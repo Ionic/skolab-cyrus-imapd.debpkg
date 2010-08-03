@@ -2008,6 +2008,11 @@ product version in the capabilities */
 /* The absolute path to the zoneinfo db file.  If not specified,
    will be confdir/zoneinfo.db */
 
+{ "normalizeuid", 0, SWITCH }
+/* Lowercase uid and strip leading and trailing blanks. It is recommended
+   to set this to yes, especially if OpenLDAP is used as authentication
+   source. */
+
 /*
 .SH SEE ALSO
 .PP
