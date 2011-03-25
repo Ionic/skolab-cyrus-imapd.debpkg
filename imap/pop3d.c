@@ -695,6 +695,9 @@ static void cmdloop(void)
 		prot_printf(popd_out,
 			    "-ERR STLS doesn't take any arguments\r\n");
 	    } else {
+		/* XXX  discard any input pipelined after STLS */
+		prot_flush(popd_in);
+
 		cmd_starttls(0);
 	    }
 	}
