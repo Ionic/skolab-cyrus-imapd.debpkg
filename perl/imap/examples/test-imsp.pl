@@ -4,7 +4,6 @@
 #
 # Joseph Jackson
 # 09-May-2000
-# $Id: test-imsp.pl,v 1.2 2002/05/25 19:57:50 leg Exp $
 #
 # Quick demonstration and test for the Cyrus IMSP Perl module.
 
@@ -16,7 +15,7 @@ my $client = Cyrus::IMAP::IMSP->new($server, $ARGV[1] || "imsp");
 die "New command failed" if (!defined $client);
 
 #
-# The maxssf=0 option is required. 
+# The maxssf=0 option is required.
 # Taking it away can lead to hangs in the send function.
 #
 #
@@ -56,13 +55,13 @@ if (!$client->set('testing.deleteme', 'delete this one')) {
 print "\n";
 print "  testing.complicated... ";
 if (!$client->set('testing.complicated',
-	  '(("Cyrus:INBOX" ((1024 768 0 0 300 400)) (true false)))')) {
+          '(("Cyrus:INBOX" ((1024 768 0 0 300 400)) (true false)))')) {
   print "Error from set is: ", $client->error;
 }
 print "\n";
 print "  testing.embeddedcr... ";
 if (!$client->set('testing.embeddedcr',
-	  "There is a CR LF here:\r\nHere's another:\r\nThat was it!")) {
+          "There is a CR LF here:\r\nHere's another:\r\nThat was it!")) {
   print "Error from set is: ", $client->error;
 }
 print "\n";

@@ -38,49 +38,20 @@
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: imapurl.c,v 1.18 2010/01/06 17:01:45 murch Exp $
- *
  * derived from chris newman's code
  */
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include <errno.h>
 #include <limits.h>
 #include <time.h>
 
 #include "imapurl.h"
 #include "xmalloc.h"
+#include "times.h"
 #include "util.h"
-
-/* hexadecimal lookup table */
-static const char hex[] = "0123456789ABCDEF";
-
-#define XX 127
-/*
- * Table for decoding hexadecimal in %encoding
- */
-static const char index_hex[256] = {
-    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
-    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
-    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
-     0, 1, 2, 3,  4, 5, 6, 7,  8, 9,XX,XX, XX,XX,XX,XX,
-    XX,10,11,12, 13,14,15,XX, XX,XX,XX,XX, XX,XX,XX,XX,
-    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
-    XX,10,11,12, 13,14,15,XX, XX,XX,XX,XX, XX,XX,XX,XX,
-    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
-    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
-    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
-    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
-    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
-    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
-    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
-    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
-    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
-};
-#define HEXCHAR(c)  (index_hex[(unsigned char)(c)])
 
 /* URL unsafe printable characters */
 static const char urlunsafe[] = " \"#%&+:;<=>?@[\\]^`{|}";
@@ -124,10 +95,8 @@ static void MailboxToURL(char *dst, const char *src)
         if (c != '&' || *src == '-') {
             if (c < ' ' || c > '~' || strchr(urlunsafe, c) != NULL) {
                 /* hex encode if necessary */
-                dst[0] = '%';
-                dst[1] = hex[c >> 4];
-                dst[2] = hex[c & 0x0f];
-                dst += 3;
+                *dst++ = '%';
+                dst += bin_to_hex(&c, 1, dst, BH_UPPER);
             } else {
                 /* encode literally */
                 *dst++ = c;
@@ -179,13 +148,12 @@ static void MailboxToURL(char *dst, const char *src)
                         utf8[3] = 0x80 | (ucs4 & 0x3f);
                         i = 4;
                     }
-                    /* convert utf8 to hex */
-                    for (c = 0; c < i; ++c) {
-                        dst[0] = '%';
-                        dst[1] = hex[utf8[c] >> 4];
-                        dst[2] = hex[utf8[c] & 0x0f];
-                        dst += 3;
-                    }
+                    /* convert utf8 to hex.
+                     * RFC3986 says: For consistency, URI producers and
+                     * normalizers should use uppercase hexadecimal digits
+                     * for all percent-encodings. */
+                    *dst++ = '%';
+                    dst += bin_to_hex(utf8, i, dst, BH_UPPER|BH_SEPARATOR('%'));
                 }
             }
             /* skip over trailing '-' in modified UTF-7 encoding */
@@ -200,9 +168,10 @@ static void MailboxToURL(char *dst, const char *src)
  *  dst should be about twice the length of src to deal with non-hex
  *  coded URLs
  */
-int URLtoMailbox(char *dst, const char *src)
+EXPORTED int URLtoMailbox(char *dst, const char *src)
 {
-    unsigned int utf8pos = 0, utf8total, i, c, utf7mode, bitstogo, utf16flag;
+    unsigned char c;
+    unsigned int utf8pos = 0, utf8total, utf7mode, bitstogo, utf16flag;
     unsigned long ucs4 = 0, bitbuf = 0;
 
     utf7mode = 0; /* is the output UTF7 currently in base64 mode? */
@@ -214,12 +183,8 @@ int URLtoMailbox(char *dst, const char *src)
         ++src;
         /* undo hex-encoding */
         if (c == '%' && src[0] != '\0' && src[1] != '\0') {
-	    c = HEXCHAR(src[0]);
-	    i = HEXCHAR(src[1]);
-	    if (c == XX || i == XX)
-		return -1;
-	    else
-		c = (char)((c << 4) | i);
+            if (hex_to_bin(src, 2, &c) != 1)
+                return -1;
             src += 2;
         }
 
@@ -228,11 +193,11 @@ int URLtoMailbox(char *dst, const char *src)
             /* switch out of UTF-7 mode */
             if (utf7mode) {
                 if (bitstogo) {
-		    *dst++ = base64chars[(bitbuf << (6 - bitstogo)) & 0x3F];
+                    *dst++ = base64chars[(bitbuf << (6 - bitstogo)) & 0x3F];
                 }
                 *dst++ = '-';
                 utf7mode = 0;
-		bitstogo = bitbuf = 0;
+                bitstogo = bitbuf = 0;
             }
             *dst++ = c;
             /* encode '&' as '&-' */
@@ -280,7 +245,7 @@ int URLtoMailbox(char *dst, const char *src)
 
         /* finished with UTF-8 character. make sure it isn't an
            overlong sequence. if it is, drop that character */
-        if ((ucs4 < 0x80 && utf8total > 1) || 
+        if ((ucs4 < 0x80 && utf8total > 1) ||
             (ucs4 < 0x0800 && utf8total > 2) ||
             (ucs4 < 0x00010000 && utf8total > 3) ||
             (ucs4 < 0x00200000 && utf8total > 4) ||
@@ -332,21 +297,16 @@ int URLtoMailbox(char *dst, const char *src)
  *  dst can be the same location as src,
  *  since the decoded length will be shorter than the encoded length
  */
-static int decode_url(char *dst, char *src)
+static int decode_url(char *dst, const char *src)
 {
     unsigned char c;
-    unsigned char i;
-    
+
     while ((c = (unsigned char)*src) != '\0') {
         ++src;
         /* undo hex-encoding */
         if (c == '%' && src[0] != '\0' && src[1] != '\0') {
-	    c = HEXCHAR(src[0]);
-	    i = HEXCHAR(src[1]);
-	    if (c == XX || i == XX)
-		return -1;
-	    else
-		c = (char)((c << 4) | i);
+            if (hex_to_bin(src, 2, &c) != 1)
+                return -1;
             src += 2;
         }
         *dst++ = (char) c;
@@ -358,215 +318,175 @@ static int decode_url(char *dst, char *src)
     return 0;
 }
 
-static const int numdays[] = {
-    31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
-};
-
-#define isleap(year) (!((year) % 4) && (((year) % 100) || !((year) % 400)))
-
-int imapurl_fromURL(struct imapurl *url, const char *s)
+EXPORTED int imapurl_fromURL(struct imapurl *url, const char *s)
 {
     char *src;
     int step = 0;  /* used to force correct ordering of url parts */
 
     memset(url, 0, sizeof(struct imapurl));
     url->freeme = xmalloc(6 * strlen(s) + 3); /* space for copy of URL +
-						 decoded mailbox */
+                                                 decoded mailbox */
     src = strcpy(url->freeme, s);
 
-    if (src[0] == '{') {	/* c-client style */
-	char *se;
+    if (src[0] == '{') {        /* c-client style */
+        char *se;
 
-	src++;
-	se = strchr(src, '}');
-	if (se == NULL) return -1;
-	*se = '\0';
-	url->server = src;
-	url->mailbox = se + 1;
+        src++;
+        se = strchr(src, '}');
+        if (se == NULL) return -1;
+        *se = '\0';
+        url->server = src;
+        url->mailbox = se + 1;
     } else { /* IMAP URL */
-	int r;
-	char *se;
-	char *at;
-	char *mbox = NULL;
-	
-	if (!strncmp(src, "imap://", 7)) { /* absolute URL */
-	    src += 7; /* skip imap:// */
-	    se = strchr(src, '/');
-	    if (se == NULL) return -1;
-	    at = strchr(src, '@');
-	
-	    if (at) {
-		*at = '\0';
-		url->user = src;
-		r = decode_url((char *) url->user, (char *) url->user);
-		if (r) return r;
-		src = at + 1; 
-	    }
-	    *se = '\0';
-	    url->server = src;
-	    src = mbox = ++se;
-	}
-	else { /* relative URL */
-	    if (*src == '/') src++;
-	    mbox = src;
-	}
+        int r;
+        char *se;
+        char *at;
+        char *mbox = NULL;
 
-	/* parse options */
-	errno = 0;
-	while (src && (src = strchr(src, ';'))) {
-	    unsigned long ul;
-	    char *endp;
+        if (!strncmp(src, "imap://", 7)) { /* absolute URL */
+            src += 7; /* skip imap:// */
+            se = strchr(src, '/');
+            if (se == NULL) return -1;
+            at = strchr(src, '@');
 
-	    if (src[-1] == '/') src[-1] = '\0'; /* trim mailbox at /; */
-	    *src++ = '\0'; /* break url at ; */
-	    if (step == 0 && !strncasecmp(src, "uidvalidity=", 12)) {
-		src += 12; /* skip uidvalidity= */
-		ul = strtoul(src, &endp, 10);  /* ends at '/' or '\0' */
-		if (errno || endp == src) return -1;
-		url->uidvalidity = ul;
-		step = 1;
-	    }
-	    else if (step <= 1 && !strncasecmp(src, "uid=", 4)) {
-		src += 4; /* skip uid= */
-		ul = strtoul(src, &endp, 10);  /* ends at '/' or '\0' */
-		if (errno || endp == src) return -1;
-		url->uid = ul;
-		step = 2;
-	    }
-	    else if (step == 2 && !strncasecmp(src, "section=", 8)) {
-		src += 8; /* skip section= */
-		url->section = src;  /* ends at ';' (next pass) or '\0' */
-		step = 3;
-	    }
-	    else if (step >= 2 && step <= 3 && !strncasecmp(src, "partial=", 8)) {
-		src += 8; /* skip partial= */
-		ul = strtoul(src, &endp, 10);  /* ends at '.', '/' or '\0' */
-		if (errno || endp == src) return -1;
-		url->start_octet = ul;
-		if (*endp == '.') {
-		    src = endp+1; /* skip . */
-		    ul = strtoul(src, &endp, 10);  /* ends at '/' or '\0' */
-		    if (errno || endp == src) return -1;
-		    url->octet_count = ul;
-		}
-		step = 4;
-	    }
-	    else if (step >= 2 && step < 5 && !strncasecmp(src, "expire=", 7)) {
-		struct tm exp;
-		int n, tm_off, leapday;
+            if (at) {
+                *at = '\0';
+                r = decode_url(src, src);
+                url->user = src;
+                if (r) return r;
+                src = at + 1;
+            }
+            *se = '\0';
+            url->server = src;
+            src = mbox = ++se;
+        }
+        else { /* relative URL */
+            if (*src == '/') src++;
+            mbox = src;
+        }
 
-		src += 7; /* skip expire= */
+        /* parse options */
+        errno = 0;
+        while (src && (src = strchr(src, ';'))) {
+            unsigned long ul;
+            char *endp;
 
-		/* parse the ISO 8601 date/time */
-		memset(&exp, 0, sizeof(struct tm));
-		n = sscanf(src, "%4d-%2d-%2dT%2d:%2d:%2d", 
-			   &exp.tm_year, &exp.tm_mon, &exp.tm_mday,
-			   &exp.tm_hour, &exp.tm_min, &exp.tm_sec);
-		if (n != 6) return -1;
+            if (src[-1] == '/') src[-1] = '\0'; /* trim mailbox at /; */
+            *src++ = '\0'; /* break url at ; */
+            if (step == 0 && !strncasecmp(src, "uidvalidity=", 12)) {
+                src += 12; /* skip uidvalidity= */
+                ul = strtoul(src, &endp, 10);  /* ends at '/' or '\0' */
+                if (errno || endp == src) return -1;
+                url->uidvalidity = ul;
+                step = 1;
+            }
+            else if (step <= 1 && !strncasecmp(src, "uid=", 4)) {
+                src += 4; /* skip uid= */
+                ul = strtoul(src, &endp, 10);  /* ends at '/' or '\0' */
+                if (errno || endp == src) return -1;
+                url->uid = ul;
+                step = 2;
+            }
+            else if (step == 2 && !strncasecmp(src, "section=", 8)) {
+                src += 8; /* skip section= */
+                url->section = src;  /* ends at ';' (next pass) or '\0' */
+                step = 3;
+            }
+            else if (step >= 2 && step <= 3 && !strncasecmp(src, "partial=", 8)) {
+                src += 8; /* skip partial= */
+                ul = strtoul(src, &endp, 10);  /* ends at '.', '/' or '\0' */
+                if (errno || endp == src) return -1;
+                url->start_octet = ul;
+                if (*endp == '.') {
+                    src = endp+1; /* skip . */
+                    ul = strtoul(src, &endp, 10);  /* ends at '/' or '\0' */
+                    if (errno || endp == src) return -1;
+                    url->octet_count = ul;
+                }
+                step = 4;
+            }
+            else if (step >= 2 && step < 5 && !strncasecmp(src, "expire=", 7)) {
+                int n;
 
-		src += 19;
-		if (*src == '.') {
-		    /* skip fractional secs */
-		    while (Uisdigit(*(++src)));
-		}
+                src += 7; /* skip expire= */
+                n = time_from_iso8601(src, &url->urlauth.expire);
+                if (n < 0)
+                    return -1;
+                src += n;
+                step = 5;
+            }
+            else if (step >= 2 && step < 6 && !strncasecmp(src, "urlauth=", 8)) {
+                char *u;
 
-		/* handle offset */
-		switch (*src++) {
-		case 'Z': tm_off = 0; break;
-		case '-': tm_off = -1; break;
-		case '+': tm_off = 1; break;
-		default: return -1;
-		}
-		if (tm_off) {
-		    int tm_houroff, tm_minoff;
+                src += 8; /* skip urlauth= */
+                url->urlauth.access = src;
+                if ((u = strchr(src, ':'))) {
+                    url->urlauth.rump_len = (u - url->freeme);
 
-		    n = sscanf(src, "%2d:%2d", &tm_houroff, &tm_minoff);
-		    if (n != 2) return -1;
-		    tm_off *= 60 * (60 * tm_houroff + tm_minoff);
-		}
+                    *u++ = '\0'; /* break urlauth at : */
+                    url->urlauth.mech = u;
+                    if ((u = strchr(u, ':'))) {
+                        *u++ = '\0'; /* break urlauth at : */
+                        url->urlauth.token = u;
+                    }
+                    src = u;
+                }
+                else {
+                    url->urlauth.rump_len = strlen(s);
+                }
+                step = 6;
+            }
+            else {
+                return -1;
+            }
+        }
 
-		exp.tm_year -= 1900; /* normalize to years since 1900 */
-		exp.tm_mon--; /* normalize to months since January */
-
-		/* sanity check the date/time (including leap day & second) */
-		leapday = exp.tm_mon == 1 && isleap(exp.tm_year + 1900);
-		if (exp.tm_year < 70 || exp.tm_mon < 0 || exp.tm_mon > 11 ||
-		    exp.tm_mday < 1 ||
-		    exp.tm_mday > (numdays[exp.tm_mon] + leapday) ||
-		    exp.tm_hour > 23 || exp.tm_min > 59 || exp.tm_sec > 60) {
-		    return -1;
-		}
-
-		/* normalize to GMT */
-		url->urlauth.expire = mktime(&exp) - tm_off;
-		step = 5;
-	    }
-	    else if (step >= 2 && step < 6 && !strncasecmp(src, "urlauth=", 8)) {
-		char *u;
-
-		src += 8; /* skip urlauth= */
-		url->urlauth.access = src;
-		if ((u = strchr(src, ':'))) {
-		    url->urlauth.rump_len = (u - url->freeme);
-
-		    *u++ = '\0'; /* break urlauth at : */
-		    url->urlauth.mech = u;
-		    if ((u = strchr(u, ':'))) {
-			*u++ = '\0'; /* break urlauth at : */
-			url->urlauth.token = u;
-		    }
-		    src = u;
-		}
-		else {
-		    url->urlauth.rump_len = strlen(s);
-		}
-		step = 6;
-	    }
-	    else {
-		return -1;
-	    }
-	}
-
-	if (mbox && *mbox) {
-	    url->mailbox = url->freeme + strlen(s) + 1;
-	    return URLtoMailbox((char *)url->mailbox, mbox);
-	}
+        if (mbox && *mbox) {
+            url->mailbox = url->freeme + strlen(s) + 1;
+            return URLtoMailbox((char *)url->mailbox, mbox);
+        }
     }
     return 0;
 }
 
-void imapurl_toURL(char *dst, struct imapurl *url)
+EXPORTED void imapurl_toURL(char *dst, const struct imapurl *url)
 {
-    if (url->mailbox) {
-	if (url->server) {
-	    dst += sprintf(dst, "imap://");
-	    if (url->auth) dst += sprintf(dst, ";AUTH=%s@", url->auth);
-	    dst += sprintf(dst, "%s", url->server);
-	}
-	*dst++ = '/';
-	MailboxToURL(dst, url->mailbox);
-	dst += strlen(dst);
+
+    if (url->server) {
+        dst += sprintf(dst, "imap://");
+        if (url->user) dst += sprintf(dst, "%s", url->user);
+        if (url->auth) dst += sprintf(dst, ";AUTH=%s", url->auth);
+        if (url->user || url->auth)
+            *dst++ = '@';
+        dst += sprintf(dst, "%s", url->server);
     }
+    if (url->mailbox) {
+        *dst++ = '/';
+        MailboxToURL(dst, url->mailbox);
+        dst += strlen(dst);
+    }
+
     if (url->uidvalidity)
-	dst += sprintf(dst, ";UIDVALIDITY=%lu", url->uidvalidity);
+        dst += sprintf(dst, ";UIDVALIDITY=%lu", url->uidvalidity);
     if (url->uid) {
-	dst += sprintf(dst, "/;UID=%lu", url->uid);
-	if (url->section) dst += sprintf(dst, "/;SECTION=%s", url->section);
-	if (url->start_octet || url->octet_count) {
-	    dst += sprintf(dst, "/;PARTIAL=%lu", url->start_octet);
-	    if (url->octet_count) dst += sprintf(dst, ".%lu", url->octet_count);
-	}
+        dst += sprintf(dst, "/;UID=%lu", url->uid);
+        if (url->section) dst += sprintf(dst, "/;SECTION=%s", url->section);
+        if (url->start_octet || url->octet_count) {
+            dst += sprintf(dst, "/;PARTIAL=%lu", url->start_octet);
+            if (url->octet_count) dst += sprintf(dst, ".%lu", url->octet_count);
+        }
     }
     if (url->urlauth.access) {
-	if (url->urlauth.expire) {
-	    struct tm *exp = (struct tm *) gmtime(&url->urlauth.expire);
-	    dst += strftime(dst, INT_MAX, ";EXPIRE=%Y-%m-%dT%H:%M:%SZ", exp);
-	}
-	dst += sprintf(dst, ";URLAUTH=%s", url->urlauth.access);
-	if (url->urlauth.mech) {
-	    dst += sprintf(dst, ":%s", url->urlauth.mech);
-	    if (url->urlauth.token) dst += sprintf(dst, ":%s", url->urlauth.token);
-	}
+        if (url->urlauth.expire) {
+            strcpy(dst, ";EXPIRE=");
+            dst += strlen(dst);
+            dst += time_to_iso8601(url->urlauth.expire, dst, INT_MAX, 1);
+        }
+        dst += sprintf(dst, ";URLAUTH=%s", url->urlauth.access);
+        if (url->urlauth.mech) {
+            dst += sprintf(dst, ":%s", url->urlauth.mech);
+            if (url->urlauth.token) dst += sprintf(dst, ":%s", url->urlauth.token);
+        }
     }
 }
 

@@ -38,8 +38,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: auth_krb5.c,v 1.8 2010/01/06 17:01:44 murch Exp $
  */
 
 #include <config.h>
@@ -59,8 +57,6 @@
 
 #include <krb5.h>
 
-#include "auth.h"
-
 struct auth_state {
     char *userid; /* Canonified Userid */
 };
@@ -68,14 +64,14 @@ struct auth_state {
 /*
  * Determine if the user is a member of 'identifier'
  * Returns one of:
- * 	0	User does not match identifier
- * 	1	identifier matches everybody
- *	2	User is in the group that is identifier
- *	3	User is identifer
+ *      0       User does not match identifier
+ *      1       identifier matches everybody
+ *      2       User is in the group that is identifier
+ *      3       User is identifer
  */
 static int mymemberof(struct auth_state *auth_state, const char *identifier)
 {
-    char *ident;
+    const char *ident;
     int ret=0;
 
     if (strcmp(identifier,"anyone") == 0) return 1;
@@ -86,10 +82,10 @@ static int mymemberof(struct auth_state *auth_state, const char *identifier)
 
     ident = auth_canonifyid(identifier,0);
 
-    if(!strcmp(ident, auth_state->userid)) {
-	ret = 3;
+    if (!strcmp(ident, auth_state->userid)) {
+        ret = 3;
     }
-    
+
     return ret;
 }
 
@@ -98,7 +94,7 @@ static int mymemberof(struct auth_state *auth_state, const char *identifier)
  * Returns a pointer to a static buffer containing the canonical form
  * or NULL if 'identifier' is invalid.
  */
-static char *mycanonifyid(const char *identifier, size_t len)
+static const char *mycanonifyid(const char *identifier, size_t len)
 {
     static char *retbuf = NULL;
     krb5_context context;
@@ -113,42 +109,42 @@ static char *mycanonifyid(const char *identifier, size_t len)
     if(!len) len = strlen(identifier);
 
     if (strcasecmp(identifier, "anonymous") == 0)
-	return "anonymous";
-    
-    if (strcasecmp(identifier, "anyone") == 0) 
-	return "anyone";
+        return "anonymous";
+
+    if (strcasecmp(identifier, "anyone") == 0)
+        return "anyone";
 
     if (krb5_init_context(&context))
-	return NULL;
+        return NULL;
 
     if (krb5_parse_name(context,identifier,&princ))
     {
-	krb5_free_context(context);
-	return NULL;
+        krb5_free_context(context);
+        return NULL;
     }
 
     /* get local realm */
     if (krb5_get_default_realm(context,&realm))
     {
-	krb5_free_principal(context,princ);
-	krb5_free_context(context);
-	return NULL;
+        krb5_free_principal(context,princ);
+        krb5_free_context(context);
+        return NULL;
     }
 
     /* build dummy princ to compare realms */
     if (krb5_build_principal(context,&princ_dummy,
-			     strlen(realm),realm,"dummy",NULL))
+                             strlen(realm),realm,"dummy",NULL))
     {
-	krb5_free_principal(context,princ);
-	krb5_free_context(context);
-	free(realm);
-	return NULL;
+        krb5_free_principal(context,princ);
+        krb5_free_context(context);
+        free(realm);
+        return NULL;
     }
 
     /* is this principal local ? */
     if (krb5_realm_compare(context,princ,princ_dummy))
     {
-	striprealm = 1;
+        striprealm = 1;
     }
 
     /* done w/ dummy princ free it & realm */
@@ -158,20 +154,20 @@ static char *mycanonifyid(const char *identifier, size_t len)
     /* get the text version of princ */
     if (krb5_unparse_name(context,princ,&retbuf))
     {
-	krb5_free_principal(context,princ);
-	krb5_free_context(context);
-	return NULL;
+        krb5_free_principal(context,princ);
+        krb5_free_context(context);
+        return NULL;
     }
 
     /* we have the canonical name pointed to by p -- strip realm if local */
     if (striprealm)
     {
-	char *realmbegin = strrchr(retbuf, '@');
-	if(realmbegin) *realmbegin = '\0';
+        char *realmbegin = strrchr(retbuf, '@');
+        if(realmbegin) *realmbegin = '\0';
     }
-    
+
     krb5_free_principal(context,princ);
-    krb5_free_context(context);	
+    krb5_free_context(context);
     return retbuf;
 }
 
@@ -181,12 +177,13 @@ static char *mycanonifyid(const char *identifier, size_t len)
 static struct auth_state *mynewstate(const char *identifier)
 {
     struct auth_state *newstate;
-    char *ident;
+    const char *ident;
+
     ident = auth_canonifyid(identifier, 0);
     if (!ident) return NULL;
 
     newstate = (struct auth_state *)xmalloc(sizeof(struct auth_state));
-    newstate->userid = xstrdup(ident);   
+    newstate->userid = xstrdup(ident);
 
     return newstate;
 }
@@ -194,7 +191,7 @@ static struct auth_state *mynewstate(const char *identifier)
 static void myfreestate(struct auth_state *auth_state)
 {
     if(!auth_state) return;
-    
+
     free(auth_state->userid);
     free(auth_state);
 }
@@ -202,39 +199,39 @@ static void myfreestate(struct auth_state *auth_state)
 #else /* HAVE_GSSAPI_H */
 
 static int mymemberof(
-    struct auth_state *auth_state __attribute__((unused)), 
+    struct auth_state *auth_state __attribute__((unused)),
     const char *identifier __attribute__((unused)))
 {
-	fatal("Authentication mechanism (krb5) not compiled in", EC_CONFIG);
-	return 0;
+        fatal("Authentication mechanism (krb5) not compiled in", EC_CONFIG);
+        return 0;
 }
 
-static char *mycanonifyid(
-    const char *identifier __attribute__((unused)), 
+static const char *mycanonifyid(
+    const char *identifier __attribute__((unused)),
     size_t len __attribute__((unused)))
 {
-	fatal("Authentication mechanism (krb5) not compiled in", EC_CONFIG);
-	return NULL;
+        fatal("Authentication mechanism (krb5) not compiled in", EC_CONFIG);
+        return NULL;
 }
 
 static struct auth_state *mynewstate(
     const char *identifier __attribute__((unused)))
 {
-	fatal("Authentication mechanism (krb5) not compiled in", EC_CONFIG);
-	return NULL;
+        fatal("Authentication mechanism (krb5) not compiled in", EC_CONFIG);
+        return NULL;
 }
 
 static void myfreestate(
     struct auth_state *auth_state __attribute__((unused)))
 {
-	fatal("Authentication mechanism (krb5) not compiled in", EC_CONFIG);
+        fatal("Authentication mechanism (krb5) not compiled in", EC_CONFIG);
 }
 
 #endif
 
-struct auth_mech auth_krb5 = 
+HIDDEN struct auth_mech auth_krb5 =
 {
-    "krb5",		/* name */
+    "krb5",             /* name */
 
     &mycanonifyid,
     &mymemberof,

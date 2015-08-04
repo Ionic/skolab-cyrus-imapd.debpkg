@@ -38,8 +38,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: mupdate.h,v 1.22 2010/07/27 19:22:54 wescraig Exp $
  */
 
 #ifndef INCLUDED_MUPDATE_H
@@ -58,8 +56,10 @@
 #include "mailbox.h"
 #include "mpool.h"
 #include "mupdate-client.h"
-#include "mupdate_err.h"
 #include "global.h"
+
+/* generated headers are not necessarily in current directory */
+#include "imap/mupdate_err.h"
 
 struct mupdate_handle_s {
     struct backend *conn;
@@ -72,9 +72,8 @@ struct mupdate_handle_s {
 
     /* For client side mupdate_find calls */
     char mailbox_buf[MAX_MAILBOX_BUFFER];
-    char server_buf[MAX_MAILBOX_BUFFER];
-    char *acl_buf;
-    size_t acl_buf_len;
+    char location_buf[MAX_MAILBOX_BUFFER];
+    char *acl;
     struct mupdate_mailboxdata mailboxdata_buf;
 
     int saslcompleted;
@@ -91,13 +90,13 @@ enum settype {
 /* acl MUST be last, since it is what causes the variable size */
 struct mbent {
     char *mailbox;
-    char *server;
+    char *location;
     enum settype t;
     struct mbent *next; /* used for queue */
     char acl[1];
 };
 
-struct mbent_queue 
+struct mbent_queue
 {
     struct mbent *head;
     struct mbent **tail;
@@ -108,11 +107,11 @@ void free_mbent(struct mbent *p);
 
 /* Used by the slave listener thread to update the local database */
 int cmd_change(struct mupdate_mailboxdata *mdata,
-	       const char *cmd, void *context);
+               const char *cmd, void *context);
 
 int mupdate_synchronize_remote(mupdate_handle *handle,
-			       struct mbent_queue *remote_boxes,
-			       struct mpool *pool);
+                               struct mbent_queue *remote_boxes,
+                               struct mpool *pool);
 /* Given an mbent_queue, will synchronize the local database to it */
 int mupdate_synchronize(struct mbent_queue *remote_boxes, struct mpool *pool);
 
@@ -137,9 +136,9 @@ enum mupdate_cmd_response {
    otherwise MUPDATE_error. */
 /* if 'wait_for_ok' is set and 'response' != NULL, *response is filled in */
 int mupdate_scarf(mupdate_handle *handle,
-		  mupdate_callback callback,
-		  void *context,
-		  int wait_for_ok,
-		  enum mupdate_cmd_response *response);
+                  mupdate_callback callback,
+                  void *context,
+                  int wait_for_ok,
+                  enum mupdate_cmd_response *response);
 
 #endif /* INCLUDED_MUPDATE_H */

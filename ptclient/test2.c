@@ -37,24 +37,23 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: test2.c,v 1.8 2010/01/06 17:01:58 murch Exp $
  */
 
+#include "config.h"
 #include <stdio.h>
 #include <sys/syslog.h>
 
 int main(void) {
   char cacheid[16]="4224423";
   openlog("testr", LOG_PID, SYSLOG_FACILITY);
-  
+
   if (!auth_setid("cg2v@club.cc.cmu.edu",cacheid))
     printf ("Auth_memberof(cg2v,cg2v:me) is %d\n",
             auth_memberof("cg2v:me"));
-  
+
   else
     printf ("Auth_setid(cg2v@club.cc.cmu.edu) failed\n");
-  
+
 }
 
 int fatal(char *foo) {

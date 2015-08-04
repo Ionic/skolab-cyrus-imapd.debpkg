@@ -39,8 +39,6 @@
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: error_message.c,v 1.3 2010/01/06 17:01:28 murch Exp $
- *
  * Copyright 1987 by the Student Information Processing Board
  * of the Massachusetts Institute of Technology
  *
@@ -64,7 +62,7 @@ static char buffer[25];
 
 extern struct et_list * _et_list;
 
-const char * INTERFACE error_message (code)
+EXPORTED const char * INTERFACE error_message (code)
 long code;
 {
     int offset;
@@ -79,38 +77,38 @@ long code;
     table_num = code - l_offset;
     if (!table_num) {
 #ifdef HAS_STRERROR
-	return strerror (offset);
+        return strerror (offset);
 #else
         if (offset < sys_nerr)
-	    return(sys_errlist[offset]);
-	else
-	    goto oops;
+            return(sys_errlist[offset]);
+        else
+            goto oops;
 #endif
     }
     for (et = _et_list; et; et = et->next) {
-	if (et->table->base == table_num) {
-	    /* This is the right table */
-	    if (et->table->n_msgs <= offset)
-		goto oops;
-	    return(et->table->msgs[offset]);
-	}
+        if (et->table->base == table_num) {
+            /* This is the right table */
+            if (et->table->n_msgs <= offset)
+                goto oops;
+            return(et->table->msgs[offset]);
+        }
     }
 oops:
     strcpy (buffer, "Unknown code ");
     if (table_num) {
-	strcat (buffer, error_table_name (table_num));
-	strcat (buffer, " ");
+        strcat (buffer, error_table_name (table_num));
+        strcat (buffer, " ");
     }
     for (cp = buffer; *cp; cp++)
-	;
+        ;
     if (offset >= 100) {
-	*cp++ = '0' + offset / 100;
-	offset %= 100;
-	started++;
+        *cp++ = '0' + offset / 100;
+        offset %= 100;
+        started++;
     }
     if (started || offset >= 10) {
-	*cp++ = '0' + offset / 10;
-	offset %= 10;
+        *cp++ = '0' + offset / 10;
+        offset %= 10;
     }
     *cp++ = '0' + offset;
     *cp = '\0';

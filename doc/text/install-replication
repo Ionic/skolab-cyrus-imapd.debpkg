@@ -52,7 +52,6 @@ Configuring the "replica" server
 
      1. Configure a standalone server as described in the rest of the
         documentation. 
-
      2. Add the following line to the "/etc/services" file. 
 
            csync     2005/tcp
@@ -79,7 +78,6 @@ Configuring the "master" server
 
         Note that the port number MUST be the same as that used on the
         "replica" server. 
-
      2. Specify the hostname of the "replica" server and how to
         authenticate to it using the following imap.conf options: 
 
@@ -111,11 +109,9 @@ Compression
      1. Enable the sync_log option in imapd.conf. This allows the imapd,
         pop3d, nntpd, and lmtpd services to log synchonization actions
         which will be periodically serviced by sync_client. 
-
      2. Optionally, adjust the sync_repeat_interval in imapd.conf. 
-
      3. Add a line similar to the following in the STARTUP section of
-        cyrus.conf:
+        cyrus.conf: 
 
           syncclient       cmd="/usr/cyrus/bin/sync_client -r"
 

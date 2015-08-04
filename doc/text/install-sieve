@@ -4,9 +4,6 @@ Installing Sieve
     specified --disable-sieve when running ./configure, you did NOT compile
     the server with sieve support. 
 
-    A brief introduction to Sieve at is available from Cyrusoft
-    International. 
-
 Configure outgoing mail
 
     Some Sieve actions (redirect, vacation) can send outgoing mail. 
@@ -33,12 +30,11 @@ Managing Sieve Scripts
 
 Testing the sieve server
 
-     1. The Sieve server, "timsieved", is used for transporting user Sieve
-        scripts to the sealed IMAP server. It is incompatible with the
-        "sieveusehomedir" option. It is named after the principal author,
-        Tim Martin, who desperately wanted something named after him in the
-        Cyrus distribution. 
-
+     1. "timsieved", is a ManageSieve server used for transporting user
+        Sieve scripts to the sealed IMAP server. It is incompatible with
+        the "sieveusehomedir" option. It is named after the principal
+        author, Tim Martin, who desperately wanted something named after
+        him in the Cyrus distribution. 
      2. From your normal account, telnet to the sieve port on the server
         you're setting up: 
 
@@ -60,11 +56,10 @@ Testing the sieve server
         support are listed. This list should be identical to the one listed
         by "imapd" earlier. Next terminate the connection, by typing
         "logout". 
-
      3. Next test authenticating to the sieve server. To do this run the
         "sieveshell" utility. You must specify the server. If you run this
         utility from a different machine without the "sieve" entry in
-        "/etc/services", port 2000 will be used. 
+        "/etc/services", port 4190 will be used. 
 
           "sieveshell foobar"
             Please enter your password: ******

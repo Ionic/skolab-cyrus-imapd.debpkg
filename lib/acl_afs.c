@@ -46,8 +46,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: acl_afs.c,v 1.29 2010/01/06 17:01:43 murch Exp $
  */
 
 #include <config.h>
@@ -58,60 +56,58 @@
 #include "acl.h"
 #include "auth.h"
 #include "xmalloc.h"
+#include "strarray.h"
+#include "libconfig.h"
 
 /*
  * Calculate the set of rights the user in 'auth_state' has in the ACL 'acl'.
  * 'acl' must be writable, but is restored to its original condition.
  */
-int cyrus_acl_myrights(struct auth_state *auth_state, char *acl)
+EXPORTED int cyrus_acl_myrights(struct auth_state *auth_state, const char *origacl)
 {
+    char *acl = xstrdupsafe(origacl);
     char *thisid, *rights, *nextid;
     long acl_positive = 0, acl_negative = 0;
     long *acl_ptr;
 
     for (thisid = acl; *thisid; thisid = nextid) {
-	acl_ptr = &acl_positive;
-	rights = strchr(thisid, '\t');
-	if (!rights) {
-	    break;
-	}
-	*rights++ = '\0';
+        acl_ptr = &acl_positive;
+        rights = strchr(thisid, '\t');
+        if (!rights) {
+            break;
+        }
+        *rights++ = '\0';
 
-	nextid = strchr(rights, '\t');
-	if (!nextid) {
-	    rights[-1] = '\t';
-	    break;
-	}
-	*nextid++ = '\0';
+        nextid = strchr(rights, '\t');
+        if (!nextid) {
+            rights[-1] = '\t';
+            break;
+        }
+        *nextid++ = '\0';
 
-	if (*thisid == '-') {
-	    acl_ptr = &acl_negative;
-	    thisid++;
-	}
-	if (auth_memberof(auth_state, thisid)) {
-	    *acl_ptr |= cyrus_acl_strtomask(rights);
-	}
-
-	/* Put the delimiters back */
-	rights[-1] = '\t';
-	nextid[-1] = '\t';
+        if (*thisid == '-') {
+            acl_ptr = &acl_negative;
+            thisid++;
+        }
+        if (auth_memberof(auth_state, thisid)) {
+            *acl_ptr |= cyrus_acl_strtomask(rights);
+        }
     }
+
+    free(acl);
 
     return acl_positive & ~acl_negative;
 }
-	
+
 /*
  * Modify the ACL pointed to by 'acl' to make the rights granted to
  * 'identifier' the set specified in the mask 'access'.  The pointer
  * pointed to by 'acl' must have been obtained from malloc().
  */
-int cyrus_acl_set(acl, identifier, mode, access, canonproc, canonrock)
-char **acl;
-const char *identifier;
-int mode;
-int access;
-cyrus_acl_canonproc_t *canonproc;
-void *canonrock;
+EXPORTED int cyrus_acl_set(char **acl, const char *identifier,
+                  int mode, int access,
+                  cyrus_acl_canonproc_t *canonproc,
+                  void *canonrock)
 {
     const char *canonid;
     char *newidentifier = 0;
@@ -123,84 +119,94 @@ void *canonrock;
     /* Convert 'identifier' into canonical form */
     canonid = auth_canonifyid(*identifier == '-' ? identifier+1 : identifier, 0);
     if (canonid) {
-	if (*identifier == '-') {
-	    newidentifier = xmalloc(strlen(canonid)+2);
-	    newidentifier[0] = '-';
-	    strcpy(newidentifier+1, canonid);
-	    identifier = newidentifier;
-	} else {
-	    identifier = canonid;
-	}
+        if (*identifier == '-') {
+            newidentifier = xmalloc(strlen(canonid)+2);
+            newidentifier[0] = '-';
+            strcpy(newidentifier+1, canonid);
+            identifier = newidentifier;
+        } else {
+            identifier = canonid;
+        }
     } else if (access != 0L) {
-	return -1;
+        return -1;
     } else {
-	/* trying to delete invalid/non-existent identifier */
+        /* trying to delete invalid/non-existent identifier */
     }
 
     /* Find any existing entry for 'identifier' in 'acl' */
     for (thisid = nextid = *acl; *thisid; thisid = nextid) {
-	rights = strchr(thisid, '\t');
-	if (!rights) {
-	    /* ACK, nuke trailing garbage */
-	    *thisid = '\0';
-	    nextid = thisid;
-	    break;
-	}
-	*rights++ = '\0';
+        rights = strchr(thisid, '\t');
+        if (!rights) {
+            /* ACK, nuke trailing garbage */
+            *thisid = '\0';
+            nextid = thisid;
+            break;
+        }
+        *rights++ = '\0';
 
-	nextid = strchr(rights, '\t');
-	if (!nextid) {
-	    /* ACK, nuke trailing garbage */
-	    *thisid = '\0';
-	    nextid = thisid;
-	    break;
-	}
-	*nextid++ = '\0';
+        nextid = strchr(rights, '\t');
+        if (!nextid) {
+            /* ACK, nuke trailing garbage */
+            *thisid = '\0';
+            nextid = thisid;
+            break;
+        }
+        *nextid++ = '\0';
 
-	if (strcmp(identifier, thisid) == 0) {
-	    oldaccess = cyrus_acl_strtomask(rights);
-	    break;
-	}
-	rights[-1] = '\t';
-	nextid[-1] = '\t';
+        if (strcmp(identifier, thisid) == 0) {
+            oldaccess = cyrus_acl_strtomask(rights);
+            break;
+        }
+        rights[-1] = '\t';
+        nextid[-1] = '\t';
     }
 
     switch (mode) {
     case ACL_MODE_SET:
-	break;
+        break;
 
     case ACL_MODE_ADD:
-	access |= oldaccess;
-	break;
+        access |= oldaccess;
+        break;
 
     case ACL_MODE_REMOVE:
-	access = oldaccess & ~access;
-	break;
+        access = oldaccess & ~access;
+        break;
     }
 
     if (canonproc) {
-	if (*identifier == '-')
-	    access = ~(canonproc(canonrock, identifier+1, ~access));
-	else
-	    access = canonproc(canonrock, identifier, access);
+        if (*identifier == '-')
+            access = ~(canonproc(canonrock, identifier+1, ~access));
+        else
+            access = canonproc(canonrock, identifier, access);
     }
 
     if (access == 0L) {
-	/* Remove any existing entry for 'identifier' */
-	strcpy(thisid, nextid);
+        /* Remove any existing entry for 'identifier'.
+           Special case: When we try to delete an invalid/non-existent identifier,
+           both 'thisid' and 'nextid' point to the end of *acl. */
+        newacl = xmalloc(strlen(*acl) + strlen(nextid) - strlen(thisid) + 1);
+        /* Copy existing ACLs without the current identifier.
+           Note: The buffer will not be zero terminated. */
+        strncpy(newacl, *acl, (thisid - *acl));
+        /* Append the remaining ACL string. Zero-terminates the string. */
+        strcpy(newacl + (thisid - *acl), nextid);
+
+        free(*acl);
+        *acl = newacl;
     }
     else {
-	/* Replace any existing entry for 'identifier' */
-	newacl = xmalloc((thisid - *acl) + strlen(identifier) + 40 +
-			 strlen(nextid));
-	strncpy(newacl, *acl, (thisid - *acl));
-	strcpy(newacl + (thisid - *acl), identifier);
-	strcat(newacl, "\t");
-	(void) cyrus_acl_masktostr(access, newacl + strlen(newacl));
-	strcat(newacl, "\t");
-	strcat(newacl, nextid);
-	free(*acl);
-	*acl = newacl;
+        /* Replace any existing entry for 'identifier' */
+        newacl = xmalloc((thisid - *acl) + strlen(identifier) + 40 +
+                         strlen(nextid));
+        strncpy(newacl, *acl, (thisid - *acl));
+        strcpy(newacl + (thisid - *acl), identifier);
+        strcat(newacl, "\t");
+        (void) cyrus_acl_masktostr(access, newacl + strlen(newacl));
+        strcat(newacl, "\t");
+        strcat(newacl, nextid);
+        free(*acl);
+        *acl = newacl;
     }
 
     if (newidentifier) free(newidentifier);
@@ -211,8 +217,22 @@ void *canonrock;
  * Remove any entry for 'identifier' in the ACL pointed to by 'acl'.
  * The pointer pointed to by 'acl' must have been obtained from malloc().
  */
-int cyrus_acl_remove(char **acl, const char *identifier, 
-	       cyrus_acl_canonproc_t canonproc, void *canonrock)
+EXPORTED int cyrus_acl_remove(char **acl, const char *identifier,
+               cyrus_acl_canonproc_t canonproc, void *canonrock)
 {
     return cyrus_acl_set(acl, identifier, ACL_MODE_SET, 0, canonproc, canonrock);
+}
+
+EXPORTED int is_system_user(const char *userid)
+{
+    static strarray_t *admins = NULL;
+
+    if (!admins) admins = strarray_split(config_getstring(IMAPOPT_ADMINS), NULL, STRARRAY_TRIM);
+
+    if (!strcmp(userid, "anyone")) return 1;
+    if (!strcmp(userid, "anonymous")) return 1;
+    if (strarray_find(admins, userid, 0) >= 0)
+        return 1;
+
+    return 0;
 }

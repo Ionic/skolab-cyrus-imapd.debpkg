@@ -38,8 +38,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: proxy.h,v 1.5 2010/01/06 17:01:39 murch Exp $
  */
 
 #ifndef _PROXY_H
@@ -54,34 +52,34 @@
 /* a final destination for a message */
 struct rcpt {
     char rcpt[MAX_MAILBOX_BUFFER]; /* where? */
-    int rcpt_num;		    /* credit this to who? */
+    int rcpt_num;                   /* credit this to who? */
     struct rcpt *next;
 };
 
 struct dest {
     char server[MAX_MAILBOX_BUFFER];  /* where? */
     char authas[MAX_MAILBOX_BUFFER];  /* as who? */
-    int rnum;			      /* number of rcpts */
+    int rnum;                         /* number of rcpts */
     struct rcpt *to;
     struct dest *next;
 };
 
 void proxy_adddest(struct dest **dlist, const char *rcpt, int rcpt_num,
-		   char *server, const char *authas);
+                   const char *server, const char *authas);
 
 struct backend *
 proxy_findserver(const char *server, struct protocol_t *prot,
-		 const char *userid, struct backend ***cache,
-		 struct backend **current, struct backend **inbox,
-		 struct protstream *clientin);
+                 const char *userid, struct backend ***cache,
+                 struct backend **current, struct backend **inbox,
+                 struct protstream *clientin);
 
 void proxy_downserver(struct backend *s);
 
 int proxy_check_input(struct protgroup *protin,
-		      struct protstream *clientin,
-		      struct protstream *clientout,
-		      struct protstream *serverin,
-		      struct protstream *serverout,
-		      unsigned long timeout_sec);
+                      struct protstream *clientin,
+                      struct protstream *clientout,
+                      struct protstream *serverin,
+                      struct protstream *serverout,
+                      unsigned long timeout_sec);
 
 #endif /* _PROXY_H */

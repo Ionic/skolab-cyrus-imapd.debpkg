@@ -38,8 +38,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: mboxkey.h,v 1.4 2010/01/06 17:01:36 murch Exp $
  */
 
 #ifndef MBOXKEY_H
@@ -51,21 +49,21 @@ struct mboxkey;
 
 /* get a database handle corresponding to user pair */
 int mboxkey_open(const char *user,
-		 int flags,
-		 struct mboxkey **mboxkeydbptr);
+                 int flags,
+                 struct mboxkey **mboxkeydbptr);
 
 /* read an entry from 'mboxkeydb' */
 int mboxkey_read(struct mboxkey *mboxkeydb, const char *mailbox,
-		 const char **mboxkey, size_t *mboxkeylen);
+                 const char **mboxkey, size_t *mboxkeylen);
 
 /* read an entry from 'mboxkeydb' and leave that record (or some superset
    of it) locked for update */
 int mboxkey_lockread(struct mboxkey *mboxkeydb, const char *mailbox,
-		     const char **mboxkey, size_t *mboxkeylen);
+                     const char **mboxkey, size_t *mboxkeylen);
 
 /* write an entry to 'mboxkeydb' */
 int mboxkey_write(struct mboxkey *mboxkeydb, const char *mailbox,
-		  const char *mboxkey, size_t mboxkeylen);
+                  const char *mboxkey, size_t mboxkeylen);
 
 /* close this handle */
 int mboxkey_close(struct mboxkey *mboxkeydb);

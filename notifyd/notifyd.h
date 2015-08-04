@@ -38,8 +38,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: notifyd.h,v 1.4 2010/01/06 17:01:54 murch Exp $
  */
 
 #include <config.h>
@@ -52,21 +50,21 @@
 
 /* Notify method dispatch table definition */
 typedef struct {
-    const char *name;				/* name of the method */
+    const char *name;                           /* name of the method */
     char *(*notify)(const char *class, const char *priority,
-		    const char *user, const char *mailbox,
-		    int nopt, char **options,
-		    const char *message);	/* notification function */
+                    const char *user, const char *mailbox,
+                    int nopt, char **options,
+                    const char *message, const char *fname);    /* notification function */
 } notifymethod_t;
 
 /* array of supported notification methods */
-notifymethod_t methods[] = {
-    { "null",	notify_null },		/* do nothing */
-    { "log",	notify_log },		/* use syslog (for testing) */
-    { "mailto",	notify_mailto },	/* send an email */
+static notifymethod_t methods[] = {
+    { "null",   notify_null },          /* do nothing */
+    { "log",    notify_log },           /* use syslog (for testing) */
+    { "mailto", notify_mailto },        /* send an email */
 #ifdef HAVE_ZEPHYR
-    { "zephyr",	notify_zephyr },	/* send a zephyrgram */
+    { "zephyr", notify_zephyr },        /* send a zephyrgram */
 #endif
-    { "external", notify_external },	/* send via external program */
-    { NULL,	NULL }
+    { "external", notify_external },    /* send via external program */
+    { NULL,     NULL }
 };

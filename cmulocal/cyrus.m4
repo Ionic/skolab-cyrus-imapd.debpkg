@@ -1,6 +1,5 @@
 dnl
 dnl Additional macros for configure.in packaged up for easier theft.
-dnl $Id: cyrus.m4,v 1.6 2010/01/06 17:01:27 murch Exp $
 dnl tjs@andrew.cmu.edu 6-may-1998
 dnl
 
@@ -12,9 +11,9 @@ dnl (so the runpath for shared libraries is set).
 AC_DEFUN([CMU_ADD_LIBPATH], [
   # this is CMU ADD LIBPATH
   if test "$andrew_cv_runpath_switch" = "none" ; then
-	LDFLAGS="-L$1 ${LDFLAGS}"
+        LDFLAGS="-L$1 ${LDFLAGS}"
   else
-	LDFLAGS="-L$1 $andrew_cv_runpath_switch$1 ${LDFLAGS}"
+        LDFLAGS="-L$1 $andrew_cv_runpath_switch$1 ${LDFLAGS}"
   fi
 ])
 
@@ -23,9 +22,9 @@ dnl (so the runpath for shared libraries is set).
 AC_DEFUN([CMU_ADD_LIBPATH_TO], [
   # this is CMU ADD LIBPATH TO
   if test "$andrew_cv_runpath_switch" = "none" ; then
-	$2="-L$1 ${$2}"
+        $2="-L$1 ${$2}"
   else
-	$2="-L$1 ${$2} $andrew_cv_runpath_switch$1"
+        $2="-L$1 ${$2} $andrew_cv_runpath_switch$1"
   fi
 ])
 
@@ -37,7 +36,7 @@ AC_DEFUN([CMU_GUESS_RUNPATH_SWITCH], [
     SAVE_LDFLAGS="${LDFLAGS}"
     LDFLAGS="-R /usr/lib"
     AC_TRY_LINK([],[],[andrew_cv_runpath_switch="-R"], [
-  	LDFLAGS="-Wl,-rpath,/usr/lib"
+        LDFLAGS="-Wl,-rpath,/usr/lib"
     AC_TRY_LINK([],[],[andrew_cv_runpath_switch="-Wl,-rpath,"],
     [andrew_cv_runpath_switch="none"])
     ])

@@ -39,10 +39,8 @@
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: init_et.c,v 1.3 2010/01/06 17:01:28 murch Exp $
- *
  * Copyright 1986, 1987, 1988 by MIT Information Systems and
- *	the MIT Student Information Processing Board.
+ *      the MIT Student Information Processing Board.
  *
  * For copyright info, see mit-sipb-copyright.h.
  */
@@ -67,11 +65,11 @@ int init_error_table(msgs, base, count)
     struct foobar * new_et;
 
     if (!base || !count || !msgs)
-	return 0;
+        return 0;
 
     new_et = (struct foobar *) malloc(sizeof(struct foobar));
     if (!new_et)
-	return errno;	/* oops */
+        return errno;   /* oops */
     new_et->etl.table = &new_et->et;
     new_et->et.msgs = msgs;
     new_et->et.base = base;

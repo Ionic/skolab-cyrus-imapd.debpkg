@@ -38,16 +38,15 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: ptloader.c,v 1.50 2010/01/06 17:01:58 murch Exp $
  */
 
 #include <config.h>
 
+#include <signal.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
+#include <syslog.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/param.h>
@@ -59,13 +58,12 @@
 #include "auth_pts.h"
 #include "cyrusdb.h"
 #include "exitcodes.h"
-#include "hash.h"
-#include "global.h"
+#include "imap/global.h"
 #include "libconfig.h"
-#include "cyr_lock.h"
 #include "retry.h"
 #include "xmalloc.h"
 #include "ptloader.h"
+#include "xversion.h"
 
 struct pts_module *pts_modules[] = {
 #ifdef HAVE_LDAP
@@ -83,39 +81,39 @@ static struct pts_module *pts_fromname()
     int i;
     const char *name = config_getstring(IMAPOPT_PTS_MODULE);
     static struct pts_module *pts = NULL;
-    
+
     if (pts)
         return pts;
-    
+
     for (i = 0; pts_modules[i]; i++) {
-	if (!strcmp(pts_modules[i]->name, name)) {
-	    pts = pts_modules[i]; break;
-	}
+        if (!strcmp(pts_modules[i]->name, name)) {
+            pts = pts_modules[i]; break;
+        }
     }
 
     if (!pts) {
-	char errbuf[1024];
-	snprintf(errbuf, sizeof(errbuf),
-		 "PTS module %s not supported", name);
-	fatal(errbuf, EC_CONFIG);
+        char errbuf[1024];
+        snprintf(errbuf, sizeof(errbuf),
+                 "PTS module %s not supported", name);
+        fatal(errbuf, EC_CONFIG);
     }
-    
+
     return pts;
 }
 
 void ptsmodule_init(void)
 {
     struct pts_module *pts = pts_fromname();
-    
+
     pts->init();
 }
 
 struct auth_state *ptsmodule_make_authstate(const char *identifier,
-					    size_t size,
-					    const char **reply, int *dsize)
+                                            size_t size,
+                                            const char **reply, int *dsize)
 {
     struct pts_module *pts = pts_fromname();
-    
+
     return pts->make_authstate(identifier, size, reply, dsize);
 }
 
@@ -127,7 +125,7 @@ const int config_need_data = 0;
 
 static char ptclient_debug = 0;
 struct db *ptsdb = NULL;
-  
+
 int service_init(int argc, char *argv[], char **envp __attribute__((unused)))
 {
     int r;
@@ -141,30 +139,30 @@ int service_init(int argc, char *argv[], char **envp __attribute__((unused)))
     /* set signal handlers */
     signal(SIGPIPE, SIG_IGN);
 
-    syslog(LOG_NOTICE, "starting: $Id: ptloader.c,v 1.50 2010/01/06 17:01:58 murch Exp $");
+    syslog(LOG_NOTICE, "starting: ptloader.c,v " _CYRUS_VERSION " " CYRUS_GITVERSION);
 
     while ((opt = getopt(argc, argv, "d:")) != EOF) {
-	switch (opt) {
-	case 'd':
-	    ptclient_debug = atoi(optarg);
-	    if (ptclient_debug < 1) {
-		ptclient_debug = 1;
-	    }
-	    break;
-	default:
+        switch (opt) {
+        case 'd':
+            ptclient_debug = atoi(optarg);
+            if (ptclient_debug < 1) {
+                ptclient_debug = 1;
+            }
+            break;
+        default:
             syslog(LOG_ERR, "invalid command line option specified");
-	    break;
-	    /* just pass through */
-	}
+            break;
+            /* just pass through */
+        }
     }
 
     strcpy(fnamebuf, config_dir);
     strcat(fnamebuf, PTS_DBFIL);
-    r = (DB->open)(fnamebuf, CYRUSDB_CREATE, &ptsdb);
+    r = cyrusdb_open(DB, fnamebuf, CYRUSDB_CREATE, &ptsdb);
     if (r != 0) {
-	syslog(LOG_ERR, "DBERROR: opening %s: %s", fnamebuf,
-	       cyrusdb_strerror(ret));
-	fatal("can't read pts database", EC_TEMPFAIL);
+        syslog(LOG_ERR, "DBERROR: opening %s: %s", fnamebuf,
+               cyrusdb_strerror(ret));
+        fatal("can't read pts database", EC_TEMPFAIL);
     }
 
     ptsmodule_init();
@@ -177,17 +175,13 @@ void service_abort(int error)
 {
     int r;
 
-    r = (DB->close)(ptsdb);
+    r = cyrusdb_close(ptsdb);
     if (r) {
-	syslog(LOG_ERR, "DBERROR: error closing ptsdb: %s",
-	       cyrusdb_strerror(r));
+        syslog(LOG_ERR, "DBERROR: error closing ptsdb: %s",
+               cyrusdb_strerror(r));
     }
 
-    r = DB->done();
-    if (r) {
-	syslog(LOG_ERR, "DBERROR: error exiting application: %s",
-	       cyrusdb_strerror(r));
-    }
+    cyrusdb_done();
 
     exit(error);
 }
@@ -195,8 +189,8 @@ void service_abort(int error)
 /* we're a 'threaded' service, but since we never fork or create any
    threads, we're just one-person-at-a-time based */
 int service_main_fd(int c, int argc __attribute__((unused)),
-		    char **argv __attribute__((unused)),
-		    char **envp __attribute__((unused)))
+                    char **argv __attribute__((unused)),
+                    char **envp __attribute__((unused)))
 {
     const char *reply = NULL;
     char user[PTS_DB_KEYSIZE];
@@ -212,10 +206,10 @@ int service_main_fd(int c, int argc __attribute__((unused)),
     }
 
     if (size > PTS_DB_KEYSIZE)  {
-	syslog(LOG_ERR, "size sent %d is greater than buffer size %d", 
-	       size, PTS_DB_KEYSIZE);
-	reply = "Error: invalid request size";
-	goto sendreply;
+        syslog(LOG_ERR, "size sent %d is greater than buffer size %d",
+               (int)size, PTS_DB_KEYSIZE);
+        reply = "Error: invalid request size";
+        goto sendreply;
     }
 
     if (size == 0) {
@@ -226,52 +220,47 @@ int service_main_fd(int c, int argc __attribute__((unused)),
 
     memset(&user, 0, sizeof(user));
     if (read(c, &user, size) < 0) {
-        syslog(LOG_ERR, "socket(user; size = %d): %m", size);
+        syslog(LOG_ERR, "socket(user; size = %d): %m", (int)size);
         reply = "Error reading request (user)";
         goto sendreply;
     }
 
     if (ptclient_debug) {
-	syslog(LOG_DEBUG, "user %s", user);
+        syslog(LOG_DEBUG, "user %s", user);
     }
 
     newstate = ptsmodule_make_authstate(user, size, &reply, &dsize);
 
     if(newstate) {
-	/* Success! */
-	rc = DB->store(ptsdb, user, size, (void *)newstate, dsize, NULL);
+        /* Success! */
+        rc = cyrusdb_store(ptsdb, user, size, (void *)newstate, dsize, NULL);
+        (void)rc;
         free(newstate);
-	
-	/* and we're done */
-	reply = "OK";
+
+        /* and we're done */
+        reply = "OK";
     } else {
         /* Failure */
-	if ( reply == NULL ) {
-	    reply = "Error making authstate";
-	}
+        if ( reply == NULL ) {
+            reply = "Error making authstate";
+        }
     }
 
  sendreply:
     if (retry_write(c, reply, strlen(reply) + 1) <0) {
-	syslog(LOG_WARNING, "retry_write: %m");
+        syslog(LOG_WARNING, "retry_write: %m");
     }
     close(c);
 
     return 0;
 }
 
-/* we need to have this function here 'cause libcyrus.a 
- * makes calls to this function. 
+/* we need to have this function here 'cause libcyrus.la
+ * makes calls to this function.
  */
-void fatal(const char *msg, int exitcode)
+EXPORTED void fatal(const char *msg, int exitcode)
 {
     syslog(LOG_ERR, "%s", msg);
     exit(exitcode);
 }
 
-void printstring(const char *s __attribute__((unused)))
-{
-    /* needed to link against annotate.o */
-    fatal("printstring() executed, but its not used for PTLOADER!",
-	  EC_SOFTWARE);
-}

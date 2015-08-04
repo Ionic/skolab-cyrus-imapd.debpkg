@@ -38,8 +38,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: notify_zephyr.h,v 1.5 2010/01/06 17:01:54 murch Exp $
  */
 
 #ifndef _NOTIFY_ZEPHYR_H_
@@ -49,8 +47,8 @@
 
 /* the options should be a list of users to notify in addition to 'user' */
 char* notify_zephyr(const char *class, const char *priority,
-		    const char *user, const char *mailbox,
-		    int nopt, char **options,
-		    const char *message);
+                    const char *user, const char *mailbox,
+                    int nopt, char **options,
+                    const char *message, const char *fname);
 
 #endif /* _NOTIFY_ZEPHYR_H_ */

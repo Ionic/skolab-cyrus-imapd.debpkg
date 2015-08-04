@@ -38,8 +38,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: ptloader.h,v 1.4 2010/01/06 17:01:58 murch Exp $
  */
 
 #ifndef INCLUDED_PTLOADER_H
@@ -64,8 +62,8 @@ extern struct pts_module pts_ldap;
 extern struct pts_module pts_afskrb;
 
 struct auth_state *ptsmodule_make_authstate(const char *identifier,
-					    size_t size,
-					    const char **reply, int *dsize);
+                                            size_t size,
+                                            const char **reply, int *dsize);
 void ptsmodule_init(void);
 
 #endif /* INCLUDED_PTLOADER_H */

@@ -38,19 +38,17 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: libconfig.h,v 1.11 2010/04/19 19:54:26 murch Exp $
  */
 
 #ifndef INCLUDED_LIBCONFIG_H
 #define INCLUDED_LIBCONFIG_H
 
-#include "exitcodes.h"
 #include "imapopts.h"
 
 /* these will assert() if they're called on the wrong type of
    option (imapopts.c) */
-extern void config_read(const char *alt_config);
+extern void config_reset(void);
+extern void config_read(const char *alt_config, const int config_need_data);
 extern const char *config_getstring(enum imapopt opt);
 extern int config_getint(enum imapopt opt);
 extern int config_getswitch(enum imapopt opt);
@@ -64,6 +62,7 @@ extern void config_foreachoverflowstring(
     void (*func)(const char *, const char *, void *), void *rock);
 extern const char *config_partitiondir(const char *partition);
 extern const char *config_metapartitiondir(const char *partition);
+extern const char *config_archivepartitiondir(const char *partition);
 
 /* cached configuration variables accessable to external world */
 extern const char *config_filename;
@@ -79,9 +78,11 @@ extern int config_implicitrights;
 extern enum enum_value config_virtdomains;
 extern enum enum_value config_mupdate_config;
 extern int config_auditlog;
+extern int config_iolog;
 extern unsigned config_maxquoted;
 extern unsigned config_maxword;
 extern int config_qosmarking;
+extern int config_debug;
 
 /* config requirement flags */
 #define CONFIG_NEED_PARTITION_DATA (1<<0)

@@ -38,31 +38,59 @@
 # AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
 # OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-# $Id: Makefile.PL,v 1.17 2010/01/06 17:01:56 murch Exp $
-#
 use ExtUtils::MakeMaker;
 use Config;
 
-my $SASL_INC = $ENV{SASL_INC};
-my $SASL_LIB = $ENV{SASL_LIB} || "-lsasl2";
-my $OPENSSL_INC = $ENV{OPENSSL_INC};
-my $OPENSSL_LIB = $ENV{OPENSSL_LIB};
-my $BDB_INC = $ENV{BDB_INC};
-my $BDB_LIB = $ENV{BDB_LIB};
-
-my $LIB_RT = $ENV{LIB_RT};
-my $ZLIB = $ENV{ZLIB};
+my $LIB_SASL = " -lsasl2" || "-lsasl2";
 
 $libs = "-lcyrus";
+
+# override default xs.c rule with a VPATH-aware version
+sub MY::xs_c
+{
+    return <<'EOT';
+
+.xs.c: .xs
+	$(XSUBPPRUN) $(XSPROTOARG) $(XSUBPPARGS) $(XSUBPP_EXTRA_ARGS) $< > $*.xsc && $(MV) $*.xsc $@
+
+EOT
+}
+
+# xs_c above is adequate, override this to get it out of the way
+sub MY::xs_o
+{
+    ;
+}
 
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 WriteMakefile(
     'NAME'	=> 'Cyrus::SIEVE::managesieve',
-    'ABSTRACT'  => 'Cyurs Sieve management interface',
-    'VERSION_FROM' => 'managesieve.pm', # finds $VERSION
-    'MYEXTLIB'  => '../lib/isieve.o ../lib/lex.o ../lib/mystring.o ../lib/request.o ../../../lib/libcyrus.a ../../../lib/libcyrus_min.a',
-    'LIBS'	=> ["$BDB_LIB $SASL_LIB $OPENSSL_LIB $LIB_RT $ZLIB -lssl -lcrypto"], 
+    'ABSTRACT'  => 'Cyrus Sieve management interface',
+    'VERSION_FROM' => "../../../perl/sieve/managesieve/managesieve.pm", # finds $VERSION
+    'MYEXTLIB'  => '../lib/libisieve.a ../../../perl/.libs/libcyrus.a ../../../perl/.libs/libcyrus_min.a',
+    'LIBS'	=> ["$LIB_SASL  -lssl -lcrypto   -luuid -lz"],
+    'CCFLAGS'	=> '',
     'DEFINE'	=> '-DPERL_POLLUTE',     # e.g., '-DHAVE_SOMETHING' 
-    'INC'	=> "-I../lib/ -I../../../lib/ $SASL_INC $OPENSSL_INC",
+    'INC'	=> "-I../../../lib -I../../../perl/sieve -I../../../perl/sieve/lib  ",
+    'OBJECT'    => 'managesieve.o',
+    'LD'	=> $Config{ld} . ' ',
+    # This is a disgusting hack to effectively disable the stupid
+    # behaviour of the generated Makefile which moves itself aside
+    # on a 'make clean' instead of on 'make distclean'.
+    'MAKEFILE_OLD' => 'Makefile',
 );
+
+sub MY::postamble {
+    return <<'EOT';
+
+VPATH=../../../perl/sieve/managesieve
+
+check:
+
+dvi:
+
+installcheck:
+
+EOT
+}

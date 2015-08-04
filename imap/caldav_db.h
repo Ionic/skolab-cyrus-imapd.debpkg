@@ -46,13 +46,8 @@
 
 #include <config.h>
 
-/* prepare for caldav operations in this process */
-int caldav_init(void);
-
-/* done with all caldav operations for this process */
-int caldav_done(void);
-
-#ifdef WITH_DAV
+extern time_t caldav_epoch;
+extern time_t caldav_eternity;
 
 #include <libical/ical.h>
 
@@ -60,38 +55,53 @@ int caldav_done(void);
 
 #ifndef HAVE_VAVAILABILITY
 /* Allow us to compile without #ifdef HAVE_VAVAILABILITY everywhere */
-#define ICAL_VAVAILABILITY_COMPONENT  ICAL_NO_COMPONENT
+#define ICAL_VAVAILABILITY_COMPONENT  ICAL_X_COMPONENT
+#define ICAL_XAVAILABLE_COMPONENT     ICAL_X_COMPONENT
 #endif
 
 #ifndef HAVE_VPOLL
 /* Allow us to compile without #ifdef HAVE_VPOLL everywhere */
-#define ICAL_VPOLL_COMPONENT   	      ICAL_NO_COMPONENT
-#define ICAL_METHOD_POLLSTATUS	      ICAL_METHOD_NONE
-#define ICAL_VOTER_PROPERTY	      ICAL_NO_PROPERTY
-#define icalproperty_get_voter	      icalproperty_get_attendee
+#define ICAL_VPOLL_COMPONENT          ICAL_NO_COMPONENT
+#define ICAL_VVOTER_COMPONENT         ICAL_X_COMPONENT
+#define ICAL_METHOD_POLLSTATUS        ICAL_METHOD_NONE
+#define ICAL_VOTER_PROPERTY           ICAL_NO_PROPERTY
+#define icalproperty_get_voter        icalproperty_get_attendee
 #endif
 
 /* Bitmask of calendar components */
 enum {
     /* "Real" components - MUST remain in this order (values used in DAV DB) */
-    CAL_COMP_VEVENT =		(1<<0),
-    CAL_COMP_VTODO =		(1<<1),
-    CAL_COMP_VJOURNAL =		(1<<2),
-    CAL_COMP_VFREEBUSY =	(1<<3),
-    CAL_COMP_VAVAILABILITY =	(1<<4),
-    CAL_COMP_VPOLL =	   	(1<<5),
+    CAL_COMP_VEVENT =           (1<<0),
+    CAL_COMP_VTODO =            (1<<1),
+    CAL_COMP_VJOURNAL =         (1<<2),
+    CAL_COMP_VFREEBUSY =        (1<<3),
+    CAL_COMP_VAVAILABILITY =    (1<<4),
+    CAL_COMP_VPOLL =            (1<<5),
     /* Append additional "real" components here */
 
     /* Other components - values don't matter - prepend here */
-    CAL_COMP_VALARM =		(1<<13),
-    CAL_COMP_VTIMEZONE =	(1<<14),
-    CAL_COMP_VCALENDAR =	(1<<15)
+    CAL_COMP_VALARM =           (1<<13),
+    CAL_COMP_VTIMEZONE =        (1<<14),
+    CAL_COMP_VCALENDAR =        (1<<15)
 };
 
 struct caldav_db;
 
-#define CALDAV_CREATE 0x01
-#define CALDAV_TRUNC  0x02
+struct comp_flags {
+    unsigned recurring    : 1;          /* Has RRULE property */
+    unsigned transp       : 1;          /* Is TRANSParent */
+    unsigned status       : 2;          /* STATUS property value (see below) */
+    unsigned tzbyref      : 1;          /* VTIMEZONEs by reference */
+    unsigned mattach      : 1;          /* Has managed ATTACHment(s) */
+};
+
+/* Status values */
+enum {
+    CAL_STATUS_BUSY = 0,
+    CAL_STATUS_CANCELED,
+    CAL_STATUS_TENTATIVE,
+    CAL_STATUS_UNAVAILABLE
+};
 
 struct caldav_data {
     struct dav_data dav;  /* MUST be first so we can typecast */
@@ -100,13 +110,21 @@ struct caldav_data {
     const char *organizer;
     const char *dtstart;
     const char *dtend;
-    unsigned recurring;
-    unsigned transp;
+    struct comp_flags comp_flags;
     const char *sched_tag;
 };
 
+typedef int caldav_cb_t(void *rock, struct caldav_data *cdata);
+
+/* prepare for caldav operations in this process */
+int caldav_init(void);
+
+/* done with all caldav operations for this process */
+int caldav_done(void);
+
 /* get a database handle corresponding to mailbox */
-struct caldav_db *caldav_open(struct mailbox *mailbox, int flags);
+struct caldav_db *caldav_open_mailbox(struct mailbox *mailbox);
+struct caldav_db *caldav_open_userid(const char *userid);
 
 /* close this handle */
 int caldav_close(struct caldav_db *caldavdb);
@@ -114,28 +132,29 @@ int caldav_close(struct caldav_db *caldavdb);
 /* lookup an entry from 'caldavdb' by resource
    (optionally inside a transaction for updates) */
 int caldav_lookup_resource(struct caldav_db *caldavdb,
-			   const char *mailbox, const char *resource,
-			   int lock, struct caldav_data **result);
+                           const char *mailbox, const char *resource,
+                           struct caldav_data **result,
+                           int tombstones);
 
 /* lookup an entry from 'caldavdb' by iCal UID
    (optionally inside a transaction for updates) */
 int caldav_lookup_uid(struct caldav_db *caldavdb, const char *ical_uid,
-		      int lock, struct caldav_data **result);
+                      struct caldav_data **result);
 
 /* process each entry for 'mailbox' in 'caldavdb' with cb() */
 int caldav_foreach(struct caldav_db *caldavdb, const char *mailbox,
-		   int (*cb)(void *rock, void *data),
-		   void *rock);
+                   caldav_cb_t *cb, void *rock);
 
 /* write an entry to 'caldavdb' */
-int caldav_write(struct caldav_db *caldavdb, struct caldav_data *cdata,
-		 int commit);
+int caldav_write(struct caldav_db *caldavdb, struct caldav_data *cdata);
+int caldav_writeentry(struct caldav_db *caldavdb, struct caldav_data *cdata,
+                      icalcomponent *ical);
 
 /* delete an entry from 'caldavdb' */
-int caldav_delete(struct caldav_db *caldavdb, unsigned rowid, int commit);
+int caldav_delete(struct caldav_db *caldavdb, unsigned rowid);
 
 /* delete all entries for 'mailbox' from 'caldavdb' */
-int caldav_delmbox(struct caldav_db *caldavdb, const char *mailbox, int commit);
+int caldav_delmbox(struct caldav_db *caldavdb, const char *mailbox);
 
 /* begin transaction */
 int caldav_begin(struct caldav_db *caldavdb);
@@ -146,11 +165,13 @@ int caldav_commit(struct caldav_db *caldavdb);
 /* abort transaction */
 int caldav_abort(struct caldav_db *caldavdb);
 
-/* create caldav_data from icalcomponent */
-void caldav_make_entry(icalcomponent *ical, struct caldav_data *cdata);
+char *caldav_mboxname(const char *userid, const char *name);
 
-int caldav_mboxname(const char *name, const char *userid, char *result);
+/* Get time period (start/end) of a component based in RFC 4791 Sec 9.9 */
+void caldav_get_period(icalcomponent *comp, icalcomponent_kind kind, struct icalperiodtype *period);
 
-#endif /* WITH_DAV */
+int caldav_get_events(struct caldav_db *caldavdb,
+                      const char *mailbox, const char *ical_uid,
+                      caldav_cb_t *cb, void *rock);
 
 #endif /* CALDAV_DB_H */

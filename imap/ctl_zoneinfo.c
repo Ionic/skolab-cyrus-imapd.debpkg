@@ -46,6 +46,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -54,13 +55,16 @@
 #include <sys/types.h>
 
 #include <libical/ical.h>
+#include <libxml/tree.h>
 
 #include "annotate.h" /* for strlist functionality */
+#include "exitcodes.h"
 #include "global.h"
 #include "hash.h"
 #include "map.h"
 #include "util.h"
 #include "xmalloc.h"
+#include "xml_support.h"
 #include "zoneinfo_db.h"
 
 extern int optind;
@@ -76,81 +80,241 @@ void usage(void);
 void free_zoneinfo(void *data);
 void store_zoneinfo(const char *tzid, void *data, void *rock);
 void do_zonedir(const char *prefix, struct hash_table *tzentries,
-		struct zoneinfo *info);
+                struct zoneinfo *info);
 void shut_down(int code);
 
 
 int main(int argc, char **argv)
 {
     int opt, r = 0;
-    char *alt_config = NULL, *version = NULL;
-    enum { REBUILD, NONE } op = NONE;
+    char *alt_config = NULL, *pub = NULL, *ver = NULL, *winfile = NULL;
+    char prefix[2048];
+    enum { REBUILD, WINZONES, NONE } op = NONE;
 
-    if ((geteuid()) == 0 && (become_cyrus() != 0)) {
-	fatal("must run as the Cyrus user", EC_USAGE);
+    if ((geteuid()) == 0 && (become_cyrus(/*ismaster*/0) != 0)) {
+        fatal("must run as the Cyrus user", EC_USAGE);
     }
 
-    while ((opt = getopt(argc, argv, "C:r:v")) != EOF) {
-	switch (opt) {
-	case 'C': /* alt config file */
-	    alt_config = optarg;
-	    break;
+    while ((opt = getopt(argc, argv, "C:r:vw:")) != EOF) {
+        switch (opt) {
+        case 'C': /* alt config file */
+            alt_config = optarg;
+            break;
 
-	case 'r':
-	    if (op == NONE) {
-		op = REBUILD;
-		version = optarg;
-	    }
-	    else usage();
-	    break;
+        case 'r':
+            if (op == NONE) {
+                op = REBUILD;
+                pub = optarg;
+                ver = strchr(optarg, ':');
+                if (ver) *ver++ = '\0';
+                else usage();
+            }
+            else usage();
+            break;
 
-	case 'v':
-	    verbose = 1;
-	    break;
+        case 'v':
+            verbose = 1;
+            break;
 
-	default:
-	    usage();
-	}
+        case 'w':
+            if (op == NONE) {
+                op = WINZONES;
+                winfile = optarg;
+            }
+            else usage();
+            break;
+
+        default:
+            usage();
+        }
     }
 
-    cyrus_init(alt_config, "ctl_zoneinfo", 0);
+    cyrus_init(alt_config, "ctl_zoneinfo", 0, 0);
 
     signals_set_shutdown(&shut_down);
     signals_add_handlers(0);
 
+    snprintf(prefix, sizeof(prefix), "%s%s", config_dir, FNAME_ZONEINFODIR);
+
     switch (op) {
     case REBUILD: {
-	struct hash_table tzentries;
-	struct zoneinfo *zi;
-	struct txn *tid = NULL;
-	char prefix[2048];
+        struct hash_table tzentries;
+        struct zoneinfo *info;
+        struct txn *tid = NULL;
+        char buf[1024];
+        FILE *fp;
 
-	construct_hash_table(&tzentries, 500, 1);
+        construct_hash_table(&tzentries, 500, 1);
 
-	/* Add INFO record (overall lastmod and TZ DB source version) */
-	zi = xzmalloc(sizeof(struct zoneinfo));
-	zi->type = ZI_INFO;
-	appendstrlist(&zi->data, version);
-	hash_insert(INFO_TZID, zi, &tzentries);
+        /* Add INFO record (overall lastmod and TZ DB source version) */
+        info = xzmalloc(sizeof(struct zoneinfo));
+        info->type = ZI_INFO;
+        appendstrlist(&info->data, pub);
+        appendstrlist(&info->data, ver);
+        hash_insert(INFO_TZID, info, &tzentries);
 
-	snprintf(prefix, sizeof(prefix), "%s%s", config_dir, FNAME_ZONEINFODIR);
+        /* Add LEAP record (last updated and hash) */
+        snprintf(buf, sizeof(buf), "%s%s", prefix, FNAME_LEAPSECFILE);
+        if (verbose) printf("Processing leap seconds file %s\n", buf);
+        if (!(fp = fopen(buf, "r"))) {
+            fprintf(stderr, "Could not open leap seconds file %s\n", buf);
+        }
+        else {
+            struct zoneinfo *leap = xzmalloc(sizeof(struct zoneinfo));
+            leap->type = ZI_INFO;
 
-	do_zonedir(prefix, &tzentries, zi);
+            while(fgets(buf, sizeof(buf), fp)) {
+                if (buf[0] == '#') {
+                    /* comment line */
 
-	zoneinfo_open(NULL);
+                    if (buf[1] == '$') {
+                        /* last updated */
+                        unsigned long last;
 
-	hash_enumerate(&tzentries, &store_zoneinfo, &tid);
+                        sscanf(buf+2, "\t%lu", &last);
+                        leap->dtstamp = last - NIST_EPOCH_OFFSET;
+                    }
+                    else if (buf[1] == 'h') {
+                        /* hash */
+                        char *p, *hash = buf+3 /* skip "#h\t" */;
 
-	zoneinfo_close(tid);
+                        /* trim trailing whitespace */
+                        for (p = hash + strlen(hash); isspace(*--p); *p = '\0');
+                        appendstrlist(&leap->data, hash);
+                    }
+                }
+            }
+            fclose(fp);
 
-	free_hash_table(&tzentries, &free_zoneinfo);
-	break;
+            hash_insert(LEAP_TZID, leap, &tzentries);
+            info->dtstamp = leap->dtstamp;
+        }
+
+        /* Add ZONE/LINK records */
+        do_zonedir(prefix, &tzentries, info);
+
+        zoneinfo_open(NULL);
+
+        /* Store records */
+        hash_enumerate(&tzentries, &store_zoneinfo, &tid);
+
+        zoneinfo_close(tid);
+
+        free_hash_table(&tzentries, &free_zoneinfo);
+        break;
+    }
+
+    case WINZONES: {
+        xmlParserCtxtPtr ctxt;
+        xmlDocPtr doc;
+        xmlNodePtr node;
+        struct buf tzidbuf = BUF_INITIALIZER;
+        struct buf aliasbuf = BUF_INITIALIZER;
+
+        if (verbose) printf("Processing Windows Zone file %s\n", winfile);
+
+        /* Parse the XML file */
+        ctxt = xmlNewParserCtxt();
+        if (!ctxt) {
+            fprintf(stderr, "Failed to create XML parser context\n");
+            break;
+        }
+
+        doc = xmlCtxtReadFile(ctxt, winfile, NULL, 0);
+        xmlFreeParserCtxt(ctxt);
+        if (!doc) {
+            fprintf(stderr, "Failed to parse XML document\n");
+            break;
+        }
+
+        node = xmlDocGetRootElement(doc);
+        if (!node || xmlStrcmp(node->name, BAD_CAST "supplementalData")) {
+            fprintf(stderr, "Incorrect root node\n");
+            goto done;
+        }
+
+        for (node = xmlFirstElementChild(node);
+             node && xmlStrcmp(node->name, BAD_CAST "windowsZones");
+             node = xmlNextElementSibling(node));
+        if (!node) {
+            fprintf(stderr, "Missing windowsZones node\n");
+            goto done;
+        }
+
+        node = xmlFirstElementChild(node);
+        if (!node || xmlStrcmp(node->name, BAD_CAST "mapTimezones")) {
+            fprintf(stderr, "Missing mapTimezones node\n");
+            goto done;
+        }
+
+        if (chdir(prefix)) {
+            fprintf(stderr, "chdir(%s) failed\n", prefix);
+            goto done;
+        }
+
+        for (node = xmlFirstElementChild(node);
+             node;
+             node = xmlNextElementSibling(node)) {
+            if (!xmlStrcmp(node->name, BAD_CAST "mapZone") &&
+                !xmlStrcmp(xmlGetProp(node, BAD_CAST "territory"),
+                           BAD_CAST "001")) {
+                const char *tzid, *alias;
+
+                buf_setcstr(&tzidbuf,
+                            (const char *) xmlGetProp(node, BAD_CAST "type"));
+                buf_appendcstr(&tzidbuf, ".ics");
+                tzid = buf_cstring(&tzidbuf);
+                buf_setcstr(&aliasbuf,
+                            (const char *) xmlGetProp(node, BAD_CAST "other"));
+                buf_appendcstr(&aliasbuf, ".ics");
+                alias = buf_cstring(&aliasbuf);
+
+                if (verbose) printf("\tLINK: %s -> %s\n", alias, tzid);
+
+                if (symlink(tzid, alias)) {
+                    if (errno == EEXIST) {
+                        struct stat sbuf;
+
+                        if (stat(alias, &sbuf)) {
+                            fprintf(stderr, "stat(%s) failed: %s\n",
+                                    alias, strerror(errno));
+                            errno = EEXIST;
+                        }
+                        else if (sbuf.st_mode & S_IFLNK) {
+                            char link[MAX_MAILBOX_PATH+1];
+                            int n = readlink(alias, link, MAX_MAILBOX_PATH);
+
+                            if (n == -1) {
+                                fprintf(stderr, "readlink(%s) failed: %s\n",
+                                        alias, strerror(errno));
+                                errno = EEXIST;
+                            }
+                            else if (n == (int) strlen(tzid) &&
+                                     !strncmp(tzid, link, n)) {
+                                errno = 0;
+                            }
+                        }
+                    }
+
+                    if (errno) {
+                        fprintf(stderr, "symlink(%s, %s) failed: %s\n",
+                                tzid, alias, strerror(errno));
+                    }
+                }
+            }
+        }
+
+  done:
+        buf_free(&aliasbuf);
+        buf_free(&tzidbuf);
+        xmlFreeDoc(doc);
+        break;
     }
 
     case NONE:
-	r = 2;
-	usage();
-	break;
+        r = 2;
+        usage();
+        break;
     }
 
     cyrus_done();
@@ -162,15 +326,15 @@ int main(int argc, char **argv)
 void usage(void)
 {
     fprintf(stderr,
-	    "usage: zoneinfo_reconstruct [-C <alt_config>] [-v]"
-	    " -r <version-string>\n");
+            "usage: zoneinfo_reconstruct [-C <alt_config>] [-v]"
+            " -r <publisher>:<version>\n");
     exit(EC_USAGE);
 }
 
 
 /* Add all ZONEs and LINKs in the given directory to the hash table */
 void do_zonedir(const char *dir, struct hash_table *tzentries,
-		struct zoneinfo *info)
+                struct zoneinfo *info)
 {
     DIR *dirp;
     struct dirent *dirent;
@@ -181,97 +345,99 @@ void do_zonedir(const char *dir, struct hash_table *tzentries,
 
     dirp = opendir(dir);
     if (!dirp) {
-	fprintf(stderr, "can't open zoneinfo directory %s\n", dir);
+        fprintf(stderr, "can't open zoneinfo directory %s\n", dir);
     }
 
     while ((dirent = readdir(dirp))) {
-	char path[2048], *tzid;
-	int plen;
-	struct stat sbuf;
-	struct zoneinfo *zi;
+        char path[2048], *tzid;
+        int plen;
+        struct stat sbuf;
+        struct zoneinfo *zi;
 
-	if (*dirent->d_name == '.') continue;	    
+        if (*dirent->d_name == '.') continue;
 
-	plen = snprintf(path, sizeof(path), "%s/%s", dir, dirent->d_name);
-	lstat(path, &sbuf);
+        plen = snprintf(path, sizeof(path), "%s/%s", dir, dirent->d_name);
+        lstat(path, &sbuf);
 
-	if (S_ISDIR(sbuf.st_mode)) {
-	    /* Path is a directory (region) */
-	  do_zonedir(path, tzentries, info);
-	}
-	else if (S_ISLNK(sbuf.st_mode)) {
-	    /* Path is a symlink (alias) */
-	    char link[1024], *alias;
-	    ssize_t llen;
+        if (S_ISDIR(sbuf.st_mode)) {
+            /* Path is a directory (region) */
+          do_zonedir(path, tzentries, info);
+        }
+        else if (S_ISLNK(sbuf.st_mode)) {
+            /* Path is a symlink (alias) */
+            char link[1024], *alias;
+            ssize_t llen;
 
-	    /* Isolate tzid in path */
-	    if ((llen = readlink(path, link, sizeof(link))) < 0) continue;
-	    link[llen-4] = '\0';  /* Trim ".ics" */
-	    for (tzid = link; !strncmp(tzid, "../", 3); tzid += 3);
+            /* Isolate tzid in path */
+            if ((llen = readlink(path, link, sizeof(link))) < 0) continue;
+            link[llen-4] = '\0';  /* Trim ".ics" */
+            for (tzid = link; !strncmp(tzid, "../", 3); tzid += 3);
 
-	    /* Isolate alias in path */
-	    path[plen-4] = '\0';  /* Trim ".ics" */
-	    alias = path + strlen(config_dir) + strlen("zoneinfo") + 2;
+            /* Isolate alias in path */
+            path[plen-4] = '\0';  /* Trim ".ics" */
+            alias = path + strlen(config_dir) + strlen("zoneinfo") + 2;
 
-	    if (verbose) printf("\tLINK: %s -> %s\n", alias, tzid);
+            if (verbose) printf("\tLINK: %s -> %s\n", alias, tzid);
 
-	    /* Create hash entry for alias */
-	    if (!(zi = hash_lookup(alias, tzentries))) {
-		zi = xzmalloc(sizeof(struct zoneinfo));
-		hash_insert(alias, zi, tzentries);
-	    }
-	    zi->type = ZI_LINK;
-	    appendstrlist(&zi->data, tzid);
+            /* Create hash entry for alias */
+            if (!(zi = hash_lookup(alias, tzentries))) {
+                zi = xzmalloc(sizeof(struct zoneinfo));
+                hash_insert(alias, zi, tzentries);
+            }
+            zi->type = ZI_LINK;
+            appendstrlist(&zi->data, tzid);
 
-	    /* Create/update hash entry for tzid */
-	    if (!(zi = hash_lookup(tzid, tzentries))) {
-		zi = xzmalloc(sizeof(struct zoneinfo));
-		hash_insert(tzid, zi, tzentries);
-	    }
-	    zi->type = ZI_ZONE;
-	    appendstrlist(&zi->data, alias);
-	}
-	else if (S_ISREG(sbuf.st_mode)) {
-	    /* Path is a regular file (zone) */
-	    int fd;
-	    const char *base = NULL;
-	    unsigned long len = 0;
-	    icalcomponent *ical, *comp;
-	    icalproperty *prop;
+            /* Create/update hash entry for tzid */
+            if (!(zi = hash_lookup(tzid, tzentries))) {
+                zi = xzmalloc(sizeof(struct zoneinfo));
+                hash_insert(tzid, zi, tzentries);
+            }
+            zi->type = ZI_ZONE;
+            appendstrlist(&zi->data, alias);
+        }
+        else if (S_ISREG(sbuf.st_mode)) {
+            /* Path is a regular file (zone) */
+            int fd;
+            const char *base = NULL;
+            size_t len = 0;
+            icalcomponent *ical, *comp;
+            icalproperty *prop;
 
-	    /* Parse the iCalendar file for important properties */
-	    if ((fd = open(path, O_RDONLY)) == -1) continue;
-	    map_refresh(fd, 1, &base, &len, MAP_UNKNOWN_LEN, path, NULL);
-	    close(fd);
+            /* Parse the iCalendar file for important properties */
+            if ((fd = open(path, O_RDONLY)) == -1) continue;
+            map_refresh(fd, 1, &base, &len, MAP_UNKNOWN_LEN, path, NULL);
+            close(fd);
 
-	    ical = icalparser_parse_string(base);
-	    map_free(&base, &len);
+            ical = icalparser_parse_string(base);
+            map_free(&base, &len);
 
-	    comp = icalcomponent_get_first_component(ical,
-						     ICAL_VTIMEZONE_COMPONENT);
-	    prop = icalcomponent_get_first_property(comp, ICAL_TZID_PROPERTY);
-	    tzid = (char *) icalproperty_get_value_as_string(prop);
+            if (!ical) continue;  /* skip non-iCalendar files */
 
-	    if (verbose) printf("\tZONE: %s\n", tzid);
+            comp = icalcomponent_get_first_component(ical,
+                                                     ICAL_VTIMEZONE_COMPONENT);
+            prop = icalcomponent_get_first_property(comp, ICAL_TZID_PROPERTY);
+            tzid = (char *) icalproperty_get_value_as_string(prop);
 
-	    /* Create/update hash entry for tzid */
-	    if (!(zi = hash_lookup(tzid, tzentries))) {
-		zi = xzmalloc(sizeof(struct zoneinfo));
-		hash_insert(tzid, zi, tzentries);
-	    }
-	    zi->type = ZI_ZONE;
-	    prop = icalcomponent_get_first_property(comp,
-						    ICAL_LASTMODIFIED_PROPERTY);
-	    zi->dtstamp = icaltime_as_timet(icalproperty_get_lastmodified(prop));
+            if (verbose) printf("\tZONE: %s\n", tzid);
 
-	    icalcomponent_free(ical);
+            /* Create/update hash entry for tzid */
+            if (!(zi = hash_lookup(tzid, tzentries))) {
+                zi = xzmalloc(sizeof(struct zoneinfo));
+                hash_insert(tzid, zi, tzentries);
+            }
+            zi->type = ZI_ZONE;
+            prop = icalcomponent_get_first_property(comp,
+                                                    ICAL_LASTMODIFIED_PROPERTY);
+            zi->dtstamp = icaltime_as_timet(icalproperty_get_lastmodified(prop));
 
-	    /* Check overall lastmod */
-	    if (zi->dtstamp > info->dtstamp) info->dtstamp = zi->dtstamp;
-	}
-	else {
-	    fprintf(stderr, "unknown path type %s\n", path);
-	}
+            icalcomponent_free(ical);
+
+            /* Check overall lastmod */
+            if (zi->dtstamp > info->dtstamp) info->dtstamp = zi->dtstamp;
+        }
+        else {
+            fprintf(stderr, "unknown path type %s\n", path);
+        }
     }
 
     closedir(dirp);

@@ -38,8 +38,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: ctl_deliver.c,v 1.25 2010/01/06 17:01:31 murch Exp $
  */
 
 #include <config.h>
@@ -50,14 +48,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <syslog.h>
-#include <errno.h>
 #include <signal.h>
 
-#include "cyrusdb.h"
 #include "duplicate.h"
 #include "exitcodes.h"
 #include "global.h"
@@ -65,13 +59,10 @@
 #include "util.h"
 #include "xmalloc.h"
 
-/* global state */
-const int config_need_data = 0;
-
-void usage(void)
+static void usage(void)
 {
     fprintf(stderr,
-	    "ctl_deliver [-C <altconfig>] -d [-f <dbfile>]\n");
+            "ctl_deliver [-C <altconfig>] -d [-f <dbfile>]\n");
     exit(-1);
 }
 
@@ -82,84 +73,83 @@ int main(int argc, char *argv[])
     char *alt_file = NULL;
     char *alt_config = NULL;
     char *days = NULL;
-    int flag = 0;
     enum { DUMP, PRUNE, NONE } op = NONE;
 
-    if ((geteuid()) == 0 && (become_cyrus() != 0)) {
-	fatal("must run as the Cyrus user", EC_USAGE);
+    if ((geteuid()) == 0 && (become_cyrus(/*is_master*/0) != 0)) {
+        fatal("must run as the Cyrus user", EC_USAGE);
     }
 
     while ((opt = getopt(argc, argv, "C:drE:f:")) != EOF) {
-	switch (opt) {
-	case 'C': /* alt config file */
-	    alt_config = optarg;
-	    break;
+        switch (opt) {
+        case 'C': /* alt config file */
+            alt_config = optarg;
+            break;
 
-	case 'd':
-	    if (op == NONE) op = DUMP;
-	    else usage();
-	    break;
+        case 'd':
+            if (op == NONE) op = DUMP;
+            else usage();
+            break;
 
         case 'f':
             if (alt_file == NULL) alt_file = optarg;
             else usage ();
             break;
 
-	case 'E':
-	    if (op == NONE) op = PRUNE;
-	    else usage();
-	    /* deprecated, but we still support it */
-	    days = optarg;
-	    break;
-	
-	default:
-	    usage();
-	    break;
-	}
+        case 'E':
+            if (op == NONE) op = PRUNE;
+            else usage();
+            /* deprecated, but we still support it */
+            days = optarg;
+            break;
+
+        default:
+            usage();
+            break;
+        }
     }
 
     switch (op) {
     case PRUNE: {
-	char buf[4096];
+        char buf[4096];
 
-	fprintf(stderr, "ctl_deliver -E is deprecated: "
-		"using cyr_expire -E instead\n");
+        fprintf(stderr, "ctl_deliver -E is deprecated: "
+                "using cyr_expire -E instead\n");
 
-	r = snprintf(buf, sizeof(buf), "%s/cyr_expire", SERVICE_PATH);
-	if(r < 0 || r >= (int) sizeof(buf)) {
-	    fatal("cyr_expire command buffer not sufficiently big", EC_CONFIG);
-	}
+        r = snprintf(buf, sizeof(buf), "%s/cyr_expire", SBIN_DIR);
+        if(r < 0 || r >= (int) sizeof(buf)) {
+            fatal("cyr_expire command buffer not sufficiently big", EC_CONFIG);
+        }
 
-	if (alt_config)
-	    execl(buf, buf, "-C", alt_config, "-E", days, NULL);
-	else
-	    execl(buf, buf, "-E", days, NULL);
+        if (alt_config)
+            execl(buf, buf, "-C", alt_config, "-E", days, NULL);
+        else
+            execl(buf, buf, "-E", days, NULL);
 
-	break;
+        break;
     }
 
     case DUMP:
-	cyrus_init(alt_config, "ctl_deliver", 0);
+        cyrus_init(alt_config, "ctl_deliver", 0, 0);
 
-	if (duplicate_init(alt_file, flag) != 0) {
-	    fprintf(stderr, 
-		    "ctl_deliver: unable to init duplicate delivery database\n");
-	    exit(1);
-	}
+        if (duplicate_init(alt_file) != 0) {
+            fprintf(stderr,
+                    "ctl_deliver: unable to init duplicate delivery database\n");
+            exit(1);
+        }
 
-	printf("it is NOW: %d\n", (int) time(NULL));
-	printf("got %d entries\n", duplicate_dump(stdout));
+        printf("it is NOW: %d\n", (int) time(NULL));
+        printf("got %d entries\n", duplicate_dump(stdout));
 
-	r = 0;
+        r = 0;
 
-	duplicate_done();
-	cyrus_done();
-	break;
+        duplicate_done();
+        cyrus_done();
+        break;
 
     case NONE:
-	r = 2;
-	usage();
-	break;
+        r = 2;
+        usage();
+        break;
     }
 
     return r;

@@ -38,12 +38,10 @@
 # WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
 # AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
 # OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-#
-# $Id: cyrusv2.mc,v 1.6 2010/01/06 17:01:29 murch Exp $
 
 #
-#	This sample mc file is for a site that uses the Cyrus IMAP server
-#	exclusively for local mail. This requires Sendmail 8.10 or later.
+#       This sample mc file is for a site that uses the Cyrus IMAP server
+#       exclusively for local mail. This requires Sendmail 8.10 or later.
 #
 
 divert(0)dnl
@@ -70,10 +68,10 @@ MAILER(`local')
 MAILER(`smtp')
 
 MAILER_DEFINITIONS
-Mcyrus,		P=[IPC], F=lsDFMnqA@/:|SmXz, E=\r\n,
-		S=EnvFromL, R=EnvToL/HdrToL, T=DNS/RFC822/X-Unix, 
-		A=FILE /var/imap/socket/lmtp
+Mcyrus,         P=[IPC], F=lsDFMnqA@/:|SmXz, E=\r\n,
+                S=EnvFromL, R=EnvToL/HdrToL, T=DNS/RFC822/X-Unix,
+                A=FILE /var/imap/socket/lmtp
 
 LOCAL_RULE_0
-Rbb + $+ < @ $=w . >	$#cyrus $: + $1
+Rbb + $+ < @ $=w . >    $#cyrus $: + $1
 

@@ -26,7 +26,7 @@
 .\"      Pittsburgh, PA  15213
 .\"      (412) 268-7393, fax: (412) 268-7395
 .\"      innovation@andrew.cmu.edu
- *
+.\"
 .\" 4. Redistributions of any form whatsoever must retain the following
 .\"    acknowledgment:
 .\"    "This product includes software developed by Computing Services
@@ -39,8 +39,6 @@
 .\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
 .\" AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
 .\" OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-.\"
-.\" $Id: nntptest.1,v 1.6 2010/01/06 17:01:52 murch Exp $
 .SH NAME
 nntptest \- interactive NNTP test program
 .SH SYNOPSIS
@@ -124,13 +122,13 @@ authentication.
 .TP
 .BI \-p " port"
 Port to connect to. If left off this defaults to \fBnntp\fR as defined in
-/etc/services. 
+/etc/services.
 .TP
 .BI -m " mechanism"
 Force nntptest to use \fImechanism\fR for authentication. If not specified
 the strongest authentication mechanism supported by the server is
 chosen.  Specify \fBuser\fR to use the AUTHINFO USER/PASS commands
-instead of AUTHINFO SASL. 
+instead of AUTHINFO SASL.
 .TP
 .BI -a " userid"
 Userid to use for authentication; defaults to the current user.

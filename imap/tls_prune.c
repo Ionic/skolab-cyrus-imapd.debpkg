@@ -38,8 +38,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: tls_prune.c,v 1.11 2010/01/06 17:01:42 murch Exp $
  */
 
 #include <config.h>
@@ -53,10 +51,7 @@
 #include "util.h"
 #include "xmalloc.h"
 
-/* global state */
-const int config_need_data = 0;
-
-void usage(void)
+static void usage(void)
 {
     fprintf(stderr, "tls_prune [-C <altconfig>]\n");
     exit(-1);
@@ -68,23 +63,23 @@ int main(int argc, char *argv[])
     int opt,r;
     char *alt_config = NULL;
 
-    if ((geteuid()) == 0 && (become_cyrus() != 0)) {
-	fatal("must run as the Cyrus user", EC_USAGE);
+    if ((geteuid()) == 0 && (become_cyrus(/*is_master*/0) != 0)) {
+        fatal("must run as the Cyrus user", EC_USAGE);
     }
 
     while ((opt = getopt(argc, argv, "C:")) != EOF) {
-	switch (opt) {
-	case 'C': /* alt config file */
-	    alt_config = optarg;
-	    break;
+        switch (opt) {
+        case 'C': /* alt config file */
+            alt_config = optarg;
+            break;
 
-	default:
-	    usage();
-	    break;
-	}
+        default:
+            usage();
+            break;
+        }
     }
 
-    cyrus_init(alt_config, "tls_prune", 0);
+    cyrus_init(alt_config, "tls_prune", 0, 0);
 
     r = tls_prune_sessions();
 

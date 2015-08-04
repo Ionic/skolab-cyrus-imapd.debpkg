@@ -1,12 +1,11 @@
 /* +++Date last modified: 05-Jul-1997 */
-/* $Id: hash.h,v 1.9 2003/10/22 18:50:12 rjs3 Exp $ */
-
 #ifndef HASH__H
 #define HASH__H
 
 #include <stddef.h>           /* For size_t     */
-#include "strhash.h"
 #include "mpool.h"
+
+#define HASH_TABLE_INITIALIZER {0, NULL, NULL}
 
 /*
 ** A hash table consists of an array of these buckets.  Each bucket
@@ -42,7 +41,7 @@ typedef struct hash_table {
 */
 
 hash_table *construct_hash_table(hash_table *table, size_t size,
-				 int use_mpool);
+                                 int use_mpool);
 
 /*
 ** Inserts a pointer to 'data' in the table, with a copy of 'key' as its
@@ -76,7 +75,11 @@ void *hash_del(const char *key,hash_table *table);
 */
 
 void hash_enumerate(hash_table *table,void (*func)(const char *,void *,void *),
-		    void *rock);
+                    void *rock);
+
+/* counts the number of nodes in the hash table */
+
+int hash_numrecords(hash_table *table);
 
 /*
 ** Frees a hash table.  For each node that was inserted in the table,

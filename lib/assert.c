@@ -38,8 +38,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: assert.c,v 1.20 2010/01/06 17:01:43 murch Exp $
  */
 
 #include <config.h>
@@ -49,15 +47,12 @@
 #include "exitcodes.h"
 #include "assert.h"
 
-void
-assertionfailed(file, line, expr)
-const char *file;
-int line;
-const char *expr;
+EXPORTED void
+assertionfailed(const char *file, int line, const char *expr)
 {
     char buf[1024];
 
     snprintf(buf, sizeof(buf), "Internal error: assertion failed: %s: %d%s%s",
-	    file, line, expr ? ": " : "", expr ? expr : "");
+            file, line, expr ? ": " : "", expr ? expr : "");
     fatal(buf, EC_SOFTWARE);
 }

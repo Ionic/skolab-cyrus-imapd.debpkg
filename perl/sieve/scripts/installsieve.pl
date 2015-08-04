@@ -41,8 +41,6 @@ exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
 # AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
 # OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-# $Id: installsieve.pl,v 1.9 2010/01/06 17:01:57 murch Exp $
-#
 use Cyrus::SIEVE::managesieve;
 use Getopt::Long;
 
@@ -52,17 +50,17 @@ print "NOTE: This program is deprecated. Please use sieveshell\n";
 print "\n";
 
 $ret = GetOptions("v|views:s" => \$views,
-		  "l|list" => \$list,
-#		  "p|port:i" => \$port,
-		  "i|installs:s" => \$installs,
-		  "a|activates:s" => \$activates,
-		  "d|deletes:s" => \$deletes,
-#		  "m|mechanism:s" => \$mech,
-		  "g|gets:s" => \$gets,
+                  "l|list" => \$list,
+#                 "p|port:i" => \$port,
+                  "i|installs:s" => \$installs,
+                  "a|activates:s" => \$activates,
+                  "d|deletes:s" => \$deletes,
+#                 "m|mechanism:s" => \$mech,
+                  "g|gets:s" => \$gets,
                   "u|username:s" => \$username,
-#		  "w|password:s" => \$pass
+#                 "w|password:s" => \$pass
                   );
-if (!$ret || $#ARGV != 0) { 
+if (!$ret || $#ARGV != 0) {
     show_help();
     exit;
 }
@@ -72,7 +70,7 @@ $acapserver = $ARGV[0];
 sub list_cb {
 
   my($name, $isactive) = @_ ;
-  
+
   print "$name ";
   if ($isactive == 1) {
     print " <- active script\n";
@@ -98,7 +96,7 @@ sub prompt {
 
   $b = <STDIN>;
   chop($b);
-  
+
   $b;
 }
 
@@ -119,6 +117,13 @@ sub show_help {
   print "\n";
 }
 
+sub error {
+    my ($obj, $msg) = @_;
+    my $errstr = sieve_get_error($obj);
+    print STDERR "$msg\n$errstr";
+    exit(1);
+}
+
 #main code
 my $obj = sieve_get_handle($acapserver,"prompt","prompt","prompt","prompt");
 
@@ -128,42 +133,42 @@ if (!defined $obj) {
 
 if (defined $installs) {
   $ret = sieve_put_file($obj, $installs);
-  if ($ret != 0) { print "upload failed\n"; }
+  if ($ret != 0) { error($obj, "upload failed"); }
 }
 
 if (defined $deletes) {
   $ret = sieve_delete($obj, $deletes);
-  if ($ret != 0) { print "delete failed\n"; }
+  if ($ret != 0) { error($obj, "delete failed"); }
 }
 
 if (defined $activates) {
   $ret = sieve_activate($obj, $activates);
-  if ($ret != 0) { print "activate failed\n"; }
+  if ($ret != 0) { error($obj, "activate failed"); }
 }
 
 if (defined $gets) {
     $str = "";
     $ret = sieve_get($obj, $gets, $str);
-    if ($ret != 0) { 
-	print "get failed\n"; 
+    if ($ret != 0) {
+        error($obj, "get failed");
     } else {
-	open (OUTPUT,">$gets") || die "Unable to open $gets";
-	print OUTPUT $str;
-	close(OUTPUT);    
+        open (OUTPUT,">$gets") || die "Unable to open $gets";
+        print OUTPUT $str;
+        close(OUTPUT);
     }
 }
 if (defined $views) {
     $str = "";
     $ret = sieve_get($obj, $views, $str);
-    if ($ret != 0) { 
-	print "get failed\n"; 
+    if ($ret != 0) {
+        error($obj, "get failed");
     } else {
-	# view
-	print $str;
+        # view
+        print $str;
     }
 }
 
 if (defined $list) {
-  $ret = sieve_list($obj, "list_cb");  
-  if ($ret != 0) { print "List command failed\n"; }
+  $ret = sieve_list($obj, "list_cb");
+  if ($ret != 0) { error("List command failed"); }
 }

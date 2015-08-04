@@ -38,8 +38,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: mbdump.h,v 1.7 2010/01/06 17:01:36 murch Exp $
  */
 
 #ifndef INCLUDED_MBDUMP_H
@@ -60,11 +58,11 @@
  * this is a Cyrus-only extention)
  */
 extern int dump_mailbox(const char *tag, struct mailbox *mailbox, uint32_t uid_start,
-			int oldversion,
-			struct protstream *pin, struct protstream *pout,
-			struct auth_state *auth_state);
+                        int oldversion,
+                        struct protstream *pin, struct protstream *pout,
+                        struct auth_state *auth_state);
 extern int undump_mailbox(const char *mbname,
-			  struct protstream *pin, struct protstream *pout,
-			  struct auth_state *auth_state);
+                          struct protstream *pin, struct protstream *pout,
+                          struct auth_state *auth_state);
 
 #endif

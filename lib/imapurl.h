@@ -37,16 +37,14 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: imapurl.h,v 1.9 2010/01/06 17:01:45 murch Exp $
  */
 
 #ifndef IMAPURL_H
 #define IMAPURL_H
 
 struct imapurl {
-    char *freeme;		/* copy of original URL + decoded mailbox;
-				   caller must free() */
+    char *freeme;               /* copy of original URL + decoded mailbox;
+                                   caller must free() */
 
     /* RFC 2192 */
     const char *user;
@@ -61,11 +59,11 @@ struct imapurl {
     unsigned long octet_count;
     /* URLAUTH */
     struct {
-	const char *access;
-	const char *mech;
-	const char *token;
-	time_t expire;
-	size_t rump_len;
+        const char *access;
+        const char *mech;
+        const char *token;
+        time_t expire;
+        size_t rump_len;
     } urlauth;
 };
 
@@ -73,8 +71,8 @@ struct imapurl {
  *  mailbox should be about twice the length of src to deal with non-hex
  *  coded URLs; server should be as large as src.
  */
-int imapurl_fromURL(struct imapurl *url, const char *src);
-int URLtoMailbox(char *dst, const char *src);
+extern int imapurl_fromURL(struct imapurl *url, const char *src);
+extern int URLtoMailbox(char *dst, const char *src);
 #define UTF8_to_mUTF7(dst, src) URLtoMailbox(dst, src)
 
 /* Convert an IMAP mailbox to a URL path
@@ -85,6 +83,6 @@ int URLtoMailbox(char *dst, const char *src);
  *
  *  it is valid for mechname to be NULL (implies anonymous mech)
  */
-void imapurl_toURL(char *dst, struct imapurl *url);
+extern void imapurl_toURL(char *dst, const struct imapurl *url);
 
 #endif /* IMAPURL_H */

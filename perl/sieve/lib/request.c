@@ -41,44 +41,38 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: request.c,v 1.19 2010/01/06 17:01:56 murch Exp $
  */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/msg.h>
-
+#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
 #include <sys/file.h>
-#include <errno.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
-#include "request.h"
-
-#include "prot.h"
-#include "lex.h"
 #include "xmalloc.h"
+#include "perl/sieve/lib/request.h"
+#include "perl/sieve/lib/lex.h"
 
 #define BLOCKSIZE 1024
 
-void parseerror(char *str)
+void parseerror(const char *str)
 {
   printf("Bad protocol from MANAGESIEVE server: %s\n", str);
 
   exit(2);
 }
 
-int handle_response(int res,int version,struct protstream *pin, 
-		    char **refer_to, mystring_t **errstr)
-{    
+int handle_response(int res,int version,struct protstream *pin,
+                    char **refer_to, char **errstr)
+{
   lexstate_t state;
   int r = 0;
 
@@ -86,136 +80,136 @@ int handle_response(int res,int version,struct protstream *pin,
 
   if (res == -1)
       parseerror("lost connection");
-  
+
   if ((res!=TOKEN_OK) && (res!=TOKEN_NO) && (res!=TOKEN_BYE))
       parseerror("ATOM");
-  
+
   if(res == TOKEN_BYE) {
       if (yylex(&state, pin)!=' ')
-	  parseerror("expected space");
+          parseerror("expected space");
 
       res = yylex(&state, pin);
 
       /* additional error response */
       if (res == '(') {
-	  /* '(' string [SP string] ')' */
+          /* '(' string [SP string] ')' */
 
-	  /* we only support the REFERRAL response with BYE */
-	  if (yylex(&state, pin)==TOKEN_REFERRAL) {
-	      if (yylex(&state, pin)!=' ')
-		  parseerror("expected space");
-	      if (yylex(&state, pin)!=STRING)
-		  parseerror("expected string");
+          /* we only support the REFERRAL response with BYE */
+          if (yylex(&state, pin)==TOKEN_REFERRAL) {
+              if (yylex(&state, pin)!=' ')
+                  parseerror("expected space");
+              if (yylex(&state, pin)!=STRING)
+                  parseerror("expected string");
 
-	      *refer_to = xstrdup(string_DATAPTR(state.str));
+              *refer_to = state.str;
 
-	      if (yylex(&state, pin)!=')')
-		  parseerror("expected RPAREN");
-	  } else {
-	      res = 0;
-	      while(res != ')' && res != -1) {
-		  res = yylex(&state, pin);
-	      }
-	      if(res != ')') {
-		  parseerror("expected RPAREN");
-	      }
-	  }
+              if (yylex(&state, pin)!=')')
+                  parseerror("expected RPAREN");
+          } else {
+              res = 0;
+              while(res != ')' && res != -1) {
+                  res = yylex(&state, pin);
+              }
+              if(res != ')') {
+                  parseerror("expected RPAREN");
+              }
+          }
 
-	  res = yylex(&state, pin);
-	  if (res == ' ') res = yylex(&state, pin);
+          res = yylex(&state, pin);
+          if (res == ' ') res = yylex(&state, pin);
       }
 
       if (res != STRING && res != EOL)
-	  parseerror("expected string2");
+          parseerror("expected string2");
 
       if (errstr)
-	  *errstr = state.str;
+          *errstr = state.str;
 
       r = -2;
   } else if (res==TOKEN_NO) {
       if (yylex(&state, pin)!=' ')
-	  parseerror("expected space");
+          parseerror("expected space");
 
       res = yylex(&state, pin);
 
       /* additional error response */
       if (res == '(') {
-	  /* '(' string [SP string] ')' */
+          /* '(' string [SP string] ')' */
 
-	  res = 0;
-	  while(res != ')' && res != -1) {
-	      res = yylex(&state, pin);
-	  }
-	  if(res != ')') {
-	      parseerror("expected RPAREN");
-	  }
-	  
-	  res = yylex(&state, pin);
-	  if (res == ' ') res = yylex(&state, pin);
+          res = 0;
+          while(res != ')' && res != -1) {
+              res = yylex(&state, pin);
+          }
+          if(res != ')') {
+              parseerror("expected RPAREN");
+          }
+
+          res = yylex(&state, pin);
+          if (res == ' ') res = yylex(&state, pin);
       }
 
       if (res != STRING)
-	  parseerror("expected string");
-      
+          parseerror("expected string");
+
 
       if (errstr)
-	  *errstr = state.str;
+          *errstr = state.str;
 
       r = -1;
   } else {
       /* ok */
       int res;
-      
+
       /* SASL response */
       res = yylex(&state, pin);
       if(res == ' ') {
-	  if (yylex(&state, pin) != '(')
-	      parseerror("expected LPAREN");
-	  
-	  if (yylex(&state, pin)==TOKEN_SASL) {
-	      if (yylex(&state, pin)!=' ')
-		  parseerror("expected space");
-	      if (yylex(&state, pin)!=STRING)
-		  parseerror("expected string");
+          if (yylex(&state, pin) != '(')
+              parseerror("expected LPAREN");
 
-	      *refer_to = xstrdup(string_DATAPTR(state.str));
+          if (yylex(&state, pin)==TOKEN_SASL) {
+              if (yylex(&state, pin)!=' ')
+                  parseerror("expected space");
+              if (yylex(&state, pin)!=STRING)
+                  parseerror("expected string");
 
-	      if (yylex(&state, pin)!=')')
-		  parseerror("expected RPAREN");
-	  } else {
-	      parseerror("unexpected response code with OK response");
-	  }
+              *refer_to = xstrdup(state.str);
+
+              if (yylex(&state, pin)!=')')
+                  parseerror("expected RPAREN");
+          } else {
+              parseerror("unexpected response code with OK response");
+          }
       } else if (version != OLD_VERSION && res == EOL) {
-	  return r;
+          return r;
       }
 
       /* old version of protocol had strings with ok responses too */
       if (version == OLD_VERSION) {
-	  if (res !=' ')
-	      parseerror("expected sp");
-	  
-	  if (yylex(&state, pin)!=STRING)
-	      parseerror("expected string");
+          if (res !=' ')
+              parseerror("expected sp");
+
+          if (yylex(&state, pin)!=STRING)
+              parseerror("expected string");
       }
   }
-  
+
   if (yylex(&state, pin)!=EOL)
       parseerror("expected EOL");
-  
+
   return r;
 }
 
-int deleteascript(int version, struct protstream *pout, 
-		  struct protstream *pin, char *name,
-		  char **refer_to, char **errstrp)
+int deleteascript(int version, struct protstream *pout,
+                  struct protstream *pin, const char *name,
+                  char **refer_to, char **errstrp)
 {
   lexstate_t state;
   int res;
   int ret;
-  mystring_t *errstr;
+  char *errstr = NULL;
 
   prot_printf(pout,"DELETESCRIPT \"%s\"\r\n",name);
-  prot_flush(pout);  
+  prot_flush(pout);
 
   res=yylex(&state, pin);
 
@@ -224,9 +218,9 @@ int deleteascript(int version, struct protstream *pout,
   if(ret == -2 && *refer_to) {
       return -2;
   } else if (ret!=0) {
-      *errstrp = malloc(128);
-      snprintf(*errstrp, 127, 
-	       "Deleting script: %s",string_DATAPTR(errstr));
+      *errstrp = strconcat("Deleting script: ",
+                           errstr,
+                           (char *)NULL);
       return -1;
   }
 
@@ -234,12 +228,12 @@ int deleteascript(int version, struct protstream *pout,
 }
 
 int installdata(int version,struct protstream *pout, struct protstream *pin,
-		char *scriptname, char *data, int len,
-		char **refer_to, char **errstrp)
+                char *scriptname, char *data, int len,
+                char **refer_to, char **errstrp)
 {
   int res;
   int ret;
-  mystring_t *errstr=NULL;
+  char *errstr=NULL;
   lexstate_t state;
 
   prot_printf(pout, "PUTSCRIPT \"%s\" ",scriptname);
@@ -260,9 +254,9 @@ int installdata(int version,struct protstream *pout, struct protstream *pin,
   if(ret == -2 && *refer_to) {
       return -2;
   } else if (ret!=0) {
-      *errstrp = malloc(128);
-      snprintf(*errstrp, 127, 
-	       "Putting script: %s",string_DATAPTR(errstr));
+      *errstrp = strconcat("Putting script: ",
+                           errstr,
+                           (char *)NULL);
       return -1;
   }
 
@@ -295,8 +289,8 @@ static char *getsievename(char *filename)
 
 
 int installafile(int version,struct protstream *pout, struct protstream *pin,
-		 char *filename, char *destname,
-		 char **refer_to, char **errstrp)
+                 char *filename, char *destname,
+                 char **refer_to, char **errstrp)
 {
   FILE *stream;
   struct stat filestats;  /* returned by stat */
@@ -305,7 +299,7 @@ int installafile(int version,struct protstream *pout, struct protstream *pin,
   int cnt;
   int res;
   int ret;
-  mystring_t *errstr=NULL;
+  char *errstr=NULL;
   lexstate_t state;
   char *sievename;
 
@@ -314,11 +308,7 @@ int installafile(int version,struct protstream *pout, struct protstream *pin,
   result=stat(filename,&filestats);
 
   if (result!=0) {
-      if (errno == ENOENT) {
-	  *errstrp = "no such file";
-      } else {
-	  *errstrp = "file i/o error";
-      }
+      *errstrp = xstrdup(strerror(errno));
       return -1;
   }
 
@@ -328,9 +318,8 @@ int installafile(int version,struct protstream *pout, struct protstream *pin,
 
   if (stream==NULL)
   {
-      *errstrp = malloc(128);
-      snprintf(*errstrp, 127, 
-	       "put script: internal error: couldn't open temporary file");
+      *errstrp = xstrdup(
+        "put script: internal error: couldn't open temporary file");
       return -1;
   }
 
@@ -353,8 +342,7 @@ int installafile(int version,struct protstream *pout, struct protstream *pin,
 
     n = fread(buf, 1, BLOCKSIZE, stream);
     if (!n) {
-      *errstrp = malloc(128);
-      snprintf(*errstrp, 127, "put script: failed to finish reading");
+      *errstrp = xstrdup("put script: failed to finish reading");
       fclose(stream);
       free(sievename);
       return -1;
@@ -380,9 +368,9 @@ int installafile(int version,struct protstream *pout, struct protstream *pin,
   if(ret == -2 && *refer_to) {
       return -2;
   } else if (ret!=0) {
-      *errstrp = malloc(128);
-      snprintf(*errstrp, 127, 
-	       "put script: %s", string_DATAPTR(errstr));
+      *errstrp = strconcat("put script: ",
+                           errstr,
+                           (char *)NULL);
       return -1;
   }
 
@@ -390,9 +378,9 @@ int installafile(int version,struct protstream *pout, struct protstream *pin,
 }
 
 
-
+/*
 int showlist(int version, struct protstream *pout, struct protstream *pin,
-	     char **refer_to)
+             char **refer_to)
 {
   lexstate_t state;
   int end=0;
@@ -408,51 +396,49 @@ int showlist(int version, struct protstream *pout, struct protstream *pin,
 
     if ((res=yylex(&state, pin))==STRING)
     {
-      char *str=string_DATAPTR(state.str);
+      char *str=state.str;
 
       if (yylex(&state, pin)==' ')
       {
-	  if (yylex(&state, pin)!=TOKEN_ACTIVE)
-	      printf("Expected ACTIVE\n");
-	  if (yylex(&state, pin)!=EOL)
-	      printf("Expected EOL\n");
+          if (yylex(&state, pin)!=TOKEN_ACTIVE)
+              printf("Expected ACTIVE\n");
+          if (yylex(&state, pin)!=EOL)
+              printf("Expected EOL\n");
 
-	  printf("  %s  <- Active Sieve Script\n",str);	  
+          printf("  %s  <- Active Sieve Script\n",str);
       } else {
 
-	  /* in old version we had that '*' means active script thing */
-	  if (version == OLD_VERSION) {
+          // in old version we had that '*' means active script thing
+          if (version == OLD_VERSION) {
 
-	      if (str[strlen(str)-1]=='*') {
-		  str[strlen(str)-1]='\0';
-		  printf("  %s  <- Active Sieve Script\n",str);	  
-	      } else {
-		  printf("  %s\n",str);	  	  
-	      }
+              if (str[strlen(str)-1]=='*') {
+                  str[strlen(str)-1]='\0';
+                  printf("  %s  <- Active Sieve Script\n",str);
+              } else {
+                  printf("  %s\n",str);
+              }
 
-	  } else { /* NEW_VERSION */
-	      /* assume it's a EOL */
-	      printf("  %s\n",str);	  	  
-	  }
+          } else { // NEW_VERSION
+              // assume it's a EOL
+              printf("  %s\n",str);
+          }
       }
 
     } else {
 
-	ret = handle_response(res,version,pin,refer_to,NULL);
-	
-	end=1;
+        ret = handle_response(res,version,pin,refer_to,NULL);
+
+        end=1;
     }
-
-
-    
   } while (end==0);
 
   return ret;
 }
+*/
 
-int list_wcb(int version, struct protstream *pout, 
-	     struct protstream *pin,isieve_listcb_t *cb ,void *rock,
-	     char **refer_to)
+int list_wcb(int version, struct protstream *pout,
+             struct protstream *pin,isieve_listcb_t *cb ,void *rock,
+             char **refer_to)
 {
   lexstate_t state;
   int end=0;
@@ -466,52 +452,52 @@ int list_wcb(int version, struct protstream *pout,
 
     if ((res=yylex(&state, pin))==STRING)
     {
-      char *str=string_DATAPTR(state.str);
+      char *str=state.str;
 
       if (yylex(&state, pin)==' ')
       {
-	  if (yylex(&state, pin)!=TOKEN_ACTIVE)
-	      printf("Expected ACTIVE\n");
-	  if (yylex(&state, pin)!=EOL)
-	      printf("Expected EOL\n");
+          if (yylex(&state, pin)!=TOKEN_ACTIVE)
+              printf("Expected ACTIVE\n");
+          if (yylex(&state, pin)!=EOL)
+              printf("Expected EOL\n");
 
-	  cb(str, 1, rock);
+          cb(str, 1, rock);
       } else {
 
-	  /* in old version we had that '*' means active script thing */
-	  if (version == OLD_VERSION) {
+          /* in old version we had that '*' means active script thing */
+          if (version == OLD_VERSION) {
 
-	      if (str[strlen(str)-1]=='*') {
-		  str[strlen(str)-1]='\0';
-		  cb(str, 1, rock);
-	      } else {
-		  cb(str, 0, rock);
-	      }
+              if (str[strlen(str)-1]=='*') {
+                  str[strlen(str)-1]='\0';
+                  cb(str, 1, rock);
+              } else {
+                  cb(str, 0, rock);
+              }
 
-	  } else { /* NEW_VERSION */
-	      /* assume it's a EOL */
-	      cb(str, 0, rock);
-	  }
+          } else { /* NEW_VERSION */
+              /* assume it's a EOL */
+              cb(str, 0, rock);
+          }
       }
 
     } else {
-	ret = handle_response(res,version,pin,refer_to,NULL);
-	
-	end=1;
+        ret = handle_response(res,version,pin,refer_to,NULL);
+
+        end=1;
     }
   } while (end==0);
 
   return ret;
 }
 
-int setscriptactive(int version, struct protstream *pout, 
-		    struct protstream *pin,char *name,
-		    char **refer_to, char **errstrp)
+int setscriptactive(int version, struct protstream *pout,
+                    struct protstream *pin,char *name,
+                    char **refer_to, char **errstrp)
 {
   lexstate_t state;
   int res;
   int ret;
-  mystring_t *errstr=NULL;
+  char *errstr=NULL;
 
   /* tell server we want "name" to be the active script */
   prot_printf(pout, "SETACTIVE \"%s\"\r\n",name);
@@ -526,22 +512,25 @@ int setscriptactive(int version, struct protstream *pout,
   if(ret == -2 && *refer_to) {
       return -2;
   } else if (ret != 0) {
-      *errstrp = malloc(128);
-      snprintf(*errstrp, 127, 
-	       "Setting script active: %s",string_DATAPTR(errstr));
+      *errstrp = strconcat("Setting script active: ",
+                           errstr,
+                           (char *)NULL);
       return -1;
   }
   return 0;
 }
 
-static int viewafile(mystring_t *data, char *name __attribute__((unused)))
+#if 0
+static int viewafile(const char *data, char *name __attribute__((unused)))
 {
-  printf("%s\r\n", string_DATAPTR(data));
+  printf("%s\r\n", data);
 
   return 0;
 }
+#endif
 
-static int writefile(mystring_t *data, char *name, char **errstrp)
+#if 0
+static int writefile(const char *data, const char *name, char **errstrp)
 {
   FILE *stream;
 
@@ -554,25 +543,29 @@ static int writefile(mystring_t *data, char *name, char **errstrp)
   free(scrname);
 
   if (stream==NULL) {
-      *errstrp = malloc(128);
-      snprintf(*errstrp, 127,
-	       "writefile: unable to open %s for writing", name);
+      *errstrp = strconcat(
+                    "writefile: unable to open ",
+                    name,
+                    " for writing",
+                    (char *)NULL);
       return -1;
   }
 
-  fwrite(string_DATAPTR(data), 1, data->len, stream);
+  fwrite(data, 1, strlen(data), stream);
 
   fclose(stream);
 
   return 0;
 }
+#endif
 
-int getscript(int version, struct protstream *pout, 
-	      struct protstream *pin,char *name, int save,
-	      char **refer_to, char **errstrp)
+/*
+int getscript(int version, struct protstream *pout,
+              struct protstream *pin, const char *name, int save,
+              char **refer_to, char **errstrp)
 {
   int res;
-  mystring_t *errstr=NULL;
+  char *errstr=NULL;
   lexstate_t state;
   int ret = 0;
 
@@ -597,26 +590,24 @@ int getscript(int version, struct protstream *pout,
 
   ret = handle_response(res, version, pin, refer_to, &errstr);
 
-  /* if command failed */
+  // if command failed
   if(ret == -2 && *refer_to) {
       return -2;
   } else if (ret!=0) {
-      *errstrp = malloc(128);
-      snprintf(*errstrp, 127, 
-	       "Getting script: %s",string_DATAPTR(errstr));
+      *errstrp = errstr;
   }
 
   return ret;
 }
+*/
 
-
-int getscriptvalue(int version, struct protstream *pout, 
-		   struct protstream *pin,char *name, mystring_t **data, 
-		   char **refer_to, char **errstrp)
+int getscriptvalue(int version, struct protstream *pout,
+                   struct protstream *pin, char *name, char **data,
+                   char **refer_to, char **errstrp)
 {
   int res;
   int ret;
-  mystring_t *errstr=NULL;
+  char *errstr=NULL;
   lexstate_t state;
 
   prot_printf(pout,"GETSCRIPT \"%s\"\r\n",name);
@@ -640,9 +631,7 @@ int getscriptvalue(int version, struct protstream *pout,
   if(ret == -2 && *refer_to) {
       return -2;
   } else if (ret!=0) {
-      *errstrp = malloc(128);
-      snprintf(*errstrp, 127, 
-	       "Getting script: %s",string_DATAPTR(errstr));
+      *errstrp = errstr;
       return -1;
   }
 

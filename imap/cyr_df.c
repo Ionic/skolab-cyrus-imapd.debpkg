@@ -38,8 +38,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: cyr_df.c,v 1.2 2010/01/06 17:01:31 murch Exp $
  */
 
 #include <config.h>
@@ -61,12 +59,9 @@
 extern int optind;
 extern char *optarg;
 
-/* config.c stuff */
-const int config_need_data = 0;
-
 /* forward declarations */
-void usage(void);
-void get_part_stats(const char *key, const char *val, void *rock);
+static void usage(void);
+static void get_part_stats(const char *key, const char *val, void *rock);
 
 int main(int argc, char *argv[])
 {
@@ -74,29 +69,29 @@ int main(int argc, char *argv[])
     char *alt_config = NULL;
     int meta = 0;
 
-    if ((geteuid()) == 0 && (become_cyrus() != 0)) {
-	fatal("must run as the Cyrus user", EC_USAGE);
+    if ((geteuid()) == 0 && (become_cyrus(/*is_master*/0) != 0)) {
+        fatal("must run as the Cyrus user", EC_USAGE);
     }
 
     while ((opt = getopt(argc, argv, "C:m")) != EOF) {
-	switch (opt) {
-	case 'C': /* alt config file */
-	    alt_config = optarg;
-	    break;
+        switch (opt) {
+        case 'C': /* alt config file */
+            alt_config = optarg;
+            break;
 
-	case 'm': /* check metapartitions */
-	    meta = 1;
-	    break;
+        case 'm': /* check metapartitions */
+            meta = 1;
+            break;
 
-	default:
-	    usage();
-	}
+        default:
+            usage();
+        }
     }
 
-    cyrus_init(alt_config, "cyr_df", 0);
+    cyrus_init(alt_config, "cyr_df", 0, 0);
 
     printf("%-12s %12s %12s %12s %3s %s\n", "Partition",
-	   "1k-blocks", "Used", "Available", "Use%", "Location");
+           "1k-blocks", "Used", "Available", "Use%", "Location");
 
     config_foreachoverflowstring(get_part_stats, &meta);
 
@@ -106,19 +101,19 @@ int main(int argc, char *argv[])
 }
 
 
-void usage(void)
+static void usage(void)
 {
     fprintf(stderr,
-	    "usage: cyr_df [-C <alt_config>] [-m]\n");
+            "usage: cyr_df [-C <alt_config>] [-m]\n");
     exit(EC_USAGE);
-}    
+}
 
 
 /*
  * config_foreachoverflowstring() callback function to find partition-
  * options and print filesystem stats
  */
-void get_part_stats(const char *key, const char *val, void *rock)
+static void get_part_stats(const char *key, const char *val, void *rock)
 {
     int meta = *((int*) rock);
     const char *part, *path;
@@ -128,7 +123,7 @@ void get_part_stats(const char *key, const char *val, void *rock)
 
     if (meta) {
         if (strncmp("meta", key, 4)) return;
-	key += 4;
+        key += 4;
     }
     if (strncmp("partition-", key, 10)) return;
 
@@ -139,12 +134,12 @@ void get_part_stats(const char *key, const char *val, void *rock)
 
     blocks_used = s.f_blocks - s.f_bfree;
     blocks_percent_used = (long)
-	(blocks_used * 100.0 / (blocks_used + s.f_bavail) + 0.5);
+        (blocks_used * 100.0 / (blocks_used + s.f_bavail) + 0.5);
 
     printf("%-12s %12ld %12ld %12ld %3ld%% %s\n",
-	   part,
-	   (long) (s.f_blocks * (s.f_frsize / 1024.0)),
-	   (long) ((s.f_blocks - s.f_bfree) * (s.f_frsize / 1024.0)),
-	   (long) (s.f_bavail * (s.f_frsize / 1024.0)),
-	   blocks_percent_used, path);
+           part,
+           (long) (s.f_blocks * (s.f_frsize / 1024.0)),
+           (long) ((s.f_blocks - s.f_bfree) * (s.f_frsize / 1024.0)),
+           (long) (s.f_bavail * (s.f_frsize / 1024.0)),
+           blocks_percent_used, path);
 }

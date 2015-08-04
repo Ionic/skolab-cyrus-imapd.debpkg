@@ -37,8 +37,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: iptostring.h,v 1.5 2010/01/06 17:01:45 murch Exp $
  */
 
 #ifndef IPTOSTRING_H
@@ -51,6 +49,6 @@
 #include <arpa/inet.h>
 
 int iptostring(const struct sockaddr *addr, socklen_t addrlen,
-	       char *out, unsigned outlen);
+               char *out, unsigned outlen);
 
 #endif /* IPTOSTRING_H */

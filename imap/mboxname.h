@@ -38,14 +38,13 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: mboxname.h,v 1.18 2010/01/06 17:01:37 murch Exp $
  */
 
 #ifndef INCLUDED_MBOXNAME_H
 #define INCLUDED_MBOXNAME_H
 
 #include "auth.h"
+#include "util.h"
 
 #define MAX_NAMESPACE_PREFIX 40
 
@@ -53,8 +52,8 @@
 #define DOTCHAR '^'
 
 /* list of our namespaces */
-enum { NAMESPACE_INBOX = 0, 
-       NAMESPACE_USER = 1, 
+enum { NAMESPACE_INBOX = 0,
+       NAMESPACE_USER = 1,
        NAMESPACE_SHARED = 2 };
 
 /* structure holding server namespace info */
@@ -66,33 +65,33 @@ struct namespace {
     int accessible[3];
     /* Convert the external mailbox 'name' to an internal name. */
     int (*mboxname_tointernal)(struct namespace *namespace, const char *name,
-			       const char *userid, char *result);
+                               const char *userid, char *result);
     /* Convert the internal mailbox 'name' to an external name. */
     int (*mboxname_toexternal)(struct namespace *namespace, const char *name,
-			       const char *userid, char *result);
-    int (*mboxlist_findall)(struct namespace *namespace,
-			    const char *pattern, int isadmin, const char *userid, 
-			    struct auth_state *auth_state, int (*proc)(),
-			    void *rock);
-    int (*mboxlist_findsub)(struct namespace *namespace,
-			    const char *pattern, int isadmin, const char *userid, 
-			    struct auth_state *auth_state, int (*proc)(),
-			    void *rock, int force);
+                               const char *userid, char *result);
 };
 
 #define NAMESPACE_INITIALIZER { '.', 0, 0, \
-				{ "INBOX.", "user.", "" }, \
-				{ 0, 0, 0, }, \
-				NULL, NULL, NULL, NULL }
+                                { "INBOX.", "user.", "" }, \
+                                { 0, 0, 0, }, \
+                                NULL, NULL }
 
 struct mboxlock {
     char *name;
     int lock_fd;
-    int locktype;
+    int locktype;       /* LOCK_NONE or LOCK_SHARED or LOCK_EXCLUSIVE */
+};
+
+struct mboxname_parts {
+    const char *domain;
+    const char *userid;     /* userid WITHOUT the domain */
+    const char *box;
+    int is_deleted;
+    char *freeme;
 };
 
 int mboxname_lock(const char *mboxname, struct mboxlock **mboxlockptr,
-		  int locktype);
+                  int locktype);
 void mboxname_release(struct mboxlock **mboxlockptr);
 
 /* Create namespace based on config options. */
@@ -107,7 +106,7 @@ struct namespace *mboxname_get_adminnamespace();
  * length is the length of the string to translate (0 = strlen(name)).
  */
 char *mboxname_hiersep_tointernal(struct namespace *namespace, char *name,
-				  int length);
+                                  int length);
 
 /*
  * Translate separator charactors in a mailboxname from its internal
@@ -128,10 +127,32 @@ int mboxname_userownsmailbox(const char *userid, const char *name);
 char *mboxname_isusermailbox(const char *name, int isinbox);
 
 /*
- * If (internal) mailbox 'name' is in the DELETED namespace
+ * If (internal) mailbox 'name' is in the DELETED namespace.
+ * If timestampp is not NULL, the delete timestamp encoded in
+ * the name is parsed and filled in.
  * returns boolean
  */
-int mboxname_isdeletedmailbox(const char *name);
+int mboxname_isdeletedmailbox(const char *name, time_t *timestampp);
+
+/*
+ * Split an (internal) inboxname into it's constituent parts.
+ * also: userid
+ */
+int mboxname_to_parts(const char *mboxname, struct mboxname_parts *parts);
+int mboxname_userid_to_parts(const char *userid, struct mboxname_parts *parts);
+
+/*
+ * Create an (internal) mboxname from parts
+ */
+
+int mboxname_parts_to_internal(struct mboxname_parts *parts, char *target);
+
+/*
+ * Cleanup up a mboxname_parts structure.
+ */
+void mboxname_init_parts(struct mboxname_parts *parts);
+void mboxname_free_parts(struct mboxname_parts *parts);
+
 
 /*
  * If (internal) mailbox 'name' is a CALENDAR mailbox
@@ -145,31 +166,53 @@ int mboxname_iscalendarmailbox(const char *name, int mbtype);
  */
 int mboxname_isaddressbookmailbox(const char *name, int mbtype);
 
+/* If (internal) mailbox is a user's top-level Notes mailbox,
+ * returns boolean
+ */
+int mboxname_isnotesmailbox(const char *name, int mbtype);
+
 /* check if one mboxname is a parent or same as the other */
 int mboxname_is_prefix(const char *longstr, const char *shortstr);
 
 /*
- * Translate (internal) inboxname into corresponding userid.
+ * Translate (internal) inboxname into corresponding userid,
+ * and vice-versa.
  */
-char *mboxname_to_userid(const char *mboxname);
+const char *mboxname_to_userid(const char *mboxname);
+/* returns a malloc'd mailbox */
+char *mboxname_user_mbox(const char *userid, const char *subfolder);
+char *mboxname_abook(const char *userid, const char *collection);
+char *mboxname_cal(const char *userid, const char *collection);
+
+/*
+ * Check whether two mboxnames have the same userid.
+ */
+int mboxname_parts_same_userid(struct mboxname_parts *a,
+                               struct mboxname_parts *b);
+int mboxname_same_userid(const char *mboxname1, const char *mboxname2);
+
 
 /*
  * Access files (or directories by leaving last parameter
  * zero) for a particular mailbox on partition.
  */
-void mboxname_hash(char *buf, size_t buf_len,
-		   const char *root,
-		   const char *name);
+char *mboxname_datapath(const char *partition,
+                        const char *mboxname,
+                        const char *uniqueid,
+                        unsigned long uid);
 
-char *mboxname_datapath(const char *partition, 
-			const char *mboxname,
-			unsigned long uid);
+char *mboxname_archivepath(const char *partition,
+                           const char *mboxname,
+                           const char *uniqueid,
+                           unsigned long uid);
 
 char *mboxname_metapath(const char *partition,
-			const char *mboxname,
-			int metafile, int isnew);
+                        const char *mboxname,
+                        const char *uniqueid,
+                        int metafile, int isnew);
 
 char *mboxname_lockpath(const char *mboxname);
+char *mboxname_lockpath_suffix(const char *mboxname, const char *suffix);
 
 /*
  * Return nonzero if (internal) mailbox 'name' consists of legal characters.
@@ -177,8 +220,38 @@ char *mboxname_lockpath(const char *mboxname);
  */
 int mboxname_policycheck(const char *name);
 
-int mboxname_netnewscheck(const char *name);
-
 void mboxname_todeleted(const char *name, char *result, int withtime);
+
+/*
+ * Given a writable buffer containing an internal mbox name,
+ * convert that buffer in-place to be the name of the mbox'
+ * parent (by truncating off the last component).
+ * Returns 0 if no more truncation is possible, 1 otherwise.
+ */
+int mboxname_make_parent(char *namebuf);
+
+char *mboxname_conf_getpath(struct mboxname_parts *parts,
+                            const char *suffix);
+
+/* ======================== COUNTERS ==================== */
+
+struct mboxname_counters {
+    uint32_t generation;
+    uint32_t version;
+    modseq_t highestmodseq;
+    modseq_t mailmodseq;
+    modseq_t caldavmodseq;
+    modseq_t carddavmodseq;
+    modseq_t notesmodseq;
+    uint32_t uidvalidity;
+};
+
+int mboxname_read_counters(const char *mboxname, struct mboxname_counters *vals);
+modseq_t mboxname_readmodseq(const char *mboxname);
+modseq_t mboxname_nextmodseq(const char *mboxname, modseq_t last, int mbtype);
+modseq_t mboxname_setmodseq(const char *mboxname, modseq_t val, int mbtype);
+uint32_t mboxname_readuidvalidity(const char *mboxname);
+uint32_t mboxname_nextuidvalidity(const char *mboxname, uint32_t last, int mbtype);
+uint32_t mboxname_setuidvalidity(const char *mboxname, uint32_t val, int mbtype);
 
 #endif

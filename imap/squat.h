@@ -37,8 +37,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: squat.h,v 1.5 2010/01/06 17:01:40 murch Exp $
  */
 
 /*
@@ -46,10 +44,10 @@
   Robert O'Callahan
 
   SQUAT (Search QUery Answer Tool) is a library for full-text indexing
-  and searching. 
+  and searching.
 
   The primary design goals are simplicity and robustness. There are
-  two parts to the API: 
+  two parts to the API:
   -- Indexing: Build an index by feeding in a set of documents
      composed of arbitrary binary text.
   -- Searching: Specify an arbitrary substring (of length >=
@@ -122,7 +120,7 @@
 #define SQUAT_WORD_SIZE 4
 
 /* Type used for an index under construction. */
-typedef struct _SquatIndex SquatIndex; 
+typedef struct _SquatIndex SquatIndex;
 /* Type used for an index being searched. */
 typedef struct _SquatSearchIndex SquatSearchIndex;
 
@@ -139,7 +137,7 @@ extern char const squat_index_file_header[8]; /* "SQUAT 1\n" */
 
 /* SQUAT error codes */
 #define SQUAT_ERR_OK                         1
-#define SQUAT_ERR_OUT_OF_MEMORY              2
+/* was SQUAT_ERR_OUT_OF_MEMORY */
 #define SQUAT_ERR_SYSERR                     3   /* check errno */
 #define SQUAT_ERR_INVALID_INDEX_FILE         4
 #define SQUAT_ERR_SEARCH_STRING_TOO_SHORT    5
@@ -156,29 +154,29 @@ int squat_get_last_error(void);
    time an event occurs. */
 #define SQUAT_STATS_COMPLETED_DOC          1 /* Finished processing a document */
 #define SQUAT_STATS_COMPLETED_INITIAL_CHAR 2 /* Indexed all words
-						beginning with a given
-						byte */
+                                                beginning with a given
+                                                byte */
 typedef union { /* An event report */
   struct {
     int type;   /* the type of the event, a SQUAT_STATS_ constant */
   } generic;
   struct {      /* data for a COMPLETED_DOC event, issued during
-		   squat_index_close_document */ 
+                   squat_index_close_document */
     int type;
     int const* num_unique_words; /* num_unique_words[i] gives the
-				    number of unique words in this
-				    source document beginning with the
-				    byte i */
+                                    number of unique words in this
+                                    source document beginning with the
+                                    byte i */
   } completed_doc;
   struct {      /* data for a COMPLETED_INITIAL_CHAR event, issued
-		   during squat_index_finish */
+                   during squat_index_finish */
     int type;
     int completed_char;     /* We've just finished processing all
-			       words beginning with this byte */
+                               words beginning with this byte */
     int num_words;          /* How many unique words over all
-			       documents start with this byte */
+                               documents start with this byte */
     int temp_file_size;     /* The size of the temporary file that was
-			       used for this byte */
+                               used for this byte */
   } completed_initial_char;
 } SquatStatsEvent;
 typedef void (* SquatStatsCallback)(void* closure, SquatStatsEvent* params);
@@ -198,33 +196,33 @@ typedef void (* SquatStatsCallback)(void* closure, SquatStatsEvent* params);
 #define SQUAT_OPTION_TMP_PATH    0x01  /* The tmp_path options field is valid. */
 #define SQUAT_OPTION_VALID_CHARS 0x02  /* The valid_chars options field is valid. */
 #define SQUAT_OPTION_STATISTICS  0x04  /* The stats_callback* options
-					  fields are valid. */
+                                          fields are valid. */
 typedef struct {
   int option_mask;                   /* Which options fields have been
-					initialized? */
+                                        initialized? */
   char const* tmp_path;              /* A directory where all
-					temporary files will be
-					created. Must not have any
-					trailing slash. */
+                                        temporary files will be
+                                        created. Must not have any
+                                        trailing slash. */
   char const* valid_chars;           /* A null-terminated string
-					containing the characters
-					which can appear in search
-					strings. (Sorry, if you use
-					this option, the null
-					character is never allowed in
-					search strings.) If you try to
-					use any other bytes in a
-					search string, you will get an
-					error. If you know in advance
-					that certain bytes cannot
-					appear in search strings, you
-					can improve performance using
-					this option (especially if
-					those bytes do occur in source
-					documents). */
+                                        containing the characters
+                                        which can appear in search
+                                        strings. (Sorry, if you use
+                                        this option, the null
+                                        character is never allowed in
+                                        search strings.) If you try to
+                                        use any other bytes in a
+                                        search string, you will get an
+                                        error. If you know in advance
+                                        that certain bytes cannot
+                                        appear in search strings, you
+                                        can improve performance using
+                                        this option (especially if
+                                        those bytes do occur in source
+                                        documents). */
   SquatStatsCallback stats_callback; /* See above */
   void* stats_callback_closure;      /* Private data passed down into
-					the callback function */
+                                        the callback function */
 } SquatOptions;
 SquatIndex* squat_index_init(int fd, SquatOptions const* options);
 
@@ -284,7 +282,7 @@ int         squat_count_docs(SquatSearchIndex* index, char first_char,
 
 /* Open an index for searching. 'fd' should be an index file opened
    for reading, positioned at the beginning of the file.
-   
+
    This function mmaps the entire index file. If there is not enough
    virtual address space available it will fail with SQUAT_ERR_SYSERR.
 */
@@ -296,19 +294,19 @@ SquatSearchIndex* squat_search_open(int fd);
    the progress of the operation. Call this after successfully calling
    squat_search_open, squat_search_list_docs, or squat_search_execute. */
 #define SQUAT_CALLBACK_CONTINUE   1  /* return this from the callback
-					function to continue with the
-					operation. */
+                                        function to continue with the
+                                        operation. */
 #define SQUAT_CALLBACK_ABORT      2  /* return this from the callback
-					function to abort the current
-					operation and return to the
-					client. */
+                                        function to abort the current
+                                        operation and return to the
+                                        client. */
 typedef struct {
   char const* doc_name;  /* The UTF8 name of the document. */
   SquatInt64  size;      /* The total size of the document in bytes. */
 } SquatListDoc;
 typedef int (* SquatListDocCallback)(void* closure, SquatListDoc const* doc);
-int               squat_search_list_docs(SquatSearchIndex* index, 
-		    SquatListDocCallback handler, void* closure);
+int               squat_search_list_docs(SquatSearchIndex* index,
+                    SquatListDocCallback handler, void* closure);
 
 
 /* Get a list of the documents that may include the given search string.

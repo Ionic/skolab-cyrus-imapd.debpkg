@@ -26,7 +26,7 @@
 .\"      Pittsburgh, PA  15213
 .\"      (412) 268-7393, fax: (412) 268-7395
 .\"      innovation@andrew.cmu.edu
- *
+.\"
 .\" 4. Redistributions of any form whatsoever must retain the following
 .\"    acknowledgment:
 .\"    "This product includes software developed by Computing Services
@@ -39,12 +39,10 @@
 .\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
 .\" AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
 .\" OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-.\"
-.\" $Id: cyrus.conf.5,v 1.17 2010/01/06 17:01:51 murch Exp $
 .SH NAME
 cyrus.conf \- Cyrus configuration file
 .SH DESCRIPTION
-\fB/etc/cyrus.conf\fR 
+\fB/etc/cyrus.conf\fR
 is the configuration file for the Cyrus \fBmaster\fR process.  It
 defines the startup procedures, services and events to be spawned by
 \fBmaster\fR.
@@ -57,11 +55,11 @@ into sections of the form
 .RS
 \fIname arguments
 .br
-	...
+        ...
 .br
-	...
+        ...
 .br
-	...
+        ...
 \fR
 .RE
 }
@@ -69,7 +67,10 @@ into sections of the form
 .PP
 where \fIsection\fR is the name of the section, \fIname\fR is the name
 of the entry and \fIarguments\fR is the whitespace-separated list of
-arguments for the entry.
+arguments for the entry.  The \fIname\fR may be any sequence of
+alphabetic and numeric characters, but may not contain punctuation
+such as '-' or '_'.  In the \fBSERVICES\fP section, names must be
+unique.
 .PP
 Blank lines and lines beginning with ``#'' are ignored.
 .SH SECTION DESCRIPTIONS
@@ -158,22 +159,22 @@ This string argument is optional.
 # example cyrus.conf
 
 START {
-  recover	cmd="ctl_cyrusdb -r"
+  recover       cmd="ctl_cyrusdb -r"
 .br
 }
 
 SERVICES {
-  imap		cmd="imapd" listen="imap" prefork=1
-  imaps		cmd="imapd -s" listen="imaps" prefork=0
-  lmtpunix	cmd="lmtpd" listen="/var/imap/socket/lmtp"
-  lmtp		cmd="lmtpd" listen="localhost:lmtp"
+  imap          cmd="imapd" listen="imap" prefork=1
+  imaps         cmd="imapd -s" listen="imaps" prefork=0
+  lmtpunix      cmd="lmtpd" listen="/var/imap/socket/lmtp"
+  lmtp          cmd="lmtpd" listen="localhost:lmtp"
 .br
 }
 
 EVENTS {
-  checkpoint	cmd="ctl_cyrusdb -c" period=30
-  delprune	cmd="cyr_expire -E 3" at=0400
-  tlsprune	cmd="tls_prune" at=0400
+  checkpoint    cmd="ctl_cyrusdb -c" period=30
+  delprune      cmd="cyr_expire -E 3" at=0400
+  tlsprune      cmd="tls_prune" at=0400
 .br
 }
 .SH ACCESS CONTROL

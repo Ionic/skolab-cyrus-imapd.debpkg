@@ -38,8 +38,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: notify_log.h,v 1.7 2010/01/06 17:01:54 murch Exp $
  */
 
 #ifndef _NOTIFY_LOG_H_
@@ -48,8 +46,8 @@
 #include <config.h>
 
 char* notify_log(const char *class, const char *priority,
-		 const char *user, const char *mailbox,
-		 int nopt, char **options,
-		 const char *message);
+                 const char *user, const char *mailbox,
+                 int nopt, char **options,
+                 const char *message, const char *fname);
 
 #endif /* _NOTIFY_LOG_H_ */

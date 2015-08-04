@@ -38,8 +38,6 @@
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: error_table.h,v 1.3 2010/01/06 17:01:28 murch Exp $
- *
  * Copyright 1988 by the Student Information Processing Board of the
  * Massachusetts Institute of Technology.
  *
@@ -63,7 +61,7 @@ int __far __pascal MessageBox (void __far *, const char __far*, const char __far
 #else
 #define INTERFACE
 #define INTERFACE_C
-extern int errno;
+#include <errno.h>
 #endif
 
 struct error_table {
@@ -77,12 +75,12 @@ struct et_list {
 };
 extern struct et_list * _et_list;
 
-#define	ERRCODE_RANGE	8	/* # of bits to shift table number */
-#define	BITS_PER_CHAR	6	/* # bits to shift per character in name */
+#define ERRCODE_RANGE   8       /* # of bits to shift table number */
+#define BITS_PER_CHAR   6       /* # bits to shift per character in name */
 
 #if defined(__STDC__) || defined(KRB5_PROVIDE_PROTOTYPES) || defined(_WINDOWS)
 extern const char *error_table_name (long);
-#else 
+#else
 extern const char *error_table_name ();
 #endif
 

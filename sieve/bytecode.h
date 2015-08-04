@@ -38,8 +38,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: bytecode.h,v 1.6 2010/01/06 17:01:59 murch Exp $
  */
 
 #ifndef SIEVE_BYTECODE_H
@@ -56,7 +54,7 @@
 
 
 /* yes, lots of these are superfluous, it's for clarity */
-typedef union 
+typedef union
 {
     int op; /* OPTYPE */
     int value;
@@ -70,10 +68,17 @@ typedef union
     char *str;
 } bytecode_t;
 
+struct bytecode_info
+{
+    bytecode_t *data;/* pointer to almost-flat bytecode */
+    size_t scriptend; /* used by emit code to know final length of bytecode */
+    size_t reallen; /* allocated length of 'data' */
+};
+
 /* For sanity during input on 64-bit platforms.
  * str should only be accessed as (char *)&str, but given the use of
  * unwrap_string, this should be OK */
-typedef union 
+typedef union
 {
     int op; /* OPTYPE */
     int value;
@@ -96,8 +101,12 @@ typedef union
  * version 0x03 scripts implemented short-circuiting of testlists (recompile)
  * version 0x04 scripts implemented BODY, INCLUDE and COPY extensions
  * version 0x05 scripts implemented updated VACATION (:from and :handle)
+ * version 0x06 scripts implemented updated VACATION (:seconds)
+ * version 0x07 scripts implemented updated INCLUDE (:once and :optional)
+ * version 0x08 scripts implemented DATE and INDEX extensions
+ * version 0x09 scripts implemented IMAP4FLAGS extension
  */
-#define BYTECODE_VERSION 0x05
+#define BYTECODE_VERSION 0x09
 #define BYTECODE_MIN_VERSION 0x03 /* minimum supported version */
 #define BYTECODE_MAGIC "CyrSBytecode"
 #define BYTECODE_MAGIC_LEN 12 /* Should be multiple of 4 */
@@ -109,33 +118,38 @@ typedef union
 enum bytecode {
     B_STOP,
 
-    B_KEEP,
+    B_KEEP_ORIG,        /* legacy keep w/o support for :copy and :flags */
     B_DISCARD,
-    B_REJECT,		/* require reject */
-    B_FILEINTO_ORIG,	/* legacy fileinto w/o support for :copy */
-    B_REDIRECT_ORIG,	/* legacy redirect w/o support for :copy */
+    B_REJECT,           /* require reject */
+    B_FILEINTO_ORIG,    /* legacy fileinto w/o support for :copy */
+    B_REDIRECT_ORIG,    /* legacy redirect w/o support for :copy */
 
     B_IF,
-  
-    B_MARK,		/* require imapflags */
-    B_UNMARK,		/* require imapflags */
 
-    B_ADDFLAG,		/* require imapflags */
-    B_SETFLAG,		/* require imapflags */
-    B_REMOVEFLAG,	/* require imapflags */
+    B_MARK,             /* require imapflags */
+    B_UNMARK,           /* require imapflags */
 
-    B_NOTIFY,		/* require notify */
-    B_DENOTIFY,		/* require notify */
+    B_ADDFLAG,          /* require imap4flags */
+    B_SETFLAG,          /* require imap4flags */
+    B_REMOVEFLAG,       /* require imap4flags */
 
-    B_VACATION,		/* require vacation */
+    B_NOTIFY,           /* require notify */
+    B_DENOTIFY,         /* require notify */
+
+    B_VACATION_ORIG,    /* legacy vacation w/o support for :seconds */
     B_NULL,
     B_JUMP,
 
-    B_INCLUDE,		/* require include */
-    B_RETURN,		/* require include */
+    B_INCLUDE,          /* require include */
+    B_RETURN,           /* require include */
 
-    B_FILEINTO,		/* require fileinto */
-    B_REDIRECT
+    B_FILEINTO_COPY,    /* legacy fileinto w/o support for :flags */
+    B_REDIRECT,
+
+    B_VACATION,         /* require vacation */
+
+    B_KEEP,
+    B_FILEINTO          /* require fileinto */
 };
 
 enum bytecode_comps {
@@ -146,10 +160,15 @@ enum bytecode_comps {
     BC_SIZE,
     BC_ANYOF,
     BC_ALLOF,
+    BC_ADDRESS_PRE_INDEX,
+    BC_ENVELOPE,        /* require envelope */
+    BC_HEADER_PRE_INDEX,
+    BC_BODY,            /* require body */
+    BC_DATE,            /* require date */
+    BC_CURRENTDATE,     /* require date */
     BC_ADDRESS,
-    BC_ENVELOPE,	/* require envelope */
     BC_HEADER,
-    BC_BODY		/* require body */
+    BC_HASFLAG          /* require imap4flags */
 };
 
 /* currently one enum so as to help determine where values are being misused.
@@ -161,36 +180,36 @@ enum bytecode_tags {
 
     B_SIZE_PLACEHOLDER_1,
     B_SIZE_PLACEHOLDER_2,
-     
+
     /* Relational Match Types */
-    B_GT,		/* require relational */
-    B_GE,		/* require relational */
-    B_LT,		/* require relational */
-    B_LE,		/* require relational */
-    B_EQ,		/* require relational */
-    B_NE,		/* require relational */
- 
+    B_GT,               /* require relational */
+    B_GE,               /* require relational */
+    B_LT,               /* require relational */
+    B_LE,               /* require relational */
+    B_EQ,               /* require relational */
+    B_NE,               /* require relational */
+
     B_RELATIONAL_PLACEHOLDER_1,
     B_RELATIONAL_PLACEHOLDER_2,
-   
+
     /* Priorities */
-    B_LOW,		/* require notify */
-    B_NORMAL,		/* require notify */
-    B_HIGH,		/* require notify */
-    B_ANY,		/* require notify */
+    B_LOW,              /* require notify */
+    B_NORMAL,           /* require notify */
+    B_HIGH,             /* require notify */
+    B_ANY,              /* require notify */
 
     B_PRIORITY_PLACEHOLDER_1,
     B_PRIORITY_PLACEHOLDER_2,
     B_PRIORITY_PLACEHOLDER_3,
     B_PRIORITY_PLACEHOLDER_4,
-    
+
     /* Address Parts */
     B_ALL,
     B_LOCALPART,
     B_DOMAIN,
-    B_USER,		/* require subaddress */
-    B_DETAIL,		/* require subaddress */
-    
+    B_USER,             /* require subaddress */
+    B_DETAIL,           /* require subaddress */
+
     B_ADDRESS_PLACEHOLDER_1,
     B_ADDRESS_PLACEHOLDER_2,
     B_ADDRESS_PLACEHOLDER_3,
@@ -199,20 +218,20 @@ enum bytecode_tags {
     /* Comparators */
     B_ASCIICASEMAP,
     B_OCTET,
-    B_ASCIINUMERIC,	/* require comparator-i;ascii-numeric */
-    
+    B_ASCIINUMERIC,     /* require comparator-i;ascii-numeric */
+
     B_COMPARATOR_PLACEHOLDER_1,
     B_COMPARATOR_PLACEHOLDER_2,
     B_COMPARATOR_PLACEHOLDER_3,
     B_COMPARATOR_PLACEHOLDER_4,
- 
+
     /* Match Types */
     B_IS,
     B_CONTAINS,
     B_MATCHES,
-    B_REGEX,		/* require regex */
-    B_COUNT,		/* require relational */
-    B_VALUE,		/* require relational */
+    B_REGEX,            /* require regex */
+    B_COUNT,            /* require relational */
+    B_VALUE,            /* require relational */
 
     B_MATCH_PLACEHOLDER_1,
     B_MATCH_PLACEHOLDER_2,
@@ -220,9 +239,9 @@ enum bytecode_tags {
     B_MATCH_PLACEHOLDER_4,
 
     /* Body Transforms */
-    B_RAW,		/* require body */
-    B_TEXT,		/* require body */
-    B_CONTENT,		/* require body */
+    B_RAW,              /* require body */
+    B_TEXT,             /* require body */
+    B_CONTENT,          /* require body */
 
     B_TRANSFORM_PLACEHOLDER_1,
     B_TRANSFORM_PLACEHOLDER_2,
@@ -231,14 +250,40 @@ enum bytecode_tags {
     B_TRANSFORM_PLACEHOLDER_5,
 
     /* Script locations */
-    B_PERSONAL,		/* require include */
-    B_GLOBAL,		/* require include */
+    B_PERSONAL,         /* require include */
+    B_GLOBAL,           /* require include */
 
     B_LOCATION_PLACEHOLDER_1,
     B_LOCATION_PLACEHOLDER_2,
     B_LOCATION_PLACEHOLDER_3,
-    B_LOCATION_PLACEHOLDER_4
-  
+    B_LOCATION_PLACEHOLDER_4,
+
+    /* Zones */
+    B_TIMEZONE,
+    B_ORIGINALZONE,
+
+    B_ZONE_PLACEHOLDER_1,
+    B_ZONE_PLACEHOLDER_2,
+
+    /* Date Parts */
+    B_YEAR,
+    B_MONTH,
+    B_DAY,
+    B_DATE,
+    B_JULIAN,
+    B_HOUR,
+    B_MINUTE,
+    B_SECOND,
+    B_TIME,
+    B_ISO8601,
+    B_STD11,
+    B_ZONE,
+    B_WEEKDAY,
+
+    B_DATEPART_PLACEHOLDER_1,
+    B_DATEPART_PLACEHOLDER_2,
+    B_DATEPART_PLACEHOLDER_3,
+    B_DATEPART_PLACEHOLDER_4
 };
 
 #endif

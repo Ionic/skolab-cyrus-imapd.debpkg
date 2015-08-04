@@ -37,8 +37,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: managesieve.h,v 1.7 2010/01/06 17:01:56 murch Exp $
  */
 
 #include "isieve.h"
@@ -47,7 +45,7 @@
 struct xscyrus {
     isieve_t *isieve;
 
-    char *errstr;		/* last error, if any */
+    char *errstr;               /* last error, if any */
 
     char *class; /* needed by perl */
 };
