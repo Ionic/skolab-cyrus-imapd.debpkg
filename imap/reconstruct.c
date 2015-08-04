@@ -410,7 +410,7 @@ int main(int argc, char **argv)
 static void usage(void)
 {
     fprintf(stderr,
-	    "usage: reconstruct [-C <alt_config>] [-p partition] [-ksrfxu] mailbox...\n");
+	    "usage: cyrreconstruct [-C <alt_config>] [-p partition] [-ksrfxu] mailbox...\n");
     fprintf(stderr, "       reconstruct [-C <alt_config>] -m\n");
     exit(EC_USAGE);
 }

@@ -218,7 +218,7 @@ int main(int argc,char **argv)
 static void usage(void)
 {
     fprintf(stderr,
-	    "usage: quota [-C <alt_config>] [-d <domain>] [-f] [-q] [prefix]...\n");
+	    "usage: cyrquota [-C <alt_config>] [-d <domain>] [-f] [-q] [prefix]...\n");
     exit(EC_USAGE);
 }
 
