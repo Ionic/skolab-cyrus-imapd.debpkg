@@ -1,7 +1,7 @@
 
 /* lmtpstats.h -- statistics push interface
 
- * generated automatically from lmtpstats.snmp by snmpgen
+ * generated automatically from /home/ellie/source/cyrus-imapd/imap/lmtpstats.snmp by snmpgen
 
  *
 
@@ -11,11 +11,11 @@
 
  * No warranty, yadda yadda
 
- */                                       
+ */
 
-                                          
 
-#ifndef lmtpstats_H    
+
+#ifndef lmtpstats_H
 
 #define lmtpstats_H
 
@@ -108,9 +108,9 @@ int snmp_connect(void);
 
 
 
-int snmp_close(void);          
+int snmp_close(void);
 
-                                    
+
 
 /* only valid on counters */
 
@@ -136,13 +136,13 @@ int snmp_set_oid(lmtpstats_t cmd, char *str);
 
 int snmp_set_time(lmtpstats_t cmd, time_t t);
 
-                                    
 
-const char *snmp_getdescription(lmtpstats_t cmd); 
 
- 
+const char *snmp_getdescription(lmtpstats_t cmd);
 
-const char *snmp_getoid(const char *name, lmtpstats_t cmd, char* buf, int buflen); 
+
+
+const char *snmp_getoid(const char *name, lmtpstats_t cmd, char* buf, int buflen);
 
 
 
@@ -152,9 +152,9 @@ void snmp_setvariable(lmtpstats_variable_t, int);
 
 #endif /* USING_SNMPGEN */
 
- 
 
-#endif /* lmtpstats_H */ 
+
+#endif /* lmtpstats_H */
 
 
 

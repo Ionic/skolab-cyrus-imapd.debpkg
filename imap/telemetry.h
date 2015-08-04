@@ -38,15 +38,13 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: telemetry.h,v 1.6 2010/05/25 20:59:18 wescraig Exp $
  */
 
 #ifndef INCLUDED_TELEMETRY_H
 #define INCLUDED_TELEMETRY_H
 
-int telemetry_log(const char *userid, struct protstream *pin, 
-		  struct protstream *pout, int usetimestamp);
+int telemetry_log(const char *userid, struct protstream *pin,
+                  struct protstream *pout, int usetimestamp);
 void telemetry_rusage(const char *userid);
 
 #endif

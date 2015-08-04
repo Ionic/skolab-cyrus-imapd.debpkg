@@ -39,8 +39,6 @@
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: cyr_synclog.c,v 1.7 2010/01/06 17:01:31 murch Exp $
- *
  * Originally written by Bron Gondwana <brong@fastmail.fm>
  */
 
@@ -52,13 +50,11 @@
 #include <unistd.h>
 #endif
 
+#include "exitcodes.h"
 #include "global.h"
 #include "sync_log.h"
 #include "util.h"
 #include "xmalloc.h"
-
-/* config.c stuff */
-const int config_need_data = 0;
 
 int main(int argc, char *argv[])
 {
@@ -66,89 +62,103 @@ int main(int argc, char *argv[])
     char cmd = '\0';
     char opt;
 
-    if ((geteuid()) == 0 && (become_cyrus() != 0)) {
-	fatal("must run as the Cyrus user", EC_USAGE);
+    if ((geteuid()) == 0 && (become_cyrus(/*is_master*/0) != 0)) {
+        fatal("must run as the Cyrus user", EC_USAGE);
     }
 
-    while ((opt = getopt(argc, argv, "C:uvmacqnsb")) != EOF) {
-	switch (opt) {
-	case 'C': /* alt config file */
-	    alt_config = optarg;
-	    break;
-	case 'u': /* User */
-	    cmd = 'u';
-	    break;
-	case 'v': /* sieVe */
-	    cmd = 'v';
-	    break;
-	case 'm': /* Mailbox */
-	    cmd = 'm';
-	    break;
-	case 'a': /* Append */
-	    cmd = 'a';
-	    break;
-	case 'c': /* aCl */
-	    cmd = 'c';
-	    break;
-	case 'q': /* Quota */
-	    cmd = 'q';
-	    break;
-	case 'n': /* aNnotation */
-	    cmd = 'n';
-	    break;
-	case 's': /* Seen */
-	    cmd = 's';
-	    break;
-	case 'b': /* suBscription */
-	    cmd = 'b';
-	    break;
-	}
+    while ((opt = getopt(argc, argv, "C:uUvmMacqnsb")) != EOF) {
+        switch (opt) {
+        case 'C': /* alt config file */
+            alt_config = optarg;
+            break;
+        case 'u': /* User */
+            cmd = 'u';
+            break;
+        case 'U': /* UnUser */
+            cmd = 'U';
+            break;
+        case 'v': /* sieVe */
+            cmd = 'v';
+            break;
+        case 'm': /* Mailbox */
+            cmd = 'm';
+            break;
+        case 'M': /* UnMailbox */
+            cmd = 'M';
+            break;
+        case 'a': /* Append */
+            cmd = 'a';
+            break;
+        case 'c': /* aCl */
+            cmd = 'c';
+            break;
+        case 'q': /* Quota */
+            cmd = 'q';
+            break;
+        case 'n': /* aNnotation */
+            cmd = 'n';
+            break;
+        case 's': /* Seen */
+            cmd = 's';
+            break;
+        case 'b': /* suBscription */
+            cmd = 'b';
+            break;
+        }
     }
 
     if((argc - optind) < 1) {
-	fprintf(stderr, "Usage: %s [-C altconfig] [-{type}] value\n", argv[0]);
-	
-	fprintf(stderr, "\n");
-	fprintf(stderr, "\n");
-	fprintf(stderr, "types:\n");
-	fprintf(stderr, "  -u   USER\n");
-	fprintf(stderr, "  -v   SIEVE\n");
-	fprintf(stderr, "  -m   MAILBOX\n");
-	fprintf(stderr, "  -q   QUOTA\n");
-	fprintf(stderr, "  -n   ANNOTATION\n");
-	fprintf(stderr, "  -s   SEEN\n");
-	fprintf(stderr, "  -b   SUBSCRIPTION\n");
-	fprintf(stderr, "\n");
-	fprintf(stderr,
-		"You may omit the type flag and just specify a complete log line\n");
-	exit(-1);
+        fprintf(stderr, "Usage: %s [-C altconfig] [-{type}] value\n", argv[0]);
+
+        fprintf(stderr, "\n");
+        fprintf(stderr, "\n");
+        fprintf(stderr, "types:\n");
+        fprintf(stderr, "  -u   USER\n");
+        fprintf(stderr, "  -U   UNUSER\n");
+        fprintf(stderr, "  -v   SIEVE\n");
+        fprintf(stderr, "  -m   MAILBOX\n");
+        fprintf(stderr, "  -M   UNMAILBOX\n");
+        fprintf(stderr, "  -q   QUOTA\n");
+        fprintf(stderr, "  -n   ANNOTATION\n");
+        fprintf(stderr, "  -s   SEEN\n");
+        fprintf(stderr, "  -b   SUBSCRIPTION\n");
+        fprintf(stderr, "\n");
+        fprintf(stderr,
+                "You may omit the type flag and just specify a complete log line\n");
+        exit(-1);
     }
 
-    cyrus_init(alt_config, "cyr_synclog", 0);
+    cyrus_init(alt_config, "cyr_synclog", 0, 0);
     sync_log_init();
 
     switch(cmd) {
-	case 'u': /* User */
-	    sync_log_user(argv[optind]);
-	    break;
-	case 'v': /* sieVe */
-	    sync_log_sieve(argv[optind]);
-	    break;
-	case 'm': /* Mailbox */
-	    sync_log_mailbox(argv[optind]);
-	    break;
-	case 'q': /* Quota */
-	    sync_log_quota(argv[optind]);
-	    break;
-	case 'n': /* aNnotation */
+        case 'u': /* User */
+            sync_log_user(argv[optind]);
+            break;
+        case 'U': /* UnUser */
+            sync_log_unuser(argv[optind]);
+            break;
+        case 'v': /* sieVe */
+            sync_log_sieve(argv[optind]);
+            break;
+        case 'm': /* Mailbox */
+            sync_log_mailbox(argv[optind]);
+            break;
+        case 'M': /* UnMailbox */
+            sync_log_unmailbox(argv[optind]);
+            break;
+        case 'q': /* Quota */
+            sync_log_quota(argv[optind]);
+            break;
+        case 'n': /* aNnotation */
             sync_log_annotation(argv[optind]);
-	    break;
-	case 's': /* Seen */
-	    sync_log_seen(argv[optind], argv[optind+1]);
-	    break;
-	case 'b': /* suBscription */
-	    sync_log_subscribe(argv[optind], argv[optind+1]);
-	    break;
+            break;
+        case 's': /* Seen */
+            sync_log_seen(argv[optind], argv[optind+1]);
+            break;
+        case 'b': /* suBscription */
+            sync_log_subscribe(argv[optind], argv[optind+1]);
+            break;
         default:
             /* just as is! */
             sync_log(argv[optind]);

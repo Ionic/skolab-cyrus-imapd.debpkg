@@ -1,11 +1,10 @@
 dnl look for the (ucd|net)snmp libraries
-dnl $Id: ucdsnmp.m4,v 1.13 2010/01/06 17:01:28 murch Exp $
 
 AC_DEFUN([CMU_UCDSNMP], [
 AC_REQUIRE([CMU_FIND_LIB_SUBDIR])
   AC_REQUIRE([CMU_SOCKETS])
-  AC_ARG_WITH(snmp, 
-              [  --with-snmp=DIR         use ucd|net snmp (rooted in DIR) [yes] ],
+  AC_ARG_WITH(snmp,
+              [AS_HELP_STRING([--with-snmp=DIR], [use ucd|net snmp (rooted in DIR) [yes]])],
               with_snmp=$withval, with_snmp=yes)
 
   dnl
@@ -52,8 +51,8 @@ if test "$with_snmp" != "no"; then
       fi
       cmu_save_LIBS="$LIBS"
       AC_CHECK_LIB(snmp, sprint_objid, [
-  		 AC_CHECK_HEADER(ucd-snmp/version.h,, with_snmp=no)],
-  		 with_snmp=no, ${LIB_SOCKET})
+                 AC_CHECK_HEADER(ucd-snmp/version.h,, with_snmp=no)],
+                 with_snmp=no, ${LIB_SOCKET})
       LIBS="$cmu_save_LIBS"
     fi
     AC_MSG_CHECKING(UCD SNMP libraries)
@@ -63,7 +62,7 @@ if test "$with_snmp" != "no"; then
       AC_DEFINE(HAVE_UCDSNMP,1,[Do we have UCD-SNMP support?])
       LIB_UCDSNMP="-lucdagent -lucdmibs -lsnmp"
       AC_CHECK_LIB(rpm, rpmdbOpen,
-		 LIB_UCDSNMP="${LIB_UCDSNMP} -lrpm -lpopt",,-lpopt)
+                 LIB_UCDSNMP="${LIB_UCDSNMP} -lrpm -lpopt",,-lpopt)
     fi
     AC_SUBST(LIB_UCDSNMP)
   fi

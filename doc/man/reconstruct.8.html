@@ -1,5 +1,5 @@
-<!-- Creator     : groff version 1.22.1 -->
-<!-- CreationDate: Tue Jul 22 16:36:20 2014 -->
+<!-- Creator     : groff version 1.21 -->
+<!-- CreationDate: Tue Aug  4 16:42:35 2015 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -29,8 +29,6 @@
 
 <hr>
 
-
-<p>*</p>
 
 <h2>NAME
 <a name="NAME"></a>
@@ -172,6 +170,17 @@ issues (like zero byte files or size mistmatches).
 <td width="3%">
 
 
+<p><b>&minus;q</b></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>Emit less verbose information to syslog.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
 <p><b>&minus;n</b></p></td>
 <td width="8%"></td>
 <td width="78%">
@@ -249,6 +258,44 @@ additional tracking files.</p></td></tr>
 
 <p>Delete odd files. This is the opposite of
 &rsquo;-o&rsquo;.</p> </td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p><b>-M</b></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>Prefer mailboxes.db over cyrus.header - will rewrite ACL
+or uniqueid from the mailboxes.db into the header file
+rather than the other way around.</p></td></tr>
+</table>
+
+<p style="margin-left:11%;"><b>&minus;V</b>
+<i>version</i></p>
+
+<p style="margin-left:22%;">Change the cyrus.index minor
+version to a specific version. This can be useful for
+upgrades or downgrades. Use a magical version of <i>max</i>
+to upgrade to the latest available database format
+version.</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p><b>-u</b></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>Instead of mailbox prefixes, give usernames on the
+command line</p></td></tr>
 <tr valign="top" align="left">
 <td width="11%"></td>
 <td width="3%">

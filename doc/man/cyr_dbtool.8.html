@@ -1,5 +1,5 @@
-<!-- Creator     : groff version 1.22.1 -->
-<!-- CreationDate: Tue Jul 22 16:36:18 2014 -->
+<!-- Creator     : groff version 1.21 -->
+<!-- CreationDate: Tue Aug  4 16:42:33 2015 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -30,8 +30,6 @@
 <hr>
 
 
-<p>*</p>
-
 <h2>NAME
 <a name="NAME"></a>
 </h2>
@@ -47,9 +45,10 @@
 
 
 <p style="margin-left:11%; margin-top: 1em"><b>cyr_dbtool</b>
-[ <b>&minus;C</b> <i>config-file</i> ] [ <b>&minus;n</b> ]
-&lt;db file&gt; &lt;db backend&gt; &lt;action&gt; [
-&lt;key&gt; ] [ &lt;value&gt; ]</p>
+[ <b>&minus;C</b> <i>config-file</i> ] [ <b>&minus;n</b> ] [
+<b>&minus;o</b> ] [ <b>&minus;T</b> ] &lt;db file&gt; &lt;db
+backend&gt; &lt;action&gt; [ &lt;key&gt; ] [ &lt;value&gt;
+]</p>
 
 <h2>DESCRIPTION
 <a name="DESCRIPTION"></a>
@@ -76,6 +75,9 @@ are:</p>
 
 <p style="margin-left:11%; margin-top: 1em"><b>consistency</b></p>
 
+
+<p style="margin-left:11%; margin-top: 1em"><b>repack</b></p>
+
 <p style="margin-left:11%; margin-top: 1em">You may omit
 key or key/value and specify one per line on stdin. Keys are
 terminated by tab or newline, values are terminated by
@@ -88,6 +90,11 @@ usable actions.</p>
 <p style="margin-left:11%; margin-top: 1em">The
 &rsquo;consistency&rsquo; command runs a consistency check
 on the DB by calling</p>
+
+<p style="margin-left:11%; margin-top: 1em">The
+&rsquo;repack&rsquo; command will compress the database by
+removing stale data on backends which support it. It&rsquo;s
+a NOOP otherwise.</p>
 
 
 <p style="margin-left:11%; margin-top: 1em"><i>cyr_dbtool</i>
@@ -123,6 +130,31 @@ line.</p>
 
 <p>Create the database file if it doesn&rsquo;t already
 exist.</p> </td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p><b>&minus;o</b></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>Store all the output in memory and only print it once
+the transaction is completed.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p><b>&minus;T</b></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>Use a transaction to do the action (most especially for
+&rsquo;show&rsquo;) - the default used to be
+transactions.</p> </td></tr>
 </table>
 
 <h2>FILES

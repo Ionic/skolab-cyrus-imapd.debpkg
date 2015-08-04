@@ -1,5 +1,5 @@
-<!-- Creator     : groff version 1.22.1 -->
-<!-- CreationDate: Tue Jul 22 16:36:19 2014 -->
+<!-- Creator     : groff version 1.21 -->
+<!-- CreationDate: Tue Aug  4 16:42:34 2015 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -30,8 +30,6 @@
 
 <hr>
 
-
-<p>*</p>
 
 <h2>NAME
 <a name="NAME"></a>
@@ -102,7 +100,7 @@ replies.</p>
 <p style="margin-left:11%; margin-top: 1em">Users must link
 with the -lcyrus switch, and must supply a function called
 <i>fatal</i> to be called in case of any error within
-<i>libcyrus.a.</i></p>
+<i>libcyrus.la.</i></p>
 
 <p style="margin-left:11%; margin-top: 1em">All of the
 <b>imclient</b> functions begin with the prefix
@@ -310,76 +308,18 @@ exit(rc); <br>
 }</p>
 
 <p style="margin-left:11%; margin-top: 1em">static void
-callback_capability(struct imclient *imclient,</p>
-
-<table width="100%" border="0" rules="none" frame="void"
-       cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="8%">
-</td>
-<td width="7%">
-</td>
-<td width="62%">
-
-
-<p>void *rock,</p></td></tr>
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="8%">
-</td>
-<td width="7%">
-</td>
-<td width="62%">
-
-
-<p>struct imclient_reply *reply) {</p></td></tr>
-</table>
-
-<p style="margin-left:11%;">if (reply-&gt;text != NULL)
-{</p>
-
-<table width="100%" border="0" rules="none" frame="void"
-       cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="92%">
-
-
-<p>*((char**)rock) = xstrdup( reply-&gt;text );</p></td></tr>
-</table>
-
-<p style="margin-left:11%;">} <br>
+callback_capability(struct imclient *imclient, <br>
+void *rock, <br>
+struct imclient_reply *reply) { <br>
+if (reply-&gt;text != NULL) { <br>
+*((char**)rock) = xstrdup( reply-&gt;text ); <br>
+} <br>
 }</p>
 
 <p style="margin-left:11%; margin-top: 1em">static void
-end_command (struct imclient *connection, void*</p>
-
-<table width="100%" border="0" rules="none" frame="void"
-       cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="8%">
-</td>
-<td width="69%">
-
-
-<p>rock, struct imclient_reply *inmsg) {</p></td></tr>
-</table>
-
-<p style="margin-left:11%;">(*(int*)rock)--; <br>
+end_command (struct imclient *connection, void* <br>
+rock, struct imclient_reply *inmsg) { <br>
+(*(int*)rock)--; <br>
 }</p>
 
 <p style="margin-left:11%; margin-top: 1em">main() { <br>
@@ -387,203 +327,46 @@ char* capability_string; <br>
 int nc;</p>
 
 <p style="margin-left:11%; margin-top: 1em">if
-(imclient_connect(&amp;imclient, server, port)) {</p>
-
-<table width="100%" border="0" rules="none" frame="void"
-       cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%"></td>
-<td width="8%">
-
-
-<p>fprintf(stderr,</p></td>
-<td width="77%">
-</td></tr>
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="77%">
-
-
-<p>&quot;error: Couldn&rsquo;t connect to %s
-%s\n&quot;,</p> </td></tr>
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="77%">
-
-
-<p>server, port);</p></td></tr>
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%"></td>
-<td width="8%">
-
-
-<p>exit(1);</p></td>
-<td width="77%">
-</td></tr>
-</table>
-
-<p style="margin-left:11%;">}</p>
+(imclient_connect(&amp;imclient, server, port)) { <br>
+fprintf(stderr, <br>
+&quot;error: Couldn&rsquo;t connect to %s %s\n&quot;, <br>
+server, port); <br>
+exit(1); <br>
+}</p>
 
 <p style="margin-left:11%; margin-top: 1em">if
 (imclient_authenticate(imclient, login_sasl_client,
-&quot;imap&quot;</p>
-
-<table width="100%" border="0" rules="none" frame="void"
-       cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="8%">
-</td>
-<td width="69%">
-
-
-<p>/* service */,</p></td></tr>
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="8%">
-</td>
-<td width="69%">
-
-
-<p>NULL /* user */, SASL_PROT_ANY)) {</p></td></tr>
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%"></td>
-<td width="8%">
-
-
-<p>exit(1);</p></td>
-<td width="8%"></td>
-<td width="69%">
-</td></tr>
-</table>
-
-<p style="margin-left:11%;">}</p>
+&quot;imap&quot; <br>
+/* service */, <br>
+NULL /* user */, SASL_PROT_ANY)) { <br>
+exit(1); <br>
+}</p>
 
 
 <p style="margin-left:11%; margin-top: 1em">imclient_addcallback(imclient,
-&quot;CAPABILITY&quot;,</p>
-
-<table width="100%" border="0" rules="none" frame="void"
-       cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="8%">
-</td>
-<td width="69%">
-
-
-<p>CALLBACK_NOLITERAL,</p></td></tr>
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="8%">
-</td>
-<td width="69%">
-
-
-<p>callback_capability,</p></td></tr>
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="8%">
-</td>
-<td width="69%">
-
-
-<p>&amp;capability_string,</p></td></tr>
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="8%">
-</td>
-<td width="69%">
-
-
-<p>NULL);</p></td></tr>
-</table>
+&quot;CAPABILITY&quot;, <br>
+CALLBACK_NOLITERAL, <br>
+callback_capability, <br>
+&amp;capability_string, <br>
+NULL);</p>
 
 <p style="margin-left:11%; margin-top: 1em">nc = 1;</p>
 
 
 <p style="margin-left:11%; margin-top: 1em">imclient_send(imclient,
-end_command,</p>
-
-<table width="100%" border="0" rules="none" frame="void"
-       cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%">
-</td>
-<td width="8%">
-</td>
-<td width="77%">
-
-
-<p>(void*) &amp;nc, &quot;CAPABILITY&quot;);</p></td></tr>
-</table>
+end_command, <br>
+(void*) &amp;nc, &quot;CAPABILITY&quot;);</p>
 
 <p style="margin-left:11%; margin-top: 1em">while(nc &gt;
-0) {</p>
-
-<table width="100%" border="0" rules="none" frame="void"
-       cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="92%">
-
-
-<p>imclient_processoneevent(imclient);</p></td></tr>
-</table>
-
-<p style="margin-left:11%;">}</p>
+0) { <br>
+imclient_processoneevent(imclient); <br>
+}</p>
 
 <p style="margin-left:11%; margin-top: 1em">if
-(strstr(&quot;LITERAL+&quot;, capability_string)) {</p>
-
-<table width="100%" border="0" rules="none" frame="void"
-       cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="92%">
-
-
-<p>imclient_setflags(imclient,
-IMCLIENT_CONN_NONSYNCLITERAL);</p> </td></tr>
-</table>
-
-<p style="margin-left:11%;">}</p>
+(strstr(&quot;LITERAL+&quot;, capability_string)) { <br>
+imclient_setflags(imclient, IMCLIENT_CONN_NONSYNCLITERAL);
+<br>
+}</p>
 
 
 <p style="margin-left:11%; margin-top: 1em">imclient_send(imclient,

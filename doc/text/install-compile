@@ -52,25 +52,6 @@ Options to configure
 
     --help  Print a summary of the options to "configure", and exit. 
 
-    --with-auth=METHOD 
-            Specifies the authorization (group membership) module to use.
-            Currently implemented authorization modules are: 
-
-            unix    Unix /etc/passwd and /etc/group file 
-            krb     Kerberos principals (requires Kerberos libraries).
-                    Optionally, specify where to find Kerberos v4 with
-                    "--with-krb=DIR" IMPORTANT: The Kerberos v4 support
-                    requires the DES library. Some vendor distributions of
-                    Kerberos, including the one with Solaris, do not have
-                    this support and cannot be used. 
-            krb_pts Kerberos principals with AFS PTserver groups (requires
-                    Kerberos and AFS libraries). Optionally, specify where
-                    the AFS libraries are found with "--with-afs=PATH".
-                    Also requires krb support as above. 
-
-            Any method of authenticating with SASL can be used with any
-            authorization module.
-
     --with-krb=PATH 
             Specifies where to find the Kerberos library.
 
@@ -171,9 +152,6 @@ Options to configure
     --enable-murder 
             Enables support for IMAP Murder.
 
-    --enable-netscapehack 
-            Enables support for X-NETSCAPE extension (administration URLs).
-
     --disable-sieve 
             By default, Sieve support is enabled. Use --disable-sieve to
             disable compiling the Sieve library and to disable all Sieve
@@ -225,14 +203,13 @@ Options to configure
     doing so, please send us a patch! Instructions for doing so can be
     found on the feedback page. 
 
-    The file "configure.in" is used as a template to create "configure" by
+    The file "configure.ac" is used as a template to create "configure" by
     a program called "autoconf". You will only need it if you want to
     regenerate "configure" using a newer version of "autoconf". 
 
     Once you have successfully run "configure", execute the following
     commands: 
 
-       make depend
        make all CFLAGS=-O
 
     If you want, you can override the "make" variables CFLAGS and LDFLAGS

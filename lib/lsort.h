@@ -1,8 +1,6 @@
 /* lsort.h -- linked list (merge) sort
  */
 
-/* $Id: lsort.h,v 1.2 2002/05/25 19:57:47 leg Exp $ */
-
 #ifndef INCLUDED_LSORT_H
 #define INCLUDED_LSORT_H
 
@@ -17,9 +15,9 @@
  * call_data: pointer to user data that is passed to compar()
  */
 extern void *lsort(void *list,
-		   void *(*getnext)(void *),
-		   void (*setnext)(void *, void *),
-		   int (*compar)(void *, void *, void *), 
-		   void *call_data);
+                   void *(*getnext)(void *),
+                   void (*setnext)(void *, void *),
+                   int (*compar)(void *, void *, void *),
+                   void *call_data);
 
 #endif /* INCLUDED_LSORT_H */

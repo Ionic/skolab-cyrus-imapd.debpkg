@@ -1,5 +1,5 @@
-<!-- Creator     : groff version 1.22.1 -->
-<!-- CreationDate: Tue Jul 22 16:36:18 2014 -->
+<!-- Creator     : groff version 1.21 -->
+<!-- CreationDate: Tue Aug  4 16:42:33 2015 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -30,8 +30,6 @@
 <hr>
 
 
-<p>*</p>
-
 <h2>NAME
 <a name="NAME"></a>
 </h2>
@@ -58,42 +56,24 @@ divided into sections of the form</p>
 <p style="margin-left:22%; margin-top: 1em"><i>section</i>
 {</p>
 
-<p style="margin-left:32%;"><i>name arguments</i></p>
-
-<table width="100%" border="0" rules="none" frame="void"
-       cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%"></td>
-<td width="85%">
-
-
-<p><i>...</i></p></td></tr>
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%"></td>
-<td width="85%">
-
-
-<p><i>...</i></p></td></tr>
-<tr valign="top" align="left">
-<td width="8%"></td>
-<td width="7%"></td>
-<td width="85%">
-
-
-<p><i>...</i></p></td></tr>
-</table>
+<p style="margin-left:32%;"><i>name arguments <br>
+... <br>
+... <br>
+...</i></p>
 
 <p style="margin-left:22%;">}</p>
 
 <p style="margin-left:11%; margin-top: 1em">where
 <i>section</i> is the name of the section, <i>name</i> is
 the name of the entry and <i>arguments</i> is the
-whitespace-separated list of arguments for the entry.</p>
+whitespace-separated list of arguments for the entry. The
+<i>name</i> may be any sequence of alphabetic and numeric
+characters, but may not contain punctuation such as
+&rsquo;-&rsquo; or &rsquo;_&rsquo;. In the <b>SERVICES</b>
+section, names must be unique.</p>
 
 <p style="margin-left:11%; margin-top: 1em">Blank lines and
-lines beginning with &lsquo;&lsquo;#&rsquo;&rsquo; are
+lines beginning with &rsquo;&rsquo;#&rsquo;&rsquo; are
 ignored.</p>
 
 <h2>SECTION DESCRIPTIONS
@@ -110,7 +90,7 @@ and each argument&rsquo;s default value is shown.</p>
 
 <p style="margin-left:11%; margin-top: 1em">Arguments can
 appear in any order. Some arguments have no default value,
-these are listed with &lsquo;&lsquo;&lt;no
+these are listed with &rsquo;&rsquo;&lt;no
 default&gt;&rsquo;&rsquo;. For string arguments, the value
 MUST be enclosed in double quotes.</p>
 
@@ -240,123 +220,26 @@ string argument is optional.</p>
 <p style="margin-left:11%; margin-top: 1em"># example
 cyrus.conf</p>
 
-<p style="margin-left:11%; margin-top: 1em">START {</p>
+<p style="margin-left:11%; margin-top: 1em">START { <br>
+recover cmd=&quot;ctl_cyrusdb -r&quot; <br>
+}</p>
 
-<table width="100%" border="0" rules="none" frame="void"
-       cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-
-
-<p>recover</p><td width="14%"></td>
-<td width="-6%"></td>
-<td width="7%"></td>
-<td width="8%"></td>
-<td width="77%">
-
-
-<p>cmd=&quot;ctl_cyrusdb -r&quot;</p></td></tr>
-</table>
-
-<p style="margin-left:11%;">}</p>
-
-<p style="margin-left:11%; margin-top: 1em">SERVICES {</p>
-
-<table width="100%" border="0" rules="none" frame="void"
-       cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-
-
-<p>imap</p><td width="14%"></td>
-<td width="-6%"></td>
-<td width="7%"></td>
-<td width="8%"></td>
-<td width="8%">
-</td>
-<td width="69%">
-
-
-<p>cmd=&quot;imapd&quot; listen=&quot;imap&quot; prefork=1
+<p style="margin-left:11%; margin-top: 1em">SERVICES { <br>
+imap cmd=&quot;imapd&quot; listen=&quot;imap&quot; prefork=1
 <br>
-imaps</p></td></tr>
-<tr valign="top" align="left">
-<td width="14%"></td>
-<td width="-6%"></td>
-<td width="7%"></td>
-<td width="8%"></td>
-<td width="8%">
-</td>
-<td width="69%">
-
-
-<p>cmd=&quot;imapd -s&quot; listen=&quot;imaps&quot;
+imaps cmd=&quot;imapd -s&quot; listen=&quot;imaps&quot;
 prefork=0 <br>
-lmtpunix</p></td></tr>
-<tr valign="top" align="left">
-<td width="14%"></td>
-<td width="-6%"></td>
-<td width="7%"></td>
-<td width="8%"></td>
-<td width="8%"></td>
-<td width="69%">
-
-
-<p>cmd=&quot;lmtpd&quot;
+lmtpunix cmd=&quot;lmtpd&quot;
 listen=&quot;/var/imap/socket/lmtp&quot; <br>
-lmtp</p></td></tr>
-<tr valign="top" align="left">
-<td width="14%"></td>
-<td width="-6%"></td>
-<td width="7%"></td>
-<td width="8%"></td>
-<td width="8%">
-</td>
-<td width="69%">
+lmtp cmd=&quot;lmtpd&quot; listen=&quot;localhost:lmtp&quot;
+<br>
+}</p>
 
-
-<p>cmd=&quot;lmtpd&quot;
-listen=&quot;localhost:lmtp&quot;</p> </td></tr>
-</table>
-
-<p style="margin-left:11%;">}</p>
-
-<p style="margin-left:11%; margin-top: 1em">EVENTS {</p>
-
-<table width="100%" border="0" rules="none" frame="void"
-       cellspacing="0" cellpadding="0">
-<tr valign="top" align="left">
-
-
-<p>checkpoint</p><td width="14%"></td>
-<td width="-6%"></td>
-<td width="15%"></td>
-<td width="8%"></td>
-<td width="69%">
-
-
-<p>cmd=&quot;ctl_cyrusdb -c&quot; period=30 <br>
-delprune</p></td></tr>
-<tr valign="top" align="left">
-<td width="14%"></td>
-<td width="-6%"></td>
-<td width="15%"></td>
-<td width="8%"></td>
-<td width="69%">
-
-
-<p>cmd=&quot;cyr_expire -E 3&quot; at=0400 <br>
-tlsprune</p></td></tr>
-<tr valign="top" align="left">
-<td width="14%"></td>
-<td width="-6%"></td>
-<td width="15%"></td>
-<td width="8%"></td>
-<td width="69%">
-
-
-<p>cmd=&quot;tls_prune&quot; at=0400</p></td></tr>
-</table>
-
-<p style="margin-left:11%;">}</p>
+<p style="margin-left:11%; margin-top: 1em">EVENTS { <br>
+checkpoint cmd=&quot;ctl_cyrusdb -c&quot; period=30 <br>
+delprune cmd=&quot;cyr_expire -E 3&quot; at=0400 <br>
+tlsprune cmd=&quot;tls_prune&quot; at=0400 <br>
+}</p>
 
 <h2>ACCESS CONTROL
 <a name="ACCESS CONTROL"></a>

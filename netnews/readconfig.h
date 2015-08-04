@@ -37,8 +37,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: readconfig.h,v 1.6 2010/01/06 17:01:54 murch Exp $
  */
 
 #ifndef READCONFIG_H
@@ -60,7 +58,7 @@ void artificial_matchall(int days);
 
 void
 callback_list(struct imclient *imclient,
-	      void *rock,
-	      struct imclient_reply *reply);
+              void *rock,
+              struct imclient_reply *reply);
 
 #endif /* READCONFIG_H */

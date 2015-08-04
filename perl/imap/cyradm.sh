@@ -1,4 +1,6 @@
 #! /bin/sh
+exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
+#!perl
 #
 # Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
 #
@@ -39,20 +41,9 @@
 # AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
 # OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-# $Id: cyradm.sh,v 1.21 2010/01/06 17:01:55 murch Exp $
 
-INCS=
-SITEARCH="@INSTALLSITEARCH@"
-if [ -n "$SITEARCH" -a -d "$SITEARCH" ]; then
-    INCS="-I$SITEARCH"
-fi
-
-case "x$BASH_VERSION" in
-x) exec perl $INCS -MCyrus::IMAP::Shell -e shell -- ${1+"$@"} ;;
-*) exec perl $INCS -MCyrus::IMAP::Shell -e shell -- "$@" ;;
-esac
-echo "$0: how did I get here?" >&2
-exit 1
+use Cyrus::IMAP::Shell;
+shell;
 
 =head1 NAME
 
@@ -101,20 +92,19 @@ authenticated once.
 Change directory.  A C<pwd> builtin is not provided, but the default command
 action will run C<pwd> from a shell if invoked.
 
-=item C<createmailbox> [C<--partition> I<partition>] I<mailbox>
+=item C<createmailbox> [C<--partition> I<partition>] [C<--specialuse> I<specialuse>] I<mailbox>
 
-=item C<createmailbox> I<mailbox> I<partition>
+=item C<create> [C<--partition> I<partition>] [C<--specialuse> I<specialuse>] I<mailbox>
 
-=item C<create> [C<--partition> I<partition>] I<mailbox>
+=item C<create> [C<--specialuse> I<specialuse>] I<mailbox> I<partition>
 
-=item C<create> I<mailbox> I<partition>
+=item C<cm> [C<--partition> I<partition>] [C<--specialuse> I<specialuse>] I<mailbox>
 
-=item C<cm> [C<--partition> I<partition>] I<mailbox>
-
-=item C<cm> I<mailbox> I<partition>
+=item C<cm> [C<--specialuse> I<specialuse>] I<mailbox> I<partition>
 
 Create a mailbox on the default or a specified partition.  Both old-style
 and getopt-style usages are accepted (combining them will produce an error).
+Optionally assign a special use to the mailbox.
 
 =item C<deleteaclmailbox> I<mailbox> I<id> [...]
 
@@ -171,15 +161,15 @@ Display the mailbox/server metadata.
 
 List ACLs on the specified mailbox.
 
-=item C<listmailbox> [C<--subscribed>] [I<pattern> [I<reference>]]
+=item C<listmailbox> [C<--subscribed>] [C<--specialuse>] [I<pattern> [I<reference>]]
 
-=item C<list> [C<--subscribed>] [I<pattern> [I<reference>]]
+=item C<list> [C<--subscribed>] [C<--specialuse>] [I<pattern> [I<reference>]]
 
-=item C<lm> [C<--subscribed>] [I<pattern> [I<reference>]]
+=item C<lm> [C<--subscribed>] [C<--specialuse>] [I<pattern> [I<reference>]]
 
-List all, or all subscribed, mailboxes matching the specified pattern.
-The pattern may have embedded wildcards C<'*'> or C<'%'>, which match
-anything or anything except the separator character, respectively.
+List all, or all subscribed or special-use, mailboxes matching the specified
+pattern.  The pattern may have embedded wildcards C<'*'> or C<'%'>, which
+match anything or anything except the separator character, respectively.
 
 Mailboxes returned will be relative to the specified reference if one
 is specified.  This allows a mailbox list to be limited to a particular
@@ -206,11 +196,13 @@ find the quota root for a mailbox.
 
 show quota roots and quotas for mailbox
 
-=item C<mboxconfig> I<mailbox> I<attribute> I<value>
+=item C<mboxconfig> [C<--private>] I<mailbox> I<attribute> I<value>
 
-=item C<mboxcfg> I<mailbox> I<attribute> I<value>
+=item C<mboxcfg> [C<--private>] I<mailbox> I<attribute> I<value>
 
-Set mailbox metadata.  A value of "none" will remove the attribute.
+Set mailbox metadata, optionally set the private instead of the shared
+version of the metadata. A value of "none" will remove the attribute.
+
 The currently supported attributes are:
 
 =over 4
@@ -225,8 +217,14 @@ Sets the number of days after which messages will be expired from the mailbox.
 
 =item C<news2mail>
 
-Sets an email address to which messages injected into the server via NNTP 
+Sets an email address to which messages injected into the server via NNTP
 will be sent.
+
+=item C<pop3showafter>
+
+Sets a time (in RFC3501 format, for example "6-Jan-2011 11:45:32 +1100")
+which specifies a cutoff date such that POP3 fetching of the folder does
+not see messages whose internaldate is before or equal to the date.
 
 =item C<sharedseen>
 
@@ -248,7 +246,7 @@ Indicates that the mailbox should have a squat index created for it.
 
 Sets the annotation I</explicit/annotation> on I<mailbox> to I<value>.
 
-=back 
+=back
 
 =item C<renamemailbox> [C<--partition> I<partition>] I<oldname> I<newname>
 
@@ -277,7 +275,7 @@ server.  It will prompt for automatic login unless the C<--noauthenticate>
 option is specified.  (This may change; in particular, either automatic
 authentication will be removed or all C<authenticate> options will be added.)
 
-When connected to a server, B<cyradm>'s prompt changes from C<cyradmE<gt>> to
+When connected to a server, the B<cyradm> prompt changes from C<cyradmE<gt>> to
 C<servernameE<gt>>, where I<servername> is the fully qualified domain name
 of the connected server.
 
@@ -377,7 +375,7 @@ server (unless overridden by a mailbox annotation).
 Indicates that all mailboxes should have a squat indexes created for
 them (unless overridden by a mailbox annotation).
 
-=back 
+=back
 
 =item C<setquota> I<root> I<resource> I<value> [I<resource> I<value> ...]
 

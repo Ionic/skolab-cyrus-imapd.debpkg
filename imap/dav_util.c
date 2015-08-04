@@ -49,10 +49,11 @@
 #include "global.h"
 #include "mailbox.h"
 #include "mboxname.h"
+#include "user.h"
 #include "util.h"
 
 /* Create filename corresponding to DAV DB for mailbox */
-void dav_getpath(struct buf *fname, struct mailbox *mailbox)
+EXPORTED void dav_getpath(struct buf *fname, struct mailbox *mailbox)
 {
     const char *userid;
 
@@ -62,24 +63,14 @@ void dav_getpath(struct buf *fname, struct mailbox *mailbox)
     else buf_setcstr(fname, mailbox_meta_fname(mailbox, META_DAV));
 }
 
-
 /* Create filename corresponding to DAV DB for userid */
-void dav_getpath_byuserid(struct buf *fname, const char *userid)
+EXPORTED void dav_getpath_byuserid(struct buf *fname, const char *userid)
 {
-    char c, *domain;
+    char *path = user_hash_meta(userid, FNAME_DAVSUFFIX);
 
-    buf_reset(fname);
-    if (config_virtdomains && (domain = strchr(userid, '@'))) {
-	char d = (char) dir_hash_c(domain+1, config_fulldirhash);
-	*domain = '\0';  /* split user@domain */
-	c = (char) dir_hash_c(userid, config_fulldirhash);
-	buf_printf(fname, "%s%s%c/%s%s%c/%s%s", config_dir, FNAME_DOMAINDIR, d,
-		   domain+1, FNAME_USERDIR, c, userid, FNAME_DAVSUFFIX);
-	*domain = '@';  /* reassemble user@domain */
+    if (buf_cstringnull(fname)) {
+        buf_setcstr(fname, path);
+        free(path);
     }
-    else {
-	c = (char) dir_hash_c(userid, config_fulldirhash);
-	buf_printf(fname, "%s%s%c/%s%s", config_dir, FNAME_USERDIR, c, userid,
-		   FNAME_DAVSUFFIX);
-    }
+    else buf_initm(fname, path, strlen(path));
 }

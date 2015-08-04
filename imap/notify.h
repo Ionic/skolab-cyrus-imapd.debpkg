@@ -38,17 +38,15 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: notify.h,v 1.9 2010/01/06 17:01:38 murch Exp $
  */
 
 #ifndef NOTIFY_H
 #define NOTIFY_H
 
 void notify(const char *method,
-	    const char *class, const char *priority,
-	    const char *user, const char *mailbox,
-	    int nopt, const char **options,
-	    const char *message);
+            const char *class, const char *priority,
+            const char *user, const char *mailbox,
+            int nopt, const char **options,
+            const char *message, const char *fname);
 
 #endif /* NOTIFY_H */

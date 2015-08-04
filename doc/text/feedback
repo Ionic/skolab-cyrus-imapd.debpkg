@@ -27,7 +27,7 @@ Sending Feedback on the Cyrus IMAP Server
     you cannot use cyradm because you are having perl problems, you can
     connect using imtest and then run the following IMAP command: 
 
-        a ID NIL 
+      * a ID NIL 
 
     The info-cyrus@andrew.cmu.edu mailing list exists for the discussion of
     this server and other Cyrus software; more information is available in

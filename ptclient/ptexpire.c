@@ -37,14 +37,12 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: ptexpire.c,v 1.23 2010/01/06 17:01:57 murch Exp $
  */
 
 /* This program purges old entries from the database. It holds an exclusive
  * lock throughout the process.
  *
- * NOTE: by adding the alt_file flag, we let exit() handle the cleanup of 
+ * NOTE: by adding the alt_file flag, we let exit() handle the cleanup of
  *       the lock file's fd. That's bad in principal but not in practice. We do
  *       to make the code easier to read.
  */
@@ -62,46 +60,43 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <syslog.h>
 
 #include "auth_pts.h"
 #include "cyrusdb.h"
 #include "exitcodes.h"
-#include "global.h"
+#include "imap/global.h"
 #include "libconfig.h"
-#include "cyr_lock.h"
 #include "xmalloc.h"
-
-static char rcsid[] = "$Id: ptexpire.c,v 1.23 2010/01/06 17:01:57 murch Exp $";
+#include "xversion.h"
 
 /* global */
 time_t timenow;
 time_t expire_time = (3*60*60); /* 3 Hours */
 
-int config_need_data = 0;
-
 static int expire_p(void *rockp __attribute__((unused)),
-		    const char *key __attribute__((unused)),
-		    int keylen __attribute__((unused)),
-		    const char *data,
-		    int datalen __attribute__((unused)))
+                    const char *key __attribute__((unused)),
+                    size_t keylen __attribute__((unused)),
+                    const char *data,
+                    size_t datalen __attribute__((unused)))
 {
     struct auth_state *authstate = (struct auth_state *)data;
     if (authstate->mark + expire_time < timenow) {
-	return 1;
+        return 1;
     }
     return 0; /* skip this one */
 }
 
 static int expire_cb(void *rockp,
-		     const char *key, int keylen,
-		     const char *data __attribute__((unused)),
-		     int datalen __attribute__((unused))) 
+                     const char *key, size_t keylen,
+                     const char *data __attribute__((unused)),
+                     size_t datalen __attribute__((unused)))
 {
     /* We only get called when we want to delete it */
-    syslog(LOG_DEBUG, "deleteing entry for %s", key);
+    syslog(LOG_DEBUG, "deleting entry for %s", key);
 
     /* xxx maybe we should use transactions for this */
-    config_ptscache_db->delete((struct db *)rockp, key, keylen, NULL, 0);
+    cyrusdb_delete((struct db *)rockp, key, keylen, NULL, 0);
     return 0;
 }
 
@@ -114,56 +109,56 @@ int main(int argc, char *argv[])
     int r;
     char *alt_config = NULL;
 
-    if ((geteuid()) == 0 && (become_cyrus() != 0)) {
-	fatal("must run as the Cyrus user", EC_USAGE);
+    if ((geteuid()) == 0 && (become_cyrus(/*is_master*/0) != 0)) {
+        fatal("must run as the Cyrus user", EC_USAGE);
     }
-    
+
     openlog("ptexpire", LOG_PID, SYSLOG_FACILITY);
 
     while ((opt = getopt(argc, argv, "C:E:")) != EOF) {
-	switch (opt) {
-	case 'C': /* alt config file */
-	    alt_config = optarg;
-	    break;
-	case 'E':
-	    expire_time = atoi(optarg);
-	    break;
-	default:
-	    fprintf(stderr,"usage: [-C filename] [-E time]"
-		    "\n\t-C <filename>\tAlternate Config File"
-		    "\n\t-E <seconds>\tExpiration time"
-		    "\n");
-	    syslog(LOG_ERR, "Invalid command line option");
-	    exit(-1);
-	    break;
-	    /* just pass through */
-	}
+        switch (opt) {
+        case 'C': /* alt config file */
+            alt_config = optarg;
+            break;
+        case 'E':
+            expire_time = atoi(optarg);
+            break;
+        default:
+            fprintf(stderr,"usage: [-C filename] [-E time]"
+                    "\n\t-C <filename>\tAlternate Config File"
+                    "\n\t-E <seconds>\tExpiration time"
+                    "\n");
+            syslog(LOG_ERR, "Invalid command line option");
+            exit(-1);
+            break;
+            /* just pass through */
+        }
     }
 
-    cyrus_init(alt_config, "ptexpire", 0);
+    cyrus_init(alt_config, "ptexpire", 0, 0);
 
     timenow = time(0);
     syslog(LOG_INFO, "Expiring entries older than %d seconds (currently %d)",
-	   expire_time, timenow);
-    syslog(LOG_DEBUG, "%s", rcsid);
-    
+           (int)expire_time, (int)timenow);
+    syslog(LOG_DEBUG, "%s", "ptexpire.c,v " _CYRUS_VERSION " " CYRUS_GITVERSION);
+
     /* open database */
     strcpy(fnamebuf, config_dir);
     strcat(fnamebuf, PTS_DBFIL);
-    r = (config_ptscache_db->open)(fnamebuf, CYRUSDB_CREATE, &ptdb);
+    r = cyrusdb_open(config_ptscache_db, fnamebuf, CYRUSDB_CREATE, &ptdb);
     if(r != CYRUSDB_OK) {
-	syslog(LOG_ERR, "error opening %s (%s)", fnamebuf,
-	       cyrusdb_strerror(r));
-	exit(1);
+        syslog(LOG_ERR, "error opening %s (%s)", fnamebuf,
+               cyrusdb_strerror(r));
+        exit(1);
     }
 
     /* iterate through db, wiping expired entries */
-    config_ptscache_db->foreach(ptdb, "", 0, expire_p, expire_cb, ptdb, NULL);
+    cyrusdb_foreach(ptdb, "", 0, expire_p, expire_cb, ptdb, NULL);
 
-    (config_ptscache_db->close)(ptdb);
+    cyrusdb_close(ptdb);
 
     cyrus_done();
 
     syslog(LOG_INFO, "finished");
     return 0;
-}      
+}

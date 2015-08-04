@@ -207,9 +207,7 @@ Identifiers
     which the entry applies. 
 
     There are two special identifiers, "anonymous", and "anyone", which are
-    explained below. The meaning of other identifiers usually depends on
-    the authorization mechanism being used (selected by --with-auth at
-    compile time, defaulting to Unix). 
+    explained below. 
 
 "anonymous" and "anyone"
 
@@ -421,7 +419,7 @@ Quota Roots
 
     exist and the quota roots 
 
-       user.bovik 
+       user.bovik
        user.bovik.list
        user.bovik.saved
 

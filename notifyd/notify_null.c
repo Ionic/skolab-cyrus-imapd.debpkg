@@ -38,8 +38,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: notify_null.c,v 1.8 2010/01/06 17:01:54 murch Exp $
  */
 
 #include <config.h>
@@ -49,12 +47,13 @@
 #include <string.h>
 
 char* notify_null(const char *class __attribute__((unused)),
-		  const char *priority __attribute__((unused)),
-		  const char *user __attribute__((unused)),
-		  const char *mailbox __attribute__((unused)),
-		  int nopt __attribute__((unused)),
-		  char **options __attribute__((unused)),
-		  const char *message __attribute__((unused)))
+                  const char *priority __attribute__((unused)),
+                  const char *user __attribute__((unused)),
+                  const char *mailbox __attribute__((unused)),
+                  int nopt __attribute__((unused)),
+                  char **options __attribute__((unused)),
+                  const char *message __attribute__((unused)),
+                  const char *fname __attribute__((unused)))
 {
     return strdup("OK null notification successful");
 }

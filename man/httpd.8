@@ -64,6 +64,9 @@ httpd \- HTTP server process
 .B \-s
 ]
 [
+.B \-q
+]
+[
 .B \-p
 .I ssf
 ]
@@ -88,7 +91,7 @@ configuration option, then
 .I httpd
 will create protocol telemetry logs for sessions authenticating as
 .IR user .
-The telemetry logs will be stored in the 
+The telemetry logs will be stored in the
 .RI log/ user
 directory with a filename of the
 .I httpd
@@ -109,6 +112,9 @@ timeout.  The default is 60.
 .TP
 .BI \-D
 Run external debugger specified in debug_command.
+.TP
+.BI \-q
+Ignore quota limits
 .TP
 .BI \-s
 Serve HTTP over SSL (https).  All data to and from

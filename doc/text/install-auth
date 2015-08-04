@@ -119,11 +119,11 @@ Configuring Kerberos v4
            Name: imap
            Instance: foobar
            Realm: ANDREW.CMU.EDU
-           Version number: 
+           Version number:
            New principal: imap.foobar@ANDREW.CMU.EDU; version 0
-           Is this correct? (y,n) [y] 
-           Password: 
-           Verifying, please re-enter Password: 
+           Is this correct? (y,n) [y]
+           Password:
+           Verifying, please re-enter Password:
            Key successfully added.
            Would you like to add another key? (y,n) [y] n
 

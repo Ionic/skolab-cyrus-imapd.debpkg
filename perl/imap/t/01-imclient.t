@@ -38,8 +38,6 @@
 # AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
 # OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-# $Id: 01-imclient.t,v 1.6 2010/01/06 17:01:55 murch Exp $
-#
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
@@ -138,11 +136,11 @@ print "ok 9\n";
 # authentication with extra parameters
 $client = Cyrus::IMAP->new($server);
 print "not " if !$client->authenticate(-mechanism => 'PLAIN',
-				       -service => 'imap',
-				       -user => $auser,
-				       -password => $pass,
-				       -minssf => 0,
-				       -maxssf => 10000);
+                                       -service => 'imap',
+                                       -user => $auser,
+                                       -password => $pass,
+                                       -minssf => 0,
+                                       -maxssf => 10000);
 $pass = "\0" x length($pass);
 print "ok 10\n";
 

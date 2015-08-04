@@ -1,5 +1,5 @@
 
-/* pushstats.c -- automatically generated from pushstats.snmp by snmpgen */
+/* pushstats.c -- automatically generated from /home/ellie/source/cyrus-imapd/imap/pushstats.snmp by snmpgen */
 
 
 
@@ -9,11 +9,11 @@
 
 /* We disable this code for now since it doesn't actually work and wastes
 
- * resources.  At some point in time, we'll make it work again as it would 
+ * resources.  At some point in time, we'll make it work again as it would
 
- * be useful to gather aggregate statistics on what commands are being used 
+ * be useful to gather aggregate statistics on what commands are being used
 
- * so we can better tune the server.  This change closes bug #1191. 
+ * so we can better tune the server.  This change closes bug #1191.
 
  * New bug 1267 opened to re-enable the feature.
 
@@ -148,7 +148,7 @@ const char *snmp_getdescription(pushstats_t evt)
 
 const char *snmp_getoid(const char *name __attribute__((unused)),
 
-			pushstats_t evt, char *buf, int buflen)
+                        pushstats_t evt, char *buf, int buflen)
 
 {
 
@@ -237,7 +237,7 @@ static void snmp_send(char *str)
 
     if (sendto(mysock, str, strlen(str), 0, (struct sockaddr *) &remote, sockaddr_len) == -1) {
 
-	return;
+        return;
 
     }
 
@@ -263,7 +263,7 @@ int snmp_connect(void)
 
     if ((s = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1) {
 
-	return 1;
+        return 1;
 
     }
 
@@ -312,7 +312,7 @@ int snmp_close(void)
 
     if (mysock > -1)
 
-	close(mysock);
+        close(mysock);
 
 
 
@@ -360,7 +360,7 @@ int snmp_increment_args(pushstats_t cmd, int incr, ...)
 
               ival = va_arg(ap, int); /* get the next arg */
 
-              variable_tmpvalue[vval] = ival;              
+              variable_tmpvalue[vval] = ival;
 
           }
 
@@ -380,7 +380,7 @@ int snmp_increment_args(pushstats_t cmd, int incr, ...)
 
     if (sendto(mysock, tosend, strlen(tosend), 0, (struct sockaddr *) &remote, sockaddr_len) == -1) {
 
-	return 1;
+        return 1;
 
     }
 
@@ -404,7 +404,7 @@ int snmp_increment_args(pushstats_t cmd, int incr, ...)
 
               ival = va_arg(ap, int); /* get the next arg */
 
-              variable_tmpvalue[vval] = -1;              
+              variable_tmpvalue[vval] = -1;
 
           }
 
@@ -444,7 +444,7 @@ int snmp_increment(pushstats_t cmd, int incr)
 
     if (sendto(mysock, tosend, strlen(tosend), 0, (struct sockaddr *) &remote, sockaddr_len) == -1) {
 
-	return 1;
+        return 1;
 
     }
 
@@ -476,7 +476,7 @@ int snmp_set(pushstats_t cmd, int value)
 
     if (sendto(mysock, tosend, strlen(tosend), 0, (struct sockaddr *) &remote, sockaddr_len) == -1) {
 
-	return 1;
+        return 1;
 
     }
 
@@ -508,7 +508,7 @@ int snmp_set_str(pushstats_t cmd, char *value)
 
     if (sendto(mysock, tosend, strlen(tosend), 0, (struct sockaddr *) &remote, sockaddr_len) == -1) {
 
-	return 1;
+        return 1;
 
     }
 
@@ -540,7 +540,7 @@ int snmp_set_time(pushstats_t cmd, time_t t)
 
     if (sendto(mysock, tosend, strlen(tosend), 0, (struct sockaddr *) &remote, sockaddr_len) == -1) {
 
-	return 1;
+        return 1;
 
     }
 

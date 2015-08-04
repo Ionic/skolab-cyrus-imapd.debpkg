@@ -35,33 +35,47 @@
 # WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
 # AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
 # OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-#
-# $Id: Makefile.PL,v 1.21 2010/01/06 17:01:55 murch Exp $
 
 use ExtUtils::MakeMaker;
 use Config;
 
-my $SASL_INC = $ENV{SASL_INC};
-my $SASL_LIB = $ENV{SASL_LIB} || "-lsasl2";
-
-my $OPENSSL_INC = $ENV{OPENSSL_INC};
-my $OPENSSL_LIB = $ENV{OPENSSL_LIB};
-
-my $BDB_INC = $ENV{BDB_INC};
-my $BDB_LIB = $ENV{BDB_LIB};
-
-my $LIB_RT = $ENV{LIB_RT};
-my $ZLIB = $ENV{ZLIB};
+my $LIB_SASL = " -lsasl2" || "-lsasl2";
 
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 $libs = "-lcyrus";
 
+# override default xs.c rule with a VPATH-aware version
+sub MY::xs_c
+{
+    return <<'EOT';
+
+.xs.c: .xs
+	$(XSUBPPRUN) $(XSPROTOARG) $(XSUBPPARGS) $(XSUBPP_EXTRA_ARGS) $< > $*.xsc && $(MV) $*.xsc $@
+
+EOT
+}
+
+# xs_c above is adequate, override this to get it out of the way
+sub MY::xs_o
+{
+    ;
+}
+
 sub MY::postamble
 {
     return <<'EOT';
+
+VPATH=../../perl/imap
+
 cyradm: cyradm.sh
-	$(ABSPERLRUN) -pne 's|\@INSTALLSITEARCH\@|$(INSTALLSITEARCH)|g;' < $< > $@
+	perl /home/ellie/source/cyrus-imapd/tools/fixsearchpath.pl NONE ${exec_prefix}/bin < $< > $@
+
+check:
+
+dvi:
+
+installcheck:
 
 EOT
 }
@@ -69,13 +83,19 @@ EOT
 WriteMakefile( 
     'NAME'	=> 'Cyrus::IMAP',
     'ABSTRACT'  => 'Cyrus administrative interface',
-    'VERSION_FROM' => 'IMAP.pm', # finds $VERSION
-    'macro'	=> {'IMCLIENT_LIBS' => ''},	# hack
+    'VERSION_FROM' => "../../perl/imap/IMAP.pm", # finds $VERSION
+    'macro'	=> {
+		    'IMCLIENT_LIBS' => '',	# hack
+		},
     'clean'	=> {'FILES' => 'libcyrperl.a cyradm'},
     'OBJECT'    => 'IMAP.o',
-    'MYEXTLIB'  => '../../lib/libcyrus.a ../../lib/libcyrus_min.a',
-    'LIBS'	=> ["$BDB_LIB $SASL_LIB $OPENSSL_LIB $LIB_RT $ZLIB -lssl -lcrypto"],
+    'MYEXTLIB'  => '../../perl/.libs/libcyrus.a ../../perl/.libs/libcyrus_min.a',
+    'LIBS'	=> [ "$LIB_SASL  -lssl -lcrypto   -luuid -lz"],
     'DEFINE'	=> '-DPERL_POLLUTE',    # e.g., '-DHAVE_SOMETHING' 
-    'INC'	=> "-I../../lib -I../.. -I../../com_err/et $SASL_INC $OPENSSL_INC", 
+    'INC'	=> "-I../.. -I../../com_err/et   -I../../perl/imap", 
     'EXE_FILES' => [cyradm],
+    # This is a disgusting hack to effectively disable the stupid
+    # behaviour of the generated Makefile which moves itself aside
+    # on a 'make clean' instead of on 'make distclean'.
+    'MAKEFILE_OLD' => 'Makefile',
 );

@@ -40,73 +40,74 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: lex.c,v 1.30 2010/01/06 17:02:01 murch Exp $
  */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
+#include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <ctype.h>
 #include <string.h>
 
-#include "tls.h"
-#include "lex.h"
-#include "codes.h"
-#include "actions.h"
 #include "libconfig.h"
-#include "global.h"
-#include "util.h"
 #include "xmalloc.h"
+#include "imap/global.h"
+#include "imap/tls.h"
+#include "timsieved/codes.h"
+#include "timsieved/lex.h"
 
-static int token_lookup (char *str, int len __attribute__((unused)))
+static int token_lookup(const char *str)
 {
     switch (*str) {
     case 'a':
-	if (strcmp(str, "authenticate")==0) return AUTHENTICATE;
-	break;
+        if (strcmp(str, "authenticate")==0) return AUTHENTICATE;
+        break;
 
     case 'c':
-	if (strcmp(str, "capability")==0) return CAPABILITY;
-	break;
+        if (strcmp(str, "capability")==0) return CAPABILITY;
+        if (strcmp(str, "checkscript")==0) return CHECKSCRIPT;
+        break;
 
     case 'd':
-	if (strcmp(str, "deletescript")==0) return DELETESCRIPT;
-	break;
+        if (strcmp(str, "deletescript")==0) return DELETESCRIPT;
+        break;
 
     case 'g':
-	if (strcmp(str, "getscript")==0) return GETSCRIPT;
-	break;
+        if (strcmp(str, "getscript")==0) return GETSCRIPT;
+        break;
 
     case 'h':
-	if (strcmp(str, "havespace")==0) return HAVESPACE;
-	break;
+        if (strcmp(str, "havespace")==0) return HAVESPACE;
+        break;
 
     case 'l':
-	if (strcmp(str, "listscripts")==0) return LISTSCRIPTS;
-	if (strcmp(str, "logout")==0) return LOGOUT;
-	break;
+        if (strcmp(str, "listscripts")==0) return LISTSCRIPTS;
+        if (strcmp(str, "logout")==0) return LOGOUT;
+        break;
 
     case 'n':
-	if (strcmp(str, "noop")==0) return NOOP;
-	break;
+        if (strcmp(str, "noop")==0) return NOOP;
+        break;
 
     case 'p':
-	if (strcmp(str, "putscript")==0) return PUTSCRIPT;
-	break;
+        if (strcmp(str, "putscript")==0) return PUTSCRIPT;
+        break;
+
+    case 'r':
+        if (strcmp(str, "renamescript")==0) return RENAMESCRIPT;
+        break;
 
     case 's':
-	if (strcmp(str, "setactive")==0) return SETACTIVE;
-	if (strcmp(str, "starttls")==0 && tls_enabled())
-	    return STARTTLS;
-	break;
+        if (strcmp(str, "setactive")==0) return SETACTIVE;
+        if (strcmp(str, "starttls")==0 && tls_enabled())
+            return STARTTLS;
+        break;
 
     case 'u':
-	if (strcmp(str, "unauthenticate")==0) return UNAUTHENTICATE;
-	break;
+        if (strcmp(str, "unauthenticate")==0) return UNAUTHENTICATE;
+        break;
     }
 
     /* error, nothing matched */
@@ -115,24 +116,23 @@ static int token_lookup (char *str, int len __attribute__((unused)))
 
 /* current state the lexer is in */
 static int lexer_state = LEXER_STATE_NORMAL;
+static unsigned long maxscriptsize=0;
+static char *buffer;
 
-#define ERR() {								\
-		lexer_state=LEXER_STATE_RECOVER;                        \
-		return TIMSIEVE_FAIL;                                   \
-  	      }
+#define ERR() {                                                         \
+                lexer_state=LEXER_STATE_RECOVER;                        \
+                return TIMSIEVE_FAIL;                                   \
+              }
 
-#define ERR_PUSHBACK() {				\
-    		prot_ungetc(ch, stream);                \
-		ERR();					\
-  	      }
+#define ERR_PUSHBACK() {                                \
+                prot_ungetc(ch, stream);                \
+                ERR();                                  \
+              }
 
 void lex_setrecovering(void)
 {
   lexer_state = LEXER_STATE_RECOVER;
 }
-
-static unsigned long maxscriptsize=0;
-static char *buffer;
 
 int lex_init(void)
 {
@@ -148,7 +148,7 @@ int lex_init(void)
  * if outstr is NULL it isn't filled in
  */
 
-int timlex(mystring_t **outstr, unsigned long *outnum,  struct protstream *stream)
+int timlex(struct buf *outstr, unsigned long *outnum,  struct protstream *stream)
 {
 
   int ch;
@@ -164,7 +164,7 @@ int timlex(mystring_t **outstr, unsigned long *outnum,  struct protstream *strea
   buff_ptr = buffer; /* ptr into the buffer */
   buff_end = buffer + maxscriptsize - 10; /* ptr to end of buffer */
 
-  
+
   while (1)
   {
 
@@ -175,207 +175,196 @@ int timlex(mystring_t **outstr, unsigned long *outnum,  struct protstream *strea
     ch=prot_getc(stream);
 
     if (ch==EOF) {
-	/* Lost connection */
-	return EOF;
+        /* Lost connection */
+        return EOF;
     }
 
     switch (lexer_state)
     {
-    
+
 
     case LEXER_STATE_RECOVER:
       if (ch == '\n') {
-	lexer_state=LEXER_STATE_NORMAL;
+        lexer_state=LEXER_STATE_NORMAL;
       }
-      if (ch == '\r') 
-	lexer_state=LEXER_STATE_RECOVER_CR;
+      if (ch == '\r')
+        lexer_state=LEXER_STATE_RECOVER_CR;
       break;
     case LEXER_STATE_RECOVER_CR:
       if (ch == '\n')
-	lexer_state=LEXER_STATE_NORMAL;
+        lexer_state=LEXER_STATE_NORMAL;
       break;
     case LEXER_STATE_CR:
       if (ch == '\n') {
-	lexer_state=LEXER_STATE_NORMAL;
-	return EOL;
+        lexer_state=LEXER_STATE_NORMAL;
+        return EOL;
       }
       /* otherwise, life is bad */
       ERR_PUSHBACK();
     case LEXER_STATE_QSTR:
       if (ch == '\"') {
-	/* End of the string */
-	if (outstr!=NULL)
-	{
-	  *outstr = NULL;
-	  result = string_allocate(buff_ptr - buffer, buffer, outstr);
-	  if (result != TIMSIEVE_OK)
-	    ERR_PUSHBACK();
-	}
-	  /*} */
-	lexer_state=LEXER_STATE_NORMAL;
-	return STRING;
+        /* End of the string */
+          /*} */
+        if (outstr) {
+            buf_appendmap(outstr, buffer, buff_ptr-buffer);
+            buf_cstring(outstr);
+        }
+        lexer_state=LEXER_STATE_NORMAL;
+        return STRING;
       }
       /* illegal character */
       if (ch == '\0'
-	  || ch == '\r'
-	  || ch == '\n'
-	  || 0x7F < ((unsigned char)ch))
+          || ch == '\r'
+          || ch == '\n'
+          || 0x7F < ((unsigned char)ch))
       {
-	ERR_PUSHBACK();
+        ERR_PUSHBACK();
       }
 
       /* Otherwise, we're appending a character */
       if (buff_end <= buff_ptr)
-	ERR_PUSHBACK();		/* too long! */
+        ERR_PUSHBACK();         /* too long! */
       if (ch == '\\') {
-	ch=prot_getc(stream);
+        ch=prot_getc(stream);
 
-	if (result != TIMSIEVE_OK)
-	  ERR();
-	if (ch != '\"' && ch != '\\')
-	  ERR_PUSHBACK();
+        if (result != TIMSIEVE_OK)
+          ERR();
+        if (ch != '\"' && ch != '\\')
+          ERR_PUSHBACK();
       }
       *buff_ptr++ = ch;
       break;
     case LEXER_STATE_LITERAL:
       if (('0' <= ch) && (ch <= '9')) {
-	unsigned long   newcount = count * 10 + (ch - '0');
+        unsigned long   newcount = count * 10 + (ch - '0');
 
-	if (newcount < count)
-	  ERR_PUSHBACK();	/* overflow */
-	/*
-	 * XXX This should be fatal if non-synchronizing.
-	 */
-	count = newcount;
-	break;
+        if (newcount < count)
+          ERR_PUSHBACK();       /* overflow */
+        /*
+         * XXX This should be fatal if non-synchronizing.
+         */
+        count = newcount;
+        break;
       }
       if (ch != '+')
-	ERR_PUSHBACK();
+        ERR_PUSHBACK();
       ch=prot_getc(stream);
       if (ch != '}')
-	ERR_PUSHBACK();
+        ERR_PUSHBACK();
       ch=prot_getc(stream);
       if (ch < 0)
-	ERR();
+        ERR();
       if (ch != '\r')
-	ERR_PUSHBACK();
+        ERR_PUSHBACK();
       ch=prot_getc(stream);
       if (ch < 0)
-	ERR();
+        ERR();
       if (ch != '\n')
-	ERR_PUSHBACK();
+        ERR_PUSHBACK();
 
       if (count > maxscriptsize) {
-	  /* too big, eat the input */
-	  for(;count > 0;count--) {
-	      if(prot_getc(stream)==EOF)
-		  break;
-	  }
-	  
-	  ERR();
-      }
+          /* too big, eat the input */
+          for(;count > 0;count--) {
+              if(prot_getc(stream)==EOF)
+                  break;
+          }
 
-      if (outstr!=NULL)
-      {
-	*outstr = NULL;
-	result = string_allocate(count, NULL, outstr);
-	if (result != TIMSIEVE_OK)
-	  ERR_PUSHBACK();
+          ERR();
       }
 
       /* there is a literal string on the wire. let's read it */
-      if (outstr!=NULL) {
-	char           *it = string_DATAPTR(*outstr),
-	               *end = it + count;
-
-	while (it < end) {
-	  *it=prot_getc(stream);
-	  it++;
-	}
+      if (outstr) {
+          for (;count > 0;count--) {
+              ch = prot_getc(stream);
+              if (ch == EOF)
+                    break;
+              buf_putc(outstr, ch);
+          }
+          buf_cstring(outstr);
       } else {
-	/* just read the chars and throw them away */
-	unsigned long lup;
+        /* just read the chars and throw them away */
+        unsigned long lup;
 
-	for (lup=0;lup<count;lup++)
-	  (void)prot_getc(stream);
+        for (lup=0;lup<count;lup++)
+          (void)prot_getc(stream);
       }
       lexer_state=LEXER_STATE_NORMAL;
       return STRING;
     case LEXER_STATE_NUMBER:
 
-	if (Uisdigit(ch)) {
-	    unsigned long   newcount = tmpnum * 10 + (ch - '0');
+        if (Uisdigit(ch)) {
+            unsigned long   newcount = tmpnum * 10 + (ch - '0');
 
-	    if (newcount < tmpnum)
-		ERR_PUSHBACK();	/* overflow */
-	    tmpnum = newcount;
-	} else {
-	    lexer_state=LEXER_STATE_NORMAL;
-	    prot_ungetc(ch, stream);
+            if (newcount < tmpnum)
+                ERR_PUSHBACK(); /* overflow */
+            tmpnum = newcount;
+        } else {
+            lexer_state=LEXER_STATE_NORMAL;
+            prot_ungetc(ch, stream);
 
-	    if (outnum) *outnum = tmpnum;
+            if (outnum) *outnum = tmpnum;
 
-	    return NUMBER;
-	}
-	
-	break;
+            return NUMBER;
+        }
+
+        break;
     case LEXER_STATE_NORMAL:
       if (Uisalpha(ch)) {
-	lexer_state=LEXER_STATE_ATOM;
-	*buff_ptr++ = tolower(ch);
-	break;
+        lexer_state=LEXER_STATE_ATOM;
+        *buff_ptr++ = tolower(ch);
+        break;
       }
       if (Uisdigit(ch)) {
-	lexer_state=LEXER_STATE_NUMBER;
-	tmpnum = ch -'0';
-	break;
+        lexer_state=LEXER_STATE_NUMBER;
+        tmpnum = ch -'0';
+        break;
       }
       switch (ch) {
       case '(':
-	return '(';
+        return '(';
       case ')':
-	return ')';
+        return ')';
       case ' ':
-	return ' ';
+        return ' ';
       case '\"':
-	lexer_state=LEXER_STATE_QSTR;
-	break;
+        lexer_state=LEXER_STATE_QSTR;
+        break;
       case '*':
-	return '*';
+        return '*';
       case '{':
-	count = 0;
-	lexer_state=LEXER_STATE_LITERAL;
-	break;
+        count = 0;
+        lexer_state=LEXER_STATE_LITERAL;
+        break;
       case '\r':
-	lexer_state=LEXER_STATE_CR;
-	break;
+        lexer_state=LEXER_STATE_CR;
+        break;
       case '\n':
-	lexer_state=LEXER_STATE_NORMAL;
-	return EOL;
-	break;
+        lexer_state=LEXER_STATE_NORMAL;
+        return EOL;
+        break;
       default:
-	return ch;
+        return ch;
       }
       break;
     case LEXER_STATE_ATOM:
       if (!Uisalpha(ch)) {
-	int token;
+        int token;
 
-	buffer[buff_ptr - buffer] = '\0';
+        *buff_ptr = '\0';
 
-	/* We've got the atom. */
-	token = token_lookup((char *) buffer, (int) (buff_ptr - buffer));
+        /* We've got the atom. */
+        token = token_lookup(buffer);
 
-	if (token!=-1) {
-	  lexer_state=LEXER_STATE_NORMAL;
-	  prot_ungetc(ch, stream);
+        if (token!=-1) {
+          lexer_state=LEXER_STATE_NORMAL;
+          prot_ungetc(ch, stream);
 
-	  return token;
-	} else
-	  ERR_PUSHBACK();
+          return token;
+        } else
+          ERR_PUSHBACK();
       }
       if (buff_end <= buff_ptr)
-	ERR_PUSHBACK();		/* atom too long */
+        ERR_PUSHBACK();         /* atom too long */
       *buff_ptr++ = tolower(ch);
       break;
     }
@@ -384,5 +373,3 @@ int timlex(mystring_t **outstr, unsigned long *outnum,  struct protstream *strea
 
   /* never reached */
 }
-
-

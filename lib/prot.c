@@ -38,8 +38,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: prot.c,v 1.100 2010/06/28 12:06:43 brong Exp $
  */
 
 #include <config.h>
@@ -48,11 +46,7 @@
 #include <string.h>
 #include <syslog.h>
 #include <signal.h>
-#ifdef HAVE_STDARG_H
 #include <stdarg.h>
-#else
-#include <varargs.h>
-#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -86,13 +80,13 @@ struct protgroup
  * Create a new protection stream for file descriptor 'fd'.  Stream
  * will be used for writing iff 'write' is nonzero.
  */
-struct protstream *prot_new(int fd, int write)
+EXPORTED struct protstream *prot_new(int fd, int write)
 {
     struct protstream *newstream;
 
     newstream = (struct protstream *) xzmalloc(sizeof(struct protstream));
-    newstream->buf = (unsigned char *) 
-	xmalloc(sizeof(char) * (PROT_BUFSIZE));
+    newstream->buf = (unsigned char *)
+        xmalloc(sizeof(char) * (PROT_BUFSIZE));
     newstream->buf_size = PROT_BUFSIZE;
     newstream->ptr = newstream->buf;
     newstream->maxplain = PROT_BUFSIZE;
@@ -101,20 +95,41 @@ struct protstream *prot_new(int fd, int write)
     newstream->logfd = PROT_NO_FD;
     newstream->big_buffer = PROT_NO_FD;
     if(write)
-	newstream->cnt = PROT_BUFSIZE;
+        newstream->cnt = PROT_BUFSIZE;
+
+    return newstream;
+}
+
+EXPORTED struct protstream *prot_writebuf(struct buf *buf)
+{
+    struct protstream *newstream;
+
+    newstream = (struct protstream *) xzmalloc(sizeof(struct protstream));
+    /* dodgy, but the alternative is two pointers */
+    newstream->buf = (unsigned char *)
+        xmalloc(sizeof(char) * (PROT_BUFSIZE));
+    newstream->buf_size = PROT_BUFSIZE;
+    newstream->ptr = newstream->buf;
+    newstream->cnt = PROT_BUFSIZE;
+    newstream->maxplain = PROT_BUFSIZE;
+    newstream->write = 1;
+    newstream->writetobuf = buf;
+    newstream->fd = PROT_NO_FD;
+    newstream->logfd = PROT_NO_FD;
+    newstream->big_buffer = PROT_NO_FD;
 
     return newstream;
 }
 
 /* Create a protstream which is just an interface to a mapped piece of
  * memory, allowing prot commands to be used to read from it */
-struct protstream *prot_readmap(const char *buf, uint32_t len)
+EXPORTED struct protstream *prot_readmap(const char *base, uint32_t len)
 {
     struct protstream *newstream;
 
     newstream = (struct protstream *) xzmalloc(sizeof(struct protstream));
     /* dodgy, but the alternative is two pointers */
-    newstream->ptr = (unsigned char *)buf;
+    newstream->ptr = (unsigned char *)base;
     newstream->cnt = len;
     newstream->fixedsize = 1;
     newstream->fd = PROT_NO_FD;
@@ -125,23 +140,55 @@ struct protstream *prot_readmap(const char *buf, uint32_t len)
 }
 
 /*
+ * Create a protstream for reading whose data is supplied by a callback rather
+ * than a file descriptor.
+ *
+ * The callback interface is similar to read(2):
+ *
+ *      typedef ssize_t prot_fillcallback_t(unsigned char *buf, size_t len, void *rock)
+ *
+ *      Read up to len bytes into the buffer buf.  On success, return the
+ *      number of bytes read, or 0 if there is no more data.  On error, set
+ *      errno to an appropriate value and return -1.
+ */
+EXPORTED struct protstream *prot_readcb(prot_fillcallback_t *proc, void *rock)
+{
+    struct protstream *newstream;
+
+    newstream = (struct protstream *) xzmalloc(sizeof(struct protstream));
+    newstream->buf = (unsigned char *)
+        xmalloc(sizeof(char) * (PROT_BUFSIZE));
+    newstream->buf_size = PROT_BUFSIZE;
+    newstream->ptr = newstream->buf;
+    newstream->maxplain = PROT_BUFSIZE;
+    newstream->fd = PROT_NO_FD;
+    newstream->logfd = PROT_NO_FD;
+    newstream->big_buffer = PROT_NO_FD;
+
+    newstream->fillcallback_proc = proc;
+    newstream->fillcallback_rock = rock;
+
+    return newstream;
+}
+
+/*
  * Free a protection stream
  */
-int prot_free(struct protstream *s)
+EXPORTED int prot_free(struct protstream *s)
 {
     if (s->error) free(s->error);
     free(s->buf);
 
     if(s->big_buffer != PROT_NO_FD) {
-	map_free(&(s->bigbuf_base), &(s->bigbuf_siz));
-	close(s->big_buffer);
+        map_free(&(s->bigbuf_base), &(s->bigbuf_siz));
+        close(s->big_buffer);
     }
 
 #ifdef HAVE_ZLIB
     if (s->zstrm) {
-	if (s->write) deflateEnd(s->zstrm);
-	else inflateEnd(s->zstrm);
-	free(s->zstrm);
+        if (s->write) deflateEnd(s->zstrm);
+        else inflateEnd(s->zstrm);
+        free(s->zstrm);
     }
     if (s->zbuf) free(s->zbuf);
 #endif
@@ -154,13 +201,13 @@ int prot_free(struct protstream *s)
 /*
  * Set the logging file descriptor for stream 's' to be 'fd'.
  */
-int prot_setlog(struct protstream *s, int fd)
+EXPORTED int prot_setlog(struct protstream *s, int fd)
 {
     s->logfd = fd;
     return 0;
 }
 
-int prot_setisclient(struct protstream *s, int val)
+EXPORTED int prot_setisclient(struct protstream *s, int val)
 {
     s->isclient = val;
     return 0;
@@ -172,14 +219,14 @@ int prot_setisclient(struct protstream *s, int val)
  * Turn on TLS for this connection
  */
 
-int prot_settls(struct protstream *s, SSL *tlsconn)
+EXPORTED int prot_settls(struct protstream *s, SSL *tlsconn)
 {
     s->tls_conn = tlsconn;
 
     /* Make nonblocking stuff to work similar to write() */
     SSL_set_mode(tlsconn,
-		 SSL_MODE_ENABLE_PARTIAL_WRITE
-		 | SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
+                 SSL_MODE_ENABLE_PARTIAL_WRITE
+                 | SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
 
     return 0;
 }
@@ -189,36 +236,36 @@ int prot_settls(struct protstream *s, SSL *tlsconn)
 /*
  * Decode data sent via a SASL security layer. Returns EOF on error.
  */
-int prot_sasldecode(struct protstream *s, int n)
+static int prot_sasldecode(struct protstream *s, int n)
 {
     int result;
     const char *out;
     unsigned outlen;
-    
+
     assert(!s->write);
 
     /* decode the input */
-    result = sasl_decode(s->conn, (const char *) s->buf, n, 
-			 &out, &outlen);
+    result = sasl_decode(s->conn, (const char *) s->buf, n,
+                         &out, &outlen);
 
     if (result != SASL_OK) {
-	char errbuf[256];
-	const char *ed = sasl_errdetail(s->conn);
+        char errbuf[256];
+        const char *ed = sasl_errdetail(s->conn);
 
-	snprintf(errbuf, 256, "decoding error: %s; %s",
-		 sasl_errstring(result, NULL, NULL),
-		 ed ? ed : "no detail");
-	s->error = xstrdup(errbuf);
-	return EOF;
+        snprintf(errbuf, 256, "decoding error: %s; %s",
+                 sasl_errstring(result, NULL, NULL),
+                 ed ? ed : "no detail");
+        s->error = xstrdup(errbuf);
+        return EOF;
     }
-   
+
     if (outlen > 0) {
       /* The contents of 'out' is static until next call to
-	 sasl_decode(), so serve data directly from 'out' */
-	s->ptr = (unsigned char *) out;
-	s->cnt = outlen;
-    } else {		/* didn't decode anything */
-	s->cnt = 0;
+         sasl_decode(), so serve data directly from 'out' */
+        s->ptr = (unsigned char *) out;
+        s->cnt = outlen;
+    } else {            /* didn't decode anything */
+        s->cnt = 0;
     }
 
     return 0;
@@ -228,49 +275,47 @@ int prot_sasldecode(struct protstream *s, int n)
  * Turn on SASL for this connection
  */
 
-int prot_setsasl(s, conn)
-struct protstream *s;
-sasl_conn_t *conn;
+EXPORTED int prot_setsasl(struct protstream *s, sasl_conn_t *conn)
 {
     const void *ssfp;
     int result;
 
     if (s->write && s->ptr != s->buf) {
-	/* flush any pending output */
-	if (prot_flush_internal(s, 0) == EOF)
-	    return EOF;
+        /* flush any pending output */
+        if (prot_flush_internal(s, 0) == EOF)
+            return EOF;
     }
-   
+
     s->conn = conn;
 
     result = sasl_getprop(conn, SASL_SSF, &ssfp);
     if (result != SASL_OK) {
-	return -1;
+        return -1;
     }
     s->saslssf = *((const int *) ssfp);
 
     if (s->write) {
-	const void *maxp;
-	unsigned int max;
+        const void *maxp;
+        unsigned int max;
 
-	/* ask SASL for layer max */
-	result = sasl_getprop(conn, SASL_MAXOUTBUF, &maxp);
-	max = *((const unsigned int *) maxp);
-	if (result != SASL_OK) {
-	    return -1;
-	}
+        /* ask SASL for layer max */
+        result = sasl_getprop(conn, SASL_MAXOUTBUF, &maxp);
+        max = *((const unsigned int *) maxp);
+        if (result != SASL_OK) {
+            return -1;
+        }
 
-	if (max == 0 || max > PROT_BUFSIZE) {
-	    /* max = 0 means unlimited, and we can't go bigger */
-	    max = PROT_BUFSIZE;
-	}
-    
-	s->maxplain = max;
-	s->cnt = max;
+        if (max == 0 || max > PROT_BUFSIZE) {
+            /* max = 0 means unlimited, and we can't go bigger */
+            max = PROT_BUFSIZE;
+        }
+
+        s->maxplain = max;
+        s->cnt = max;
     }
-    else if (s->cnt) {  
-	/* decode any pending input */
-	if (prot_sasldecode(s, s->cnt) == EOF) return EOF;
+    else if (s->cnt) {
+        /* decode any pending input */
+        if (prot_sasldecode(s, s->cnt) == EOF) return EOF;
     }
 
     return 0;
@@ -280,7 +325,7 @@ sasl_conn_t *conn;
  * Turn off SASL for this connection
  */
 
-void prot_unsetsasl(struct protstream *s)
+EXPORTED void prot_unsetsasl(struct protstream *s)
 {
     s->conn = NULL;
     s->maxplain = PROT_BUFSIZE;
@@ -293,13 +338,13 @@ void prot_unsetsasl(struct protstream *s)
 
 /* Wrappers for our memory management functions */
 static voidpf zalloc(voidpf opaque __attribute__((unused)),
-		     uInt items, uInt size)
+                     uInt items, uInt size)
 {
     return (voidpf) xmalloc(items * size);
 }
 
 static void zfree(voidpf opaque __attribute__((unused)),
-		  voidpf address)
+                  voidpf address)
 {
     free(address);
 }
@@ -310,7 +355,7 @@ static void zfree(voidpf opaque __attribute__((unused)),
  * otherwise initialize a decompressor.
  */
 
-int prot_setcompress(struct protstream *s)
+EXPORTED int prot_setcompress(struct protstream *s)
 {
     int zr = Z_OK;
     z_stream *zstrm = (z_stream *) xmalloc(sizeof(z_stream));
@@ -320,24 +365,25 @@ int prot_setcompress(struct protstream *s)
     zstrm->opaque = Z_NULL;
 
     if (s->write) {
-	if (s->ptr != s->buf) {
-	    /* flush any pending output */
-	    if (prot_flush_internal(s, 0) == EOF)
-	        goto error;
-	}
+        if (s->ptr != s->buf) {
+            /* flush any pending output */
+            if (prot_flush_internal(s, 0) == EOF)
+                goto error;
+        }
 
-	s->zlevel = Z_DEFAULT_COMPRESSION;
-	zr = deflateInit2(zstrm, s->zlevel, Z_DEFLATED,
-		          -MAX_WBITS, MAX_MEM_LEVEL, Z_DEFAULT_STRATEGY);
+        s->zlevel = Z_DEFAULT_COMPRESSION;
+        zr = deflateInit2(zstrm, s->zlevel, Z_DEFLATED,
+                          -MAX_WBITS,           /* raw deflate */
+                          MAX_MEM_LEVEL, Z_DEFAULT_STRATEGY);
     }
     else {
-	zstrm->next_in = Z_NULL;
-	zstrm->avail_in = 0;
-	zr = inflateInit2(zstrm, -MAX_WBITS);
+        zstrm->next_in = Z_NULL;
+        zstrm->avail_in = 0;
+        zr = inflateInit2(zstrm, -MAX_WBITS);   /* raw inflate */
     }
 
     if (zr != Z_OK)
-	goto error;
+        goto error;
 
     /* RFC 1951 says:
      * A simple counting argument shows that no lossless compression
@@ -347,7 +393,7 @@ int prot_setcompress(struct protstream *s)
      *
      * We say: maxplain can never be bigger than PROT_BUFSIZE, which
      * is currently 4096, so adding 5 bytes will do it!
-     * 
+     *
      * Add another spare byte and we'll never totally fill the buffer,
      * which saves a loop.
      *
@@ -357,14 +403,14 @@ int prot_setcompress(struct protstream *s)
     s->zbuf_size = s->maxplain + 6;
     s->zbuf = (unsigned char *) xmalloc(sizeof(unsigned char) * s->zbuf_size);
     syslog(LOG_DEBUG, "created %scompress buffer of %u bytes",
-	   s->write ? "" : "de", s->zbuf_size);
+           s->write ? "" : "de", s->zbuf_size);
     s->zstrm = zstrm;
 
     return 0;
 
 error:
     syslog(LOG_NOTICE, "failed to start %scompression",
-	   s->write ? "" : "de");
+           s->write ? "" : "de");
     free(zstrm);
     return EOF;
 }
@@ -375,12 +421,12 @@ static struct file_sig {
     size_t len;
     const char *sig;
 } sig_tbl[] = {
-    { "GIF87a",	6, "GIF87a" },
-    { "GIF89a",	6, "GIF89a" },
-    { "GZIP",	2, "\x1F\x8B" },
-    { "JPEG",	4, "\xFF\xD8\xFF\xE0" },
-    { "PNG",	8, "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A" },
-    { NULL,	0, NULL }
+    { "GIF87a", 6, "GIF87a" },
+    { "GIF89a", 6, "GIF89a" },
+    { "GZIP",   2, "\x1F\x8B" },
+    { "JPEG",   4, "\xFF\xD8\xFF\xE0" },
+    { "PNG",    8, "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A" },
+    { NULL,     0, NULL }
 };
 
 /* Check if a chunk of data is incompressible */
@@ -392,11 +438,11 @@ static int is_incompressible(const char *p, size_t n)
     if (n < ZLARGE_DIFF_CHUNK) return 0;
 
     while (sig->type) {
-	if (n >= sig->len && !memcmp(p, sig->sig, sig->len)) {
-	    syslog(LOG_DEBUG, "data is %s", sig->type);
-	    return 1;
-	}
-	sig++;
+        if (n >= sig->len && !memcmp(p, sig->sig, sig->len)) {
+            syslog(LOG_DEBUG, "data is %s", sig->type);
+            return 1;
+        }
+        sig++;
     }
 
     return 0;
@@ -408,7 +454,7 @@ static int is_incompressible(const char *p, size_t n)
  * Since we might want to look at the data, we only set a flag and delay
  * any changes to the stream layers until the next prot_write().
  */
-int prot_data_boundary(struct protstream *s)
+EXPORTED int prot_data_boundary(struct protstream *s)
 {
     s->boundary = 1;
     return 0;
@@ -418,7 +464,7 @@ int prot_data_boundary(struct protstream *s)
  * Set the read timeout for the stream 's' to 'timeout' seconds.
  * 's' must have been created for reading.
  */
-int prot_settimeout(struct protstream *s, int timeout)
+EXPORTED int prot_settimeout(struct protstream *s, int timeout)
 {
     assert(!s->write);
 
@@ -431,7 +477,7 @@ int prot_settimeout(struct protstream *s, int timeout)
  * Reset the read timeout_mark for the stream 's'.
  * 'S' must have been created for reading.
  */
-int prot_resettimeout(struct protstream *s)
+EXPORTED int prot_resettimeout(struct protstream *s)
 {
     assert(!s->write);
 
@@ -444,7 +490,7 @@ int prot_resettimeout(struct protstream *s)
  * blocking for reading. 's' must have been created for reading,
  * 'flushs' for writing.
  */
-int prot_setflushonread(struct protstream *s, struct protstream *flushs)
+EXPORTED int prot_setflushonread(struct protstream *s, struct protstream *flushs)
 {
     assert(!s->write);
     if(flushs) assert(flushs->write);
@@ -457,8 +503,8 @@ int prot_setflushonread(struct protstream *s, struct protstream *flushs)
  * Set on stream 's' the callback 'proc' and 'rock'
  * to make the next time we have to wait for input.
  */
-int prot_setreadcallback(struct protstream *s, 
-			 prot_readcallback_t *proc, void *rock)
+int prot_setreadcallback(struct protstream *s,
+                         prot_readcallback_t *proc, void *rock)
 {
     assert(!s->write);
 
@@ -472,9 +518,9 @@ int prot_setreadcallback(struct protstream *s,
  * argument 'rock' will be called at 'mark' (in seconds) while
  * waiting for input.
  */
-struct prot_waitevent *prot_addwaitevent(struct protstream *s, time_t mark,
-					 prot_waiteventcallback_t *proc,
-					 void *rock)
+EXPORTED struct prot_waitevent *prot_addwaitevent(struct protstream *s, time_t mark,
+                                         prot_waiteventcallback_t *proc,
+                                         void *rock)
 {
     struct prot_waitevent *new, *cur;
 
@@ -490,11 +536,11 @@ struct prot_waitevent *prot_addwaitevent(struct protstream *s, time_t mark,
 
     /* add the new event to the end of the list */
     if (!s->waitevent)
-	s->waitevent = new;
+        s->waitevent = new;
     else {
-	cur = s->waitevent;
-	while (cur && cur->next) cur = cur->next;
-	cur->next = new;
+        cur = s->waitevent;
+        while (cur && cur->next) cur = cur->next;
+        cur->next = new;
     }
 
     return new;
@@ -503,7 +549,7 @@ struct prot_waitevent *prot_addwaitevent(struct protstream *s, time_t mark,
 /*
  * Remove 'event' from stream 's'.
  */
-void prot_removewaitevent(struct protstream *s, struct prot_waitevent *event)
+EXPORTED void prot_removewaitevent(struct protstream *s, struct prot_waitevent *event)
 {
     struct prot_waitevent *prev, *cur;
 
@@ -511,16 +557,16 @@ void prot_removewaitevent(struct protstream *s, struct prot_waitevent *event)
     cur = s->waitevent;
 
     while (cur && cur != event) {
-	prev = cur;
-	cur = cur->next;
+        prev = cur;
+        cur = cur->next;
     }
 
     if (!cur) return;
 
     if (!prev)
-	s->waitevent = cur->next;
+        s->waitevent = cur->next;
     else
-	prev->next = cur->next;
+        prev->next = cur->next;
 
     free(cur);
 }
@@ -530,7 +576,7 @@ void prot_removewaitevent(struct protstream *s, struct prot_waitevent *event)
  * error encountered on 's'.  If there is no error condition, return a
  * null pointer.
  */
-const char *prot_error(struct protstream *s)
+EXPORTED const char *prot_error(struct protstream *s)
 {
     if(!s) return "bad protstream passed to prot_error";
     else if(s->error) return s->error;
@@ -541,13 +587,13 @@ const char *prot_error(struct protstream *s)
 /*
  * Rewind the stream 's'.  's' must have been created for reading.
  */
-int prot_rewind(struct protstream *s)
+EXPORTED int prot_rewind(struct protstream *s)
 {
     assert(!s->write);
 
     if (lseek(s->fd, 0L, 0) == -1) {
-	s->error = xstrdup(strerror(errno));
-	return EOF;
+        s->error = xstrdup(strerror(errno));
+        return EOF;
     }
     s->cnt = 0;
     s->error = 0;
@@ -561,7 +607,7 @@ int prot_rewind(struct protstream *s)
  * Read data into the empty buffer for the stream 's' and return the
  * first character.  Returns EOF on EOF or error.
  */
-int prot_fill(struct protstream *s)
+EXPORTED int prot_fill(struct protstream *s)
 {
     int n;
     unsigned char *ptr;
@@ -569,10 +615,10 @@ int prot_fill(struct protstream *s)
     int r;
     struct timeval timeout;
     fd_set rfds;
-    int haveinput; 
+    int haveinput;
     time_t read_timeout;
     struct prot_waitevent *event, *next;
-   
+
     assert(!s->write);
 
     /* Zero errno just in case */
@@ -583,187 +629,189 @@ int prot_fill(struct protstream *s)
 
     do {
 #ifdef HAVE_ZLIB
-	/* check if there's anything in the zlib buffer already */
-	if (s->zstrm && s->zstrm->avail_in) {
-	    /* Decompress the data */
-	    int zr = Z_OK;
+        /* check if there's anything in the zlib buffer already */
+        if (s->zstrm && s->zstrm->avail_in) {
+            /* Decompress the data */
+            int zr = Z_OK;
 
-	    s->zstrm->next_out = s->zbuf;
-	    s->zstrm->avail_out = s->zbuf_size;
-	    zr = inflate(s->zstrm, Z_SYNC_FLUSH);
-	    if (!(zr == Z_OK || zr == Z_BUF_ERROR || zr == Z_STREAM_END)) {
-		/* Error decompressing */
-		syslog(LOG_ERR, "zlib inflate error: %d %s", zr, s->zstrm->msg);
-		s->error = xstrdup("Error decompressing data");
-		return EOF;
-	    }
+            s->zstrm->next_out = s->zbuf;
+            s->zstrm->avail_out = s->zbuf_size;
+            zr = inflate(s->zstrm, Z_SYNC_FLUSH);
+            if (!(zr == Z_OK || zr == Z_BUF_ERROR || zr == Z_STREAM_END)) {
+                /* Error decompressing */
+                syslog(LOG_ERR, "zlib inflate error: %d %s", zr, s->zstrm->msg);
+                s->error = xstrdup("Error decompressing data");
+                return EOF;
+            }
 
-	    if (s->zstrm->avail_out < s->zbuf_size) {
-		/* inflated some data */
-		s->ptr = s->zbuf;
-		s->cnt = s->zbuf_size - s->zstrm->avail_out;
+            if (s->zstrm->avail_out < s->zbuf_size) {
+                /* inflated some data */
+                s->ptr = s->zbuf;
+                s->cnt = s->zbuf_size - s->zstrm->avail_out;
 
-		/* drop straight to logging and returning the first char */
-		break;
-	    }
-	}
+                /* drop straight to logging and returning the first char */
+                break;
+            }
+        }
 #endif
 
-	/* wait until get input */
-	haveinput = 0;
+        /* wait until get input */
+        haveinput = 0;
 
 #ifdef HAVE_SSL
-	/* maybe there's data stuck in the SSL buffer? */
-	if (s->tls_conn != NULL) {
-	    haveinput = SSL_pending(s->tls_conn);
-	}
+        /* maybe there's data stuck in the SSL buffer? */
+        if (s->tls_conn != NULL) {
+            haveinput = SSL_pending(s->tls_conn);
+        }
 #endif
 
-	/* if we've promised to call something before blocking or
-	   flush an output stream, check to see if we're going to block */
-	if (s->readcallback_proc ||
-	    (s->flushonread && s->flushonread->ptr != s->flushonread->buf)) {
-	    timeout.tv_sec = timeout.tv_usec = 0;
-	    FD_ZERO(&rfds);
-	    FD_SET(s->fd, &rfds);
+        /* if we've promised to call something before blocking or
+           flush an output stream, check to see if we're going to block */
+        if (s->readcallback_proc ||
+            (s->flushonread && s->flushonread->ptr != s->flushonread->buf)) {
+            timeout.tv_sec = timeout.tv_usec = 0;
+            FD_ZERO(&rfds);
+            FD_SET(s->fd, &rfds);
 
-	    if (!haveinput &&
-		(select(s->fd + 1, &rfds, (fd_set *)0, (fd_set *)0,
-			&timeout) <= 0)) {
-		if (s->readcallback_proc) {
-		    (*s->readcallback_proc)(s, s->readcallback_rock);
-		    s->readcallback_proc = 0;
-		    s->readcallback_rock = 0;
-		}
-		/* Request a flush of the buffer.  If we are a blocking
-		   read stream, force the flush */
-		if (s->flushonread)
-		    prot_flush_internal(s->flushonread, !s->dontblock);
-	    }
-	    else {
-		haveinput = 1;
-	    }
-	}
+            if (!haveinput &&
+                (signals_select(s->fd + 1, &rfds, (fd_set *)0, (fd_set *)0,
+                        &timeout) <= 0)) {
+                if (s->readcallback_proc) {
+                    (*s->readcallback_proc)(s, s->readcallback_rock);
+                    s->readcallback_proc = 0;
+                    s->readcallback_rock = 0;
+                }
+                /* Request a flush of the buffer.  If we are a blocking
+                   read stream, force the flush */
+                if (s->flushonread)
+                    prot_flush_internal(s->flushonread, !s->dontblock);
+            }
+            else {
+                haveinput = 1;
+            }
+        }
 
-	if (!haveinput && (s->read_timeout || s->dontblock)) {
-	    time_t now = time(NULL);
-	    time_t sleepfor;
+        if (!haveinput && (s->read_timeout || s->dontblock)) {
+            time_t now = time(NULL);
+            time_t sleepfor;
 
-	    read_timeout = s->dontblock ? now : s->timeout_mark;
-	    do {
-		if (read_timeout < now)
-		    sleepfor = 0;
-		else
-		    sleepfor = read_timeout - now;
-		/* execute each callback that has timed out */
-		for (event = s->waitevent; event; event = next)
-		{
-		    next = event->next;
-		    if (now >= event->mark) {
-			event = (*event->proc)(s, event, event->rock);
-		    }
-		    /* if event == NULL, the callback has removed itself */
-		    if (event && sleepfor > (event->mark - now)) {
-			sleepfor = event->mark - now;
-		    }
-		}
+            read_timeout = s->dontblock ? now : s->timeout_mark;
+            do {
+                if (read_timeout < now)
+                    sleepfor = 0;
+                else
+                    sleepfor = read_timeout - now;
+                /* execute each callback that has timed out */
+                for (event = s->waitevent; event; event = next)
+                {
+                    next = event->next;
+                    if (now >= event->mark) {
+                        event = (*event->proc)(s, event, event->rock);
+                    }
+                    /* if event == NULL, the callback has removed itself */
+                    if (event && sleepfor > (event->mark - now)) {
+                        sleepfor = event->mark - now;
+                    }
+                }
 
-		/* check for input */
-		timeout.tv_sec = sleepfor;
-		timeout.tv_usec = 0;
-		FD_ZERO(&rfds);
-		FD_SET(s->fd, &rfds);
-		r = select(s->fd + 1, &rfds, (fd_set *)0, (fd_set *)0,
-			   &timeout);
-		now = time(NULL);
-	    } while ((r == 0 || (r == -1 && errno == EINTR && !signals_poll())) &&
-		     (now < read_timeout));
-	    if ((r == 0) || 
+                /* check for input */
+                timeout.tv_sec = sleepfor;
+                timeout.tv_usec = 0;
+                FD_ZERO(&rfds);
+                FD_SET(s->fd, &rfds);
+                r = signals_select(s->fd + 1, &rfds, (fd_set *)0, (fd_set *)0,
+                           &timeout);
+                now = time(NULL);
+            } while ((r == 0 || (r == -1 && errno == EINTR && !signals_poll())) &&
+                     (now < read_timeout));
+            if ((r == 0) ||
                 /* ignore EINTR if we've timed out */
                 (r == -1 && errno == EINTR && !signals_poll() && now >= read_timeout)) {
-		if (!s->dontblock) {
-		    s->error = xstrdup("idle for too long");
-		    return EOF;
-		} else {
-		    errno = EAGAIN;
-		    return EOF;
-		}
-	    }
-	    else if (r == -1) {
-		syslog(LOG_ERR, "select() failed: %m");
-		s->error = xstrdup(strerror(errno));
-		return EOF;
-	    }
-	}
+                if (!s->dontblock) {
+                    s->error = xstrdup("idle for too long");
+                    return EOF;
+                } else {
+                    errno = EAGAIN;
+                    return EOF;
+                }
+            }
+            else if (r == -1) {
+                syslog(LOG_ERR, "select() failed: %m");
+                s->error = xstrdup(strerror(errno));
+                return EOF;
+            }
+        }
 
-	/* we have data, reset the timeout_mark */
-	s->timeout_mark = time(NULL) + s->read_timeout;
-	
-	do {
-	    cmdtime_netstart();
-#ifdef HAVE_SSL	  
-	    /* just do a SSL read instead if we're under a tls layer */
-	    if (s->tls_conn != NULL) {
-		n = SSL_read(s->tls_conn, (char *) s->buf, PROT_BUFSIZE);
-	    } else {
-		n = read(s->fd, s->buf, PROT_BUFSIZE);
-	    }
-#else  /* HAVE_SSL */
-	    n = read(s->fd, s->buf, PROT_BUFSIZE);
+        /* we have data, reset the timeout_mark */
+        prot_resettimeout(s);
+
+        do {
+            cmdtime_netstart();
+            if (s->fillcallback_proc != NULL) {
+                n = (*s->fillcallback_proc)(s->buf, PROT_BUFSIZE, s->fillcallback_rock);
+            }
+#ifdef HAVE_SSL
+            /* just do a SSL read instead if we're under a tls layer */
+            else if (s->tls_conn != NULL) {
+                n = SSL_read(s->tls_conn, (char *) s->buf, PROT_BUFSIZE);
+            }
 #endif /* HAVE_SSL */
-	    cmdtime_netend();
-	} while (n == -1 && errno == EINTR && !signals_poll());
+            else {
+                n = read(s->fd, s->buf, PROT_BUFSIZE);
+            }
+            cmdtime_netend();
+        } while (n == -1 && errno == EINTR && !signals_poll());
 
-	if (n <= 0) {
-	    if (n) s->error = xstrdup(strerror(errno));
-	    else s->eof = 1;
-	    return EOF;
-	}
-	
-	if (s->saslssf) { /* decode it */
-	    if (prot_sasldecode(s, n) == EOF) return EOF;
-	} else {
-	    /* No protection function, just use the raw data */
-	    s->ptr = s->buf;
-	    s->cnt = n;
-	}
+        if (n <= 0) {
+            if (n) s->error = xstrdup(strerror(errno));
+            else s->eof = 1;
+            return EOF;
+        }
+
+        if (s->saslssf) { /* decode it */
+            if (prot_sasldecode(s, n) == EOF) return EOF;
+        } else {
+            /* No protection function, just use the raw data */
+            s->ptr = s->buf;
+            s->cnt = n;
+        }
 
 #ifdef HAVE_ZLIB
-	if (s->zstrm) {
-	    /* transfer the data we have to the input of 
-	     * the z_stream and loop to process it */
+        if (s->zstrm) {
+            /* transfer the data we have to the input of
+             * the z_stream and loop to process it */
 
-	    s->zstrm->next_in = s->ptr;
-	    s->zstrm->avail_in = s->cnt;
-	    s->cnt = 0;
-	}
+            s->zstrm->next_in = s->ptr;
+            s->zstrm->avail_in = s->cnt;
+            s->cnt = 0;
+        }
 #endif /* HAVE_ZLIB */
     } while (!s->cnt);
 
     if (s->logfd != -1) {
-	time_t newtime;
-	char timebuf[20];
+        time_t newtime;
+        char timebuf[20];
 
-	time(&newtime);
-	snprintf(timebuf, sizeof(timebuf), "<%ld<", newtime);
-	n = write(s->logfd, timebuf, strlen(timebuf));
+        time(&newtime);
+        snprintf(timebuf, sizeof(timebuf), "<%ld<", newtime);
+        n = write(s->logfd, timebuf, strlen(timebuf));
 
-	left = s->cnt;
-	ptr = s->ptr;
-	do {
-	    n = write(s->logfd, ptr, left);
-	    if (n == -1 && (errno != EINTR || signals_poll())) {
-		break;
-	    }
+        left = s->cnt;
+        ptr = s->ptr;
+        do {
+            n = write(s->logfd, ptr, left);
+            if (n == -1 && (errno != EINTR || signals_poll())) {
+                break;
+            }
 
-	    if (n > 0) {
-		ptr += n;
-		left -= n;
-	    }
-	} while (left);
+            if (n > 0) {
+                ptr += n;
+                left -= n;
+            }
+        } while (left);
     }
 
-    s->cnt--;		/* we return the first char */
+    s->cnt--;           /* we return the first char */
     s->can_unget = 1;
     s->bytes_in++;
     return *s->ptr++;
@@ -773,151 +821,153 @@ int prot_fill(struct protstream *s)
  * If 's' is an input stream, discard any pending/buffered data.  Otherwise,
  * Write out any buffered data in the stream 's'
  */
-int prot_flush(struct protstream *s) 
+EXPORTED int prot_flush(struct protstream *s)
 {
     if (!s->write) {
-	int c, save_dontblock = s->dontblock;
+        int c, save_dontblock = s->dontblock;
 
-	/* Set stream to nonblocking mode */
-	if (!save_dontblock) nonblock(s->fd, (s->dontblock = 1));
+        /* Set stream to nonblocking mode */
+        if (!save_dontblock) nonblock(s->fd, (s->dontblock = 1));
 
-	/* Ingest any pending input */
-	while ((c = prot_fill(s)) != EOF);
+        /* Ingest any pending input */
+        while ((c = prot_fill(s)) != EOF);
 
-	/* Reset stream to previous blocking mode */
-	if (!save_dontblock) nonblock(s->fd, (s->dontblock = 0));
+        /* Reset stream to previous blocking mode */
+        if (!save_dontblock) nonblock(s->fd, (s->dontblock = 0));
 
-	/* Discard any buffered input */
-	s->cnt = 0;
-	s->can_unget = 0;
+        /* Discard any buffered input */
+        s->cnt = 0;
+        s->can_unget = 0;
 
-	return 0;
+        return 0;
     }
 
     return prot_flush_internal(s, 1);
 }
 
 /* Do the logging part of prot_flush */
-static void prot_flush_log(struct protstream *s) 
+static void prot_flush_log(struct protstream *s)
 {
     if(s->logfd != PROT_NO_FD) {
-	unsigned char *ptr = s->buf;
-	int left = s->ptr - s->buf;
-	int n;
-	time_t newtime;
-	char timebuf[20];
-	
-	time(&newtime);
-	snprintf(timebuf, sizeof(timebuf), ">%ld>", newtime);
-	n = write(s->logfd, timebuf, strlen(timebuf));
+        unsigned char *ptr = s->buf;
+        int left = s->ptr - s->buf;
+        int n;
+        time_t newtime;
+        char timebuf[20];
 
-	do {
-	    n = write(s->logfd, ptr, left);
-	    if (n == -1 && (errno != EINTR || signals_poll())) {
-		break;
-	    }
-	    if (n > 0) {
-		ptr += n;
-		left -= n;
-	    }
-	} while (left);
+        time(&newtime);
+        snprintf(timebuf, sizeof(timebuf), ">%ld>", newtime);
+        n = write(s->logfd, timebuf, strlen(timebuf));
 
-	(void)fsync(s->logfd);
+        do {
+            n = write(s->logfd, ptr, left);
+            if (n == -1 && (errno != EINTR || signals_poll())) {
+                break;
+            }
+            if (n > 0) {
+                ptr += n;
+                left -= n;
+            }
+        } while (left);
+
+        /* we don't care THAT much about logs
+         * (void)fsync(s->logfd);
+         */
     }
 }
 
 /* Do the encoding part of prot_flush */
 static int prot_flush_encode(struct protstream *s,
-			     const char **output_buf,
-			     unsigned *output_len) 
+                             const char **output_buf,
+                             unsigned *output_len)
 {
     unsigned char *ptr = s->buf;
     int left = s->ptr - s->buf;
 
 #ifdef HAVE_ZLIB
     if (s->zstrm) {
-	/* Compress the data */
-	int zr = Z_OK;
+        /* Compress the data */
+        int zr = Z_OK;
 
-	s->zstrm->next_in = ptr;
-	s->zstrm->avail_in = left;
-	s->zstrm->next_out = s->zbuf;
-	s->zstrm->avail_out = s->zbuf_size;
+        s->zstrm->next_in = ptr;
+        s->zstrm->avail_in = left;
+        s->zstrm->next_out = s->zbuf;
+        s->zstrm->avail_out = s->zbuf_size;
 
-	do {
-	    /* should never be needed, but it's better to always check! */
-	    if (!s->zstrm->avail_out) {
-		syslog(LOG_DEBUG, "growing compress buffer from %u to %u bytes",
-		       s->zbuf_size, s->zbuf_size + PROT_BUFSIZE);
+        do {
+            /* should never be needed, but it's better to always check! */
+            if (!s->zstrm->avail_out) {
+                syslog(LOG_DEBUG, "growing compress buffer from %u to %u bytes",
+                       s->zbuf_size, s->zbuf_size + PROT_BUFSIZE);
 
-		s->zbuf = (unsigned char *)
-		    xrealloc(s->zbuf, s->zbuf_size + PROT_BUFSIZE);
-		s->zstrm->next_out = s->zbuf + s->zbuf_size;
-		s->zstrm->avail_out = PROT_BUFSIZE;
-		s->zbuf_size += PROT_BUFSIZE;
-	    }
+                s->zbuf = (unsigned char *)
+                    xrealloc(s->zbuf, s->zbuf_size + PROT_BUFSIZE);
+                s->zstrm->next_out = s->zbuf + s->zbuf_size;
+                s->zstrm->avail_out = PROT_BUFSIZE;
+                s->zbuf_size += PROT_BUFSIZE;
+            }
 
-	    zr = deflate(s->zstrm, Z_SYNC_FLUSH);
-	    if (!(zr == Z_OK || zr == Z_STREAM_END || zr == Z_BUF_ERROR)) {
-		/* something went wrong */
-		syslog(LOG_ERR, "zlib deflate error: %d %s", zr, s->zstrm->msg);
-		s->error = xstrdup("Error compressing data");
-		return EOF;
-	    }
+            zr = deflate(s->zstrm, Z_SYNC_FLUSH);
+            if (!(zr == Z_OK || zr == Z_STREAM_END || zr == Z_BUF_ERROR)) {
+                /* something went wrong */
+                syslog(LOG_ERR, "zlib deflate error: %d %s", zr, s->zstrm->msg);
+                s->error = xstrdup("Error compressing data");
+                return EOF;
+            }
 
-	    /* http://www.zlib.net/manual.html says:
-	     * If deflate returns with avail_out == 0, this function must be 
-	     * called again with the same value of the flush parameter and
-	     * more output space (updated avail_out), until the flush is 
-	     * complete (deflate returns with non-zero avail_out). 
-	     */
-	} while (!s->zstrm->avail_out);
+            /* http://www.zlib.net/manual.html says:
+             * If deflate returns with avail_out == 0, this function must be
+             * called again with the same value of the flush parameter and
+             * more output space (updated avail_out), until the flush is
+             * complete (deflate returns with non-zero avail_out).
+             */
+        } while (!s->zstrm->avail_out);
 
-	ptr = s->zbuf;
-	left = s->zbuf_size - s->zstrm->avail_out;
+        ptr = s->zbuf;
+        left = s->zbuf_size - s->zstrm->avail_out;
     }
 #endif /* HAVE_ZLIB */
 
     if (s->saslssf != 0) {
-	/* encode the data */
-	int result = sasl_encode(s->conn, (char *) ptr, left, 
-				 output_buf, output_len);
-	if (result != SASL_OK) {
-	    char errbuf[256];
-	    const char *ed = sasl_errdetail(s->conn);
-	    
-	    snprintf(errbuf, 256, "encoding error: %s; %s",
-		     sasl_errstring(result, NULL, NULL),
-		     ed ? ed : "no detail");
-	    s->error = xstrdup(errbuf);
-	    
-	    return EOF;
-	}
+        /* encode the data */
+        int result = sasl_encode(s->conn, (char *) ptr, left,
+                                 output_buf, output_len);
+        if (result != SASL_OK) {
+            char errbuf[256];
+            const char *ed = sasl_errdetail(s->conn);
+
+            snprintf(errbuf, 256, "encoding error: %s; %s",
+                     sasl_errstring(result, NULL, NULL),
+                     ed ? ed : "no detail");
+            s->error = xstrdup(errbuf);
+
+            return EOF;
+        }
     } else {
-	*output_buf = (char *) ptr;
-	*output_len = left;
+        *output_buf = (char *) ptr;
+        *output_len = left;
     }
     return 0;
 }
 
 /* A wrapper for write() that handles SSL and EINTR */
 static int prot_flush_writebuffer(struct protstream *s,
-				  const char *buf, size_t len) 
+                                  const char *buf, size_t len)
 {
     int n;
-    
+
     do {
-	cmdtime_netstart();
+        cmdtime_netstart();
 #ifdef HAVE_SSL
-	if (s->tls_conn != NULL) {
-	    n = SSL_write(s->tls_conn, (char *)buf, len);
-	} else {
-	    n = write(s->fd, buf, len);
-	}
+        if (s->tls_conn != NULL) {
+            n = SSL_write(s->tls_conn, (char *)buf, len);
+        } else {
+            n = write(s->fd, buf, len);
+        }
 #else  /* HAVE_SSL */
-	n = write(s->fd, buf, len);
+        n = write(s->fd, buf, len);
 #endif /* HAVE_SSL */
-	cmdtime_netend();
+        cmdtime_netend();
     } while (n == -1 && errno == EINTR && !signals_poll());
 
     return n;
@@ -935,197 +985,205 @@ int prot_flush_internal(struct protstream *s, int force)
 
     /* Is this protstream finished? */
     if (s->eof || s->error) {
-	s->ptr = s->buf;
-	s->cnt = 1;
-	return EOF;
+        s->ptr = s->buf;
+        s->cnt = 1;
+        return EOF;
     }
 
     /* make sure that the main file descriptor is set up to
      * be blocking or nonblocking based on the configuration of the
      * protstream and the force flag */
     if(force)
-	s->dontblock = 0;
-    
+        s->dontblock = 0;
+
     if(s->dontblock != s->dontblock_isset) {
-	nonblock(s->fd,s->dontblock);
-	s->dontblock_isset = s->dontblock;
+        nonblock(s->fd,s->dontblock);
+        s->dontblock_isset = s->dontblock;
     }
-    
+
     /* end protstream setup */
 
+    /* if writing to a buffer, just append the lot.  Always works */
+    if (s->writetobuf) {
+        buf_appendmap(s->writetobuf, ptr, left);
+    }
+
     /* If we're doing a blocking write, flush the buffers, bigbuffer first */
-    if(!s->dontblock) {
-	if(s->big_buffer != PROT_NO_FD) {
-	    /* Write the bigbuffer */
-	    do {
-		n = prot_flush_writebuffer(s, s->bigbuf_base + s->bigbuf_pos,
-					   s->bigbuf_len - s->bigbuf_pos);
-		if(n == -1) {
-		    s->error = xstrdup(strerror(errno));
-		    goto done;
-		} else if (n > 0) {
-		    s->bigbuf_pos += n;
-		}
-	    } while(s->bigbuf_len != s->bigbuf_pos);
+    else if (!s->dontblock) {
+        if(s->big_buffer != PROT_NO_FD) {
+            /* Write the bigbuffer */
+            do {
+                n = prot_flush_writebuffer(s, s->bigbuf_base + s->bigbuf_pos,
+                                           s->bigbuf_len - s->bigbuf_pos);
+                if(n == -1) {
+                    s->error = xstrdup(strerror(errno));
+                    goto done;
+                } else if (n > 0) {
+                    s->bigbuf_pos += n;
+                }
+            } while(s->bigbuf_len != s->bigbuf_pos);
 
-	    /* Free the bigbuffer */
-	    map_free(&(s->bigbuf_base), &(s->bigbuf_siz));
-	    close(s->big_buffer);
-	    s->bigbuf_len = s->bigbuf_pos = 0;
-	    s->big_buffer = PROT_NO_FD;
-	}
+            /* Free the bigbuffer */
+            map_free(&(s->bigbuf_base), &(s->bigbuf_siz));
+            close(s->big_buffer);
+            s->bigbuf_len = s->bigbuf_pos = 0;
+            s->big_buffer = PROT_NO_FD;
+        }
 
-	/* Is there anything in the memory buffer? */
-	if(!left) {
-	    goto done;
-	}
+        /* Is there anything in the memory buffer? */
+        if(!left) {
+            goto done;
+        }
 
-	/* Do a regular write of whatever is left */
+        /* Do a regular write of whatever is left */
 
-	/* Log and Encode it */
-	prot_flush_log(s);
+        /* Log and Encode it */
+        prot_flush_log(s);
 
-	if(prot_flush_encode(s, &ptr, &left) == EOF) {
-	    /* s->error set by prot_flush_encode */
-	    goto done;
-	}
+        if(prot_flush_encode(s, &ptr, &left) == EOF) {
+            /* s->error set by prot_flush_encode */
+            goto done;
+        }
 
-	/* Write it to descriptor */
-	do {
-	    n = prot_flush_writebuffer(s, ptr, left);
-	    if(n == -1) {
-		s->error = xstrdup(strerror(errno));
-		goto done;
-	    } else if (n > 0) {
-		ptr += n;
-		left -= n;
-	    }
-	} while(left);
-    } else { /* Nonblocking */
-	/* If we've been feeding a bigbuffer, write out from the current
-	 * position as much as we can */
-	if (s->big_buffer != PROT_NO_FD) {
-	    /* Write what we can. */
-	    n = prot_flush_writebuffer(s, s->bigbuf_base + s->bigbuf_pos,
-				       s->bigbuf_len - s->bigbuf_pos);
+        /* Write it to descriptor */
+        do {
+            n = prot_flush_writebuffer(s, ptr, left);
+            if(n == -1) {
+                s->error = xstrdup(strerror(errno));
+                goto done;
+            } else if (n > 0) {
+                ptr += n;
+                left -= n;
+            }
+        } while(left);
+    }
 
-	    if(n == -1 && errno == EAGAIN) {
-		/* No room in the pipe, but we don't care */
-		n = 0;
-	    } else if(n == -1) {
-		s->error = xstrdup(strerror(errno));
-		goto done;
-	    }
+    /* Nonblocking */
+    else {
+        /* If we've been feeding a bigbuffer, write out from the current
+         * position as much as we can */
+        if (s->big_buffer != PROT_NO_FD) {
+            /* Write what we can. */
+            n = prot_flush_writebuffer(s, s->bigbuf_base + s->bigbuf_pos,
+                                       s->bigbuf_len - s->bigbuf_pos);
 
-	    if (n > 0) {
-		s->bigbuf_pos += n;
-	    }
-	}
+            if(n == -1 && errno == EAGAIN) {
+                /* No room in the pipe, but we don't care */
+                n = 0;
+            } else if(n == -1) {
+                s->error = xstrdup(strerror(errno));
+                goto done;
+            }
 
-	/* If there isn't anything in the memory buffer, we're done now */
-	if(!left) {
-	    goto done;
-	}
+            if (n > 0) {
+                s->bigbuf_pos += n;
+            }
+        }
 
-	/* Prepare the data in the memory buffer */
-	prot_flush_log(s);
-	
-	/* Encode it */
-	if(prot_flush_encode(s, &ptr, &left) == EOF) {
-	    /* prot_flush_encode set s->error */
-	    goto done;
-	}
+        /* If there isn't anything in the memory buffer, we're done now */
+        if(!left) {
+            goto done;
+        }
 
-	if(s->big_buffer == PROT_NO_FD || s->bigbuf_pos == s->bigbuf_len) {
-	    /* No bigbuffer currently open (or we've written the current
-	       one to its entirety), so write what we can from memory */
+        /* Prepare the data in the memory buffer */
+        prot_flush_log(s);
 
-	    n = prot_flush_writebuffer(s, ptr, left);
+        /* Encode it */
+        if(prot_flush_encode(s, &ptr, &left) == EOF) {
+            /* prot_flush_encode set s->error */
+            goto done;
+        }
 
-	    if(n == -1 && errno == EAGAIN) {
-		/* No room in the pipe, but we don't care */
-		n = 0;
-	    } else if(n == -1) {
-		s->error = xstrdup(strerror(errno));
-		goto done;
-	    }
+        if(s->big_buffer == PROT_NO_FD || s->bigbuf_pos == s->bigbuf_len) {
+            /* No bigbuffer currently open (or we've written the current
+               one to its entirety), so write what we can from memory */
 
-	    if(n > 0) {
-		ptr += n;
-		left -= n;
-	    }
-	}
+            n = prot_flush_writebuffer(s, ptr, left);
 
-	/* if there is data still to send, it needs to go to the bigbuffer */
-	if(left) {
-	    struct stat sbuf;
-	    
-	    if(s->big_buffer == PROT_NO_FD) {
-		/* open new bigbuffer */
-		int fd = create_tempfile(libcyrus_config_getstring(CYRUSOPT_TEMP_PATH));
-		if(fd == -1) {
-		    s->error = xstrdup(strerror(errno));
-		    goto done;
-		}
+            if(n == -1 && errno == EAGAIN) {
+                /* No room in the pipe, but we don't care */
+                n = 0;
+            } else if(n == -1) {
+                s->error = xstrdup(strerror(errno));
+                goto done;
+            }
 
-		s->big_buffer = fd;
-	    }
+            if(n > 0) {
+                ptr += n;
+                left -= n;
+            }
+        }
 
-	    do {
-		n = write(s->big_buffer, ptr, left);
-		if (n == -1 && (errno != EINTR || signals_poll())) {
-		    syslog(LOG_ERR, "write to protstream buffer failed: %s",
-			   strerror(errno));
-		    
-		    fatal("write to big buffer failed", EC_OSFILE);
-		}
-		if (n > 0) {
-		    ptr += n;
-		    left -= n;
-		}
-	    } while (left);
+        /* if there is data still to send, it needs to go to the bigbuffer */
+        if(left) {
+            struct stat sbuf;
 
-	    /* We did a write to the bigbuffer, refresh the memory map */
-	    if (fstat(s->big_buffer, &sbuf) == -1) {
-		syslog(LOG_ERR, "IOERROR: fstating temp protlayer buffer: %m");
-		fatal("failed to fstat protlayer buffer", EC_IOERR);
-	    }
-	    
-	    s->bigbuf_len = sbuf.st_size;
+            if(s->big_buffer == PROT_NO_FD) {
+                /* open new bigbuffer */
+                int fd = create_tempfile(libcyrus_config_getstring(CYRUSOPT_TEMP_PATH));
+                if(fd == -1) {
+                    s->error = xstrdup(strerror(errno));
+                    goto done;
+                }
 
-	    map_refresh(s->big_buffer, 0, &(s->bigbuf_base), &(s->bigbuf_siz),
-			s->bigbuf_len, "temp protlayer buffer", NULL);
-	}
-	
+                s->big_buffer = fd;
+            }
+
+            do {
+                n = write(s->big_buffer, ptr, left);
+                if (n == -1 && (errno != EINTR || signals_poll())) {
+                    syslog(LOG_ERR, "write to protstream buffer failed: %s",
+                           strerror(errno));
+
+                    fatal("write to big buffer failed", EC_OSFILE);
+                }
+                if (n > 0) {
+                    ptr += n;
+                    left -= n;
+                }
+            } while (left);
+
+            /* We did a write to the bigbuffer, refresh the memory map */
+            if (fstat(s->big_buffer, &sbuf) == -1) {
+                syslog(LOG_ERR, "IOERROR: fstating temp protlayer buffer: %m");
+                fatal("failed to fstat protlayer buffer", EC_IOERR);
+            }
+
+            s->bigbuf_len = sbuf.st_size;
+
+            map_refresh(s->big_buffer, 0, &(s->bigbuf_base), &(s->bigbuf_siz),
+                        s->bigbuf_len, "temp protlayer buffer", NULL);
+        }
+
     } /* end of blocking/nonblocking if statment */
 
     /* Reset the memory buffer -- should be done on EOF or on success. */
     s->ptr = s->buf;
     s->cnt = s->maxplain;
-        
+
  done:
     /* are we done with the big buffer? If so, free it. This includes
      * when we exit with error */
     if (s->big_buffer != PROT_NO_FD &&
        (s->bigbuf_pos == s->bigbuf_len || s->error)) {
-	map_free(&(s->bigbuf_base), &(s->bigbuf_siz));
-	close(s->big_buffer);
-	s->bigbuf_len = s->bigbuf_pos = 0;
-	s->big_buffer = PROT_NO_FD;
+        map_free(&(s->bigbuf_base), &(s->bigbuf_siz));
+        close(s->big_buffer);
+        s->bigbuf_len = s->bigbuf_pos = 0;
+        s->big_buffer = PROT_NO_FD;
     }
 
     if (force) {
-	/* we don't need to call nonblock() again, because it will be
-	 * set correctly on the next prot_flush_internal() anyway */
-	s->dontblock = save_dontblock;
+        /* we don't need to call nonblock() again, because it will be
+         * set correctly on the next prot_flush_internal() anyway */
+        s->dontblock = save_dontblock;
     }
-    
-    /* If we are exiting with an error, we should clear our memory buffer 
+
+    /* If we are exiting with an error, we should clear our memory buffer
      * and set our return code */
     if(s->error) {
         s->ptr = s->buf;
         s->cnt = s->maxplain;
-	return EOF;
+        return EOF;
     }
 
     return 0;
@@ -1134,52 +1192,52 @@ int prot_flush_internal(struct protstream *s, int force)
 /*
  * Write to the output stream 's' the 'len' bytes of data at 'buf'
  */
-int prot_write(struct protstream *s, const char *buf, unsigned len)
+EXPORTED int prot_write(struct protstream *s, const char *buf, unsigned len)
 {
     assert(s->write);
     if(s->error || s->eof) return EOF;
     if(len == 0) return 0;
-    
+
     /* Different type of data, adjust layers accordingly */
     if (s->boundary) {
 #ifdef HAVE_ZLIB
-	if (s->zstrm) {
-	    int zr = Z_OK;
-	    int zlevel = Z_DEFAULT_COMPRESSION;
+        if (s->zstrm) {
+            int zr = Z_OK;
+            int zlevel = Z_DEFAULT_COMPRESSION;
 
-	    if (is_incompressible(buf, len))
-		zlevel = Z_NO_COMPRESSION;
+            if (is_incompressible(buf, len))
+                zlevel = Z_NO_COMPRESSION;
 
-	    if (zlevel != s->zlevel) {
-		s->zlevel = zlevel;
+            if (zlevel != s->zlevel) {
+                s->zlevel = zlevel;
 
-		/* flush any pending data */
-		if (s->ptr != s->buf) {
-		    if (prot_flush_internal(s, 1) == EOF) return EOF;
-		}
+                /* flush any pending data */
+                if (s->ptr != s->buf) {
+                    if (prot_flush_internal(s, 1) == EOF) return EOF;
+                }
 
-		/* Set new compression level */
-		zr = deflateParams(s->zstrm, s->zlevel, Z_DEFAULT_STRATEGY);
-		if (zr != Z_OK) {
-		    s->error = xstrdup("Error setting compression level");
-		    return EOF;
-		}
-	    }
-	}
+                /* Set new compression level */
+                zr = deflateParams(s->zstrm, s->zlevel, Z_DEFAULT_STRATEGY);
+                if (zr != Z_OK) {
+                    s->error = xstrdup("Error setting compression level");
+                    return EOF;
+                }
+            }
+        }
 #endif /* HAVE_ZLIB */
 
-	s->boundary = 0;
+        s->boundary = 0;
     }
 
     while (len >= s->cnt) {
-	/* XXX can we manage to write data from 'buf' without copying it
-	   to s->ptr ? */
-	memcpy(s->ptr, buf, s->cnt);
-	s->ptr += s->cnt;
-	buf += s->cnt;
-	len -= s->cnt;
-	s->cnt = 0;
-	if (prot_flush_internal(s,0) == EOF) return EOF;
+        /* XXX can we manage to write data from 'buf' without copying it
+           to s->ptr ? */
+        memcpy(s->ptr, buf, s->cnt);
+        s->ptr += s->cnt;
+        buf += s->cnt;
+        len -= s->cnt;
+        s->cnt = 0;
+        if (prot_flush_internal(s,0) == EOF) return EOF;
     }
     memcpy(s->ptr, buf, len);
     s->ptr += len;
@@ -1191,12 +1249,12 @@ int prot_write(struct protstream *s, const char *buf, unsigned len)
     return 0;
 }
 
-int prot_putbuf(struct protstream *s, struct buf *buf)
+EXPORTED int prot_putbuf(struct protstream *s, struct buf *buf)
 {
     return prot_write(s, buf->s, buf->len);
 }
 
-int prot_puts(struct protstream *s, const char *str)
+EXPORTED int prot_puts(struct protstream *s, const char *str)
 {
     return prot_write(s, str, strlen(str));
 }
@@ -1204,9 +1262,10 @@ int prot_puts(struct protstream *s, const char *str)
 /*
  * Stripped-down version of printf() that works on protection streams
  * Only understands '%lld', '%llu', '%llx', '%ld', '%lu', '%lx',
- * '%d', %u', '%x', '%s', '%tu', '%td', '%c', and '%%' in the format string.
+ * '%d', %u', '%x', '%s', '%tu', '%td', '%c', and '%%'
+ * in the format string.
  */
-int prot_printf(struct protstream *s, const char *fmt, ...)
+EXPORTED int prot_printf(struct protstream *s, const char *fmt, ...)
 {
     va_list pvar;
     int r;
@@ -1218,7 +1277,7 @@ int prot_printf(struct protstream *s, const char *fmt, ...)
     return r;
 }
 
-int prot_vprintf(struct protstream *s, const char *fmt, va_list pvar)
+EXPORTED int prot_vprintf(struct protstream *s, const char *fmt, va_list pvar)
 {
     char *percent, *p;
     long l;
@@ -1230,201 +1289,263 @@ int prot_vprintf(struct protstream *s, const char *fmt, va_list pvar)
     assert(s->write);
 
     while ((percent = strchr(fmt, '%')) != 0) {
-	prot_write(s, fmt, percent-fmt);
-	switch (*++percent) {
-	case '%':
-	    (void)prot_putc('%', s);
-	    break;
+        prot_write(s, fmt, percent-fmt);
+        switch (*++percent) {
+        case '%':
+            (void)prot_putc('%', s);
+            break;
 
-	case 'l':
-	    switch (*++percent) {
-	    case 'd':
-		l = va_arg(pvar, long);
-		snprintf(buf, sizeof(buf), "%ld", l);
-		prot_write(s, buf, strlen(buf));
-		break;
+        case 'l':
+            switch (*++percent) {
+            case 'd':
+                l = va_arg(pvar, long);
+                snprintf(buf, sizeof(buf), "%ld", l);
+                prot_write(s, buf, strlen(buf));
+                break;
 
-	    case 'u':
-		ul = va_arg(pvar, long);
-		snprintf(buf, sizeof(buf), "%lu", ul);
-		prot_write(s, buf, strlen(buf));
-		break;
+            case 'u':
+                ul = va_arg(pvar, long);
+                snprintf(buf, sizeof(buf), "%lu", ul);
+                prot_write(s, buf, strlen(buf));
+                break;
 
-	    case 'x':
-		l = va_arg(pvar, long);
-		snprintf(buf, sizeof(buf), "%lx", l);
-		prot_write(s, buf, strlen(buf));
-		break;
+            case 'x':
+                l = va_arg(pvar, long);
+                snprintf(buf, sizeof(buf), "%lx", l);
+                prot_write(s, buf, strlen(buf));
+                break;
 
-#ifdef HAVE_LONG_LONG_INT
             case 'l': {
-		long long int ll;
-		unsigned long long int ull;
+                long long int ll;
+                unsigned long long int ull;
 
-	        switch (*++percent) {
-		case 'd':
-		    ll = va_arg(pvar, long long int);
-		    snprintf(buf, sizeof(buf), "%lld", ll);
-		    prot_write(s, buf, strlen(buf));
-		    break;
+                switch (*++percent) {
+                case 'd':
+                    ll = va_arg(pvar, long long int);
+                    snprintf(buf, sizeof(buf), "%lld", ll);
+                    prot_write(s, buf, strlen(buf));
+                    break;
 
-		case 'u':
-		    ull = va_arg(pvar, unsigned long long int);
-		    snprintf(buf, sizeof(buf), "%llu", ull);
-		    prot_write(s, buf, strlen(buf));
-		    break;
+                case 'u':
+                    ull = va_arg(pvar, unsigned long long int);
+                    snprintf(buf, sizeof(buf), "%llu", ull);
+                    prot_write(s, buf, strlen(buf));
+                    break;
 
-		case 'x':
-		    ll = va_arg(pvar, long long int);
-		    snprintf(buf, sizeof(buf), "%llx", ll);
-		    prot_write(s, buf, strlen(buf));
-		    break;
+                case 'x':
+                    ll = va_arg(pvar, long long int);
+                    snprintf(buf, sizeof(buf), "%llx", ll);
+                    prot_write(s, buf, strlen(buf));
+                    break;
 
-	        default:
-		    abort();
-		}
-		break;
-	    }
-#endif
+                default:
+                    abort();
+                }
+                break;
+            }
 
-	    default:
-		abort();
-	    }
-	    break;
+            default:
+                abort();
+            }
+            break;
 
-	case 'd':
-	    i = va_arg(pvar, int);
-	    snprintf(buf, sizeof(buf), "%d", i);
-	    prot_write(s, buf, strlen(buf));
-	    break;
+        case 'd':
+            i = va_arg(pvar, int);
+            snprintf(buf, sizeof(buf), "%d", i);
+            prot_write(s, buf, strlen(buf));
+            break;
 
-	case 'u':
-	    u = va_arg(pvar, int);
-	    snprintf(buf, sizeof(buf), "%u", u);
-	    prot_write(s, buf, strlen(buf));
-	    break;
+        case 'u':
+            u = va_arg(pvar, unsigned);
+            snprintf(buf, sizeof(buf), "%u", u);
+            prot_write(s, buf, strlen(buf));
+            break;
 
-	case 'x':
-	    i = va_arg(pvar, int);
-	    snprintf(buf, sizeof(buf), "%x", i);
-	    prot_write(s, buf, strlen(buf));
-	    break;
+        case 'x':
+            i = va_arg(pvar, int);
+            snprintf(buf, sizeof(buf), "%x", i);
+            prot_write(s, buf, strlen(buf));
+            break;
 
-	/* according to linux 'man 3 printf' this is supposed to be
-	 * of type "ptrdiff_t", not "size_t" - but don't want to break
-	 * running code! */
-	case 't': {
-	    size_t tu;
-	    ssize_t td;
+        /* according to linux 'man 3 printf' this is supposed to be
+         * of type "ptrdiff_t", not "size_t" - but don't want to break
+         * running code! */
+        case 't': {
+            size_t tu;
+            ssize_t td;
 
-	    switch (*++percent) {
-	    case 'u':
-		tu = va_arg(pvar, size_t);
-		snprintf(buf, sizeof(buf), "%tu", tu);
-		prot_write(s, buf, strlen(buf));
-		break;
+            switch (*++percent) {
+            case 'u':
+                tu = va_arg(pvar, size_t);
+                snprintf(buf, sizeof(buf), "%tu", tu);
+                prot_write(s, buf, strlen(buf));
+                break;
 
-	    case 'd':
-		td = va_arg(pvar, ssize_t);
-		snprintf(buf, sizeof(buf), "%td", td);
-		prot_write(s, buf, strlen(buf));
-		break;
+            case 'd':
+                td = va_arg(pvar, ssize_t);
+                snprintf(buf, sizeof(buf), "%td", td);
+                prot_write(s, buf, strlen(buf));
+                break;
 
-	    default:
-		abort();
-	    }
-	    break;
-	}
+            default:
+                abort();
+            }
+            break;
+        }
 
-	case 's':
-	    p = va_arg(pvar, char *);
-	    prot_write(s, p, strlen(p));
-	    break;
+        case 's':
+            p = va_arg(pvar, char *);
+            prot_write(s, p, strlen(p));
+            break;
 
-	case 'c':
-	    i = va_arg(pvar, int);
-	    (void)prot_putc(i, s);
-	    break;
+        case 'c':
+            i = va_arg(pvar, int);
+            (void)prot_putc(i, s);
+            break;
 
-	case 'z': {
-	    size_t zu;
-	    ssize_t zd;
+        case 'z': {
+            size_t zu;
+            ssize_t zd;
 
-	    switch (*++percent) {
-	    case 'u':
-		zu = va_arg(pvar, size_t);
-		snprintf(buf, sizeof(buf), "%zu", zu);
-		prot_write(s, buf, strlen(buf));
-		break;
+            switch (*++percent) {
+            case 'u':
+                zu = va_arg(pvar, size_t);
+                snprintf(buf, sizeof(buf), "%zu", zu);
+                prot_write(s, buf, strlen(buf));
+                break;
 
-	    case 'd':
-		zd = va_arg(pvar, ssize_t);
-		snprintf(buf, sizeof(buf), "%zd", zd);
-		prot_write(s, buf, strlen(buf));
-		break;
+            case 'd':
+                zd = va_arg(pvar, ssize_t);
+                snprintf(buf, sizeof(buf), "%zd", zd);
+                prot_write(s, buf, strlen(buf));
+                break;
 
-	    default:
-		abort();
-	    }
-	    break;
-	}
+            default:
+                abort();
+            }
+            break;
+        }
 
-	default:
-	    abort();
-	}
-	fmt = percent+1;
+        default:
+            abort();
+        }
+        fmt = percent+1;
     }
     prot_write(s, fmt, strlen(fmt));
     if (s->error || s->eof) return EOF;
     return 0;
 }
 
-int prot_printliteral(struct protstream *out, const char *s, size_t size)
+EXPORTED int prot_printliteral(struct protstream *out, const char *s, size_t size)
 {
     int r;
     if (out->isclient)
-	r = prot_printf(out, "{" SIZE_T_FMT "+}\r\n", size);
+        r = prot_printf(out, "{" SIZE_T_FMT "+}\r\n", size);
     else
-	r = prot_printf(out, "{" SIZE_T_FMT "}\r\n", size);
+        r = prot_printf(out, "{" SIZE_T_FMT "}\r\n", size);
     if (r) return r;
     return prot_write(out, s, size);
 }
 
+#define isQCHAR(c) \
+        (!((c) & 0x80 || *p == '\r' || (c) == '\n' \
+            || (c) == '\"' || (c) == '%' || (c) == '\\'))
+#define MAXQSTRING  1024
+
 /*
  * Print 's' as a quoted-string or literal (but not an atom)
  */
-int prot_printstring(struct protstream *out, const char *s)
+EXPORTED int prot_printstring(struct protstream *out, const char *s)
 {
     const char *p;
-    int len = 0;
 
     if (!s) return prot_printf(out, "NIL");
 
     /* Look for any non-QCHAR characters */
-    for (p = s; *p && len < 1024; p++) {
-	len++;
-	if (*p & 0x80 || *p == '\r' || *p == '\n'
-	    || *p == '\"' || *p == '%' || *p == '\\') break;
+    for (p = s; *p && (p-s) < MAXQSTRING; p++) {
+        if (!isQCHAR(*p)) break;
     }
 
     /* if it's too long, literal it */
-    if (*p || len >= 1024) {
-	return prot_printliteral(out, s, strlen(s));
+    if (*p || (p-s) >= MAXQSTRING) {
+        return prot_printliteral(out, s, strlen(s));
     }
 
     return prot_printf(out, "\"%s\"", s);
 }
 
 /*
+ * Print the @n bytes at @s as a quoted-string or literal.
+ * Handles embedded NULs.
+ */
+EXPORTED int prot_printmap(struct protstream *out, const char *s, size_t n)
+{
+    const char *p;
+    int r;
+
+    if (!s) return prot_printf(out, "NIL");
+
+    /* if it's too long, literal it */
+    if (n >= MAXQSTRING)
+        return prot_printliteral(out, s, n);
+
+    /* Look for NULs or any non-QCHAR characters */
+    for (p = s; (size_t)(p-s) < n; p++) {
+        if (!*p || !isQCHAR(*p))
+            return prot_printliteral(out, s, n);
+    }
+
+    prot_putc('"', out);
+    r = prot_write(out, s, n);
+    if (r < 0)
+        return r;
+    prot_putc('"', out);
+    return r+2;
+}
+
+/*
+ * Print the @n bytes at @s as an atom, quoted-string or literal.
+ * Handles embedded NULs.
+ */
+EXPORTED int prot_printamap(struct protstream *out, const char *s, size_t n)
+{
+    const char *p;
+    int r;
+
+    if (!s) return prot_printf(out, "NIL");
+
+    if (imparse_isnatom(s, n) && (n != 3 || memcmp(s, "NIL", 3)))
+        return prot_write(out, s, n);
+
+    /* if it's too long, literal it */
+    if (n >= MAXQSTRING)
+        return prot_printliteral(out, s, n);
+
+    /* Look for NULs or any non-QCHAR characters */
+    for (p = s; (size_t)(p-s) < n; p++) {
+        if (!*p || !isQCHAR(*p))
+            return prot_printliteral(out, s, n);
+    }
+
+    prot_putc('"', out);
+    r = prot_write(out, s, n);
+    if (r < 0)
+        return r;
+    prot_putc('"', out);
+    return r+2;
+}
+
+/*
  * Print 's' as an atom, quoted-string, or literal
  */
-int prot_printastring(struct protstream *out, const char *s)
+EXPORTED int prot_printastring(struct protstream *out, const char *s)
 {
     if (!s) return prot_printf(out, "NIL");
 
     /* special cases for atoms */
     if (!*s) return prot_printf(out, "\"\"");
-    if (imparse_isatom(s)) return prot_printf(out, "%s", s);
+    if (imparse_isatom(s) && strcmp(s, "NIL"))
+        return prot_printf(out, "%s", s);
 
     /* not an atom, so pass to printstring */
     return prot_printstring(out, s);
@@ -1434,7 +1555,7 @@ int prot_printastring(struct protstream *out, const char *s)
  * Read from the protections stream 's' up to 'size' bytes into the buffer
  * 'buf'.  Returns the number of bytes read, or 0 for some error.
  */
-int prot_read(struct protstream *s, char *buf, unsigned size)
+EXPORTED int prot_read(struct protstream *s, char *buf, unsigned size)
 {
     int c;
 
@@ -1444,9 +1565,9 @@ int prot_read(struct protstream *s, char *buf, unsigned size)
 
     /* If no data in the input buffer, get some */
     if (!s->cnt) {
-	c = prot_fill(s);
-	if (c == EOF) return 0;
-	prot_ungetc(c, s);
+        c = prot_fill(s);
+        if (c == EOF) return 0;
+        prot_ungetc(c, s);
     }
 
     if (size > s->cnt) size = s->cnt;
@@ -1462,7 +1583,7 @@ int prot_read(struct protstream *s, char *buf, unsigned size)
  * Read from the protections stream 's' up to 'size' bytes, and append them
  * to the buffer 'buf'.  Returns the number of bytes read, or 0 for some error.
  */
-int prot_readbuf(struct protstream *s, struct buf *buf, unsigned size)
+EXPORTED int prot_readbuf(struct protstream *s, struct buf *buf, unsigned size)
 {
     buf_ensure(buf, size);
     size = prot_read(s, buf->s + buf->len, size);
@@ -1477,10 +1598,10 @@ int prot_readbuf(struct protstream *s, struct buf *buf, unsigned size)
  * returns # of protstreams with pending data (including the extra fd)
  *
  * Only works for readable protstreams
- */ 
-int prot_select(struct protgroup *readstreams, int extra_read_fd,
-		struct protgroup **out, int *extra_read_flag,
-		struct timeval *timeout) 
+ */
+EXPORTED int prot_select(struct protgroup *readstreams, int extra_read_fd,
+                struct protgroup **out, int *extra_read_flag,
+                struct timeval *timeout)
 {
     struct protstream *s, *timeout_prot = NULL;
     struct protgroup *retval = NULL;
@@ -1492,7 +1613,7 @@ int prot_select(struct protgroup *readstreams, int extra_read_fd,
     struct prot_waitevent *event;
     time_t now = time(NULL);
     time_t read_timeout = 0;
-    
+
     assert(readstreams || extra_read_fd != PROT_NO_FD);
     assert(extra_read_fd == PROT_NO_FD || extra_read_flag);
     assert(out);
@@ -1507,127 +1628,127 @@ int prot_select(struct protgroup *readstreams, int extra_read_fd,
     max_fd = extra_read_fd;
 
     for(i = 0; i<readstreams->next_element; i++) {
-	int have_thistimeout = 0; /* used to compute the minimal timeout for */
-	time_t this_timeout = 0;  /* this stream */
-	
-	s = readstreams->group[i];
-	if (!s) continue;
+        int have_thistimeout = 0; /* used to compute the minimal timeout for */
+        time_t this_timeout = 0;  /* this stream */
 
-	assert(!s->write);
+        s = readstreams->group[i];
+        if (!s) continue;
 
-	/* scan for waitevent callbacks */
-	for (event = s->waitevent; event; event = event->next)
-	{
-	    if(!have_thistimeout || event->mark - now < this_timeout) {
-		this_timeout = event->mark - now;
-		have_thistimeout = 1;
-	    }
-	}
-	
-	/* check the idle timeout on this one as well */
-	if(s->read_timeout &&
-	   (!have_thistimeout || s->timeout_mark - now < this_timeout)) {
-	    this_timeout = s->timeout_mark - now;
-	    have_thistimeout = 1;
-	}
+        assert(!s->write);
 
-	if(!s->dontblock && have_thistimeout &&
-	   (!have_readtimeout || now + this_timeout < read_timeout)) {
-	    read_timeout = now + this_timeout;
-	    have_readtimeout = 1;
-	    if(!timeout || this_timeout <= timeout->tv_sec)
-		timeout_prot = s;
-	}
-	    
-	FD_SET(s->fd, &rfds);
-	if(s->fd > max_fd)
-	    max_fd = s->fd;
+        /* scan for waitevent callbacks */
+        for (event = s->waitevent; event; event = event->next)
+        {
+            if(!have_thistimeout || event->mark - now < this_timeout) {
+                this_timeout = event->mark - now;
+                have_thistimeout = 1;
+            }
+        }
 
-	/* Is something currently pending in our protstream's buffer? */
-	if(s->cnt > 0) {
-	    found_fds++;
+        /* check the idle timeout on this one as well */
+        if(s->read_timeout &&
+           (!have_thistimeout || s->timeout_mark - now < this_timeout)) {
+            this_timeout = s->timeout_mark - now;
+            have_thistimeout = 1;
+        }
 
-	    if(!retval)
-		retval = protgroup_new(readstreams->next_element + 1);
+        if(!s->dontblock && have_thistimeout &&
+           (!have_readtimeout || now + this_timeout < read_timeout)) {
+            read_timeout = now + this_timeout;
+            have_readtimeout = 1;
+            if(!timeout || this_timeout <= timeout->tv_sec)
+                timeout_prot = s;
+        }
 
-	    protgroup_insert(retval, s);
-	    
-	}
+        FD_SET(s->fd, &rfds);
+        if(s->fd > max_fd)
+            max_fd = s->fd;
+
+        /* Is something currently pending in our protstream's buffer? */
+        if(s->cnt > 0) {
+            found_fds++;
+
+            if(!retval)
+                retval = protgroup_new(readstreams->next_element + 1);
+
+            protgroup_insert(retval, s);
+
+        }
 #ifdef HAVE_SSL
-	else if(s->tls_conn != NULL && SSL_pending(s->tls_conn)) {
-	    found_fds++;
+        else if(s->tls_conn != NULL && SSL_pending(s->tls_conn)) {
+            found_fds++;
 
-	    if(!retval)
-		retval = protgroup_new(readstreams->next_element + 1);
+            if(!retval)
+                retval = protgroup_new(readstreams->next_element + 1);
 
-	    protgroup_insert(retval, s);
-	}
+            protgroup_insert(retval, s);
+        }
 #endif
     }
 
     /* xxx we should probably do a nonblocking select on the remaining
      * protstreams instead of skipping this part entirely */
     if(!retval) {
-	time_t sleepfor;
+        time_t sleepfor;
 
-	/* do a select */
-	if(extra_read_fd != PROT_NO_FD) {
-	    /* max_fd started with atleast extra_read_fd */
-	    FD_SET(extra_read_fd, &rfds);
-	}
+        /* do a select */
+        if(extra_read_fd != PROT_NO_FD) {
+            /* max_fd started with atleast extra_read_fd */
+            FD_SET(extra_read_fd, &rfds);
+        }
 
-	if(read_timeout < now)
-	    sleepfor = 0;
-	else
-	    sleepfor = read_timeout - now;
+        if(read_timeout < now)
+            sleepfor = 0;
+        else
+            sleepfor = read_timeout - now;
 
-	/* If we don't have a timeout structure, and we need one, use
-	 * a local version.  Otherwise, make sure that we are timing out
-	 * for the right reason */
-	if(have_readtimeout &&
-	   (!timeout || sleepfor < timeout->tv_sec)) {
-	    if(!timeout) timeout = &my_timeout;
-	    timeout->tv_sec = sleepfor;
-	    timeout->tv_usec = 0;
-	}
+        /* If we don't have a timeout structure, and we need one, use
+         * a local version.  Otherwise, make sure that we are timing out
+         * for the right reason */
+        if(have_readtimeout &&
+           (!timeout || sleepfor < timeout->tv_sec)) {
+            if(!timeout) timeout = &my_timeout;
+            timeout->tv_sec = sleepfor;
+            timeout->tv_usec = 0;
+        }
 
-	if(select(max_fd + 1, &rfds, NULL, NULL, timeout) == -1)
-	    return -1;
+        if(signals_select(max_fd + 1, &rfds, NULL, NULL, timeout) == -1)
+            return -1;
 
-	/* Reset now */
-	now = time(NULL);
+        /* Reset now */
+        now = time(NULL);
 
-	if(extra_read_fd != PROT_NO_FD && FD_ISSET(extra_read_fd, &rfds)) {
-	    *extra_read_flag = 1;
-	    found_fds++;
-	} else if(extra_read_flag) {
-	    *extra_read_flag = 0;
-	}
-	
-	for(i = 0; i<readstreams->next_element; i++) {
-	    s = readstreams->group[i];
-	    if (!s) continue;
+        if(extra_read_fd != PROT_NO_FD && FD_ISSET(extra_read_fd, &rfds)) {
+            *extra_read_flag = 1;
+            found_fds++;
+        } else if(extra_read_flag) {
+            *extra_read_flag = 0;
+        }
 
-	    if(FD_ISSET(s->fd, &rfds)) {
-		found_fds++;
+        for(i = 0; i<readstreams->next_element; i++) {
+            s = readstreams->group[i];
+            if (!s) continue;
 
-		if(!retval)
-		    retval = protgroup_new(readstreams->next_element + 1);
+            if(FD_ISSET(s->fd, &rfds)) {
+                found_fds++;
 
-		protgroup_insert(retval, s);
-	    } else if(s == timeout_prot && now >= read_timeout) {
-		/* If we timed out, be sure to add the protstream we were
-		 * waiting for, even if it didn't show up */
-		found_fds++;
+                if(!retval)
+                    retval = protgroup_new(readstreams->next_element + 1);
 
-		if(!retval)
-		    retval = protgroup_new(readstreams->next_element + 1);
+                protgroup_insert(retval, s);
+            } else if(s == timeout_prot && now >= read_timeout) {
+                /* If we timed out, be sure to add the protstream we were
+                 * waiting for, even if it didn't show up */
+                found_fds++;
 
-		protgroup_insert(retval, s);
-	    }
-	}	
+                if(!retval)
+                    retval = protgroup_new(readstreams->next_element + 1);
+
+                protgroup_insert(retval, s);
+            }
+        }
     }
-    
+
     *out = retval;
     return found_fds;
 }
@@ -1635,7 +1756,7 @@ int prot_select(struct protgroup *readstreams, int extra_read_fd,
 /*
  * Version of fgets() that works with protection streams.
  */
-char *prot_fgets(char *buf, unsigned size, struct protstream *s)
+EXPORTED char *prot_fgets(char *buf, unsigned size, struct protstream *s)
 {
     char *p = buf;
     int c;
@@ -1646,10 +1767,10 @@ char *prot_fgets(char *buf, unsigned size, struct protstream *s)
     size--;
 
     while (size && (c = prot_getc(s)) != EOF) {
-	size--;
-	*p++ = c;
+        size--;
+        *p++ = c;
         s->bytes_in++;
-	if (c == '\n') break;
+        if (c == '\n') break;
     }
     if (p == buf) return 0;
     *p++ = '\0';
@@ -1658,7 +1779,7 @@ char *prot_fgets(char *buf, unsigned size, struct protstream *s)
 
 /* Handle protgroups */
 /* Create a new protgroup of the given size, or 32 if size is 0 */
-struct protgroup *protgroup_new(size_t size) 
+EXPORTED struct protgroup *protgroup_new(size_t size)
 {
     struct protgroup *ret = xmalloc(sizeof(struct protgroup));
 
@@ -1677,31 +1798,31 @@ struct protgroup *protgroup_copy(struct protgroup *src)
     assert(src);
     dest = protgroup_new(src->nalloced);
     if(src->next_element) {
-	memcpy(dest->group, src->group,
-	       src->next_element * sizeof(struct protstream *));
+        memcpy(dest->group, src->group,
+               src->next_element * sizeof(struct protstream *));
     }
     return dest;
 }
 
-void protgroup_reset(struct protgroup *group) 
+EXPORTED void protgroup_reset(struct protgroup *group)
 {
     if(group) {
-	memset(group->group, 0,
-	       group->nalloced * sizeof(struct protstream *));
-	group->next_element = 0;
+        memset(group->group, 0,
+               group->nalloced * sizeof(struct protstream *));
+        group->next_element = 0;
     }
 }
 
-void protgroup_free(struct protgroup *group) 
+EXPORTED void protgroup_free(struct protgroup *group)
 {
     if(group) {
-	assert(group->group);
-	free(group->group);
-	free(group);
+        assert(group->group);
+        free(group->group);
+        free(group);
     }
 }
 
-void protgroup_insert(struct protgroup *group, struct protstream *item) 
+EXPORTED void protgroup_insert(struct protgroup *group, struct protstream *item)
 {
     unsigned i, empty;
 
@@ -1710,21 +1831,21 @@ void protgroup_insert(struct protgroup *group, struct protstream *item)
 
     /* See if we already have this protstream */
     for (i = 0, empty = group->next_element; i < group->next_element; i++) {
-	if (!group->group[i]) empty = i;
-	else if (group->group[i] == item) return;
+        if (!group->group[i]) empty = i;
+        else if (group->group[i] == item) return;
     }
-    /* Double size of the protgroup if we're at our limit */ 
+    /* Double size of the protgroup if we're at our limit */
     if (empty == group->next_element &&
-	group->next_element++ == group->nalloced) {
-	group->nalloced *= 2;
-	group->group = xrealloc(group->group,
-				group->nalloced * sizeof(struct protstream *));
+        group->next_element++ == group->nalloced) {
+        group->nalloced *= 2;
+        group->group = xrealloc(group->group,
+                                group->nalloced * sizeof(struct protstream *));
     }
     /* Insert the item at the empty location */
     group->group[empty] = item;
 }
 
-void protgroup_delete(struct protgroup *group, struct protstream *item) 
+EXPORTED void protgroup_delete(struct protgroup *group, struct protstream *item)
 {
     unsigned i;
 
@@ -1733,64 +1854,64 @@ void protgroup_delete(struct protgroup *group, struct protstream *item)
 
     /* find the protstream */
     for (i = 0; i < group->next_element; i++) {
-	if (group->group[i] == item) {
-	    /* slide all remaining elements down one slot */
-	    group->next_element--;
-	    for (; i < group->next_element; i++) {
-		group->group[i] = group->group[i+1];
-	    }
-	    group->group[i] = NULL;
-	    return;
-	}
+        if (group->group[i] == item) {
+            /* slide all remaining elements down one slot */
+            group->next_element--;
+            for (; i < group->next_element; i++) {
+                group->group[i] = group->group[i+1];
+            }
+            group->group[i] = NULL;
+            return;
+        }
     }
     syslog(LOG_ERR, "protgroup_delete(): can't find protstream in group");
 }
 
-struct protstream *protgroup_getelement(struct protgroup *group,
-					size_t element) 
+EXPORTED struct protstream *protgroup_getelement(struct protgroup *group,
+                                        size_t element)
 {
     assert(group);
 
     if (element >= group->next_element)
-	return NULL;
+        return NULL;
 
     return group->group[element];
 }
 
-int prot_getc(struct protstream *s)
+EXPORTED int prot_getc(struct protstream *s)
 {
     assert(!s->write);
 
     if (s->cnt > 0) {
-	--s->cnt;
-	s->can_unget++;
-	s->bytes_in++;
-	return *(s->ptr)++;
+        --s->cnt;
+        s->can_unget++;
+        s->bytes_in++;
+        return *(s->ptr)++;
     }
 
     return prot_fill(s);
 }
 
-int prot_ungetc(int c, struct protstream *s)
+EXPORTED int prot_ungetc(int c, struct protstream *s)
 {
     assert(!s->write);
 
     if (c == EOF) return EOF;
 
     if (!s->can_unget)
-	fatal("Can't unwind any more", EC_SOFTWARE);
+        fatal("Can't unwind any more", EC_SOFTWARE);
 
     s->cnt++;
     s->can_unget--;
     s->bytes_in--;
     s->ptr--;
     if (*s->ptr != c)
-	fatal("Trying to unput wrong character", EC_SOFTWARE);
+        fatal("Trying to unput wrong character", EC_SOFTWARE);
 
     return c;
 }
 
-int prot_putc(int c, struct protstream *s)
+EXPORTED int prot_putc(int c, struct protstream *s)
 {
     assert(s->write);
     assert(s->cnt > 0);
@@ -1799,7 +1920,7 @@ int prot_putc(int c, struct protstream *s)
 
     s->bytes_out++;
     if (--s->cnt == 0)
-	return prot_flush_internal(s,0);
+        return prot_flush_internal(s,0);
 
     return 0;
 }

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,8 +38,6 @@
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: com_err.c,v 1.3 2010/01/06 17:01:28 murch Exp $
- *
  * Copyright 1987, 1988 by MIT Student Information Processing Board.
  *
  * For copyright info, see mit-sipb-copyright.h.
@@ -62,7 +60,7 @@
 #include "error_table.h"
 #include "internal.h"
 
-struct et_list * _et_list = (struct et_list *) NULL;
+EXPORTED struct et_list * _et_list = (struct et_list *) NULL;
 
 #ifdef notdef
 /*
@@ -78,7 +76,7 @@ struct et_list * _et_list = (struct et_list *) NULL;
 
 /*
  * XXX for now, we define error_message by hand.  Ultimately, we
- * should fix up com_err.h so that it's safe to #include here 
+ * should fix up com_err.h so that it's safe to #include here
  * directly.
  */
 #if defined(__STDC__) || defined(_WINDOWS)
@@ -102,12 +100,12 @@ static void
 
     *errbuf = '\0';
     if (whoami) {
-	strcat (errbuf, whoami);
-	strcat (errbuf, ": ");
+        strcat (errbuf, whoami);
+        strcat (errbuf, ": ");
     }
     if (code) {
-	strcat (errbuf, error_message(code));
-	strcat (errbuf, " ");
+        strcat (errbuf, error_message(code));
+        strcat (errbuf, " ");
     }
     if (fmt) {
         vsprintf (errbuf + strlen (errbuf), fmt, args);
@@ -141,12 +139,12 @@ void com_err_va (whoami, code, fmt, args)
 }
 
 #ifndef VARARGS
-void INTERFACE_C com_err (const char *whoami,
-	      long code,
-	      const char *fmt, ...)
+EXPORTED void INTERFACE_C com_err (const char *whoami,
+              long code,
+              const char *fmt, ...)
 {
 #else
-void INTERFACE_C com_err (va_alist)
+EXPORTED void INTERFACE_C com_err (va_alist)
     va_dcl
 {
     const char *whoami, *fmt;
@@ -155,7 +153,7 @@ void INTERFACE_C com_err (va_alist)
     va_list pvar;
 
     if (!com_err_hook)
-	com_err_hook = default_com_err_proc;
+        com_err_hook = default_com_err_proc;
 #ifdef VARARGS
     va_start (pvar);
     whoami = va_arg (pvar, const char *);
@@ -174,9 +172,9 @@ errf set_com_err_hook (new_proc)
     errf x = com_err_hook;
 
     if (new_proc)
-	com_err_hook = new_proc;
+        com_err_hook = new_proc;
     else
-	com_err_hook = default_com_err_proc;
+        com_err_hook = default_com_err_proc;
 
     return x;
 }

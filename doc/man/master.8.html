@@ -1,5 +1,5 @@
-<!-- Creator     : groff version 1.22.1 -->
-<!-- CreationDate: Tue Jul 22 16:36:20 2014 -->
+<!-- Creator     : groff version 1.21 -->
+<!-- CreationDate: Tue Aug  4 16:42:34 2015 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -31,8 +31,6 @@
 
 <hr>
 
-
-<p>*</p>
 
 <h2>NAME
 <a name="NAME"></a>
@@ -153,9 +151,16 @@ from controlling terminal).</p></td></tr>
 <td width="78%">
 
 
-<p>Don&rsquo;t close stdin/stdout/stderr. Primiarly useful
-for debugging.</p></td></tr>
+<p>Don&rsquo;t close stdin/stdout/stderr. Primarily useful
+for debugging. Note that -d and -D cannot be used together;
+consider using -L instead.</p></td></tr>
 </table>
+
+<p style="margin-left:11%;"><b>&minus;L</b>
+<i>logfile</i></p>
+
+<p style="margin-left:22%;">Redirect stdout and stderr to
+the given <i>logfile</i>.</p>
 
 <p style="margin-left:11%;"><b>&minus;x</b> <i>snmp agentx
 socket</i></p>
@@ -179,6 +184,18 @@ signal, SIGHUP. Services and events may be added, deleted or
 modified when the configuration file is reread. Any active
 services removed from the configuration file will be allowed
 to run until completion.</p>
+
+<p style="margin-left:11%; margin-top: 1em"><i>Master</i>
+propagates the hangup signal, SIGHUP, to its child service
+processes, so that they stop waiting for incoming
+connections and exit, allowing them to be recycled. This is
+useful to make services take into account a new version of
+the <i>imapd.conf</i>(5) file. Children that are servicing a
+client connection when SIGHUP is received are allowed to run
+until the client logouts before being recycled. It may take
+a long time until the client logouts, so a log message is
+generated for processes that have not been recycled whithin
+30s.</p>
 
 <h2>NOTES
 <a name="NOTES"></a>

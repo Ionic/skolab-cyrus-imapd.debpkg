@@ -38,8 +38,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: ctl_cyrusdb.c,v 1.33 2010/01/06 17:01:30 murch Exp $
  */
 
 #include <config.h>
@@ -50,13 +48,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <syslog.h>
-#include <errno.h>
 
-#include "cyrusdb.h"
 #include "global.h"
 #include "exitcodes.h"
 #include "libcyr_cfg.h"
@@ -67,74 +61,69 @@
 #include "xmalloc.h"
 
 /* config.c stuff */
-const int config_need_data = 0;
 static int do_remove = 0;
 
-void usage(void)
+static void usage(void)
 {
     fprintf(stderr, "cyr_userseen [-C <altconfig>] -d\n");
     exit(-1);
 }
 
 /* Callback for use by delete_seen */
-static int deluserseen(char *name,
-		       int matchlen __attribute__((unused)),
-		       int maycreate __attribute__((unused)),
-		       void *rock __attribute__((unused)))
+static int deluserseen(const mbentry_t *mbentry, void *rock __attribute__((unused)))
 {
     struct mailbox *mailbox = NULL;
     const char *userid;
-    int r;
+    int r = 0;
 
-    r = mailbox_open_irl(name, &mailbox);
-    if (r) return r;
+    r = mailbox_open_irl(mbentry->name, &mailbox);
+    if (r) goto done;
 
-    userid = mboxname_to_userid(name);
+    userid = mboxname_to_userid(mbentry->name);
     if (userid) {
-	printf("removing seen for %s on %s\n", userid, mailbox->name);
-	if (do_remove) seen_delete_mailbox(userid, mailbox);
+        printf("removing seen for %s on %s\n", userid, mailbox->name);
+        if (do_remove) seen_delete_mailbox(userid, mailbox);
     }
 
     mailbox_close(&mailbox);
 
-    return 0;
+done:
+    return r;
 }
 
 int main(int argc, char *argv[])
 {
-    char pattern[2] = { '*', '\0' };
     extern char *optarg;
     int opt;
     char *alt_config = NULL;
 
-    if ((geteuid()) == 0 && (become_cyrus() != 0)) {
-	fatal("must run as the Cyrus user", EC_USAGE);
+    if ((geteuid()) == 0 && (become_cyrus(/*is_master*/0) != 0)) {
+        fatal("must run as the Cyrus user", EC_USAGE);
     }
 
     while ((opt = getopt(argc, argv, "C:d")) != EOF) {
-	switch (opt) {
-	case 'C': /* alt config file */
-	    alt_config = optarg;
-	    break;
+        switch (opt) {
+        case 'C': /* alt config file */
+            alt_config = optarg;
+            break;
 
-	case 'd':
-	    do_remove = 1;
-	    break;
+        case 'd':
+            do_remove = 1;
+            break;
 
-	default:
-	    usage();
-	    break;
-	}
+        default:
+            usage();
+            break;
+        }
     }
 
-    cyrus_init(alt_config, "cyr_userseen", 0);
+    cyrus_init(alt_config, "cyr_userseen", 0, 0);
 
     mboxlist_init(0);
     mboxlist_open(NULL);
 
     /* build a list of mailboxes - we're using internal names here */
-    mboxlist_findall(NULL, pattern, 1, NULL,
-		     NULL, deluserseen, NULL);
+    mboxlist_allmbox("", deluserseen, NULL, /*incdel*/0);
 
     mboxlist_close();
     mboxlist_done();

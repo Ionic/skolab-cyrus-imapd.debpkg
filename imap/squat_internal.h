@@ -37,8 +37,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: squat_internal.h,v 1.4 2010/01/06 17:01:41 murch Exp $
  */
 
 /*
@@ -111,10 +109,10 @@ typedef struct {
   char doc_ID_list_offset[8];/* offset to a doc-ID-list structure (see below) */
   char word_list_offset[8];  /* offset to a word-list structure (see below) */
   char valid_char_bits[32];  /* a bitmap recording which characters
-				appear in the index. The client
-				promises that query strings will not
-				contain characters which don't have
-				their bits set in the bitmap. */
+                                appear in the index. The client
+                                promises that query strings will not
+                                contain characters which don't have
+                                their bits set in the bitmap. */
 } SquatDiskHeader;
 
 /* Index file format

@@ -20,13 +20,6 @@ Prerequisites and other notes
     features. If you don't have them, certain features of the IMAP server
     will be disabled. 
 
-      * makedepend. A version is included in the makedepend subdirectory of
-        the distribution. Try and install it before installing the Cyrus
-        IMAPd. If it fails, the configure script will use a dummy shell
-        script instead of makedepend, and you should be sure to always give
-        the command "make clean" before "make all". If you don't mind
-        builds taking longer, this isn't a big deal and you can ignore any
-        makedepend errors. 
       * Perl, version 5. To obtain Perl, see the Comprehensive Perl
         Archive. This is required for cyradm (written by Brandon Allbery).
         It is also used for some installation scripts: you don't need it
@@ -51,7 +44,7 @@ Prerequisites and other notes
 
     The following programs and/or packages are recommended: 
 
-      * flex - libsieve has two different lexical analyzers, and that's
-        hard to do with traditional lex. 
+      * flex - libcyrus_sieve has two different lexical analyzers, and
+        that's hard to do with traditional lex. 
       * gcc - we build using gcc and the compiler options -O2 -g. 
 

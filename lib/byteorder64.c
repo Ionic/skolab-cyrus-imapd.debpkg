@@ -38,16 +38,12 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: byteorder64.c,v 1.5 2010/01/06 17:01:44 murch Exp $
  */
 
 #include <config.h>
 #include "byteorder64.h"
 
-#if defined(HAVE_LONG_LONG_INT)
-
-#if !defined(WORDS_BIGENDIAN)
+#ifdef CYRUS_BYTESWAP
 
 #include <netinet/in.h>
 
@@ -58,12 +54,12 @@ union byteswap_64_u {
 };
 
 /* Function to byteswap 64bit unsigned integers on
- * little endian machines to big endian network order. 
+ * little endian machines to big endian network order.
  * On big endian machines this will be a null macro.
  * The macro htonll() is defined in byteorder64.h,
  * and if needed refers to _htonll() here.
  */
-unsigned long long _htonll(unsigned long long x)
+EXPORTED unsigned long long _htonll(unsigned long long x)
 {
     union byteswap_64_u u1;
     union byteswap_64_u u2;
@@ -78,12 +74,12 @@ unsigned long long _htonll(unsigned long long x)
 
 
 /* Function to byteswap big endian 64bit unsigned integers
- * back to little endian host order on little endian machines. 
+ * back to little endian host order on little endian machines.
  * As above, on big endian machines this will be a null macro.
  * The macro ntohll() is defined in byteorder64.h, and if needed,
  * refers to _ntohll() here.
  */
-unsigned long long _ntohll(unsigned long long x)
+EXPORTED unsigned long long _ntohll(unsigned long long x)
 {
     union byteswap_64_u u1;
     union byteswap_64_u u2;
@@ -96,22 +92,20 @@ unsigned long long _ntohll(unsigned long long x)
     return u2.a;
 }
 
-#endif /* !defined(WORDS_BIGENDIAN) */
+#endif /* CYRUS_BYTESWAP */
 
 #include <string.h>
 
-void *align_htonll(void *dst, unsigned long long src)
+EXPORTED void *align_htonll(void *dst, unsigned long long src)
 {
     unsigned long long tmp = htonll(src);
     return memcpy(dst, (void *) &tmp, sizeof(unsigned long long));
 }
 
-unsigned long long align_ntohll(const void *src)
+EXPORTED unsigned long long align_ntohll(const void *src)
 {
     unsigned long long dst;
 
     memcpy((void *) &dst, src, sizeof(unsigned long long));
     return ntohll(dst);
 }
-
-#endif /* defined(HAVE_LONG_LONG_INT) */

@@ -152,8 +152,8 @@ Installing and configuring the IMAP Server
            imaps     993/tcp
            pop3s     995/tcp
            kpop      1109/tcp
-           sieve     2000/tcp
            lmtp      2003/tcp
+           sieve     4190/tcp
            fud       4201/udp
 
     12. Remove "/etc/[x]inetd.conf" entries. Any imap, imaps, pop3, pop3s,
@@ -256,10 +256,8 @@ Configuring Sendmail
 
         If you wish to change the name of the UNIX socket or switch to TCP,
         define CYRUSV2_MAILER_ARGS appropriately as described in cf/README. 
-
       * For Sendmail 8.10 - 8.12.3, use the cyrusv2.mc file as a template
         to create a Sendmail configuration file. 
-
       * For Sendmail 8.9.x and earlier, use the cyrus mailer definition in
         the Sendmail distribution: 
 
@@ -335,9 +333,9 @@ Configuring Exim 4
     no local user accounts. As a result, you must define the following
     "router": 
 
-        localuser:
-          driver = accept
-          transport = local_delivery
+    localuser:
+      driver = accept
+      transport = local_delivery
 
     The following "transports" assume that you are using either the
     lmtpunix or lmtp service from one of the sample cyrus.conf files
@@ -428,14 +426,14 @@ Configuring Cyrus with OpenSSL
      3. Add the following to /etc/imapd.conf to tell the server where to
         find the certificate and key files (used for ALL services): 
 
-        tls_cert_file: /var/imap/server.pem
-        tls_key_file: /var/imap/server.pem
+        server_cert_file: /var/imap/server.cert
+        server_key_file: /var/imap/server.key
 
         Optionally, you can use separate certificates and key files for
         each service: 
 
-        [servicename]_tls_cert_file: /var/imap/imap-server.pem
-        [servicename]_tls_key_file: /var/imap/imap-server.pem
+        [servicename]_server_cert_file: /var/imap/imap-server.cert
+        [servicename]_server_key_file: /var/imap/imap-server.key
 
         "servicename" here refers to the name of the service as specified
         in cyrus.conf. It is not necessarily the name of the binary. 

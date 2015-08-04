@@ -37,8 +37,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: ptdump.c,v 1.16 2010/01/06 17:01:57 murch Exp $
  */
 
 #include <config.h>
@@ -48,27 +46,25 @@
 
 #include "auth_pts.h"
 #include "cyrusdb.h"
-#include "global.h"
+#include "imap/global.h"
 #include "libconfig.h"
 
-int config_need_data = 0;
-
 static int dump_cb(void *rockp __attribute__((unused)),
-		     const char *key, int keylen,
-		     const char *data,
-		     int datalen __attribute__((unused))) 
+                     const char *key, size_t keylen,
+                     const char *data,
+                     size_t datalen __attribute__((unused)))
 {
     struct auth_state *authstate = (struct auth_state *)data;
     int i;
-    
+
     printf("user: ");
     fwrite(key, keylen, 1, stdout);
     printf(" time: %d groups: %d\n",
-	   (unsigned)authstate->mark, (unsigned)authstate->ngroups);
+           (unsigned)authstate->mark, (unsigned)authstate->ngroups);
 
     for (i=0; i < authstate->ngroups; i++)
-	printf("  %s\n",authstate->groups[i].id);
-    
+        printf("  %s\n",authstate->groups[i].id);
+
     return 0;
 }
 
@@ -82,36 +78,36 @@ int main(int argc, char *argv[])
     char *alt_config = NULL;
 
     while ((opt = getopt(argc, argv, "C:")) != EOF) {
-	switch (opt) {
-	case 'C': /* alt config file */
-	    alt_config = optarg;
-	    break;
-	default:
-	    fprintf(stderr,"usage: [-C filename]"
-		    "\n\t-C <filename>\tAlternate Config File"
-		    "\n");
-	    exit(-1);
-	    break;
-	    /* just pass through */
-	}
+        switch (opt) {
+        case 'C': /* alt config file */
+            alt_config = optarg;
+            break;
+        default:
+            fprintf(stderr,"usage: [-C filename]"
+                    "\n\t-C <filename>\tAlternate Config File"
+                    "\n");
+            exit(-1);
+            break;
+            /* just pass through */
+        }
     }
 
-    cyrus_init(alt_config, "ptdump", 0);
+    cyrus_init(alt_config, "ptdump", 0, 0);
 
     /* open database */
     strcpy(fnamebuf, config_dir);
     strcat(fnamebuf, PTS_DBFIL);
-    r = (config_ptscache_db->open)(fnamebuf, CYRUSDB_CREATE, &ptdb);
+    r = cyrusdb_open(config_ptscache_db, fnamebuf, CYRUSDB_CREATE, &ptdb);
     if(r != CYRUSDB_OK) {
-	fprintf(stderr,"error opening %s (%s)", fnamebuf,
-	       cyrusdb_strerror(r));
-	exit(1);
+        fprintf(stderr,"error opening %s (%s)", fnamebuf,
+               cyrusdb_strerror(r));
+        exit(1);
     }
 
     /* iterate through db, wiping expired entries */
-    config_ptscache_db->foreach(ptdb, "", 0, NULL, dump_cb, ptdb, NULL);
+    cyrusdb_foreach(ptdb, "", 0, NULL, dump_cb, ptdb, NULL);
 
-    (config_ptscache_db->close)(ptdb);
+    cyrusdb_close(ptdb);
 
     cyrus_done();
 

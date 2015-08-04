@@ -1,5 +1,5 @@
-<!-- Creator     : groff version 1.22.1 -->
-<!-- CreationDate: Tue Jul 22 16:36:21 2014 -->
+<!-- Creator     : groff version 1.21 -->
+<!-- CreationDate: Tue Aug  4 16:42:35 2015 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -31,8 +31,6 @@
 <hr>
 
 
-<p>*</p>
-
 <h2>NAME
 <a name="NAME"></a>
 </h2>
@@ -57,9 +55,8 @@ engine</p>
 <i>wait_interval</i> ] <br>
 [ <b>&minus;t</b> <i>timeout</i> ] [ <b>&minus;d</b>
 <i>delay</i> ] [ <b>&minus;r</b> ] [ <b>&minus;u</b> ] [
-<b>&minus;m</b> ] <br>
-[ <b>&minus;s</b> ] [ <b>&minus;p</b> <i>partition</i> ]
-<i>objects</i>...</p>
+<b>&minus;m</b> ] [ <b>&minus;A</b> ] <br>
+[ <b>&minus;s</b> ] <i>objects</i>...</p>
 
 <h2>DESCRIPTION
 <a name="DESCRIPTION"></a>
@@ -67,7 +64,7 @@ engine</p>
 
 
 
-<p style="margin-left:11%; margin-top: 1em"><i>Sync_client</i>
+<p style="margin-left:11%; margin-top: 1em"><b>sync_client</b>
 is the client side of the replication system. It runs on the
 client (master) system and connects to the target (replica)
 system and generates an appropriate sequence of transactions
@@ -91,7 +88,8 @@ system.</p>
 <td width="78%">
 
 
-<p style="margin-top: 1em">Verbose mode.</p></td></tr>
+<p style="margin-top: 1em">Verbose mode. Use twice (-v -v)
+to log all protocol traffic to stderr.</p></td></tr>
 <tr valign="top" align="left">
 <td width="11%"></td>
 <td width="3%">
@@ -137,10 +135,10 @@ rather than waiting up to 1000 seconds before giving up.</p></td></tr>
 <td width="78%">
 
 
-<p>Enable compress. If you set &rsquo;sync_compress&rsquo;
-in the imapd.conf or pass -z to sync_client, the replication
-protocol will attempt to enable deflate compression on the
-connection.</p> </td></tr>
+<p>Require compression. The replication protocol will
+always try to enable deflate compression if both ends
+support it. Set this flag when you want to abort if
+compression is not available.</p></td></tr>
 </table>
 
 <p style="margin-left:11%;"><b>&minus;C</b>
@@ -162,24 +160,26 @@ configuration option.</p>
 <p style="margin-left:22%;">In mailbox or user replication
 mode: provides list of users or mailboxes to replicate. In
 rolling replication mode, specifies an alternate log file
-(sync_client will exit after processing the log file).</p>
+(<b>sync_client</b> will exit after processing the log
+file).</p>
 
 <p style="margin-left:11%;"><b>&minus;F</b>
 <i>shutdown-file</i></p>
 
 <p style="margin-left:22%;">Rolling replication checks for
 this file at the end of each replication cycle and shuts
-down if it is present. Used to request nice clean shutdown
-at first convenient point. The file in question is removed
-on shutdown. Overrides <i>sync_shutdown_file</i> option in
+down if it is present. Used to request a nice clean shutdown
+at the first convenient point. The file is removed on
+shutdown. Overrides <i>sync_shutdown_file</i> option in
 <i>imapd.conf</i></p>
 
 <p style="margin-left:11%;"><b>&minus;w</b>
 <i>interval</i></p>
 
 <p style="margin-left:22%;">Wait this long before starting.
-Typically used so that we can attach a debugger to one end
-of the replication system or the other.</p>
+This option is typically used so that we can attach a
+debugger to one end of the replication system or the
+other.</p>
 
 <p style="margin-left:11%;"><b>&minus;t</b>
 <i>timeout</i></p>
@@ -213,10 +213,10 @@ seconds.</p>
 
 
 <p>Rolling (repeat) replication mode. Pick up a list of
-actions recorded by the <b>lmtpd(8), imapd(8), popd(8) and
-nntpd(8)</b> daemons from the file specified in
-<i>sync_log_file.</i> Repeat until <i>sync_shutdwon_file</i>
-appears.</p> </td></tr>
+actions recorded by the <b>lmtpd</b>(8), <b>imapd</b>(8),
+<b>popd</b>(8) and <b>nntpd</b>(8) daemons from the file
+specified in <i>sync_log_file</i>. Repeat until
+<i>sync_shutdown_file</i> appears.</p></td></tr>
 <tr valign="top" align="left">
 <td width="11%"></td>
 <td width="3%">
@@ -230,8 +230,8 @@ appears.</p> </td></tr>
 <p>Use the named channel for rolling replication mode. If
 multiple channels are specified in <i>sync_log_channels</i>
 then use one of them. This option is probably best combined
-with -S to connect to a different server with each
-channel.</p> </td></tr>
+with <b>&minus;S</b> to connect to a different server with
+each channel.</p></td></tr>
 <tr valign="top" align="left">
 <td width="11%"></td>
 <td width="3%">
@@ -244,6 +244,20 @@ channel.</p> </td></tr>
 
 <p>User mode. Remaining arguments are list of users who
 should be replicated.</p></td></tr>
+<tr valign="top" align="left">
+<td width="11%"></td>
+<td width="3%">
+
+
+<p><b>&minus;A</b></p></td>
+<td width="8%"></td>
+<td width="78%">
+
+
+<p>All users mode. Sync every user on the server to the
+replica (doesn&rsquo;t do non-user mailboxes at all... this
+could be considered a bug and maybe it should do those
+mailboxes independently)</p></td></tr>
 <tr valign="top" align="left">
 <td width="11%"></td>
 <td width="3%">
@@ -269,15 +283,8 @@ which should be replicated.</p></td></tr>
 <p>Sieve mode. Remaining arguments are list of users whose
 Sieve files should be replicated. Principally used for
 debugging purposes: not exposed to
-<b>sync_client(8).</b></p> </td></tr>
+<b>sync_client</b>(8).</p> </td></tr>
 </table>
-
-<p style="margin-left:11%;"><b>&minus;p</b>
-<i>partition</i></p>
-
-<p style="margin-left:22%;">In mailbox or user replication
-mode: provides the name of the partition on the replica to
-which the mailboxes/users should be replicated.</p>
 
 <h2>FILES
 <a name="FILES"></a>
@@ -293,7 +300,7 @@ which the mailboxes/users should be replicated.</p>
 
 
 
-<p style="margin-left:11%; margin-top: 1em"><b>sync_server(8)</b></p>
+<p style="margin-left:11%; margin-top: 1em"><b>sync_server</b>(8)</p>
 
 <h2>AUTHORS
 <a name="AUTHORS"></a>

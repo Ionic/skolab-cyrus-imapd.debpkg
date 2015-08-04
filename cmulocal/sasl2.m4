@@ -1,6 +1,5 @@
 # sasl2.m4--sasl2 libraries and includes
 # Rob Siemborski
-# $Id: sasl2.m4,v 1.61 2011/11/09 15:49:47 murch Exp $
 
 # SASL2_CRYPT_CHK
 # ---------------
@@ -41,7 +40,7 @@ if test "$gssapi" != no; then
     *)
       AC_WARN([The system type is not recognized. If you believe that CyberSafe GSSAPI works on this platform, please update the configure script])
       if test "$gss_impl" = "cybersafe"; then
-        AC_ERROR([CyberSafe was forced, cannot continue as platform is not supported])
+        AC_MSG_ERROR([CyberSafe was forced, cannot continue as platform is not supported])
       fi
       ;;
   esac
@@ -66,8 +65,7 @@ if test "$gssapi" != no; then
     fi
   fi
   AC_CHECK_HEADER([gssapi.h],,
-                  [AC_CHECK_HEADER([gssapi/gssapi.h],,
-                                   [AC_WARN([Disabling GSSAPI - no include files found]); gssapi=no])])
+                  [AC_CHECK_HEADER([gssapi/gssapi.h],, [gssapi=no])])
   AC_CHECK_HEADERS(gssapi/gssapi_ext.h)
   CPPFLAGS=$cmu_saved_CPPFLAGS
 
@@ -139,7 +137,7 @@ if test "$gssapi" != no; then
 
     gss_failed=0
 
-# Check for CyberSafe with two libraries first, than fall back to a single 
+# Check for CyberSafe with two libraries first, than fall back to a single
 # library (older CyberSafe)
 
     unset ac_cv_lib_gss_csf_gss_acq_user
@@ -252,7 +250,6 @@ if test "$gssapi" != "no"; then
   fi
 fi
 
-GSSAPI_LIBS=""
 AC_MSG_CHECKING([GSSAPI])
 if test "$gssapi" != no; then
   AC_MSG_RESULT([with implementation ${gss_impl}])
@@ -295,24 +292,23 @@ int main(void)
     gss_OID_set mech_set;
     OM_uint32 min_stat;
     int have_spnego = 0;
-                                                                               
+
     if (gss_indicate_mechs(&min_stat, &mech_set) == GSS_S_COMPLETE) {
-	gss_test_oid_set_member(&min_stat, &spnego_oid, mech_set, &have_spnego);
-	gss_release_oid_set(&min_stat, &mech_set);
+        gss_test_oid_set_member(&min_stat, &spnego_oid, mech_set, &have_spnego);
+        gss_release_oid_set(&min_stat, &mech_set);
     }
 
     return (!have_spnego);  // 0 = success, 1 = failure
 }
-],	
-	[ AC_DEFINE(HAVE_GSS_SPNEGO,,[Define if your GSSAPI implementation supports SPNEGO])
-	AC_MSG_RESULT(yes) ],
-	AC_MSG_RESULT(no))
+],
+        [ AC_DEFINE(HAVE_GSS_SPNEGO,,[Define if your GSSAPI implementation supports SPNEGO])
+        AC_MSG_RESULT(yes) ],
+        AC_MSG_RESULT(no))
   LIBS="$cmu_save_LIBS"
 
 else
   AC_MSG_RESULT([disabled])
 fi
-AC_SUBST(GSSAPI_LIBS)
 AC_SUBST(GSSAPIBASE_LIBS)
 ])# SASL_GSSAPI_CHK
 
@@ -385,9 +381,10 @@ if test ${with_staticsasl} != "no"; then
                                         LIB_SASL="$LIB_SASL ${with_staticsasl}/$i42/libsasl2.a"
                                       fi
                                     done
+                                    AC_CHECK_FUNC(dlopen,,[AC_CHECK_LIB(dl, dlopen, [LIB_SASL+="$LIB_SASL -ldl"])])
                                     if test ! "$ac_cv_found_sasl" = "yes"; then
                                       AC_MSG_CHECKING([for static libsasl])
-                                      AC_ERROR([Could not find ${with_staticsasl}/lib*/libsasl2.a])
+                                      AC_MSG_ERROR([Could not find ${with_staticsasl}/lib*/libsasl2.a])
                                     fi])])
 
   AC_MSG_RESULT([found])
@@ -396,7 +393,7 @@ if test ${with_staticsasl} != "no"; then
     LIB_SASL="$LIB_SASL $GSSAPIBASE_STATIC_LIBS"
   else
     SASL_GSSAPI_LIBS_SET=""
-    cmu_saved_LIBS="$GSSAPIBASE_STATIC_LIBS $cmu_saved_LIBS" 
+    cmu_saved_LIBS="$GSSAPIBASE_STATIC_LIBS $cmu_saved_LIBS"
   fi
 fi
 
@@ -416,7 +413,7 @@ fi
 # be sure to check for a SASLv2 specific function
 AC_CHECK_HEADER(sasl/sasl.h,
                 [AC_CHECK_HEADER(sasl/saslutil.h,
-                                 [AC_CHECK_LIB(sasl2, prop_get, 
+                                 [AC_CHECK_LIB(sasl2, prop_get,
                                                ac_cv_found_sasl=yes,
                                                ac_cv_found_sasl=no)],
                                  ac_cv_found_sasl=no)],
@@ -439,7 +436,7 @@ fi
 
 if test "x$SASL_GSSAPI_LIBS_SET" != "x"; then
   SASL_GSSAPI_LIBS_SET=""
-  cmu_saved_LIBS="$GSSAPIBASE_LIBS $cmu_saved_LIBS" 
+  cmu_saved_LIBS="$GSSAPIBASE_LIBS $cmu_saved_LIBS"
 fi
 
 LIBS="$cmu_saved_LIBS"
@@ -458,7 +455,7 @@ AC_SUBST(SASLFLAGS)
 AC_DEFUN([CMU_SASL2_REQUIRED],
 [AC_REQUIRE([CMU_SASL2])
 if test "$ac_cv_found_sasl" != "yes"; then
-  AC_ERROR([Cannot continue without libsasl2.
+  AC_MSG_ERROR([Cannot continue without libsasl2.
 Get it from ftp://ftp.andrew.cmu.edu/pub/cyrus-mail/.])
 fi])
 
@@ -488,7 +485,7 @@ AC_TRY_CPP([
 #error SASL version is less than $1.$2.$3
 #endif
 ],,
-           [AC_ERROR([Incorrect SASL headers found.  This package requires SASL $1.$2.$3 or newer.])])
+           [AC_MSG_ERROR([Incorrect SASL headers found.  This package requires SASL $1.$2.$3 or newer.])])
 
 CPPFLAGS=$cmu_saved_CPPFLAGS
 ])# CMU_SASL2_REQUIRE_VER

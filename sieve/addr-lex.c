@@ -1,5 +1,6 @@
+#line 2 "sieve/addr-lex.c"
 
-#line 3 "<stdout>"
+#line 4 "sieve/addr-lex.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -27,7 +28,7 @@
 #define FLEX_SCANNER
 #define YY_FLEX_MAJOR_VERSION 2
 #define YY_FLEX_MINOR_VERSION 5
-#define YY_FLEX_SUBMINOR_VERSION 36
+#define YY_FLEX_SUBMINOR_VERSION 35
 #if YY_FLEX_SUBMINOR_VERSION > 0
 #define FLEX_BETA
 #endif
@@ -160,7 +161,15 @@ typedef unsigned int flex_uint32_t;
 
 /* Size of default input buffer. */
 #ifndef YY_BUF_SIZE
+#ifdef __ia64__
+/* On IA-64, the buffer size is 16k, not 8k.
+ * Moreover, YY_BUF_SIZE is 2*YY_READ_BUF_SIZE in the general case.
+ * Ditto for the __ia64__ case accordingly.
+ */
+#define YY_BUF_SIZE 32768
+#else
 #define YY_BUF_SIZE 16384
+#endif /* __ia64__ */
 #endif
 
 /* The state buf must be large enough to hold one state per character in the main buffer.
@@ -172,12 +181,7 @@ typedef unsigned int flex_uint32_t;
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
 #endif
 
-#ifndef YY_TYPEDEF_YY_SIZE_T
-#define YY_TYPEDEF_YY_SIZE_T
-typedef size_t yy_size_t;
-#endif
-
-extern yy_size_t addrleng;
+extern int addrleng;
 
 extern FILE *addrin, *addrout;
 
@@ -203,6 +207,11 @@ extern FILE *addrin, *addrout;
 
 #define unput(c) yyunput( c, (yytext_ptr)  )
 
+#ifndef YY_TYPEDEF_YY_SIZE_T
+#define YY_TYPEDEF_YY_SIZE_T
+typedef size_t yy_size_t;
+#endif
+
 #ifndef YY_STRUCT_YY_BUFFER_STATE
 #define YY_STRUCT_YY_BUFFER_STATE
 struct yy_buffer_state
@@ -220,7 +229,7 @@ struct yy_buffer_state
 	/* Number of characters read into yy_ch_buf, not including EOB
 	 * characters.
 	 */
-	yy_size_t yy_n_chars;
+	int yy_n_chars;
 
 	/* Whether we "own" the buffer - i.e., we know we created it,
 	 * and can realloc() it to grow it, and should free() it to
@@ -290,8 +299,8 @@ static YY_BUFFER_STATE * yy_buffer_stack = 0; /**< Stack as an array. */
 
 /* yy_hold_char holds the character lost when addrtext is formed. */
 static char yy_hold_char;
-static yy_size_t yy_n_chars;		/* number of characters read into yy_ch_buf */
-yy_size_t addrleng;
+static int yy_n_chars;		/* number of characters read into yy_ch_buf */
+int addrleng;
 
 /* Points to current character in buffer. */
 static char *yy_c_buf_p = (char *) 0;
@@ -319,7 +328,7 @@ static void addr_init_buffer (YY_BUFFER_STATE b,FILE *file  );
 
 YY_BUFFER_STATE addr_scan_buffer (char *base,yy_size_t size  );
 YY_BUFFER_STATE addr_scan_string (yyconst char *yy_str  );
-YY_BUFFER_STATE addr_scan_bytes (yyconst char *bytes,yy_size_t len  );
+YY_BUFFER_STATE addr_scan_bytes (yyconst char *bytes,int len  );
 
 void *addralloc (yy_size_t  );
 void *addrrealloc (void *,yy_size_t  );
@@ -351,7 +360,7 @@ void addrfree (void *  );
 
 /* Begin user sect3 */
 
-#define addrwrap() 1
+#define addrwrap(n) 1
 #define YY_SKIP_YYWRAP
 
 typedef unsigned char YY_CHAR;
@@ -565,23 +574,18 @@ char *addrtext;
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: addr-lex.l,v 1.12 2010/01/06 17:01:58 murch Exp $
  */
 
-#include "addr.h"
-#include <stdlib.h>
-#include <string.h>
+#include "sieve/sieve_interface.h"
+#include "sieve/addr.h"
 
-#undef YY_INPUT
-#define YY_INPUT(b, r, ms) (r = addrinput(b, ms))
+void addrerror(void*, const char *);
 
-int addrinput(char *buf, size_t max_size);
-void addrerror(const char *);
+static int ncom;        /* number of open comments */
+#define YY_DECL int addrlex(YYSTYPE* addrlval __attribute__((unused)), void* parse_script)
+#define YY_NO_INPUT 1
 
-static int ncom;	/* number of open comments */
-
-#line 585 "<stdout>"
+#line 589 "sieve/addr-lex.c"
 
 #define INITIAL 0
 #define QSTRING 1
@@ -623,7 +627,7 @@ FILE *addrget_out (void );
 
 void addrset_out  (FILE * out_str  );
 
-yy_size_t addrget_leng (void );
+int addrget_leng (void );
 
 char *addrget_text (void );
 
@@ -663,7 +667,12 @@ static int input (void );
 
 /* Amount of stuff to slurp up with each read. */
 #ifndef YY_READ_BUF_SIZE
+#ifdef __ia64__
+/* On IA-64, the buffer size is 16k, not 8k */
+#define YY_READ_BUF_SIZE 16384
+#else
 #define YY_READ_BUF_SIZE 8192
+#endif /* __ia64__ */
 #endif
 
 /* Copy whatever the last rule matched to the standard output. */
@@ -764,10 +773,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 67 "addr-lex.l"
+#line 62 "addr-lex.l"
 
 
-#line 771 "<stdout>"
+#line 780 "sieve/addr-lex.c"
 
 	if ( !(yy_init) )
 		{
@@ -852,104 +861,104 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 69 "addr-lex.l"
+#line 64 "addr-lex.l"
 { BEGIN QSTRING; return addrtext[0]; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 70 "addr-lex.l"
+#line 65 "addr-lex.l"
 { BEGIN DOMAINLIT; return addrtext[0]; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 71 "addr-lex.l"
+#line 66 "addr-lex.l"
 { ncom = 1; BEGIN COMMENT; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 72 "addr-lex.l"
-{ addrerror("address parse error, "
-					  "unexpected `')'' "
-					  "(unbalanced comment)");
-				  yyterminate(); }
+#line 67 "addr-lex.l"
+{ addrerror(parse_script, "address parse error, "
+                                          "unexpected `')'' "
+                                          "(unbalanced comment)");
+                                  yyterminate(); }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 77 "addr-lex.l"
+#line 72 "addr-lex.l"
 return ATOM;
 	YY_BREAK
 case 6:
 /* rule 6 can match eol */
 YY_RULE_SETUP
-#line 79 "addr-lex.l"
+#line 74 "addr-lex.l"
 /* ignore whitespace */
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 80 "addr-lex.l"
+#line 75 "addr-lex.l"
 return addrtext[0];
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 82 "addr-lex.l"
+#line 77 "addr-lex.l"
 return QTEXT;
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 83 "addr-lex.l"
+#line 78 "addr-lex.l"
 { BEGIN INITIAL; return addrtext[0]; }
 	YY_BREAK
 case YY_STATE_EOF(QSTRING):
-#line 84 "addr-lex.l"
+#line 79 "addr-lex.l"
 { BEGIN INITIAL;
-				  addrerror("address parse error, expecting `'\"'' (unterminated string)");
-				  yyterminate(); }
+                                  addrerror(parse_script, "address parse error, expecting `'\"'' (unterminated string)");
+                                  yyterminate(); }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 88 "addr-lex.l"
+#line 83 "addr-lex.l"
 return DTEXT;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 89 "addr-lex.l"
+#line 84 "addr-lex.l"
 { BEGIN INITIAL; return addrtext[0]; }
 	YY_BREAK
 case YY_STATE_EOF(DOMAINLIT):
-#line 90 "addr-lex.l"
+#line 85 "addr-lex.l"
 { BEGIN INITIAL;
-				  addrerror("address parse error, expecting `']'' (unterminated domain literal)");
-				  yyterminate(); }
+                                  addrerror(parse_script, "address parse error, expecting `']'' (unterminated domain literal)");
+                                  yyterminate(); }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 96 "addr-lex.l"
+#line 91 "addr-lex.l"
 /* ignore comments */
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 97 "addr-lex.l"
+#line 92 "addr-lex.l"
 ncom++;
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 98 "addr-lex.l"
+#line 93 "addr-lex.l"
 { ncom--; if (ncom == 0) BEGIN INITIAL; }
 	YY_BREAK
 case YY_STATE_EOF(COMMENT):
-#line 99 "addr-lex.l"
+#line 94 "addr-lex.l"
 { BEGIN INITIAL;
-				  addrerror("address parse error, "
-					  "expecting `')'' "
-					  "(unterminated comment)");
-				  yyterminate(); }
+                                  addrerror(parse_script, "address parse error, "
+                                          "expecting `')'' "
+                                          "(unterminated comment)");
+                                  yyterminate(); }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 105 "addr-lex.l"
+#line 100 "addr-lex.l"
 ECHO;
 	YY_BREAK
-#line 953 "<stdout>"
+#line 962 "sieve/addr-lex.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1135,21 +1144,21 @@ static int yy_get_next_buffer (void)
 
 	else
 		{
-			yy_size_t num_to_read =
+			int num_to_read =
 			YY_CURRENT_BUFFER_LVALUE->yy_buf_size - number_to_move - 1;
 
 		while ( num_to_read <= 0 )
 			{ /* Not enough room in the buffer - grow it. */
 
 			/* just a shorter name for the current buffer */
-			YY_BUFFER_STATE b = YY_CURRENT_BUFFER_LVALUE;
+			YY_BUFFER_STATE b = YY_CURRENT_BUFFER;
 
 			int yy_c_buf_p_offset =
 				(int) ((yy_c_buf_p) - b->yy_ch_buf);
 
 			if ( b->yy_is_our_buffer )
 				{
-				yy_size_t new_size = b->yy_buf_size * 2;
+				int new_size = b->yy_buf_size * 2;
 
 				if ( new_size <= 0 )
 					b->yy_buf_size += b->yy_buf_size / 8;
@@ -1180,7 +1189,7 @@ static int yy_get_next_buffer (void)
 
 		/* Read in more data. */
 		YY_INPUT( (&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move]),
-			(yy_n_chars), num_to_read );
+			(yy_n_chars), (size_t) num_to_read );
 
 		YY_CURRENT_BUFFER_LVALUE->yy_n_chars = (yy_n_chars);
 		}
@@ -1275,7 +1284,7 @@ static int yy_get_next_buffer (void)
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 	yy_is_jam = (yy_current_state == 39);
 
-		return yy_is_jam ? 0 : yy_current_state;
+	return yy_is_jam ? 0 : yy_current_state;
 }
 
 #ifndef YY_NO_INPUT
@@ -1302,7 +1311,7 @@ static int yy_get_next_buffer (void)
 
 		else
 			{ /* need more input */
-			yy_size_t offset = (yy_c_buf_p) - (yytext_ptr);
+			int offset = (yy_c_buf_p) - (yytext_ptr);
 			++(yy_c_buf_p);
 
 			switch ( yy_get_next_buffer(  ) )
@@ -1462,6 +1471,10 @@ static void addr_load_buffer_state  (void)
 	addrfree((void *) b  );
 }
 
+#ifndef __cplusplus
+extern int isatty (int );
+#endif /* __cplusplus */
+    
 /* Initializes or reinitializes a buffer.
  * This function is sometimes called more than once on the same buffer,
  * such as during a addrrestart() or at EOF.
@@ -1574,7 +1587,7 @@ void addrpop_buffer_state (void)
  */
 static void addrensure_buffer_stack (void)
 {
-	yy_size_t num_to_alloc;
+	int num_to_alloc;
     
 	if (!(yy_buffer_stack)) {
 
@@ -1671,7 +1684,7 @@ YY_BUFFER_STATE addr_scan_string (yyconst char * yystr )
  * 
  * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE addr_scan_bytes  (yyconst char * yybytes, yy_size_t  _yybytes_len )
+YY_BUFFER_STATE addr_scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
 {
 	YY_BUFFER_STATE b;
 	char *buf;
@@ -1758,7 +1771,7 @@ FILE *addrget_out  (void)
 /** Get the length of the current token.
  * 
  */
-yy_size_t addrget_leng  (void)
+int addrget_leng  (void)
 {
         return addrleng;
 }
@@ -1906,21 +1919,7 @@ void addrfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 105 "addr-lex.l"
+#line 100 "addr-lex.l"
 
 
-
-/* take input from address string provided by sieve parser */
-int addrinput(char *buf, size_t max_size)
-{
-    extern char *addrptr;	/* current position in address string */
-    size_t n;			/* number of characters to read from string */
-
-    n = strlen(addrptr) < max_size ? strlen(addrptr) : max_size;
-    if (n > 0) {
-	memcpy(buf, addrptr, n);
-	addrptr += n;
-    }
-    return n;
-}
 
