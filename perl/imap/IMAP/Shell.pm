@@ -445,7 +445,7 @@ sub run {
 sub shell {
   my ($server, $port, $authz, $auth, $systemrc, $userrc, $dorc, $mech, $pw,
       $tlskey, $notls, $cacert, $capath) =
-    ('', 143, undef, $ENV{USER} || $ENV{LOGNAME}, '/usr/local/etc/cyradmrc.pl',
+    ('', 143, undef, $ENV{USER} || $ENV{LOGNAME}, '/etc/cyradmrc.pl',
      "$ENV{HOME}/.cyradmrc.pl", 1, undef, undef, undef, undef, undef, undef);
   GetOptions('user|u=s' => \$auth,
 	     'authz|z=s' => \$authz,
@@ -483,7 +483,7 @@ sub shell {
 			  -mechanism => $mech, -password => $pw,
 			  -tlskey => $tlskey, -notls => $notls,
 			  -cafile => $cacert, -capath => $capath)
-      or die "cyradm: cannot authenticate to server with $mech as $auth\n";
+      or die "cyradm: cannot authenticate to server" . (defined($mech)?" with $mech":"") . " as $auth\n";
   }
   my $fstk = [*STDIN, *STDOUT, *STDERR];
   if ($dorc && $systemrc ne '' && -f $systemrc) {
