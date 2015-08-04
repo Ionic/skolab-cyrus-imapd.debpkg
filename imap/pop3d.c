@@ -98,6 +98,10 @@
 #define MAXHOSTNAMELEN 256
 #endif
 
+#ifndef MAXHOSTNAMELEN
+#define MAXHOSTNAMELEN
+#endif
+
 #ifdef HAVE_KRB
 /* kerberos des is purported to conflict with OpenSSL DES */
 #define DES_DEFS
