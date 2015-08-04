@@ -170,9 +170,6 @@ fi
 
 CMU_C_FPIC
 
-dnl check for -R, etc. switch
-CMU_GUESS_RUNPATH_SWITCH
-
 AC_CHECK_HEADERS(unistd.h sys/select.h sys/param.h stdarg.h)
 AC_REPLACE_FUNCS(memmove strcasecmp ftruncate strerror posix_fadvise strsep memmem)
 AC_CHECK_FUNCS(strlcat strlcpy getgrouplist fmemopen pselect)
