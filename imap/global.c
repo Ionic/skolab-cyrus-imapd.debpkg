@@ -148,6 +148,9 @@ static int get_facility(const char *name)
     return SYSLOG_FACILITY;
 }
 
+/* syslog prefix tag */
+static char syslog_prefix[20];
+
 /* Called before a cyrus application starts (but after command line parameters
  * are read) */
 EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flags, int config_need_data)
@@ -181,7 +184,9 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
     
     /* xxx we lose here since we can't have the prefix until we load the
      * config file */
-    openlog(config_ident, syslog_opts, SYSLOG_FACILITY);
+    strncpy(syslog_prefix, "cyrus/", sizeof(syslog_prefix));
+    strncat(syslog_prefix, config_ident, sizeof(syslog_prefix) - 7);
+    openlog(syslog_prefix, syslog_opts, SYSLOG_FACILITY);
 
     /* Load configuration file.  This will set config_dir when it finds it */
     config_read(alt_config, config_need_data);
