@@ -1,3 +1,15 @@
+cyrus-imapd (3.0.0~beta1-82-g1b5369a-1) unstable; urgency=medium
+
+  * Pass a /usr directory to --enable-gssapi and --with-sasl
+  * Fix the AC_LANG_SOURCE warning
+  * Disabling runpath needed additional tweaks for build to succeed
+  * Remove tweak that removed -lsensors from master/Makefile
+  * Disable xapian as the build is broken
+  * Imported Upstream version 3.0.0~beta1-82-g1b5369a
+  * Rebase patches on top of git release
+
+ -- Ondřej Surý <ondrej@debian.org>  Mon, 21 Sep 2015 17:27:05 +0200
+
 cyrus-imapd (3.0.0~beta1-1) unstable; urgency=medium
 
   * Imported Upstream version 3.0.0~beta1
