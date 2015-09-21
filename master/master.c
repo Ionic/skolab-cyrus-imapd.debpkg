@@ -69,6 +69,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <math.h>
+#include <inttypes.h>
 
 #ifndef INADDR_NONE
 #define INADDR_NONE 0xffffffff
@@ -1890,6 +1891,11 @@ static void limit_fds(rlim_t x)
 
 #ifdef HAVE_GETRLIMIT
     if (!getrlimit(RLIMIT_NUMFDS, &rl)) {
+        if (x != RLIM_INFINITY && rl.rlim_max != RLIM_INFINITY && x > rl.rlim_max) {
+            syslog(LOG_WARNING,
+                   "limit_fds: requested %" PRIu64 ", but capped to %" PRIu64,
+                   (uint64_t) x, (uint64_t) rl.rlim_max);
+        }
         rl.rlim_cur = (x == RLIM_INFINITY || x > rl.rlim_max) ? rl.rlim_max : x;
     }
     else
@@ -2198,23 +2204,28 @@ int main(int argc, char **argv)
             int exit_result = EX_OSERR;
 
             /* Tell our parent that we failed. */
-            r = write(startup_pipe[1], &exit_result, sizeof(exit_result));
+            if (write(startup_pipe[1], &exit_result, sizeof(exit_result)) == -1) {
+                syslog(LOG_ERR, "can't write to startup parent pipe: %m");
+            }
 
             fatal("setsid failure", EX_OSERR);
         }
     }
 
-    limit_fds(RLIM_INFINITY);
+    limit_fds(1024);
 
     /* Write out the pidfile */
     pidfd = open(pidfile, O_CREAT|O_RDWR, 0644);
     if(pidfd == -1) {
         int exit_result = EX_OSERR;
 
-        /* Tell our parent that we failed. */
-        r = write(startup_pipe[1], &exit_result, sizeof(exit_result));
-
         syslog(LOG_ERR, "can't open pidfile: %m");
+
+        /* Tell our parent that we failed. */
+        if (daemon_mode && write(startup_pipe[1], &exit_result, sizeof(exit_result)) == -1) {
+            syslog(LOG_ERR, "can't write to startup parent pipe: %m");
+        }
+
         exit(EX_OSERR);
     } else {
         char buf[100];
@@ -2223,7 +2234,9 @@ int main(int argc, char **argv)
             int exit_result = EX_OSERR;
 
             /* Tell our parent that we failed. */
-            r = write(startup_pipe[1], &exit_result, sizeof(exit_result));
+            if (write(startup_pipe[1], &exit_result, sizeof(exit_result)) == -1) {
+                syslog(LOG_ERR, "can't write to startup parent pipe: %m");
+            }
 
             fatal("cannot get exclusive lock on pidfile (is another master still running?)", EX_OSERR);
         } else {
@@ -2234,10 +2247,14 @@ int main(int argc, char **argv)
             if (pidfd_flags == -1) {
                 int exit_result = EX_OSERR;
 
-                /* Tell our parent that we failed. */
-                r = write(startup_pipe[1], &exit_result, sizeof(exit_result));
+                syslog(LOG_ERR, "unable to set close-on-exec for pidfile: %m");
 
-                fatalf(EX_OSERR, "unable to set close-on-exec for pidfile: %m");
+                /* Tell our parent that we failed. */
+                if (write(startup_pipe[1], &exit_result, sizeof(exit_result)) == -1) {
+                    syslog(LOG_ERR, "can't write to startup parent pipe: %m");
+                }
+
+                fatalf(EX_OSERR, "unable to set close-on-exec for pidfile (see syslog for details)");
             }
 
             /* Write PID */
@@ -2247,10 +2264,14 @@ int main(int argc, char **argv)
                write(pidfd, buf, strlen(buf)) == -1) {
                 int exit_result = EX_OSERR;
 
-                /* Tell our parent that we failed. */
-                r = write(startup_pipe[1], &exit_result, sizeof(exit_result));
+                syslog(LOG_ERR, "unable to write to pidfile: %m");
 
-                fatalf(EX_OSERR, "unable to write to pidfile: %m");
+                /* Tell our parent that we failed. */
+                if (daemon_mode && write(startup_pipe[1], &exit_result, sizeof(exit_result)) == -1) {
+                    syslog(LOG_ERR, "can't write to startup parent pipe: %m");
+                }
+
+                fatalf(EX_OSERR, "unable to write to pidfile (see syslog for details)");
             }
             if (fsync(pidfd))
                 fatalf(EX_OSERR, "unable to sync pidfile: %m");

@@ -260,14 +260,18 @@ static int do_unuser(const char *userid)
 {
     const char *cmd = "UNUSER";
     struct mailbox *mailbox = NULL;
-    char buf[MAX_MAILBOX_BUFFER];
     struct dlist *kl;
     int r;
 
+    /* nothing to do if there's no userid */
+    if (!userid || !userid[0]) {
+        syslog(LOG_WARNING, "ignoring attempt to %s() without userid", __func__);
+        return 0;
+    }
+
     /* check local mailbox first */
-    (sync_namespace.mboxname_tointernal)(&sync_namespace, "INBOX",
-                                          userid, buf);
-    r = mailbox_open_irl(buf, &mailbox);
+    char *inbox = mboxname_user_mbox(userid, NULL);
+    r = mailbox_open_irl(inbox, &mailbox);
 
     /* only remove from server if there's no local mailbox */
     if (r == IMAP_MAILBOX_NONEXISTENT) {
@@ -280,6 +284,7 @@ static int do_unuser(const char *userid)
     }
 
     mailbox_close(&mailbox);
+    free(inbox);
 
     return r;
 }
@@ -350,14 +355,13 @@ static int do_sync_mailboxes(struct sync_name_list *mboxname_list,
             /* promote failed personal mailboxes to USER */
             int nonuser = 0;
             struct sync_name *mbox;
-            const char *userid;
 
             for (mbox = mboxname_list->head; mbox; mbox = mbox->next) {
                 /* done OK?  Good :) */
                 if (mbox->mark)
                     continue;
 
-                userid = mboxname_to_userid(mbox->name);
+                char *userid = mboxname_to_userid(mbox->name);
                 if (userid) {
                     mbox->mark = 1;
 
@@ -370,6 +374,7 @@ static int do_sync_mailboxes(struct sync_name_list *mboxname_list,
                         syslog(LOG_INFO, "  Promoting: MAILBOX %s -> USER %s",
                                mbox->name, userid);
                     }
+                    free(userid);
                 }
                 else
                     nonuser = 1; /* there was a non-user mailbox */
@@ -518,8 +523,8 @@ static int do_sync(sync_log_reader_t *slr)
             continue;
 
         if (sync_do_seen(action->user, action->name, sync_backend, flags)) {
-            char *userid = mboxname_isusermailbox(action->name, 1);
-            if (userid && !strcmp(userid, action->user)) {
+            char *userid = mboxname_to_userid(action->name);
+            if (userid && mboxname_isusermailbox(action->name, 1) && !strcmp(userid, action->user)) {
                 sync_action_list_add(user_list, NULL, action->user);
                 if (verbose) {
                     printf("  Promoting: SEEN %s %s -> USER %s\n",
@@ -540,6 +545,7 @@ static int do_sync(sync_log_reader_t *slr)
                            action->user, action->name, action->user);
                 }
             }
+            free(userid);
         }
     }
 
@@ -1001,10 +1007,9 @@ static int do_mailbox(const char *mboxname, unsigned flags)
 
 static int cb_allmbox(const mbentry_t *mbentry, void *rock __attribute__((unused)))
 {
-    const char *userid;
     int r = 0;
 
-    userid = mboxname_to_userid(mbentry->name);
+    char *userid = mboxname_to_userid(mbentry->name);
 
     if (userid) {
         /* skip deleted mailboxes only because the are out of order, and you would
@@ -1025,6 +1030,7 @@ static int cb_allmbox(const mbentry_t *mbentry, void *rock __attribute__((unused
             free(prev_userid);
             prev_userid = xstrdup(userid);
         }
+        free(userid);
     }
     else {
         /* all shared mailboxes, including DELETED ones, sync alone */
@@ -1075,9 +1081,7 @@ int main(int argc, char **argv)
     char buf[512];
     FILE *file;
     int len;
-    int config_virtdomains;
     struct sync_name_list *mboxname_list;
-    char mailboxname[MAX_MAILBOX_BUFFER];
 
     if ((geteuid()) == 0 && (become_cyrus(/*is_master*/0) != 0)) {
         fatal("must run as the Cyrus user", EC_USAGE);
@@ -1227,7 +1231,6 @@ int main(int argc, char **argv)
     }
 
     /* Set namespace -- force standard (internal) */
-    config_virtdomains = config_getenum(IMAPOPT_VIRTDOMAINS);
     if ((r = mboxname_init_namespace(&sync_namespace, 1)) != 0) {
         fatal(error_message(r), EC_CONFIG);
     }
@@ -1268,9 +1271,6 @@ int main(int argc, char **argv)
                 if ((len == 0) || (buf[0] == '#'))
                     continue;
 
-                mboxname_hiersep_tointernal(&sync_namespace, buf,
-                                            config_virtdomains ?
-                                            strcspn(buf, "@") : 0);
                 if (sync_do_user(buf, sync_backend, flags)) {
                     if (verbose)
                         fprintf(stderr,
@@ -1283,9 +1283,6 @@ int main(int argc, char **argv)
             }
             fclose(file);
         } else for (i = optind; !r && i < argc; i++) {
-            mboxname_hiersep_tointernal(&sync_namespace, argv[i],
-                                        config_virtdomains ?
-                                        strcspn(argv[i], "@") : 0);
             if (sync_do_user(argv[i], sync_backend, flags)) {
                 if (verbose)
                     fprintf(stderr, "Error from sync_do_user(%s): bailing out!\n",
@@ -1326,17 +1323,17 @@ int main(int argc, char **argv)
                 if ((len == 0) || (buf[0] == '#'))
                     continue;
 
-                (*sync_namespace.mboxname_tointernal)(&sync_namespace, buf,
-                                                      NULL, mailboxname);
-                if (!sync_name_lookup(mboxname_list, mailboxname))
-                    sync_name_list_add(mboxname_list, mailboxname);
+                char *intname = mboxname_from_external(buf, &sync_namespace, NULL);
+                if (!sync_name_lookup(mboxname_list, intname))
+                    sync_name_list_add(mboxname_list, intname);
+                free(intname);
             }
             fclose(file);
         } else for (i = optind; i < argc; i++) {
-            (*sync_namespace.mboxname_tointernal)(&sync_namespace, argv[i],
-                                                   NULL, mailboxname);
-            if (!sync_name_lookup(mboxname_list, mailboxname))
-                sync_name_list_add(mboxname_list, mailboxname);
+            char *intname = mboxname_from_external(argv[i], &sync_namespace, NULL);
+            if (!sync_name_lookup(mboxname_list, intname))
+                sync_name_list_add(mboxname_list, intname);
+            free(intname);
         }
 
         if (sync_do_mailboxes(mboxname_list, sync_backend, flags)) {
@@ -1357,9 +1354,6 @@ int main(int argc, char **argv)
         replica_connect(channel);
 
         for (i = optind; i < argc; i++) {
-            mboxname_hiersep_tointernal(&sync_namespace, argv[i],
-                                        config_virtdomains ?
-                                        strcspn(argv[i], "@") : 0);
             if (sync_do_meta(argv[i], sync_backend, flags)) {
                 if (verbose) {
                     fprintf(stderr,

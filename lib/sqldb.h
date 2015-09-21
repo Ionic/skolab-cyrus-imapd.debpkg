@@ -52,7 +52,7 @@ struct sqldb_bindval {
     const char *name;
     int type;
     union {
-        int i;
+        sqlite3_int64 i;
         const char *s;
     } val;
 };
@@ -85,7 +85,7 @@ int sqldb_init(void);
 int sqldb_done(void);
 
 sqldb_t *sqldb_open(const char *fname, const char *initsql,
-                   int version, struct sqldb_upgrade *upgradesql);
+                   int version, const struct sqldb_upgrade *upgradesql);
 
 /* execute 'cmd' and process results with 'cb'
    'cmd' is prepared as 'stmt' with 'bval' as bound values */
@@ -101,6 +101,7 @@ int sqldb_writecommit(sqldb_t *open);
 int sqldb_writeabort(sqldb_t *open);
 
 int sqldb_lastid(sqldb_t *open);
+int sqldb_changes(sqldb_t *open);
 
 int sqldb_close(sqldb_t **openp);
 

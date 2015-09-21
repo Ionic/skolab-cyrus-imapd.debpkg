@@ -110,7 +110,7 @@ static int _version_cb(void *rock, int ncol, char **vals, char **names __attribu
 
 /* Open DAV DB corresponding in file */
 EXPORTED sqldb_t *sqldb_open(const char *fname, const char *initsql,
-                             int version, struct sqldb_upgrade *upgradesql)
+                             int version, const struct sqldb_upgrade *upgradesql)
 {
     int rc = SQLITE_OK;
     struct stat sbuf;
@@ -298,7 +298,7 @@ EXPORTED int sqldb_exec(sqldb_t *open, const char *cmd, struct sqldb_bindval bva
 
         switch (bval->type) {
         case SQLITE_INTEGER:
-            sqlite3_bind_int(stmt, cidx, bval->val.i);
+            sqlite3_bind_int64(stmt, cidx, bval->val.i);
             break;
 
         case SQLITE_TEXT:
@@ -393,6 +393,11 @@ EXPORTED int sqldb_writeabort(sqldb_t *open)
 EXPORTED int sqldb_lastid(sqldb_t *open)
 {
     return sqlite3_last_insert_rowid(open->db);
+}
+
+EXPORTED int sqldb_changes(sqldb_t *open)
+{
+    return sqlite3_changes(open->db);
 }
 
 EXPORTED int sqldb_close(sqldb_t **dbp)

@@ -189,8 +189,6 @@ static int jmap_post(struct transaction_t *txn,
     int ret;
     char *buf;
 
-    construct_hash_table(&idmap, 1024, 0);
-
     /* Read body */
     txn->req_body.flags |= BODY_DECODE;
     ret = http_read_body(httpd_in, httpd_out,
@@ -209,6 +207,9 @@ static int jmap_post(struct transaction_t *txn,
         return HTTP_BAD_MEDIATYPE;
     }
 
+    /* Allocate map to store uids */
+    construct_hash_table(&idmap, 1024, 0);
+
     /* Parse the JSON request */
     req = json_loads(buf_cstring(&txn->req_body.payload), 0, &jerr);
     if (!req || !json_is_array(req)) {
@@ -225,7 +226,7 @@ static int jmap_post(struct transaction_t *txn,
         goto done;
     }
 
-    const char *inboxname = mboxname_user_mbox(httpd_userid, NULL);
+    char *inboxname = mboxname_user_mbox(httpd_userid, NULL);
 
     /* we lock the user's INBOX before we start any operation, because that way we
      * guarantee (via conversations magic) that nothing changes the modseqs except
@@ -303,6 +304,7 @@ static int jmap_post(struct transaction_t *txn,
   done:
     free_hash_table(&idmap, free);
     mailbox_close(&mailbox);
+    free(inboxname);
     if (req) json_decref(req);
     if (resp) json_decref(resp);
 
@@ -398,7 +400,7 @@ static void _add_xhref(json_t *obj, const char *mboxname, const char *resource)
 {
     /* XXX - look up root path from namespace? */
     struct buf buf = BUF_INITIALIZER;
-    const char *userid = mboxname_to_userid(mboxname);
+    char *userid = mboxname_to_userid(mboxname);
 
     const char *prefix = NULL;
     if (mboxname_isaddressbookmailbox(mboxname, 0)) {
@@ -422,6 +424,7 @@ static void _add_xhref(json_t *obj, const char *mboxname, const char *resource)
         buf_printf(&buf, "/%s", resource);
 
     json_object_set_new(obj, "x-href", json_string(buf_cstring(&buf)));
+    free(userid);
     buf_free(&buf);
 }
 
@@ -1271,8 +1274,7 @@ static int getcontacts_cb(void *rock, struct carddav_data *cdata)
     vparse_set_multival(&vparser, "n");
     r = vparse_parse(&vparser, 0);
     buf_free(&msg_buf);
-    if (r) return r;
-    if (!vparser.card || !vparser.card->objects) {
+    if (r || !vparser.card || !vparser.card->objects) {
         vparse_free(&vparser);
         return r;
     }
@@ -1353,7 +1355,7 @@ static int getcontacts_cb(void *rock, struct carddav_data *cdata)
                             json_string(strarray_safenth(org, 1)));
     if (_wantprop(crock->props, "jobTitle"))
         json_object_set_new(obj, "jobTitle",
-                            json_string(strarray_safenth(org, 1)));
+                            json_string(strarray_safenth(org, 2)));
     /* XXX - position? */
 
     /* address - we need to open code this, because it's repeated */
@@ -1624,6 +1626,7 @@ static int getcontacts_cb(void *rock, struct carddav_data *cdata)
 
     if (empty) strarray_free(empty);
 
+    vparse_free(&vparser);
     buf_free(&buf);
 
     return 0;
@@ -1995,19 +1998,15 @@ static void _make_fn(struct vparse_card *card)
         if (v && v[0]) strarray_append(name, v);
     }
 
-    if (!strarray_size(name)) {
-        /* XXX - grep type=pref?  Meh */
-        v = vparse_stringval(card, "email");
-        if (v && v[0]) strarray_append(name, v);
-    }
+    char *fn = NULL;
+    if (strarray_size(name))
+        fn = strarray_join(name, " ");
+    else
+        fn = xstrdup(" ");
 
-    if (!strarray_size(name)) {
-        strarray_append(name, "No Name");
-    }
-
-    char *fn = strarray_join(name, " ");
-
+    strarray_free(name);
     vparse_replace_entry(card, NULL, "fn", fn);
+    free(fn);
 }
 
 static int _json_to_card(struct vparse_card *card,
@@ -2206,7 +2205,7 @@ static int setContacts(struct jmap_req *req)
                 /* XXX - invalid arguments */
                 addressbookId = json_string_value(abookid);
             }
-            const char *mboxname = mboxname_abook(req->userid, addressbookId);
+            char *mboxname = mboxname_abook(req->userid, addressbookId);
             json_object_del(arg, "addressbookId");
             addressbookId = NULL;
 
@@ -2219,6 +2218,7 @@ static int setContacts(struct jmap_req *req)
                 mailbox_close(&mailbox);
                 r = mailbox_open_iwl(mboxname, &mailbox);
                 if (r) {
+                    free(mboxname);
                     vparse_free_card(card);
                     goto done;
                 }
@@ -2241,6 +2241,7 @@ static int setContacts(struct jmap_req *req)
             r = carddav_store(mailbox, card, NULL,
                               flags, annots, req->userid, req->authstate, ignorequota);
             vparse_free_card(card);
+            free(mboxname);
             strarray_free(flags);
             freeentryatts(annots);
 
@@ -2469,8 +2470,9 @@ static int setContacts(struct jmap_req *req)
     /* read the modseq again every time, just in case something changed it
      * in our actions */
     struct buf buf = BUF_INITIALIZER;
-    const char *inboxname = mboxname_user_mbox(req->userid, NULL);
+    char *inboxname = mboxname_user_mbox(req->userid, NULL);
     modseq_t modseq = mboxname_readmodseq(inboxname);
+    free(inboxname);
     buf_printf(&buf, "%llu", modseq);
     json_object_set_new(set, "newState", json_string(buf_cstring(&buf)));
     buf_free(&buf);
@@ -2708,9 +2710,10 @@ static int getCalendars(struct jmap_req *req)
         int size = json_array_size(want);
         for (i = 0; i < size; i++) {
             const char *id = json_string_value(json_array_get(want, i));
-            const char *mboxname = caldav_mboxname(req->userid, id);
             rock.rows = 0;
+            char *mboxname = caldav_mboxname(req->userid, id);
             r = mboxlist_mboxtree(mboxname, &getcalendars_cb, &rock, MBOXTREE_SKIP_CHILDREN);
+            free(mboxname);
             if (r) goto err;
             if (!rock.rows) {
                 json_array_append_new(notfound, json_string(id));

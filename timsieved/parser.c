@@ -187,6 +187,10 @@ int parser(struct protstream *sieved_out, struct protstream *sieved_in)
       break;
 
   case AUTHENTICATE:
+    if (sieved_tls_required) {
+      error_msg = "AUTHENTICATE only available under a layer";
+      goto error;
+    }
     if (timlex(NULL, NULL, sieved_in)!=SPACE)
     {
       error_msg = "SPACE must occur after AUTHENTICATE";
@@ -743,25 +747,11 @@ static int cmd_authenticate(struct protstream *sieved_out,
 
   if (!verify_only) {
       /* Check for a remote mailbox (should we setup a redirect?) */
-      struct namespace sieved_namespace;
-      char inboxname[MAX_MAILBOX_BUFFER];
       int r;
 
-      /* Set namespace */
-      if ((r = mboxname_init_namespace(&sieved_namespace, 0)) != 0) {
-          syslog(LOG_ERR, "%s", error_message(r));
-          fatal(error_message(r), EC_CONFIG);
-      }
-
-      /* Translate any separators in userid */
-      mboxname_hiersep_tointernal(&sieved_namespace, username,
-                                  config_virtdomains ?
-                                  strcspn(username, "@") : 0);
-
-      (*sieved_namespace.mboxname_tointernal)(&sieved_namespace, "INBOX",
-                                             username, inboxname);
-
-      r = mboxlist_lookup(inboxname, &mbentry, NULL);
+      char *inbox = mboxname_user_mbox(username, NULL);
+      r = mboxlist_lookup(inbox, &mbentry, NULL);
+      free(inbox);
 
       if(r && !sieved_userisadmin) {
           /* lookup error */
@@ -950,6 +940,7 @@ static int cmd_starttls(struct protstream *sieved_out, struct protstream *sieved
     prot_settls(sieved_out, tls_conn);
 
     starttls_done = 1;
+    sieved_tls_required = 0;
 
     return capabilities(sieved_out, sieved_saslconn, starttls_done,
                         authenticated, sasl_ssf);

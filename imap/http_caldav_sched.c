@@ -95,21 +95,21 @@ int caladdress_lookup(const char *addr, struct sched_param *param)
     if (islocal) {
         /* User is in a local domain */
         int r;
-        char mailboxname[MAX_MAILBOX_NAME];
+        const char *mboxname = NULL;
         mbentry_t *mbentry = NULL;
-        struct mboxname_parts parts;
+        mbname_t *mbname = NULL;
 
         if (!found) return HTTP_NOT_FOUND;
         else param->userid = xstrndup(userid, len); /* XXX - memleak */
 
         /* Lookup user's cal-home-set to see if its on this server */
 
-        mboxname_userid_to_parts(param->userid, &parts);
-        parts.box = xstrdupnull(config_getstring(IMAPOPT_CALENDARPREFIX));
-        mboxname_parts_to_internal(&parts, mailboxname);
-        mboxname_free_parts(&parts);
+        mbname = mbname_from_userid(param->userid);
+        mbname_push_boxes(mbname, config_getstring(IMAPOPT_CALENDARPREFIX));
+        mboxname = mbname_intname(mbname);
 
-        r = http_mlookup(mailboxname, &mbentry, NULL);
+        r = http_mlookup(mboxname, &mbentry, NULL);
+        mbname_free(&mbname);
 
         if (!r) {
             param->server = xstrdupnull(mbentry->server); /* XXX - memory leak */
@@ -718,7 +718,7 @@ int sched_busytime_query(struct transaction_t *txn,
     memset(&fctx, 0, sizeof(struct propfind_ctx));
     fctx.req_tgt = &txn->req_tgt;
     fctx.depth = 2;
-    fctx.userid = proxy_userid;
+    fctx.userid = httpd_userid;
     fctx.userisadmin = httpd_userisadmin;
     fctx.authstate = org_authstate;
     fctx.reqd_privs = 0;  /* handled by CALDAV:schedule-deliver on Inbox */
