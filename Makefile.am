@@ -681,12 +681,12 @@ cunit_unit_LDADD += $(LD_UTILITY_ADD) -lcunit
 CUNIT_PL = $(top_srcdir)/cunit/cunit.pl --project $(CUNIT_PROJECT)
 
 .testc.o:
-	$(CUNIT_PL) --generate-wrapper $<
-	$(COMPILE) -c -o $@ $<-cunit.c
-	$(RM) $<-cunit.c
+	$(AM_V_at)$(CUNIT_PL) --generate-wrapper $<
+	$(AM_V_CC)$(COMPILE) -c -o $@ $<-cunit.c
+	$(AM_V_at)$(RM) $<-cunit.c
 
 $(CUNIT_PROJECT):
-	@$(RM) $@
+	$(AM_V_at)$(RM) $@
 	$(AM_V_GEN)$(CUNIT_PL) --add-sources $(addprefix $(top_srcdir)/,$(cunit_TESTS))
 
 cunit/registers.h: $(CUNIT_PROJECT)
@@ -1146,26 +1146,35 @@ imap_httpd_SOURCES = \
 	imap/http_admin.c \
 	imap/http_caldav.c \
 	imap/http_caldav_sched.c \
+	imap/http_caldav_sched.h \
 	imap/http_carddav.c \
 	imap/http_client.c \
+	imap/http_client.h \
 	imap/http_dav.c \
+	imap/http_dav.h \
 	imap/http_dblookup.c \
 	imap/http_ischedule.c \
 	imap/http_jmap.c \
 	imap/http_proxy.c \
+	imap/http_proxy.h \
 	imap/http_rss.c \
 	imap/http_tzdist.c \
 	imap/http_webdav.c \
 	imap/httpd.c \
+	imap/httpd.h \
 	imap/ical_support.c \
 	imap/jcal.c \
+	imap/jcal.h \
 	imap/mutex_fake.c \
 	imap/proxy.c \
 	imap/smtpclient.c \
 	imap/spool.c \
 	imap/xcal.c \
+	imap/xcal.h \
 	imap/xml_support.c \
+	imap/xml_support.h \
 	imap/zoneinfo_db.c \
+	imap/zoneinfo_db.h \
 	master/masterconf.c \
 	master/service.c
 

@@ -115,7 +115,7 @@
 static const char tls_message[] =
     HTML_DOCTYPE
     "<html>\n<head>\n<title>TLS Required</title>\n</head>\n" \
-    "<body>\n<h2>TLS is required to use Basic authentication</h2>\n" \
+    "<body>\n<h2>TLS is required prior to authentication</h2>\n" \
     "Use <a href=\"%s\">%s</a> instead.\n" \
     "</body>\n</html>\n";
 
@@ -131,7 +131,8 @@ sasl_conn_t *httpd_saslconn; /* the sasl connection context */
 
 static struct wildmat *allow_cors = NULL;
 int httpd_timeout, httpd_keepalive;
-char *httpd_userid = NULL, *proxy_userid = NULL;
+char *httpd_userid = NULL;
+char *httpd_extrafolder = NULL;
 char *httpd_extradomain = NULL;
 struct auth_state *httpd_authstate = 0;
 int httpd_userisadmin = 0;
@@ -376,13 +377,13 @@ static void httpd_reset(void)
         httpd_userid = NULL;
     }
     httpd_userisanonymous = 1;
+    if (httpd_extrafolder != NULL) {
+        free(httpd_extrafolder);
+        httpd_extrafolder = NULL;
+    }
     if (httpd_extradomain != NULL) {
         free(httpd_extradomain);
         httpd_extradomain = NULL;
-    }
-    if (proxy_userid != NULL) {
-        free(proxy_userid);
-        proxy_userid = NULL;
     }
     if (httpd_authstate) {
         auth_freestate(httpd_authstate);
@@ -626,7 +627,8 @@ int service_main(int argc __attribute__((unused)),
             }
         }
     }
-    httpd_tls_required = !avail_auth_schemes;
+    httpd_tls_required =
+        config_getswitch(IMAPOPT_TLS_REQUIRED) || !avail_auth_schemes;
 
     proc_register(config_ident, httpd_clienthost, NULL, NULL, NULL);
 
@@ -983,8 +985,6 @@ static void cmdloop(void)
             ret = HTTP_SERVER_ERROR;
         }
 
-        proc_register(config_ident, httpd_clienthost, httpd_userid, NULL, NULL);
-
       req_line:
         do {
             /* Flush any buffered output */
@@ -1250,14 +1250,20 @@ static void cmdloop(void)
                 txn.auth_chal.scheme = NULL;
             }
 
-            /* Check the auth credentials */
-            r = http_auth(hdr[0], &txn);
-            if ((r < 0) || !txn.auth_chal.scheme) {
-                /* Auth failed - reinitialize */
-                syslog(LOG_DEBUG, "auth failed - reinit");
-                reset_saslconn(&httpd_saslconn);
-                txn.auth_chal.scheme = NULL;
+            if (httpd_tls_required) {
+                /* TLS required - redirect handled below */
                 ret = HTTP_UNAUTHORIZED;
+            }
+            else {
+                /* Check the auth credentials */
+                r = http_auth(hdr[0], &txn);
+                if ((r < 0) || !txn.auth_chal.scheme) {
+                    /* Auth failed - reinitialize */
+                    syslog(LOG_DEBUG, "auth failed - reinit");
+                    reset_saslconn(&httpd_saslconn);
+                    txn.auth_chal.scheme = NULL;
+                    ret = HTTP_UNAUTHORIZED;
+                }
             }
         }
         else if (!httpd_userid && txn.auth_chal.scheme) {
@@ -2216,7 +2222,7 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
     buf_reset(&log);
     /* Add client data */
     buf_printf(&log, "%s", httpd_clienthost);
-    if (proxy_userid) buf_printf(&log, " as \"%s\"", proxy_userid);
+    if (httpd_userid) buf_printf(&log, " as \"%s\"", httpd_userid);
     if (txn->req_hdrs &&
         (hdr = spool_getheader(txn->req_hdrs, "User-Agent"))) {
         buf_printf(&log, " with \"%s\"", hdr[0]);
@@ -2746,6 +2752,10 @@ static int proxy_authz(const char **authzid, struct transaction_t *txn)
         free(httpd_userid);
         httpd_userid = NULL;
     }
+    if (httpd_extrafolder) {
+        free(httpd_extrafolder);
+        httpd_extrafolder = NULL;
+    }
     if (httpd_extradomain) {
         free(httpd_extradomain);
         httpd_extradomain = NULL;
@@ -2845,16 +2855,14 @@ static void auth_success(struct transaction_t *txn)
         ftruncate(httpd_logfd, end - buf_len(&txn->buf));
     }
 
-    if (!proxy_userid || strcmp(proxy_userid, httpd_userid)) {
-        /* Close existing telemetry log */
-        close(httpd_logfd);
+    /* Close existing telemetry log */
+    close(httpd_logfd);
 
-        prot_setlog(httpd_in, PROT_NO_FD);
-        prot_setlog(httpd_out, PROT_NO_FD);
+    prot_setlog(httpd_in, PROT_NO_FD);
+    prot_setlog(httpd_out, PROT_NO_FD);
 
-        /* Create telemetry log based on new userid */
-        httpd_logfd = telemetry_log(httpd_userid, httpd_in, httpd_out, 0);
-    }
+    /* Create telemetry log based on new userid */
+    httpd_logfd = telemetry_log(httpd_userid, httpd_in, httpd_out, 0);
 
     if (httpd_logfd != -1) {
         /* Log credential-redacted request */
@@ -2862,15 +2870,6 @@ static void auth_success(struct transaction_t *txn)
     }
 
     buf_reset(&txn->buf);
-
-    /* Make a copy of the external userid for use in proxying */
-    if (proxy_userid) free(proxy_userid);
-    proxy_userid = xstrdup(httpd_userid);
-
-    /* Translate any separators in userid */
-    mboxname_hiersep_tointernal(&httpd_namespace, httpd_userid,
-                                config_virtdomains ?
-                                strcspn(httpd_userid, "@") : 0);
 
     /* Do any namespace specific post-auth processing */
     for (i = 0; namespaces[i]; i++) {
@@ -2911,6 +2910,10 @@ static int http_auth(const char *creds, struct transaction_t *txn)
     if (httpd_userid) {
         free(httpd_userid);
         httpd_userid = NULL;
+    }
+    if (httpd_extrafolder) {
+        free(httpd_extrafolder);
+        httpd_extrafolder = NULL;
     }
     if (httpd_extradomain) {
         free(httpd_extradomain);
@@ -3007,6 +3010,8 @@ static int http_auth(const char *creds, struct transaction_t *txn)
         /* Basic (plaintext) authentication */
         char *pass;
         char *extra;
+        char *plus;
+        char *domain;
 
         if (!clientin) {
             /* Create initial challenge (base64 buffer is static) */
@@ -3026,23 +3031,31 @@ static int http_auth(const char *creds, struct transaction_t *txn)
             return SASL_BADPARAM;
         }
         *pass++ = '\0';
+        domain = strchr(user, '@');
+        if (domain) *domain++ = '\0';
         extra = strchr(user, '%');
         if (extra) *extra++ = '\0';
+        plus = strchr(user, '+');
+        if (plus) *plus++ = '\0';
         /* Verify the password */
-        status = sasl_checkpass(httpd_saslconn, user, strlen(user),
+        char *realuser = domain ? strconcat(user, "@", domain, (char *)NULL) : xstrdup(user);
+        status = sasl_checkpass(httpd_saslconn, realuser, strlen(realuser),
                                 pass, strlen(pass));
         memset(pass, 0, strlen(pass));          /* erase plaintext password */
 
         if (status) {
             syslog(LOG_NOTICE, "badlogin: %s Basic %s %s",
-                   httpd_clienthost, user, sasl_errdetail(httpd_saslconn));
+                   httpd_clienthost, realuser, sasl_errdetail(httpd_saslconn));
+            free(realuser);
 
             /* Don't allow user probing */
             if (status == SASL_NOUSER) status = SASL_BADAUTH;
             return status;
         }
+        free(realuser);
 
         /* Successful authentication - fall through */
+        httpd_extrafolder = xstrdupnull(plus);
         httpd_extradomain = xstrdupnull(extra);
     }
     else {
@@ -3482,7 +3495,7 @@ static int meth_get(struct transaction_t *txn,
         /* Remote content */
         struct backend *be;
 
-        be = proxy_findserver(prefix, &http_protocol, proxy_userid,
+        be = proxy_findserver(prefix, &http_protocol, httpd_userid,
                               &backend_cached, NULL, NULL, httpd_in);
         if (!be) return HTTP_UNAVAILABLE;
 
@@ -3726,7 +3739,7 @@ EXPORTED int meth_trace(struct transaction_t *txn, void *params)
             struct backend *be;
 
             be = proxy_findserver(txn->req_tgt.mbentry->server,
-                                  &http_protocol, proxy_userid,
+                                  &http_protocol, httpd_userid,
                                   &backend_cached, NULL, NULL, httpd_in);
             if (!be) return HTTP_UNAVAILABLE;
 
