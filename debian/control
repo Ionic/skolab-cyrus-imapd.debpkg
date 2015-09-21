@@ -1,4 +1,4 @@
-Source: cyrus-imapd-2.4
+Source: cyrus-imapd
 Section: mail
 Priority: extra
 Maintainer: Debian Cyrus Team <pkg-cyrus-imapd-debian-devel@lists.alioth.debian.org>
@@ -41,8 +41,8 @@ Build-Depends: autotools-dev,
                transfig,
                unicode-data,
                xutils-dev
-Vcs-Git: git://anonscm.debian.org/pkg-cyrus-imapd/cyrus-imapd-2.4.git
-Vcs-Browser: http://anonscm.debian.org/?p=pkg-cyrus-imapd/cyrus-imapd-2.4.git
+Vcs-Git: git://anonscm.debian.org/pkg-cyrus-imapd/cyrus-imapd.git
+Vcs-Browser: http://anonscm.debian.org/?p=pkg-cyrus-imapd/cyrus-imapd.git
 Homepage: http://www.cyrusimap.org/
 
 Package: cyrus-common

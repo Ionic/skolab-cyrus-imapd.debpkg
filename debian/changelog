@@ -1,4 +1,4 @@
-cyrus-imapd-2.4 (3.0.0~beta1-1) unstable; urgency=medium
+cyrus-imapd (3.0.0~beta1-1) unstable; urgency=medium
 
   * Imported Upstream version 3.0.0~beta1
   * Update patches on top of 3.0.0~beta1 + gbp pq import/export
