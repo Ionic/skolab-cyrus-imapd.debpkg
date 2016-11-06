@@ -100,7 +100,7 @@ override_dh_auto_configure:
 		>> debian/README.configure-options
 
 override_dh_auto_build:
-	dh_auto_build
+	dh_auto_build -- -k
 
 # store database configuration for possible automatic
 # upgrading later
