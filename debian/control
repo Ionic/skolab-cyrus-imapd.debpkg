@@ -14,8 +14,8 @@ Build-Depends: autotools-dev,
                flex,
                ghostscript,
                groff,
+               libdb-dev,
                libdkim-dev,
-	       libdb-dev,
                libical-dev (>= 2.0.0),
                libjansson-dev,
                libkrb5-dev,
@@ -23,7 +23,7 @@ Build-Depends: autotools-dev,
                libldap2-dev,
                libopendkim-dev,
                libpam0g-dev,
-	       libpcre3-dev,
+               libpcre3-dev,
                libsasl2-dev (>= 2.1.9),
                libsnmp-dev,
                libsqlite3-dev,
@@ -195,7 +195,8 @@ Architecture: all
 Section: mail
 Pre-Depends: dpkg (>= 1.17.14~),
              ${misc:Pre-Depends}
-Depends: libcyrus-imap-perl (>= ${binary:Version}),
+Depends: cyrus-common,
+         libcyrus-imap-perl (>= ${binary:Version}),
          ${misc:Depends},
          ${perl:Depends}
 Suggests: sasl2-bin
