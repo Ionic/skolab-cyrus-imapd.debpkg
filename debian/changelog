@@ -1,7 +1,12 @@
 cyrus-imapd (2.5.11-1) unstable; urgency=medium
 
+  [ Steve Langasek ]
+  * Fix FTBFS with libical3 (Closes: #883951)
+
+  [ Ondřej Surý ]
+  * Add dependency on cyrus-common to debian-admin (Closes: #872247)
   * Cleanup d/control (Closes: #899477)
-  * New upstream version 2.5.11
+  * New upstream version 2.5.11 (Closes: #879007, #866124, #863520)
   * Rebase patches on top of Cyrus IMAP 2.5.11
   * com_err now needs --with-com_err="" to use system provided library
 
