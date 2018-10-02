@@ -1,10 +1,9 @@
 Source: cyrus-imapd
 Section: mail
 Priority: extra
-Maintainer: Debian Cyrus Team <pkg-cyrus-imapd-debian-devel@lists.alioth.debian.org>
+Maintainer: Debian Cyrus Team <team+cyrus@tracker.debian.org>
 Uploaders: Henrique de Moraes Holschuh <hmh@debian.org>,
-           Ondřej Surý <ondrej@debian.org>,
-           Anthony Prades <toony.debian@chezouam.net>
+           Ondřej Surý <ondrej@debian.org>
 Standards-Version: 3.9.6
 Build-Depends: autotools-dev,
                bison,
@@ -42,9 +41,9 @@ Build-Depends: autotools-dev,
                unicode-data,
                vim-common,
                xutils-dev
-Vcs-Git: git://anonscm.debian.org/pkg-cyrus-imapd/cyrus-imapd.git
-Vcs-Browser: http://anonscm.debian.org/?p=pkg-cyrus-imapd/cyrus-imapd.git
-Homepage: http://www.cyrusimap.org/
+Vcs-Git: https://salsa.debian.org/debian/cyrus-imapd.git
+Vcs-Browser: https://salsa.debian.org/debian/cyrus-imapd
+Homepage: https://www.cyrusimap.org/
 
 Package: cyrus-common
 Architecture: any
