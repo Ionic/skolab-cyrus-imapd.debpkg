@@ -1,3 +1,12 @@
+cyrus-imapd (2.5.12-1) UNRELEASED; urgency=medium
+
+  [ Anthony Prades ]
+  * New upstream version 2.5.12
+  * Rebase patches on top of Cyrus IMAP 2.5.12
+  * add cyr_buildinfo bin and its man and doc page
+
+ -- Anthony Prades <toony.debian@chezouam.net>  Sun, 14 Oct 2018 18:39:11 +0200
+
 cyrus-imapd (2.5.11-1) unstable; urgency=medium
 
   [ Steve Langasek ]
