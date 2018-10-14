@@ -222,7 +222,7 @@ static RSA *tmp_rsa_cb(SSL * s __attribute__((unused)),
 }
 #endif
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x20700000L)
 /* replacements for new 1.1 API accessors */
 /* XXX probably put these somewhere central */
 static int DH_set0_pqg(DH *dh, BIGNUM *p, BIGNUM *q, BIGNUM *g)
@@ -1373,12 +1373,7 @@ EXPORTED int tls_prune_sessions(void)
     }
 
     ret = cyrusdb_open(DB, fname, 0, &sessdb);
-    if (ret != CYRUSDB_OK) {
-	syslog(LOG_ERR, "DBERROR: opening %s: %s",
-	       fname, cyrusdb_strerror(ret));
-	return 1;
-    }
-    else {
+    if (ret == CYRUSDB_OK) {
 	/* check each session in our database */
 	sess_dbopen = 1;
 	prock.count = prock.deletions = 0;
@@ -1390,10 +1385,19 @@ EXPORTED int tls_prune_sessions(void)
 	syslog(LOG_NOTICE, "tls_prune: purged %d out of %d entries",
 	       prock.deletions, prock.count);
     }
+    else if (ret == CYRUSDB_NOTFOUND) {
+	syslog(LOG_NOTICE, "tls_prune: %s not found, nothing to do", fname);
+	ret = 0;
+    }
+    else {
+	syslog(LOG_ERR, "DBERROR: opening %s: %s",
+	       fname, cyrusdb_strerror(ret));
+    }
 
-    free(tofree);
+    if (tofree)
+	free(tofree);
 
-    return 0;
+    return ret;
 }
 
 /* fill string buffer with info about tls connection */

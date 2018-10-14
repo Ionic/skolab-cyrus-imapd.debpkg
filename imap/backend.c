@@ -279,7 +279,7 @@ static int parse_capability(struct backend *s, const char *str)
     if (s->prot->type != TYPE_STD) return 0;
 
     /* save the buffer, we're going to be destructively parsing it */
-    buf = xstrdup(str);
+    buf = xstrdupsafe(str);
 
     if ((s->prot->u.std.capa_cmd.formatflags & CAPAF_ONE_PER_LINE)) {
 	/*
@@ -732,7 +732,7 @@ static int backend_authenticate(struct backend *s, const char *userid,
 
     if (mechlist) free(mechlist);
 
-    return SASL_OK;
+    return r;
 }
 
 static int backend_login(struct backend *ret, const char *userid,
@@ -1018,7 +1018,10 @@ EXPORTED struct backend *backend_connect(struct backend *ret_backend, const char
     prot_setisclient(ret->out, 1);
 
     /* Start TLS if required */
-    if (do_tls) r = backend_starttls(ret, NULL, NULL, NULL);
+    if (do_tls) {
+	r = backend_starttls(ret, NULL, NULL, NULL);
+	if (r) goto error;
+    }
 
     /* Login to the server */
     if (prot->type == TYPE_SPEC)

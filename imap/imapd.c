@@ -2741,9 +2741,7 @@ static void cmd_id(char *tag)
 
     /* check if we've already had an ID in non-authenticated state */
     if (!imapd_userid && imapd_id.did_id) {
-	prot_printf(imapd_out,
-		    "%s NO Only one Id allowed in non-authenticated state\r\n",
-		    tag);
+	prot_printf(imapd_out, "%s OK NIL\r\n", tag);
 	eatline(imapd_in, c);
 	return;
     }
@@ -5620,7 +5618,7 @@ static void cmd_create(char *tag, char *name, struct dlist *extargs, int localon
 
 		    // special use needs extended support, so pass through extargs
 		    if (specialuse.len) {
-			prot_printf(s_conn->out, "(USE (%s)", buf_cstring(&specialuse));
+			prot_printf(s_conn->out, " (USE (%s)", buf_cstring(&specialuse));
 
 			if (partition) {
 			    prot_printf(s_conn->out, " PARTITION ");
