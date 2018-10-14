@@ -9,7 +9,7 @@ Subject: Disable runpath checking
  1 file changed, 3 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
-index 34be8a6..1d321d1 100644
+index aeda2e7..8869340 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -170,9 +170,6 @@ fi
