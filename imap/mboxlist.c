@@ -1549,14 +1549,14 @@ EXPORTED int mboxlist_renamemailbox(const char *oldname, const char *newname,
         if (mupdatecommiterror) {
             r = 0;
 
-            /* recreate an old entry */
+            /* delete the new entry */
             if (!isusermbox)
+                r = cyrusdb_delete(mbdb, newname, strlen(newname), &tid, 0);
+
+            /* recreate an old entry */
+            if (!r)
                 r = cyrusdb_store(mbdb, oldname, strlen(oldname),
 				  mboxent, strlen(mboxent), &tid);
-
-            /* delete the new entry */
-            if (!r)
-                r = cyrusdb_delete(mbdb, newname, strlen(newname), &tid, 0);
 
             /* Commit transaction */
             if (!r)
@@ -2374,6 +2374,7 @@ EXPORTED int mboxlist_allusermbox(const char *userid, foreach_cb *proc,
 				  void *rock, int incdel)
 {
     char *inbox = mboxname_user_mbox(userid, 0);
+    if (!inbox) return CYRUSDB_NOTFOUND;
     size_t inboxlen = strlen(inbox);
     char *search = strconcat(inbox, ".", (char *)NULL);
     const char *data = NULL;

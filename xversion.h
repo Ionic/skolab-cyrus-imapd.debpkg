@@ -1,3 +1,3 @@
 /* Development version */
-#define _CYRUS_VERSION "2.5.11"
-#define CYRUS_GITVERSION "3d03f4e9 2017-05-09"
+#define _CYRUS_VERSION "2.5.12"
+#define CYRUS_GITVERSION "a4c4768f 2018-10-08"

@@ -115,7 +115,8 @@ noinst_HEADERS =
 noinst_LTLIBRARIES =
 CLEANFILES =
 EXTRA_DIST = \
-	$(wildcard tools/vzic/*)
+	$(wildcard tools/vzic/*) \
+	VERSION
 
 if COM_ERR
 COMPILE_ET_DEP = com_err/et/compile_et
@@ -149,6 +150,7 @@ user_PROGRAMS += \
 	imap/ctl_deliver \
 	imap/ctl_mboxlist \
 	imap/cvt_cyrusdb \
+	imap/cyr_buildinfo \
 	imap/cyr_df \
 	imap/cyrdump \
 	imap/cyr_dbtool \
@@ -555,7 +557,7 @@ com_err/et/compile_et: com_err/et/compile_et.sh com_err/et/config_script \
 # Note that several places in the code use -lcrypto, e.g. for SHA1 or
 # MD5 algorithms, without needing SSL.  Currently we have no way of
 # minimally linking such code.
-LD_BASIC_ADD = lib/libcyrus.la lib/libcyrus_min.la ${LIBS} $(LIB_RT) \
+LD_BASIC_ADD = lib/libcyrus.la lib/libcyrus_min.la ${LIBS} \
 	${LIB_SASL} $(SSL_LIBS)
 
 # UTILITY is the libraries that utility programs which use Cyrus'
@@ -588,6 +590,7 @@ cunit_FRAMEWORK = \
 	cunit/timeout.h
 
 cunit_TESTS = \
+	cunit/aaa-db.testc \
 	cunit/annotate.testc \
 	cunit/backend.testc \
 	cunit/binhex.testc \
@@ -596,7 +599,6 @@ cunit_TESTS = \
 	cunit/byteorder64.testc \
 	cunit/charset.testc \
 	cunit/crc32.testc \
-	cunit/db.testc \
 	cunit/dlist.testc \
 	cunit/duplicate.testc \
 	cunit/getxstring.testc \
@@ -756,6 +758,9 @@ imap_cvt_cyrusdb_LDADD = $(LD_UTILITY_ADD)
 imap_cyrdump_SOURCES = imap/cli_fatal.c imap/cyrdump.c imap/mutex_fake.c
 imap_cyrdump_LDADD = $(LD_UTILITY_ADD)
 
+imap_cyr_buildinfo_SOURCES = imap/cli_fatal.c imap/cyr_buildinfo.c imap/mutex_fake.c
+imap_cyr_buildinfo_LDADD = $(LD_UTILITY_ADD)
+
 imap_cyr_dbtool_SOURCES = imap/cli_fatal.c imap/cyr_dbtool.c imap/mutex_fake.c
 imap_cyr_dbtool_LDADD = $(LD_UTILITY_ADD)
 
@@ -780,14 +785,8 @@ imap_cyr_synclog_LDADD = $(LD_UTILITY_ADD)
 imap_cyr_userseen_SOURCES = imap/cli_fatal.c imap/cyr_userseen.c imap/mutex_fake.c
 imap_cyr_userseen_LDADD = $(LD_UTILITY_ADD)
 
-if HAVE_CLAMAV
 imap_cyr_virusscan_SOURCES = imap/cli_fatal.c imap/cyr_virusscan.c imap/mutex_fake.c
-imap_cyr_virusscan_LDADD = $(LD_UTILITY_ADD) -lclamav
-else # HAVE_CLAMAV
-EXTRA_DIST += \
-	imap/cyr_virusscan.c
-
-endif # HAVE_CLAMAV
+imap_cyr_virusscan_LDADD = $(LD_UTILITY_ADD) $(CLAMAV_LIBS)
 
 if HTTPD
 imap_ctl_zoneinfo_SOURCES = imap/cli_fatal.c imap/ctl_zoneinfo.c imap/mutex_fake.c
@@ -1220,7 +1219,7 @@ lib_libcyrus_la_SOURCES += lib/nonblock_fcntl.c
 else
 lib_libcyrus_la_SOURCES += lib/nonblock_ioctl.c
 endif
-lib_libcyrus_la_LIBADD = $(LIB_RT) ${LIB_SASL} $(SSL_LIBS)
+lib_libcyrus_la_LIBADD = ${LIB_SASL} $(SSL_LIBS)
 lib_libcyrus_la_CFLAGS = $(AM_CFLAGS) $(CFLAG_VISIBILITY)
 
 nodist_lib_libcyrus_min_la_SOURCES = \
@@ -1600,6 +1599,9 @@ doc: tools/htmlstrip doc/man/cyradm.1.html doc/man/sieveshell.1.html
 		tools/htmlstrip $$file > doc/text/`basename $$file .html`; \
 	done
 	@echo "== done =="
+
+VERSION: tools/git-version.sh
+	$(AM_V_GEN)$< > $@.NEW && mv $@.NEW $@
 
 install-data-hook:
 if CMULOCAL
