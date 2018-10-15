@@ -9,6 +9,7 @@ usr/lib/cyrus/bin/arbitronsort
 usr/lib/cyrus/bin/chk_*
 usr/lib/cyrus/bin/ctl_*
 usr/lib/cyrus/bin/cvt_*
+usr/lib/cyrus/bin/cyr_buildinfo
 usr/lib/cyrus/bin/cyr_dbtool
 usr/lib/cyrus/bin/cyr_deny
 usr/lib/cyrus/bin/cyr_df
