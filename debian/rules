@@ -47,12 +47,12 @@ MAN1 := imtest installsieve lmtptest mupdatetest nntptest \
 
 MAN8 := master reconstruct quota deliver \
 	mbpath ctl_mboxlist ctl_deliver ctl_cyrusdb squatter \
-	tls_prune ipurge cyrdump cvt_cyrusdb chk_cyrus arbitron \
+	tls_prune ipurge cvt_cyrusdb chk_cyrus arbitron \
 	cyr_expire unexpunge sync_client sync_reset cyr_synclog \
 	cyr_dbtool cyr_df ctl_zoneinfo cyr_deny cyr_info \
-	cyr_deny cyr_info fetchnews fud httpd idled imapd \
-	lmtpd mbexamine nntpd notifyd pop3d rmnews smmapd \
-	sync_server timsieved cyr_buildinfo
+	fetchnews fud httpd idled imapd lmtpd mbexamine nntpd \
+	notifyd pop3d rmnews smmapd sync_server timsieved \
+	cyr_buildinfo
 
 %:
 	dh $@ --with autoreconf --with autotools-dev --with systemd
