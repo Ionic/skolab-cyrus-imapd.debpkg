@@ -52,7 +52,7 @@ MAN8 := master reconstruct quota deliver \
 	cyr_dbtool cyr_df ctl_zoneinfo cyr_deny cyr_info \
 	cyr_deny cyr_info fetchnews fud httpd idled imapd \
 	lmtpd mbexamine nntpd notifyd pop3d rmnews smmapd \
-	sync_server timsieved
+	sync_server timsieved cyr_buildinfo
 
 %:
 	dh $@ --with autoreconf --with autotools-dev --with systemd
