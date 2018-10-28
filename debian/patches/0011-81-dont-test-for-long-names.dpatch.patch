@@ -1,4 +1,5 @@
-From: Debian Cyrus Team <pkg-cyrus-imapd-debian-devel@lists.alioth.debian.org>
+From: Debian Cyrus Team
+ <pkg-cyrus-imapd-debian-devel@lists.alioth.debian.org>
 Date: Tue, 4 Aug 2015 10:38:06 +0200
 Subject: 81-dont-test-for-long-names.dpatch
 
@@ -15,10 +16,10 @@ Subject: 81-dont-test-for-long-names.dpatch
  1 file changed, 4 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
-index a703b6b..a257817 100644
+index 456939a..9a6c023 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -137,10 +137,6 @@ AC_PROG_INSTALL
+@@ -135,10 +135,6 @@ AC_PROG_INSTALL
  AC_USE_SYSTEM_EXTENSIONS
  AC_ISC_POSIX
  AC_PROG_AWK

@@ -1,4 +1,5 @@
-From: Debian Cyrus Team <pkg-cyrus-imapd-debian-devel@lists.alioth.debian.org>
+From: Debian Cyrus Team
+ <pkg-cyrus-imapd-debian-devel@lists.alioth.debian.org>
 Date: Tue, 4 Aug 2015 10:38:04 +0200
 Subject: 03-fix_docs.dpatch
 
@@ -10,16 +11,14 @@ _# 03-fix_docs.dpatch by Sven Mueller <debian@incase.de>
 
 @DPATCH@
 ---
- doc/faq.html                 |  2 +-
- doc/install-virtdomains.html |  4 ++++
- lib/imapoptions              | 11 +++++++++--
+ doc/legacy/faq.html                 |  2 +-
+ doc/legacy/install-virtdomains.html |  4 ++++
+ lib/imapoptions                     | 11 +++++++++--
  3 files changed, 14 insertions(+), 3 deletions(-)
 
-diff --git a/doc/faq.html b/doc/faq.html
-index 15ec74e..e639d32 100644
---- a/doc/faq.html
-+++ b/doc/faq.html
-@@ -168,7 +168,7 @@ Dec  6 12:58:57 mail3.andrew.cmu.edu imapd[1297]: cannot connect to saslauthd se
+--- a/doc/legacy/faq.html
++++ b/doc/legacy/faq.html
+@@ -168,7 +168,7 @@
  </pre>
  
  <p>Make sure that <tt>saslauthd</tt> is running and that the cyrus
@@ -28,11 +27,9 @@ index 15ec74e..e639d32 100644
  
  </dd>
  
-diff --git a/doc/install-virtdomains.html b/doc/install-virtdomains.html
-index 957e26c..9d6da47 100644
---- a/doc/install-virtdomains.html
-+++ b/doc/install-virtdomains.html
-@@ -101,6 +101,10 @@ then set <tt>defaultdomain</tt> to 'xxx.yyy.zzz'.
+--- a/doc/legacy/install-virtdomains.html
++++ b/doc/legacy/install-virtdomains.html
+@@ -101,6 +101,10 @@
  to the <tt>defaultdomain</tt>.  See <a href="#admins">Administrators</a>
  below for further discussion.
  
@@ -43,11 +40,9 @@ index 957e26c..9d6da47 100644
  <p>Here is a sample <tt>imapd.conf</tt> with a minimal set of configuration
  options.</p>
  
-diff --git a/lib/imapoptions b/lib/imapoptions
-index 461103c..6dff61a 100644
 --- a/lib/imapoptions
 +++ b/lib/imapoptions
-@@ -542,7 +542,11 @@ Blank lines and lines beginning with ``#'' are ignored.
+@@ -646,7 +646,11 @@
     mailbox that does not have a parent mailbox. */
  
  { "defaultdomain", "internal", STRING }
@@ -60,7 +55,7 @@ index 461103c..6dff61a 100644
  
  { "defaultpartition", NULL, STRING }
  /* The partition name used by default for new mailboxes.  If not
-@@ -1066,7 +1070,10 @@ Blank lines and lines beginning with ``#'' are ignored.
+@@ -1195,7 +1199,10 @@
  /* The list of remote realms whose users may authenticate using cross-realm
     authentication identifiers.  Separate each realm name by a space.  (A
     cross-realm identity is considered any identity returned by SASL

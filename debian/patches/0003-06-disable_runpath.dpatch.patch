@@ -1,4 +1,5 @@
-From: Debian Cyrus Team <pkg-cyrus-imapd-debian-devel@lists.alioth.debian.org>
+From: Debian Cyrus Team
+ <pkg-cyrus-imapd-debian-devel@lists.alioth.debian.org>
 Date: Tue, 4 Aug 2015 10:38:04 +0200
 Subject: 06-disable_runpath.dpatch
 
@@ -67,10 +68,10 @@ index 6180152..8f390f7 100644
 -  LDFLAGS="${SAVE_LDFLAGS}"
 -  ])])
 diff --git a/configure.ac b/configure.ac
-index 816cd50..13d1a6d 100644
+index 965b259..456939a 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -172,9 +172,6 @@ else
+@@ -178,9 +178,6 @@ else
    AC_MSG_ERROR(The Cyrus IMAPD requires support for long long int)
  fi
  
@@ -79,4 +80,4 @@ index 816cd50..13d1a6d 100644
 -
  AC_CHECK_HEADERS(unistd.h sys/select.h sys/param.h stdarg.h)
  AC_REPLACE_FUNCS(memmove strcasecmp ftruncate strerror posix_fadvise strsep memmem)
- AC_CHECK_FUNCS(strlcat strlcpy getgrouplist fmemopen pselect)
+ AC_CHECK_FUNCS(strlcat strlcpy strnchr getgrouplist fmemopen pselect)

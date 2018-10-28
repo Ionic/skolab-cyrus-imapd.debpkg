@@ -16,10 +16,10 @@ By normalize, it is intended that;
  5 files changed, 31 insertions(+)
 
 diff --git a/imap/global.c b/imap/global.c
-index be9dfbb..6e8e4f3 100644
+index f0d5c3a..e12e94f 100644
 --- a/imap/global.c
 +++ b/imap/global.c
-@@ -285,6 +285,8 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
+@@ -298,6 +298,8 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
                                    config_getswitch(IMAPOPT_UNIX_GROUP_ENABLE));
          libcyrus_config_setswitch(CYRUSOPT_USERNAME_TOLOWER,
                                    config_getswitch(IMAPOPT_USERNAME_TOLOWER));
@@ -68,12 +68,12 @@ index 6caddaa..910453d 100644
  }
  
 diff --git a/lib/imapoptions b/lib/imapoptions
-index 9394226..0a3e89f 100644
+index 561ff8b..58740b1 100644
 --- a/lib/imapoptions
 +++ b/lib/imapoptions
-@@ -2140,6 +2140,11 @@ product version in the capabilities */
- /* The absolute path to the zoneinfo db file.  If not specified,
-    will be confdir/zoneinfo.db */
+@@ -2433,6 +2433,11 @@ product version in the capabilities
+ { "fastmailsharing", 0, SWITCH }
+ /* If enabled, use FastMail style sharing (oldschool full server paths) */
  
 +{ "normalizeuid", 0, SWITCH }
 +/* Lowercase uid and strip leading and trailing blanks. It is recommended
@@ -84,10 +84,10 @@ index 9394226..0a3e89f 100644
  .SH SEE ALSO
  .PP
 diff --git a/lib/libcyr_cfg.c b/lib/libcyr_cfg.c
-index bd7ded2..116f709 100644
+index 7fdb012..096d7ed 100644
 --- a/lib/libcyr_cfg.c
 +++ b/lib/libcyr_cfg.c
-@@ -144,6 +144,10 @@ static struct cyrusopt_s cyrus_options[] = {
+@@ -145,6 +145,10 @@ static struct cyrusopt_s cyrus_options[] = {
        CFGVAL(long, 1),
        CYRUS_OPT_SWITCH },
  

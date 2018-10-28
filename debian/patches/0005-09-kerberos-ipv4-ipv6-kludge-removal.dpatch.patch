@@ -1,4 +1,5 @@
-From: Debian Cyrus Team <pkg-cyrus-imapd-debian-devel@lists.alioth.debian.org>
+From: Debian Cyrus Team
+ <pkg-cyrus-imapd-debian-devel@lists.alioth.debian.org>
 Date: Tue, 4 Aug 2015 10:38:04 +0200
 Subject: 09-kerberos-ipv4-ipv6-kludge-removal.dpatch
 
@@ -15,10 +16,10 @@ Subject: 09-kerberos-ipv4-ipv6-kludge-removal.dpatch
  1 file changed, 35 deletions(-)
 
 diff --git a/imap/pop3d.c b/imap/pop3d.c
-index c2274df..3a9b7c7 100644
+index 0b49922..c555b01 100644
 --- a/imap/pop3d.c
 +++ b/imap/pop3d.c
-@@ -733,41 +733,6 @@ EXPORTED void fatal(const char* s, int code)
+@@ -737,41 +737,6 @@ EXPORTED void fatal(const char* s, int code)
  }
  
  #ifdef HAVE_KRB

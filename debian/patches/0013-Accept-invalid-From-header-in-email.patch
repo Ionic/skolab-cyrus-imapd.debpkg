@@ -15,10 +15,10 @@ Cyrus should not raise problems.
  1 file changed, 18 insertions(+), 3 deletions(-)
 
 diff --git a/imap/message.c b/imap/message.c
-index 38c0c58..04b312c 100644
+index 1119a53..31d3186 100644
 --- a/imap/message.c
 +++ b/imap/message.c
-@@ -186,6 +186,8 @@ EXPORTED int message_copy_strict(struct protstream *from, FILE *to,
+@@ -187,6 +187,8 @@ EXPORTED int message_copy_strict(struct protstream *from, FILE *to,
      int reject8bit = config_getswitch(IMAPOPT_REJECT8BIT);
      int munge8bit = config_getswitch(IMAPOPT_MUNGE8BIT);
      int inheader = 1, blankline = 1;
@@ -27,7 +27,7 @@ index 38c0c58..04b312c 100644
  
      while (size) {
          n = prot_read(from, buf, size > 4096 ? 4096 : size);
-@@ -262,9 +264,22 @@ EXPORTED int message_copy_strict(struct protstream *from, FILE *to,
+@@ -263,9 +265,22 @@ EXPORTED int message_copy_strict(struct protstream *from, FILE *to,
          /* Check for valid header name */
          if (sawnl && buf[0] != ' ' && buf[0] != '\t') {
              if (buf[0] == ':') return IMAP_MESSAGE_BADHEADER;
