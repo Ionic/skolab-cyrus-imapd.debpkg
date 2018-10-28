@@ -1,0 +1,20 @@
+
+DAV Components
+**************
+
+The following CalDAV components are supported for calendar
+collections:
+
+   * VEVENT
+
+   * VTODO
+
+   * VJOURNAL
+
+   * VFREEBUSY
+
+   * VAVAILABILITY
+
+   * VPOLL (awaiting IETF review)
+
+Back to Features

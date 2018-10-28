@@ -51,6 +51,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "assert.h"
 #include "charset.h"
@@ -143,6 +144,10 @@ int script_require(sieve_script_t *s, char *req)
             (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_IMAP4FLAGS)) {
         s->support.imap4flags = 1;
         return 1;
+    } else if (!strcmp("variables", req) &&
+            (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_VARIABLES)) {
+        s->support.variables = 1;
+        return 1;
     } else if (!strcmp("notify",req)) {
         if (s->interp.notify &&
             (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_NOTIFY)) {
@@ -192,7 +197,20 @@ int script_require(sieve_script_t *s, char *req)
                (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_INDEX)) {
         s->support.index = 1;
         return 1;
+    } else if (!strcmp("mailbox", req) &&
+               (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_MAILBOX)) {
+        s->support.mailbox = 1;
+        return 1;
+    } else if (!strcmp("mboxmetadata", req) &&
+               (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_MBOXMETADATA)) {
+        s->support.mboxmetadata = 1;
+        return 1;
+    } else if (!strcmp("servermetadata", req) &&
+               (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_SERVERMETADATA)) {
+        s->support.servermetadata = 1;
+        return 1;
     }
+
     return 0;
 }
 
@@ -233,6 +251,97 @@ EXPORTED int sieve_script_parse(sieve_interp_t *interp, FILE *script,
     return res;
 }
 
+static void stub_generic(void)
+{
+    fatal("stub function called", 0);
+}
+
+static sieve_vacation_t stub_vacation = {
+    0,                                  /* min response */
+    0,                                  /* max response */
+    (sieve_callback *) &stub_generic,   /* autorespond() */
+    (sieve_callback *) &stub_generic,   /* send_response() */
+};
+
+static int stub_notify(void *ac __attribute__((unused)),
+                       void *interp_context __attribute__((unused)),
+                       void *script_context __attribute__((unused)),
+                       void *message_context __attribute__((unused)),
+                       const char **errmsg __attribute__((unused)))
+{
+    fatal("stub function called", 0);
+    return SIEVE_FAIL;
+}
+
+static int stub_parse_error(int lineno, const char *msg,
+                            void *interp_context __attribute__((unused)),
+                            void *script_context)
+{
+    struct buf *errors = (struct buf *) script_context;
+    buf_printf(errors, "line %d: %s\r\n", lineno, msg);
+    return SIEVE_OK;
+}
+
+/* Wrapper for sieve_script_parse using a disposable single-use interpreter.
+ * Use when you only want to parse or compile, but not execute, a script. */
+EXPORTED int sieve_script_parse_only(FILE *stream, char **out_errors,
+                                     sieve_script_t **out_script)
+{
+    sieve_interp_t *interpreter = NULL;
+    sieve_script_t *script = NULL;
+    struct buf errors = BUF_INITIALIZER;
+    int res;
+
+    /* build a single-use interpreter using stub callbacks*/
+    interpreter = sieve_interp_alloc(NULL); /* uses xmalloc, never returns NULL */
+
+    sieve_register_redirect(interpreter, (sieve_callback *) &stub_generic);
+    sieve_register_discard(interpreter, (sieve_callback *) &stub_generic);
+    sieve_register_reject(interpreter, (sieve_callback *) &stub_generic);
+    sieve_register_fileinto(interpreter, (sieve_callback *) &stub_generic);
+    sieve_register_keep(interpreter, (sieve_callback *) &stub_generic);
+    sieve_register_imapflags(interpreter, NULL);
+    sieve_register_size(interpreter, (sieve_get_size *) &stub_generic);
+    sieve_register_mailboxexists(interpreter, (sieve_get_mailboxexists *) &stub_generic);
+    sieve_register_metadata(interpreter, (sieve_get_metadata *) &stub_generic);
+    sieve_register_header(interpreter, (sieve_get_header *) &stub_generic);
+    sieve_register_envelope(interpreter, (sieve_get_envelope *) &stub_generic);
+    sieve_register_body(interpreter, (sieve_get_body *) &stub_generic);
+    sieve_register_include(interpreter, (sieve_get_include *) &stub_generic);
+
+    res = sieve_register_vacation(interpreter, &stub_vacation);
+    if (res != SIEVE_OK) {
+        syslog(LOG_ERR, "sieve_register_vacation() returns %d\n", res);
+        goto done;
+    }
+
+    sieve_register_notify(interpreter, &stub_notify);
+    sieve_register_parse_error(interpreter, &stub_parse_error);
+
+    buf_appendcstr(&errors, "script errors:\r\n");
+    *out_errors = NULL;
+
+    rewind(stream);
+    res = sieve_script_parse(interpreter, stream, &errors, &script);
+
+    if (res == SIEVE_OK) {
+        if (out_script) {
+            *out_script = script;
+        } else {
+            sieve_script_free(&script);
+        }
+    }
+    else {
+        sieve_script_free(&script);
+        *out_errors = buf_release(&errors);
+    }
+
+done:
+    sieve_interp_free(&interpreter);
+    buf_free(&errors);
+    return res;
+}
+
 EXPORTED void sieve_script_free(sieve_script_t **s)
 {
     if (*s) {
@@ -257,7 +366,7 @@ static void add_header(sieve_interp_t *i, int isenv, char *header,
     if (!h || !h[0])
         return;
 
-    decoded_header = charset_parse_mimeheader(h[0]);
+    decoded_header = charset_parse_mimeheader(h[0], 0/*flags*/);
     buf_appendcstr(out, decoded_header);
     free(decoded_header);
 }
@@ -431,7 +540,11 @@ EXPORTED int sieve_script_load(const char *fname, sieve_execute_t **ret)
     if (!fname || !ret) return SIEVE_FAIL;
 
     if (stat(fname, &sbuf) == -1) {
-        syslog(LOG_DEBUG, "IOERROR: fstating sieve script %s: %m", fname);
+        if (errno == ENOENT) {
+            syslog(LOG_DEBUG, "WARNING: sieve script %s doesn't exist: %m", fname);
+        } else {
+            syslog(LOG_DEBUG, "IOERROR: fstating sieve script %s: %m", fname);
+        }
         return SIEVE_FAIL;
     }
 
@@ -770,47 +883,6 @@ static int do_action_list(sieve_interp_t *interp,
                 break;
             }
 
-
-        case ACTION_SETFLAG:
-            strarray_fini(imapflags);
-            break;
-        case ACTION_ADDFLAG:
-            strarray_add_case(imapflags, a->u.fla.flag);
-            free(interp->lastitem);
-            interp->lastitem = xstrdup(a->u.fla.flag);
-            break;
-        case ACTION_REMOVEFLAG:
-            strarray_remove_all_case(imapflags, a->u.fla.flag);
-            free(interp->lastitem);
-            interp->lastitem = xstrdup(a->u.fla.flag);
-            break;
-        case ACTION_MARK:
-            {
-                int n = interp->markflags->count;
-
-                ret = SIEVE_OK;
-                while (n) {
-                    strarray_add_case(imapflags,
-                                        interp->markflags->data[--n]);
-                }
-                free(interp->lastitem);
-                interp->lastitem = NULL;
-                break;
-            }
-        case ACTION_UNMARK:
-          {
-
-                int n = interp->markflags->count;
-                ret = SIEVE_OK;
-                while (n) {
-                    strarray_remove_all_case(imapflags,
-                                           interp->markflags->data[--n]);
-                }
-                free(interp->lastitem);
-                interp->lastitem = NULL;
-                break;
-            }
-
         case ACTION_NONE:
             break;
 
@@ -836,9 +908,8 @@ static int do_action_list(sieve_interp_t *interp,
 /* execute some bytecode */
 int sieve_eval_bc(sieve_execute_t *exe, int is_incl, sieve_interp_t *i,
                   void *sc, void *m,
-                  variable_list_t * flagvars, action_list_t *actions,
-                  notify_list_t *notify_list, const char **errmsg,
-                  variable_list_t *workingvars);
+                  variable_list_t *variables, action_list_t *actions,
+                  notify_list_t *notify_list, const char **errmsg);
 
 EXPORTED int sieve_execute_bytecode(sieve_execute_t *exe, sieve_interp_t *interp,
                            void *script_context, void *message_context)
@@ -851,12 +922,13 @@ EXPORTED int sieve_execute_bytecode(sieve_execute_t *exe, sieve_interp_t *interp
     char actions_string[ACTIONS_STRING_LEN] = "";
     const char *errmsg = NULL;
     strarray_t imapflags = STRARRAY_INITIALIZER;
-    strarray_t workingflags = STRARRAY_INITIALIZER;
-    variable_list_t flagvars = VARIABLE_LIST_INITIALIZER;
-    variable_list_t workingvars = VARIABLE_LIST_INITIALIZER;
+    variable_list_t variables = VARIABLE_LIST_INITIALIZER;
 
-    flagvars.var = &imapflags;
-    workingvars.var = &workingflags;
+    variables.var = &imapflags;
+    variables.name = xstrdup("");
+
+    varlist_extend(&variables)->name = xstrdup(VL_MATCH_VARS);
+    varlist_extend(&variables)->name = xstrdup(VL_PARSED_STRINGS);
 
     if (!interp) return SIEVE_FAIL;
 
@@ -880,8 +952,7 @@ EXPORTED int sieve_execute_bytecode(sieve_execute_t *exe, sieve_interp_t *interp
     else {
         ret = sieve_eval_bc(exe, 0, interp,
                             script_context, message_context,
-                            &flagvars, actions, notify_list, &errmsg,
-                            &workingvars);
+                            &variables, actions, notify_list, &errmsg);
 
         if (ret < 0) {
             ret = do_sieve_error(SIEVE_RUN_ERROR, interp,
@@ -897,8 +968,7 @@ EXPORTED int sieve_execute_bytecode(sieve_execute_t *exe, sieve_interp_t *interp
         }
     }
 
-    varlist_fini(&flagvars);
-    varlist_fini(&workingvars);
+    varlist_fini(&variables);
 
     return ret;
 }

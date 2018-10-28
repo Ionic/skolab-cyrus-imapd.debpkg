@@ -1,0 +1,49 @@
+
+**tls_prune**
+*************
+
+Prune expired sessions from the TLS sessions database
+
+
+Synopsis
+========
+
+   tls_prune [OPTIONS]
+
+
+Description
+===========
+
+   **CMD** [ **-C** *config-file* ]
+
+
+Description
+===========
+
+**CMD** is used to prune expired sessions from the TLS sessions
+database.  The lifetime of a TLS session is determined by the
+"tls_session_timeout" configuration option.
+
+**CMD** reads its configuration options out of the imapd.conf(5) file
+unless specified otherwise by **-C**.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+
+Files
+=====
+
+/etc/imapd.conf
+
+
+See Also
+========
+
+imapd.conf(5), master(8)

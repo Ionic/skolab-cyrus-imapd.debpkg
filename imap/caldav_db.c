@@ -238,7 +238,7 @@ static unsigned _comp_flags_to_num(struct comp_flags *flags)
     "SELECT rowid, creationdate, mailbox, resource, imap_uid,"          \
     "  lock_token, lock_owner, lock_ownerid, lock_expire,"              \
     "  comp_type, ical_uid, organizer, dtstart, dtend,"                 \
-    "  comp_flags, sched_tag, alive"                                    \
+    "  comp_flags, sched_tag, alive, modseq"                            \
     " FROM ical_objs"                                                   \
 
 static int read_cb(sqlite3_stmt *stmt, void *rock)
@@ -251,6 +251,7 @@ static int read_cb(sqlite3_stmt *stmt, void *rock)
     memset(cdata, 0, sizeof(struct caldav_data));
 
     cdata->dav.alive = sqlite3_column_int(stmt, 16);
+    cdata->dav.modseq = sqlite3_column_int(stmt, 17);
     if (!(rrock->flags && RROCK_FLAG_TOMBSTONES) && !cdata->dav.alive)
         return 0;
 
@@ -344,6 +345,33 @@ EXPORTED int caldav_lookup_resource(struct caldav_db *caldavdb,
     return r;
 }
 
+#define CMD_SELIMAPUID CMD_READFIELDS \
+    " WHERE mailbox = :mailbox AND imap_uid = :imap_uid;"
+
+EXPORTED int caldav_lookup_imapuid(struct caldav_db *caldavdb,
+                           const char *mailbox, int imap_uid,
+                           struct caldav_data **result,
+                           int tombstones)
+{
+    struct sqldb_bindval bval[] = {
+        { ":mailbox",  SQLITE_TEXT,    { .s = mailbox       } },
+        { ":imap_uid", SQLITE_INTEGER, { .i = imap_uid      } },
+        { NULL,        SQLITE_NULL,    { .s = NULL          } } };
+    static struct caldav_data cdata;
+    struct read_rock rrock = { caldavdb, &cdata, tombstones, NULL, NULL };
+    int r;
+
+    *result = memset(&cdata, 0, sizeof(struct caldav_data));
+
+    r = sqldb_exec(caldavdb->db, CMD_SELIMAPUID, bval, &read_cb, &rrock);
+    if (!r && !cdata.dav.rowid) r = CYRUSDB_NOTFOUND;
+
+    cdata.dav.mailbox = mailbox;
+    cdata.dav.imap_uid = imap_uid;
+
+    return r;
+}
+
 
 #define CMD_SELUID CMD_READFIELDS \
     " WHERE ical_uid = :ical_uid AND mailbox != :inbox AND alive = 1;"
@@ -373,6 +401,9 @@ EXPORTED int caldav_lookup_uid(struct caldav_db *caldavdb, const char *ical_uid,
 #define CMD_SELMBOX CMD_READFIELDS \
     " WHERE mailbox = :mailbox AND alive = 1;"
 
+#define CMD_SELALIVE CMD_READFIELDS \
+    " WHERE alive = 1;"
+
 EXPORTED int caldav_foreach(struct caldav_db *caldavdb, const char *mailbox,
                             caldav_cb_t *cb, void *rock)
 {
@@ -384,7 +415,53 @@ EXPORTED int caldav_foreach(struct caldav_db *caldavdb, const char *mailbox,
 
     /* XXX - tombstones */
 
-    return sqldb_exec(caldavdb->db, CMD_SELMBOX, bval, &read_cb, &rrock);
+    if (mailbox) {
+        return sqldb_exec(caldavdb->db, CMD_SELMBOX, bval, &read_cb, &rrock);
+    } else {
+        return sqldb_exec(caldavdb->db, CMD_SELALIVE, bval, &read_cb, &rrock);
+    }
+}
+
+#define CMD_SELRANGE_MBOX CMD_READFIELDS \
+    " WHERE dtend > :after AND dtstart < :before " \
+    " AND mailbox = :mailbox AND alive = 1;"
+
+#define CMD_SELRANGE CMD_READFIELDS \
+    " WHERE dtend > :after AND dtstart < :before " \
+    " AND alive = 1;"
+
+EXPORTED int caldav_foreach_timerange(struct caldav_db *caldavdb,
+                                      const char *mailbox,
+                                      time_t after, time_t before,
+                                      caldav_cb_t *cb, void *rock)
+{
+    struct sqldb_bindval bval[] = {
+        { ":after",     SQLITE_TEXT, { .s = NULL    } },
+        { ":before",   SQLITE_TEXT, { .s = NULL    } },
+        { ":mailbox", SQLITE_TEXT, { .s = mailbox } },
+        { NULL,       SQLITE_NULL, { .s = NULL    } } };
+    struct caldav_data cdata;
+    struct read_rock rrock = { caldavdb, &cdata, 0, cb, rock };
+    icaltimetype dtafter, dtbefore;
+    icaltimezone *utc = icaltimezone_get_utc_timezone();
+
+    dtafter = icaltime_from_timet_with_zone(after, 0, utc);
+    dtbefore= icaltime_from_timet_with_zone(before, 0, utc);
+
+    bval[0].val.s = icaltime_as_ical_string(dtafter);
+    bval[1].val.s = icaltime_as_ical_string(dtbefore);
+
+    /* XXX - if 'before' defines the zero second of a day, a full-day
+     * event starting on that day matches. That's not entirely correct,
+     * since 'before' is defined to be exclusive. */
+
+    /* XXX - tombstones */
+
+    if (mailbox) {
+        return sqldb_exec(caldavdb->db, CMD_SELRANGE_MBOX, bval, &read_cb, &rrock);
+    } else {
+        return sqldb_exec(caldavdb->db, CMD_SELRANGE, bval, &read_cb, &rrock);
+    }
 }
 
 
@@ -487,193 +564,59 @@ EXPORTED int caldav_delmbox(struct caldav_db *caldavdb, const char *mailbox)
 }
 
 
-/* Get time period (start/end) of a component based in RFC 4791 Sec 9.9 */
-EXPORTED void caldav_get_period(icalcomponent *comp, icalcomponent_kind kind,
-                       struct icalperiodtype *period)
+#define CMD_GETUPDATES CMD_READFIELDS \
+      " WHERE comp_type = :comp_type AND modseq > :modseq" \
+      " ORDER BY modseq LIMIT :limit;"
+
+#define CMD_GETUPDATES_MBOX CMD_READFIELDS \
+      " WHERE mailbox = :mailbox AND comp_type = :comp_type AND modseq > :modseq" \
+      " ORDER BY modseq LIMIT :limit;"
+
+EXPORTED int caldav_get_updates(struct caldav_db *caldavdb,
+                                modseq_t oldmodseq, const char *mboxname, int kind, int limit,
+                                int (*cb)(void *rock, struct caldav_data *cdata),
+                                void *rock)
 {
-    icaltimezone *utc = icaltimezone_get_utc_timezone();
+    struct sqldb_bindval bval[] = {
+        { ":mailbox",      SQLITE_TEXT,    { .s = mboxname  } },
+        { ":modseq",       SQLITE_INTEGER, { .i = oldmodseq } },
+        { ":comp_type",    SQLITE_INTEGER, { .i = kind      } },
+        { ":limit",        SQLITE_INTEGER, { .i = limit > 0 ? limit : -1 } },
+        { NULL,            SQLITE_NULL,    { .s = NULL      } }
+    };
+    static struct caldav_data cdata;
+    struct read_rock rrock = { caldavdb, &cdata, RROCK_FLAG_TOMBSTONES, cb, rock };
+    int r;
 
-    period->start =
-        icaltime_convert_to_zone(icalcomponent_get_dtstart(comp), utc);
-    period->end =
-        icaltime_convert_to_zone(icalcomponent_get_dtend(comp), utc);
-    period->duration = icaldurationtype_null_duration();
-
-    switch (kind) {
-    case ICAL_VEVENT_COMPONENT:
-        if (icaltime_is_null_time(period->end)) {
-            /* No DTEND or DURATION */
-            if (icaltime_is_date(period->start)) {
-                /* DTSTART is not DATE-TIME */
-                struct icaldurationtype dur = icaldurationtype_null_duration();
-
-                dur.days = 1;
-                period->end = icaltime_add(period->start, dur);
-            }
-            else
-                memcpy(&period->end, &period->start, sizeof(struct icaltimetype));
-        }
-        break;
-
-#ifdef HAVE_VPOLL
-    case ICAL_VPOLL_COMPONENT:
-#endif
-    case ICAL_VTODO_COMPONENT: {
-        struct icaltimetype due = (kind == ICAL_VPOLL_COMPONENT) ?
-            icalcomponent_get_dtend(comp) : icalcomponent_get_due(comp);
-
-        if (!icaltime_is_null_time(period->start)) {
-            /* Has DTSTART */
-            if (icaltime_is_null_time(period->end)) {
-                /* No DURATION */
-                memcpy(&period->end, &period->start,
-                       sizeof(struct icaltimetype));
-
-                if (!icaltime_is_null_time(due)) {
-                    /* Has DUE (DTEND for VPOLL) */
-                    if (icaltime_compare(due, period->start) < 0)
-                        memcpy(&period->start, &due, sizeof(struct icaltimetype));
-                    if (icaltime_compare(due, period->end) > 0)
-                        memcpy(&period->end, &due, sizeof(struct icaltimetype));
-                }
-            }
-        }
-        else {
-            icalproperty *prop;
-
-            /* No DTSTART */
-            if (!icaltime_is_null_time(due)) {
-                /* Has DUE (DTEND for VPOLL) */
-                memcpy(&period->start, &due, sizeof(struct icaltimetype));
-                memcpy(&period->end, &due, sizeof(struct icaltimetype));
-            }
-            else if ((prop =
-                      icalcomponent_get_first_property(comp,
-                                                       ICAL_COMPLETED_PROPERTY))) {
-                /* Has COMPLETED */
-                period->start =
-                    icaltime_convert_to_zone(icalproperty_get_completed(prop),
-                                             utc);
-                memcpy(&period->end, &period->start, sizeof(struct icaltimetype));
-
-                if ((prop =
-                     icalcomponent_get_first_property(comp,
-                                                      ICAL_CREATED_PROPERTY))) {
-                    /* Has CREATED */
-                    struct icaltimetype created =
-                        icaltime_convert_to_zone(icalproperty_get_created(prop),
-                                                 utc);
-                    if (icaltime_compare(created, period->start) < 0)
-                        memcpy(&period->start, &created, sizeof(struct icaltimetype));
-                    if (icaltime_compare(created, period->end) > 0)
-                        memcpy(&period->end, &created, sizeof(struct icaltimetype));
-                }
-            }
-            else if ((prop =
-                      icalcomponent_get_first_property(comp,
-                                                       ICAL_CREATED_PROPERTY))) {
-                /* Has CREATED */
-                period->start =
-                    icaltime_convert_to_zone(icalproperty_get_created(prop),
-                                             utc);
-                period->end =
-                    icaltime_from_timet_with_zone(caldav_eternity, 0, NULL);
-            }
-            else {
-                /* Always */
-                period->start =
-                    icaltime_from_timet_with_zone(caldav_epoch, 0, NULL);
-                period->end =
-                    icaltime_from_timet_with_zone(caldav_eternity, 0, NULL);
-            }
-        }
-        break;
+    /* SQLite interprets a negative limit as unbounded. */
+    if (mboxname) {
+        r = sqldb_exec(caldavdb->db, CMD_GETUPDATES_MBOX, bval, &read_cb, &rrock);
+    } else {
+        r = sqldb_exec(caldavdb->db, CMD_GETUPDATES, bval, &read_cb, &rrock);
     }
-
-    case ICAL_VJOURNAL_COMPONENT:
-        if (!icaltime_is_null_time(period->start)) {
-            /* Has DTSTART */
-            memcpy(&period->end, &period->start,
-                   sizeof(struct icaltimetype));
-
-            if (icaltime_is_date(period->start)) {
-                /* DTSTART is not DATE-TIME */
-                struct icaldurationtype dur;
-
-                dur = icaldurationtype_from_int(60*60*24 - 1);  /* P1D */
-                icaltime_add(period->end, dur);
-            }
-        }
-        else {
-            /* Never */
-            period->start =
-                icaltime_from_timet_with_zone(caldav_eternity, 0, NULL);
-            period->end =
-                icaltime_from_timet_with_zone(caldav_epoch, 0, NULL);
-        }
-        break;
-
-    case ICAL_VFREEBUSY_COMPONENT:
-        if (icaltime_is_null_time(period->start) ||
-            icaltime_is_null_time(period->end)) {
-            /* No DTSTART or DTEND */
-            icalproperty *fb =
-                icalcomponent_get_first_property(comp,
-                                                 ICAL_FREEBUSY_PROPERTY);
-
-
-            if (fb) {
-                /* Has FREEBUSY */
-                /* XXX  Convert FB period into our period */
-            }
-            else {
-                /* Never */
-                period->start =
-                    icaltime_from_timet_with_zone(caldav_eternity, 0, NULL);
-                period->end =
-                    icaltime_from_timet_with_zone(caldav_epoch, 0, NULL);
-            }
-        }
-        break;
-
-    case ICAL_VAVAILABILITY_COMPONENT:
-        if (icaltime_is_null_time(period->start)) {
-            /* No DTSTART */
-            period->start =
-                icaltime_from_timet_with_zone(caldav_epoch, 0, NULL);
-        }
-        if (icaltime_is_null_time(period->end)) {
-            /* No DTEND */
-            period->end =
-                icaltime_from_timet_with_zone(caldav_eternity, 0, NULL);
-        }
-        break;
-
-    default:
-        break;
+    if (r) {
+        syslog(LOG_ERR, "caldav error %s", error_message(r));
     }
+    return r;
 }
 
 
-/* icalcomponent_foreach_recurrence() callback to find earliest/latest time */
-static void recur_cb(icalcomponent *comp, struct icaltime_span *span,
-                     void *rock)
+static void check_mattach_cb(icalcomponent *comp, void *rock)
 {
-    struct icalperiodtype *period = (struct icalperiodtype *) rock;
-    int is_date = icaltime_is_date(icalcomponent_get_dtstart(comp));
-    icaltimezone *utc = icaltimezone_get_utc_timezone();
-    struct icaltimetype start =
-        icaltime_from_timet_with_zone(span->start, is_date, utc);
-    struct icaltimetype end =
-        icaltime_from_timet_with_zone(span->end, is_date, utc);
+    int *mattach = (int *) rock;
 
-    if (icaltime_compare(start, period->start) < 0)
-        memcpy(&period->start, &start, sizeof(struct icaltimetype));
+    /* Check for managed attachment */
+    if (!*mattach) {
+        icalproperty *prop;
 
-    if (icaltime_compare(end, period->end) > 0)
-        memcpy(&period->end, &end, sizeof(struct icaltimetype));
+        for (prop = icalcomponent_get_first_property(comp, ICAL_ATTACH_PROPERTY);
+             prop;
+             prop = icalcomponent_get_next_property(comp, ICAL_ATTACH_PROPERTY)) {
+            
+            if (icalproperty_get_managedid_parameter(prop)) *mattach = 1;
+        }
+    }
 }
-
 
 EXPORTED int caldav_writeentry(struct caldav_db *caldavdb, struct caldav_data *cdata,
                                icalcomponent *ical)
@@ -710,10 +653,26 @@ EXPORTED int caldav_writeentry(struct caldav_db *caldavdb, struct caldav_data *c
     cdata->comp_type = mykind;
     cdata->comp_flags.status = status;
 
+    cdata->organizer = NULL;
+
     /* Get organizer */
     prop = icalcomponent_get_first_property(comp, ICAL_ORGANIZER_PROPERTY);
-    if (prop) cdata->organizer = icalproperty_get_organizer(prop)+7;
-    else cdata->organizer = NULL;
+    if (prop) {
+        cdata->organizer = icalproperty_get_organizer(prop);
+        if (cdata->organizer && !strncasecmp(cdata->organizer, "mailto:", 7))
+            cdata->organizer += 7;
+    }
+    /* maybe it's only on a sub event */
+    icalcomponent *nextcomp;
+    while (!cdata->organizer &&
+           (nextcomp = icalcomponent_get_next_component(ical, kind))) {
+        prop = icalcomponent_get_first_property(nextcomp, ICAL_ORGANIZER_PROPERTY);
+        if (prop) {
+            cdata->organizer = icalproperty_get_organizer(prop);
+            if (cdata->organizer && !strncasecmp(cdata->organizer, "mailto:", 7))
+                cdata->organizer += 7;
+        }
+    }
 
     /* Get transparency */
     prop = icalcomponent_get_first_property(comp, ICAL_TRANSP_PROPERTY);
@@ -733,85 +692,15 @@ EXPORTED int caldav_writeentry(struct caldav_db *caldavdb, struct caldav_data *c
     }
     cdata->comp_flags.transp = transp;
 
-    /* Check for managed attachment */
-    prop = icalcomponent_get_first_property(comp, ICAL_ATTACH_PROPERTY);
-    if (prop) {
-        icalparameter *param = icalproperty_get_managedid_parameter(prop);
-        if (param) mattach = 1;
-    }
-    cdata->comp_flags.mattach = mattach;
-
-    /* Initialize span to be nothing */
-    span.start = icaltime_from_timet_with_zone(caldav_eternity, 0, NULL);
-    span.end = icaltime_from_timet_with_zone(caldav_epoch, 0, NULL);
-    span.duration = icaldurationtype_null_duration();
-
-    do {
-        struct icalperiodtype period;
-        icalproperty *rrule;
-
-        /* Get base dtstart and dtend */
-        caldav_get_period(comp, kind, &period);
-
-        /* See if its a recurring event */
-        rrule = icalcomponent_get_first_property(comp, ICAL_RRULE_PROPERTY);
-        if (rrule ||
-            icalcomponent_get_first_property(comp, ICAL_RDATE_PROPERTY) ||
-            icalcomponent_get_first_property(comp, ICAL_EXDATE_PROPERTY)) {
-            /* Recurring - find widest time range that includes events */
-            int expand = recurring = 1;
-
-            if (rrule) {
-                struct icalrecurrencetype recur = icalproperty_get_rrule(rrule);
-
-                if (!icaltime_is_null_time(recur.until)) {
-                    /* Recurrence ends - calculate dtend of last recurrence */
-                    struct icaldurationtype duration;
-                    icaltimezone *utc = icaltimezone_get_utc_timezone();
-
-                    duration = icaltime_subtract(period.end, period.start);
-                    period.end =
-                        icaltime_add(icaltime_convert_to_zone(recur.until, utc),
-                                     duration);
-
-                    /* Do RDATE expansion only */
-                    /* XXX  This is destructive but currently doesn't matter */
-                    icalcomponent_remove_property(comp, rrule);
-                    free(rrule);
-                }
-                else if (!recur.count) {
-                    /* Recurrence never ends - set end of span to eternity */
-                    span.end =
-                        icaltime_from_timet_with_zone(caldav_eternity, 0, NULL);
-
-                    /* Skip RRULE & RDATE expansion */
-                    expand = 0;
-                }
-            }
-
-            /* Expand (remaining) recurrences */
-            if (expand) {
-                icalcomponent_foreach_recurrence(
-                    comp,
-                    icaltime_from_timet_with_zone(caldav_epoch, 0, NULL),
-                    icaltime_from_timet_with_zone(caldav_eternity, 0, NULL),
-                    recur_cb, &span);
-            }
-        }
-
-        /* Check our dtstart and dtend against span */
-        if (icaltime_compare(period.start, span.start) < 0)
-            memcpy(&span.start, &period.start, sizeof(struct icaltimetype));
-
-        if (icaltime_compare(period.end, span.end) > 0)
-            memcpy(&span.end, &period.end, sizeof(struct icaltimetype));
-
-    } while ((comp = icalcomponent_get_next_component(ical, kind)));
+    /* Get span of component set and check for managed attachments */
+    span = icalrecurrenceset_get_utc_timespan(ical, kind, &recurring,
+                                              &check_mattach_cb, &mattach);
 
     cdata->dtstart = icaltime_as_ical_string(span.start);
     cdata->dtend = icaltime_as_ical_string(span.end);
     cdata->comp_flags.recurring = recurring;
-
+    cdata->comp_flags.mattach = mattach;
+    
     return caldav_write(caldavdb, cdata);
 }
 

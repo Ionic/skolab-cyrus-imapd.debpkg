@@ -52,6 +52,7 @@
 #include "arrayu64.h"
 #include "hash.h"
 #include "hashu64.h"
+#include "message_guid.h"
 #include "strarray.h"
 #include "util.h"
 
@@ -59,13 +60,15 @@ typedef bit64   conversation_id_t;
 #define CONV_FMT "%016llx"
 #define NULLCONVERSATION        (0ULL)
 
+struct index_record;
+struct mailbox;
+
 struct conversations_state {
     struct db *db;
     struct txn *txn;
     strarray_t *counted_flags;
     strarray_t *folder_names;
     hash_table folderstatus;
-    struct hashu64_table cidrenames;
     char *path;
 };
 
@@ -80,8 +83,19 @@ typedef struct conversation conversation_t;
 typedef struct conv_folder  conv_folder_t;
 typedef struct conv_sender  conv_sender_t;
 typedef struct conv_status  conv_status_t;
+typedef struct conv_guidrec conv_guidrec_t;
+typedef struct conv_thread  conv_thread_t;
 
 #define MAX_CONVERSATION_FLAGS 256
+
+struct conv_thread {
+    conv_thread_t *next;
+    struct message_guid guid;
+    int exists;
+    time_t internaldate;
+    int32_t msgid;
+    int32_t inreplyto;
+};
 
 struct conv_folder {
     conv_folder_t   *next;
@@ -91,6 +105,13 @@ struct conv_folder {
     uint32_t        exists;
     uint32_t        unseen;
     uint32_t        prev_exists;
+};
+
+struct conv_guidrec {
+    const char      *mboxname;
+    uint32_t        uid;
+    const char      *part;
+    conversation_id_t cid;
 };
 
 struct conv_sender {
@@ -120,9 +141,12 @@ struct conversation {
     uint32_t        *counts;
     conv_folder_t   *folders;
     conv_sender_t   *senders;
+    conv_thread_t   *thread;
     char            *subject;
     int             dirty;
 };
+
+#include "mailbox.h"
 
 /* Sets the suffix used for conversations db filenames.  Only needed
  * when doing special weird stuff like the conversations audit mode */
@@ -157,6 +181,17 @@ extern conv_folder_t *conversation_get_folder(conversation_t *conv,
 
 extern void conversation_normalise_subject(struct buf *);
 
+/* G record */
+extern const strarray_t *conversations_get_folders(struct conversations_state *state);
+extern int conversations_guid_exists(struct conversations_state *state,
+                                     const char *guidrep);
+extern int conversations_guid_foreach(struct conversations_state *state,
+                                      const char *guidrep,
+                                      int(*cb)(const conv_guidrec_t*,void*),
+                                      void *rock);
+extern conversation_id_t conversations_guid_cid_lookup(struct conversations_state *state,
+                                                       const char *guidrep);
+
 /* F record items */
 extern int conversation_getstatus(struct conversations_state *state,
                                   const char *mboxname,
@@ -190,6 +225,11 @@ extern int conversation_store(struct conversations_state *state,
  * consistency rules (e.g. the conversation's modseq is the
  * maximum of all the per-folder modseqs).  Sets conv->dirty
  * if any data actually changed.  */
+extern int conversations_update_record(struct conversations_state *cstate,
+                                       struct mailbox *mailbox,
+                                       const struct index_record *old,
+                                       struct index_record *new);
+
 extern void conversation_update(struct conversations_state *state,
                                 conversation_t *conv,
                                 const char *mboxname,
@@ -223,13 +263,6 @@ extern int conversations_truncate(struct conversations_state *);
 
 extern const char *conversation_id_encode(conversation_id_t cid);
 extern int conversation_id_decode(conversation_id_t *cid, const char *text);
-
-extern void conversations_rename_cid(struct conversations_state *state,
-                                     conversation_id_t from_cid,
-                                     conversation_id_t to_cid);
-extern void conversations_rename_cidentry(struct conversations_state *state,
-                                          conversation_id_t from,
-                                          conversation_id_t to);
 
 
 extern int conversations_zero_counts(struct conversations_state *state);

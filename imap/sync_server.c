@@ -150,6 +150,8 @@ static void cmd_compress(char *alg);
 static void cmd_get(struct dlist *kl);
 static void cmd_apply(struct dlist *kl,
                       struct sync_reserve_list *reserve_list);
+static void cmd_restore(struct dlist *kin,
+                        struct sync_reserve_list *reserve_list);
 
 static void usage(void);
 void shut_down(int code) __attribute__ ((noreturn));
@@ -345,7 +347,6 @@ int service_main(int argc __attribute__((unused)),
                  char **argv __attribute__((unused)),
                  char **envp __attribute__((unused)))
 {
-    struct protoent *proto;
     const char *localip, *remoteip;
     sasl_security_properties_t *secprops = NULL;
     int timeout;
@@ -363,7 +364,7 @@ int service_main(int argc __attribute__((unused)),
     sync_clienthost = get_clienthost(0, &localip, &remoteip);
     if (!strcmp(sync_clienthost, UNIX_SOCKET)) {
         /* we're not connected to an internet socket! */
-        sync_userid = xstrdup("cyrus");
+        sync_userid = xstrdup(cyrus_user());
         sync_userisadmin = 1;
     }
     else {
@@ -391,20 +392,7 @@ int service_main(int argc __attribute__((unused)),
             saslprops.ipremoteport = xstrdup(remoteip);
         }
 
-        /* Disable Nagle's Algorithm => increase throughput
-         *
-         * http://en.wikipedia.org/wiki/Nagle's_algorithm
-         */
-        if ((proto = getprotobyname("tcp")) != NULL) {
-            int on = 1;
-
-            if (setsockopt(1, proto->p_proto, TCP_NODELAY,
-                           (void *) &on, sizeof(on)) != 0) {
-                syslog(LOG_ERR, "unable to setsocketopt(TCP_NODELAY): %m");
-            }
-        } else {
-            syslog(LOG_ERR, "unable to getprotobyname(\"tcp\"): %m");
-        }
+        tcp_disable_nagle(1); /* XXX magic fd */
     }
 
     proc_register(config_ident, sync_clienthost, NULL, NULL, NULL);
@@ -690,7 +678,19 @@ static void cmdloop(void)
                 prot_printf(sync_out, "OK Restarting\r\n");
                 continue;
             }
-            else if (!sync_userid) goto nologin;
+            if (!sync_userid) goto nologin;
+            if (!strcmp(cmd.s, "Restore")) {
+                kl = sync_parseline(sync_in);
+                if (kl) {
+                    cmd_restore(kl, reserve_list);
+                    dlist_free(&kl);
+                }
+                else {
+                    syslog(LOG_ERR, "IOERROR: received bad RESTORE command");
+                    prot_printf(sync_out, "BAD IMAP_PROTOCOL_ERROR Failed to parse RESTORE line\r\n");
+                }
+                continue;
+            }
             break;
 
         case 'S':
@@ -873,7 +873,8 @@ static void cmd_starttls(void)
 
     result=tls_init_serverengine("csync",
                                  5,        /* depth to verify */
-                                 1);       /* can client auth? */
+                                 1,        /* can client auth? */
+                                 NULL);
 
     if (result == -1) {
         syslog(LOG_ERR, "error initializing TLS");
@@ -955,7 +956,7 @@ static void cmd_compress(char *alg)
     sync_compress_done = 1;
 }
 #else
-static void cmd_compress(char *alg)
+static void cmd_compress(char *alg __attribute__((unused)))
 {
     prot_printf(sync_out, "NO ZLIB not available\r\n");
 }
@@ -1064,5 +1065,20 @@ static void cmd_get(struct dlist *kin)
     };
 
     const char *resp = sync_get(kin, &sync_state);
+    prot_printf(sync_out, "%s\r\n", resp);
+}
+
+static void cmd_restore(struct dlist *kin, struct sync_reserve_list *reserve_list)
+{
+    struct sync_state sync_state = {
+        sync_userid,
+        sync_userisadmin,
+        sync_authstate,
+        &sync_namespace,
+        sync_out,
+        0 /* local_only */
+    };
+
+    const char *resp = sync_restore(kin, reserve_list, &sync_state);
     prot_printf(sync_out, "%s\r\n", resp);
 }

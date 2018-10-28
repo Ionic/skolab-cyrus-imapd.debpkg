@@ -1,138 +1,166 @@
-.\" -*- nroff -*-
-.TH IPURGE 8 "Project Cyrus" CMU
-.\"
-.\" Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
-.\"
-.\" Redistribution and use in source and binary forms, with or without
-.\" modification, are permitted provided that the following conditions
-.\" are met:
-.\"
-.\" 1. Redistributions of source code must retain the above copyright
-.\"    notice, this list of conditions and the following disclaimer.
-.\"
-.\" 2. Redistributions in binary form must reproduce the above copyright
-.\"    notice, this list of conditions and the following disclaimer in
-.\"    the documentation and/or other materials provided with the
-.\"    distribution.
-.\"
-.\" 3. The name "Carnegie Mellon University" must not be used to
-.\"    endorse or promote products derived from this software without
-.\"    prior written permission. For permission or any legal
-.\"    details, please contact
-.\"      Carnegie Mellon University
-.\"      Center for Technology Transfer and Enterprise Creation
-.\"      4615 Forbes Avenue
-.\"      Suite 302
-.\"      Pittsburgh, PA  15213
-.\"      (412) 268-7393, fax: (412) 268-7395
-.\"      innovation@andrew.cmu.edu
-.\"
-.\" 4. Redistributions of any form whatsoever must retain the following
-.\"    acknowledgment:
-.\"    "This product includes software developed by Computing Services
-.\"     at Carnegie Mellon University (http://www.cmu.edu/computing/)."
-.\"
-.\" CARNEGIE MELLON UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO
-.\" THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-.\" AND FITNESS, IN NO EVENT SHALL CARNEGIE MELLON UNIVERSITY BE LIABLE
-.\" FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
-.\" AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
-.\" OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\" Man page generated from reStructuredText.
+.
+.TH "IPURGE" "8" "August 10, 2018" "3.0.8" "Cyrus IMAP"
 .SH NAME
-ipurge \- delete mail from IMAP mailbox or partition based on age or size
+ipurge \- Cyrus IMAP documentation
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.sp
+Delete mail from IMAP mailbox or partition based on age or size
 .SH SYNOPSIS
-.B ipurge
-[
-.B \-f
-]
-[
-.B \-C
-.I config-file
-]
-[
-.B \-x
-]
-[
-.B \-X
-]
-[
-.B \-i
-]
-[
-.B \-s
-]
-[
-.B \-o
-]
-.br
-       [
-.BI \-d " days"
-|
-.BI \-b " bytes"
-|
-.BI \-k " Kbytes"
-|
-.BI \-m " Mbytes"
-]
-.br
-       [
-.IR mailbox-pattern ...
-]
+.sp
+.nf
+\fBipurge\fP [ \fB\-f\fP ] [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-x\fP ] [ \fB\-X\fP ] [ \fB\-i\fP ] [ \fB\-s\fP ] [ \fB\-o\fP ] [ \fB\-n\fP ] [ \fB\-v\fP ]
+        [ \fB\-d\fP \fIdays\fP | \fB\-b\fP \fIbytes\fP | \fB\-k\fP \fIKbytes\fP | \fB\-m\fP \fIMbytes\fP ]
+        [ \fImailbox\-pattern\fP\&... ]
+.fi
 .SH DESCRIPTION
-.I Ipurge
-deletes messages from the mailbox(es) specified by
-\fImailbox-pattern\fR that are older or larger than specified by the
-\fB-d\fR, \fB-b\fR, \fB-k\fR or \fB-m\fR options.  If no
-\fImailbox-pattern\fR is given, \fIipurge\fR works on all mailboxes.  If the
-\fB-x\fR option is given, the message age and size MUST match exactly
-those specified by \fB-d\fR, \fB-b\fR, \fB-k\fR or \fB-m\fR.  The are
-no default values, and at least one of \fB-d\fR, \fB-b\fR, \fB-k\fR or
-\fB-m\fR MUST be specified.
-.PP
-.I Ipurge
-by default only deletes mail below shared folders, which means that mails
-in mailbox(es) below INBOX.* and user.* stay untouched. Use the option
-\fB-f\fR to also delete mail in mailbox(es) below these folders.
-.PP
-.I Ipurge
-reads its configuration options out of the
-.IR imapd.conf (5)
-file unless specified otherwise by \fB-C\fR.
+.sp
+\fIipurge\fP deletes messages from the mailbox(es) specified by
+\fIImailbox\-pattern\fP that are older or larger than specified by the
+\fB\-d\fP, \fB\-b\fP, \fB\-k\fP or \fB\-m\fP options.  If no \fImailbox\-pattern\fP is
+given, \fIipurge\fP works on all mailboxes.  If the \fB\-x\fP option is given,
+the message age and size MUST match exactly those specified by \fB\-d\fP,
+\fB\-b\fP, \fB\-k\fP or \fB\-m\fP\&.  The are no default values, and at least one
+of \fB\-d\fP, \fB\-b\fP, \fB\-k\fP or \fB\-m\fP MUST be specified.
+.sp
+\fIIpurge\fP by default only deletes mail below shared folders, which means
+that mails in mailbox(es) below INBOX.* and user.* stay untouched. Use
+the option \fB\-f\fP to also delete mail in mailbox(es) below these
+folders.
+.sp
+\fIipurge\fP reads its configuration options out of the imapd.conf(5) file unless specified otherwise by \fB\-C\fP\&.
 .SH OPTIONS
+.INDENT 0.0
 .TP
-.BI \-f
-Force deletion of mail in \fIall\fR mailboxes.
+.B \-C config\-file
+Use the specified configuration file \fIconfig\-file\fP rather than the default imapd.conf(5)\&.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI \-C " config-file"
-Read configuration options from \fIconfig-file\fR.
+.B \-f
+Force ipurge to examine mailboxes below INBOX.* and user.*.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI \-d " days"
-Age of message in \fIdays\fR.
+.B \-d days
+Age of message in \fIdays\fP\&.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI \-b " bytes"
-Size of message in \fIbytes\fR.
+.B \-b bytes
+Size of message in \fIbytes\fP\&.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI \-k " Kbytes"
-Size of message in \fIKbytes\fR (2^10 bytes).
+.B \-k Kbytes
+Size of message in \fIKbytes\fP (2^10 bytes).
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI \-m " Mbytes"
-Size of message in \fIMbytes\fR (2^20 bytes).
+.B \-m Mbytes
+Size of message in \fIMbytes\fP (2^20 bytes).
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-x
 Perform an exact match on age or size (instead of older or larger).
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-X
-Use delivery time instead of Date: header for date matches
+Use delivery time instead of Date: header for date matches.
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-i
-Invert match logic: -x means not equal, date is for newer, size is for smaller
+Invert match logic: \-x means not equal, date is for newer, size is
+for smaller.
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-s
-Skip over messages that have the \\Flagged flag set.
+Skip over messages that have the \eFlagged flag set.
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-o
-Only purge messages that have the \\Deleted flag set.
-.SH FILES
+Only purge messages that have the \eDeleted flag set.
+.UNINDENT
+.INDENT 0.0
 .TP
-.B /etc/imapd.conf
+.B \-n
+Only print messages that would be deleted (dry run).
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-v
+Enable verbose output/logging.
+.UNINDENT
+.SH EXAMPLES
+.sp
+[NB: Examples needed]
+.SH FILES
+.sp
+/etc/imapd.conf
+.SH SEE ALSO
+.sp
+imapd.conf(5)
+.SH AUTHOR
+The Cyrus Team, Nic Bernstein (Onlight), Jeroen van Meeuwen (Kolab Systems)
+.SH COPYRIGHT
+1993-2017, The Cyrus Team
+.\" Generated by docutils manpage writer.
+.

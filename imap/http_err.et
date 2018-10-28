@@ -88,6 +88,9 @@ ec HTTP_FOUND,
 ec HTTP_SEE_OTHER,
    "303 See Other"
 
+ec HTTP_USE_PROXY,
+   "305 Use Proxy"
+
 ec HTTP_TEMP_REDIRECT,
    "307 Temporary Redirect"
 
@@ -131,10 +134,6 @@ ec HTTP_URI_TOO_LONG,
    "414 URI Too Long"
 
 ec HTTP_BAD_MEDIATYPE,
-   "415 Unsupported Media Type"
-
-# Used to differentiate between unsupported Content-Encoding and Content-Type
-ec HTTP_BAD_CE,
    "415 Unsupported Media Type"
 
 ec HTTP_EXPECT_FAILED,
@@ -196,6 +195,51 @@ ec HTTP_PROXY_AUTH,
 
 
 
+# Permanent Redirect (RFC 7538)
+
+ec HTTP_PERM_REDIRECT,
+   "308 Permanent Redirect"
+
+
+
+# HTTP/2 (RFC 7540)
+
+ec HTTP_MISDIRECTED,
+   "421 Misdirected Request"
+
+
+
+# Client-Initiated Content-Encoding (RFC 7694)
+
+# Used to differentiate between unsupported Content-Encoding and Content-Type
+ec HTTP_BAD_CE,
+   "415 Unsupported Media Type"
+
+
+
+# Legally Restricted (RFC 7725)
+
+ec HTTP_CENSORED,
+   "451 Unavailable For Legal Reasons"
+
+
+
+# Additional HTTP Status Codes (RFC 6585)
+
+ec HTTP_PRECOND_REQUIRED,
+   "428 Precondition Required"
+
+ec HTTP_TOO_MANY_REQUESTS,
+   "429 Too Many Requests"
+
+ec HTTP_HEADERS_TOO_LARGE,
+   "431 Request Header Fields Too Large"
+
+ec HTTP_NETWORK_AUTH,
+   "511 Network Authentication Required"
+
+
+
 # WebDAV (RFC 2518/4918)
 
 ec HTTP_PROCESSING,
@@ -218,26 +262,13 @@ ec HTTP_NO_STORAGE,
 
 
 
-# Permanent Redirect (RFC 7538)
+# Binding Extensions to WebDAV (RFC 5842)
 
-ec HTTP_PERM_REDIRECT,
-   "308 Permanent Redirect"
+ec HTTP_DUPLICATE,
+   "208 Already Reported"
 
-
-
-# Additional HTTP Status Codes (RFC 6585)
-
-ec HTTP_PRECOND_REQUIRED,
-   "428 Precondition Required"
-
-ec HTTP_TOO_MANY_REQUESTS,
-   "429 Too Many Requests"
-
-ec HTTP_HEADERS_TOO_LARGE,
-   "431 Request Header Fields Too Large"
-
-ec HTTP_NETWORK_AUTH,
-   "511 Network Authentication Required"
+ec HTTP_LOOP,
+   "508 Loop Detected"
 
 
 

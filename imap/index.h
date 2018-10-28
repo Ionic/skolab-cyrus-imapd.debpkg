@@ -87,6 +87,7 @@ struct index_init {
     int examine_mode;
     int select;
     int want_dav;
+    uint32_t want_mbtype;
     int want_expunged;
     struct vanished_params vanished;
     struct seqset *vanishedlist;
@@ -112,6 +113,7 @@ struct index_state {
     unsigned long last_uid;
     uint32_t generation; /* to notice repacks */
     uint32_t uidvalidity; /* to notice delete/recreate */
+    modseq_t oldhighestmodseq;
     modseq_t highestmodseq;
     modseq_t delayed_modseq;
     struct index_map *map;
@@ -130,6 +132,7 @@ struct index_state {
     struct protstream *out;
     struct auth_state *authstate;
     int want_dav;
+    uint32_t want_mbtype;
     int want_expunged;
     unsigned num_expunged;
 };
@@ -154,6 +157,8 @@ typedef struct msgdata {
     size_t size;                /* message size */
     modseq_t modseq;            /* modseq of record*/
     bit32 hasflag;              /* hasflag values (up to 32 of them) */
+    struct message_guid guid;   /* message guid */
+    uint32_t system_flags;      /* system flags */
 
     /* items from the conversations database */
     modseq_t convmodseq;        /* modseq of conversation */
@@ -243,7 +248,8 @@ extern int index_sort(struct index_state *state, const struct sortcrit *sortcrit
 extern int index_convsort(struct index_state *state, struct sortcrit *sortcrit,
                       struct searchargs *searchargs,
                       const struct windowargs * windowargs);
-extern int index_convmultisort(struct index_state *state, struct sortcrit *sortcrit,
+extern int index_convmultisort(struct index_state *state,
+                               struct sortcrit *sortcrit,
                                struct searchargs *searchargs,
                                const struct windowargs * windowargs);
 extern int index_snippets(struct index_state *state,
@@ -273,6 +279,8 @@ extern int find_thread_algorithm(char *arg);
 
 extern int index_open(const char *name, struct index_init *init,
                       struct index_state **stateptr);
+extern int index_open_mailbox(struct mailbox *mailbox, struct index_init *init,
+                              struct index_state **stateptr);
 extern int index_refresh(struct index_state *state);
 extern void index_checkflags(struct index_state *state, int print, int dirty);
 extern void index_select(struct index_state *state, struct index_init *init);
@@ -317,14 +325,14 @@ void index_msgdata_free(MsgData **, unsigned int);
 MsgData **index_msgdata_load(struct index_state *state, unsigned *msgno_list, int n,
                              const struct sortcrit *sortcrit,
                              unsigned int anchor, int *found_anchor);
-int index_search_evaluate(struct index_state *state, const search_expr_t *e, uint32_t msgno);
+extern int index_search_evaluate(struct index_state *state, const search_expr_t *e, uint32_t msgno);
 
 extern int index_expunge(struct index_state *state, char *uidsequence,
                          int need_deleted);
 
-extern int index_getsearchtext(struct message *,
-                                struct search_text_receiver *receiver,
-                                int snippet);
+extern int index_getsearchtext(struct message *msg,
+                               struct search_text_receiver *receiver,
+                               int snippet);
 
 extern int index_getuidsequence(struct index_state *state,
                                 struct searchargs *searchargs,

@@ -56,6 +56,7 @@
 
 #include "assert.h"
 #include "bitvector.h"
+#include "bloom.h"
 #include "global.h"
 #include "ptrarray.h"
 #include "user.h"
@@ -81,18 +82,6 @@
 
 /* Name of columns */
 #define COL_CYRUSID     "cyrusid"
-static const char * const prefix_by_part[SEARCH_NUM_PARTS] = {
-    NULL,
-    "F",                /* FROM */
-    "T",                /* TO */
-    "C",                /* CC */
-    "B",                /* BCC */
-    "S",                /* SUBJECT */
-    "L",                /* LISTID */
-    "Y",                /* TYPE */
-    "H",                /* HEADERS */
-    "D",                /* BODY */
-};
 
 struct segment
 {
@@ -106,6 +95,25 @@ struct segment
 static const char *xapian_rootdir(const char *tier, const char *partition);
 static int xapian_basedir(const char *tier, const char *mboxname, const char *part,
                           const char *root, char **basedir);
+
+/* ====================================================================== */
+static int check_config(void)
+{
+    int r = 0;
+    const char *s;
+
+    if (!config_getswitch(IMAPOPT_CONVERSATIONS)) {
+        syslog(LOG_ERR, "ERROR: conversations required but not enabled");
+        return IMAP_NOTFOUND;
+    }
+    s = config_getstring(IMAPOPT_DEFAULTSEARCHTIER);
+    if (!s || !strlen(s)) {
+        syslog(LOG_ERR, "ERROR: no default search tier configured");
+        r = IMAP_PARTITION_UNKNOWN;
+    }
+
+    return r;
+}
 
 /* ====================================================================== */
 
@@ -178,11 +186,14 @@ static strarray_t *activefile_filter(const strarray_t *active, const strarray_t 
     int i;
 
     for (i = 0; i < active->count; i++) {
-        struct activeitem *item = activeitem_parse(strarray_nth(active, i));
+        const char *name = strarray_nth(active, i);
+        struct activeitem *item = activeitem_parse(name);
         /* we want to compress anything which can't possibly exist as well
          * as anything which matches the filter tiers */
-        if (!item || strarray_find(tiers, item->tier, 0) >= 0 || !xapian_rootdir(item->tier, partition))
-            strarray_append(res, strarray_nth(active, i));
+        if (!item || strarray_find(tiers, item->tier, 0) >= 0
+                  || strarray_find(tiers, name, 0) >= 0
+                  || !xapian_rootdir(item->tier, partition))
+            strarray_append(res, name);
         activeitem_free(item);
     }
 
@@ -314,6 +325,37 @@ static strarray_t *activefile_open(const char *mboxname, const char *partition,
     return activefile_read(*activefile);
 }
 
+static int xapstat(const char *path)
+{
+    struct stat sbuf;
+    int r;
+
+    /* is there a glass file? */
+    char *glass = strconcat(path, "/iamglass", (char *)NULL);
+    r = stat(glass, &sbuf);
+    free(glass);
+
+    /* zero byte file is the same as no database */
+    if (!r && !sbuf.st_size) {
+         r = -1;
+         errno = ENOENT;
+    }
+    if (!r) return 0;
+
+    /* check for old chert file */
+    char *chert = strconcat(path, "/iamchert", (char *)NULL);
+    r = stat(chert, &sbuf);
+    free(chert);
+
+    /* zero byte file is the same as no database */
+    if (!r && !sbuf.st_size) {
+         r = -1;
+         errno = ENOENT;
+    }
+
+    return r;
+}
+
 /* given an item from the activefile file, and the mboxname and partition
  * to calculate the user, find the path.  If dostat is true, also stat the
  * path and return NULL if it doesn't exist (used for filtering databases
@@ -336,8 +378,7 @@ static char *activefile_path(const char *mboxname, const char *part, const char 
     dest = buf_release(&buf);
 
     if (dostat) {
-        struct stat sbuf;
-        if (stat(dest, &sbuf)) {
+        if (xapstat(dest)) {
             if (errno != ENOENT)
                 syslog(LOG_ERR, "IOERROR: can't read %s for search, check permissions: %m", dest);
             free(dest);
@@ -346,6 +387,7 @@ static char *activefile_path(const char *mboxname, const char *part, const char 
     }
 
 out:
+    buf_free(&buf);
     activeitem_free(ai);
     return dest;
 }
@@ -359,7 +401,8 @@ static strarray_t *activefile_resolve(const char *mboxname, const char *part,
     int i;
 
     for (i = 0; i < items->count; i++) {
-        char *dir = activefile_path(mboxname, part, strarray_nth(items, i), dostat);
+        int statthis = (dostat == 1 || (dostat == 2 && i));
+        char *dir = activefile_path(mboxname, part, strarray_nth(items, i), statthis);
         if (dir) strarray_appendm(result, dir);
     }
 
@@ -654,10 +697,11 @@ out:
 
 /* ====================================================================== */
 
-static int parse_cyrusid(const char *cyrusid,
-                         const char **mboxnamep,
-                         unsigned int *uidvalidityp,
-                         unsigned int *uidp)
+/* FIXME remove when legacy cyrusid are deprecated */
+static int parse_legacy_cyrusid(const char *cyrusid,
+                                const char **mboxnamep,
+                                unsigned int *uidvalidityp,
+                                unsigned int *uidp)
 {
     // user.cassandane.1320711192.196715
     static struct buf buf = BUF_INITIALIZER;
@@ -683,15 +727,12 @@ static int parse_cyrusid(const char *cyrusid,
     return 1;
 }
 
-static const char *make_cyrusid(struct mailbox *mailbox, uint32_t uid)
+static const char *make_cyrusid(const struct message_guid *guid)
 {
     static struct buf buf = BUF_INITIALIZER;
-    // user.cassandane.1320711192.196715
-    buf_reset(&buf);
-    buf_printf(&buf, "%s.%u.%u",
-                     mailbox->name,
-                     mailbox->i.uidvalidity,
-                     uid);
+    // *G*<encoded message guid>
+    buf_setcstr(&buf, "*G*");
+    buf_appendcstr(&buf, message_guid_encode(guid));
     return buf_cstring(&buf);
 }
 
@@ -848,9 +889,8 @@ static xapian_query_t *opnode_to_query(const xapian_db_t *db, struct opnode *on)
          * field"; instead we fake it by explicitly searching for
          * all of the available prefixes */
         for (i = 0 ; i < SEARCH_NUM_PARTS ; i++) {
-            if (prefix_by_part[i] != NULL)
-                ptrarray_push(&childqueries,
-                              xapian_query_new_match(db, prefix_by_part[i], on->arg));
+            void *q = xapian_query_new_match(db, i, on->arg);
+            if (q) ptrarray_push(&childqueries, q);
         }
         qq = xapian_query_new_compound(db, /*is_or*/1,
                                        (xapian_query_t **)childqueries.data,
@@ -859,36 +899,75 @@ static xapian_query_t *opnode_to_query(const xapian_db_t *db, struct opnode *on)
     default:
         assert(on->arg != NULL);
         assert(on->children == NULL);
-        qq = xapian_query_new_match(db, prefix_by_part[on->op], on->arg);
+        qq = xapian_query_new_match(db, on->op, on->arg);
         break;
     }
     ptrarray_fini(&childqueries);
     return qq;
 }
 
-static int xapian_run_cb(const char *cyrusid, void *rock)
+static int xapian_run_guid_cb(const conv_guidrec_t *rec, void *rock)
 {
     xapian_builder_t *bb = (xapian_builder_t *)rock;
-    int r;
-    const char *mboxname;
-    unsigned int uidvalidity;
-    unsigned int uid;
 
-    r = parse_cyrusid(cyrusid, &mboxname, &uidvalidity, &uid);
-    if (!r) {
-        syslog(LOG_ERR, "IOERROR: Cannot parse \"%s\" as cyrusid", cyrusid);
-        return IMAP_IOERROR;
-    }
+    /* we only want full message matches here */
+    if (rec->part) return 0;
 
     if (!(bb->opts & SEARCH_MULTIPLE)) {
-        if (strcmp(mboxname, bb->mailbox->name))
-            return 0;
-        if (uidvalidity != bb->mailbox->i.uidvalidity)
+        if (strcmp(rec->mboxname, bb->mailbox->name))
             return 0;
     }
 
     xstats_inc(SPHINX_RESULT);
-    return bb->proc(mboxname, uidvalidity, uid, bb->rock);
+    return bb->proc(rec->mboxname, /*uidvalidity*/0, rec->uid, bb->rock);
+}
+
+static int xapian_run_cb(const char *cyrusid, void *rock)
+{
+    xapian_builder_t *bb = (xapian_builder_t *)rock;
+
+    int r = cmd_cancelled();
+    if (r) return r;
+
+    if (!strncmp(cyrusid, "*G*", 3)) {
+        /* Current cyrus ids: *G*<encoded message guid> */
+        struct conversations_state *cstate;
+        const char *guid = cyrusid + 3;
+
+        cstate = mailbox_get_cstate(bb->mailbox);
+        if (!cstate) {
+            syslog(LOG_INFO, "search_xapian: can't open conversations for %s",
+                    bb->mailbox->name);
+            return IMAP_NOTFOUND;
+        }
+
+        r = conversations_guid_foreach(cstate, guid, xapian_run_guid_cb, bb);
+        return r;
+
+    } else {
+        /* FIXME remove block when legacy cyrusid are deprecated */
+        /* Legacy cyrus ids: user.cassandane.1320711192.196715 */
+        const char *mboxname;
+        unsigned int uidvalidity;
+        unsigned int uid;
+
+        r = parse_legacy_cyrusid(cyrusid, &mboxname, &uidvalidity, &uid);
+        if (!r) {
+            syslog(LOG_ERR, "IOERROR: Cannot parse \"%s\" as cyrusid", cyrusid);
+            return IMAP_IOERROR;
+        }
+
+        if (!(bb->opts & SEARCH_MULTIPLE)) {
+            if (strcmp(mboxname, bb->mailbox->name))
+                return 0;
+            if (uidvalidity != bb->mailbox->i.uidvalidity)
+                return 0;
+        }
+
+        xstats_inc(SPHINX_RESULT);
+        r = bb->proc(mboxname, uidvalidity, uid, bb->rock);
+        return r;
+    }
 }
 
 static int run(search_builder_t *bx, search_hit_cb_t proc, void *rock)
@@ -897,11 +976,19 @@ static int run(search_builder_t *bx, search_hit_cb_t proc, void *rock)
     xapian_query_t *qq = NULL;
     int r = 0;
 
-    if (bb->db == NULL)
+    if (bb->db == NULL) {
+        syslog(LOG_ERR, "search_xapian: can't find index for mailbox: %s",
+                bb->mailbox ?  bb->mailbox->name : "<unknown>");
         return IMAP_NOTFOUND;       /* there's no index for this user */
+    }
+
+    /* Validate config */
+    r = check_config();
+    if (r) return r;
 
     optimise_nodes(NULL, bb->root);
     qq = opnode_to_query(bb->db, bb->root);
+    if (!qq) goto out;
 
     bb->proc = proc;
     bb->rock = rock;
@@ -994,7 +1081,8 @@ static search_builder_t *begin_search(struct mailbox *mailbox, int opts)
     strarray_t *active = NULL;
     int r;
 
-    xapian_init();
+    r = check_config();
+    if (r) return NULL;
 
     bb = xzmalloc(sizeof(xapian_builder_t));
     bb->super.begin_boolean = begin_boolean;
@@ -1066,6 +1154,7 @@ struct xapian_receiver
     search_text_receiver_t super;
     int verbose;
     struct mailbox *mailbox;
+    struct message_guid guid;
     uint32_t uid;
     int part;
     unsigned int parts_total;
@@ -1107,10 +1196,19 @@ static const char *xapian_rootdir(const char *tier, const char *partition)
 {
     char *confkey;
     const char *root;
-    if (!partition)
+
+    if (!partition) {
         partition = config_getstring(IMAPOPT_DEFAULTPARTITION);
+        if (!partition) {
+            syslog(LOG_ERR, "no default partition configured");
+            return NULL;
+        }
+    }
     confkey = strconcat(tier, "searchpartition-", partition, NULL);
     root = config_getoverflowstring(confkey, NULL);
+    if (!root) {
+        syslog(LOG_ERR, "undefined search partition: %s", confkey);
+    }
     free(confkey);
     return root;
 }
@@ -1212,28 +1310,30 @@ static int flush(search_text_receiver_t *rx)
     int r = 0;
     struct timeval start, end;
 
-    if (!tr->uncommitted) return 0;
+    if (tr->uncommitted) {
+        assert(tr->dbw);
 
-    assert(tr->dbw);
+        gettimeofday(&start, NULL);
+        r = xapian_dbw_commit_txn(tr->dbw);
+        if (r) goto out;
+        gettimeofday(&end, NULL);
 
-    gettimeofday(&start, NULL);
-    r = xapian_dbw_commit_txn(tr->dbw);
-    if (r) goto out;
-    gettimeofday(&end, NULL);
+        syslog(LOG_INFO, "Xapian committed %u updates in %.6f sec",
+                    tr->uncommitted, timesub(&start, &end));
 
-    syslog(LOG_INFO, "Xapian committed %u updates in %.6f sec",
-                tr->uncommitted, timesub(&start, &end));
+        tr->uncommitted = 0;
+        tr->commits++;
+    }
 
     /* We write out the indexed list for the mailbox only after successfully
      * updating the index, to avoid a future instance not realising that
      * there are unindexed messages should we fail to index */
-    r = write_indexed(strarray_nth(tr->activedirs, 0),
-                      tr->super.mailbox->name, tr->super.mailbox->i.uidvalidity,
-                      tr->indexed, tr->super.verbose);
-    if (r) goto out;
-
-    tr->uncommitted = 0;
-    tr->commits++;
+    if (tr->indexed) {
+        r = write_indexed(strarray_nth(tr->activedirs, 0),
+                          tr->super.mailbox->name, tr->super.mailbox->i.uidvalidity,
+                          tr->indexed, tr->super.verbose);
+        if (r) goto out;
+    }
 
 out:
     return r;
@@ -1252,14 +1352,21 @@ static void free_segments(xapian_receiver_t *tr)
     ptrarray_truncate(&tr->segs, 0);
 }
 
-static void begin_message(search_text_receiver_t *rx, uint32_t uid)
+static int begin_message(search_text_receiver_t *rx, message_t *msg)
 {
-    xapian_receiver_t *tr = (xapian_receiver_t *)rx;
+    xapian_update_receiver_t *tr = (xapian_update_receiver_t *)rx;
 
-    tr->uid = uid;
-    free_segments(tr);
-    tr->parts_total = 0;
-    tr->truncate_warning = 0;
+    uint32_t uid = 0;
+    const struct message_guid *guid = NULL;
+    message_get_uid(msg, &uid);
+    message_get_guid(msg, &guid);
+
+    tr->super.uid = uid;
+    message_guid_copy(&tr->super.guid, guid);
+    free_segments((xapian_receiver_t *)tr);
+    tr->super.parts_total = 0;
+    tr->super.truncate_warning = 0;
+    return 0;
 }
 
 static void begin_part(search_text_receiver_t *rx, int part)
@@ -1338,14 +1445,14 @@ static int end_message_update(search_text_receiver_t *rx)
 
     if (!tr->dbw) return IMAP_INTERNAL;
 
-    r = xapian_dbw_begin_doc(tr->dbw, make_cyrusid(tr->super.mailbox, tr->super.uid));
+    r = xapian_dbw_begin_doc(tr->dbw, make_cyrusid(&tr->super.guid));
     if (r) goto out;
 
     ptrarray_sort(&tr->super.segs, compare_segs);
 
     for (i = 0 ; i < tr->super.segs.count ; i++) {
         seg = (struct segment *)ptrarray_nth(&tr->super.segs, i);
-        r = xapian_dbw_doc_part(tr->dbw, &seg->text, prefix_by_part[seg->part]);
+        r = xapian_dbw_doc_part(tr->dbw, &seg->text, seg->part);
         if (r) goto out;
     }
 
@@ -1355,27 +1462,23 @@ static int end_message_update(search_text_receiver_t *rx)
     }
     r = xapian_dbw_end_doc(tr->dbw);
     if (r) goto out;
+
     ++tr->uncommitted;
-    /* track that this UID was indexed.  Use SEQ_MERGE to avoid a bitty sequence
-     * with lots of holes in it if messages have been expunged meanwhile. */
-    if (!tr->indexed) {
-        tr->indexed = seqset_init(0, SEQ_MERGE);
-    }
-    seqset_add(tr->indexed, tr->super.uid, 1);
 
 out:
     tr->super.uid = 0;
+    message_guid_set_null(&tr->super.guid);
     return r;
 }
 
 static int begin_mailbox_update(search_text_receiver_t *rx,
                                 struct mailbox *mailbox,
-                                int flags __attribute__((unused)))
+                                int flags)
 {
     xapian_update_receiver_t *tr = (xapian_update_receiver_t *)rx;
     char *fname = activefile_fname(mailbox->name);
     strarray_t *active = NULL;
-    int r = 0;
+    int r = IMAP_IOERROR;
 
     /* not an indexable mailbox, fine - return a code to avoid
      * trying to index each message as well */
@@ -1391,10 +1494,8 @@ static int begin_mailbox_update(search_text_receiver_t *rx,
      * identical API */
     mailbox_unlock_index(mailbox, NULL);
 
-    /* XXX - if not incremental, we actually want to throw away all existing up to
-     * this point and write a new one, so we should launch a new file and then
-     * reindex using the same algorithm as the "compress" codepath.  The
-     * problem is that the index is per user, not per mailbox */
+    /* we're using "not incremental" to mean "check that the GUID of every message
+     * in the mailbox is present in an index rather than trusting the UID ranges */
 
     /* we grab an activefile writelock to index.  Strictly we don't need it, but
      * doing this guarantees we never write under a client which is reading, which
@@ -1416,25 +1517,32 @@ static int begin_mailbox_update(search_text_receiver_t *rx,
      *  to avoid it happening at least."
      */
     active = activefile_open(mailbox->name, mailbox->part, &tr->activefile, /*write*/1);
-    if (!active || !active->count) goto out;
+    if (!active || !active->count) {
+        goto out;
+    }
 
     /* doesn't matter if the first one doesn't exist yet, we'll create it */
-    tr->activedirs = activefile_resolve(mailbox->name, mailbox->part, active, /*dostat*/0);
-    if (!tr->activedirs || !tr->activedirs->count) goto out;
+    tr->activedirs = activefile_resolve(mailbox->name, mailbox->part, active, /*dostat*/2);
+    if (!tr->activedirs || !tr->activedirs->count) {
+        goto out;
+    }
 
     /* create the directory if needed */
     r = check_directory(strarray_nth(tr->activedirs, 0), tr->super.verbose, /*create*/1);
     if (r) goto out;
 
     /* open the DB */
-    r = xapian_dbw_open(strarray_nth(tr->activedirs, 0), &tr->dbw);
+    r = xapian_dbw_open((const char **)tr->activedirs->data, &tr->dbw);
     if (r) goto out;
 
     /* read the indexed data from every directory so know what still needs indexing */
     tr->oldindexed = seqset_init(0, SEQ_MERGE);
-    r = read_indexed(tr->activedirs, mailbox->name, mailbox->i.uidvalidity,
-                     tr->oldindexed, tr->super.verbose);
-    if (r) goto out;
+
+    if ((flags & SEARCH_UPDATE_INCREMENTAL)) {
+        r = read_indexed(tr->activedirs, mailbox->name, mailbox->i.uidvalidity,
+                         tr->oldindexed, tr->super.verbose);
+        if (r) goto out;
+    }
 
     /* XXX - and of course we have to lock again! (XXX - no support for the nonblocking bit
      * on this second lock... *sigh*)  We don't have the flags to know that we wanted it */
@@ -1459,11 +1567,23 @@ static uint32_t first_unindexed_uid(search_text_receiver_t *rx)
     return seqset_firstnonmember(tr->oldindexed);
 }
 
-static int is_indexed(search_text_receiver_t *rx, uint32_t uid)
+static int is_indexed(search_text_receiver_t *rx, message_t *msg)
 {
     xapian_update_receiver_t *tr = (xapian_update_receiver_t *)rx;
 
-    return (seqset_ismember(tr->oldindexed, uid) || seqset_ismember(tr->indexed, uid));
+    uint32_t uid = 0;
+    message_get_uid(msg, &uid);
+
+    if (seqset_ismember(tr->indexed, uid)) return 3;
+    if (seqset_ismember(tr->oldindexed, uid)) return 2;
+
+    if (!tr->indexed) tr->indexed = seqset_init(0, SEQ_MERGE);
+    seqset_add(tr->indexed, uid, 1);
+
+    const struct message_guid *guid = NULL;
+    message_get_guid(msg, &guid);
+
+    return xapian_dbw_is_indexed(tr->dbw, make_cyrusid(guid)) ? 1 : 0;
 }
 
 static int end_mailbox_update(search_text_receiver_t *rx,
@@ -1511,7 +1631,7 @@ static search_text_receiver_t *begin_update(int verbose)
 {
     xapian_update_receiver_t *tr;
 
-    xapian_init();
+    if (check_config()) return NULL;
 
     tr = xzmalloc(sizeof(xapian_update_receiver_t));
     tr->super.super.begin_mailbox = begin_mailbox_update;
@@ -1636,7 +1756,7 @@ static int end_message_snippets(search_text_receiver_t *rx)
             generate_snippet_terms(tr->snipgen, seg->part, tr->root);
         }
 
-        r = xapian_snipgen_doc_part(tr->snipgen, &seg->text);
+        r = xapian_snipgen_doc_part(tr->snipgen, &seg->text, seg->part);
         if (r) break;
 
         last_part = seg->part;
@@ -1666,12 +1786,13 @@ static int end_mailbox_snippets(search_text_receiver_t *rx,
 
 static search_text_receiver_t *begin_snippets(void *internalised,
                                               int verbose,
+                                              search_snippet_markup_t *m,
                                               search_snippet_cb_t proc,
                                               void *rock)
 {
     xapian_snippet_receiver_t *tr;
 
-    xapian_init();
+    if (check_config()) return NULL;
 
     tr = xzmalloc(sizeof(xapian_snippet_receiver_t));
     tr->super.super.begin_mailbox = begin_mailbox_snippets;
@@ -1684,7 +1805,7 @@ static search_text_receiver_t *begin_snippets(void *internalised,
 
     tr->super.verbose = verbose;
     tr->root = (struct opnode *)internalised;
-    tr->snipgen = xapian_snipgen_new();
+    tr->snipgen = xapian_snipgen_new(m->hi_start, m->hi_end, m->omit);
     tr->proc = proc;
     tr->rock = rock;
 
@@ -1766,18 +1887,21 @@ out:
     return 0;
 }
 
-struct mbdata {
-    uint32_t uidvalidity;
-    bitvector_t uids;
-};
-
 struct mbfilter {
-    hash_table mboxes;
-    struct db *indexed;
+    const char *userid;
+    struct bloom bloom;
+    struct db *indexeddb;
     struct txn **tid;
-    char *destpath;
+    const strarray_t *destpaths;
     int flags;
 };
+
+static void free_mbfilter(struct mbfilter *filter)
+{
+    if (filter->tid) cyrusdb_abort(filter->indexeddb, *filter->tid);
+    cyrusdb_close(filter->indexeddb);
+    bloom_free(&filter->bloom);
+}
 
 static int copyindexed_cb(void *rock,
                          const char *key, size_t keylen,
@@ -1787,199 +1911,52 @@ static int copyindexed_cb(void *rock,
     struct seqset *seq = parse_indexed(data, datalen);
     int r = 0;
     if (seq) {
-        r = store_indexed(filter->indexed, filter->tid, key, keylen, seq);
+        r = store_indexed(filter->indexeddb, filter->tid, key, keylen, seq);
         seqset_free(seq);
     }
     return r;
 }
 
-static void free_mbdata(void *rock)
-{
-    struct mbdata *data = (struct mbdata *)rock;
-    if (!data) return;
-    bv_free(&data->uids);
-    free(data);
-}
-
-static int mbox_vector(const char *mboxname, struct mbfilter *filter)
-{
-    struct mbdata *mbdata = xzmalloc(sizeof(struct mbdata));
-    struct buf key = BUF_INITIALIZER;
-    const char *data = NULL;
-    size_t datalen = 0;
-    struct seqset *seq = NULL;
-    struct mailbox *mailbox = NULL;
-    const struct index_record *record;
-    int verbose = SEARCH_VERBOSE(filter->flags);
-    int r;
-
-    r = mailbox_open_irl(mboxname, &mailbox);
-    if (r) {
-        /* XXX - this is just a workaround for bugs in mboxlist_allusermbox */
-        if (r == IMAP_MAILBOX_NONEXISTENT) r = 0;
-        goto done;
-    }
-
-    buf_printf(&key, "%s.%u", mboxname, mailbox->i.uidvalidity);
-
-    r = cyrusdb_fetch(filter->indexed,
-                      key.s, key.len,
-                      &data, &datalen,
-                      (struct txn **)NULL);
-
-    if (r == CYRUSDB_NOTFOUND) {
-        r = 0;
-        goto done;
-    }
-    if (r) goto done;
-
-    seq = parse_indexed(data, datalen);
-    if (!seq) goto done;
-
-    mbdata->uidvalidity = mailbox->i.uidvalidity;
-    bv_setsize(&mbdata->uids, mailbox->i.last_uid);
-
-    if (verbose)
-        printf("Vectoring %s\n", mboxname);
-
-    struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_EXPUNGED);
-
-    while ((record = mailbox_iter_step(iter))) {
-        /* we don't expect it to be in this index, don't check for it */
-        if (!seqset_ismember(seq, record->uid))
-            continue;
-
-        bv_set(&mbdata->uids, record->uid);
-    }
-
-    mailbox_iter_done(&iter);
-
-    /* yay, we have succeeded */
-    hash_insert(mboxname, mbdata, &filter->mboxes);
-    mbdata = NULL;
-
-done:
-    buf_free(&key);
-    if (seq) seqset_free(seq);
-    if (mailbox) mailbox_close(&mailbox);
-    if (mbdata) free_mbdata(mbdata);
-    return r;
-}
-
-static int mbox_vector_cb(const mbentry_t *mbentry, void *rock)
-{
-    struct mbfilter *filter = (struct mbfilter *)rock;
-    return mbox_vector(mbentry->name, filter);
-}
-
-static int build_mbfilter(const char *userid, struct mbfilter *filter)
-{
-    construct_hash_table(&filter->mboxes, 1024, 0);
-    return mboxlist_usermboxtree(userid, mbox_vector_cb, filter, 0);
-}
-
-static void free_mbfilter(struct mbfilter *filter)
-{
-    free_hash_table(&filter->mboxes, free_mbdata);
-    if (filter->tid) cyrusdb_abort(filter->indexed, *filter->tid);
-    cyrusdb_close(filter->indexed);
-    free(filter->destpath);
-}
-
 static int mbdata_exists_cb(const char *cyrusid, void *rock)
 {
     struct mbfilter *filter = (struct mbfilter *)rock;
-    int verbose = SEARCH_VERBOSE(filter->flags);
-    const char *mboxname;
-    unsigned int uidvalidity;
-    unsigned int uid;
-    struct mbdata *data;
-    int res = 0;
 
-    if (!parse_cyrusid(cyrusid, &mboxname, &uidvalidity, &uid))
-        goto out; /* failed to parse -> not exists */
+    /* we can't get here without GUID keys */
+    assert(!strncmp(cyrusid, "*G*", 3));
 
-    data = (struct mbdata *)hash_lookup(mboxname, &filter->mboxes);
-
-    /* is it an identical mailbox? */
-    if (!data) goto out;
-    if (data->uidvalidity != uidvalidity) goto out;
-
-    /* then check if the UID exists */
-    res = bv_isset(&data->uids, uid);
-
-    if (res) {
-        /* if we find it again, then we don't need a second copy */
-        bv_clear(&data->uids, uid);
-    }
-
-out:
-    if (res) {
-        if (verbose > 2)
-            printf("filter check %s: EXISTS\n", cyrusid);
-    }
-    else {
-        if (verbose > 1)
-            printf("filter check %s: MISSING\n", cyrusid);
-    }
-
-    if (filter->flags & SEARCH_COMPACT_FILTER)
-        return res;
-
-    /* don't delete anything */
-    return 1;
+    return bloom_check(&filter->bloom, cyrusid+3, strlen(cyrusid+3));
 }
 
-static void notify_filter_cb(const char *mboxname, void *data, void *rock)
+static int bloomadd_cb(void *rock,
+                       const char *key, size_t keylen,
+                       const char *data __attribute__((unused)),
+                       size_t datalen __attribute__((unused)))
 {
-    struct mbdata *mbdata = (struct mbdata *)data;
-    struct mbfilter *filter = (struct mbfilter *)rock;
-    struct seqset *seq = seqset_init(0, SEQ_SPARSE);
-    int verbose = SEARCH_VERBOSE(filter->flags);
-    int uid;
-
-    if (verbose)
-        printf("checking for unindexed messages in %s\n", mboxname);
-
-    /* now we just read the bitvector and look for trouble! */
-    for (uid = bv_next_set(&mbdata->uids, 0) ;
-         uid != -1 ;
-         uid = bv_next_set(&mbdata->uids, uid+1))
-        seqset_add(seq, uid, 1);
-
-    if (seq->len) {
-        char *seqstr = seqset_cstring(seq);
-        syslog(LOG_ERR, "IOERROR: unindexed messages in %s: %s", mboxname, seqstr);
-        if (verbose)
-            printf("IOERROR: unindexed messages in %s: %s\n", mboxname, seqstr);
-        free(seqstr);
-    }
-
-    seqset_free(seq);
+    struct bloom *bloom = (struct bloom *)rock;
+    if (keylen > 41 && !memchr(key+41, '[', keylen-41))
+        bloom_add(bloom, key+1, 40);
+    return 0;
 }
 
-static void notify_missing_messages(struct mbfilter *filter)
-{
-    hash_enumerate(&filter->mboxes, notify_filter_cb, filter);
-}
-
-static int create_filter(const strarray_t *srcpaths, const char *destpath,
-                         int flags, struct mbfilter *filter)
+static int create_filter(const strarray_t *srcpaths, const strarray_t *destpaths,
+                         const char *userid, int flags, struct mbfilter *filter, int bloom)
 {
     struct buf buf = BUF_INITIALIZER;
     int r = 0;
     int i;
+    struct conversations_state *cstate = NULL;
 
     memset(filter, 0, sizeof(struct mbfilter));
+    filter->destpaths = destpaths;
+    filter->userid = userid;
     filter->flags = flags;
-    filter->destpath = xstrdup(destpath);
 
     /* build the cyrus.indexed.db from the contents of the source dirs */
 
     buf_reset(&buf);
-    buf_printf(&buf, "%s%s", destpath, INDEXEDDB_FNAME);
+    buf_printf(&buf, "%s%s", strarray_nth(destpaths, 0), INDEXEDDB_FNAME);
     r = cyrusdb_open(config_getstring(IMAPOPT_SEARCH_INDEXED_DB),
-                     buf_cstring(&buf), CYRUSDB_CREATE, &filter->indexed);
+                     buf_cstring(&buf), CYRUSDB_CREATE, &filter->indexeddb);
     if (r) {
         printf("ERROR: failed to open indexed %s\n", buf_cstring(&buf));
         goto done;
@@ -2001,43 +1978,50 @@ static int create_filter(const strarray_t *srcpaths, const char *destpath,
             goto done;
         }
     }
-    if (filter->tid) r = cyrusdb_commit(filter->indexed, *filter->tid);
+    if (filter->tid) r = cyrusdb_commit(filter->indexeddb, *filter->tid);
     if (r) {
-        printf("ERROR: failed to commit indexed %s\n", destpath);
+        printf("ERROR: failed to commit indexed %s\n", strarray_nth(destpaths, 0));
         goto done;
     }
 
+    if (bloom) {
+        /* assume a 4 million maximum records */
+        bloom_init(&filter->bloom, 4000000, 0.01);
+
+        r = conversations_open_user(userid, &cstate);
+        if (r) {
+            printf("ERROR: failed to open conversations for %s\n", userid);
+            goto done;
+        }
+
+        r = cyrusdb_foreach(cstate->db, "G", 1, NULL, bloomadd_cb, &filter->bloom, NULL);
+    }
+
 done:
+    conversations_commit(&cstate);
+
     return r;
 }
 
 static int search_filter(const char *userid, const strarray_t *srcpaths,
-                         const char *destpath, int flags)
+                         const strarray_t *destpaths, int flags)
 {
     struct mbfilter filter;
     int verbose = SEARCH_VERBOSE(flags);
     int r;
 
-    r = create_filter(srcpaths, destpath, flags, &filter);
+    r = create_filter(srcpaths, destpaths, userid, flags, &filter, 1);
     if (r) goto done;
 
     if (verbose)
-        printf("Building vector table for %s\n", userid);
-    r = build_mbfilter(userid, &filter);
-    if (r) goto done;
+        printf("Filtering database %s\n", strarray_nth(destpaths, 0));
 
-    if (verbose)
-        printf("Filtering database %s\n", destpath);
-
-    r = xapian_filter(destpath, (const char **)srcpaths->data,
+    r = xapian_filter(strarray_nth(destpaths, 0), (const char **)srcpaths->data,
                       mbdata_exists_cb, &filter);
     if (r) goto done;
 
     if (verbose)
-        printf("done %s\n", destpath);
-
-    if (flags & SEARCH_COMPACT_AUDIT)
-        notify_missing_messages(&filter);
+        printf("done %s\n", strarray_nth(destpaths, 0));
 
 done:
     free_mbfilter(&filter);
@@ -2054,7 +2038,6 @@ static int reindex_mb(void *rock,
     xapian_update_receiver_t *tr = NULL;
     struct mailbox *mailbox = NULL;
     ptrarray_t batch = PTRARRAY_INITIALIZER;
-    const struct index_record *record;
     int verbose = SEARCH_VERBOSE(filter->flags);
     int r = 0;
     int i;
@@ -2076,34 +2059,43 @@ static int reindex_mb(void *rock,
 
     if (mailbox->i.uidvalidity != uidvalidity) goto done; /* returns 0, nothing to index */
 
+    /* open the DB */
+    tr = (xapian_update_receiver_t *)begin_update(verbose);
+    r = xapian_dbw_open((const char **)filter->destpaths->data, &tr->dbw);
+    if (r) goto done;
+    tr->super.mailbox = mailbox;
+
     struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_EXPUNGED);
 
-    while ((record = mailbox_iter_step(iter))) {
+    const message_t *msg;
+    while ((msg = mailbox_iter_step(iter))) {
+        const struct index_record *record = msg_record(msg);
         /* it wasn't in the previous index, skip it */
         if (!seqset_ismember(seq, record->uid))
             continue;
 
+        message_t *msg = message_new_from_record(mailbox, record);
+
         /* add the record to the list */
-        ptrarray_append(&batch, message_new_from_record(mailbox, record));
+        if (!is_indexed((search_text_receiver_t *)tr, msg))
+            ptrarray_append(&batch, msg);
+        else
+            message_unref(&msg);
     }
 
     mailbox_iter_done(&iter);
 
+    mailbox_unlock_index(mailbox, NULL);
+
     if (batch.count) {
-        tr = (xapian_update_receiver_t *)begin_update(verbose);
         /* XXX - errors here could leak... */
         /* game on */
-        mailbox_unlock_index(mailbox, NULL);
-        /* open the DB */
-        r = xapian_dbw_open(filter->destpath, &tr->dbw);
-        if (r) goto done;
-        tr->super.mailbox = mailbox;
 
         /* preload */
         for (i = 0 ; i < batch.count ; i++) {
             message_t *msg = ptrarray_nth(&batch, i);
-            const char *fname;
 
+            const char *fname;
             r = message_get_fname(msg, &fname);
             if (r) goto done;
             r = warmup_file(fname, 0, 0);
@@ -2115,9 +2107,9 @@ static int reindex_mb(void *rock,
         for (i = 0 ; i < batch.count ; i++) {
             message_t *msg = ptrarray_nth(&batch, i);
             r = index_getsearchtext(msg, &tr->super.super, 0);
+            if (r) goto done;
             message_unref(&msg);
         }
-        if (r) goto done;
         if (tr->uncommitted) {
             r = xapian_dbw_commit_txn(tr->dbw);
             if (r) goto done;
@@ -2138,27 +2130,27 @@ done:
 }
 
 static int search_reindex(const char *userid, const strarray_t *srcpaths,
-                          const char *destpath, int flags)
+                          const strarray_t *destpaths, int flags)
 {
     struct buf buf = BUF_INITIALIZER;
     struct mbfilter filter;
     int verbose = SEARCH_VERBOSE(flags);
     int r;
 
-    r = create_filter(srcpaths, destpath, flags, &filter);
+    r = create_filter(srcpaths, destpaths, userid, flags, &filter, 0);
     if (r) goto done;
 
     if (verbose)
         printf("Reindexing messages for %s\n", userid);
 
-    r = cyrusdb_foreach(filter.indexed, "", 0, NULL, reindex_mb, &filter, NULL);
+    r = cyrusdb_foreach(filter.indexeddb, "", 0, NULL, reindex_mb, &filter, NULL);
     if (r) {
-        printf("ERROR: failed to reindex to %s\n", destpath);
+        printf("ERROR: failed to reindex to %s\n", strarray_nth(destpaths, 0));
         goto done;
     }
 
     if (verbose)
-        printf("done %s\n", destpath);
+        printf("done %s\n", strarray_nth(destpaths, 0));
 
 done:
     free_mbfilter(&filter);
@@ -2167,27 +2159,27 @@ done:
 }
 
 static int search_compress(const char *userid, const strarray_t *srcpaths,
-                           const char *destpath, int flags)
+                           const strarray_t *destpaths, int flags)
 {
     struct buf buf = BUF_INITIALIZER;
     struct mbfilter filter;
     int verbose = SEARCH_VERBOSE(flags);
     int r;
 
-    r = create_filter(srcpaths, destpath, flags, &filter);
+    r = create_filter(srcpaths, destpaths, userid, flags, &filter, 0);
     if (r) goto done;
 
     if (verbose)
         printf("Compressing messages for %s\n", userid);
 
-    r = xapian_compact_dbs(destpath, (const char **)srcpaths->data);
+    r = xapian_compact_dbs(strarray_nth(destpaths, 0), (const char **)srcpaths->data);
     if (r) {
-        printf("ERROR: failed to compress to %s\n", destpath);
+        printf("ERROR: failed to compress to %s\n", strarray_nth(destpaths, 0));
         goto done;
     }
 
     if (verbose)
-        printf("done %s\n", destpath);
+        printf("done %s\n", strarray_nth(destpaths, 0));
 
 done:
     free_mbfilter(&filter);
@@ -2201,13 +2193,16 @@ static int compact_dbs(const char *userid, const char *tempdir,
     char *mboxname = mboxname_user_mbox(userid, NULL);
     struct mboxlist_entry *mbentry = NULL;
     struct mappedfile *activefile = NULL;
-    strarray_t *dirs = NULL;
+    strarray_t *srcdirs = NULL;
     strarray_t *active = NULL;
     strarray_t *tochange = NULL;
+    strarray_t *orig = NULL;
+    strarray_t *toreindex = NULL;
+    strarray_t *tocompact = NULL;
     char *newdest = NULL;
     char *destdir = NULL;
     char *tempdestdir = NULL;
-    char *activestr = NULL;
+    char *tempreindexdir = NULL;
     struct buf mytempdir = BUF_INITIALIZER;
     struct buf buf = BUF_INITIALIZER;
     int verbose = SEARCH_VERBOSE(flags);
@@ -2225,13 +2220,14 @@ static int compact_dbs(const char *userid, const char *tempdir,
         goto out;
     }
 
-    xapian_init();
+    r = check_config();
+    if (r) goto out;
 
     /* take an exclusive lock on the activefile file */
     active = activefile_open(mboxname, mbentry->partition, &activefile, /*write*/1);
     if (!active || !active->count) goto out;
 
-    activestr = strarray_join(active, ",");
+    orig = strarray_dup(active);
 
     /* read the activefile file, taking down the names of all paths with a
      * level less than or equal to that requested */
@@ -2247,8 +2243,8 @@ static int compact_dbs(const char *userid, const char *tempdir,
     }
 
     /* find out which items actually exist from the set to be compressed - first pass */
-    dirs = activefile_resolve(mboxname, mbentry->partition, tochange, /*dostat*/1);
-    if (!dirs || !dirs->count) goto out;
+    srcdirs = activefile_resolve(mboxname, mbentry->partition, tochange, /*dostat*/1);
+    if (!srcdirs || !srcdirs->count) goto out;
     /* NOTE: it's safe to keep this list even over the unlock/relock because we
      * always write out a new first item if necessary, so these will never be
      * written to after we release the lock - if they don't have content now,
@@ -2260,7 +2256,9 @@ static int compact_dbs(const char *userid, const char *tempdir,
 
     if (verbose) {
         char *target = strarray_join(tochange, ",");
+        char *activestr = strarray_join(orig, ",");
         printf("compressing %s to %s for %s (active %s)\n", target, newdest, mboxname, activestr);
+        free(activestr);
         free(target);
     }
 
@@ -2300,12 +2298,14 @@ static int compact_dbs(const char *userid, const char *tempdir,
         strarray_free(newactive);
     }
 
-    /* run the compress to tmpfs */
-    if (tempdir)
+    if (tempdir) {
+        /* run the compress to tmpfs */
         buf_printf(&mytempdir, "%s/xapian.%d", tempdir, getpid());
-    /* or just directly in place */
-    else
+    }
+    else {
+        /* or just directly in place */
         buf_printf(&mytempdir, "%s", tempdestdir);
+    }
 
     /* make sure the destination path exists */
     r = cyrus_mkdir(buf_cstring(&mytempdir), 0755);
@@ -2315,36 +2315,77 @@ static int compact_dbs(const char *userid, const char *tempdir,
     r = mkdir(buf_cstring(&mytempdir), 0755);
     if (r) goto out;
 
-    if (dirs->count == 1 && (flags & SEARCH_COMPACT_COPYONE)) {
+    if (srcdirs->count == 1 && (flags & SEARCH_COMPACT_COPYONE)) {
         if (verbose) {
             printf("only one source, copying directly to %s\n", tempdestdir);
         }
         cyrus_mkdir(tempdestdir, 0755);
         remove_dir(tempdestdir);
-        r = copy_files(dirs->data[0], tempdestdir);
+        r = copy_files(srcdirs->data[0], tempdestdir);
     }
-    else if (dirs->count) {
+    else if (srcdirs->count) {
         if (verbose) {
             printf("compacting databases\n");
         }
+
+        /* calculate the existing databases that we also need to check for duplicates */
+        strarray_t *existing = strarray_dup(orig);
+        for (i = 0; i < tochange->count; i++)
+            strarray_remove_all(existing, strarray_nth(tochange, i));
+        strarray_t *newdirs = activefile_resolve(mboxname, mbentry->partition, existing, /*dostat*/1);
+        strarray_free(existing);
+        /* we'll be prepending the final target directory to newdirs before compacting */
+
+        toreindex = strarray_new();
+        tocompact = strarray_new();
+        if ((flags & SEARCH_COMPACT_REINDEX)) {
+            /* all databases to be reindexed */
+            strarray_cat(toreindex, srcdirs);
+        }
+        else {
+            xapian_check_if_needs_reindex(srcdirs, toreindex);
+            for (i = 0; i < srcdirs->count; i++) {
+                const char *thisdir = strarray_nth(srcdirs, i);
+                if (strarray_find(toreindex, thisdir, 0) < 0)
+                    strarray_append(tocompact, thisdir);
+            }
+        }
+
+        if (toreindex->count) {
+            tempreindexdir = strconcat(buf_cstring(&mytempdir), ".REINDEX", (char *)NULL);
+            // add this directory to the repack target as the first entry point
+            strarray_unshift(newdirs, tempreindexdir);
+            r = search_reindex(userid, toreindex, newdirs, flags);
+            if (r) {
+                printf("ERROR: failed to reindex to %s", buf_cstring(&mytempdir));
+                goto out;
+            }
+            // remove tempreindexdir from newdirs again, it's going to be compacted instead
+            free(strarray_shift(newdirs));
+
+            // add it to the to-compact list if there's something there to reindex
+            if (!xapstat(tempreindexdir))
+                strarray_unshift(tocompact, tempreindexdir);
+        }
+
+        // nothing left to compress
+        if (!tocompact->count)
+            goto out;
+
+        // and now we're ready to compact to the real tempdir
+        strarray_unshift(newdirs, buf_cstring(&mytempdir));
+
         if (flags & SEARCH_COMPACT_FILTER) {
-            r = search_filter(userid, dirs, buf_cstring(&mytempdir), flags);
+            r = search_filter(userid, tocompact, newdirs, flags);
             if (r) {
                 printf("ERROR: failed to filter to %s", buf_cstring(&mytempdir));
                 goto out;
             }
         }
-        else if (flags & SEARCH_COMPACT_REINDEX) {
-            r = search_reindex(userid, dirs, buf_cstring(&mytempdir), flags);
-            if (r) {
-                printf("ERROR: failed to reindex to %s", buf_cstring(&mytempdir));
-                goto out;
-            }
-        }
         else {
-            r = search_compress(userid, dirs, buf_cstring(&mytempdir), flags);
+            r = search_compress(userid, tocompact, newdirs, flags);
             if (r) {
-                printf("ERROR: failed to reindex to %s", buf_cstring(&mytempdir));
+                printf("ERROR: failed to compact to %s", buf_cstring(&mytempdir));
                 goto out;
             }
         }
@@ -2382,7 +2423,7 @@ static int compact_dbs(const char *userid, const char *tempdir,
         strarray_free(newactive);
     }
 
-    if (dirs->count) {
+    if (srcdirs->count) {
         /* create a new target name one greater than the highest in the
          * activefile file for our target directory.  Rename our DB to
          * that path, then rewrite activefile removing all the source
@@ -2405,7 +2446,7 @@ static int compact_dbs(const char *userid, const char *tempdir,
     }
 
     for (i = 0; i < tochange->count; i++)
-        strarray_remove_all(active, tochange->data[i]);
+        strarray_remove_all(active, strarray_nth(tochange, i));
 
     activefile_write(activefile, active);
 
@@ -2419,25 +2460,31 @@ static int compact_dbs(const char *userid, const char *tempdir,
     }
 
     /* finally remove all directories on disk of the source dbs */
-    for (i = 0; i < dirs->count; i++)
-        remove_dir(dirs->data[i]);
+    for (i = 0; i < srcdirs->count; i++)
+        remove_dir(strarray_nth(srcdirs, i));
 
     /* XXX - readdir and remove other directories as well */
 
 out:
+    // cleanup all our work locations
     if (tempdestdir)
         remove_dir(tempdestdir);
+    if (tempreindexdir)
+        remove_dir(tempreindexdir);
     if (mytempdir.len)
         remove_dir(buf_cstring(&mytempdir));
-    strarray_free(dirs);
+
+    strarray_free(orig);
     strarray_free(active);
+    strarray_free(srcdirs);
+    strarray_free(toreindex);
     strarray_free(tochange);
     buf_free(&mytempdir);
     buf_free(&buf);
     free(newdest);
-    free(activestr);
     free(destdir);
     free(tempdestdir);
+    free(tempreindexdir);
     mappedfile_unlock(activefile);
     mappedfile_close(&activefile);
     mboxlist_entry_free(&mbentry);
@@ -2471,14 +2518,30 @@ static int delete_user(const char *userid)
 {
     char *mboxname = mboxname_user_mbox(userid, /*subfolder*/NULL);
     char *activename = activefile_fname(mboxname);
+    struct mappedfile *activefile = NULL;
+    int r = 0;
+
+    /* grab an exclusive lock on activefile: that way we won't delete
+     * it out from under something else (such as squatter)
+     */
+    r = mappedfile_open(&activefile, activename, MAPPEDFILE_RW);
+    if (r) goto out;
+    r = mappedfile_writelock(activefile);
+    if (r) goto out;
 
     config_foreachoverflowstring(delete_one, mboxname);
     unlink(activename);
 
+out:
+    if (activefile) {
+        mappedfile_unlock(activefile);
+        mappedfile_close(&activefile);
+    }
+
     free(activename);
     free(mboxname);
 
-    return 0;
+    return r;
 }
 
 

@@ -84,6 +84,10 @@
 #include "xmalloc.h"
 #include "xstrlcpy.h"
 
+#ifdef ENABLE_BACKUP
+#include "backup/backup.h"
+#endif
+
 #define N(a) (sizeof(a) / sizeof(a[0]))
 
 static struct cyrusdb {
@@ -95,6 +99,9 @@ static struct cyrusdb {
     { FNAME_MBOXLIST,           &config_mboxlist_db,    NULL,   1 },
     { FNAME_QUOTADB,            &config_quota_db,       NULL,   1 },
     { FNAME_GLOBALANNOTATIONS,  &config_annotation_db,  NULL,   1 },
+#ifdef ENABLE_BACKUP
+    { FNAME_BACKUPDB,           &config_backup_db,      NULL,   1 },
+#endif
     { FNAME_DELIVERDB,          &config_duplicate_db,   NULL,   0 },
     { FNAME_TLSSESSIONS,        &config_tls_sessions_db,NULL,   0 },
     { FNAME_PTSDB,              &config_ptscache_db,    NULL,   0 },
@@ -118,7 +125,7 @@ static void usage(void)
     exit(-1);
 }
 
-/* Callback for use by recover_reserved */
+/* Callback for use by process_mboxlist */
 static int fixmbox(const mbentry_t *mbentry,
                    void *rock __attribute__((unused)))
 {
@@ -159,7 +166,7 @@ static int fixmbox(const mbentry_t *mbentry,
     return 0;
 }
 
-static void recover_reserved(void)
+static void process_mboxlist(void)
 {
     mboxlist_init(0);
     mboxlist_open(NULL);
@@ -176,6 +183,9 @@ static void recover_reserved(void)
     /* build a list of mailboxes - we're using internal names here */
     mboxlist_allmbox(NULL, fixmbox, NULL, 0);
 
+    /* enable or disable RACLs per config */
+    mboxlist_set_racls(config_getswitch(IMAPOPT_REVERSEACLS));
+
     quotadb_close();
     quotadb_done();
 
@@ -189,7 +199,34 @@ static void recover_reserved(void)
 static const char *dbfname(struct cyrusdb *db)
 {
     static char buf[MAX_MAILBOX_PATH];
-    snprintf(buf, MAX_MAILBOX_PATH, "%s%s", config_dir, db->name);
+    const char *fname = NULL;
+
+    /* find absolute path to db files in configuration */
+    if (!strcmp(db->name, FNAME_MBOXLIST))
+        fname = config_getstring(IMAPOPT_MBOXLIST_DB_PATH);
+    else if (!strcmp(db->name, FNAME_QUOTADB))
+        fname = config_getstring(IMAPOPT_QUOTA_DB_PATH);
+    else if (!strcmp(db->name, FNAME_GLOBALANNOTATIONS))
+        fname = config_getstring(IMAPOPT_ANNOTATION_DB_PATH);
+#ifdef ENABLE_BACKUP
+    else if (!strcmp(db->name, FNAME_BACKUPDB))
+        fname = config_getstring(IMAPOPT_BACKUP_DB_PATH);
+#endif
+    else if (!strcmp(db->name, FNAME_DELIVERDB))
+        fname = config_getstring(IMAPOPT_DUPLICATE_DB_PATH);
+    else if (!strcmp(db->name, FNAME_TLSSESSIONS))
+        fname = config_getstring(IMAPOPT_TLSCACHE_DB_PATH);
+    else if (!strcmp(db->name, FNAME_PTSDB))
+        fname = config_getstring(IMAPOPT_PTSCACHE_DB_PATH);
+    else if (!strcmp(db->name, FNAME_STATUSCACHEDB))
+        fname = config_getstring(IMAPOPT_STATUSCACHE_DB_PATH);
+
+    /* use default if no special path was found */
+    if (!fname)
+        snprintf(buf, MAX_MAILBOX_PATH, "%s%s", config_dir, db->name);
+    else
+        snprintf(buf, MAX_MAILBOX_PATH, "%s", fname);
+
     return buf;
 }
 
@@ -377,7 +414,7 @@ int main(int argc, char *argv[])
     strarray_fini(&files);
 
     if(op == RECOVER && reserve_flag)
-        recover_reserved();
+        process_mboxlist();
 
     free(dirname);
     free(backup1);

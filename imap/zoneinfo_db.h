@@ -54,6 +54,12 @@
 /* name of the NIST leap seconds file (provided with IANA tzdata) */
 #define FNAME_LEAPSECFILE "/leap-seconds.list"
 
+/* name of the world shape file (http://efele.net/maps/tz/world/) */
+#define FNAME_WORLD_SHAPEFILE "/tz_world.shp"
+
+/* name of the antarctica shape file (http://efele.net/maps/tz/world/) */
+#define FNAME_AQ_SHAPEFILE "/tz_antarctica.shp"
+
 /* offset between NIST and UNIX epochs (in seconds) */
 #define NIST_EPOCH_OFFSET 2208988800U
 

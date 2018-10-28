@@ -1,0 +1,105 @@
+
+Frequently Asked Questions
+**************************
+
+
+Features
+========
+
+* Which database backend should I use for which databases?
+
+* Duplicate Delivery Suppression
+
+
+Installation Problems
+=====================
+
+* Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora
+
+* Problems detecting Berkley DB on Red Hat Linux
+
+* Help! There must be an easier way to get all this going...
+
+* OpenSSL Version Mismatches
+
+* Libical v1.0.1 or v2.0
+
+
+Common Feature Requests
+=======================
+
+* Does the Cyrus Murder support High Availability configurations?
+
+* Can I configure pop3d to log amount and size of messages fetched
+  by user?
+
+* How can I make CyrusSieve work with public shared folders?
+
+* Can I have subfolders not appear under INBOX?
+
+
+Common Operational Questions
+============================
+
+* How do I view ACLs on a mailbox?
+
+* What annotations are available?
+
+* Why does ctl_cyrusdb -r take so long with Berkeley DB?
+
+* Is it safe to put <configdirectory>/proc and
+  <configdirectory>/lock on a tmpfs filesystem?
+
+* How to enable core dumps
+
+* Is the "db3: x Lockers" log message harmful?
+
+* Why can I not delete a mailbox as an admin user?
+
+* When is What ... Deleted, Expired, Expunged or Purged?
+
+* Why is deliver.db so large?
+
+* I have multiple imapd-SERVICES configured and experience
+  occasional freezes when I try to log in!
+
+* How to run gdb on Cyrus components
+
+* Cyrus delivers claims that the mailbox does not exist
+
+* Why is mail being rejected with No Mailbox found due to MiXed CaSe
+  incoming e-mail?
+
+* Can I use MySQL (or another SQL database) as the primary mail
+  store?
+
+* Why do POP3 connections take so long, but once the connection is
+  established all is well?
+
+* Why does reconstruct -m not work?
+
+* Shared File Systems GPFS for high availability
+
+* How to enable telemetry
+
+* The process count keeps growing!
+
+* "unable to join environment" error
+
+* Why does Cyrus set the MAIL FROM address of the sender of vacation
+  responses to '<>'?
+
+
+Common Interoperability Problems
+================================
+
+* Why does Cyrus reject 8-bit characters in the headers of my
+  messages?
+
+* Why does Cyrus reject messages with "bare newlines"?
+
+* How do I get Cyrus Sieve to play nice with Exim?
+
+* Why does mail delivery go slow or hang sometimes?
+
+Looking for the *Cyrus SASL FAQ*?

@@ -1,233 +1,285 @@
-.\" -*- nroff -*-
-.TH RECONSTRUCT 8 "Project Cyrus" CMU
-.\"
-.\" Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
-.\"
-.\" Redistribution and use in source and binary forms, with or without
-.\" modification, are permitted provided that the following conditions
-.\" are met:
-.\"
-.\" 1. Redistributions of source code must retain the above copyright
-.\"    notice, this list of conditions and the following disclaimer.
-.\"
-.\" 2. Redistributions in binary form must reproduce the above copyright
-.\"    notice, this list of conditions and the following disclaimer in
-.\"    the documentation and/or other materials provided with the
-.\"    distribution.
-.\"
-.\" 3. The name "Carnegie Mellon University" must not be used to
-.\"    endorse or promote products derived from this software without
-.\"    prior written permission. For permission or any legal
-.\"    details, please contact
-.\"      Carnegie Mellon University
-.\"      Center for Technology Transfer and Enterprise Creation
-.\"      4615 Forbes Avenue
-.\"      Suite 302
-.\"      Pittsburgh, PA  15213
-.\"      (412) 268-7393, fax: (412) 268-7395
-.\"      innovation@andrew.cmu.edu
-.\"
-.\" 4. Redistributions of any form whatsoever must retain the following
-.\"    acknowledgment:
-.\"    "This product includes software developed by Computing Services
-.\"     at Carnegie Mellon University (http://www.cmu.edu/computing/)."
-.\"
-.\" CARNEGIE MELLON UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO
-.\" THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-.\" AND FITNESS, IN NO EVENT SHALL CARNEGIE MELLON UNIVERSITY BE LIABLE
-.\" FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
-.\" AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
-.\" OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\" Man page generated from reStructuredText.
+.
+.TH "RECONSTRUCT" "8" "August 10, 2018" "3.0.8" "Cyrus IMAP"
 .SH NAME
-reconstruct \- reconstruct mailboxes
+reconstruct \- Cyrus IMAP documentation
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.sp
+Reconstruct mailboxes
 .SH SYNOPSIS
-.B reconstruct
-[
-.B \-C
-.I config-file
-]
-[
-.B \-p
-.I partition
-]
-[
-.B \-x
-]
-[
-.B \-r
-]
-[
-.B \-f
-]
-.br
-            [
-.B \-k
-]
-[
-.B \-s
-]
-[
-.B \-g
-]
-[
-.B \-G
-]
-[
-.B \-R
-]
-[
-.B \-o
-]
-[
-.B \-O
-]
-.IR mailbox ...
-.br
-.br
-.B reconstruct
-[
-.B \-C
-.I config-file
-]
-.B \-m
+.sp
+.nf
+\fBreconstruct\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-p\fP \fIpartition\fP ] [ \fB\-x\fP ] [ \fB\-r\fP ]
+    [ \fB\-f\fP ] [ \fB\-U\fP ] [ \fB\-s\fP ] [ \fB\-q\fP ] [ \fB\-G\fP ] [ \fB\-R\fP ] [ \fB\-o\fP ]
+    [ \fB\-O\fP ] [ \fB\-M\fP ] \fImailbox\fP\&...
+
+\fBreconstruct\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-p\fP \fIpartition\fP ] [ \fB\-x\fP ] [ \fB\-r\fP ]
+    [ \fB\-f\fP ] [ \fB\-U\fP ] [ \fB\-s\fP ] [ \fB\-q\fP ] [ \fB\-G\fP ] [ \fB\-R\fP ] [ \fB\-o\fP ]
+    [ \fB\-O\fP ] [ \fB\-M\fP ] [ \fB\-u\fP ] \fIusers\fP\&...
+
+\fBreconstruct\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-p\fP \fIpartition\fP ] [ \fB\-x\fP ] [ \fB\-r\fP ]
+    [ \fB\-f\fP ] [ \fB\-U\fP ] [ \fB\-s\fP ] [ \fB\-q\fP ] [ \fB\-G\fP ] [ \fB\-R\fP ] [ \fB\-o\fP ]
+    [ \fB\-O\fP ] [ \fB\-M\fP ] \fB\-V\fP \fI<version>\fP [ \fB\-u\fP \fIusers\fP ]
+
+\fBreconstruct\fP [ \fB\-C\fP \fIconfig\-file\fP ] \fB\-m\fP
+.fi
 .SH DESCRIPTION
-.I Reconstruct
-rebuilds one or more IMAP mailboxes.  When invoked with the
-.B \-m
-switch, it rebuilds the master
-mailboxes file.  It can be used to recover from
-almost any sort of data corruption.
-.PP
-If
-.I Reconstruct
-can find existing header and index files, it attempts to preserve any
-data in them that is not derivable from the message files themselves.
-The state
-.I reconstruct
-attempts to preserve includes the flag names, flag state, and
-internaldate.
-.I Reconstruct
-derives all other information from the message files.
-.PP
-.I Reconstruct
-reads its configuration options out of the
-.IR imapd.conf (5)
-file unless specified otherwise by \fB-C\fR.  Any mailbox directory
-underneath the path specified in the
-.I partition-news
-configuration option is assumed to be in news format.
-.PP
-.I Reconstruct
-does not adjust the quota usage recorded in any quota
-root files.  After running
-.IR reconstruct ,
-it is advisable to run
-.IR quota (8)
-with the
-.I \-f
-switch in order to fix the quota root files.
+.sp
+\fBreconstruct\fP rebuilds one or more IMAP mailboxes.  When invoked with
+the \fB\-m\fP switch, it rebuilds the master mailboxes file.  It can be
+used to recover from almost any sort of data corruption.
+.sp
+If \fBreconstruct\fP can find existing header and index files, it
+attempts to preserve any data in them that is not derivable from the
+message files themselves. The state \fBreconstruct\fP attempts to
+preserve includes the flag names, flag state, and internaldate.
+.sp
+\fBreconstruct\fP derives all other information from the message files.
+.sp
+\fBreconstruct\fP reads its configuration options out of the imapd.conf(5) file unless specified otherwise by \fB\-C\fP\&.  Any mailbox directory underneath
+the path specified in the \fBpartition\-news\fP configuration option is
+assumed to be in news format.
+.sp
+\fBreconstruct\fP does not adjust the quota usage recorded in any quota
+root files.  After running \fBreconstruct\fP, it is advisable to run
+\fBquota(8)\fP with the \fB\-f\fP switch in order to fix the quota
+root files.
+.sp
+When upgrading versions of Cyrus software, it may be necessary to run
+\fBreconstruct\fP with the \fB\-V\fP option, to rebuild indexes to a
+given version, (or \fImax\fP for the most recent).
 .SH OPTIONS
+.INDENT 0.0
 .TP
-.BI \-C " config-file"
-Read configuration options from \fIconfig-file\fR.
+.B \-C  config\-file
+Use the specified configuration file \fIconfig\-file\fP rather than the default imapd.conf(5)\&.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI \-p " partition"
-Search for the listed (non-existant) mailboxes on the indicated partition.
-Create the mailboxes in the database in addition to reconstructing them.
-(not compatible with the use of wildcards)
+.B \-p  partition
+Search for the listed (non\-existant) mailboxes on the indicated
+\fIpartition\fP\&. Create the mailboxes in the database in addition to
+reconstructing them. (not compatible with the use of wildcards)
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-x
-When processing a mailbox which is not in the mailbox list (e.g. via
-the -p or -f options), do not import the metadata from the mailbox,
-instead create it anew (this specifically affects at least the mailbox's seen
-state unique identifier, user flags, and ACL).
+When processing a mailbox which is not in the mailbox list (e.g.
+via the \fB\-p\fP or \fB\-f\fP options), do not import the metadata from
+the mailbox, instead create it anew (this specifically affects at
+least the mailbox\(aqs seen state unique identifier, user flags, and
+ACL).
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-r
-Recursively reconstruct all sub-mailboxes of the mailboxes or mailbox
-prefixes given as arguments.
+Recursively reconstruct all sub\-mailboxes of the mailboxes or
+mailbox prefixes given as arguments.
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-f
-Examine the filesystem underneath mailbox, adding all directories with
-a cyrus.header found there as new mailboxes.  Useful for
+Examine the filesystem underneath mailbox, adding all directories
+with a \fBcyrus.header\fP found there as new mailboxes.  Useful for
 restoring mailboxes from backups.
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-s
-Don't stat underlying files.  This makes reconstruct run faster, at
+Don\(aqt stat underlying files.  This makes reconstruct run faster, at
 the expense of not noticing some issues (like zero byte files or
-size mistmatches).  "reconstruct -s" should be quite fast.
+size mistmatches).  "\fBreconstruct \-s\fP" should be quite fast.
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-q
 Emit less verbose information to syslog.
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-n
-Don't make any changes.  This gives equivalent behaviour to
-.I chk_cyrus
-where problems are reported, but not fixed.
+Don\(aqt make any changes.  This gives equivalent behaviour to
+chk_cyrus(8) where problems are reported, but not fixed.
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-G
-Force re-parsing of the underlying message (checks GUID correctness).
-Reconstruct with -G should fix all possible individual message issues,
-including corrupted data files.
+Force re\-parsing of the underlying message (checks GUID
+correctness). Reconstruct with \-G should fix all possible
+individual message issues, including corrupted data files.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-I
+If two mailboxes exist with the same UNIQUEID and reconstruct visits
+both of them, \-I will cause the second mailbox to have a new UNIQUEID
+created for it.  If you don\(aqt specify \-I, you will just get a syslog
+entry telling you of the clash.
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-R
-Perform a UID upgrade operation on GUID mismatch files.  Use this option
-if you think your index is corrupted rather than your message files, or if
-all backup attempts have failed and you're happy to be served the missing
-files.
+Perform a UID upgrade operation on GUID mismatch files.  Use this
+option if you think your index is corrupted rather than your
+message files, or if all backup attempts have failed and you\(aqre
+happy to be served the missing files.
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-U
-Use this option if you have corrupt message files in your spool and have
-been unable to restore them from backup.  This will make the mailbox
-IOERROR free and fix replication.
-.B WARNING
-this deletes corrupt message files for ever - so make sure you've exhausted
-other options first!
+Use this option if you have corrupt message files in your spool and
+have been unable to restore them from backup.  This will make the
+mailbox IOERROR free and fix replication.
+.sp
+WARNING:
+this deletes corrupt message files for ever \- so make sure you\(aqve
+exhausted other options first!
+.UNINDENT
+.INDENT 0.0
 .TP
-.B -o
-Ignore odd files in your mailbox disk directories.  Probably useful if you
-are using some tool which adds additional tracking files.
+.B \-o
+Ignore odd files in your mailbox disk directories.  Probably useful
+if you are using some tool which adds additional tracking files.
+.UNINDENT
+.INDENT 0.0
 .TP
-.B -O
-Delete odd files.  This is the opposite of '-o'.
+.B \-O
+Delete odd files.  This is the opposite of \fB\-o\fP\&.
+.UNINDENT
+.INDENT 0.0
 .TP
-.B -M
-Prefer mailboxes.db over cyrus.header - will rewrite ACL or uniqueid from
-the mailboxes.db into the header file rather than the other way around.
+.B \-M
+Prefer mailboxes.db over cyrus.header \- will rewrite ACL or
+uniqueid from the mailboxes.db into the header file rather than the
+other way around.  This feature was introduced in version 3.0.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI \-V " version"
-Change the cyrus.index minor version to a specific version. This can be
-useful for upgrades or downgrades. Use a magical version of \fImax\fR to
-upgrade to the latest available database format version.
+.B \-V  version
+Change the \fBcyrus.index\fP minor version to a specific \fIversion\fP\&.
+This can be useful for upgrades or downgrades. Use a magical
+version of \fImax\fP to upgrade to the latest available database format
+version.
+.UNINDENT
+.INDENT 0.0
 .TP
-.B -u
+.B \-u
 Instead of mailbox prefixes, give usernames on the command line
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-m
-.B NOTE: CURRENTLY UNAVAILABLE
-.br
-Rebuild the
-.I mailboxes
-file.  Use whatever data in the existing
-.I mailboxes
-file it can scavenge, then scans all partitions listed in the
-.IR imapd.conf (5)
-file for additional mailboxes.
+NOTE:
+CURRENTLY UNAVAILABLE
+.sp
+Rebuild the \fImailboxes\fP file.  Use whatever data in the existing
+\fImailboxes\fP file it can scavenge, then scans all partitions listed
+in the imapd.conf(5) file for additional mailboxes.
+.UNINDENT
 .SH EXAMPLES
-You want to reconstruct the index files for a user, you have recovered a deleted mail file from backup
-and given it a suitable name (eg user/ben-lacy/33.), but it is not visible since it is not indexed:
-
+.sp
 .nf
-reconstruct -r user.ben-lacy
+\fBreconstruct \-r \-f\fP \fItech.support\fP
 .fi
-.PP
-If you have the \fBunixhierarchysep:yes\fR option set in \fB/etc/imapd.conf\fR you would need
-to run:
-
+.INDENT 0.0
+.INDENT 3.5
+Recursively reconstruct all mailboxes within the \fItech.support\fP
+hierarchy, restoring any directories containing \fBcyrus.header\fP
+files.
+.UNINDENT
+.UNINDENT
+.sp
 .nf
-reconstruct -r user/ben.lacy
+\fBreconstruct \-r \-f\fP \fItech.support.Archive.2%\fP
 .fi
-
+.INDENT 0.0
+.INDENT 3.5
+Recursively reconstruct all mailboxes within the
+\fItech.support.Archive\fP hierarchy with names begining with \(aq2\(aq,
+restoring any directories containing \fBcyrus.header\fP
+files.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBreconstruct \-r \-f \-u\fP \fIjsmith\fP
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Recusively reconstruct all mailboxes belonging to \fIjsmith\fP,
+restoring any directories containing \fBcyrus.header\fP files.
+.UNINDENT
+.UNINDENT
+.SH HISTORY
+.sp
+The options \fB\-k\fP (keep flags) and \fB\-g\fP (clear GUID) have been
+deprecated in Cyrus version 2.4.
+.sp
+The \fB\-u\fP and \fB\-V\fP options were added in Cyrus version 2.5.
+.sp
+The \fB\-M\fP option was added in Cyrus version 3.0.
 .SH FILES
-.TP
-.B /etc/imapd.conf
+.sp
+/etc/imapd.conf
+.SH SEE ALSO
+.sp
+imapd.conf(5)
+.SH AUTHOR
+The Cyrus Team, Nic Bernstein (Onlight)
+.SH COPYRIGHT
+1993-2017, The Cyrus Team
+.\" Generated by docutils manpage writer.
+.

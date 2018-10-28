@@ -47,10 +47,11 @@
 #include <sasl/sasl.h>
 #include <libxml/tree.h>
 #include <libxml/uri.h>
+#include <libical/ical.h>
 
-#ifdef HAVE_ZLIB
-#include <zlib.h>
-#endif /* HAVE_ZLIB */
+#ifdef HAVE_NGHTTP2
+#include <nghttp2/nghttp2.h>
+#endif /* HAVE_NGHTTP2 */
 
 #include "annotate.h" /* for strlist */
 #include "hash.h"
@@ -69,7 +70,7 @@
 #define XML_NS_CYRUS    "http://cyrusimap.org/ns/"
 
 /* Supported TLS version for Upgrade */
-#define TLS_VERSION      "TLS/1.0"
+#define TLS_VERSION      "TLS/1.2"
 
 /* Supported HTML DOCTYPE */
 #define HTML_DOCTYPE \
@@ -117,16 +118,18 @@ enum {
 enum {
     URL_NS_DEFAULT = 0,
     URL_NS_PRINCIPAL,
+    URL_NS_NOTIFY,
     URL_NS_CALENDAR,
     URL_NS_FREEBUSY,
     URL_NS_ADDRESSBOOK,
+    URL_NS_DRIVE,
     URL_NS_ISCHEDULE,
     URL_NS_DOMAINKEY,
     URL_NS_TZDIST,
     URL_NS_RSS,
     URL_NS_DBLOOKUP,
-    URL_NS_JMAP,
-    URL_NS_ADMIN
+    URL_NS_ADMIN,
+    URL_NS_APPLEPUSH
 };
 
 /* Bitmask of features/methods to allow, based on URL */
@@ -134,18 +137,31 @@ enum {
     ALLOW_READ =        (1<<0), /* Read resources/properties */
     ALLOW_POST =        (1<<1), /* Post to a URL */
     ALLOW_WRITE =       (1<<2), /* Create/modify/lock resources */
-    ALLOW_DELETE =      (1<<3), /* Delete resources/collections */
-    ALLOW_TRACE =       (1<<4), /* TRACE a request */
-    ALLOW_DAV =         (1<<5), /* WebDAV specific methods/features */
-    ALLOW_WRITECOL =    (1<<6), /* Create/modify collections */
-    ALLOW_CAL =         (1<<7), /* CalDAV specific methods/features */
-    ALLOW_CAL_AVAIL =   (1<<8), /* CalDAV Availability specific features */
-    ALLOW_CAL_SCHED =   (1<<9), /* CalDAV Scheduling specific features */
-    ALLOW_CAL_NOTZ =    (1<<10),/* CalDAV TZ by Ref specific features */
-    ALLOW_CAL_ATTACH =  (1<<11),/* CalDAV Managed Attachments features */
-    ALLOW_CARD =        (1<<12),/* CardDAV specific methods/features */
-    ALLOW_ISCHEDULE =   (1<<13) /* iSchedule specific methods/features */
+    ALLOW_PATCH =       (1<<3), /* Patch resources */
+    ALLOW_DELETE =      (1<<4), /* Delete resources/collections */
+    ALLOW_TRACE =       (1<<5), /* TRACE a request */
+
+    ALLOW_DAV =         (1<<8), /* WebDAV specific methods/features */
+    ALLOW_PROPPATCH  =  (1<<9), /* Modify properties */
+    ALLOW_MKCOL =       (1<<10),/* Create collections */
+    ALLOW_ACL =         (1<<11),/* Modify access control list */
+
+    ALLOW_CAL =         (1<<16),/* CalDAV specific methods/features */
+    ALLOW_CAL_SCHED =   (1<<17),/* CalDAV Scheduling specific features */
+    ALLOW_CAL_AVAIL =   (1<<18),/* CalDAV Availability specific features */
+    ALLOW_CAL_NOTZ =    (1<<19),/* CalDAV TZ by Ref specific features */
+    ALLOW_CAL_ATTACH =  (1<<20),/* CalDAV Managed Attachments features */
+
+    ALLOW_CARD =        (1<<24),/* CardDAV specific methods/features */
+
+    ALLOW_ISCHEDULE =   (1<<31) /* iSchedule specific methods/features */
 };
+
+#define ALLOW_READ_MASK ~(ALLOW_POST|ALLOW_WRITE|ALLOW_DELETE|ALLOW_PATCH\
+                          |ALLOW_PROPPATCH|ALLOW_MKCOL|ALLOW_ACL)
+
+
+struct transaction_t;
 
 struct auth_scheme_t {
     unsigned idx;               /* Index value of the scheme */
@@ -153,7 +169,8 @@ struct auth_scheme_t {
     const char *saslmech;       /* Corresponding SASL mech name */
     unsigned flags;             /* Bitmask of requirements/features */
                                 /* Optional function to send success data */
-    void (*send_success)(const char *name, const char *data);
+    void (*send_success)(struct transaction_t *txn,
+                         const char *name, const char *data);
                                 /* Optional function to recv success data */
     const char *(*recv_success)(hdrcache_t hdrs);
 };
@@ -163,7 +180,8 @@ enum {
     AUTH_BASIC = 0,
     AUTH_DIGEST,
     AUTH_SPNEGO,
-    AUTH_NTLM
+    AUTH_NTLM,
+    AUTH_BEARER
 };
 
 /* Auth scheme flags */
@@ -193,7 +211,7 @@ struct request_line_t {
 struct request_target_t {
     char path[MAX_MAILBOX_PATH+1]; /* working copy of URL path */
     char *tail;                 /* tail of original request path */
-    unsigned namespace;         /* namespace of path */
+    const struct namespace_t *namespace; /* namespace of path */
     char *userid;               /* owner of collection (needs freeing) */
     char *collection;           /* ptr to collection name */
     size_t collen;
@@ -201,17 +219,19 @@ struct request_target_t {
     size_t reslen;
     unsigned flags;             /* target-specific flags/meta-data */
     unsigned long allow;        /* bitmask of allowed features/methods */
-    int mboxtype;               /* mailbox types to match on findall */
     mbentry_t *mbentry;         /* mboxlist entry of target collection */
-    const char *prefix;         /* namespace prefix */
+    const char *mboxprefix;     /* mailbox prefix */
 };
 
 /* Request target flags */
 enum {
     TGT_SERVER_INFO = 1,
+    TGT_DAV_SHARED,
     TGT_SCHED_INBOX,
     TGT_SCHED_OUTBOX,
-    TGT_MANAGED_ATTACH
+    TGT_MANAGED_ATTACH,
+    TGT_DRIVE_ROOT,
+    TGT_DRIVE_USER
 };
 
 /* Function to parse URI path and generate a mailbox name */
@@ -228,7 +248,8 @@ struct auth_challenge_t {
 struct error_t {
     const char *desc;                   /* Error description */
     unsigned precond;                   /* [Cal]DAV precondition */
-    const char *resource;               /* Resource which lacks privileges */
+    xmlNodePtr node;                    /* XML node to be added to error */
+    const char *resource;               /* Resource href to be added to error */
     int rights;                         /* Privileges needed by resource */
 };
 
@@ -238,44 +259,81 @@ struct range {
     struct range *next;
 };
 
+struct patch_doc_t {
+    const char *format;                 /* MIME format of patch document */
+    int (*proc)();                      /* Function to parse and apply doc */
+};
+
 
 /* Meta-data for response body (payload & representation headers) */
 struct resp_body_t {
-    ulong len;          /* Content-Length   */
-    struct range *range;/* Content-Range    */
-    const char *fname;  /* Content-Dispo    */
-    unsigned char enc;  /* Content-Encoding */
-    const char *lang;   /* Content-Language */
-    const char *loc;    /* Content-Location */
-    const u_char *md5;  /* Content-MD5      */
-    const char *type;   /* Content-Type     */
-    unsigned prefs;     /* Prefer           */
-    const char *lock;   /* Lock-Token       */
-    const char *etag;   /* ETag             */
-    time_t lastmod;     /* Last-Modified    */
-    time_t maxage;      /* Expires          */
-    const char *stag;   /* Schedule-Tag     */
-    const char *cmid;   /* Cal-Managed-ID   */
-    time_t iserial;     /* iSched serial#   */
-    struct buf payload; /* Payload          */
+    ulong len;                          /* Content-Length   */
+    struct range *range;                /* Content-Range    */
+    const char *fname;                  /* Content-Dispo    */
+    unsigned char enc;                  /* Content-Encoding */
+    const char *lang;                   /* Content-Language */
+    const char *loc;                    /* Content-Location */
+    const u_char *md5;                  /* Content-MD5      */
+    const char *type;                   /* Content-Type     */
+    const struct patch_doc_t *patch;    /* Accept-Patch     */
+    unsigned prefs;                     /* Prefer           */
+    const char *link;                   /* Link             */
+    const char *lock;                   /* Lock-Token       */
+    const char *ctag;                   /* CTag             */
+    const char *etag;                   /* ETag             */
+    time_t lastmod;                     /* Last-Modified    */
+    time_t maxage;                      /* Expires          */
+    const char *stag;                   /* Schedule-Tag     */
+    const char *cmid;                   /* Cal-Managed-ID   */
+    time_t iserial;                     /* iSched serial#   */
+    struct buf payload;                 /* Payload          */
 };
 
 /* Transaction flags */
 struct txn_flags_t {
-    unsigned char ver1_0;               /* Request from HTTP/1.0 client */
-    unsigned char conn;                 /* Connection opts on req/resp */
-    unsigned char override;             /* HTTP method override */
-    unsigned char cors;                 /* Cross-Origin Resource Sharing */
-    unsigned char mime;                 /* MIME-conformant response */
-    unsigned char te;                   /* Transfer-Encoding for resp */
-    unsigned char cc;                   /* Cache-Control directives for resp */
-    unsigned char ranges;               /* Accept range requests for resource */
-    unsigned char vary;                 /* Headers on which response varied */
-    unsigned char trailer;              /* Headers which will be in trailer */
+    unsigned long ver      : 2;         /* HTTP version of request */
+    unsigned long conn     : 3;         /* Connection opts on req/resp */
+    unsigned long upgrade  : 2;         /* Upgrade protocols */
+    unsigned long override : 1;         /* HTTP method override */
+    unsigned long cors     : 3;         /* Cross-Origin Resource Sharing */
+    unsigned long mime     : 1;         /* MIME-conformant response */
+    unsigned long te       : 3;         /* Transfer-Encoding for resp */
+    unsigned long cc       : 7;         /* Cache-Control directives for resp */
+    unsigned long ranges   : 1;         /* Accept range requests for resource */
+    unsigned long vary     : 4;         /* Headers on which response varied */
+    unsigned long trailer  : 2;         /* Headers which will be in trailer */
 };
+
+/* HTTP connection context */
+struct http_connection {
+    struct protstream *pin;             /* Input protstream */
+    struct protstream *pout;            /* Output protstream */
+
+    void *zstrm;                        /* Zlib compression context */
+    void *brotli;                       /* Brotli compression context */
+
+#ifdef HAVE_NGHTTP2
+    nghttp2_session *http2_session;     /* HTTP/2 session context */
+    nghttp2_option *http2_options;      /* Config options for HTTP/2 session */
+};
+
+#define HTTP2_MAX_HEADERS  100
+
+/* HTTP/2 stream context */
+struct http2_stream {
+    int32_t stream_id;                  /* Stream ID */
+    size_t num_resp_hdrs;               /* Number of response headers */
+    nghttp2_nv resp_hdrs[HTTP2_MAX_HEADERS]; /* Array of response headers */
+#endif /* HAVE_NGHTTP2 */
+};
+
 
 /* Transaction context */
 struct transaction_t {
+    struct http_connection *conn;       /* Global connection context */
+#ifdef HAVE_NGHTTP2
+    struct http2_stream http2;          /* HTTP/2 stream data */
+#endif
     unsigned meth;                      /* Index of Method to be performed */
     struct txn_flags_t flags;           /* Flags for this txn */
     struct request_line_t req_line;     /* Parsed request-line */
@@ -288,10 +346,7 @@ struct transaction_t {
     const char *location;               /* Location of resource */
     struct error_t error;               /* Error response meta-data */
     struct resp_body_t resp_body;       /* Response body meta-data */
-#ifdef HAVE_ZLIB
-    z_stream zstrm;                     /* Compression context */
     struct buf zbuf;                    /* Compression buffer */
-#endif
     struct buf buf;                     /* Working buffer - currently used for:
                                            httpd:
                                              - telemetry of auth'd request
@@ -308,11 +363,24 @@ struct transaction_t {
                                         */
 };
 
+/* HTTP version flags */
+enum {
+    VER_1_0 =           0,
+    VER_1_1 =           1,
+    VER_2 =             2
+};
+
 /* Connection token flags */
 enum {
     CONN_CLOSE =        (1<<0),
     CONN_UPGRADE =      (1<<1),
     CONN_KEEPALIVE =    (1<<2)
+};
+
+/* Upgrade protocol flags */
+enum {
+    UPGRADE_TLS =       (1<<0),
+    UPGRADE_HTTP2 =     (1<<1)
 };
 
 /* Cross-Origin Resource Sharing flags */
@@ -324,9 +392,10 @@ enum {
 
 /* Content-Encoding flags (coding of representation) */
 enum {
-    CE_IDENTITY =       0,
-    CE_DEFLATE =        (1<<0),
-    CE_GZIP =           (1<<1)
+    CE_IDENTITY =       0,      /* no encoding       */
+    CE_DEFLATE =        (1<<0), /* ZLIB   - RFC 1950 */
+    CE_GZIP =           (1<<1), /* GZIP   - RFC 1952 */
+    CE_BR =             (1<<2)  /* Brotli - RFC 7932 */
 };
 
 /* Cache-Control directive flags */
@@ -350,12 +419,12 @@ enum {
 
 /* Trailer header flags */
 enum {
-    TRAILER_CMD5 =      (1<<0)  /* Content-MD5 */
+    TRAILER_CMD5 =      (1<<0), /* Content-MD5 will be generated */
+    TRAILER_PROXY =     (1<<1)  /* Trailer(s) will be proxied from origin */
 };
 
+typedef int (*premethod_proc_t)(struct transaction_t *txn);
 typedef int (*method_proc_t)(struct transaction_t *txn, void *params);
-typedef int (*filter_proc_t)(struct transaction_t *txn,
-                             const char *base, unsigned long len);
 
 struct method_t {
     method_proc_t proc;         /* Function to perform the method */
@@ -367,16 +436,19 @@ struct namespace_t {
     unsigned enabled;           /* Is this namespace enabled? */
     const char *prefix;         /* Prefix of URL path denoting namespace */
     const char *well_known;     /* Any /.well-known/ URI */
-    unsigned need_auth;         /* Do we need to auth for this namespace? */
-    int mboxtype;               /* what type of mailbox can be seen in this namespace? */
+    int (*need_auth)(struct transaction_t *); /* Run prior unauthorized requests */
+    unsigned auth_schemes;      /* Bitmask of allowed auth schemes, 0 for any */
+    int mboxtype;               /* What mbtype can be seen in this namespace? */
     unsigned long allow;        /* Bitmask of allowed features/methods */
-    void (*init)(struct buf *serverinfo);
-    void (*auth)(const char *userid);
-    void (*reset)(void);
-    void (*shutdown)(void);
+    void (*init)(struct buf *); /* Function run during service startup */
+    void (*auth)(const char *); /* Function run after authentication */
+    void (*reset)(void);        /* Function run before change in auth */
+    void (*shutdown)(void);     /* Function run during service shutdown */
+    int (*premethod)(struct transaction_t *); /* Func run prior to any method */
+    int (*bearer)(const char*, char *, size_t); /* Run to authenticate Bearer */
     struct method_t methods[];  /* Array of functions to perform HTTP methods.
                                  * MUST be an entry for EACH method listed,
-                                 * and in the SAME ORDER in which they appear,
+                                 * and in the SAME ORDER in which they appear
                                  * in the http_methods[] array.
                                  * If the method is not supported,
                                  * the function pointer MUST be NULL.
@@ -391,16 +463,18 @@ struct accept {
 
 extern struct namespace_t namespace_default;
 extern struct namespace_t namespace_principal;
+extern struct namespace_t namespace_notify;
 extern struct namespace_t namespace_calendar;
 extern struct namespace_t namespace_freebusy;
 extern struct namespace_t namespace_addressbook;
+extern struct namespace_t namespace_drive;
 extern struct namespace_t namespace_ischedule;
 extern struct namespace_t namespace_domainkey;
 extern struct namespace_t namespace_tzdist;
-extern struct namespace_t namespace_jmap;
 extern struct namespace_t namespace_rss;
 extern struct namespace_t namespace_dblookup;
 extern struct namespace_t namespace_admin;
+extern struct namespace_t namespace_applepush;
 
 
 /* XXX  These should be included in struct transaction_t */
@@ -409,6 +483,7 @@ extern struct backend **backend_cached;
 extern struct protstream *httpd_in;
 extern struct protstream *httpd_out;
 extern int https;
+extern sasl_conn_t *httpd_saslconn;
 extern int httpd_tls_done;
 extern int httpd_timeout;
 extern int httpd_userisadmin;
@@ -419,24 +494,32 @@ extern char *httpd_extrafolder;
 extern char *httpd_extradomain;
 extern struct auth_state *httpd_authstate;
 extern struct namespace httpd_namespace;
-extern struct sockaddr_storage httpd_localaddr, httpd_remoteaddr;
+extern const char *httpd_localip, *httpd_remoteip;
 extern unsigned long config_httpmodules;
 extern int config_httpprettytelemetry;
 
 extern int ignorequota;
+extern int apns_enabled;
 
 extern xmlURIPtr parse_uri(unsigned meth, const char *uri, unsigned path_reqd,
                            const char **errstr);
 extern struct accept *parse_accept(const char **hdr);
+extern void parse_query_params(struct transaction_t *txn, const char *query);
 extern time_t calc_compile_time(const char *time, const char *date);
 extern const char *http_statusline(long code);
 extern char *rfc3339date_gen(char *buf, size_t len, time_t t);
 extern char *httpdate_gen(char *buf, size_t len, time_t t);
-extern void comma_list_hdr(const char *hdr, const char *vals[],
+extern void begin_resp_headers(struct transaction_t *txn, long code);
+extern int end_resp_headers(struct transaction_t *txn, long code);
+extern void simple_hdr(struct transaction_t *txn,
+                       const char *name, const char *value, ...);
+extern void comma_list_hdr(struct transaction_t *txn,
+                           const char *hdr, const char *vals[],
                            unsigned flags, ...);
 extern void response_header(long code, struct transaction_t *txn);
 extern void buf_printf_markup(struct buf *buf, unsigned level,
                               const char *fmt, ...);
+extern void keepalive_response(struct transaction_t *txn);
 extern void error_response(long code, struct transaction_t *txn);
 extern void html_response(long code, struct transaction_t *txn, xmlDocPtr html);
 extern void xml_response(long code, struct transaction_t *txn, xmlDocPtr xml);
@@ -450,6 +533,8 @@ extern int etagcmp(const char *hdr, const char *etag);
 extern int check_precond(struct transaction_t *txn,
                          const char *etag, time_t lastmod);
 
-extern int httpd_myrights(struct auth_state *authstate, const char *acl);
+extern int httpd_myrights(struct auth_state *authstate, const mbentry_t *mbentry);
+extern int http_allow_noauth(struct transaction_t *txn);
+extern int http_allow_noauth_get(struct transaction_t *txn);
 
 #endif /* HTTPD_H */

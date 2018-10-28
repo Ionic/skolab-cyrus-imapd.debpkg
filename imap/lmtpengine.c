@@ -260,7 +260,8 @@ static void send_lmtp_error(struct protstream *pout, int r)
     case MUPDATE_BADPARAM:
     default:
         /* Some error we're not expecting. */
-        prot_printf(pout, "451 4.3.0 Unexpected internal error\r\n");
+        prot_printf(pout, "451 4.3.0 Unexpected internal error: %s\r\n",
+                    error_message(r));
         break;
     }
 }
@@ -701,6 +702,10 @@ static int savemsg(struct clientdata *cd,
     fprintf(f, "%s\r\n", p);
     spool_cache_header(xstrdup("Received"), addbody, m->hdrcache);
 
+    char *sid = xstrdup(session_id());
+    fprintf(f, "X-Cyrus-Session-Id: %s\r\n", sid);
+    spool_cache_header(xstrdup("X-Cyrus-Session-Id"), sid, m->hdrcache);
+
     /* add any requested headers */
     if (func->addheaders) {
         struct addheader *h;
@@ -825,6 +830,7 @@ static int process_recipient(char *addr,
     }
 
     mbname_t *mbname = NULL;
+    int r = 0;
 
     size_t sl = strlen(addr);
     if (addr[sl-1] == '>') sl--;
@@ -838,14 +844,15 @@ static int process_recipient(char *addr,
         if (forcedowncase) mbname_downcaseuser(mbname);
 
         /* strip username if postuser */
-        if (!strcmpsafe(mbname_userid(mbname), config_getstring(IMAPOPT_POSTUSER))) {
+        if (!strcmpsafe(mbname_localpart(mbname), config_getstring(IMAPOPT_POSTUSER))) {
             mbname_set_localpart(mbname, NULL);
-            mbname_set_domain(mbname, NULL);
+            if (!config_virtdomains || !strcmpsafe(mbname_domain(mbname), config_defdomain))
+                mbname_set_domain(mbname, NULL);
         }
 
-        if (verify_user(mbname,
+        if ((r = verify_user(mbname,
                         (quota_t) (ignorequota ? -1 : msg->size),
-                        ignorequota ? -1 : 1, msg->authstate)) {
+                        ignorequota ? -1 : 1, msg->authstate))) {
             mbname_free(&mbname);
         }
     }
@@ -854,9 +861,9 @@ static int process_recipient(char *addr,
         const char *catchall = config_getstring(IMAPOPT_LMTP_CATCHALL_MAILBOX);
         if (catchall) {
             mbname = mbname_from_userid(catchall);
-            if (verify_user(mbname,
+            if ((r = verify_user(mbname,
                             ignorequota ? -1 : msg->size,
-                            ignorequota ? -1 : 1, msg->authstate)) {
+                            ignorequota ? -1 : 1, msg->authstate))) {
                 mbname_free(&mbname);
             }
         }
@@ -864,6 +871,9 @@ static int process_recipient(char *addr,
 
     if (!mbname) {
         /* we lost */
+        if (r) {
+            return r;
+        }
         return IMAP_MAILBOX_NONEXISTENT;
     }
 
@@ -1210,7 +1220,7 @@ void lmtpmode(struct lmtp_func *func,
                 snmp_increment(mtaReceivedRecipients, msg->rcpt_num);
 
                 /* do delivery, report status */
-                r = func->deliver(msg, msg->authuser, msg->authstate);
+                func->deliver(msg, msg->authuser, msg->authstate, msg->ns);
                 for (j = 0; j < msg->rcpt_num; j++) {
                     if (!msg->rcpt[j]->status) delivered++;
                     send_lmtp_error(pout, msg->rcpt[j]->status);
@@ -1248,7 +1258,8 @@ void lmtpmode(struct lmtp_func *func,
                   mechcount > 0) {
                   prot_printf(pout,"250-%s\r\n", mechs);
               }
-              prot_printf(pout, "250 IGNOREQUOTA\r\n");
+              prot_printf(pout, "250-IGNOREQUOTA\r\n");
+              prot_printf(pout, "250 Ok SESSIONID=<%s>\r\n", session_id());
 
               strlcpy(cd.lhlo_param, buf + 5, sizeof(cd.lhlo_param));
 
@@ -1447,7 +1458,7 @@ void lmtpmode(struct lmtp_func *func,
             }
             else if (!strcasecmp(buf, "rset")) {
                 session_new_id();
-                prot_printf(pout, "250 2.0.0 ok SESSIONID=<%s>\r\n", session_id());
+                prot_printf(pout, "250 2.0.0 Ok SESSIONID=<%s>\r\n", session_id());
 
               rset:
                 if (msg) msg_free(msg);
@@ -1486,7 +1497,8 @@ void lmtpmode(struct lmtp_func *func,
 
                 r=tls_init_serverengine("lmtp",
                                         5,   /* depth to verify */
-                                        1);  /* can client auth? */
+                                        1,   /* can client auth? */
+                                        NULL);
 
                 if (r == -1) {
 

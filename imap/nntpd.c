@@ -164,6 +164,8 @@ static sasl_ssf_t extprops_ssf = 0;
 static int nntps = 0;
 static int nntp_starttls_done = 0;
 static int nntp_tls_required = 0;
+static void *nntp_tls_comp = NULL; /* TLS compression method, if any */
+static int nntp_compress_done = 0; /* have we done a successful compress? */
 
 /* the sasl proxy policy context */
 static struct proxy_context nntp_proxyctx = {
@@ -222,6 +224,9 @@ static void cmd_newnews(char *wild, time_t tstamp);
 static void cmd_over(char *msgid, unsigned long uid, unsigned long last);
 static void cmd_post(char *msgid, int mode);
 static void cmd_starttls(int nntps);
+#ifdef HAVE_ZLIB
+static void cmd_compress(char *alg);
+#endif
 static void usage(void);
 void shut_down(int code) __attribute__ ((noreturn));
 
@@ -263,7 +268,7 @@ static struct protocol_t nntp_protocol =
   { { { 0, "20" },
       { "CAPABILITIES", NULL, ".", NULL,
         CAPAF_ONE_PER_LINE,
-        { { "SASL ", CAPA_AUTH },
+        { { "SASL", CAPA_AUTH },
           { "STARTTLS", CAPA_STARTTLS },
           { NULL, 0 } } },
       { "STARTTLS", "382", "580", 0 },
@@ -402,6 +407,8 @@ static void nntp_reset(void)
         sasl_dispose(&nntp_saslconn);
         nntp_saslconn = NULL;
     }
+    nntp_compress_done = 0;
+    nntp_tls_comp = NULL;
     nntp_starttls_done = 0;
 
     if(saslprops.iplocalport) {
@@ -684,6 +691,7 @@ void shut_down(int code)
 #endif
 
     if (newsgroups) free_wildmats(newsgroups);
+    auth_freestate(newsmaster_authstate);
 
     cyrus_done();
 
@@ -986,6 +994,17 @@ static void cmdloop(void)
 
                 cmd_capabilities(arg1.s);
             }
+#ifdef HAVE_ZLIB
+            else if (!strcmp(cmd.s, "Compress")) {
+                if (c != ' ') goto missingargs;
+                c = getword(nntp_in, &arg1);
+                if (c == EOF) goto missingargs;
+                if (c == '\r') c = prot_getc(nntp_in);
+                if (c != '\n') goto extraargs;
+
+                cmd_compress(arg1.s);
+            }
+#endif /* HAVE_ZLIB */
             else if (!(nntp_capa & MODE_FEED)) goto noperm;
             else if (!strcmp(cmd.s, "Check")) {
                 mode = POST_CHECK;
@@ -1833,6 +1852,13 @@ static void cmd_capabilities(char *keyword __attribute__((unused)))
         if (mechcount) prot_printf(nntp_out, "%s", mechlist);
     }
 
+#ifdef HAVE_ZLIB
+    /* add COMPRESS */
+    if (!nntp_compress_done && !nntp_tls_comp) {
+        prot_printf(nntp_out, "COMPRESS DEFLATE\r\n");
+    }
+#endif
+
     /* add the reader capabilities/extensions */
     if ((nntp_capa & MODE_READ) && (nntp_authstate || allowanonymous)) {
         prot_printf(nntp_out, "READER\r\n");
@@ -2464,37 +2490,28 @@ static void cmd_help(void)
 
 struct list_rock {
     int (*proc)(const char *, void *);
+    unsigned rights;
     struct wildmat *wild;
     struct hash_table server_table;
 };
 
 /*
- * mboxlist_findall() callback function to LIST
+ * mboxlist_allmbox() callback function to LIST
  */
-static int list_cb(const char *name, int matchlen,
-                   int maycreate __attribute__((unused)), void *rock)
+static int list_cb(const mbentry_t *mbentry, void *rock)
 {
-    static char lastname[MAX_MAILBOX_BUFFER];
+    const char *name = mbentry->name;
     struct list_rock *lrock = (struct list_rock *) rock;
     struct wildmat *wild;
 
-    /* We have to reset the initial state.
-     * Handle it as a dirty hack.
-     */
-    if (!name) {
-        lastname[0] = '\0';
+    /* skip mailboxes that we aren't allowed to list */
+    if (!mbentry->acl ||
+        !(cyrus_acl_myrights(nntp_authstate, mbentry->acl) & lrock->rights)) {
         return 0;
     }
 
     /* skip mailboxes that we don't want to serve as newsgroups */
     if (!is_newsgroup(name)) return 0;
-
-    /* don't repeat */
-    if (matchlen == (int) strlen(lastname) &&
-        !strncmp(name, lastname, matchlen)) return 0;
-
-    strncpy(lastname, name, matchlen);
-    lastname[matchlen] = '\0';
 
     /* see if the mailbox matches one of our specified wildmats */
     wild = lrock->wild;
@@ -2503,7 +2520,20 @@ static int list_cb(const char *name, int matchlen,
     /* if we don't have a match, or its a negative match, skip it */
     if (!wild->pat || wild->not) return 0;
 
-    return lrock->proc(name, lrock);
+    if (mbentry->server) {
+        /* remote group */
+        struct list_rock *lrock = (struct list_rock *) rock;
+
+        if (!hash_lookup(mbentry->server, &lrock->server_table)) {
+            /* add this server to our table */
+            hash_insert(mbentry->server,
+                        (void *)0xDEADBEEF, &lrock->server_table);
+        }
+
+        return 0;
+    }
+    else if (lrock->proc) return lrock->proc(name, lrock);
+    else return CYRUSDB_DONE;
 }
 
 struct enum_rock {
@@ -2514,7 +2544,8 @@ struct enum_rock {
 /*
  * hash_enumerate() callback function to LIST (proxy)
  */
-static void list_proxy(const char *server, void *data __attribute__((unused)), void *rock)
+static void list_proxy(const char *server,
+                       void *data __attribute__((unused)), void *rock)
 {
     struct enum_rock *erock = (struct enum_rock *) rock;
     struct backend *be;
@@ -2537,11 +2568,10 @@ static void list_proxy(const char *server, void *data __attribute__((unused)), v
 }
 
 /*
- * perform LIST ACTIVE (backend) or create a server hash table (proxy)
+ * perform LIST ACTIVE (backend)
  */
-static int do_active(const char *name, void *rock)
+static int do_active(const char *name, void *rock __attribute__((unused)))
 {
-    struct list_rock *lrock = (struct list_rock *) rock;
     int r, postable;
     struct backend *be;
 
@@ -2550,54 +2580,15 @@ static int do_active(const char *name, void *rock)
     if (r) {
         /* can't open group, skip it */
     }
-    else if (be) {
-        if (!hash_lookup(be->hostname, &lrock->server_table)) {
-            /* add this server to our table */
-            hash_insert(be->hostname, (void *)0xDEADBEEF, &lrock->server_table);
-        }
-    }
     else {
         prot_printf(nntp_out, "%s %u %u %c\r\n", name+strlen(newsprefix),
-                    group_state->exists ? index_getuid(group_state, group_state->exists) :
+                    group_state->exists ?
+                    index_getuid(group_state, group_state->exists) :
                     group_state->mailbox->i.last_uid,
                     group_state->exists ? index_getuid(group_state, 1) :
                     group_state->mailbox->i.last_uid+1,
                     postable ? 'y' : 'n');
         index_close(&group_state);
-    }
-
-    return 0;
-}
-
-/*
- * perform LIST NEWSGROUPS (backend) or create a server hash table (proxy)
- */
-static int do_newsgroups(const char *name, void *rock)
-{
-    struct list_rock *lrock = (struct list_rock *) rock;
-    mbentry_t *mbentry = NULL;
-    int r;
-
-    r = mlookup(name, &mbentry);
-
-    if (r || !mbentry->acl ||
-        !(cyrus_acl_myrights(nntp_authstate, mbentry->acl) && ACL_LOOKUP)) {
-        mboxlist_entry_free(&mbentry);
-        return 0;
-    }
-
-    if (mbentry->server) {
-        /* remote group */
-        if (!hash_lookup(mbentry->server, &lrock->server_table)) {
-            /* add this server to our table */
-            hash_insert(mbentry->server, (void *)0xDEADBEEF, &lrock->server_table);
-        }
-        mboxlist_entry_free(&mbentry);
-    }
-    else {
-        /* local group */
-        mboxlist_entry_free(&mbentry);
-        return CYRUSDB_DONE;
     }
 
     return 0;
@@ -2643,7 +2634,6 @@ static void cmd_list(char *arg1, char *arg2)
         lcase(arg1);
 
     if (!strcmp(arg1, "active")) {
-        char pattern[MAX_MAILBOX_BUFFER];
         struct list_rock lrock;
         struct enum_rock erock;
 
@@ -2653,6 +2643,7 @@ static void cmd_list(char *arg1, char *arg2)
         erock.wild = xstrdup(arg2); /* make a copy before we munge it */
 
         lrock.proc = do_active;
+        lrock.rights = ACL_READ;
         /* split the list of wildmats */
         lrock.wild = split_wildmats(arg2, config_getstring(IMAPOPT_NEWSPREFIX));
 
@@ -2661,12 +2652,7 @@ static void cmd_list(char *arg1, char *arg2)
 
         prot_printf(nntp_out, "215 List of newsgroups follows:\r\n");
 
-        strcpy(pattern, newsprefix);
-        strcat(pattern, "*");
-        list_cb(NULL, 0, 0, NULL);
-        mboxlist_findall(NULL, pattern, 0,
-                         nntp_authstate ? nntp_userid : NULL, nntp_authstate,
-                         list_cb, &lrock);
+        mboxlist_allmbox(newsprefix, list_cb, &lrock, 0);
 
         /* proxy to the backends */
         hash_enumerate(&lrock.server_table, list_proxy, &erock);
@@ -2713,7 +2699,8 @@ static void cmd_list(char *arg1, char *arg2)
         erock.cmd = "NEWSGROUPS";
         erock.wild = xstrdup(arg2); /* make a copy before we munge it */
 
-        lrock.proc = do_newsgroups;
+        lrock.proc = NULL;
+        lrock.rights = ACL_LOOKUP;
         /* split the list of wildmats */
         lrock.wild = split_wildmats(arg2, config_getstring(IMAPOPT_NEWSPREFIX));
 
@@ -2722,12 +2709,7 @@ static void cmd_list(char *arg1, char *arg2)
 
         prot_printf(nntp_out, "215 List of newsgroups follows:\r\n");
 
-        strcpy(pattern, newsprefix);
-        strcat(pattern, "*");
-        list_cb(NULL, 0, 0, NULL);
-        mboxlist_findall(NULL, pattern, 0,
-                         nntp_authstate ? nntp_userid : NULL, nntp_authstate,
-                         list_cb, &lrock);
+        mboxlist_allmbox(newsprefix, list_cb, &lrock, 0);
 
         /* proxy to the backends */
         hash_enumerate(&lrock.server_table, list_proxy, &erock);
@@ -4095,7 +4077,8 @@ static void cmd_starttls(int nntps)
 
     result=tls_init_serverengine("nntp",
                                  5,        /* depth to verify */
-                                 !nntps);  /* can client auth? */
+                                 !nntps,   /* can client auth? */
+                                 NULL);
 
     if (result == -1) {
 
@@ -4165,6 +4148,10 @@ static void cmd_starttls(int nntps)
     nntp_starttls_done = 1;
     nntp_tls_required = 0;
 
+#if (OPENSSL_VERSION_NUMBER >= 0x0090800fL)
+    nntp_tls_comp = (void *) SSL_get_current_compression(tls_conn);
+#endif
+
     /* close any selected group */
     if (group_state)
         index_close(&group_state);
@@ -4180,3 +4167,39 @@ static void cmd_starttls(int nntps __attribute__((unused)))
     fatal("cmd_starttls() called, but no OpenSSL", EC_SOFTWARE);
 }
 #endif /* HAVE_SSL */
+
+#ifdef HAVE_ZLIB
+static void cmd_compress(char *alg)
+{
+    if (nntp_compress_done) {
+        prot_printf(nntp_out,
+                    "502 DEFLATE compression already active via COMPRESS\r\n");
+    }
+#if defined(HAVE_SSL) && (OPENSSL_VERSION_NUMBER >= 0x0090800fL)
+    else if (nntp_tls_comp) {
+        prot_printf(nntp_out,
+                    "502 %s compression already active via TLS\r\n",
+                    SSL_COMP_get_name(nntp_tls_comp));
+    }
+#endif // defined(HAVE_SSL) && (OPENSSL_VERSION_NUMBER >= 0x0090800fL)
+    else if (strcasecmp(alg, "DEFLATE")) {
+        prot_printf(nntp_out,
+                    "502 Unknown COMPRESS algorithm: %s\r\n", alg);
+    }
+    else if (ZLIB_VERSION[0] != zlibVersion()[0]) {
+        prot_printf(nntp_out,
+                    "403 Error initializing %s (incompatible zlib version)\r\n",
+                    alg);
+    }
+    else {
+        prot_printf(nntp_out,
+                    "206 %s compression active\r\n", alg);
+
+        /* enable (de)compression for the prot layer */
+        prot_setcompress(nntp_in);
+        prot_setcompress(nntp_out);
+
+        nntp_compress_done = 1;
+    }
+}
+#endif /* HAVE_ZLIB */

@@ -386,6 +386,8 @@ EXPORTED mbname_t *mbname_from_recipient(const char *recipient, const struct nam
         *plus = '\0';
         mbname->boxes = strarray_split(plus+1, sep, /*flags*/0);
     }
+    else
+        mbname->boxes = strarray_new();
 
     return mbname;
 }
@@ -419,19 +421,82 @@ EXPORTED mbname_t *mbname_dup(const mbname_t *orig)
     return mbname;
 }
 
-static void _add_dots(char *p)
+static void _append_intbuf(struct buf *buf, const char *val)
 {
-    for (; *p; p++) {
-        if (*p == '^') *p = '.';
+    const char *p;
+    for (p = val; *p; p++) {
+        switch (*p) {
+        case '.':
+            buf_putc(buf, '^');
+            break;
+        default:
+            buf_putc(buf, *p);
+            break;
+        }
     }
 }
 
-static void _rm_dots(char *p)
+static strarray_t *_array_from_intname(strarray_t *a)
 {
-    for (; *p; p++) {
-        if (*p == '.') *p = '^';
+    int i;
+    for (i = 0; i < strarray_size(a); i++) {
+        char *p;
+        for (p = a->data[i]; *p; p++) {
+            switch (*p) {
+            case '^':
+                *p = '.';
+                break;
+            default:
+                break;
+            }
+        }
+    }
+    return a;
+}
+
+static void _append_extbuf(const struct namespace *ns, struct buf *buf, const char *val)
+{
+    const char *p;
+    int isuhs = (ns->hier_sep == '/');
+    for (p = val; *p; p++) {
+        switch (*p) {
+        case '.':
+            if (isuhs) buf_putc(buf, '.');
+            else buf_putc(buf, '^');
+            break;
+        default:
+            buf_putc(buf, *p);
+            break;
+        }
     }
 }
+
+static strarray_t *_array_from_extname(const struct namespace *ns, strarray_t *a)
+{
+    int i;
+    int isuhs = (ns->hier_sep == '/');
+    for (i = 0; i < strarray_size(a); i++) {
+        char *p;
+        for (p = a->data[i]; *p; p++) {
+            switch (*p) {
+            case '^':
+                if (isuhs) goto err;
+                else *p = '.';
+                break;
+            case '/':
+                goto err;
+            default:
+                break;
+            }
+        }
+    }
+    return a;
+
+err:
+    strarray_free(a);
+    return NULL;
+}
+
 
 EXPORTED mbname_t *mbname_from_intname(const char *intname)
 {
@@ -458,23 +523,19 @@ EXPORTED mbname_t *mbname_from_intname(const char *intname)
         intname = p+1;
     }
 
-    mbname->boxes = strarray_split(intname, ".", 0);
-    int i;
-    for (i = 0; i < mbname->boxes->count; i++) {
-        _add_dots(mbname->boxes->data[i]);
-    }
+    mbname->boxes = _array_from_intname(strarray_split(intname, ".", 0));
 
     if (!strarray_size(mbname->boxes))
         return mbname;
 
-    if (strarray_size(mbname->boxes) > 2 && !strcmp(strarray_nth(mbname->boxes, 0), dp)) {
+    if (strarray_size(mbname->boxes) > 2 && !strcmpsafe(strarray_nth(mbname->boxes, 0), dp)) {
         free(strarray_shift(mbname->boxes));
         char *delval = strarray_pop(mbname->boxes);
         mbname->is_deleted = strtoul(delval, NULL, 16);
         free(delval);
     }
 
-    if (strarray_size(mbname->boxes) > 1 && !strcmp(strarray_nth(mbname->boxes, 0), "user")) {
+    if (strarray_size(mbname->boxes) > 1 && !strcmpsafe(strarray_nth(mbname->boxes, 0), "user")) {
         free(strarray_shift(mbname->boxes));
         mbname->localpart = strarray_shift(mbname->boxes);
     }
@@ -484,9 +545,22 @@ EXPORTED mbname_t *mbname_from_intname(const char *intname)
 
 EXPORTED mbname_t *mbname_from_extname(const char *extname, const struct namespace *ns, const char *userid)
 {
+    int crossdomains = config_getswitch(IMAPOPT_CROSSDOMAINS) && !ns->isadmin;
+    int cdother = config_getswitch(IMAPOPT_CROSSDOMAINS_ONLYOTHER);
+    /* old-school virtdomains requires admin to be a different domain than the userid */
+    int admindomains = config_virtdomains && ns->isadmin;
+
+    /* specialuse magic */
+    if (extname && extname[0] == '\\') {
+        char *intname = mboxlist_find_specialuse(extname, userid);
+        mbname_t *mbname = mbname_from_intname(intname);
+        free(intname);
+        return mbname;
+    }
+
     mbname_t *mbname = xzmalloc(sizeof(mbname_t));
     char sepstr[2];
-    const char *domain = NULL;
+    char *p = NULL;
 
     if (!extname)
         return mbname;
@@ -494,22 +568,36 @@ EXPORTED mbname_t *mbname_from_extname(const char *extname, const struct namespa
     if (!*extname)
         return mbname; // empty string, *sigh*
 
-    mbname_t *userparts = mbname_from_userid(userid);
-
-    mbname->extname = xstrdup(extname); // may as well cache it
-
     sepstr[0] = ns->hier_sep;
     sepstr[1] = '\0';
 
-    char *p = config_virtdomains ? strchr(mbname->extname, '@') : NULL;
-    if (p) {
-        domain = p+1;
-        if (!strcmpsafe(domain, config_defdomain))
-            domain = NULL;
-        *p = '\0'; /* temporary */
+    mbname->extname = xstrdup(extname); // may as well cache it
+
+    mbname_t *userparts = mbname_from_userid(userid);
+
+    if (admindomains) {
+        p = strchr(mbname->extname, '@');
+        if (p) {
+            *p = '\0';
+            if (strcmpsafe(p+1, config_defdomain))
+                mbname->domain = xstrdup(p+1);
+        }
+        else {
+            // domain admin?
+            mbname->domain = xstrdupnull(mbname_domain(userparts));
+        }
     }
-    mbname->boxes = strarray_split(mbname->extname, sepstr, 0);
-    if (p) *p = '@'; /* repair */
+    else if (!crossdomains) {
+        // non-crossdomains, we're always in the user's domain
+        mbname->domain = xstrdupnull(mbname_domain(userparts));
+    }
+
+    mbname->boxes = _array_from_extname(ns, strarray_split(mbname->extname, sepstr, 0));
+
+    if (p) *p = '@'; // rebuild extname for later use
+
+    if (!mbname->boxes)
+        goto done;
 
     if (!strarray_size(mbname->boxes))
         goto done;
@@ -517,31 +605,79 @@ EXPORTED mbname_t *mbname_from_extname(const char *extname, const struct namespa
     if (ns->isalt) {
         /* admin can't be in here, so we can ignore that :) - and hence also
          * the DELETED namespace */
+        assert(!ns->isadmin);
+
+        const char *toplevel = strarray_nth(mbname->boxes, 0);
+
         const char *up = config_getstring(IMAPOPT_USERPREFIX);
         const char *sp = config_getstring(IMAPOPT_SHAREDPREFIX);
+        const char *ap = config_getstring(IMAPOPT_ALTPREFIX);
 
-        if (!strcmp(strarray_nth(mbname->boxes, 0), up)) {
-            /* other user namespace */
+        if (!strcmpsafe(toplevel, ap)) {
             free(strarray_shift(mbname->boxes));
-            /* XXX - cross domain support.  For now, it's always in the
-             * userid's domain, if any */
-            mbname->localpart = strarray_shift(mbname->boxes);
-            mbname->domain = xstrdupnull(mbname_domain(userparts));
+
+            /* everything belongs to the userid */
+            mbname->localpart = xstrdupnull(mbname_localpart(userparts));
+            /* otherwise it was done above */
+            if (crossdomains) mbname->domain = xstrdupnull(mbname_domain(userparts));
+
             goto done;
         }
 
-        if (!strcmp(strarray_nth(mbname->boxes, 0), sp)) {
+        else if (!strcmpsafe(toplevel, up)) {
+            /* other user namespace */
+            free(strarray_shift(mbname->boxes));
+            mbname->localpart = strarray_shift(mbname->boxes);
+            if (crossdomains && mbname->localpart) {
+                char *p = strchr(mbname->localpart, '@');
+                if (p) {
+                    *p = '\0';
+                    if (strcmpsafe(p+1, config_defdomain))
+                        mbname->domain = xstrdup(p+1);
+                }
+                else if (cdother) {
+                    mbname->domain = xstrdupnull(mbname_domain(userparts));
+                }
+                /* otherwise it must be in defdomain.  Domains are
+                 * always specified in crossdomains */
+            }
+            goto done;
+        }
+
+        else if (!strcmpsafe(toplevel, sp)) {
             /* shared namespace, no user */
             free(strarray_shift(mbname->boxes));
+            if (crossdomains) {
+                const char *toplevel = strarray_nth(mbname->boxes, 0);
+                if (toplevel && strchr(toplevel, '@')) {
+                    char *p = (char *)strchr(toplevel, '@');
+                    *p = '\0';
+                    if (strcmpsafe(p+1, config_defdomain))
+                        mbname->domain = xstrdup(p+1);
+                }
+                else if (cdother) {
+                    mbname->domain = xstrdupnull(mbname_domain(userparts));
+                }
+            }
             goto done;
         }
 
         /* everything else belongs to the userid */
         mbname->localpart = xstrdupnull(mbname_localpart(userparts));
-        mbname->domain = xstrdupnull(mbname_domain(userparts));
-        /* special case pure inbox with case, because horrible */
-        if (strarray_size(mbname->boxes) == 1 && !strcasecmp(strarray_nth(mbname->boxes, 0), "INBOX"))
-            free(strarray_shift(mbname->boxes));
+        /* otherwise it was done above */
+        if (crossdomains) mbname->domain = xstrdupnull(mbname_domain(userparts));
+        /* special case INBOX case, because horrible */
+        if (!strcasecmpsafe(toplevel, "INBOX")) {
+            if (strarray_size(mbname->boxes) == 1) {
+                free(strarray_shift(mbname->boxes));
+            }
+            else {
+                /* force to upper case */
+                char *p = (char *)toplevel;
+                for (; *p; ++p)
+                    *p = toupper(*p);
+            }
+        }
 
         goto done;
     }
@@ -549,15 +685,16 @@ EXPORTED mbname_t *mbname_from_extname(const char *extname, const struct namespa
     const char *dp = config_getstring(IMAPOPT_DELETEDPREFIX);
 
     /* special inbox with insensitivity still, because horrible */
-    if (!strcasecmp(strarray_nth(mbname->boxes, 0), "INBOX")) {
+    if (!strcasecmpsafe(strarray_nth(mbname->boxes, 0), "INBOX")) {
         free(strarray_shift(mbname->boxes));
         mbname->localpart = xstrdupnull(mbname_localpart(userparts));
-        mbname->domain = xstrdupnull(mbname_domain(userparts));
+        /* otherwise it was done above */
+        if (crossdomains) mbname->domain = xstrdupnull(mbname_domain(userparts));
         goto done;
     }
 
     /* deleted prefix first */
-    if (!strcmp(strarray_nth(mbname->boxes, 0), dp)) {
+    if (ns->isadmin && !strcmpsafe(strarray_nth(mbname->boxes, 0), dp)) {
         free(strarray_shift(mbname->boxes));
         char *delval = strarray_pop(mbname->boxes);
         if (!delval)
@@ -570,13 +707,29 @@ EXPORTED mbname_t *mbname_from_extname(const char *extname, const struct namespa
         goto done;
 
     /* now look for user */
-    if (!strcmp(strarray_nth(mbname->boxes, 0), "user")) {
+    if (!strcmpsafe(strarray_nth(mbname->boxes, 0), "user")) {
         free(strarray_shift(mbname->boxes));
         mbname->localpart = strarray_shift(mbname->boxes);
-        mbname->domain = xstrdupnull(domain ? domain : mbname_domain(userparts));
+        if (crossdomains && mbname->localpart) {
+            char *p = strchr(mbname->localpart, '@');
+            if (p) {
+                *p = '\0';
+                if (strcmpsafe(p+1, config_defdomain))
+                    mbname->domain = xstrdup(p+1);
+            }
+            else if (cdother) {
+                mbname->domain = xstrdupnull(mbname_domain(userparts));
+            }
+        }
+        goto done;
     }
 
-    /* the rest is just in boxes */
+    /* shared folders: are in user's domain unless admin */
+    if ((config_virtdomains && !ns->isadmin) || crossdomains) {
+        free(mbname->domain);
+        mbname->domain = xstrdupnull(mbname_domain(userparts));
+    }
+
  done:
     mbname_free(&userparts);
 
@@ -657,19 +810,13 @@ EXPORTED const char *mbname_intname(const mbname_t *mbname)
     if (mbname->localpart) {
         if (sep) buf_putc(&buf, '.');
         buf_appendcstr(&buf, "user.");
-        char *lp = xstrdup(mbname->localpart);
-        _rm_dots(lp);
-        buf_appendcstr(&buf, lp);
-        free(lp);
+        _append_intbuf(&buf, mbname->localpart);
         sep = 1;
     }
 
     for (i = 0; i < strarray_size(boxes); i++) {
         if (sep) buf_putc(&buf, '.');
-        char *lp = xstrdup(strarray_nth(boxes, i));
-        _rm_dots(lp);
-        buf_appendcstr(&buf, lp);
-        free(lp);
+        _append_intbuf(&buf, strarray_nth(boxes, i));
         sep = 1;
     }
 
@@ -735,8 +882,14 @@ EXPORTED const char *mbname_recipient(const mbname_t *mbname, const struct names
 
     struct buf buf = BUF_INITIALIZER;
 
-    if (mbname->localpart)
+    if (mbname->localpart) {
+        /* user mailbox */
         buf_appendcstr(&buf, mbname->localpart);
+    }
+    else {
+        /* shared mailbox */
+        buf_appendcstr(&buf, config_getstring(IMAPOPT_POSTUSER));
+    }
 
     int i;
     for (i = 0; i < strarray_size(mbname->boxes); i++) {
@@ -764,39 +917,130 @@ EXPORTED const char *mbname_recipient(const mbname_t *mbname, const struct names
  * Due to ambiguity, some names won't be representable in the external namespace,
  * so this function can return a NULL in those cases.
  */
+EXPORTED int mbname_category(const mbname_t *mbname, const struct namespace *ns, const char *userid)
+{
+    if (!mbname_localpart(mbname)) return MBNAME_SHARED;
+    if (mbname_isdeleted(mbname)) return MBNAME_SHARED;
+
+    if (strcmpsafe(mbname_userid(mbname), userid)) return MBNAME_OTHERUSER;
+
+    const strarray_t *boxes = mbname_boxes(mbname);
+
+    if (!strarray_size(boxes)) return MBNAME_INBOX;
+
+    if (ns->isalt) {
+        const char *toplevel = strarray_nth(boxes, 0);
+
+        /* exact "INBOX" */
+        if (!strcmpsafe(toplevel, "INBOX")) {
+            if (strarray_size(boxes) == 1) return MBNAME_ALTINBOX;
+            return MBNAME_INBOXSUB;
+        }
+
+        /* other "INBOX" spellings */
+        if (!strcasecmpsafe(toplevel, "INBOX")) return MBNAME_ALTPREFIX;
+
+        /* other prefixes that are special */
+        if (!strcmpsafe(toplevel, config_getstring(IMAPOPT_USERPREFIX))) return MBNAME_ALTPREFIX;
+        if (!strcmpsafe(toplevel, config_getstring(IMAPOPT_SHAREDPREFIX))) return MBNAME_ALTPREFIX;
+        if (!strcmpsafe(toplevel, config_getstring(IMAPOPT_ALTPREFIX))) return MBNAME_ALTPREFIX;
+    }
+
+    /* everything else is owner */
+
+    return MBNAME_OWNER;
+}
+
+EXPORTED const char *mbname_category_prefix(int category, const struct namespace *ns)
+{
+    if (ns->isalt) {
+        switch (category) {
+            case MBNAME_ALTINBOX:
+                return config_getstring(IMAPOPT_ALTPREFIX);
+            case MBNAME_OTHERUSER:
+                return config_getstring(IMAPOPT_USERPREFIX);
+            case MBNAME_SHARED:
+                return config_getstring(IMAPOPT_SHAREDPREFIX);
+            default:
+                return NULL;
+        }
+    }
+    else {
+        if (category == MBNAME_OTHERUSER) return "user";
+    }
+
+    return NULL;
+}
+
 EXPORTED const char *mbname_extname(const mbname_t *mbname, const struct namespace *ns, const char *userid)
 {
+    int crossdomains = config_getswitch(IMAPOPT_CROSSDOMAINS) && !ns->isadmin;
+    int cdother = config_getswitch(IMAPOPT_CROSSDOMAINS_ONLYOTHER);
+    /* old-school virtdomains requires admin to be a different domain than the userid */
+    int admindomains = config_virtdomains && ns->isadmin;
+
     /* gotta match up! */
     if (mbname->extname && ns == mbname->extns && !strcmpsafe(userid, mbname->extuserid))
         return mbname->extname;
 
+    struct buf buf = BUF_INITIALIZER;
+
+    /* have to zero out any existing value just in case we drop through */
+    mbname_t *backdoor = (mbname_t *)mbname;
+    if (backdoor->extname) {
+        free(backdoor->extname);
+        backdoor->extname = NULL;
+        backdoor->extns = ns;
+        free(backdoor->extuserid);
+        backdoor->extuserid = xstrdupnull(userid);
+    }
+
     mbname_t *userparts = mbname_from_userid(userid);
     strarray_t *boxes = strarray_dup(mbname_boxes(mbname));
 
-    struct buf buf = BUF_INITIALIZER;
-
     if (ns->isalt) {
+        assert(!ns->isadmin);
+
         const char *up = config_getstring(IMAPOPT_USERPREFIX);
         const char *sp = config_getstring(IMAPOPT_SHAREDPREFIX);
+        const char *ap = config_getstring(IMAPOPT_ALTPREFIX);
 
         /* DELETED mailboxes have no extname in alt namespace.
-         * There's also no need to display domains, because admins
-         * are never in altnamespace, and only admins can see domains */
+         * There's also no need to display domains unless in crossdomains,
+         * because admins are never in altnamespace, and only admins can
+         * see domains in the admindomains space */
         if (mbname->is_deleted)
             goto done;
 
         /* shared */
-        if (!mbname->localpart) {
-            if (strarray_size(boxes) == 1 && !strcmp(strarray_nth(boxes, 0), "user")) {
+        if (!mbname_localpart(mbname)) {
+            /* can't represent an empty mailbox */
+            if (!strarray_size(boxes))
+                goto done;
+
+            const char *toplevel = strarray_nth(boxes, 0);
+
+            if (strarray_size(boxes) == 1 && !strcmpsafe(toplevel, "user")) {
                 /* special case user all by itself */
                 buf_appendcstr(&buf, up);
                 goto end;
             }
             buf_appendcstr(&buf, sp);
+            buf_putc(&buf, ns->hier_sep);
+            _append_extbuf(ns, &buf, toplevel);
+            /* domains go on the top level folder */
+            if (crossdomains) {
+                const char *domain = mbname_domain(mbname);
+                if (!cdother || strcmpsafe(domain, mbname_domain(userparts))) {
+                    if (!domain) domain = config_defdomain;
+                    buf_putc(&buf, '@');
+                    _append_extbuf(ns, &buf, domain);
+                }
+            }
             int i;
-            for (i = 0; i < strarray_size(boxes); i++) {
+            for (i = 1; i < strarray_size(boxes); i++) {
                 buf_putc(&buf, ns->hier_sep);
-                buf_appendcstr(&buf, strarray_nth(boxes, i));
+                _append_extbuf(ns, &buf, strarray_nth(boxes, i));
             }
             goto end;
         }
@@ -805,11 +1049,19 @@ EXPORTED const char *mbname_extname(const mbname_t *mbname, const struct namespa
         if (strcmpsafe(mbname_userid(mbname), userid)) {
             buf_appendcstr(&buf, up);
             buf_putc(&buf, ns->hier_sep);
-            buf_appendcstr(&buf, mbname->localpart);
+            _append_extbuf(ns, &buf, mbname_localpart(mbname));
+            if (crossdomains) {
+                const char *domain = mbname_domain(mbname);
+                if (!cdother || strcmpsafe(domain, mbname_domain(userparts))) {
+                    if (!domain) domain = config_defdomain;
+                    buf_putc(&buf, '@');
+                    _append_extbuf(ns, &buf, domain);
+                }
+            }
             int i;
             for (i = 0; i < strarray_size(boxes); i++) {
                 buf_putc(&buf, ns->hier_sep);
-                buf_appendcstr(&buf, strarray_nth(boxes, i));
+                _append_extbuf(ns, &buf, strarray_nth(boxes, i));
             }
             goto end;
         }
@@ -820,22 +1072,29 @@ EXPORTED const char *mbname_extname(const mbname_t *mbname, const struct namespa
             goto end;
         }
 
-        /* invalid names - anything exactly 'inbox' can't be displayed because
-         * select would be ambiguous */
-        if (strarray_size(boxes) == 1 && !strcasecmp(strarray_nth(boxes, 0), "INBOX"))
-            goto done;
+        const char *toplevel = strarray_nth(boxes, 0);
+        /* INBOX is very special, because it can only be represented with exact case,
+         * and it skips a level. Everything else including allcaps INBOX goes into
+         * the Alt Prefix */
+        if (!strcasecmpsafe(toplevel, "INBOX")) {
+            if (strarray_size(boxes) == 1 || strcmpsafe(toplevel, "INBOX")) {
+                buf_appendcstr(&buf, ap);
+                buf_putc(&buf, ns->hier_sep);
+            }
+        }
+        /* likewise anything exactly matching the user, alt or shared prefixes, both top level
+         * or with children goes into alt prefix */
+        else if (!strcmpsafe(toplevel, up) || !strcmpsafe(toplevel, sp) || !strcmpsafe(toplevel, ap)) {
+            buf_appendcstr(&buf, ap);
+            buf_putc(&buf, ns->hier_sep);
+        }
 
-        /* likewise anything exactly matching the user or shared prefixes, both top level
-         * or with children */
-        if (!strcmp(strarray_nth(boxes, 0), up))
-            goto done;
-        if (!strcmp(strarray_nth(boxes, 0), sp))
-            goto done;
+         _append_extbuf(ns, &buf, toplevel);
 
         int i;
-        for (i = 0; i < strarray_size(boxes); i++) {
-            if (i) buf_putc(&buf, ns->hier_sep);
-            buf_appendcstr(&buf, strarray_nth(boxes, i));
+        for (i = 1; i < strarray_size(boxes); i++) {
+           buf_putc(&buf, ns->hier_sep);
+            _append_extbuf(ns, &buf, strarray_nth(boxes, i));
         }
 
         goto end;
@@ -847,19 +1106,25 @@ EXPORTED const char *mbname_extname(const mbname_t *mbname, const struct namespa
     }
 
     /* shared */
-    if (!mbname->localpart) {
+    if (!mbname_localpart(mbname)) {
         /* invalid names - not sure it's even possible, but hey */
         if (!strarray_size(boxes))
             goto done;
-        if (!strcasecmp(strarray_nth(boxes, 0), "INBOX"))
+        if (!strcasecmpsafe(strarray_nth(boxes, 0), "INBOX"))
             goto done;
+
+        /* shared folders can ONLY be in the same domain except for admin */
+        if (!admindomains && strcmpsafe(mbname_domain(mbname), mbname_domain(userparts)))
+            goto done;
+
         /* note "user" precisely appears here, but no need to special case it
          * since the output is the same */
         int i;
         for (i = 0; i < strarray_size(boxes); i++) {
             if (i) buf_putc(&buf, ns->hier_sep);
-            buf_appendcstr(&buf, strarray_nth(boxes, i));
+            _append_extbuf(ns, &buf, strarray_nth(boxes, i));
         }
+
         goto end;
     }
 
@@ -867,11 +1132,22 @@ EXPORTED const char *mbname_extname(const mbname_t *mbname, const struct namespa
     if (strcmpsafe(mbname_userid(mbname), userid)) {
         buf_appendcstr(&buf, "user");
         buf_putc(&buf, ns->hier_sep);
-        buf_appendcstr(&buf, mbname->localpart);
+        _append_extbuf(ns, &buf, mbname_localpart(mbname));
+        if (crossdomains) {
+            const char *domain = mbname_domain(mbname);
+            if (!cdother || strcmpsafe(domain, mbname_domain(userparts))) {
+                if (!domain) domain = config_defdomain;
+                buf_putc(&buf, '@');
+                _append_extbuf(ns, &buf, domain);
+            }
+        }
+        /* shared folders can ONLY be in the same domain except for admin */
+        else if (!admindomains && strcmpsafe(mbname_domain(mbname), mbname_domain(userparts)))
+            goto done;
         int i;
         for (i = 0; i < strarray_size(boxes); i++) {
             buf_putc(&buf, ns->hier_sep);
-            buf_appendcstr(&buf, strarray_nth(boxes, i));
+            _append_extbuf(ns, &buf, strarray_nth(boxes, i));
         }
         goto end;
     }
@@ -880,7 +1156,7 @@ EXPORTED const char *mbname_extname(const mbname_t *mbname, const struct namespa
     int i;
     for (i = 0; i < strarray_size(boxes); i++) {
        buf_putc(&buf, ns->hier_sep);
-       buf_appendcstr(&buf, strarray_nth(boxes, i));
+       _append_extbuf(ns, &buf, strarray_nth(boxes, i));
     }
 
  end:
@@ -891,17 +1167,12 @@ EXPORTED const char *mbname_extname(const mbname_t *mbname, const struct namespa
         buf_printf(&buf, "%X", (unsigned)mbname->is_deleted);
     }
 
-    if (mbname->domain && strcmpsafe(mbname->domain, userparts->domain)) {
+    if (admindomains && mbname_domain(mbname)) {
         buf_putc(&buf, '@');
-        buf_appendcstr(&buf, mbname->domain);
+        buf_appendcstr(&buf, mbname_domain(mbname));
     }
 
-    mbname_t *backdoor = (mbname_t *)mbname;
-    free(backdoor->extname);
     backdoor->extname = buf_release(&buf);
-    backdoor->extns = ns;
-    free(backdoor->extuserid);
-    backdoor->extuserid = xstrdupnull(userid);
 
  done:
 
@@ -1087,6 +1358,44 @@ EXPORTED int mboxname_isaddressbookmailbox(const char *name, int mbtype)
 }
 
 /*
+ * If (internal) mailbox 'name' is a DAVDRIVE mailbox
+ * returns boolean
+ */
+EXPORTED int mboxname_isdavdrivemailbox(const char *name, int mbtype)
+{
+    if (mbtype & MBTYPE_COLLECTION) return 1;  /* Only works on backends */
+    int res = 0;
+
+    mbname_t *mbname = mbname_from_intname(name);
+    const strarray_t *boxes = mbname_boxes(mbname);
+    const char *prefix = config_getstring(IMAPOPT_DAVDRIVEPREFIX);
+    if (strarray_size(boxes) && !strcmpsafe(prefix, strarray_nth(boxes, 0)))
+        res = 1;
+
+    mbname_free(&mbname);
+    return res;
+}
+
+/*
+ * If (internal) mailbox 'name' is a DAVNOTIFICATIONS mailbox
+ * returns boolean
+ */
+EXPORTED int mboxname_isdavnotificationsmailbox(const char *name, int mbtype)
+{
+    if (mbtype & MBTYPE_COLLECTION) return 1;  /* Only works on backends */
+    int res = 0;
+
+    mbname_t *mbname = mbname_from_intname(name);
+    const strarray_t *boxes = mbname_boxes(mbname);
+    const char *prefix = config_getstring(IMAPOPT_DAVNOTIFICATIONSPREFIX);
+    if (strarray_size(boxes) && !strcmpsafe(prefix, strarray_nth(boxes, 0)))
+        res = 1;
+
+    mbname_free(&mbname);
+    return res;
+}
+
+/*
  * If (internal) mailbox 'name' is a user's "Notes" mailbox
  * returns boolean
  */
@@ -1102,6 +1411,23 @@ EXPORTED int mboxname_isnotesmailbox(const char *name, int mbtype __attribute__(
 
     mbname_free(&mbname);
     return res;
+}
+
+/*
+ * If (internal) mailbox 'name' is a user's mail outbox
+ * returns boolean
+ */
+EXPORTED int mboxname_isoutbox(const char *name)
+{
+
+    int isoutbox = 0;
+    /* XXX - use specialuse for this later */
+    mbname_t *mbname = mbname_from_intname(name);
+    const strarray_t *boxes = mbname_boxes(mbname);
+    if (mbname_localpart(mbname) && strarray_size(boxes) == 1 && !strcmp(strarray_nth(boxes, 0), "Outbox"))
+        isoutbox = 1;
+    mbname_free(&mbname);
+    return isoutbox;
 }
 
 EXPORTED char *mboxname_user_mbox(const char *userid, const char *subfolder)
@@ -1185,18 +1511,17 @@ EXPORTED int mboxname_same_userid(const char *name1, const char *name2)
 /*
  * Apply site policy restrictions on mailbox names.
  * Restrictions are hardwired for now.
+ * NOTE: '^' is '.' externally in unixhs, and invalid in unixhs
  */
-#define GOODCHARS " #$'+,-.0123456789:=@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
+#define GOODCHARS " #$'()*+,-.0123456789:=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_abcdefghijklmnopqrstuvwxyz~"
 HIDDEN int mboxname_policycheck(const char *name)
 {
     const char *p;
     int sawutf7 = 0;
     unsigned c1, c2, c3, c4, c5, c6, c7, c8;
     int ucs4;
-    int unixsep;
     int namelen = strlen(name);
-
-    unixsep = config_getswitch(IMAPOPT_UNIXHIERARCHYSEP);
+    int hasdom = 0;
 
     /* Skip policy check on mailbox created in delayed delete namespace
      * assuming the mailbox existed before and was OK then.
@@ -1218,6 +1543,7 @@ HIDDEN int mboxname_policycheck(const char *name)
         if (config_virtdomains) {
             name = p + 1;
             namelen = strlen(name);
+            hasdom = 1;
         }
         else
             return IMAP_MAILBOX_BADNAME;
@@ -1310,12 +1636,7 @@ HIDDEN int mboxname_policycheck(const char *name)
             name++;             /* Skip over terminating '-' */
         }
         else {
-            /* If we're using unixhierarchysep, DOTCHAR is allowed */
-            if (!strchr(GOODCHARS, *name) &&
-                !(unixsep && *name == DOTCHAR))
-                return IMAP_MAILBOX_BADNAME;
-            /* If we're not using virtdomains, '@' is not permitted in the mboxname */
-            if (!config_virtdomains && *name == '@')
+            if (!(strchr(GOODCHARS, *name) || (hasdom && *name == '!')))
                 return IMAP_MAILBOX_BADNAME;
             name++;
             sawutf7 = 0;
@@ -1346,7 +1667,9 @@ EXPORTED int mboxname_is_prefix(const char *longstr, const char *shortstr)
 }
 
 
-static void mboxname_hash(char *dest, size_t destlen, const char *root, const char *name)
+EXPORTED void mboxname_hash(char *dest, size_t destlen,
+                            const char *root,
+                            const char *name)
 {
     mbname_t *mbname = mbname_from_intname(name);
     struct buf buf = BUF_INITIALIZER;
@@ -1386,10 +1709,8 @@ static void mboxname_hash(char *dest, size_t destlen, const char *root, const ch
 
     int i;
     for (i = 0; i < strarray_size(boxes); i++) {
-        char *item = xstrdup(strarray_nth(boxes, i));
-        _rm_dots(item);
-        buf_printf(&buf, "/%s", item);
-        free(item);
+        buf_putc(&buf, '/');
+        _append_intbuf(&buf, strarray_nth(boxes, i));
     }
 
     /* for now, keep API even though we're doing a buffer inside here */
@@ -1733,7 +2054,7 @@ static bit64 mboxname_readval_old(const char *mboxname, const char *metaname)
     return fileval;
 }
 
-#define MV_VERSION 1
+#define MV_VERSION 3
 
 #define MV_OFF_GENERATION 0
 #define MV_OFF_VERSION 4
@@ -1742,9 +2063,13 @@ static bit64 mboxname_readval_old(const char *mboxname, const char *metaname)
 #define MV_OFF_CALDAVMODSEQ 24
 #define MV_OFF_CARDDAVMODSEQ 32
 #define MV_OFF_NOTESMODSEQ 40
-#define MV_OFF_UIDVALIDITY 48
-#define MV_OFF_CRC 52
-#define MV_LENGTH 56
+#define MV_OFF_MAILFOLDERSMODSEQ 48
+#define MV_OFF_CALDAVFOLDERSMODSEQ 56
+#define MV_OFF_CARDDAVFOLDERSMODSEQ 64
+#define MV_OFF_NOTESFOLDERSMODSEQ 72
+#define MV_OFF_UIDVALIDITY 80
+#define MV_OFF_CRC 84
+#define MV_LENGTH 88
 
 /* NOTE: you need a MV_LENGTH byte base here */
 static int mboxname_buf_to_counters(const char *base, size_t len, struct mboxname_counters *vals)
@@ -1765,6 +2090,11 @@ static int mboxname_buf_to_counters(const char *base, size_t len, struct mboxnam
         vals->mailmodseq = ntohll(*((uint64_t *)(base+16)));
         vals->caldavmodseq = ntohll(*((uint64_t *)(base+24)));
         vals->carddavmodseq = ntohll(*((uint64_t *)(base+32)));
+        vals->notesmodseq = 0;
+        vals->mailfoldersmodseq = 0;
+        vals->caldavfoldersmodseq = 0;
+        vals->carddavfoldersmodseq = 0;
+        vals->notesfoldersmodseq = 0;
         vals->uidvalidity = ntohl(*((uint32_t *)(base+40)));
         break;
 
@@ -1778,7 +2108,45 @@ static int mboxname_buf_to_counters(const char *base, size_t len, struct mboxnam
         vals->caldavmodseq = ntohll(*((uint64_t *)(base+24)));
         vals->carddavmodseq = ntohll(*((uint64_t *)(base+32)));
         vals->notesmodseq = ntohll(*((uint64_t *)(base+40)));
+        vals->mailfoldersmodseq = 0;
+        vals->caldavfoldersmodseq = 0;
+        vals->carddavfoldersmodseq = 0;
+        vals->notesfoldersmodseq = 0;
         vals->uidvalidity = ntohl(*((uint32_t *)(base+48)));
+        break;
+
+    case 2:
+        if (len != 64) return IMAP_MAILBOX_CHECKSUM;
+        if (crc32_map(base, 60) != ntohl(*((uint32_t *)(base+60))))
+            return IMAP_MAILBOX_CHECKSUM;
+
+        vals->highestmodseq = ntohll(*((uint64_t *)(base+8)));
+        vals->mailmodseq = ntohll(*((uint64_t *)(base+16)));
+        vals->caldavmodseq = ntohll(*((uint64_t *)(base+24)));
+        vals->carddavmodseq = ntohll(*((uint64_t *)(base+32)));
+        vals->notesmodseq = ntohll(*((uint64_t *)(base+40)));
+        vals->mailfoldersmodseq = ntohll(*((uint32_t *)(base+48)));
+        vals->caldavfoldersmodseq = 0;
+        vals->carddavfoldersmodseq = 0;
+        vals->notesfoldersmodseq = 0;
+        vals->uidvalidity = ntohl(*((uint32_t *)(base+56)));
+        break;
+
+    case 3:
+        if (len != 88) return IMAP_MAILBOX_CHECKSUM;
+        if (crc32_map(base, 84) != ntohl(*((uint32_t *)(base+84))))
+            return IMAP_MAILBOX_CHECKSUM;
+
+        vals->highestmodseq = ntohll(*((uint64_t *)(base+8)));
+        vals->mailmodseq = ntohll(*((uint64_t *)(base+16)));
+        vals->caldavmodseq = ntohll(*((uint64_t *)(base+24)));
+        vals->carddavmodseq = ntohll(*((uint64_t *)(base+32)));
+        vals->notesmodseq = ntohll(*((uint64_t *)(base+40)));
+        vals->mailfoldersmodseq = ntohll(*((uint64_t *)(base+48)));
+        vals->caldavfoldersmodseq = ntohll(*((uint64_t *)(base+56)));
+        vals->carddavfoldersmodseq = ntohll(*((uint64_t *)(base+64)));
+        vals->notesfoldersmodseq = ntohll(*((uint64_t *)(base+72)));
+        vals->uidvalidity = ntohl(*((uint32_t *)(base+80)));
         break;
 
     default:
@@ -1798,6 +2166,10 @@ static void mboxname_counters_to_buf(const struct mboxname_counters *vals, char 
     align_htonll(base+MV_OFF_CALDAVMODSEQ, vals->caldavmodseq);
     align_htonll(base+MV_OFF_CARDDAVMODSEQ, vals->carddavmodseq);
     align_htonll(base+MV_OFF_NOTESMODSEQ, vals->notesmodseq);
+    align_htonll(base+MV_OFF_MAILFOLDERSMODSEQ, vals->mailfoldersmodseq);
+    align_htonll(base+MV_OFF_CALDAVFOLDERSMODSEQ, vals->caldavfoldersmodseq);
+    align_htonll(base+MV_OFF_CARDDAVFOLDERSMODSEQ, vals->carddavfoldersmodseq);
+    align_htonll(base+MV_OFF_NOTESFOLDERSMODSEQ, vals->notesfoldersmodseq);
     *((uint32_t *)(base+MV_OFF_UIDVALIDITY)) = htonl(vals->uidvalidity);
     *((uint32_t *)(base+MV_OFF_CRC)) = htonl(crc32_map(base, MV_OFF_CRC));
 }
@@ -2021,93 +2393,71 @@ EXPORTED int mboxname_read_counters(const char *mboxname, struct mboxname_counte
     return r;
 }
 
-EXPORTED modseq_t mboxname_readmodseq(const char *mboxname)
+static modseq_t mboxname_domodseq(const char *mboxname, modseq_t last, int mbtype, int dofolder, modseq_t add)
 {
     struct mboxname_counters counters;
-
-    if (!config_getswitch(IMAPOPT_CONVERSATIONS))
-        return 0;
-
-    if (mboxname_read_counters(mboxname, &counters))
-        return 0;
-
-    return counters.highestmodseq;
-}
-
-EXPORTED modseq_t mboxname_nextmodseq(const char *mboxname, modseq_t last, int mbtype)
-{
-    struct mboxname_counters counters;
-    modseq_t *typemodseqp;
+    struct mboxname_counters oldcounters;
+    modseq_t *typemodseqp = NULL;
+    modseq_t *foldersmodseqp = NULL;
     int fd = -1;
 
     if (!config_getswitch(IMAPOPT_CONVERSATIONS))
-        return last + 1;
+        return last + add;
 
     /* XXX error handling */
     if (mboxname_load_counters(mboxname, &counters, &fd))
-        return last + 1;
+        return last + add;
 
-    if (mboxname_isaddressbookmailbox(mboxname, mbtype))
+    oldcounters = counters;
+
+    if (mboxname_isaddressbookmailbox(mboxname, mbtype)) {
         typemodseqp = &counters.carddavmodseq;
-    else if (mboxname_iscalendarmailbox(mboxname, mbtype))
+        foldersmodseqp = &counters.carddavfoldersmodseq;
+    }
+    else if (mboxname_iscalendarmailbox(mboxname, mbtype)) {
         typemodseqp = &counters.caldavmodseq;
-    else if (mboxname_isnotesmailbox(mboxname, mbtype))
+        foldersmodseqp = &counters.caldavfoldersmodseq;
+    }
+    else if (mboxname_isnotesmailbox(mboxname, mbtype)) {
         typemodseqp = &counters.notesmodseq;
-    else
+        foldersmodseqp = &counters.notesfoldersmodseq;
+    }
+    else {
         typemodseqp = &counters.mailmodseq;
+        foldersmodseqp = &counters.mailfoldersmodseq;
+    }
 
+    /* make sure all counters are at least the old value */
     if (counters.highestmodseq < last)
         counters.highestmodseq = last;
+    if (*typemodseqp < last)
+        *typemodseqp = last;
+    if (dofolder && *foldersmodseqp < last)
+        *foldersmodseqp = last;
 
-    counters.highestmodseq++;
-
-    *typemodseqp = counters.highestmodseq;
-
-    /* always set, because we always increased */
-    mboxname_set_counters(mboxname, &counters, fd);
-
-    return counters.highestmodseq;
-}
-
-EXPORTED modseq_t mboxname_setmodseq(const char *mboxname, modseq_t val, int mbtype)
-{
-    struct mboxname_counters counters;
-    modseq_t *typemodseqp;
-    int fd = -1;
-    int dirty = 0;
-
-    if (!config_getswitch(IMAPOPT_CONVERSATIONS))
-        return val;
-
-    /* XXX error handling */
-    if (mboxname_load_counters(mboxname, &counters, &fd))
-        return val;
-
-    if (mboxname_isaddressbookmailbox(mboxname, mbtype))
-        typemodseqp = &counters.carddavmodseq;
-    else if (mboxname_iscalendarmailbox(mboxname, mbtype))
-        typemodseqp = &counters.caldavmodseq;
-    else if (mboxname_isnotesmailbox(mboxname, mbtype))
-        typemodseqp = &counters.notesmodseq;
-    else
-        typemodseqp = &counters.mailmodseq;
-
-    if (counters.highestmodseq < val) {
-        counters.highestmodseq = val;
-        dirty = 1;
+    /* if adding, bring all counters up to the overall highest modseq */
+    if (add) {
+        counters.highestmodseq += add;
+        *typemodseqp = counters.highestmodseq;
+        if (dofolder) *foldersmodseqp = counters.highestmodseq;
     }
 
-    if (*typemodseqp < val) {
-        *typemodseqp = val;
-        dirty = 1;
-    }
-
-    if (dirty)
+    if (memcmp(&counters, &oldcounters, sizeof(struct mboxname_counters)))
         mboxname_set_counters(mboxname, &counters, fd);
     else
         mboxname_unload_counters(fd);
 
-    return val;
+    return counters.highestmodseq;
+}
+
+EXPORTED modseq_t mboxname_nextmodseq(const char *mboxname, modseq_t last, int mbtype, int dofolder)
+{
+    return mboxname_domodseq(mboxname, last, mbtype, dofolder, 1);
+}
+
+EXPORTED modseq_t mboxname_setmodseq(const char *mboxname, modseq_t last, int mbtype, int dofolder)
+{
+    return mboxname_domodseq(mboxname, last, mbtype, dofolder, 0);
 }
 
 EXPORTED uint32_t mboxname_readuidvalidity(const char *mboxname)
@@ -2123,7 +2473,7 @@ EXPORTED uint32_t mboxname_readuidvalidity(const char *mboxname)
     return counters.uidvalidity;
 }
 
-EXPORTED uint32_t mboxname_nextuidvalidity(const char *mboxname, uint32_t last, int mbtype __attribute__((unused)))
+EXPORTED uint32_t mboxname_nextuidvalidity(const char *mboxname, uint32_t last)
 {
     struct mboxname_counters counters;
     int fd = -1;
@@ -2146,7 +2496,7 @@ EXPORTED uint32_t mboxname_nextuidvalidity(const char *mboxname, uint32_t last, 
     return counters.uidvalidity;
 }
 
-EXPORTED uint32_t mboxname_setuidvalidity(const char *mboxname, uint32_t val, int mbtype __attribute__((unused)))
+EXPORTED uint32_t mboxname_setuidvalidity(const char *mboxname, uint32_t val)
 {
     struct mboxname_counters counters;
     int fd = -1;

@@ -151,7 +151,7 @@ static void batch_commands(struct db *db)
     struct protstream *in = prot_new(0, 0); // stdin
     struct protstream *out = prot_new(1, 1); // stdout
     int line = 0;
-    char c = '-';
+    int c = '-';
     int r = 0;
 
     while (c != EOF) {
@@ -250,10 +250,16 @@ int main(int argc, char *argv[])
     struct txn *tid = NULL;
     struct txn **tidp = NULL;
 
-    while ((opt = getopt(argc, argv, "C:ntT")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:MntTc")) != EOF) {
         switch (opt) {
         case 'C': /* alt config file */
             alt_config = optarg;
+            break;
+        case 'c':
+            db_flags |= CYRUSDB_CONVERT;
+            break;
+        case 'M': /* use "improved_mboxlist_sort" */
+            db_flags |= CYRUSDB_MBOXSORT;
             break;
         case 'n': /* create new */
             db_flags |= CYRUSDB_CREATE;

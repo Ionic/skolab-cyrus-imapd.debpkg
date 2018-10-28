@@ -52,6 +52,7 @@
 #include "httpd.h"
 #include "http_dav.h"
 #include "libconfig.h"
+#include "mboxevent.h"
 #include "times.h"
 #include "util.h"
 #include "xstrlcat.h"
@@ -107,7 +108,6 @@ EXPORTED struct carddav_db *carddav_open_mailbox(struct mailbox *mailbox)
     if (!db) return NULL;
 
     carddavdb = xzmalloc(sizeof(struct carddav_db));
-    carddavdb->userid = xstrdup(userid);
     carddavdb->db = db;
 
     return carddavdb;
@@ -169,7 +169,8 @@ static const char *column_text_to_buf(const char *text, struct buf *buf)
 #define CMD_GETFIELDS                                                   \
     "SELECT rowid, creationdate, mailbox, resource, imap_uid,"          \
     "  lock_token, lock_owner, lock_ownerid, lock_expire,"              \
-    "  version, vcard_uid, kind, fullname, name, nickname, alive"       \
+    "  version, vcard_uid, kind, fullname, name, nickname, alive,"      \
+    "  modseq" \
     " FROM vcard_objs"
 
 static int read_cb(sqlite3_stmt *stmt, void *rock)
@@ -182,6 +183,7 @@ static int read_cb(sqlite3_stmt *stmt, void *rock)
     memset(cdata, 0, sizeof(struct carddav_data));
 
     cdata->dav.alive = sqlite3_column_int(stmt, 15);
+    cdata->dav.modseq = sqlite3_column_int(stmt, 16);
     if (!rrock->tombstones && !cdata->dav.alive)
         return 0;
 
@@ -293,7 +295,10 @@ EXPORTED int carddav_lookup_uid(struct carddav_db *carddavdb, const char *vcard_
 
 
 #define CMD_SELMBOX CMD_GETFIELDS \
-    " WHERE mailbox = :mailbox AND alive = 1;"
+    " WHERE mailbox = :mailbox AND alive = 1 ORDER BY modseq DESC;"
+
+#define CMD_SELALIVE CMD_GETFIELDS \
+    " WHERE alive = 1 ORDER BY modseq DESC;"
 
 EXPORTED int carddav_foreach(struct carddav_db *carddavdb, const char *mailbox,
                    int (*cb)(void *rock, struct carddav_data *data),
@@ -305,7 +310,11 @@ EXPORTED int carddav_foreach(struct carddav_db *carddavdb, const char *mailbox,
     struct carddav_data cdata;
     struct read_rock rrock = { carddavdb, &cdata, 0, cb, rock };
 
-    return sqldb_exec(carddavdb->db, CMD_SELMBOX, bval, &read_cb, &rrock);
+    if (mailbox) {
+        return sqldb_exec(carddavdb->db, CMD_SELMBOX, bval, &read_cb, &rrock);
+    } else {
+        return sqldb_exec(carddavdb->db, CMD_SELALIVE, bval, &read_cb, &rrock);
+    }
 }
 
 #define CMD_GETUID_GROUPS \
@@ -318,6 +327,16 @@ static int addarray_cb(sqlite3_stmt *stmt, void *rock)
 {
     strarray_t *array = (strarray_t *)rock;
     const char *value = (const char *)sqlite3_column_text(stmt, 0);
+    if (value) strarray_add(array, value);
+    return 0;
+}
+
+static int addarray_kv_cb(sqlite3_stmt *stmt, void *rock)
+{
+    strarray_t *array = (strarray_t *)rock;
+    const char *key = (const char *)sqlite3_column_text(stmt, 0);
+    if (key) strarray_add(array, key);
+    const char *value = (const char *)sqlite3_column_text(stmt, 1);
     if (value) strarray_add(array, value);
     return 0;
 }
@@ -362,7 +381,7 @@ EXPORTED strarray_t *carddav_getuid_groups(struct carddav_db *carddavdb, const c
     " AND E.email = :email AND CO.mailbox = :mailbox;"
 
 #define CMD_GETUID2GROUPS \
-    "SELECT DISTINCT GO.fullname" \
+    "SELECT DISTINCT GO.vcard_uid, GO.fullname" \
     " FROM vcard_objs GO JOIN vcard_groups G" \
     " WHERE G.objid = GO.rowid AND GO.alive = 1" \
     " AND G.member_uid = :member_uid AND G.otheruser = :otheruser" \
@@ -432,7 +451,7 @@ EXPORTED strarray_t *carddav_getuid2groups(struct carddav_db *carddavdb, const c
     };
     strarray_t *groups = strarray_new();
 
-    sqldb_exec(carddavdb->db, CMD_GETUID2GROUPS, bval, &addarray_cb, groups);
+    sqldb_exec(carddavdb->db, CMD_GETUID2GROUPS, bval, &addarray_kv_cb, groups);
 
     return groups;
 }
@@ -709,7 +728,7 @@ EXPORTED int carddav_get_updates(struct carddav_db *carddavdb,
         { NULL,       SQLITE_NULL,    { .s = NULL      } }
     };
     static struct carddav_data cdata;
-    struct read_rock rrock = { carddavdb, &cdata, 0, cb, rock };
+    struct read_rock rrock = { carddavdb, &cdata, 1 /* tombstones */, cb, rock };
     int r;
 
     if (mboxname)
@@ -739,42 +758,45 @@ EXPORTED int carddav_writecard(struct carddav_db *carddavdb, struct carddav_data
         if (!name) continue;
         if (!propval) continue;
 
-        if (!strcmp(name, "uid")) {
+        if (!strcasecmp(name, "uid")) {
             cdata->vcard_uid = propval;
         }
-        else if (!strcmp(name, "n")) {
+        else if (!strcasecmp(name, "n")) {
             cdata->name = propval;
         }
-        else if (!strcmp(name, "fn")) {
+        else if (!strcasecmp(name, "fn")) {
             cdata->fullname = propval;
         }
-        else if (!strcmp(name, "nickname")) {
+        else if (!strcasecmp(name, "nickname")) {
             cdata->nickname = propval;
         }
-        else if (!strcmp(name, "email")) {
+        else if (!strcasecmp(name, "email")) {
             /* XXX - insert if primary */
             int ispref = 0;
             struct vparse_param *param;
             for (param = ventry->params; param; param = param->next) {
-                if (!strcasecmp(param->name, "type") && !strcasecmp(param->value, "pref"))
+                if (!strcasecmp(param->name, "type") &&
+                    !strcasecmp(param->value, "pref"))
                     ispref = 1;
             }
             strarray_append(&emails, propval);
             strarray_append(&emails, ispref ? "1" : "");
         }
-        else if (!strcmp(name, "x-addressbookserver-member")) {
+        else if (!strcasecmp(name, "member") ||
+                 !strcasecmp(name, "x-addressbookserver-member")) {
             if (strncmp(propval, "urn:uuid:", 9)) continue;
             strarray_append(&member_uids, propval+9);
             strarray_append(&member_uids, "");
         }
-        else if (!strcmp(name, "x-fm-otheraccount-member")) {
+        else if (!strcasecmp(name, "x-fm-otheraccount-member")) {
             if (strncmp(propval, "urn:uuid:", 9)) continue;
             struct vparse_param *param = vparse_get_param(ventry, "userid");
             if (!param) continue;
             strarray_append(&member_uids, propval+9);
             strarray_append(&member_uids, param->value);
         }
-        else if (!strcmp(name, "x-addressbookserver-kind")) {
+        else if (!strcasecmp(name, "kind") ||
+                 !strcasecmp(name, "x-addressbookserver-kind")) {
             if (!strcasecmp(propval, "group"))
                 cdata->kind = CARDDAV_KIND_GROUP;
             /* default case is CARDDAV_KIND_CONTACT */
@@ -899,7 +921,7 @@ done:
 }
 
 EXPORTED int carddav_remove(struct mailbox *mailbox,
-                          uint32_t olduid, int isreplace)
+                            uint32_t olduid, int isreplace, const char *userid)
 {
 
     int userflag;
@@ -909,7 +931,17 @@ EXPORTED int carddav_remove(struct mailbox *mailbox,
     if (!r && !(oldrecord.system_flags & FLAG_EXPUNGED)) {
         if (isreplace) oldrecord.user_flags[userflag/32] |= 1<<(userflag&31);
         oldrecord.system_flags |= FLAG_EXPUNGED;
+
         r = mailbox_rewrite_index_record(mailbox, &oldrecord);
+
+        /* Report mailbox event. */
+        struct mboxevent *mboxevent = mboxevent_new(EVENT_MESSAGE_EXPUNGE);
+        mboxevent_extract_record(mboxevent, mailbox, &oldrecord);
+        mboxevent_extract_mailbox(mboxevent, mailbox);
+        mboxevent_set_numunseen(mboxevent, mailbox, -1);
+        mboxevent_set_access(mboxevent, NULL, NULL, userid, mailbox->name, 0);
+        mboxevent_notify(&mboxevent);
+        mboxevent_free(&mboxevent);
     }
     if (r) {
         syslog(LOG_ERR, "expunging record (%s) failed: %s",

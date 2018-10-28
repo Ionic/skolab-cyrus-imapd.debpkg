@@ -69,7 +69,7 @@ struct Test {
     union {
         testlist_t *tl; /* anyof, allof */
         strarray_t *sl; /* exists */
-        struct { /* it's a header or hasflag test */
+        struct { /* it's a header or hasflag or string test */
             int index;
             int comptag;
             char * comparator;
@@ -114,6 +114,14 @@ struct Test {
             char *header_name;
             strarray_t *kl;
         } dt;
+        struct { /* it's one of the mailbox type tests */
+            char *extname;
+            char *keyname;
+            strarray_t *keylist;
+            int comptag;
+            int relation;
+            char *comparator;
+        } mbx;
     } u;
 };
 
@@ -125,8 +133,7 @@ struct Testlist {
 struct Commandlist {
     int type;
     union {
-        char *str;
-        strarray_t *sl; /* the parameters */
+        char *reject; /* its a reject action */
         struct { /* it's an if statement */
             test_t *t;
             commandlist_t *do_then;
@@ -138,6 +145,14 @@ struct Commandlist {
             int optional;
             char *script;
         } inc;
+        struct { /* it's a set action */
+            int mod40; /* :lower or :upper */
+            int mod30; /* :lowerfirst or :upperfirst */
+            int mod20; /* :quotewildcard */
+            int mod10; /* :length */
+            char *variable;
+            char *value;
+        } s;
         struct { /* it's a keep action */
             int copy;
             strarray_t *flags;
@@ -145,8 +160,13 @@ struct Commandlist {
         struct { /* it's a fileinto action */
             char *folder;
             int copy;
+            int create;
             strarray_t *flags;
         } f;
+        struct { /* it's a flag action */
+            char *variable;
+            strarray_t *flags;
+        } fl;
         struct { /* it's a redirect action */
             char *address;
             int copy;

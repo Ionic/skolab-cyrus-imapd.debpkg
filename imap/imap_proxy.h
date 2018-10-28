@@ -63,7 +63,8 @@ enum {
     CAPA_ACLRIGHTS      = (1 << 6),
     CAPA_LISTEXTENDED   = (1 << 7),
     CAPA_SASL_IR        = (1 << 8),
-    CAPA_REPLICATION    = (1 << 9)
+    CAPA_REPLICATION    = (1 << 9),
+    CAPA_METADATA       = (1 << 10)
 };
 
 extern struct protocol_t imap_protocol;
@@ -76,7 +77,10 @@ int pipe_until_tag(struct backend *s, const char *tag, int force_notfatal);
 int pipe_including_tag(struct backend *s, const char *tag, int force_notfatal);
 int pipe_command(struct backend *s, int optimistic_literal);
 int pipe_lsub(struct backend *s, const char *userid, const char *tag,
-              int force_notfatal, const char *resp);
+              int force_notfatal, struct listargs *listargs, strarray_t *subs);
+
+void print_listresponse(unsigned cmd, const char *extname, char hier_sep,
+                        uint32_t attributes, struct buf *extraflags);
 
 void proxy_copy(const char *tag, char *sequence, char *name, int myrights,
                 int usinguid, struct backend *s);

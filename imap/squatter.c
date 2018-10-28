@@ -96,6 +96,7 @@ const int SKIP_FUZZ = 60;
 
 static int verbose = 0;
 static int incremental_mode = 0;
+static int batch_mode = 0;
 static int recursive_flag = 0;
 static int annotation_flag = 0;
 static int running_daemon = 0;
@@ -110,20 +111,43 @@ static void shut_down(int code) __attribute__((noreturn));
 static int usage(const char *name)
 {
     fprintf(stderr,
-            "usage: %s [-C <alt_config>] [-v] [-s] [-a] [mailbox...]\n",
-            name);
-    fprintf(stderr,
-            "usage: %s [-C <alt_config>] [-v] [-s] [-a] -u user...\n",
-            name);
-    fprintf(stderr,
-            "       %s [-C <alt_config>] [-v] [-s] [-a] -r mailbox [...]\n",
-            name);
-    fprintf(stderr,
-            "       %s [-C <alt_config>] [-v] [-s] [-d] [-n channel] -R\n",
-            name);
-    fprintf(stderr,
-            "       %s [-C <alt_config>] [-v] [-s] -f synclogfile\n",
-            name);
+            "usage: %s [mode] [options] [source]\n"
+            "\n"
+            "Mode flags: \n"
+            "  none        index [source] (default)\n"
+            "  -a          index [source] using /squat annotations\n"
+            "  -r          index [source] recursively\n"
+            "  -f file     index from synclog file\n"
+            "  -I file     index mbox/uids in file\n"
+            "  -R          start rolling indexer\n"
+            "  -z tier     compact to tier\n"
+            "\n"
+            "Index mode options:\n"
+            "  -i          index incrementally\n"
+            "  -N name     index mailbox names starting with name\n"
+            "  -S seconds  sleep seconds between indexing mailboxes\n"
+            "\n"
+            "Index sources:\n"
+            "  none        all mailboxes (default)\n"
+            "  mailbox...  index mailboxes\n"
+            "  -u user...  index mailboxes of users\n"
+            "\n"
+            "Rolling indexer options:\n"
+            "  -n channel  listen to channel\n"
+            "  -d          don't background process\n"
+            "\n"
+            "Compact mode options:\n"
+            "  -t tier...  compact from tiers\n"
+            "  -F          filter during compaction\n"
+            "  -T dir      use temporary directory dir during compaction\n"
+            "  -X          reindex during compaction\n"
+            "  -U          reindex tiers having deprecated stems or prefixes\n"
+            "  -o          copy db rather compacting\n"
+            "\n"
+            "General options:\n"
+            "  -v          be verbose\n"
+            "  -h          show usage\n",
+        name);
 
     exit(EC_USAGE);
 }
@@ -170,6 +194,8 @@ static int index_one(const char *name, int blocking)
 
     if (incremental_mode)
         flags |= SEARCH_UPDATE_INCREMENTAL;
+    if (batch_mode)
+        flags |= SEARCH_UPDATE_BATCH;
 
     /* Convert internal name to external */
     char *extname = mboxname_to_external(name, &squat_namespace, NULL);
@@ -349,11 +375,9 @@ static int index_single_message(const char *mboxname, uint32_t uid)
     r = mailbox_open_irl(mboxname, &mailbox);
     if (r) goto out;
 
-    r = rx->begin_mailbox(rx, mailbox, /*incremental*/1);
+    r = rx->begin_mailbox(rx, mailbox, SEARCH_UPDATE_INCREMENTAL);
     if (r) goto out;
     begun = 1;
-
-    if (rx->is_indexed(rx, uid)) goto out;
 
     r = mailbox_find_index_record(mailbox, uid, &record);
     if (r) goto out;
@@ -362,6 +386,9 @@ static int index_single_message(const char *mboxname, uint32_t uid)
 
     msg = message_new_from_record(mailbox, &record);
     if (!msg) goto out;
+
+    if (rx->is_indexed(rx, msg))
+        goto out;
 
     if (verbose) fprintf(stderr, "squatter: indexing mailbox:%s uid:%u\n",
                          mboxname, uid);
@@ -446,7 +473,7 @@ static int squatter_build_query(search_builder_t *bx, const char *query)
     char *q;
     int r = 0;
     int part;
-    int utf8 = charset_lookupname("utf-8");
+    charset_t utf8 = charset_lookupname("utf-8");
 
     while ((p = tok_next(&tok))) {
         if (!strncasecmp(p, "__begin:", 8)) {
@@ -509,6 +536,7 @@ static int squatter_build_query(search_builder_t *bx, const char *query)
     r = 0;
 
 out:
+    charset_free(&utf8);
     tok_fini(&tok);
     return r;
 
@@ -593,7 +621,7 @@ static int do_search(const char *query, int single, const strarray_t *mboxnames)
         if (bx) {
             r = squatter_build_query(bx, query);
             if (!r)
-                r = bx->run(bx, print_search_hit, &single);
+                bx->run(bx, print_search_hit, &single);
             search_end_search(bx);
         }
 
@@ -641,6 +669,10 @@ static int do_synclogfile(const char *synclogfile)
 
     /* have some due items in the queue, try to index them */
     rx = search_begin_update(verbose);
+    if (NULL == rx) {
+        r = 1;
+        goto out;
+    }
     for (i = 0; i < folders->count; i++) {
         const char *mboxname = strarray_nth(folders, i);
         if (verbose > 1)
@@ -700,6 +732,10 @@ static void do_rolling(const char *channel)
         if (folders->count) {
             /* have some due items in the queue, try to index them */
             rx = search_begin_update(verbose);
+            if (NULL == rx) {
+                /* XXX if xapian, probably don't have conversations enabled? */
+                fatal("could not construct search text receiver", EC_CONFIG);
+            }
             for (i = 0; i < folders->count; i++) {
                 const char *mboxname = strarray_nth(folders, i);
                 if (verbose > 1)
@@ -707,7 +743,7 @@ static void do_rolling(const char *channel)
                 r = index_one(mboxname, /*blocking*/0);
                 if (r == IMAP_AGAIN || r == IMAP_MAILBOX_LOCKED) {
                     /* XXX: alternative, just append to strarray_t *folders ... */
-                    sync_log_channel(channel, "APPEND %s", mboxname);
+                    sync_log_channel_append(channel, mboxname);
                 }
                 if (sleepmicroseconds)
                     usleep(sleepmicroseconds);
@@ -798,14 +834,10 @@ int main(int argc, char **argv)
 
     setbuf(stdout, NULL);
 
-    while ((opt = getopt(argc, argv, "C:I:N:RAXT:S:Fc:de:f:mn:rsiavz:t:ou")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:I:N:RXT:S:Fc:de:f:mn:riavz:t:ouh")) != EOF) {
         switch (opt) {
         case 'C':               /* alt config file */
             alt_config = optarg;
-            break;
-
-        case 'A':
-            compact_flags |= SEARCH_COMPACT_AUDIT;
             break;
 
         case 'F':
@@ -830,6 +862,7 @@ int main(int argc, char **argv)
             if (mode != UNKNOWN) usage(argv[0]);
             mode = ROLLING;
             incremental_mode = 1; /* always incremental if rolling */
+            batch_mode = 1;
             break;
 
         case 'S':               /* sleep time in seconds */
@@ -920,6 +953,7 @@ int main(int argc, char **argv)
             user_mode = 1;
             break;
 
+        case 'h':
         default:
             usage("squatter");
         }
@@ -931,7 +965,7 @@ int main(int argc, char **argv)
         mode = INDEXER;
 
     /* fork and close fds if required */
-    if (mode == ROLLING && background) {
+    if (mode == ROLLING && background && !getenv("CYRUS_ISDAEMON")) {
         become_daemon();
         init_flags &= ~CYRUSINIT_PERROR;
     }

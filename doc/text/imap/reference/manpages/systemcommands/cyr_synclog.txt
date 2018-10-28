@@ -1,0 +1,96 @@
+
+**cyr_synclog**
+***************
+
+is used to append a value to the log file.  You can either specify the
+log type and value, or an entire log line.
+
+
+Synopsis
+========
+
+   **cyr_synclog** [ **-C** *config-file* ] [ *-{type}* *value* ]
+   **cyr_synclog** [ **-C** *config-file* ] *"<raw-log-line>"*
+
+
+Description
+===========
+
+**cyr_synclog** is used to append a value to the log file.  You can
+either specify the log type and value, or an entire log line.
+
+Running without any options will print a short usage document.
+
+**cyr_synclog** reads its configuration options out of the
+imapd.conf(5) file unless specified otherwise by **-C**.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+-u   user
+
+-U   unuser
+
+-v   sieve
+
+-m   mailbox
+
+-M   unmailbox
+
+-a   append
+
+-c   acl
+
+-q   quota
+
+-n   annotation
+
+-s   seen
+
+-b   subscription
+
+
+Examples
+========
+
+   **cyr_synclog -m** *user.brong*
+
+   Add the mailbox *user.brong* to the log.
+
+   **cyr_synclog -u** *brong*
+
+   Add the user *brong* to the log.
+
+   **cyr_synclog -C** */etc/imapd-special.conf* **-s** *user.brong* *brong*
+
+   Add a log entry to mark mailbox *user.brong* as seen by user
+   *brong*.
+
+   **cyr_synclog** *"SEEN user.brong brong"*
+
+   Add a log line, using the raw format, to mark mailbox *user.brong*
+   as seen by user *brong*.
+
+
+History
+=======
+
+This command was introduced in version 3.0.
+
+
+Files
+=====
+
+/etc/imapd.conf, <configdirectory>/sync/log
+
+
+See Also
+========
+
+imapd.conf(5), sync_client(8)

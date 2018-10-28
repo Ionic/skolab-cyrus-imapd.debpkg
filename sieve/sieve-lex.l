@@ -2,7 +2,7 @@
 /* sieve.l -- sieve lexer
  * Larry Greenfield
  *
- * Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
+ * Copyright (c) 1994-2016 Carnegie Mellon University.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -118,7 +118,8 @@ CRLF            (\r\n|\r|\n)
 <INITIAL>body           return BODY;
 <INITIAL>not            return NOT;
 <INITIAL>size           return SIZE;
-<INITIAL>hasflag        return HASFLAG;
+<INITIAL>hasflag        return yylval->nval = HASFLAG;
+<INITIAL>string         return yylval->nval = STRINGT;
 <INITIAL>reject         return REJCT;
 <INITIAL>fileinto       return FILEINTO;
 <INITIAL>redirect       return REDIRECT;
@@ -126,9 +127,9 @@ CRLF            (\r\n|\r|\n)
 <INITIAL>require        return REQUIRE;
 <INITIAL>stop           return STOP;
 <INITIAL>discard        return DISCARD;
-<INITIAL>setflag        return SETFLAG;
-<INITIAL>addflag        return ADDFLAG;
-<INITIAL>removeflag     return REMOVEFLAG;
+<INITIAL>setflag        return yylval->nval = SETFLAG;
+<INITIAL>addflag        return yylval->nval = ADDFLAG;
+<INITIAL>removeflag     return yylval->nval = REMOVEFLAG;
 <INITIAL>mark           return MARK;
 <INITIAL>unmark         return UNMARK;
 <INITIAL>notify         return NOTIFY;
@@ -179,6 +180,19 @@ CRLF            (\r\n|\r|\n)
 <INITIAL>:zone          return ZONE;
 <INITIAL>:originalzone  return ORIGINALZONE;
 <INITIAL>:flags         return FLAGS;
+<INITIAL>mailboxexists  return MAILBOXEXISTS; /* RFC 5490 */
+<INITIAL>:create        return CREATE;
+<INITIAL>metadata       return METADATA;
+<INITIAL>metadataexists return METADATAEXISTS;
+<INITIAL>servermetadata       return SERVERMETADATA;
+<INITIAL>servermetadataexists return SERVERMETADATAEXISTS;
+<INITIAL>set            return yylval->nval = SET;
+<INITIAL>:lower         return yylval->nval = LOWER;
+<INITIAL>:upper	        return yylval->nval = UPPER;
+<INITIAL>:lowerfirst    return yylval->nval = LOWERFIRST;
+<INITIAL>:upperfirst    return yylval->nval = UPPERFIRST;
+<INITIAL>:quotewildcard return yylval->nval = QUOTEWILDCARD;
+<INITIAL>:length        return yylval->nval = LENGTH;
 <INITIAL>[ \t\n\r] ;    /* ignore whitespace */
 <INITIAL>#.* ;          /* ignore hash comments */
 <INITIAL>"/*"([^\*]|\*[^\/])*\*?"*/" ;  /* ignore bracket comments */

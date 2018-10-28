@@ -75,6 +75,18 @@
 #include "xstrlcpy.h"
 #include "xstrlcat.h"
 
+#ifndef AI_V4MAPPED
+#define AI_V4MAPPED	0
+#endif
+
+#ifndef AI_ADDRCONFIG
+#define AI_ADDRCONFIG	0
+#endif
+
+#ifndef AI_MASK
+#define AI_MASK	(AI_V4MAPPED | AI_ADDRCONFIG)
+#endif
+
 enum {
     AUTO_CAPA_BANNER = -1,
     AUTO_CAPA_NO = 0,
@@ -466,11 +478,9 @@ EXPORTED char *backend_get_cap_params(const struct backend *s, unsigned long cap
     return NULL;
 }
 
+#ifdef HAVE_ZLIB
 static int do_compress(struct backend *s, struct simple_cmd_t *compress_cmd)
 {
-#ifndef HAVE_ZLIB
-    return -1;
-#else
     char buf[1024];
 
     /* send compress command */
@@ -486,8 +496,14 @@ static int do_compress(struct backend *s, struct simple_cmd_t *compress_cmd)
     prot_setcompress(s->out);
 
     return 0;
-#endif /* HAVE_ZLIB */
 }
+#else
+static int do_compress(struct backend *s __attribute__((unused)),
+                       struct simple_cmd_t *compress_cmd __attribute__((unused)))
+{
+    return -1;
+}
+#endif /* HAVE_ZLIB */
 
 #ifdef HAVE_SSL
 EXPORTED int backend_starttls(  struct backend *s,
@@ -498,6 +514,7 @@ EXPORTED int backend_starttls(  struct backend *s,
     char *auth_id = NULL;
     int *layerp = NULL;
     int r = 0;
+    int auto_capa = 0;
 
     if (tls_cmd) {
         char buf[2048];
@@ -509,6 +526,8 @@ EXPORTED int backend_starttls(  struct backend *s,
         if (!prot_fgets(buf, sizeof(buf), s->in) ||
             strncmp(buf, tls_cmd->ok, strlen(tls_cmd->ok)))
             return -1;
+
+        auto_capa = tls_cmd->auto_capa;
     }
 
     r = tls_init_clientengine(5, c_cert_file, c_key_file);
@@ -531,7 +550,7 @@ EXPORTED int backend_starttls(  struct backend *s,
     prot_settls(s->in,  s->tlsconn);
     prot_settls(s->out, s->tlsconn);
 
-    ask_capability(s, /*dobanner*/1, tls_cmd->auto_capa);
+    ask_capability(s, /*dobanner*/1, auto_capa);
 
     return 0;
 }
@@ -728,9 +747,6 @@ static int backend_authenticate(struct backend *s, const char *userid,
              backend_starttls(s, &prot->u.std.tls_cmd, c_cert_file, c_key_file) != -1 &&
              (mechlist = backend_get_cap_params(s, CAPA_AUTH)));
 
-    /* FIXME there's a bug around here somewhere, if we fall out of here without a mech we
-     * end up returning SASL_OK anyway */
-
     if (r == SASL_OK) {
         prot_setsasl(s->in, s->saslconn);
         prot_setsasl(s->out, s->saslconn);
@@ -738,7 +754,7 @@ static int backend_authenticate(struct backend *s, const char *userid,
 
     if (mechlist) free(mechlist);
 
-    return SASL_OK;
+    return r;
 }
 
 static int backend_login(struct backend *ret, const char *userid,
@@ -844,7 +860,7 @@ static int backend_login(struct backend *ret, const char *userid,
                  (strcmp(prot->service, "pop3")))) {
                 char rsessionid[MAX_SESSIONID_SIZE];
                 parse_sessionid(my_status, rsessionid);
-                syslog(LOG_NOTICE, "proxy %s sessionid=<%s> remote=<%s>", userid, session_id(), rsessionid);
+                syslog(LOG_NOTICE, "auditlog: proxy %s sessionid=<%s> remote=<%s>", userid, session_id(), rsessionid);
             }
         }
 
@@ -866,6 +882,53 @@ static int backend_login(struct backend *ret, const char *userid,
     return 0;
 }
 
+static int backend_client_bind(const int sock, const struct addrinfo *dest)
+{
+    const char *client_bind_name = config_getstring(IMAPOPT_CLIENT_BIND_NAME);
+    struct addrinfo hints = {0}, *res0 = NULL, *iter;
+    int r;
+
+    if (!client_bind_name) client_bind_name = config_servername;
+
+    hints.ai_family = dest->ai_family;
+    hints.ai_socktype = dest->ai_socktype;
+    hints.ai_protocol = dest->ai_protocol;
+    hints.ai_flags = AI_MASK & (AI_V4MAPPED | AI_ADDRCONFIG);
+
+    r = getaddrinfo(client_bind_name, NULL, &hints, &res0);
+    if (r && config_debug) {
+        syslog(LOG_DEBUG, "%s: getaddrinfo(%s) failed: %s",
+               __func__, client_bind_name, gai_strerror(r));
+    }
+
+    for (iter = res0; iter != NULL; iter = iter->ai_next) {
+        r = bind(sock, iter->ai_addr, iter->ai_addrlen);
+        if (!r) break;  /* found a good one */
+
+        if (config_debug) {
+            char bind_addr[1024] = {0};
+            int saved_errno = errno;
+
+            getnameinfo(iter->ai_addr, iter->ai_addrlen,
+                        bind_addr, sizeof(bind_addr),
+                        NULL, 0,
+                        NI_NUMERICHOST);
+
+            errno = saved_errno;
+            syslog(LOG_DEBUG, "%s: bind(%s) failed: %m", __func__, bind_addr);
+        }
+    }
+
+    if (r || !iter) {
+        syslog(LOG_ERR, "client bind failed: no suitable address found for %s",
+               client_bind_name);
+        r = r ? r : -1;
+    }
+
+    if (res0 != NULL) freeaddrinfo(res0);
+
+    return r;
+}
 
 EXPORTED struct backend *backend_connect(struct backend *ret_backend, const char *server,
                                 struct protocol_t *prot, const char *userid,
@@ -877,6 +940,7 @@ EXPORTED struct backend *backend_connect(struct backend *ret_backend, const char
     int sock = -1;
     int r;
     int err = -1;
+    int do_client_bind = 0;
     int do_tls = 0;
     int noauth = 0;
     struct addrinfo hints, *res0 = NULL, *res;
@@ -944,12 +1008,23 @@ EXPORTED struct backend *backend_connect(struct backend *ret_backend, const char
                    server, gai_strerror(err));
             goto error;
         }
+
+        do_client_bind = config_getswitch(IMAPOPT_CLIENT_BIND);
     }
 
     for (res = res0; res; res = res->ai_next) {
         sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
         if (sock < 0)
             continue;
+
+        if (do_client_bind) {
+            r = backend_client_bind(sock, res);
+            if (r) {
+                close(sock);
+                sock = -1;
+                continue;
+            }
+        }
 
         /* Do a non-blocking connect() */
         nonblock(sock, 1);
@@ -1024,7 +1099,10 @@ EXPORTED struct backend *backend_connect(struct backend *ret_backend, const char
     prot_setisclient(ret->out, 1);
 
     /* Start TLS if required */
-    if (do_tls) r = backend_starttls(ret, NULL, NULL, NULL);
+    if (do_tls) {
+        r = backend_starttls(ret, NULL, NULL, NULL);
+        if (r) goto error;
+    }
 
     /* Login to the server */
     if (prot->type == TYPE_SPEC)
@@ -1043,23 +1121,9 @@ EXPORTED struct backend *backend_connect(struct backend *ret_backend, const char
     return ret;
 
 error:
-    forget_capabilities(ret);
-    if (ret->in) {
-        prot_free(ret->in);
-        ret->in = NULL;
-    }
-    if (ret->out) {
-        prot_free(ret->out);
-        ret->out = NULL;
-    }
-    if (sock >= 0)
-        close(sock);
-    if (ret->saslconn) {
-        sasl_dispose(&ret->saslconn);
-        ret->saslconn = NULL;
-    }
-    if (!ret_backend)
-        free(ret);
+    if (sock >= 0) backend_disconnect(ret);
+    ret->sock = -1;
+    if (!ret_backend) free(ret);
     return NULL;
 }
 
@@ -1126,11 +1190,11 @@ EXPORTED void backend_disconnect(struct backend *s)
                 }
             }
         }
-    }
 
-    /* Flush the incoming buffer */
-    prot_NONBLOCK(s->in);
-    prot_fill(s->in);
+        /* Flush the incoming buffer */
+        prot_NONBLOCK(s->in);
+        prot_fill(s->in);
+    }
 
 #ifdef HAVE_SSL
     /* Free tlsconn */

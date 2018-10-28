@@ -371,7 +371,12 @@ static int dump2_test(bytecode_input_t * d, int i, int version)
         printf("             ]\n");
         break;
     case BC_HASFLAG:/*15*/
-        printf("Hasflag [");
+    case BC_STRING:/*21*/
+        if (BC_HASFLAG == opcode) {
+            printf("Hasflag [");
+        } else {
+            printf("String [");
+        }
         i= printComparison(d, i+1);
         printf("              Variables: ");
         i=write_list(ntohl(d[i].len), i+1, d);
@@ -398,6 +403,7 @@ static int dump2_test(bytecode_input_t * d, int i, int version)
         break;
     case BC_DATE:/*11*/
         has_index=1;
+        GCC_FALLTHROUGH
     case BC_CURRENTDATE:/*12*/
         if (0x07 == version) {
             /* There was a version of the bytecode that had the index extension
@@ -551,11 +557,16 @@ static void dump2(bytecode_input_t *d, int bc_len)
 
     version = ntohl(d[i].op);
     printf("Sievecode version %d\n", version);
-
-    for(i++; i<bc_len;)
+    if (version >= 0x11 && ntohl(d[++i].value) & BFE_VARIABLES) {
+        printf("Require Variables\n");
+    }
+    
+    for(i++; i<bc_len;) 
     {
         int op;
         int copy = 0;
+        int create = 0;
+        int supports_variables = 0;
 
         printf("%d: ",i);
 
@@ -585,13 +596,16 @@ static void dump2(bytecode_input_t *d, int bc_len)
             printf("REJECT {%d}%s\n", len, data);
             break;
 
-        case B_FILEINTO:/*23*/
+        case B_FILEINTO: /*24*/
+            create = ntohl(d[i++].value);
+            /* fall through */
+        case B_FILEINTO_FLAGS:/*23*/
             printf("FILEINTO FLAGS {%d}\n", ntohl(d[i].listlen));
             i=write_list(ntohl(d[i].listlen), i+1, d);
             copy = ntohl(d[i++].value);
             i = unwrap_string(d, i, &data, &len);
-            printf("              COPY(%d) FOLDER({%d}%s)\n",
-                    copy, len, data);
+            printf("              CREATE(%d) COPY(%d) FOLDER({%d}%s)\n",
+                    create, copy, len, data);
             break;
 
         case B_FILEINTO_COPY : /*19*/
@@ -599,7 +613,7 @@ static void dump2(bytecode_input_t *d, int bc_len)
             /* fall through */
         case B_FILEINTO_ORIG: /*4*/
             i = unwrap_string(d, i, &data, &len);
-            printf("FILEINTO COPY(%d) FOLDER({%d}%s)\n",copy,len,data);
+            printf("FILEINTO COPY(%d) CREATE(%d) FOLDER({%d}%s)\n",copy,create,len,data);
             break;
 
         case B_REDIRECT: /*20*/
@@ -627,18 +641,33 @@ static void dump2(bytecode_input_t *d, int bc_len)
             printf("UNMARK\n");
             break;
 
-        case B_ADDFLAG: /*9*/
-            printf("ADDFLAG  {%d}\n",ntohl(d[i].len));
-            i=write_list(ntohl(d[i].len),i+1,d);
-            break;
-
-        case B_SETFLAG: /*10*/
-            printf("SETFLAG  {%d}\n",ntohl(d[i].len));
-            i=write_list(ntohl(d[i].len),i+1,d);
-            break;
-
-        case B_REMOVEFLAG: /*11*/
-            printf("REMOVEFLAG  {%d}\n",ntohl(d[i].len));
+        case B_ADDFLAG: /*26*/
+        case B_SETFLAG: /*27*/
+        case B_REMOVEFLAG: /*28*/
+            i = unwrap_string(d, i, &data, &len);
+            supports_variables = 1;
+            /* fall through */
+        case B_ADDFLAG_ORIG: /*9*/
+        case B_SETFLAG_ORIG: /*10*/
+        case B_REMOVEFLAG_ORIG: /*11*/
+            switch (op) {
+            case B_ADDFLAG_ORIG:
+            case B_ADDFLAG:
+                printf("ADDFLAG ");
+                break;
+            case B_SETFLAG:
+            case B_SETFLAG_ORIG:
+                printf("SETFLAG ");
+                break;
+            case B_REMOVEFLAG:
+            case B_REMOVEFLAG_ORIG:
+                printf("REMOVEFLAG ");
+                break;
+            }
+            if (supports_variables) {
+                printf("VARIABLE({%d}%s) ", len, data);
+            }
+            printf("FLAGS {%d}\n",ntohl(d[i].len));
             i=write_list(ntohl(d[i].len),i+1,d);
             break;
 
@@ -648,7 +677,7 @@ static void dump2(bytecode_input_t *d, int bc_len)
                    ntohl(d[i].value), ntohl(d[i+1].value), ntohl(d[i+2].value));
             i+=3;
 
-            i = unwrap_string(d, i+1, &data, &len);
+            i = unwrap_string(d, i, &data, &len);
 
             printf("           ({%d}%s)\n", len, (!data ? "[nil]" : data));
             break;
@@ -721,6 +750,21 @@ static void dump2(bytecode_input_t *d, int bc_len)
                 ntohl(d[i].value) & 128 ? "yes" : "no");
             i = unwrap_string(d, i+1, &data, &len);
             printf(" {%d}%s\n", len, data);
+            break;
+
+        case B_SET: /*25*/
+        {
+            int m = ntohl(d[i++].value);
+            i = unwrap_string(d, i, &data, &len);
+            printf("SET ");
+            printf("LOWER(%d) UPPER(%d) LOWERFIRST(%d) UPPERFIRST(%d) "
+                   "QUOTEWILDCARD(%d) LENGTH(%d)\n",
+		   m & BFV_LOWER, m & BFV_UPPER, m & BFV_LOWERFIRST,
+		   m & BFV_UPPERFIRST, m & BFV_QUOTEWILDCARD, m & BFV_LENGTH);
+            printf("              VARS({%d}%s)", len, data);
+            i = unwrap_string(d, i, &data, &len);
+            printf(" VALS({%d}%s)\n", len, data);
+        }
             break;
 
         case B_RETURN:/*18*/

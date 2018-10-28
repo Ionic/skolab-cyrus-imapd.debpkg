@@ -1,106 +1,181 @@
-.\" -*- nroff -*-
-.TH CYR_SYNCLOG 8 "Project Cyrus" CMU
-.\"
-.\" Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
-.\"
-.\" Redistribution and use in source and binary forms, with or without
-.\" modification, are permitted provided that the following conditions
-.\" are met:
-.\"
-.\" 1. Redistributions of source code must retain the above copyright
-.\"    notice, this list of conditions and the following disclaimer.
-.\"
-.\" 2. Redistributions in binary form must reproduce the above copyright
-.\"    notice, this list of conditions and the following disclaimer in
-.\"    the documentation and/or other materials provided with the
-.\"    distribution.
-.\"
-.\" 3. The name "Carnegie Mellon University" must not be used to
-.\"    endorse or promote products derived from this software without
-.\"    prior written permission. For permission or any legal
-.\"    details, please contact
-.\"      Carnegie Mellon University
-.\"      Center for Technology Transfer and Enterprise Creation
-.\"      4615 Forbes Avenue
-.\"      Suite 302
-.\"      Pittsburgh, PA  15213
-.\"      (412) 268-7393, fax: (412) 268-7395
-.\"      innovation@andrew.cmu.edu
-.\"
-.\" 4. Redistributions of any form whatsoever must retain the following
-.\"    acknowledgment:
-.\"    "This product includes software developed by Computing Services
-.\"     at Carnegie Mellon University (http://www.cmu.edu/computing/)."
-.\"
-.\" CARNEGIE MELLON UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO
-.\" THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-.\" AND FITNESS, IN NO EVENT SHALL CARNEGIE MELLON UNIVERSITY BE LIABLE
-.\" FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
-.\" AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
-.\" OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\" Man page generated from reStructuredText.
+.
+.TH "CYR_SYNCLOG" "8" "August 10, 2018" "3.0.8" "Cyrus IMAP"
 .SH NAME
-cyr_synclog \- add entries to the replication log
-.SH SYNOPSIS
-.B cyr_synclog
-[
-.B \-C
-.I config-file
-]
-[
-.B \-type
-]
-<value>
-.SH DESCRIPTION
-.I cyr_synclog
+cyr_synclog \- Cyrus IMAP documentation
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.sp
 is used to append a value to the log file.  You can either specify
 the log type and value, or an entire log line.
-.PP
-\-u   USER
-
-\-U   UNUSER
-
-\-v   SIEVE
-
-\-m   MAILBOX
-
-\-M   UNMAILBOX
-
-\-a   APPEND
-
-\-c   ACL
-
-\-q   QUOTA
-
-\-n   ANNOTATION
-
-\-s   SEEN
-
-\-b   SUBSCRIPTION
-.PP
+.SH SYNOPSIS
+.sp
+.nf
+\fBcyr_synclog\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fI\-{type}\fP \fIvalue\fP ]
+\fBcyr_synclog\fP [ \fB\-C\fP \fIconfig\-file\fP ] \fI"<raw\-log\-line>"\fP
+.fi
+.SH DESCRIPTION
+.sp
+\fBcyr_synclog\fP is used to append a value to the log file.  You can
+either specify the log type and value, or an entire log line.
+.sp
 Running without any options will print a short usage document.
-.PP
-.I cyr_synclog
-reads any applicable configuration options out of the
-.IR imapd.conf (5)
-file unless specified otherwise by \fB-C\fR.
-.SH EXAMPLES
-Here are some example ways to use cyr_synclog:
-.PP
-cyr_synclog \-m user.brong
-
-cyr_synclog \-u brong
-
-cyr_synclog \-C /etc/imapd-special.conf \-s user.brong brong
-
-cyr_synclog "SEEN user.brong brong"
+.sp
+\fBcyr_synclog\fP reads its configuration options out of the imapd.conf(5) file unless specified otherwise by \fB\-C\fP\&.
 .SH OPTIONS
+.INDENT 0.0
 .TP
-.BI \-C " config-file"
-Read configuration options from \fIconfig-file\fR.
+.B \-C config\-file
+Use the specified configuration file \fIconfig\-file\fP rather than the default imapd.conf(5)\&.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-u   user
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-U   unuser
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-v   sieve
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-m   mailbox
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-M   unmailbox
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-a   append
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-c   acl
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-q   quota
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-n   annotation
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-s   seen
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-b   subscription
+.UNINDENT
+.SH EXAMPLES
+.sp
+.nf
+\fBcyr_synclog \-m\fP \fIuser.brong\fP
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Add the mailbox \fIuser.brong\fP to the log.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBcyr_synclog \-u\fP \fIbrong\fP
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Add the user \fIbrong\fP to the log.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBcyr_synclog \-C\fP \fI/etc/imapd\-special.conf\fP \fB\-s\fP \fIuser.brong\fP \fIbrong\fP
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Add a log entry to mark mailbox \fIuser.brong\fP as seen by user
+\fIbrong\fP\&.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBcyr_synclog\fP \fI"SEEN user.brong brong"\fP
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Add a log line, using the raw format, to mark mailbox
+\fIuser.brong\fP as seen by user \fIbrong\fP\&.
+.UNINDENT
+.UNINDENT
+.SH HISTORY
+.sp
+This command was introduced in version 3.0.
 .SH FILES
-.TP
-.B /etc/imapd.conf
+.sp
+/etc/imapd.conf,
+<configdirectory>/sync/log
 .SH SEE ALSO
-.PP
-\fBimapd.conf(5)\fR
+.sp
+imapd.conf(5), sync_client(8)
+.SH AUTHOR
+The Cyrus Team, Nic Bernstein (Onlight)
+.SH COPYRIGHT
+1993-2017, The Cyrus Team
+.\" Generated by docutils manpage writer.
+.

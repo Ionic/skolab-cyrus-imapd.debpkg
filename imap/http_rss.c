@@ -108,12 +108,14 @@ static struct body *body_fetch_section(struct body *body, const char *section);
 
 /* Namespace for RSS feeds of mailboxes */
 struct namespace_t namespace_rss = {
-    URL_NS_RSS, 0, "/rss", NULL, 1 /* auth */,
+    URL_NS_RSS, 0, "/rss", NULL,
+    http_allow_noauth_get, /*authschemes*/0,
     /*mbtype*/0,
     ALLOW_READ,
-    rss_init, NULL, NULL, NULL,
+    rss_init, NULL, NULL, NULL, NULL, NULL,
     {
         { NULL,                 NULL },                 /* ACL          */
+        { NULL,                 NULL },                 /* BIND         */
         { NULL,                 NULL },                 /* COPY         */
         { NULL,                 NULL },                 /* DELETE       */
         { &meth_get,            NULL },                 /* GET          */
@@ -123,12 +125,14 @@ struct namespace_t namespace_rss = {
         { NULL,                 NULL },                 /* MKCOL        */
         { NULL,                 NULL },                 /* MOVE         */
         { &meth_options,        &rss_parse_path },      /* OPTIONS      */
+        { NULL,                 NULL },                 /* PATCH        */
         { NULL,                 NULL },                 /* POST         */
         { NULL,                 NULL },                 /* PROPFIND     */
         { NULL,                 NULL },                 /* PROPPATCH    */
         { NULL,                 NULL },                 /* PUT          */
         { NULL,                 NULL },                 /* REPORT       */
         { &meth_trace,          &rss_parse_path },      /* TRACE        */
+        { NULL,                 NULL },                 /* UNBIND       */
         { NULL,                 NULL }                  /* UNLOCK       */
     }
 };
@@ -153,6 +157,8 @@ static int meth_get(struct transaction_t *txn,
     uint32_t uid = 0;
     struct mailbox *mailbox = NULL;
 
+    if (!httpd_userid) return HTTP_UNAUTHORIZED;
+
     /* Construct mailbox name corresponding to request target URI */
     if ((r = rss_parse_path(txn->req_uri->path,
                             &txn->req_tgt, &txn->error.desc))) {
@@ -167,8 +173,7 @@ static int meth_get(struct transaction_t *txn,
     if (!is_feed(txn->req_tgt.mbentry->name)) return HTTP_NOT_FOUND;
 
     /* Check ACL for current user */
-    rights = txn->req_tgt.mbentry->acl ?
-        cyrus_acl_myrights(httpd_authstate, txn->req_tgt.mbentry->acl) : 0;
+    rights = httpd_myrights(httpd_authstate, txn->req_tgt.mbentry);
     if (!(rights & ACL_READ)) return HTTP_NO_PRIVS;
 
     if (txn->req_tgt.mbentry->server) {
@@ -250,6 +255,8 @@ static int meth_get(struct transaction_t *txn,
 
                 if (precond != HTTP_NOT_MODIFIED) break;
 
+                GCC_FALLTHROUGH
+
             default:
                 /* We failed a precondition - don't perform the request */
                 ret = precond;
@@ -280,7 +287,7 @@ static int meth_get(struct transaction_t *txn,
                 outbuf = charset_decode_mimebody(buf_base(&msg_buf) +
                                                  part->content_offset,
                                                  part->content_size,
-                                                 part->charset_cte & 0xff,
+                                                 part->charset_enc,
                                                  &part->decoded_body, &outsize);
 
                 if (!outbuf) {
@@ -347,6 +354,12 @@ static int rss_parse_path(const char *path, struct request_target_t *tgt,
 
     /* Locate the mailbox */
     if (*mboxname) {
+        /* Translate external (URL) mboxname to internal */
+        for (; len > 0; len--) {
+            if (mboxname[len-1] == '/') mboxname[len-1] = '.';
+            else if (mboxname[len-1] == '.') mboxname[len-1] = '^';
+        }
+
         int r = http_mlookup(mboxname, &tgt->mbentry, NULL);
         if (r) {
             syslog(LOG_ERR, "mlookup(%s) failed: %s",
@@ -406,7 +419,7 @@ struct list_rock {
     struct node *last;
 };
 
-static int list_cb(const char *name, int matchlen, int maycreate, void *rock)
+static int do_list(const char *name, void *rock)
 {
     struct list_rock *lrock = (struct list_rock *) rock;
     struct node *last = lrock->last;
@@ -427,7 +440,7 @@ static int list_cb(const char *name, int matchlen, int maycreate, void *rock)
         r = http_mlookup(name, &mbentry, NULL);
         if (r) return 0;
 
-        rights = httpd_myrights(httpd_authstate, mbentry->acl);
+        rights = httpd_myrights(httpd_authstate, mbentry);
         mboxlist_entry_free(&mbentry);
 
         if ((rights & ACL_READ) != ACL_READ)
@@ -439,7 +452,7 @@ static int list_cb(const char *name, int matchlen, int maycreate, void *rock)
         (!last->len || (name[last->len] == '.'))) {
         /* Found closest ancestor of 'name' */
         struct node *node;
-        size_t len = matchlen;
+        size_t len = strlen(name);
         char shortname[MAX_MAILBOX_NAME+1], path[MAX_MAILBOX_PATH+1];
         char *cp, *href = NULL;
 
@@ -482,7 +495,16 @@ static int list_cb(const char *name, int matchlen, int maycreate, void *rock)
 
         if (href) {
             /* Add selectable feed with link */
-            snprintf(path, sizeof(path), ".rss.%s", node->name);
+            struct buf *mboxname = &lrock->txn->buf;
+
+            /* Translate internal mboxname to external (URL) */
+            buf_setcstr(mboxname, node->name);
+            for (; len > 0; len--) {
+                if (mboxname->s[len-1] == '.') mboxname->s[len-1] = '/';
+                else if (mboxname->s[len-1] == '^') mboxname->s[len-1] = '.';
+            }
+
+            snprintf(path, sizeof(path), "/rss/%s", buf_cstring(mboxname));
             buf_printf(buf, "<li><a href=\"%s\">%s</a>",
                        href, shortname);
         }
@@ -490,7 +512,7 @@ static int list_cb(const char *name, int matchlen, int maycreate, void *rock)
             /* Add missing ancestor and recurse down the tree */
             buf_printf(buf, "<li>%s", shortname);
 
-            list_cb(name, matchlen, maycreate, rock);
+            do_list(name, rock);
         }
     }
     else {
@@ -504,11 +526,18 @@ static int list_cb(const char *name, int matchlen, int maycreate, void *rock)
         if (last->parent) {
             /* Recurse back up the tree */
             lrock->last = last->parent;
-            list_cb(name, matchlen, maycreate, rock);
+            do_list(name, rock);
         }
     }
 
     return 0;
+}
+
+static int list_cb(struct findall_data *data, void *rock)
+{
+    if (data && data->mbname)
+        return do_list(mbname_intname(data->mbname), rock);
+    return do_list(NULL, rock);
 }
 
 
@@ -530,10 +559,17 @@ static int list_feeds(struct transaction_t *txn)
     struct node root = { "", 0, NULL, NULL };
 
     if (template_file) {
+        struct buf *path = &txn->buf;
+
+        buf_reset(path);
+        prefix = config_getstring(IMAPOPT_HTTPDOCROOT);
+        if (prefix) buf_printf(path, "%s/", prefix);
+        buf_appendcstr(path, template_file);
+
         /* See if template exists and contains feedlist variable */
-        if (!stat(template_file, &sbuf) && S_ISREG(sbuf.st_mode) &&
+        if (!stat(buf_cstring(path), &sbuf) && S_ISREG(sbuf.st_mode) &&
             (size_t) sbuf.st_size >= varlen &&
-            (fd = open(template_file, O_RDONLY)) != -1) {
+            (fd = open(buf_cstring(path), O_RDONLY)) != -1) {
             const char *p;
             unsigned long len;
 
@@ -596,6 +632,8 @@ static int list_feeds(struct transaction_t *txn)
 
         if (precond != HTTP_NOT_MODIFIED) break;
 
+        GCC_FALLTHROUGH
+
     default:
         /* We failed a precondition - don't perform the request */
         ret = precond;
@@ -624,7 +662,6 @@ static int list_feeds(struct transaction_t *txn)
                      httpd_authstate, list_cb, &lrock);
 
     /* Close out the tree */
-    list_cb(NULL, 0, 0, &lrock);
     if (buf_len(body)) write_body(0, txn, buf_cstring(body), buf_len(body));
 
     /* Send rest of template */
@@ -785,6 +822,8 @@ static int list_messages(struct transaction_t *txn, struct mailbox *mailbox)
 
         if (precond != HTTP_NOT_MODIFIED) break;
 
+        GCC_FALLTHROUGH
+
     default:
         /* We failed a precondition - don't perform the request */
         return precond;
@@ -944,7 +983,7 @@ static int list_messages(struct transaction_t *txn, struct mailbox *mailbox)
         buf_printf_markup(buf, level++, "<entry>");
 
         /* <title> - required */
-        subj = charset_parse_mimeheader(body->subject);
+        subj = charset_parse_mimeheader(body->subject, charset_flags);
         buf_printf_markup(buf, level++, "<title type=\"html\">");
         buf_escapestr(buf, subj && *subj ? subj : "[Untitled]", 0, 0, level);
         buf_printf_markup(buf, --level, "</title>");
@@ -976,7 +1015,7 @@ static int list_messages(struct transaction_t *txn, struct mailbox *mailbox)
 
             /* <name> - required */
             if (addr->name) {
-                char *name = charset_parse_mimeheader(addr->name);
+                char *name = charset_parse_mimeheader(addr->name, charset_flags);
                 buf_printf_markup(buf, level++, "<name>");
                 buf_escapestr(buf, name, 0, 0, level);
                 buf_printf_markup(buf, --level, "</name>");
@@ -1095,7 +1134,7 @@ static void display_part(struct transaction_t *txn,
         if (subpart->subject) {
             char *subj;
 
-            subj = charset_parse_mimeheader(subpart->subject);
+            subj = charset_parse_mimeheader(subpart->subject, charset_flags);
             buf_printf_markup(buf, level++, "<tr>");
             buf_printf_markup(buf, level,
                               "<td align=right valign=top><b>Subject: </b></td>");
@@ -1187,13 +1226,17 @@ static void display_part(struct transaction_t *txn,
             (!body->disposition || !strcmp(body->disposition, "INLINE"))) {
             /* Display non-attachment text part */
             int ishtml = !strcmp(body->subtype, "HTML");
-            int charset = (body->charset_cte << 16) & 0xffff;
-            int encoding = body->charset_cte & 0xff;
+            charset_t charset = charset_lookupname(body->charset_id);
+            int encoding = body->charset_enc;
 
-            if (charset == 0xffff) charset = 0; /* unknown, try ASCII */
+            if (charset == CHARSET_UNKNOWN_CHARSET) {
+                /* unknown, try ASCII */
+                charset = charset_lookupname("us-ascii");
+            }
             body->decoded_body =
                 charset_to_utf8(buf_base(msg_buf) + body->content_offset,
                                 body->content_size, charset, encoding);
+            charset_free(&charset);
             if (!ishtml) buf_printf_markup(buf, level, "<pre>");
             write_body(0, txn, buf_cstring(buf), buf_len(buf));
             buf_reset(buf);
@@ -1238,7 +1281,7 @@ static void display_part(struct transaction_t *txn,
             /* Create text for link or alternative text for image */
             if (param) buf_printf(buf, "%s", param->value);
             else {
-                buf_printf(buf, "[%s/%s %lu bytes]",
+                buf_printf(buf, "[%s/%s %u bytes]",
                            body->type, body->subtype, body->content_size);
             }
 

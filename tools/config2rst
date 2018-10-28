@@ -40,7 +40,7 @@
 # OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #
-# Copyright (c) 2015 Nic Bernstein, Onlight, Inc.
+# Copyright (c) 2017 Nic Bernstein, Onlight, Inc.
 #
 
 exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
@@ -63,8 +63,9 @@ if ($@) { die "$@"; }
 __END__
 require 5;
 
-package Man2rst;
+package config2rst;
 use strict;
+use warnings;
 
 my $mode = 0;
 my $save = "";
@@ -189,7 +190,8 @@ sub print_man2rst {
     if (/^\.TH\s+(\S+).*$/) {
         $file = lc $1;
         my $headlen = length $file;
-        my $header = ".. _imap-admin-configs-$file:\n\n";
+        my $header = "\n\n.. cyrusman:: $file(5)\n\n";
+        $header .= ".. _imap-reference-manpages-configs-$file:\n\n";
         $header .= '=' x $headlen . "\n$file\n" . '=' x $headlen . "\n";
         $_ = $header;
     }
@@ -366,8 +368,9 @@ while (<>) {
             $tabs = 0;
             $opt = '';
         } elsif (m|\s*(.*)\s*|) {
-            chomp($1);
-            print print_man2rst($1);
+            my $stripped = $1;
+	    chomp($stripped);
+            print print_man2rst($stripped);
         }
     }
 }

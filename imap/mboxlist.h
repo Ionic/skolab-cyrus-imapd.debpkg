@@ -83,6 +83,7 @@ struct mboxlist_entry {
     char *ext_name;
     time_t mtime;
     uint32_t uidvalidity;
+    modseq_t foldermodseq;
     int mbtype;
     char *partition;
     char *server; /* holds remote machine for REMOTE mailboxes */
@@ -108,14 +109,10 @@ mbentry_t *mboxlist_entry_copy(const mbentry_t *src);
 
 void mboxlist_entry_free(mbentry_t **mbentryptr);
 
-/* formats a cstring from a mboxlist_entry.  Caller must free
- * after use */
-char *mboxlist_entry_cstring(mbentry_t *mbentry);
-
 const char *mboxlist_mbtype_to_string(uint32_t mbtype);
 uint32_t mboxlist_string_to_mbtype(const char *string);
 
-int mboxlist_delete(const char *name, int force);
+int mboxlist_delete(const char *name);
 /* Lookup 'name' in the mailbox list. */
 int mboxlist_lookup(const char *name, mbentry_t **mbentryptr,
                     struct txn **tid);
@@ -123,9 +120,8 @@ int mboxlist_lookup_allow_all(const char *name,
                                    mbentry_t **mbentryptr,
                                    struct txn **tid);
 
-int mboxlist_parse_entry(mbentry_t **mbentryptr,
-                         const char *name, size_t namelen,
-                         const char *data, size_t datalen);
+char *mboxlist_find_specialuse(const char *use, const char *userid);
+char *mboxlist_find_uniqueid(const char *uniqueid, const char *userid);
 
 
 /* insert/delete stub entries */
@@ -205,7 +201,19 @@ int mboxlist_setacl(const struct namespace *namespace, const char *name,
 /* Change all ACLs on mailbox */
 int mboxlist_sync_setacls(const char *name, const char *acl);
 
-typedef int findall_cb(const char *name, int matchlen, int maycreate, void *rock);
+int mboxlist_set_racls(int enabled);
+
+modseq_t mboxlist_foldermodseq_dirty(struct mailbox *mailbox);
+
+struct findall_data {
+    const char *extname;
+    int mb_category;
+    const mbentry_t *mbentry;
+    const mbname_t *mbname;
+};
+
+typedef int findall_cb(struct findall_data *data, void *rock);
+
 /* Find all mailboxes that match 'pattern'. */
 int mboxlist_findall(struct namespace *namespace,
                      const char *pattern, int isadmin,
@@ -215,6 +223,10 @@ int mboxlist_findallmulti(struct namespace *namespace,
                           const strarray_t *patterns, int isadmin,
                           const char *userid, const struct auth_state *auth_state,
                           findall_cb *proc, void *rock);
+int mboxlist_findone(struct namespace *namespace,
+                     const char *intname, int isadmin,
+                     const char *userid, const struct auth_state *auth_state,
+                     findall_cb *proc, void *rock);
 
 /* Find a mailbox's parent (if any) */
 int mboxlist_findparent(const char *mboxname,
@@ -226,13 +238,18 @@ int mboxlist_alluser(user_cb *proc, void *rock);
 
 typedef int mboxlist_cb(const mbentry_t *mbentry, void *rock);
 
+int mboxlist_visible(const char *userid, const struct auth_state *auth_state,
+                     mboxlist_cb *proc, void *rock, int incdel);
 int mboxlist_allmbox(const char *prefix, mboxlist_cb *proc, void *rock, int incdel);
 #define MBOXTREE_TOMBSTONES (1<<0)
+#define MBOXTREE_DELETED (1<<1)
 #define MBOXTREE_SKIP_ROOT (1<<2)
 #define MBOXTREE_SKIP_CHILDREN (1<<3)
-#define MBOXTREE_DELETED (1<<4)
+#define MBOXTREE_SKIP_PERSONAL (1<<4)
+#define MBOXTREE_PLUS_RACL (1<<5)
 int mboxlist_mboxtree(const char *mboxname, mboxlist_cb *proc, void *rock, int flags);
 int mboxlist_usermboxtree(const char *userid, mboxlist_cb *proc, void *rock, int flags);
+int mboxlist_usersubs(const char *userid, mboxlist_cb *proc, void *rock, int flags);
 
 strarray_t *mboxlist_sublist(const char *userid);
 

@@ -53,6 +53,11 @@
 #include <ctype.h>
 #include <stdlib.h>
 
+#ifdef USE_HTTPD
+/* For iCalendar indexing */
+#include <libical/ical.h>
+#endif
+
 #include "acl.h"
 #include "annotate.h"
 #include "append.h"
@@ -113,13 +118,13 @@ static void index_fetchmsg(struct index_state *state,
                     unsigned start_octet, unsigned octet_count);
 static int index_fetchsection(struct index_state *state, const char *resp,
                               const struct buf *msg,
-                              char *section,
-                              const char *cachestr, unsigned size,
+                              char *section, struct body *body, unsigned size,
                               unsigned start_octet, unsigned octet_count);
+
 static void index_fetchfsection(struct index_state *state,
                                 const char *msg_base, unsigned long msg_size,
                                 struct fieldlist *fsection,
-                                const char *cachestr,
+                                struct body *body,
                                 unsigned start_octet, unsigned octet_count);
 static char *index_readheader(const char *msg_base, unsigned long msg_size,
                               unsigned offset, unsigned size);
@@ -167,9 +172,12 @@ static void index_thread_orderedsubj(struct index_state *state,
 static void index_thread_sort(Thread *root, const struct sortcrit *sortcrit);
 static void index_thread_print(struct index_state *state,
                                Thread *threads, int usinguid);
-static void index_thread_ref(struct index_state *state,
-                             unsigned *msgno_list, unsigned int nmsg,
-                             int usinguid);
+static void index_thread_references(struct index_state *state,
+                                    unsigned *msgno_list, unsigned int nmsg,
+                                    int usinguid);
+static void index_thread_refs(struct index_state *state,
+                              unsigned *msgno_list, unsigned int nmsg,
+                              int usinguid);
 
 static struct seqset *_parse_sequence(struct index_state *state,
                                       const char *sequence, int usinguid);
@@ -178,7 +186,8 @@ static void massage_header(char *hdr);
 /* NOTE: Make sure these are listed in CAPABILITY_STRING */
 static const struct thread_algorithm thread_algs[] = {
     { "ORDEREDSUBJECT", index_thread_orderedsubj },
-    { "REFERENCES", index_thread_ref },
+    { "REFERENCES", index_thread_references },
+    { "REFS", index_thread_refs },
     { NULL, NULL }
 };
 
@@ -285,32 +294,27 @@ EXPORTED void index_close(struct index_state **stateptr)
 }
 
 /*
- * A new mailbox has been selected, map it into memory and do the
- * initial CHECK.
+ * A new mailbox has been selected and already opened, map it into
+ * memory and do the initial CHECK.
  */
-EXPORTED int index_open(const char *name, struct index_init *init,
-               struct index_state **stateptr)
+EXPORTED int index_open_mailbox(struct mailbox *mailbox, struct index_init *init,
+                                struct index_state **stateptr)
 {
     int r;
     struct index_state *state = xzmalloc(sizeof(struct index_state));
 
+    state->mailbox = mailbox;
+    state->mboxname = xstrdup(mailbox->name);
+
     if (init) {
         state->authstate = init->authstate;
         state->examining = init->examine_mode;
-        state->mboxname = xstrdup(name);
         state->out = init->out;
         state->userid = xstrdupnull(init->userid);
         state->want_dav = init->want_dav;
+        state->want_mbtype = init->want_mbtype;
         state->want_expunged = init->want_expunged;
 
-        if (state->examining) {
-            r = mailbox_open_irl(state->mboxname, &state->mailbox);
-            if (r) goto fail;
-        }
-        else {
-            r = mailbox_open_iwl(state->mboxname, &state->mailbox);
-            if (r) goto fail;
-        }
         state->myrights = cyrus_acl_myrights(init->authstate,
                                              state->mailbox->acl);
         if (state->examining)
@@ -319,14 +323,13 @@ EXPORTED int index_open(const char *name, struct index_init *init,
         state->internalseen = mailbox_internal_seen(state->mailbox,
                                                     state->userid);
     }
-    else {
-        r = mailbox_open_iwl(name, &state->mailbox);
-        if (r) goto fail;
-    }
 
     if (state->mailbox->mbtype & MBTYPES_NONIMAP) {
         if (state->want_dav && (state->mailbox->mbtype & MBTYPES_DAV)) {
             /* User logged in using imapmagicplus token "dav" */
+        }
+        else if (state->mailbox->mbtype == state->want_mbtype) {
+            /* Caller explicitly asks for this NONIMAP type */
         }
         else {
             r = IMAP_MAILBOX_BADTYPE;
@@ -348,10 +351,29 @@ EXPORTED int index_open(const char *name, struct index_init *init,
     return 0;
 
 fail:
-    mailbox_close(&state->mailbox);
     free(state->mboxname);
     free(state->userid);
     free(state);
+    return r;
+}
+
+/*
+ * A new mailbox has been selected, map it into memory and do the
+ * initial CHECK.
+ */
+EXPORTED int index_open(const char *name, struct index_init *init,
+                        struct index_state **stateptr)
+{
+    int r;
+    struct mailbox *mailbox = NULL;
+
+    r = init && init->examine_mode ? mailbox_open_irl(name, &mailbox) :
+                                     mailbox_open_iwl(name, &mailbox);
+    if (r) return r;
+
+    r = index_open_mailbox(mailbox, init, stateptr);
+    if (r) mailbox_close(&mailbox);
+
     return r;
 }
 
@@ -370,13 +392,10 @@ EXPORTED int index_expunge(struct index_state *state, char *sequence,
     r = index_lock(state);
     if (r) return r;
 
-    /* XXX - earlier list if the sequence names UIDs that don't exist? */
+    /* XXX - check if not mailbox->i.deleted count and need_deleted */
     seq = _parse_sequence(state, sequence, 1);
 
-    /* don't notify for messages that don't need \Deleted flag because
-     * a notification should be already send (eg. MessageMove) */
-    if (need_deleted)
-        mboxevent = mboxevent_new(EVENT_MESSAGE_EXPUNGE);
+    mboxevent = mboxevent_new(EVENT_MESSAGE_EXPUNGE);
 
     for (msgno = 1; msgno <= state->exists; msgno++) {
         im = &state->map[msgno-1];
@@ -436,7 +455,7 @@ EXPORTED int index_expunge(struct index_state *state, char *sequence,
                numexpunged, state->mboxname);
         /* send the MessageExpunge event notification for "immediate", "default"
          * and "delayed" expunge */
-        mboxevent_notify(mboxevent);
+        mboxevent_notify(&mboxevent);
     }
 
     mboxevent_free(&mboxevent);
@@ -589,7 +608,7 @@ static struct seqset *_readseen(struct index_state *state, unsigned *recentuid)
 static void index_refresh_locked(struct index_state *state)
 {
     struct mailbox *mailbox = state->mailbox;
-    const struct index_record *record;
+    const message_t *msg;
     uint32_t msgno = 1;
     uint32_t firstnotseen = 0;
     uint32_t numrecent = 0;
@@ -632,7 +651,8 @@ static void index_refresh_locked(struct index_state *state)
 
     /* walk through all records */
     struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_UNLINKED);
-    while ((record = mailbox_iter_step(iter))) {
+    while ((msg = mailbox_iter_step(iter))) {
+        const struct index_record *record = msg_record(msg);
         im = &state->map[msgno-1];
         while (msgno <= state->exists && im->uid < record->uid) {
             /* NOTE: this same logic is repeated below for messages
@@ -762,6 +782,7 @@ static void index_refresh_locked(struct index_state *state)
     state->oldexists = state->exists; /* we last knew about this many */
     state->exists = msgno - 1; /* we actually got this many */
     state->delayed_modseq = delayed_modseq;
+    state->oldhighestmodseq = state->highestmodseq;
     state->highestmodseq = mailbox->i.highestmodseq;
     state->generation = mailbox->i.generation_no;
     state->uidvalidity = mailbox->i.uidvalidity;
@@ -919,11 +940,12 @@ struct seqset *index_vanished(struct index_state *state,
     /* XXX - use match_seq and match_uid */
 
     if (params->modseq >= mailbox->i.deletedmodseq) {
+        const message_t *msg;
         /* all records are significant */
         /* List only expunged UIDs with MODSEQ > requested */
-        const struct index_record *record;
         struct mailbox_iter *iter = mailbox_iter_init(mailbox, params->modseq, 0);
-        while ((record = mailbox_iter_step(iter))) {
+        while ((msg = mailbox_iter_step(iter))) {
+            const struct index_record *record = msg_record(msg);
             if (!(record->system_flags & FLAG_EXPUNGED))
                 continue;
             if (!params->sequence || seqset_ismember(seq, record->uid))
@@ -960,7 +982,7 @@ struct seqset *index_vanished(struct index_state *state,
             seqset_free(uidlist);
         }
 
-        const struct index_record *record;
+        const message_t *msg;
         struct mailbox_iter *iter = mailbox_iter_init(mailbox, params->modseq, ITER_SKIP_EXPUNGED);
         mailbox_iter_startuid(iter, prevuid);
 
@@ -973,7 +995,8 @@ struct seqset *index_vanished(struct index_state *state,
         /* for the rest of the mailbox, we're just going to have to assume
          * every record in the requested range which DOESN'T exist has been
          * expunged, so build a complete sequence */
-        while ((record = mailbox_iter_step(iter))) {
+        while ((msg = mailbox_iter_step(iter))) {
+            const struct index_record *record = msg_record(msg);
             while (++prevuid < record->uid) {
                 if (!params->sequence || seqset_ismember(seq, prevuid))
                     seqset_add(outlist, prevuid, 1);
@@ -1058,22 +1081,34 @@ EXPORTED void index_fetchresponses(struct index_state *state,
     start = 1;
     end = state->exists;
 
-    /* compress the search range down if a sequence was given */
-    if (seq) {
-        unsigned first = seqset_first(seq);
-        unsigned last = seqset_last(seq);
+    /* if we haven't told exists and we're fetching something past the end of the
+     * old size, we need to tell exists now...
+     * https://github.com/cyrusimap/cyrus-imapd/issues/1967
+     */
+    if (state->exists != state->oldexists) index_tellexists(state);
 
-        if (usinguid) {
-            if (first > 1)
-                start = index_finduid(state, first);
-            if (first == last)
-                end = start;
-            else if (last < state->last_uid)
-                end = index_finduid(state, last);
-        }
-        else {
-            start = first;
-            end = last;
+    /* if the modseq hasn't changed then there will be no unsolicited updates
+     * to send, so we only need to scan messages inside the sequence range.
+     * https://github.com/cyrusimap/cyrus-imapd/issues/1971
+     */
+    if (state->oldhighestmodseq == state->highestmodseq) {
+        /* compress the search range down if a sequence was given */
+        if (seq) {
+            unsigned first = seqset_first(seq);
+            unsigned last = seqset_last(seq);
+
+            if (usinguid) {
+                if (first > 1)
+                    start = index_finduid(state, first);
+                if (first == last)
+                    end = start;
+                else if (last < state->last_uid)
+                    end = index_finduid(state, last);
+            }
+            else {
+                start = first;
+                end = last;
+            }
         }
     }
 
@@ -1083,12 +1118,19 @@ EXPORTED void index_fetchresponses(struct index_state *state,
 
     for (msgno = start; msgno <= end; msgno++) {
         im = &state->map[msgno-1];
-        if (seq && !seqset_ismember(seq, usinguid ? im->uid : msgno))
+        if (seq && !seqset_ismember(seq, usinguid ? im->uid : msgno)) {
+            if (im->told_modseq !=0 && im->modseq > im->told_modseq)
+                index_printflags(state, msgno, usinguid, 0);
             continue;
+        }
+
         if (index_fetchreply(state, msgno, fetchargs))
             break;
         fetched = 1;
     }
+
+    /* Update oldhighestmodseq, ensuring we don't have unsolicited updates */
+    state->oldhighestmodseq = state->highestmodseq;
 
     if (fetchedsomething) *fetchedsomething = fetched;
     annotate_putdb(&annot_db);
@@ -1150,7 +1192,7 @@ EXPORTED int index_fetch(struct index_state *state,
     index_unlock(state);
 
     /* send MessageRead event notification for successfully rewritten records */
-    mboxevent_notify(mboxevent);
+    mboxevent_notify(&mboxevent);
     mboxevent_free(&mboxevent);
 
     index_checkflags(state, 1, 0);
@@ -1289,9 +1331,10 @@ EXPORTED int index_store(struct index_state *state, char *sequence,
     mboxevent_set_access(flagsclear, NULL, NULL, state->userid, state->mailbox->name, 1);
     mboxevent_set_numunseen(flagsclear, mailbox, state->numunseen);
 
-    mboxevent_notify(mboxevents);
-    mboxevent_freequeue(&mboxevents);
+    mboxevent_notify(&mboxevents);
+
 out:
+    mboxevent_freequeue(&mboxevents);
     if (storeargs->operation == STORE_ANNOTATION && r)
         annotate_state_abort(&mailbox->annot_state);
     seqset_free(seq);
@@ -1563,6 +1606,7 @@ EXPORTED int index_scan(struct index_state *state, const char *contents)
     struct searchargs searchargs;
     unsigned long length;
     struct mailbox *mailbox = state->mailbox;
+    charset_t ascii = charset_lookupname("US-ASCII");
 
     if (!(contents && contents[0])) return(0);
 
@@ -1578,8 +1622,8 @@ EXPORTED int index_scan(struct index_state *state, const char *contents)
     searchargs.root->attr = search_attr_find("text");
 
     /* Use US-ASCII to emulate fgrep */
-    searchargs.root->value.s = charset_convert(contents, charset_lookupname("US-ASCII"),
-                                charset_flags);
+
+    searchargs.root->value.s = charset_convert(contents, ascii, charset_flags);
 
     search_expr_internalise(state, searchargs.root);
 
@@ -1588,6 +1632,8 @@ EXPORTED int index_scan(struct index_state *state, const char *contents)
     listcount = index_prefilter_messages(msgno_list, state, &searchargs);
 
     for (listindex = 0; !n && listindex < listcount; listindex++) {
+        if (cmd_cancelled())
+            break;
         struct buf buf = BUF_INITIALIZER;
         struct index_record record;
         msgno = msgno_list[listindex];
@@ -1603,6 +1649,7 @@ EXPORTED int index_scan(struct index_state *state, const char *contents)
         buf_free(&buf);
     }
 
+    charset_free(&ascii);
     search_expr_free(searchargs.root);
     free(msgno_list);
 
@@ -2208,7 +2255,7 @@ EXPORTED int index_convmultisort(struct index_state *state,
     ptrarray_t dummy_response;
     int total = UNPREDICTABLE;
     int r = 0;
-    modseq_t hms;
+    struct mboxname_counters counters;
     search_query_t *query = NULL;
     search_folder_t *folder = NULL;
     search_folder_t *anchor_folder = NULL;
@@ -2227,12 +2274,14 @@ EXPORTED int index_convmultisort(struct index_state *state,
     r = index_refresh(state);
     if (r) return r;
 
-    hms = mboxname_readmodseq(index_mboxname(state));
+    r = mboxname_read_counters(index_mboxname(state), &counters);
+    if (r) return r;
     query = search_query_new(state, searchargs);
     query->multiple = 1;
     query->need_ids = 1;
     query->need_expunge = 1;
     query->sortcrit = sortcrit;
+
     r = search_query_run(query);
     if (r) return r;
 
@@ -2370,7 +2419,7 @@ out:
             prot_printf(state->out, "* OK [POSITION %u]\r\n", first_pos);
 
         prot_printf(state->out, "* OK [HIGHESTMODSEQ " MODSEQ_FMT "]\r\n",
-                    hms);
+                    counters.mailmodseq);
 #if 0
         prot_printf(state->out, "* OK [UIDNEXT %u]\r\n",
                     state->mailbox->i.last_uid + 1);
@@ -2450,7 +2499,7 @@ EXPORTED int index_snippets(struct index_state *state,
     srock.out = state->out;
     srock.namespace = searchargs->namespace;
     srock.userid = searchargs->userid;
-    rx = search_begin_snippets(intquery, 0/*verbose*/,
+    rx = search_begin_snippets(intquery, 0/*verbose*/, &default_snippet_markup,
                                emit_snippet, &srock);
     if (!rx) goto out;
 
@@ -3053,13 +3102,15 @@ enum {
 
 static int data_domain(const char *p, size_t n)
 {
+    int r = DOMAIN_7BIT;
+
     while (n--) {
         if (!*p) return DOMAIN_BINARY;
-        if (*p & 0x80) return DOMAIN_8BIT;
+        if (*p & 0x80) r = DOMAIN_8BIT;
         p++;
     }
 
-    return DOMAIN_7BIT;
+    return r;
 }
 
 /*
@@ -3142,24 +3193,55 @@ void index_fetchmsg(struct index_state *state, const struct buf *msg,
     if (domain != DOMAIN_7BIT) prot_data_boundary(state->out);
 }
 
+static int body_is_rfc822(struct body *body)
+{
+    return body &&
+        !strcasecmpsafe(body->type, "MESSAGE") &&
+        !strcasecmpsafe(body->subtype, "RFC822");
+}
+
+static struct body *find_part(struct body *body, int32_t part)
+{
+    if (body_is_rfc822(body))
+        body = body->subpart;
+    else if (!body->numparts)
+        return NULL;
+
+    if (body->numparts) {
+        /* A multipart */
+        if (part >= body->numparts + 1)
+            return NULL;
+        body = body->subpart + part - 1;
+    }
+    else {
+        /* Every message has at least one part number. */
+        if (part > 1)
+            return NULL;
+    }
+
+    return body;
+}
+
 /*
  * Helper function to fetch a body section
  */
 static int index_fetchsection(struct index_state *state, const char *resp,
                               const struct buf *inmsg,
-                              char *section, const char *cachestr, unsigned size,
+                              char *section, struct body *body, unsigned size,
                               unsigned start_octet, unsigned octet_count)
 {
     const char *p;
-    int32_t skip = 0;
-    int fetchmime = 0;
     unsigned offset = 0;
     char *decbuf = NULL;
     struct buf msg = BUF_INITIALIZER;
-
-    buf_init_ro(&msg, inmsg->s, inmsg->len);
+    struct body *top = body;
+    int wantheader = 0;
+    int32_t mimenum = 0;
+    int r;
 
     p = section;
+
+    buf_init_ro(&msg, inmsg->s, inmsg->len);
 
     /* Special-case BODY[] */
     if (*p == ']') {
@@ -3173,70 +3255,66 @@ static int index_fetchsection(struct index_state *state, const char *resp,
         return 0;
     }
 
-    while (*p != ']' && *p != 'M') {
-        int num_parts = CACHE_ITEM_BIT32(cachestr);
-        int r;
+    /*
+       section         = "[" [section-spec] "]"
 
-        /* Generate the actual part number */
-        r = parseint32(p, &p, &skip);
-        if (*p == '.') p++;
+       section-msgtext = "HEADER" / "HEADER.FIELDS" [".NOT"] SP header-list /
+                         "TEXT"
+                    ; top-level or MESSAGE/RFC822 part
 
-        /* Handle .0, .HEADER, and .TEXT */
-        if (r || skip == 0) {
-            skip = 0;
-            /* We don't have any digits, so its a string */
-            switch (*p) {
-            case 'H':
-                p += 6;
-                fetchmime++;    /* .HEADER maps internally to .0.MIME */
-                break;
+       section-part    = nz-number *("." nz-number)
+                    ; body part nesting
 
-            case 'T':
-                p += 4;
-                break;          /* .TEXT maps internally to .0 */
+       section-spec    = section-msgtext / (section-part ["." section-text])
 
-            default:
-                fetchmime++;    /* .0 maps internally to .0.MIME */
-                break;
-            }
-        }
+       section-text    = section-msgtext / "MIME"
+                    ; text other than actual body part (headers, etc.)
+     */
 
-        /* section number too large */
-        if (skip >= num_parts) goto badpart;
-
-        if (*p != ']' && *p != 'M') {
-            /* We are NOT at the end of a part specification, so there's
-             * a subpart being requested.  Find the subpart in the tree. */
-
-            /* Skip the headers for this part, along with the number of
-             * sub parts */
-            cachestr += num_parts * 5 * 4 + CACHE_ITEM_SIZE_SKIP;
-
-            /* Skip to the correct part */
-            while (--skip) {
-                if (CACHE_ITEM_BIT32(cachestr) > 0) {
-                    /* Skip each part at this level */
-                    skip += CACHE_ITEM_BIT32(cachestr)-1;
-                    cachestr += CACHE_ITEM_BIT32(cachestr) * 5 * 4;
-                }
-                cachestr += CACHE_ITEM_SIZE_SKIP;
-            }
+    while (*p != ']') {
+        switch (*p) {
+        case 'H':
+            if (!body_is_rfc822(body)) goto badpart;
+            body = body->subpart;
+            p += 6;
+            wantheader = 1;
+            goto emitpart;
+        case 'T':
+            if (!body_is_rfc822(body)) goto badpart;
+            body = body->subpart;
+            p += 4;
+            goto emitpart;
+        case 'M':
+            if (body == top) goto badpart;
+            p += 4;
+            wantheader = 1;
+            goto emitpart;
+        default:
+            mimenum = 0;
+            r = parseint32(p, &p, &mimenum);
+            if (*p == '.') p++;
+            if (r || !mimenum) goto badpart;
+            body = find_part(body, mimenum);
+            if (!body) goto badpart;
+            break;
         }
     }
 
-    if (*p == 'M') fetchmime++;
+emitpart:
+    if (*p != ']') goto badpart;
 
-    cachestr += skip * 5 * 4 + CACHE_ITEM_SIZE_SKIP + (fetchmime ? 0 : 2 * 4);
+    if (wantheader) {
+        offset = body->header_offset;
+        size = body->header_size;
+    }
+    else {
+        offset = body->content_offset;
+        size = body->content_size;
+    }
 
-    if (CACHE_ITEM_BIT32(cachestr + CACHE_ITEM_SIZE_SKIP) == (bit32) -1)
-        goto badpart;
-
-    offset = CACHE_ITEM_BIT32(cachestr);
-    size = CACHE_ITEM_BIT32(cachestr + CACHE_ITEM_SIZE_SKIP);
-
-    if (msg.s && (p = strstr(resp, "BINARY"))) {
+    if (msg.s && !wantheader && (p = strstr(resp, "BINARY"))) {
         /* BINARY or BINARY.SIZE */
-        int encoding = CACHE_ITEM_BIT32(cachestr + 2 * 4) & 0xff;
+        int encoding = body->charset_enc & 0xff;
         size_t newsize;
 
         /* check that the offset isn't corrupt */
@@ -3290,11 +3368,11 @@ static void index_fetchfsection(struct index_state *state,
                                 const char *msg_base,
                                 unsigned long msg_size,
                                 struct fieldlist *fsection,
-                                const char *cachestr,
+                                struct body *body,
                                 unsigned start_octet, unsigned octet_count)
 {
     const char *p;
-    int32_t skip = 0;
+    int32_t mimenum = 0;
     int fields_not = 0;
     const char *crlf = "\r\n";
     unsigned crlf_start = 0;
@@ -3312,37 +3390,24 @@ static void index_fetchfsection(struct index_state *state,
     p = fsection->section;
 
     while (*p != 'H') {
-        int num_parts = CACHE_ITEM_BIT32(cachestr);
-
-        r = parseint32(p, &p, &skip);
+        r = parseint32(p, &p, &mimenum);
         if (*p == '.') p++;
 
-        /* section number too large */
-        if (r || skip == 0 || skip >= num_parts) goto badpart;
+        if (r || !mimenum) goto badpart;
 
-        cachestr += num_parts * 5 * 4 + CACHE_ITEM_SIZE_SKIP;
-        while (--skip) {
-            if (CACHE_ITEM_BIT32(cachestr) > 0) {
-                skip += CACHE_ITEM_BIT32(cachestr)-1;
-                cachestr += CACHE_ITEM_BIT32(cachestr) * 5 * 4;
-            }
-            cachestr += CACHE_ITEM_SIZE_SKIP;
-        }
+        body = find_part(body, mimenum);
+        if (!body) goto badpart;
     }
 
-    /* leaf object */
-    if (0 == CACHE_ITEM_BIT32(cachestr)) goto badpart;
+    if (body_is_rfc822(body)) body = body->subpart;
 
-    cachestr += 4;
-
-    if (CACHE_ITEM_BIT32(cachestr+CACHE_ITEM_SIZE_SKIP) == (bit32) -1)
-        goto badpart;
+    if (!body->header_size) goto badpart;
 
     if (p[13]) fields_not++;    /* Check for "." after "HEADER.FIELDS" */
 
     buf = index_readheader(msg_base, msg_size,
-                           CACHE_ITEM_BIT32(cachestr),
-                           CACHE_ITEM_BIT32(cachestr+CACHE_ITEM_SIZE_SKIP));
+                           body->header_offset,
+                           body->header_size);
 
     if (fields_not) {
         message_pruneheader(buf, 0, fsection->fields);
@@ -3643,9 +3708,15 @@ EXPORTED void index_tellchanges(struct index_state *state, int canexpunge,
     uint32_t msgno;
     struct index_map *im;
 
+    /* must call tellexpunge before tellexists, because tellexpunge changes
+     * the size of oldexists to mention expunges, and tellexists will reset
+     * oldexists.  If we do these out of order, we will tell the user about
+     * expunges of messages they never saw, which would be wrong */
     if (canexpunge) index_tellexpunge(state);
 
     if (state->oldexists != state->exists) index_tellexists(state);
+
+    if (state->oldhighestmodseq == state->highestmodseq) return;
 
     index_checkflags(state, 1, 0);
 
@@ -3792,6 +3863,25 @@ static void index_printflags(struct index_state *state,
     prot_printf(state->out, ")\r\n");
 }
 
+/* interface message_read_bodystructure which makes sure the cache record
+ * exists and adds the MESSAGE/RFC822 wrapper to make fetch BODY[*]
+ * work consistently */
+static void loadbody(struct mailbox *mailbox, struct index_record *record,
+                     struct body **bodyp)
+{
+    if (*bodyp) return;
+    if (mailbox_cacherecord(mailbox, record)) return;
+    struct body *body = xzmalloc(sizeof(struct body));
+    message_read_bodystructure(record, &body->subpart);
+    body->type = xstrdup("MESSAGE");
+    body->subtype = xstrdup("RFC822");
+    body->header_offset = 0;
+    body->header_size = 0;
+    body->content_offset = 0;
+    body->content_offset = record->size;
+    *bodyp = body;
+}
+
 /*
  * Helper function to send requested * FETCH data for a message
  */
@@ -3810,6 +3900,7 @@ static int index_fetchreply(struct index_state *state, uint32_t msgno,
     int r = 0;
     struct index_map *im = &state->map[msgno-1];
     struct index_record record;
+    struct body *body = NULL;
 
     /* Check the modseq against changedsince */
     if (fetchargs->changedsince && im->modseq <= fetchargs->changedsince)
@@ -4004,6 +4095,7 @@ static int index_fetchreply(struct index_state *state, uint32_t msgno,
                        (fetchitems & FETCH_IS_PARTIAL) ?
                          fetchargs->octet_count : 0);
     }
+
     for (fsection = fetchargs->fsections; fsection; fsection = fsection->next) {
         int i;
         prot_printf(state->out, "%cBODY[%s ", sepchar, fsection->section);
@@ -4021,16 +4113,18 @@ static int index_fetchreply(struct index_state *state, uint32_t msgno,
         prot_printf(state->out, "%s ", fsection->trail);
 
         if (fetchargs->cache_atleast > record.cache_version) {
-            if (!mailbox_cacherecord(mailbox, &record))
+            loadbody(mailbox, &record, &body);
+            if (body) {
                 index_fetchfsection(state, buf.s, buf.len,
                                     fsection,
-                                    cacheitem_base(&record, CACHE_SECTION),
+                                    body,
                                     (fetchitems & FETCH_IS_PARTIAL) ?
                                       fetchargs->start_octet : oi->start_octet,
                                     (fetchitems & FETCH_IS_PARTIAL) ?
                                       fetchargs->octet_count : oi->octet_count);
-            else
+            } else {
                 prot_printf(state->out, "NIL");
+            }
 
         }
         else {
@@ -4052,14 +4146,14 @@ static int index_fetchreply(struct index_state *state, uint32_t msgno,
 
         oi = &section->octetinfo;
 
-        if (!mailbox_cacherecord(mailbox, &record)) {
+        loadbody(mailbox, &record, &body);
+        if (body) {
             r = index_fetchsection(state, respbuf, &buf,
-                                   section->name, cacheitem_base(&record, CACHE_SECTION),
-                                   record.size,
-                                   (fetchitems & FETCH_IS_PARTIAL) ?
-                                    fetchargs->start_octet : oi->start_octet,
-                                   (fetchitems & FETCH_IS_PARTIAL) ?
-                                    fetchargs->octet_count : oi->octet_count);
+                    section->name, body, record.size,
+                    (fetchitems & FETCH_IS_PARTIAL) ?
+                    fetchargs->start_octet : oi->start_octet,
+                    (fetchitems & FETCH_IS_PARTIAL) ?
+                    fetchargs->octet_count : oi->octet_count);
             if (!r) sepchar = ' ';
         }
     }
@@ -4072,11 +4166,11 @@ static int index_fetchreply(struct index_state *state, uint32_t msgno,
         snprintf(respbuf+strlen(respbuf), sizeof(respbuf)-strlen(respbuf),
                  "%cBINARY[%s ", sepchar, section->name);
 
-        if (!mailbox_cacherecord(mailbox, &record)) {
+        loadbody(mailbox, &record, &body);
+        if (body) {
             oi = &section->octetinfo;
             r = index_fetchsection(state, respbuf, &buf,
-                                   section->name, cacheitem_base(&record, CACHE_SECTION),
-                                   record.size,
+                                   section->name, body, record.size,
                                    (fetchitems & FETCH_IS_PARTIAL) ?
                                     fetchargs->start_octet : oi->start_octet,
                                    (fetchitems & FETCH_IS_PARTIAL) ?
@@ -4093,10 +4187,10 @@ static int index_fetchreply(struct index_state *state, uint32_t msgno,
         snprintf(respbuf+strlen(respbuf), sizeof(respbuf)-strlen(respbuf),
                  "%cBINARY.SIZE[%s ", sepchar, section->name);
 
-        if (!mailbox_cacherecord(mailbox, &record)) {
+        loadbody(mailbox, &record, &body);
+        if (body) {
             r = index_fetchsection(state, respbuf, &buf,
-                                   section->name, cacheitem_base(&record, CACHE_SECTION),
-                                   record.size,
+                                   section->name, body, record.size,
                                    fetchargs->start_octet, fetchargs->octet_count);
             if (!r) sepchar = ' ';
         }
@@ -4106,6 +4200,10 @@ static int index_fetchreply(struct index_state *state, uint32_t msgno,
         prot_printf(state->out, ")\r\n");
     }
     buf_free(&buf);
+    if (body) {
+        message_free_body(body);
+        free(body);
+    }
 
     return r;
 }
@@ -4134,14 +4232,16 @@ EXPORTED int index_urlfetch(struct index_state *state, uint32_t msgno,
      * so there we go */
     static char text_mime[] = "HEADER";
     struct buf buf = BUF_INITIALIZER;
-    const char *cacheitem;
-    int fetchmime = 0, domain = DOMAIN_7BIT;
+    int domain = DOMAIN_7BIT;
     const char *data;
     size_t size;
-    int32_t skip = 0;
-    int n, r = 0;
+    int32_t wantheader = 0;
+    unsigned long n;
+    int r = 0;
     char *decbuf = NULL;
     struct index_record record;
+    struct body *top = NULL, *body = NULL;
+    size_t section_offset, section_size;
 
     r = index_lock(state);
     if (r) return r;
@@ -4156,8 +4256,9 @@ EXPORTED int index_urlfetch(struct index_state *state, uint32_t msgno,
     r = index_reload_record(state, msgno, &record);
     if (r) goto done;
 
-    r = mailbox_cacherecord(mailbox, &record);
-    if (r) goto done;
+    loadbody(mailbox, &record, &body);
+    if (!body) goto done;
+    top = body;
 
     /* Open the message file */
     if (mailbox_map_record(mailbox, &record, &buf)) {
@@ -4168,7 +4269,7 @@ EXPORTED int index_urlfetch(struct index_state *state, uint32_t msgno,
     data = buf.s;
     size = buf.len;
 
-    cacheitem = cacheitem_base(&record, CACHE_SECTION);
+    int is_binary = params & URLFETCH_BINARY;
 
     /* Special-case BODY[] */
     if (!section || !*section) {
@@ -4176,74 +4277,48 @@ EXPORTED int index_urlfetch(struct index_state *state, uint32_t msgno,
     }
     else {
         const char *p = ucase((char *) section);
+        int32_t mimenum = 0;
 
-        while (*p && *p != 'M') {
-            int num_parts = CACHE_ITEM_BIT32(cacheitem);
-
-            /* Generate the actual part number */
-            r = parseint32(p, &p, &skip);
-            if (*p == '.') p++;
-
-            /* Handle .0, .HEADER, and .TEXT */
-            if (r || skip == 0) {
-                skip = 0;
-                /* We don't have any digits, so its a string */
-                switch (*p) {
-                case 'H':
-                    p += 6;
-                    fetchmime++;  /* .HEADER maps internally to .0.MIME */
-                    break;
-
-                case 'T':
-                    p += 4;
-                    break;        /* .TEXT maps internally to .0 */
-
-                default:
-                    fetchmime++;  /* .0 maps internally to .0.MIME */
-                    break;
-                }
-            }
-
-            /* section number too large */
-            if (skip >= num_parts) {
-                r = IMAP_BADURL;
-                goto done;
-            }
-
-            if (*p && *p != 'M') {
-                /* We are NOT at the end of a part specification, so there's
-                 * a subpart being requested.  Find the subpart in the tree. */
-
-                /* Skip the headers for this part, along with the number of
-                 * sub parts */
-                cacheitem += num_parts * 5 * 4 + CACHE_ITEM_SIZE_SKIP;
-
-                /* Skip to the correct part */
-                while (--skip) {
-                    if (CACHE_ITEM_BIT32(cacheitem) > 0) {
-                        /* Skip each part at this level */
-                        skip += CACHE_ITEM_BIT32(cacheitem)-1;
-                        cacheitem += CACHE_ITEM_BIT32(cacheitem) * 5 * 4;
-                    }
-                    cacheitem += CACHE_ITEM_SIZE_SKIP;
-                }
+        while (*p) {
+            switch(*p) {
+            case 'H':
+                if (is_binary) goto badpart;
+                if (!body_is_rfc822(body)) goto badpart;
+                body = body->subpart;
+                p += 6;
+                wantheader = 1;
+                goto getoffset;
+            case 'T':
+                if (is_binary) goto badpart;
+                if (!body_is_rfc822(body)) goto badpart;
+                body = body->subpart;
+                p += 4;
+                goto getoffset;
+            case 'M':
+                if (is_binary) goto badpart;
+                if (top == body) goto badpart;
+                p += 4;
+                wantheader = 1;
+                goto getoffset;
+            default:
+                mimenum = 0;
+                r = parseint32(p, &p, &mimenum);
+                if (*p == '.') p++;
+                if (r || !mimenum) goto badpart;
+                body = find_part(body, mimenum);
+                if (!body) goto badpart;
+                break;
             }
         }
 
-        if (*p == 'M') fetchmime++;
+      getoffset:
+        if (*p) goto badpart;
 
-        cacheitem += skip * 5 * 4 + CACHE_ITEM_SIZE_SKIP +
-            (fetchmime ? 0 : 2 * 4);
+        section_offset = wantheader ? body->header_offset : body->content_offset;
+        section_size = wantheader ? body->header_size : body->content_size;
 
-        if (CACHE_ITEM_BIT32(cacheitem + CACHE_ITEM_SIZE_SKIP) == (bit32) -1) {
-            r = IMAP_BADURL;
-            goto done;
-        }
-
-        size_t section_offset = CACHE_ITEM_BIT32(cacheitem);
-        size_t section_size = CACHE_ITEM_BIT32(cacheitem + CACHE_ITEM_SIZE_SKIP);
-
-        if (section_offset + section_size > size) {
+        if (section_offset + section_size < section_offset
+            || section_offset + section_size > size) {
             r = IMAP_INTERNAL;
             goto done;
         }
@@ -4252,30 +4327,59 @@ EXPORTED int index_urlfetch(struct index_state *state, uint32_t msgno,
         size = section_size;
     }
 
-    /* Handle extended URLFETCH parameters */
+    if (is_binary) {
+        int encoding = body->charset_enc & 0xff;
+
+        data = charset_decode_mimebody(data, size, encoding,
+                                       &decbuf, &size);
+
+        /* update the encoding of this part per RFC5524:3.2 */
+        if (data && encoding) {
+            domain = data_domain(data, size);
+            free(body->encoding);
+            switch (domain) {
+            case DOMAIN_BINARY:
+                body->encoding = xstrdup("BINARY");
+                break;
+            case DOMAIN_8BIT:
+                body->encoding = xstrdup("8BIT");
+                break;
+            default:
+                body->encoding = NULL; // will output 7BIT
+                break;
+            }
+            body->content_size = size;
+            body->content_lines = 0;
+        }
+    }
+
     if (params & URLFETCH_BODYPARTSTRUCTURE) {
-        prot_printf(pout, " (BODYPARTSTRUCTURE");
-        /* XXX Calculate body part structure */
-        prot_printf(pout, " NIL");
-        prot_printf(pout, ")");
+        struct buf buf = BUF_INITIALIZER;
+        message_write_body(&buf, body, 1);
+        prot_puts(pout, " (BODYPARTSTRUCTURE ");
+        if (buf_len(&buf))
+            prot_putbuf(pout, &buf);
+        else
+            prot_puts(pout, "NIL");
+        prot_puts(pout, ")");
+        buf_free(&buf);
     }
 
     if (params & URLFETCH_BODY) {
         prot_printf(pout, " (BODY");
     }
     else if (params & URLFETCH_BINARY) {
-        int encoding = CACHE_ITEM_BIT32(cacheitem + 2 * 4) & 0xff;
-
         prot_printf(pout, " (BINARY");
-
-        data = charset_decode_mimebody(data, size, encoding,
-                                       &decbuf, &size);
         if (!data) {
             /* failed to decode */
             prot_printf(pout, " NIL)");
             r = 0;
             goto done;
         }
+    }
+    else if (params) {
+        r = 0;
+        goto done;
     }
 
     /* Handle PARTIAL request */
@@ -4286,7 +4390,7 @@ EXPORTED int index_urlfetch(struct index_state *state, uint32_t msgno,
         start_octet = size;
         n = 0;
     }
-    else if (start_octet + n > size) {
+    else if (start_octet + n < start_octet || start_octet + n > size) {
         n = size - start_octet;
     }
 
@@ -4298,10 +4402,10 @@ EXPORTED int index_urlfetch(struct index_state *state, uint32_t msgno,
 
         if (domain == DOMAIN_BINARY) {
             /* Write size of literal8 */
-            prot_printf(pout, " ~{%u}\r\n", n);
+            prot_printf(pout, " ~{%lu}\r\n", n);
         } else {
             /* Write size of literal */
-            prot_printf(pout, " {%u}\r\n", n);
+            prot_printf(pout, " {%lu}\r\n", n);
         }
     }
 
@@ -4314,7 +4418,7 @@ EXPORTED int index_urlfetch(struct index_state *state, uint32_t msgno,
     if (domain != DOMAIN_7BIT) prot_data_boundary(pout);
 
     /* Complete extended URLFETCH response */
-    if (params & (URLFETCH_BODY | URLFETCH_BINARY)) prot_printf(pout, ")");
+    if (params) prot_printf(pout, ")");
 
     r = 0;
 
@@ -4323,8 +4427,16 @@ EXPORTED int index_urlfetch(struct index_state *state, uint32_t msgno,
     index_unlock(state);
     buf_free(&buf);
 
+    if (top) {
+        message_free_body(top);
+        free(top);
+    }
     if (decbuf) free(decbuf);
     return r;
+
+  badpart:
+    r = IMAP_PROTOCOL_BAD_PARAMETERS;
+    goto done;
 }
 
 /*
@@ -4538,9 +4650,9 @@ out:
 /*
  * Evaluate a searchargs structure on a msgno
  */
-int index_search_evaluate(struct index_state *state,
-                          const search_expr_t *e,
-                          uint32_t msgno)
+EXPORTED int index_search_evaluate(struct index_state *state,
+                                   const search_expr_t *e,
+                                   uint32_t msgno)
 {
     struct index_map *im = &state->map[msgno-1];
     int r;
@@ -4564,7 +4676,7 @@ int index_search_evaluate(struct index_state *state,
 struct getsearchtext_rock
 {
     search_text_receiver_t *receiver;
-    int partcount;
+    int indexed_headers;
     int charset_flags;
 };
 
@@ -4586,31 +4698,55 @@ static void extract_cb(const struct buf *text, void *rock)
     str->receiver->append_text(str->receiver, text);
 }
 
-static int getsearchtext_cb(int partno, int charset, int encoding,
-                            const char *subtype, struct buf *data,
+static int getsearchtext_cb(int isbody, charset_t charset, int encoding,
+                            const char *type, const char *subtype,
+                            const struct param *type_params __attribute__((unused)),
+                            const char *disposition,
+                            const struct param *disposition_params,
+                            struct buf *data,
                             void *rock)
 {
     struct getsearchtext_rock *str = (struct getsearchtext_rock *)rock;
     char *q;
     struct buf text = BUF_INITIALIZER;
 
-    if (!partno) {
-        /* header-like */
-        q = charset_decode_mimeheader(buf_cstring(data), str->charset_flags);
-        buf_init_ro_cstr(&text, q);
-        if (++str->partcount == 1) {
+    if (!isbody) {
+        if (!str->indexed_headers) {
+            /* Only index the headers of the top message */
+            q = charset_decode_mimeheader(buf_cstring(data), str->charset_flags);
+            buf_init_ro_cstr(&text, q);
             stuff_part(str->receiver, SEARCH_PART_HEADERS, &text);
-        } else {
-            stuff_part(str->receiver, SEARCH_PART_BODY, &text);
+            free(q);
+            buf_free(&text);
+            str->indexed_headers = 1;
         }
-        free(q);
-        buf_free(&text);
+
+        /* Index attachment file names */
+        const struct param *param;
+        if (disposition && !strcmp(disposition, "ATTACHMENT")) {
+            /* Look for "Content-Disposition: attachment;filename=" header */
+            for (param = disposition_params; param; param = param->next) {
+                if (strcmp(param->attribute, "FILENAME"))
+                    continue;
+                buf_init_ro_cstr(&text, param->value);
+                stuff_part(str->receiver, SEARCH_PART_ATTACHMENTNAME, &text);
+                buf_free(&text);
+            }
+        }
+        for(param = type_params; param; param = param->next) {
+            /* Look for "Content-Type: foo;name=" header */
+            if (strcmp(param->attribute, "NAME"))
+                continue;
+            buf_init_ro_cstr(&text, param->value);
+            stuff_part(str->receiver, SEARCH_PART_ATTACHMENTNAME, &text);
+            buf_free(&text);
+        }
     }
     else if (buf_len(data) > 50 && !memcmp(data->s, "-----BEGIN PGP MESSAGE-----", 27)) {
         /* PGP encrypted body part - we don't want to index this,
          * it's a ton of random base64 noise */
     }
-    else {
+    else if (!strcmp(type, "TEXT")) {
         /* body-like */
         str->receiver->begin_part(str->receiver, SEARCH_PART_BODY);
         charset_extract(extract_cb, str, data, charset, encoding, subtype,
@@ -4631,23 +4767,136 @@ static void append_alnum(struct buf *buf, const char *ss)
     }
 }
 
+#ifdef USE_HTTPD
+static int index_icalmessage(message_t *msg, struct getsearchtext_rock *str)
+{
+    icalcomponent *comp = NULL, *ical = NULL;
+    struct buf buf = BUF_INITIALIZER;
+    const char *s;
+    int r, enc = 0;
+
+    /* Parse the message into an iCalendar object */
+    r = message_get_encoding(msg, &enc);
+    if (r) return r;
+    r = message_get_field(msg, "rawbody", MESSAGE_RAW, &buf);
+    if (r) return r;
+    ical = icalparser_parse_string(buf_cstring(&buf));
+    if (!ical) {
+        r = IMAP_INTERNAL;
+        goto done;
+    }
+    buf_reset(&buf);
+
+    for (comp = icalcomponent_get_first_real_component(ical);
+         comp;
+         comp = icalcomponent_get_next_component(ical, icalcomponent_isa(comp))) {
+
+        icalproperty *prop;
+        icalparameter *param;
+
+        /* description */
+        if ((s = icalcomponent_get_description(comp))) {
+            buf_setcstr(&buf, s);
+            charset_t utf8 = charset_lookupname("utf-8");
+            str->receiver->begin_part(str->receiver, SEARCH_PART_BODY);
+            charset_extract(extract_cb, str, &buf, utf8, enc, "calendar",
+                            str->charset_flags);
+            str->receiver->end_part(str->receiver, SEARCH_PART_BODY);
+            charset_free(&utf8);
+            buf_reset(&buf);
+        }
+
+        /* summary */
+        if ((prop = icalcomponent_get_first_property(comp, ICAL_SUMMARY_PROPERTY))) {
+            if ((s = icalproperty_get_summary(prop))) {
+                buf_setcstr(&buf, s);
+                stuff_part(str->receiver, SEARCH_PART_SUBJECT, &buf);
+                buf_reset(&buf);
+            }
+        }
+
+        /* organizer */
+        if ((prop = icalcomponent_get_first_property(comp, ICAL_ORGANIZER_PROPERTY))) {
+            if ((s = icalproperty_get_organizer(prop))) {
+                if (!strncasecmp(s, "mailto:", 7)) {
+                    s += 7;
+                }
+                param = icalproperty_get_first_parameter(prop, ICAL_CN_PARAMETER);
+                if (param) {
+                    buf_printf(&buf, "\"%s\" <%s>", icalparameter_get_cn(param), s);
+                } else {
+                    buf_setcstr(&buf, s);
+                }
+                stuff_part(str->receiver, SEARCH_PART_FROM, &buf);
+                buf_reset(&buf);
+            }
+        }
+
+        /* attendees */
+        for (prop = icalcomponent_get_first_property(comp, ICAL_ATTENDEE_PROPERTY);
+             prop;
+             prop = icalcomponent_get_next_property(comp, ICAL_ATTENDEE_PROPERTY)) {
+            if ((s = icalproperty_get_attendee(prop))) {
+                if (!strncasecmp(s, "mailto:", 7)) {
+                    s += 7;
+                }
+                param = icalproperty_get_first_parameter(prop, ICAL_CN_PARAMETER);
+                if (buf.len) {
+                    buf_appendcstr(&buf, ", ");
+                }
+                if (param) {
+                    buf_printf(&buf, "\"%s\" <%s>", icalparameter_get_cn(param), s);
+                } else {
+                    buf_appendcstr(&buf, s);
+                }
+            }
+        }
+        if (buf.len) {
+            stuff_part(str->receiver, SEARCH_PART_TO, &buf);
+            buf_reset(&buf);
+        }
+
+        /* location */
+        if ((prop = icalcomponent_get_first_property(comp, ICAL_LOCATION_PROPERTY))) {
+            if ((s = icalproperty_get_location(prop))) {
+                buf_setcstr(&buf, s);
+                stuff_part(str->receiver, SEARCH_PART_LOCATION, &buf);
+                buf_reset(&buf);
+            }
+        }
+    }
+
+done:
+    buf_free(&buf);
+    if (ical) icalcomponent_free(ical);
+    return r;
+}
+#endif /* USE_HTTPD */
+
 EXPORTED int index_getsearchtext(message_t *msg,
-                         search_text_receiver_t *receiver,
-                         int snippet)
+                                 search_text_receiver_t *receiver,
+                                 int snippet)
 {
     struct getsearchtext_rock str;
     struct buf buf = BUF_INITIALIZER;
-    uint32_t uid = 0;
     int format = MESSAGE_SEARCH;
     strarray_t types = STRARRAY_INITIALIZER;
+    const char *type = NULL, *subtype = NULL;
     int i;
     int r;
 
-    message_get_uid(msg, &uid);
-    receiver->begin_message(receiver, uid);
+    /* Determine Content-Type */
+    r = message_get_type(msg, &type);
+    if (r) return r;
+    r = message_get_subtype(msg, &subtype);
+    if (r) return r;
+
+    /* Set up search receiver */
+    r = receiver->begin_message(receiver, msg);
+    if (r) return r;
 
     str.receiver = receiver;
-    str.partcount = 0;
+    str.indexed_headers = 0;
     str.charset_flags = charset_flags;
 
     if (snippet) {
@@ -4655,60 +4904,73 @@ EXPORTED int index_getsearchtext(message_t *msg,
         format = MESSAGE_SNIPPET;
     }
 
-    message_foreach_text_section(msg, getsearchtext_cb, &str);
-
-    if (!message_get_field(msg, "From", format, &buf))
-        stuff_part(receiver, SEARCH_PART_FROM, &buf);
-
-    if (!message_get_field(msg, "To", format, &buf))
-        stuff_part(receiver, SEARCH_PART_TO, &buf);
-
-    if (!message_get_field(msg, "Cc", format, &buf))
-        stuff_part(receiver, SEARCH_PART_CC, &buf);
-
-    if (!message_get_field(msg, "Bcc", format, &buf))
-        stuff_part(receiver, SEARCH_PART_BCC, &buf);
-
-    if (!message_get_field(msg, "Subject", format, &buf))
-        stuff_part(receiver, SEARCH_PART_SUBJECT, &buf);
-
-    if (!message_get_field(msg, "List-Id", format, &buf))
-        stuff_part(receiver, SEARCH_PART_LISTID, &buf);
-    if (!message_get_field(msg, "Mailing-List", format, &buf))
-        stuff_part(receiver, SEARCH_PART_LISTID, &buf);
-
-    if (!message_get_leaf_types(msg, &types) && types.count) {
-        /* We add three search terms: the type, subtype, and a combined
-         * type+subtype string.  We carefully control punctuation to
-         * ensure that each word in indexed as a single term.  For
-         * example if the original message has "application/x-pdf" then
-         * we index "APPLICATION" "XPDF" "APPLICATION_XPDF".  */
-
-        receiver->begin_part(receiver, SEARCH_PART_TYPE);
-        for (i = 0 ; i < types.count ; i+= 2) {
-            buf_reset(&buf);
-
-            if (i) buf_putc(&buf, ' ');
-
-            /* type */
-            append_alnum(&buf, types.data[i]);
-            buf_putc(&buf, ' ');
-            /* subtype */
-            append_alnum(&buf, types.data[i+1]);
-            buf_putc(&buf, ' ');
-            /* combined type_subtype */
-            append_alnum(&buf, types.data[i]);
-            buf_putc(&buf, '_');
-            append_alnum(&buf, types.data[i+1]);
-
-            receiver->append_text(receiver, &buf);
-        }
-        receiver->end_part(receiver, SEARCH_PART_TYPE);
+#ifdef USE_HTTPD
+    /* Choose index scheme for Content=Type */
+    if (!strcasecmp(type, "TEXT") && !strcasecmp(subtype, "CALENDAR")) {
+        /* An iCalendar entry. */
+        index_icalmessage(msg, &str);
     }
+    else {
+#endif
+        /* A regular message */
+        message_foreach_section(msg, getsearchtext_cb, &str);
+
+        if (!message_get_field(msg, "From", format, &buf))
+            stuff_part(receiver, SEARCH_PART_FROM, &buf);
+
+        if (!message_get_field(msg, "To", format, &buf))
+            stuff_part(receiver, SEARCH_PART_TO, &buf);
+
+        if (!message_get_field(msg, "Cc", format, &buf))
+            stuff_part(receiver, SEARCH_PART_CC, &buf);
+
+        if (!message_get_field(msg, "Bcc", format, &buf))
+            stuff_part(receiver, SEARCH_PART_BCC, &buf);
+
+        if (!message_get_field(msg, "Subject", format, &buf))
+            stuff_part(receiver, SEARCH_PART_SUBJECT, &buf);
+
+        if (!message_get_field(msg, "List-Id", format, &buf))
+            stuff_part(receiver, SEARCH_PART_LISTID, &buf);
+        if (!message_get_field(msg, "Mailing-List", format, &buf))
+            stuff_part(receiver, SEARCH_PART_LISTID, &buf);
+
+        if (!message_get_leaf_types(msg, &types) && types.count) {
+            /* We add three search terms: the type, subtype, and a combined
+             * type+subtype string.  We carefully control punctuation to
+             * ensure that each word in indexed as a single term.  For
+             * example if the original message has "application/x-pdf" then
+             * we index "APPLICATION" "XPDF" "APPLICATION_XPDF".  */
+
+            receiver->begin_part(receiver, SEARCH_PART_TYPE);
+            for (i = 0 ; i < types.count ; i+= 2) {
+                buf_reset(&buf);
+
+                if (i) buf_putc(&buf, ' ');
+
+                /* type */
+                append_alnum(&buf, types.data[i]);
+                buf_putc(&buf, ' ');
+                /* subtype */
+                append_alnum(&buf, types.data[i+1]);
+                buf_putc(&buf, ' ');
+                /* combined type_subtype */
+                append_alnum(&buf, types.data[i]);
+                buf_putc(&buf, '_');
+                append_alnum(&buf, types.data[i+1]);
+
+                receiver->append_text(receiver, &buf);
+            }
+            receiver->end_part(receiver, SEARCH_PART_TYPE);
+        }
+#ifdef USE_HTTPD
+    }
+#endif
 
     r = receiver->end_message(receiver);
     buf_free(&buf);
     strarray_fini(&types);
+
     return r;
 }
 
@@ -4787,6 +5049,8 @@ MsgData **index_msgdata_load(struct index_state *state,
 
         cur->uid = record.uid;
         cur->cid = record.cid;
+        cur->system_flags = record.system_flags;
+        message_guid_copy(&cur->guid, &record.guid);
         if (found_anchor && record.uid == anchor)
             *found_anchor = 1;
 
@@ -4800,7 +5064,7 @@ MsgData **index_msgdata_load(struct index_state *state,
         for (j = 0; sortcrit[j].key; j++) {
             label = sortcrit[j].key;
 
-            if ((label == SORT_CC || label == SORT_DATE ||
+            if ((label == SORT_CC ||
                  label == SORT_FROM || label == SORT_SUBJECT ||
                  label == SORT_TO || label == LOAD_IDS ||
                  label == SORT_DISPLAYFROM || label == SORT_DISPLAYTO ||
@@ -5008,7 +5272,7 @@ static char *index_extract_subject(const char *subj, size_t len, int *is_refwd)
         rawbuf = xstrndup(s, len - (s - subj));
     }
 
-    buf = charset_parse_mimeheader(rawbuf);
+    buf = charset_parse_mimeheader(rawbuf, charset_flags);
     free(rawbuf);
 
     for (s = buf;;) {
@@ -5308,6 +5572,9 @@ static int index_sort_compare(MsgData *md1, MsgData *md2,
         case SORT_RELEVANCY:
             ret = 0;        /* for now all messages have relevancy=100 */
             break;
+        case SORT_GUID:
+            ret = message_guid_cmp(&md1->guid, &md2->guid);
+            break;
         }
     } while (!ret && sortcrit[i++].key != SORT_SEQUENCE);
 
@@ -5339,6 +5606,8 @@ void index_msgdata_free(MsgData **msgdata, unsigned int n)
         return;
     for (i = 0 ; i < n ; i++) {
         MsgData *md = msgdata[i];
+
+        if (!md) continue;
 
         free(md->cc);
         free(md->from);
@@ -5511,7 +5780,7 @@ static void _index_thread_print(struct index_state *state,
         /* if we have a message, print its identifier
          * (do nothing for empty containers)
          */
-        if (thread->msgdata) {
+        if (thread->msgdata && thread->msgdata->uid) {
             prot_printf(state->out, "%u",
                         usinguid ? thread->msgdata->uid :
                         thread->msgdata->msgno);
@@ -6070,15 +6339,16 @@ static void index_thread_search(struct index_state *state,
 
 /*
  * Guts of the REFERENCES algorithms.  Behavior is tweaked with loadcrit[],
- * searchproc() and sortcrit[].
+ * threadproc(), searchproc() and sortcrit[].
  */
 static void _index_thread_ref(struct index_state *state, unsigned *msgno_list,
                               unsigned int nmsg,
                               const struct sortcrit loadcrit[],
+                              MsgData **(*threadproc) (struct rootset *, Thread **),
                               int (*searchproc) (MsgData *),
                               const struct sortcrit sortcrit[], int usinguid)
 {
-    MsgData **msgdata;
+    MsgData **msgdata, **thrdata = NULL;
     unsigned int mi;
     int tref, nnode;
     Thread *newnode;
@@ -6134,11 +6404,8 @@ static void _index_thread_ref(struct index_state *state, unsigned *msgno_list,
     /* Step 3: prune tree of empty containers - get our deposit back :^) */
     ref_prune_tree(rootset.root);
 
-    /* Step 4: sort the root set */
-    ref_sort_root(rootset.root);
-
-    /* Step 5: group root set by subject */
-    ref_group_subjects(rootset.root, rootset.nroot, &newnode);
+    /* Steps 4/5: algorithm-specific thread processing */
+    if (threadproc) thrdata = threadproc(&rootset, &newnode);
 
     /* Optionally search threads (to be used by REFERENCES derivatives) */
     if (searchproc) index_thread_search(state, rootset.root, searchproc);
@@ -6154,14 +6421,27 @@ static void _index_thread_ref(struct index_state *state, unsigned *msgno_list,
 
     /* free the msgdata array */
     index_msgdata_free(msgdata, nmsg);
+    index_msgdata_free(thrdata, rootset.nroot);
 }
 
 /*
  * Thread a list of messages using the REFERENCES algorithm.
  */
-static void index_thread_ref(struct index_state *state,
-                             unsigned *msgno_list, unsigned int nmsg,
-                             int usinguid)
+static MsgData **references_thread_proc(struct rootset *rootset,
+                                        Thread **newnode)
+{
+    /* Step 4: sort the root set */
+    ref_sort_root(rootset->root);
+    
+    /* Step 5: group root set by subject */
+    ref_group_subjects(rootset->root, rootset->nroot, newnode);
+
+    return NULL;
+}
+
+static void index_thread_references(struct index_state *state,
+                                    unsigned *msgno_list, unsigned int nmsg,
+                                    int usinguid)
 {
     static const struct sortcrit loadcrit[] =
                                  {{ LOAD_IDS,      0, {{NULL,NULL}} },
@@ -6172,7 +6452,82 @@ static void index_thread_ref(struct index_state *state,
                                  {{ SORT_DATE,     0, {{NULL,NULL}} },
                                   { SORT_SEQUENCE, 0, {{NULL,NULL}} }};
 
-    _index_thread_ref(state, msgno_list, nmsg, loadcrit, NULL, sortcrit, usinguid);
+    _index_thread_ref(state, msgno_list, nmsg, loadcrit,
+                      references_thread_proc, NULL, sortcrit, usinguid);
+}
+
+/* Find most recent internaldate of all messages in thread */
+static void find_most_recent(Thread *thread, MsgData *recent)
+{
+    Thread *child;
+
+    /* test the head node */
+    if (thread->msgdata->internaldate > recent->internaldate)
+        recent->internaldate = thread->msgdata->internaldate;
+
+    /* test the children recursively */
+    child = thread->child;
+    while (child) {
+        find_most_recent(child, recent);
+        child = child->next;
+    }
+}
+
+/*
+ * Tag the root of each thread with the most recent internaldate of all
+ * messages in the thread.  The actual sorting will be done by the calling
+ * function, but we leverage the fact that sorting by sentdate will fallback
+ * to internaldate if sentdate == 0.
+ */
+static MsgData **refs_thread_proc(struct rootset *rootset,
+                                  Thread **newnode __attribute((unused)))
+{
+    MsgData **ptrs, *md;
+    Thread *cur;
+    int i = 0;
+
+    /* Create an array of MsgData for dummy roots */
+    ptrs = (MsgData **) xzmalloc(rootset->nroot *
+                                 (sizeof(MsgData *) + sizeof(MsgData)));
+    md = (MsgData *)(ptrs + rootset->nroot);
+
+    /* Find most recent internaldate in each thread */
+    cur = rootset->root->child;
+    while (cur) {
+        /* If the message is a dummy, assign it MsgData for sorting */
+        if (!cur->msgdata) {
+            cur->msgdata = ptrs[i] = &md[i];
+            i++;
+            cur->msgdata->internaldate = cur->child->msgdata->internaldate;
+        }
+        cur->msgdata->sentdate = 0; /* force date sort to use internaldate */
+
+        find_most_recent(cur, cur->msgdata);
+        cur = cur->next;
+    }
+
+    return ptrs;
+}
+
+/*
+ * Thread a list of messages using the REFS algorithm.
+ */
+static void index_thread_refs(struct index_state *state,
+                              unsigned *msgno_list, unsigned int nmsg,
+                              int usinguid)
+{
+    static const struct sortcrit loadcrit[] =
+                                 {{ LOAD_IDS,      0, {{NULL,NULL}} },
+                                  { SORT_DATE,     0, {{NULL,NULL}} },
+                                  { SORT_ARRIVAL,  0, {{NULL,NULL}} },
+                                  { SORT_SEQUENCE, 0, {{NULL,NULL}} }};
+    static const struct sortcrit sortcrit[] =
+                                 {{ SORT_DATE,     0, {{NULL,NULL}} },
+                                  { SORT_ARRIVAL,  0, {{NULL,NULL}} },
+                                  { SORT_SEQUENCE, 0, {{NULL,NULL}} }};
+
+    _index_thread_ref(state, msgno_list, nmsg, loadcrit,
+                      refs_thread_proc, NULL, sortcrit, usinguid);
 }
 
 /*
@@ -6228,7 +6583,7 @@ EXPORTED extern struct nntp_overview *index_overview(struct index_state *state,
     static int envsize = 0, fromsize = 0, hdrsize = 0;
     int size;
     char *envtokens[NUMENVTOKENS];
-    struct address addr = { NULL, NULL, NULL, NULL, NULL, NULL };
+    struct address addr = { NULL, NULL, NULL, NULL, NULL, NULL, 0 };
     strarray_t refhdr = STRARRAY_INITIALIZER;
     struct mailbox *mailbox = state->mailbox;
     struct index_record record;
@@ -6334,6 +6689,8 @@ EXPORTED extern char *index_getheader(struct index_state *state,
         buf_free(&msgbuf);
     }
 
+    buf_cstring(&staticbuf);
+
     strarray_append(&headers, hdr);
     message_pruneheader(staticbuf.s, &headers, NULL);
     strarray_fini(&headers);
@@ -6409,7 +6766,8 @@ EXPORTED struct searchargs *new_searchargs(const char *tag, int state,
     sa = (struct searchargs *)xzmalloc(sizeof(struct searchargs));
     sa->tag = tag;
     sa->state = state;
-    /* default charset is US-ASCII which is always 0 */
+    /* default charset is US-ASCII */
+    sa->charset = charset_lookupname("US-ASCII");
 
     sa->namespace = namespace;
     sa->userid = userid;
@@ -6426,6 +6784,7 @@ EXPORTED void freesearchargs(struct searchargs *s)
 {
     if (!s) return;
 
+    charset_free(&s->charset);
     search_expr_free(s->root);
     free(s);
 }

@@ -189,7 +189,12 @@ EXPORTED const char *config_partitiondir(const char *partition)
     if (strlcat(buf, partition, sizeof(buf)) >= sizeof(buf))
         return 0;
 
-    return config_getoverflowstring(buf, NULL);
+    const char *dir = config_getoverflowstring(buf, NULL);
+    if (!dir)
+        syslog(LOG_WARNING, "requested partition directory for unknown partition '%s'",
+                            partition);
+
+    return dir;
 }
 
 EXPORTED const char *config_metapartitiondir(const char *partition)
@@ -201,7 +206,12 @@ EXPORTED const char *config_metapartitiondir(const char *partition)
     if (strlcat(buf, partition, sizeof(buf)) >= sizeof(buf))
         return 0;
 
-    return config_getoverflowstring(buf, NULL);
+    const char *dir = config_getoverflowstring(buf, NULL);
+    if (!dir)
+        syslog(LOG_DEBUG, "requested meta partition directory for unknown partition '%s'",
+                          partition);
+
+    return dir;
 }
 
 EXPORTED const char *config_archivepartitiondir(const char *partition)
@@ -213,7 +223,27 @@ EXPORTED const char *config_archivepartitiondir(const char *partition)
     if(strlcat(buf, partition, sizeof(buf)) >= sizeof(buf))
         return 0;
 
-    return config_getoverflowstring(buf, NULL);
+    const char *dir = config_getoverflowstring(buf, NULL);
+    if (!dir)
+        syslog(LOG_DEBUG, "requested archive partition directory for unknown partition '%s'",
+                          partition);
+
+    return dir;
+}
+
+EXPORTED const char *config_backupstagingpath(void)
+{
+    static const char *staging_path = NULL;
+
+    if (staging_path) return staging_path;
+
+    staging_path = config_getstring(IMAPOPT_BACKUP_STAGING_PATH);
+
+    if (!staging_path)
+        staging_path = strconcat(config_getstring(IMAPOPT_TEMP_PATH),
+                                 "/backup", NULL);
+
+    return staging_path;
 }
 
 static void config_ispartition(const char *key,
@@ -307,6 +337,7 @@ EXPORTED void config_reset(void)
         if (imapopts[opt].t == OPT_STRING &&
             (imapopts[opt].seen ||
              (imapopts[opt].def.s &&
+              imapopts[opt].val.s != imapopts[opt].def.s &&
               !strncasecmp(imapopts[opt].def.s, "{configdirectory}", 17))))
             free((char *)imapopts[opt].val.s);
         memcpy(&imapopts[opt].val,

@@ -1,0 +1,183 @@
+
+Administrator Guide
+*******************
+
+
+Architecture
+============
+
+* System Architecture
+
+  * High Level Architecture
+
+  * Cyrus Murder
+
+  * Replication
+
+  * Invoking Cyrus
+
+
+Management
+==========
+
+* File & Directory Locations
+
+  * Archive Partitions
+
+  * Configuration file locations
+
+  * State Directories
+
+  * Per-user State Directories
+
+  * Directory Hashing
+
+  * Spool Directories
+
+  * Metadata Partitions
+
+  * Search Tiers
+
+  * Partitions
+
+  * Working With Partitions
+
+* Ports and Sockets
+
+  * Cyrus Service Definitions
+
+  * Cyrus Socket Locations
+
+* Access Control
+
+  * Combining Access Rights
+
+  * Access Control Defaults
+
+  * Access Control Identifier (ACI)
+
+  * Access Control Lists Rights Reference
+
+  * Discretionary Access Control
+
+* Quotas
+
+  * Quota Roots
+
+  * Supported Quota Types
+
+  * Monitor and Repair
+
+  * Controlling Quota Behavior
+
+  * Quota Database
+
+  * Converting Quotas Database
+
+* Cyrus Sieve
+
+  * Introduction
+
+  * Installing Sieve
+
+  * Managing Sieve Scripts
+
+  * Testing the sieve server
+
+  * Cyrus Sieve Support
+
+  * Writing Sieve
+
+* Cyrus Backups
+
+  * Introduction
+
+  * Limitations
+
+  * Architecture
+
+  * Installation
+
+  * Administration
+
+  * Tools
+
+* Cyrus NNTP
+
+  * Overview
+
+  * NNTP Setup
+
+  * Defining Newsgroups
+
+  * Configuration
+
+  * Further information
+
+* Cyrus Prot Layer
+
+  * Events
+
+* Standard Operating Procedures
+
+  * Replication: Installation and Administration
+
+  * Mailbox Operations
+
+  * Reloading Cyrus IMAP Services
+
+  * Alternative Namespace
+
+  * Deleting and Undeleting Messages and Folders
+
+  * Running Cyrus IMAP Services on Non-Standard Ports
+
+  * Reconstructing Mailboxes
+
+  * Using Squatter for Faster IMAP SEARCH
+
+  * Splitting Metadata from Partitions
+
+  * Managing user_deny.db
+
+* Cyrus Event Source
+
+  * Overview
+
+  * Compile options
+
+  * Configuration options
+
+  * Event Types
+
+  * Accessing events
+
+  * Apple Push Service
+
+* Mailbox Distribution
+
+  * Selection Modes
+
+  * Special cases
+
+  * Application
+
+* Cyrus Murder
+
+  * Cyrus Murder: Concepts
+
+  * Cyrus Murder: Installation and Administration
+
+  * Cyrus Murder Mupdate Details
+
+  * Cyrus Murder Failure Modes
+
+  * Cyrus Murder Mail Delivery
+
+* HOWTO: Using an NGINX IMAP Proxy
+
+* Tweaking Cyrus IMAP
+
+  * Storage Tiering
+
+  * Synchronous File Operations

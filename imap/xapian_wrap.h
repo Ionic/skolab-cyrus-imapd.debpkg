@@ -44,31 +44,32 @@
 #define __CYRUS_IMAP_XAPIAN_WRAP__
 
 #include "util.h"
+#include "strarray.h"
 
 typedef struct xapian_dbw xapian_dbw_t;
 typedef struct xapian_db xapian_db_t;
 typedef struct xapian_query xapian_query_t;
 typedef struct xapian_snipgen xapian_snipgen_t;
 
-extern void xapian_init(void);
-
 /* compaction interface */
 extern int xapian_compact_dbs(const char *dest, const char **sources);
+extern void xapian_check_if_needs_reindex(const strarray_t *sources, strarray_t *toreindex);
 
 /* write-side interface */
-extern int xapian_dbw_open(const char *path, xapian_dbw_t **dbwp);
+extern int xapian_dbw_open(const char **paths, xapian_dbw_t **dbwp);
 extern void xapian_dbw_close(xapian_dbw_t *dbw);
 extern int xapian_dbw_begin_txn(xapian_dbw_t *dbw);
 extern int xapian_dbw_commit_txn(xapian_dbw_t *dbw);
 extern int xapian_dbw_cancel_txn(xapian_dbw_t *dbw);
 extern int xapian_dbw_begin_doc(xapian_dbw_t *dbw, const char *cyrusid);
-extern int xapian_dbw_doc_part(xapian_dbw_t *dbw, const struct buf *part, const char *prefix);
+extern int xapian_dbw_doc_part(xapian_dbw_t *dbw, const struct buf *part, int num_part);
 extern int xapian_dbw_end_doc(xapian_dbw_t *dbw);
+extern int xapian_dbw_is_indexed(xapian_dbw_t *dbw, const char *cyrusid);
 
 /* query-side interface */
 extern int xapian_db_open(const char **paths, xapian_db_t **dbp);
 extern void xapian_db_close(xapian_db_t *);
-extern xapian_query_t *xapian_query_new_match(const xapian_db_t *, const char *prefix, const char *term);
+extern xapian_query_t *xapian_query_new_match(const xapian_db_t *, int num_part, const char *term);
 extern xapian_query_t *xapian_query_new_compound(const xapian_db_t *, int is_or, xapian_query_t **children, int n);
 extern xapian_query_t *xapian_query_new_not(const xapian_db_t *, xapian_query_t *);
 extern void xapian_query_free(xapian_query_t *);
@@ -76,11 +77,11 @@ extern int xapian_query_run(const xapian_db_t *, const xapian_query_t *,
                             int (*cb)(const char *cyrusid, void *rock), void *rock);
 
 /* snippets interface */
-extern xapian_snipgen_t *xapian_snipgen_new(void);
+extern xapian_snipgen_t *xapian_snipgen_new(const char *hi_start, const char *hi_end, const char *omit);
 extern void xapian_snipgen_free(xapian_snipgen_t *);
 extern int xapian_snipgen_add_match(xapian_snipgen_t *snipgen, const char *match);
 extern int xapian_snipgen_begin_doc(xapian_snipgen_t *snipgen, unsigned context_length);
-extern int xapian_snipgen_doc_part(xapian_snipgen_t *snipgen, const struct buf *part);
+extern int xapian_snipgen_doc_part(xapian_snipgen_t *snipgen, const struct buf *part, int partnum);
 extern int xapian_snipgen_end_doc(xapian_snipgen_t *snipgen, struct buf *);
 
 /* filter interface */

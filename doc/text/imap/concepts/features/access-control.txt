@@ -1,0 +1,21 @@
+
+Access Control
+**************
+
+Cyrus IMAP features rich access control compliant with **RFC 2086**,
+**RFC 4314**, **RFC 5257** and **RFC 5464**.
+
+Combined, this provides powerful mechanisms to enable or restrict
+access to information contained within the Cyrus IMAP mailspool.
+
+See also:
+
+  * Access Control Lists Rights Reference
+
+  * Combining Access Rights
+
+  * Access Control Defaults
+
+  * Access Control Identifier (ACI)
+
+Back to Features

@@ -1,0 +1,240 @@
+
+Configuration file locations
+****************************
+
+The main configuration file for Cyrus IMAP is imapd.conf(5) and its
+path is compiled into the executable files, based upon the "--
+sysconfdir" build flag.  For many utilities, this may be overridden at
+runtime via the **-C** flag, followed by the name of the configuration
+file to use.  For example:
+
+   **ctl_mboxlist** **-C** */usr/local/etc/imapd.conf*  **-d** **-f** *mailboxes.dump*
+
+The main configuration directory is referred to as "<configdirectory>"
+in Cyrus IMAP documentation, and is set via the "configdirectory"
+entry in imapd.conf(5):
+
+   "configdirectory:" <none>
+
+      The pathname of the IMAP configuration directory.  This field is
+      required.
+
+While Cyrus itself has no default values for this setting, most
+distributions use "/var/lib/imap" or "/var/lib/cyrus".
+
+
+State Databases
+===============
+
+Despite the name, most of what's stored in "<configdirectory>" is
+state information.  Here's a list of files typically located therein:
+
+   * Annotations (annotations.db)
+
+   * Backups (backups.db)
+
+   * Duplicate Delivery (deliver.db)
+
+   * Mailbox List (mailboxes.db)
+
+   * News database (fetchnews.db)
+
+   * PTS cache (ptscache.db)
+
+   * Quotas (quotas.db)
+
+   * STATUS cache (statuscache.db)
+
+   * TLS cache (tls_sessions.db)
+
+   * User Access (user_deny.db)
+
+   * Zoneinfo db (zoneinfo.db)
+
+The links above document the purpose, DB type and choices for those
+files.  You may adjust the locations of these database files via
+various settings in imapd.conf(5):
+
+   "annotation_db_path:" <none>
+
+      The absolute path to the annotations db file.  If not specified,
+      will be configdirectory/annotations.db
+
+   "backup_db_path:" <none>
+
+      The absolute path to the backup db file.  If not specified, will
+      be configdirectory/backups.db
+
+   "duplicate_db_path:" <none>
+
+      The absolute path to the duplicate db file.  If not specified,
+      will be configdirectory/deliver.db
+
+   "mboxlist_db_path:" <none>
+
+      The absolute path to the mailboxes db file.  If not specified
+      will be configdirectory/mailboxes.db
+
+   "newsrc_db_path:" <none>
+
+      The absolute path to the newsrc db file.  If not specified, will
+      be configdirectory/fetchnews.db
+
+   "ptscache_db_path:" <none>
+
+      The absolute path to the ptscache db file.  If not specified,
+      will be configdirectory/ptscache.db
+
+   "quota_db_path:" <none>
+
+      The absolute path for the quota database (if you choose a
+      single-file quota DB type - or the base path if you choose
+      quotalegacy).  If not specified will be
+      configdirectory/quotas.db or configdirectory/quota/
+
+   "statuscache_db_path:" <none>
+
+      The absolute path to the statuscache db file.  If not specified,
+      will be configdirectory/statuscache.db
+
+   "tls_sessions_db_path:" <none>
+
+      The absolute path to the TLS sessions db file. If not specified,
+      will be configdirectory/tls_sessions.db
+
+   "userdeny_db_path:" <none>
+
+      The absolute path to the userdeny db file.  If not specified,
+      will be configdirectory/user_deny.db
+
+   "zoneinfo_db_path:" <none>
+
+      The absolute path to the zoneinfo db file.  If not specified,
+      will be configdirectory/zoneinfo.db
+
+
+Ephemeral Databases
+-------------------
+
+Several of the state databases may be located in RAM-backed locations,
+such as "/run" or "/var/run" or where ever your OS roots such
+filesystems (i.e. "tmpfs" on Linux or "mfs" on FreeBSD). Cyrus 3.0
+will recreate the following databases for you automatically:
+
+* duplicate delivery (deliver.db),
+
+* TLS cache (tls_sessions.db),
+
+* PTS cache (ptscache.db),
+
+* STATUS cache (statuscache.db).
+
+Relocating these DBs to ephemeral storage will place less IO load on
+your disks and tend to run faster.
+
+Note: Please be warned that some packagers place tasks such as
+  "tlsprune" (tls_prune(8)) in the "START{}" stanza of cyrus.conf(5).
+  This will cause a startup problem if the "tls_sessions_db" is not
+  present. The solution to this is to remove the "tlsprune" task from
+  "START{}" and schedule it in "EVENTS{}", further down.
+
+
+State Directories
+*****************
+
+In addition to the files, are several directories:
+
+   * lock (per-mailbox lock files)
+
+   * log (per-user telemetry log directories)
+
+   * proc (per-process state data)
+
+   * ptclient (PT Loader Unix-domain socket)
+
+   * quota (per-quotaroot quota state data)
+
+   * sieve (per-user sieve message filter scripts)
+
+   * socket (per-service Unix-domain sockets)
+
+   * sync (per-replica directories with sync log files)
+
+   * user (per-user DBs, see next section)
+
+As with the DB files, above, many of these, too, may be relocated via
+settings in imapd.conf(5):
+
+   "mboxname_lockpath:" <none>
+
+      Path to mailbox name lock files (default $conf/lock)
+
+   "proc_path:" <none>
+
+      Path to proc directory.  Default is NULL - must be an absolute
+      path if specified.  If not specified, the path
+      $configdirectory/proc/ will be used.
+
+   "ptloader_sock:" <none>
+
+      Unix domain socket that ptloader listens on. (defaults to
+      configdirectory/ptclient/ptsock)
+
+   "quota_db_path:" <none>
+
+      The absolute path for the quota database (if you choose a
+      single-file quota DB type - or the base path if you choose
+      quotalegacy).  If not specified will be
+      configdirectory/quotas.db or configdirectory/quota/
+
+Note: If your configuration uses "quota_db: quotalegacy", then
+  "quota_db_path" points to the base of the quota directory hierarchy.
+  If you use any other DB type, then this will be the actual filename.
+
+   "sieveusehomedir:" 0
+
+      If enabled, lmtpd will look for Sieve scripts in user's home
+      directories: ~user/.sieve.
+
+   "sievedir:" /usr/sieve
+
+      If sieveusehomedir is false, this directory is searched for
+      Sieve scripts.
+
+   "idlesocket:" {configdirectory}/socket/idle
+
+      Unix domain socket that idled listens on.
+
+   "lmtpsocket:" {configdirectory}/socket/lmtp
+
+      Unix domain socket that lmtpd listens on, used by deliver(8).
+      This should match the path specified in cyrus.conf(5).
+
+   "notifysocket:" {configdirectory}/socket/notify
+
+      Unix domain socket that the mail notification daemon listens on.
+
+   "sphinx_socket:" {configdirectory}/socket/sphinx
+
+      Unix domain socket that the Sphinx searchd daemons listens on.
+
+
+Per-user State Directories
+**************************
+
+There are several things tracked per-user, and the data files for
+these items, such as subscriptions and seen state, are stored in
+<configdirectory>/user.  These files may not be relocated from
+<configdirectory>.  They are:
+
+   * Seen State (<userid>.seen)
+
+   * Subscriptions (<userid>.sub)
+
+   * Search Index DB List (<userid>.xapianactive)
+
+   * Mailbox Keys (<userid>.mboxkey)
+
+   * DAV Index (<userid>.dav)
+
+Please follow those links for more information on these files.

@@ -269,6 +269,10 @@ int main(int argc, char **argv)
     pid_t pid;
     char *alt_config = NULL;
 
+    if ((geteuid()) == 0 && (become_cyrus(/*is_master*/0) != 0)) {
+        fatal("must run as the Cyrus user", EC_USAGE);
+    }
+
     p = getenv("CYRUS_VERBOSE");
     if (p) verbose = atoi(p) + 1;
 
@@ -338,6 +342,8 @@ int main(int argc, char **argv)
 
     for (;;) {
         int n;
+
+        signals_poll();
 
         /* check for shutdown file */
         if (shutdown_file(NULL, 0)) {

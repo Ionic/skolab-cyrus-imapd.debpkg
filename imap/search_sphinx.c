@@ -114,7 +114,9 @@ static const char * const column_by_part[SEARCH_NUM_PARTS] = {
     "header_listid",
     "header_type",
     "headers",
-    "body"
+    "body",
+    "location",
+    "attachmentname"
 };
 
 static void close_connection(struct connection *conn)
@@ -1895,12 +1897,12 @@ out:
     return r;
 }
 
-static void begin_message(search_text_receiver_t *rx, uint32_t uid)
+static int begin_message(search_text_receiver_t *rx, message_t *msg)
 {
     sphinx_receiver_t *tr = (sphinx_receiver_t *)rx;
     int i;
 
-    tr->uid = uid;
+    message_get_uid(msg, &tr->uid);
     for (i = 0 ; i < SEARCH_NUM_PARTS ; i++)
         buf_reset(&tr->parts[i]);
     tr->parts_total = 0;
@@ -2325,6 +2327,7 @@ static int end_mailbox_snippets(search_text_receiver_t *rx,
 
 static search_text_receiver_t *begin_snippets(void *internalised,
                                               int verbose,
+                                              search_snippet_markup_t *m __attribute__((unused)),
                                               search_snippet_cb_t proc,
                                               void *rock)
 {

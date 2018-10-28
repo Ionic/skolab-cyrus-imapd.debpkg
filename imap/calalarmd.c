@@ -54,7 +54,6 @@
 #endif
 #include <signal.h>
 #include <fcntl.h>
-#include <math.h>
 
 #include "global.h"
 #include "xmalloc.h"
@@ -69,7 +68,7 @@ static int debugmode = 0;
 
 EXPORTED void fatal(const char *msg, int err)
 {
-    if (debugmode) fprintf(stderr, "dying with %s %d\n",msg,err);
+    if (debugmode) fprintf(stderr, "dying with %s %d\n", msg, err);
     syslog(LOG_CRIT, "%s", msg);
     syslog(LOG_NOTICE, "exiting");
 
@@ -83,6 +82,8 @@ static void shut_down(int ec)
 {
     caldav_done();
     annotatemore_close();
+    quotadb_close();
+    quotadb_done();
     mboxlist_close();
     mboxlist_done();
     cyrus_done();
@@ -94,18 +95,26 @@ int main(int argc, char **argv)
     int opt;
     pid_t pid;
     char *alt_config = NULL;
+    time_t runattime = 0;
+    int upgrade = 0;
 
     if ((geteuid()) == 0 && (become_cyrus(/*is_master*/0) != 0)) {
         fatal("must run as the Cyrus user", EC_USAGE);
     }
 
-    while ((opt = getopt(argc, argv, "C:di:")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:dt:U")) != EOF) {
         switch (opt) {
         case 'C': /* alt config file */
             alt_config = optarg;
             break;
         case 'd': /* don't fork. debugging mode */
             debugmode = 1;
+            break;
+        case 't': /* run a single scan at this time */
+            runattime = atoi(optarg);
+            break;
+        case 'U':
+            upgrade = 1;
             break;
         default:
             fprintf(stderr, "invalid argument\n");
@@ -119,11 +128,24 @@ int main(int argc, char **argv)
     mboxlist_init(0);
     mboxlist_open(NULL);
 
+    quotadb_init(0);
+    quotadb_open(NULL);
+
     annotatemore_open();
 
     caldav_init();
 
     mboxevent_init();
+
+    if (upgrade) {
+        caldav_alarm_upgrade();
+        shut_down(0);
+    }
+
+    if (runattime) {
+        caldav_alarm_process(runattime);
+        shut_down(0);
+    }
 
     signals_set_shutdown(shut_down);
     signals_add_handlers(0);
@@ -152,13 +174,13 @@ int main(int argc, char **argv)
         signals_poll();
 
         gettimeofday(&start, 0);
-        caldav_alarm_process();
+        caldav_alarm_process(0);
         gettimeofday(&end, 0);
 
         signals_poll();
 
         totaltime = timesub(&start, &end);
-        tosleep = 10 - round(totaltime);
+        tosleep = 10 - (int) (totaltime + 0.5); /* round to nearest int */
         if (tosleep > 0)
             sleep(tosleep);
     }
@@ -166,4 +188,3 @@ int main(int argc, char **argv)
     /* NOTREACHED */
     shut_down(1);
 }
-

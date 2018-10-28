@@ -44,46 +44,35 @@ dnl configure.ac for the Cyrus imapd
 dnl
 
 
-AC_INIT([cyrus-imapd], [3.0.0-beta1], [http://bugzilla.cyrusimap.org],,[http://www.cyrusimap.org])
+AC_INIT([cyrus-imapd],
+        m4_esyscmd(printf '%s' $(tools/git-version.sh)),
+        [https://github.com/cyrusimap/cyrus-imapd/issues],
+        ,
+        [https://www.cyrusimap.org])
 AC_PREREQ([2.63])
 AC_CONFIG_SRCDIR([imap/imapd.c])
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_MACRO_DIR([cmulocal])
 AC_CANONICAL_SYSTEM
 
+dnl carve the version string (defined in AC_INIT above) into useful chunks
+dnl e.g. for version 3.0.0-beta:
+dnl   CYRUS_IMAPD_SERIES   => 3.0
+dnl   CYRUS_IMAPD_REVISION => 0
+dnl   CYRUS_IMAPD_PATCH    => beta2
+CYRUS_IMAPD_SERIES=`echo AC_PACKAGE_VERSION | cut -d- -f1 | cut -d. -f1-2`
+CYRUS_IMAPD_REVISION=`echo AC_PACKAGE_VERSION | cut -d- -f1 | cut -d. -f3`
+CYRUS_IMAPD_PATCH=`echo AC_PACKAGE_VERSION | cut -d- -f2-`
+AC_SUBST([CYRUS_IMAPD_SERIES])
+AC_SUBST([CYRUS_IMAPD_REVISION])
+AC_SUBST([CYRUS_IMAPD_PATCH])
+
 dnl in case the first use of PKG_CHECK_MODULES is inside a conditional
 PKG_PROG_PKG_CONFIG
 
-AM_INIT_AUTOMAKE([-Wall -Werror -Wno-portability foreign dist-bzip2 no-installinfo subdir-objects silent-rules])
+AM_INIT_AUTOMAKE([-Wall -Werror -Wno-portability foreign dist-bzip2
+                  no-installinfo subdir-objects silent-rules tar-ustar])
 AC_CONFIG_LIBOBJ_DIR([lib])
-
-dnl if the git repository is here we also have git
-if test -d ".git/"; then
-    git_bin=$(which git 2>/dev/null)
-    if test "x$git_bin" != "x"; then
-        if test -x "/$(which git 2>/dev/null)"; then
-            git_branch=$(git branch -l | grep ^* | sed -e 's/* //g')
-
-            case "$git_branch" in
-                cyrus-imapd-*)
-                        git_tag=$(git tag -l | grep -E "$git_branch\." | sort --version-sort | tail -n 1)
-                        git_revs=$(git log $git_tag..HEAD --pretty=oneline 2>/dev/null | wc -l)
-                        if test "x$git_revs" != "x0"; then
-                            git_version=".$git_revs"
-                        fi
-                    ;;
-
-                master)
-                        git_revs=$(git log 777a1b46..HEAD --pretty=oneline | wc -l)
-                        git_version="-dev$git_revs"
-                    ;;
-
-            esac
-        fi
-    fi
-fi
-
-AC_SUBST(git_version)
 
 dnl Useful hook for distributions
 AC_ARG_WITH(extraident,
@@ -92,18 +81,24 @@ AC_ARG_WITH(extraident,
 
 AM_MAINTAINER_MODE
 
+dnl Coverage (disabled by default)
+GCOV_CFLAGS=
+GCOV_CXXFLAGS=
+GCOV_LDFLAGS=
+GCOV_LIBS=
+
 AC_ARG_ENABLE(coverage,
-        [AS_HELP_STRING([--enable-coverage],[enable C test coverage])],
-        [GCOV_CFLAGS="--coverage"
-         GCOV_CXXFLAGS="--coverage"
-         GCOV_LDFLAGS="--coverage"
-         GCOV_LIBS="-lgcov"
-        ],[
-         GCOV_CFLAGS=
-         GCOV_CXXFLAGS=
-         GCOV_LDFLAGS=
-         GCOV_LIBS=
-        ])
+    AS_HELP_STRING([--enable-coverage],[enable C test coverage])
+)
+
+AS_IF([test "x$enable_coverage" = "xyes"], [
+    GCOV_CFLAGS="--coverage"
+    GCOV_CXXFLAGS="--coverage"
+    GCOV_LDFLAGS="--coverage"
+    GCOV_LIBS="-lgcov"
+])
+AM_CONDITIONAL([HAVE_COVERAGE], [test "x$enable_coverage" = "xyes"])
+
 AC_SUBST(GCOV_CFLAGS)
 AC_SUBST(GCOV_CXXFLAGS)
 AC_SUBST(GCOV_LDFLAGS)
@@ -128,8 +123,11 @@ if test $sysconfdir = '${prefix}/etc'; then
   sysconfdir="/etc"
 fi
 
-AC_PROG_CC
+dnl for some reason AC_PROG_CXX can succeed even though c++ compiler is missing
+dnl if it is invoked after AC_PROG_CC, so instead invoke it first
+dnl ref: https://lists.gnu.org/archive/html/bug-autoconf/2010-05/msg00001.html
 AC_PROG_CXX
+AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
@@ -152,6 +150,13 @@ AH_BOTTOM([#if HAVE_VISIBILITY
 #define HIDDEN
 #endif])
 
+AH_BOTTOM([#if defined __GNUC__ &&  __GNUC__ > 6
+    #define GCC_FALLTHROUGH __attribute__((fallthrough));
+#else
+    #define GCC_FALLTHROUGH /* fall through */
+#endif
+])
+
 LT_PREREQ([2.2.6])
 LT_INIT([disable-static])
 AC_SUBST([LIBTOOL_DEPS])
@@ -161,6 +166,7 @@ AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(size_t)
 AC_CHECK_SIZEOF(off_t)
+AC_CHECK_SIZEOF(time_t)
 
 dnl Check that `long long int' is available
 AC_CHECK_SIZEOF(long long int)
@@ -177,7 +183,7 @@ CMU_GUESS_RUNPATH_SWITCH
 
 AC_CHECK_HEADERS(unistd.h sys/select.h sys/param.h stdarg.h)
 AC_REPLACE_FUNCS(memmove strcasecmp ftruncate strerror posix_fadvise strsep memmem)
-AC_CHECK_FUNCS(strlcat strlcpy getgrouplist fmemopen pselect)
+AC_CHECK_FUNCS(strlcat strlcpy strnchr getgrouplist fmemopen pselect)
 AC_HEADER_DIRENT
 
 dnl check whether to use getpassphrase or getpass
@@ -220,7 +226,7 @@ dnl parameters: backend name, variable to set, withval
 
 dnl SQL DB Detection
 
-HAVE_SQL=0
+HAVE_CYRUSDB_SQL=0
 
 dnl MySQL Detection
 
@@ -245,7 +251,9 @@ case "$with_mysql" in
         ;;
   yes)
         # Find mysql_config in $PATH
-        mysql_config=mysql_config
+        AC_PATH_PROG(mysql_config, mysql_config, [])
+        AS_IF([test -z "$mysql_config"],
+            AC_MSG_ERROR([The mysql_config program was not found]))
         ;;
   *)
         # Find mysql_config in the specified directory
@@ -261,10 +269,11 @@ esac
 if test "$with_mysql" != "no"; then
     MYSQL_LIBADD=`$mysql_config --libs`
     MYSQL_INCADD=`$mysql_config --cflags`
-    HAVE_SQL=1
+    HAVE_CYRUSDB_SQL=1
     LIBS="${LIBS} ${MYSQL_LIBADD}"
     CPPFLAGS="${MYSQL_INCADD} ${CPPFLAGS}"
     AC_DEFINE(HAVE_MYSQL,[],[Build in MySQL support?])
+    AC_SUBST(MYSQL_LIBADD)
 fi
 AC_MSG_RESULT($with_mysql)
 
@@ -299,7 +308,7 @@ if test "$use_pgsql" != "no"; then
     AC_MSG_ERROR([PgSQL was not found.  You may need to supply the
     --with-pgsql-libdir or --with-pgsql-incdir configure options.])
   else
-    HAVE_SQL=1
+    HAVE_CYRUSDB_SQL=1
   fi
 
   if test "$with_pgsql_lib" != "none"; then
@@ -310,15 +319,21 @@ if test "$use_pgsql" != "no"; then
   CPPFLAGS="${PGSQL_INCADD} ${CPPFLAGS}"
 
   AC_DEFINE(HAVE_PGSQL,[],[Build in PgSQL support?])
+  AC_SUBST(PGSQL_LIBADD)
 fi
 
 dnl End PgSQL Detection
 
 
 dnl SQLite Detection
+dnl XXX this is a bit gross... the same option for specifying WHERE sqlite is
+dnl (--with-sqlite) is also the option for enabling it as a cyrusdb backend,
+dnl which means if your sqlite is in a non-default location and you need httpd
+dnl or object storage etc, you're suddenly also supporting it as a cyrusdb
+dnl backend, possibly unexpectedly.
 AC_ARG_WITH(sqlite,
         [AS_HELP_STRING([--with-sqlite=DIR], [use SQLite (in DIR) [no]])],
-        with_sqlite=$withval, with_sqlite=no)
+        with_sqlite=$withval, with_sqlite=check)
 
 case "$with_sqlite" in
   no)
@@ -326,6 +341,11 @@ case "$with_sqlite" in
         ;;
   yes)
         use_sqlite="yes"
+        with_sqlite_lib=none
+        with_sqlite_inc=none
+        ;;
+  check)
+        use_sqlite="check"
         with_sqlite_lib=none
         with_sqlite_inc=none
         ;;
@@ -339,51 +359,187 @@ esac
 if test "$use_sqlite" != "no"; then
   CYRUS_SQLITE_CHK()
 
-  if test "$sqlitelib" = "no"; then
-    AC_MSG_ERROR([Sqlite was not found.  You may need to supply the
-    --with-sqlite-libdir or --with-sqlite-incdir configure options.])
+  if test "$use_sqlite" = "yes"; then
+    dnl sqlite specifically requested: not found is a failure
+    if test "$sqlitelib" = "no"; then
+        AC_MSG_ERROR([Sqlite was not found.  You may need to supply the
+        --with-sqlite-libdir or --with-sqlite-incdir configure options.])
+    else
+        HAVE_CYRUSDB_SQL=1
+        HAVE_SQLITE=1
+    fi
   else
-    HAVE_SQL=1
+    dnl sqlite not specifically requested: not found isn't a failure (yet)
+    use_sqlite="no"
+    if test "$sqlitelib" = "no"; then
+        AC_MSG_NOTICE([sqlite was not found, will try to build without it])
+    else
+        HAVE_SQLITE=1
+    fi
   fi
 
-  if test "$with_sqlite_lib" != "none"; then
-    CMU_ADD_LIBPATH($with_sqlite_lib)
-  fi
-
-  LIBS="${LIBS} ${SQLITE_LIBADD}"
-  CPPFLAGS="${SQLITE_INCADD} ${CPPFLAGS}"
-
-  AC_DEFINE(HAVE_SQLITE,[],[Build in SQLite support?])
+  dnl other modules might yet need to link against sqlite.
+  dnl we will update LIBS/CPPFLAGS etc later, once their checks have run.
+  dnl for now:
+  dnl   * $use_sqlite = "yes" if we definitely need it
+  dnl   * $HAVE_SQLITE = 1 if we have it available
 fi
 
 dnl End SQLite Detection
 
-AM_CONDITIONAL([USE_SQL], [test $HAVE_SQL = 1])
+if test "x$HAVE_CYRUSDB_SQL" = x1; then
+    AC_DEFINE([USE_CYRUSDB_SQL],[],[Build in cyrusdb_sql support?])
+fi
+AM_CONDITIONAL([USE_CYRUSDB_SQL], [test $HAVE_CYRUSDB_SQL = 1])
 dnl End SQL DB Detection
+
+dnl LMDB configuration
+AC_ARG_WITH(lmdb,
+        [AS_HELP_STRING([--with-lmdb], [use LMDB backend [no]])],
+        with_lmdb="$withval", with_lmdb="no")
+if test "$with_lmdb" = "yes"; then
+  AC_CHECK_LIB(lmdb,mdb_env_create,
+      use_lmdb="yes"
+      LMDB_LIB="-llmdb"
+      AC_DEFINE([HAVE_LMDB],[],[Build in cyrusdb_lmdb support?]),
+      AC_MSG_ERROR([The LMDB library is required for Cyrus DB LMDB support.]))
+else
+    use_lmdb="no"
+fi
+AM_CONDITIONAL([USE_CYRUSDB_LMDB], [test "x$use_lmdb" = "xyes"])
+
+dnl
+dnl Object Store support
+dnl
+
+dnl Caringo object store backend
+AC_MSG_CHECKING([whether to use Caringo])
+AC_ARG_WITH(caringo,
+        [AS_HELP_STRING([--with-caringo], [use Caringo ("yes" or "no")])],,with_caringo="no")
+case "$with_caringo" in
+  yes)
+	LDFLAGS="$LDFLAGS -lCastorSDK"
+  ;;
+esac
+AC_MSG_RESULT([$with_caringo])
+
+dnl OpenIO object store backend
+dnl deps: metautils gridclient oiosds curl
+AC_MSG_CHECKING([whether to use OpenIO])
+AC_ARG_WITH(openio,
+        [AS_HELP_STRING([--with-openio=yes|no], [use OpenIO ("yes" or "no")])],
+        with_openio=$withval, with_openio="no")
+
+case "$with_openio" in
+  no)
+	use_openio="no"
+	;;
+  yes)
+	use_openio="yes"
+	with_openio_lib=none
+	with_openio_inc=none
+	AC_DEFINE([WITH_OPENIO],[1],[Enable support for OpenIO object storage.])
+	;;
+  *)
+	use_openio="yes"
+	with_openio_lib="$with_openio/lib64"
+	with_openio_inc="$with_openio/include"
+	AC_DEFINE([WITH_OPENIO],[1],[Enable support for OpenIO object storage.])
+	;;
+esac
+
+AC_ARG_WITH(openio-libdir,
+        [AS_HELP_STRING([--with-openio-libdir=DIR], [OpenIO lib files are in DIR])],
+        with_openio_lib=$withval,
+        [ test "${with_openio_lib+set}" = set || with_openio_lib=none])
+AC_ARG_WITH(openio-incdir,
+        [AS_HELP_STRING([--with-openio-incdir=DIR], [OpenIO include files are in DIR])],
+        with_openio_inc=$withval,
+        [ test "${with_openio_inc+set}" = set || with_openio_inc=none ])
+
+if test "$use_openio" = "yes"; then
+	if test ! -d "$with_openio_lib"; then
+		AC_MSG_ERROR([OpenIO library directory '$with_openio_lib' does not exist.])
+	fi
+	if test ! -d "$with_openio_inc"; then
+		AC_MSG_ERROR([OpenIO include directory '$with_openio_inc' does not exist.])
+	fi
+
+	LDFLAGS="$LDFLAGS -L$with_openio_lib"
+	CFLAGS="$CFLAGS -I$with_openio_inc"
+	openio_headers="oio_sds.h core/oiourl.h"
+	for h in $openio_headers; do
+		AC_CHECK_HEADER($h,[],[
+			AC_MSG_ERROR([Header $h is missing.])
+		])
+	done
+	AC_CHECK_LIB([oiosds],[oio_error_free],[],[AC_MSG_ERROR([Library oiosds not found.])])
+	AC_CHECK_LIB([oiocore],[oio_url_empty],[],[AC_MSG_ERROR([Library oiocore not found.])])
+	AC_CHECK_LIB([curl],[curl_version],[],[AC_MSG_ERROR([Library curl not found.])])
+	AC_CHECK_LIB([json-c],[json_tokener_parse_ex],[],[AC_MSG_ERROR([Library json-c not found.])])
+
+	LDFLAGS="$LDFLAGS -L$with_openio_lib -loiosds -loiocore -lcurl -ljson-c"
+fi
+AC_MSG_RESULT([$use_openio])
+
+dnl enable object store
+AC_MSG_CHECKING([whether to enable object store])
+AC_ARG_ENABLE(objectstore,
+    [AS_HELP_STRING([--enable-objectstore],
+        [enable IMAP objectstore support. Use --with-caringo or --with-openio to choose a backend])],
+    [],
+    [enable_objectstore=no])
+
+with_objectstore_dummy=no
+if test "x$enable_objectstore" != xno ; then
+    dnl we need sqlite for the objectstore database
+    if test "x$HAVE_SQLITE" != x1; then
+        AC_MSG_ERROR([Need sqlite3 for objectstore])
+    else
+        use_sqlite="yes"
+    fi
+
+    dnl arbitrarily prioritise OpenIO over Caringo if both are requested
+    AS_IF(
+        [test "x$with_openio" != xno -a "x$with_caringo" != xno],
+            [AC_MSG_WARN([both --with-openio and --with-caringo requested: using OpenIO])
+             enable_objectstore="openio"
+             with_caringo = "no"],
+        [test "x$with_openio" != xno],
+            [enable_objectstore="openio"],
+        [test "x$with_caringo" != xno],
+            [enable_objectstore="caringo"],
+        [enable_objectstore="dummy"
+         with_objectstore_dummy="yes"])
+    AC_DEFINE([ENABLE_OBJECTSTORE],[],[Build with Object Store support])
+fi
+AC_MSG_RESULT([$enable_objectstore])
+AM_CONDITIONAL([OBJECTSTORE], [test "x$enable_objectstore" != xno])
+AM_CONDITIONAL([WITH_CARINGO], [test "x$with_caringo" != xno])
+AM_CONDITIONAL([WITH_OPENIO], [test "x$use_openio" != xno])
+AM_CONDITIONAL([WITH_OBJSTR_DUMMY], [test "x$with_objectstore_dummy" != xno])
+
 
 dnl
 dnl Search engines - SQUAT
 dnl
 
-enable_squat=yes
 AC_ARG_ENABLE(squat,
-        [  --disable-squat         disable Squat support])
-if test "x$enable_squat" != xno ; then
+    [AS_HELP_STRING([--disable-squat], [disable Squat support])],,[enable_squat="yes";])
+
+if test "$enable_squat" != "no"; then
     AC_DEFINE(USE_SQUAT,[],[Build in Squat support?])
 fi
+
 AM_CONDITIONAL([USE_SQUAT], [test "${enable_squat}" != "no"])
 
 dnl
 dnl Search engines - Sphinx
 dnl
 
-enable_squat=no
 AC_ARG_ENABLE(sphinx,
-        [  --enable-sphinx         disable Sphinx support],[
-            enable_sphinx=$enableval
-        ],[
-            enable_sphinx=no
-        ])
+        [AS_HELP_STRING([--enable-sphinx], [enable Sphinx support])],,
+        [enable_sphinx=no])
 if test "x$enable_sphinx" != xno ; then
     AC_DEFINE(USE_SPHINX,[],[Build in Sphinx support?])
 fi
@@ -400,12 +556,10 @@ dnl
 dnl Search engines - Xapian
 dnl
 
+xapian_flavor=none
 AC_ARG_ENABLE(xapian,
-        [  --enable-xapian         enable Xapian support],[
-            enable_xapian=$enableval
-        ],[
-            enable_xapian=no
-        ])
+        [AS_HELP_STRING([--enable-xapian], [enable Xapian support])],,
+        [enable_xapian=no])
 if test "x$enable_xapian" != xno ; then
     AC_ARG_VAR(XAPIAN_CONFIG, [Location of xapian-config])
     AC_PATH_PROG(XAPIAN_CONFIG, xapian-config, [])
@@ -422,6 +576,9 @@ if test "x$enable_xapian" != xno ; then
         else
             AC_MSG_ERROR([\`$XAPIAN_CONFIG --ltlibs --cxxflags' doesn't work, aborting])
         fi
+
+        dnl Xapian requires CXX11
+        AX_CXX_COMPILE_STDCXX_11([noext], [mandatory])
 
         dnl If AC_PROG_LIBTOOL (or the deprecated older version AM_PROG_LIBTOOL)
         dnl has already been expanded, enable libtool support now, otherwise add
@@ -444,12 +601,38 @@ if test "x$enable_xapian" != xno ; then
                 define([AM_PROG_LIBTOOL], defn([AM_PROG_LIBTOOL])
                        [XAPIAN_LIBS="`$XAPIAN_CONFIG --ltlibs`"])])])
         AC_DEFINE(USE_XAPIAN,[],[Build in Xapian support?])
+
+        dnl check if Xapian supports Cyruslibs extensions
+        AC_LANG_PUSH([C++])
+        ORIG_LDFLAGS=$LDFLAGS
+        ORIG_CXXFLAGS=$CXXFLAGS
+        LDFLAGS="$LDFLAGS $XAPIAN_LIBS"
+        CXXFLAGS="$CXXFLAGS $XAPIAN_CXXFLAGS"
+        AC_MSG_CHECKING([for Xapian cyruslibs extensions])
+        AC_LINK_IFELSE(
+            [AC_LANG_PROGRAM(
+                [[#include <xapian.h>]],
+                [[unsigned cjk_flags = Xapian::TermGenerator::FLAG_CJK_WORDS | Xapian::QueryParser::FLAG_CJK_WORDS; unsigned snippet_flags = Xapian::MSet::SNIPPET_START_AT_NONSPACE; (void) cjk_flags; (void) snippet_flags]])],
+            [xapian_cyrusexts="yes"],
+            [xapian_cyrusexts="no"])
+        AC_MSG_RESULT($xapian_cyrusexts)
+        if test $xapian_cyrusexts = yes; then
+            AC_DEFINE([USE_XAPIAN_CYRUS_EXTENSIONS], [], [Use Xapian cyruslibs extensions?])
+            xapian_flavor=cyruslibs
+        else
+            AC_MSG_NOTICE([Your Xapian does not support the Cyrus extensions for Xapian. Consider installing cyruslibs Xapian])
+            xapian_flavor=vanilla
+        fi
+        LDFLAGS=$ORIG_LDFLAGS
+        CXXFLAGS=$ORIG_CXXFLAGS
+        AC_LANG_POP([C++])
     fi
     AC_SUBST(XAPIAN_CXXFLAGS)
     AC_SUBST(XAPIAN_LIBS)
     AC_SUBST(XAPIAN_VERSION)
 fi
 AM_CONDITIONAL([USE_XAPIAN], [test "${enable_xapian}" != "no"])
+AC_DEFINE_UNQUOTED([XAPIAN_FLAVOR], ["$xapian_flavor"], [Which Xapian are we running on?])
 
 
 AM_CONDITIONAL([SQUATTER],
@@ -467,18 +650,28 @@ if test "$enable_sieve" != "no"; then
         AC_PROG_YACC
         AM_PROG_LEX
 
-        if test "$enable_pcre" != "no"; then
-            AC_CHECK_HEADER(pcreposix.h)
-            if test "$ac_cv_header_pcreposix_h" = "yes"; then
-                    AC_MSG_CHECKING(for utf8 enabled pcre)
-                    AC_CACHE_VAL(cyrus_cv_pcre_utf8, AC_TRY_CPP([#include <pcreposix.h>
+        if test -z "$ac_cv_prog_YACC"; then
+            AC_MSG_ERROR([Sieve requires bison/byacc/yacc, but none is installed])
+        fi
+
+        if test -z "$ac_cv_prog_LEX"; then
+            AC_MSG_ERROR([Sieve requires flex/lex, but none is installed])
+        fi
+fi
+
+AM_CONDITIONAL([SIEVE], [test "${enable_sieve}" != "no"])
+
+if test "$enable_pcre" != "no"; then
+        AC_CHECK_HEADER(pcreposix.h)
+        if test "$ac_cv_header_pcreposix_h" = "yes"; then
+            AC_MSG_CHECKING(for utf8 enabled pcre)
+            AC_CACHE_VAL(cyrus_cv_pcre_utf8, AC_TRY_CPP([#include <pcreposix.h>
 #ifndef REG_UTF8
 #include </nonexistent>
 #endif],cyrus_cv_pcre_utf8=yes,cyrus_cv_pcre_utf8=no))
-                    AC_MSG_RESULT($cyrus_cv_pcre_utf8)
-            else
-                    cyrus_cv_pcre_utf8="no"
-            fi
+            AC_MSG_RESULT($cyrus_cv_pcre_utf8)
+        else
+            cyrus_cv_pcre_utf8="no"
         fi
 
         if test "$cyrus_cv_pcre_utf8" = "yes"; then
@@ -499,7 +692,20 @@ if test "$enable_sieve" != "no"; then
         fi
 fi
 
-AM_CONDITIONAL([SIEVE], [test "${enable_sieve}" != "no"])
+dnl look for an option to disable sign-comparison warnings (needed for
+dnl flex-generated sieve sources when building with -Werror)
+saved_CFLAGS="$CFLAGS"
+NOWARN_SIGN_COMPARE="-Wno-sign-compare"
+CFLAGS="$NOWARN_SIGN_COMPARE"
+AC_MSG_CHECKING([whether the C compiler supports -Wno-sign-compare])
+AC_COMPILE_IFELSE(
+    [AC_LANG_PROGRAM([], [])],
+    [AC_MSG_RESULT([yes])],
+    [NOWARN_SIGN_COMPARE=]
+    [AC_MSG_RESULT([no])]
+)
+CFLAGS="$saved_CFLAGS"
+AC_SUBST([NOWARN_SIGN_COMPARE])
 
 dnl for et routines
 AC_FUNC_CHECK(strerror,AC_DEFINE(HAS_STRERROR,[],[Do we have strerror()?]),
@@ -537,16 +743,15 @@ if test "$spt_type" = ""; then
 fi
 if test "$spt_type" = ""; then
         AC_MSG_CHECKING(for PS_STRINGS)
-        AC_CACHE_VAL(cyrus_cv_sys_psstrings, AC_TRY_CPP([
+        AC_CACHE_VAL(cyrus_cv_sys_psstrings, AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #include <machine/vmparam.h>
 #include <sys/exec.h>
-#ifndef PS_STRINGS
-#include </nonexistent>
-#endif],cyrus_cv_sys_psstrings=yes,cyrus_cv_sys_psstrings=no))
-        if test $cyrus_cv_sys_psstrings = yes; then
-                spt_type=SPT_PSSTRINGS
-        fi
-        AC_MSG_RESULT($cyrus_cv_sys_psstrings)
+void *p = PS_STRINGS;
+])],cyrus_cv_sys_psstrings=yes,cyrus_cv_sys_psstrings=no))
+         if test $cyrus_cv_sys_psstrings = yes; then
+                 spt_type=SPT_PSSTRINGS
+         fi
+         AC_MSG_RESULT($cyrus_cv_sys_psstrings)
 fi
 if test "$spt_type" = ""; then
         AC_MSG_CHECKING(for SCO)
@@ -685,12 +890,13 @@ AC_ARG_WITH(lock,
 AM_CONDITIONAL([LOCK_FCNTL], [test $WITH_LOCK = "fcntl"])
 
 dnl check for fdatasync (used by cyrusdb_skiplist)
-LIB_RT=""
-AC_CHECK_FUNC(fdatasync, AC_DEFINE(HAVE_FDATASYNC,[],[Do we have fdatasync()?]), [
-  AC_CHECK_LIB(rt, fdatasync, [
-        LIB_RT="-lrt"
-        AC_DEFINE(HAVE_FDATASYNC,[],[Do we have fdatasync()?])
-  ])
+AC_SEARCH_LIBS([fdatasync], [rt], [
+    AC_DEFINE(HAVE_FDATASYNC,[],[Do we have fdatasync()?])
+], [])
+
+dnl check for clock_gettime
+AC_SEARCH_LIBS([clock_gettime], [rt], [], [
+    AC_MSG_ERROR([unable to find the clock_gettime() function])
 ])
 
 dnl check for libuuid (used when generating mailbox uniqueids)
@@ -749,6 +955,7 @@ if test "x$enable_afs" = "xyes"; then
       AC_DEFINE(AFSPTS_USE_KRB5,[],[Should the AFS PTS plugin use krb5?])
     ])
 
+    SAVE_CFLAGS="$CFLAGS"
     CFLAGS="${CFLAGS} -I${with_afs_incdir}"
     AFS_LIBS="${with_afs_libdir}/afs/libkauth.a ${with_afs_libdir}/afs/libprot.a  ${with_afs_libdir}/afs/libauth.a ${with_afs_libdir}/afs/libsys.a ${with_afs_libdir}/librxkad.a ${with_afs_libdir}/librx.a ${with_afs_libdir}/afs/libsys.a ${with_afs_libdir}/libubik.a ${with_afs_libdir}/afs/util.a ${with_afs_libdir}/afs/libafscom_err.a -lresolv"
     if test -f ${with_afs_libdir}/afs/liblwp.a; then
@@ -799,6 +1006,7 @@ if test "x$enable_afs" = "xyes"; then
       AC_DEFINE(HAVE_AFSKRB,[],[Should we build afskrb pts module?])
     fi
     LIBS="$SAVE_LIBS"
+    CFLAGS="$SAVE_CFLAGS"
     AC_SUBST(AFS_LDFLAGS)
     AC_SUBST(AFS_LIBS)
 fi
@@ -857,48 +1065,13 @@ AM_CONDITIONAL([HAVE_LDAP], [test "$have_ldap" = "yes"])
 
 AM_CONDITIONAL([PTCLIENT], [test "x$enable_afs" = "xyes" -o "$have_ldap" = "yes"])
 
-AC_ARG_WITH(
-    clamav,
-    [AS_HELP_STRING([--with-clamav=DIR], [use ClamAV from PATH (no)])],
-    with_clamav=$withval,
-    with_clamav=no
-)
-
-if test "$with_clamav" != no; then
-    if test -d $with_clamav; then
-        save_CPPFLAGS="$CPPFLAGS"
-        save_LDFLAGS="$LDFLAGS"
-        save_LIBS="$LIBS"
-
-        CPPFLAGS="${CPPFLAGS} -I${with_clamav}/include"
-        LDFLAGS="$LDFLAGS -L${with_clamav}/$CMU_LIB_SUBDIR"
-        AC_CHECK_LIB(
-            wrap,
-            request_init,
-            [AC_CHECK_HEADER(clamav.h,, with_clamav=no)],
-            with_clamav=no
-        )
-        CPPFLAGS="$save_CPPFLAGS"
-        LDFLAGS="$save_LDFLAGS"
-        LIBS="$save_LIBS"
-    fi
-fi
-
-AC_MSG_CHECKING(ClamAV support)
-AC_MSG_RESULT($with_clamav)
-LIB_CLAMAV=""
-if test "$with_clamav" != "no"; then
-    AC_DEFINE(HAVE_CLAMAV,[],[Do we have ClamAV?])
-    if test -d "$with_clamav"; then
-        CPPFLAGS="${CPPFLAGS} -I${with_clamav}/include"
-        LIB_CLAMAV="-L${with_clamav}/$CMU_LIB_SUBDIR -lclamav"
-    else
-        LIB_CLAMAV="-lclamav"
-    fi
-fi
-
-AC_SUBST(LIB_CLAMAV)
-AM_CONDITIONAL([HAVE_CLAMAV], [test "$with_clamav" = "yes"])
+AC_ARG_WITH([clamav],
+	AS_HELP_STRING([--without-clamav], [ignore presence of ClamAV and disable it]))
+AS_IF([test "x$with_clamav" != "xno"],
+	[ PKG_CHECK_MODULES([CLAMAV], [libclamav],
+		[ AC_DEFINE(HAVE_CLAMAV, [], [Do we have ClamAV?])
+		  with_clamav=yes ],
+		with_clamav=no)])
 
 AC_ARG_ENABLE(server,
         [AS_HELP_STRING([--disable-server], [disable compiling servers])])
@@ -1010,10 +1183,13 @@ xno)
     ;;
 x|xyes)
     # default args or --with-openssl
-    # try to enable, search in default system directories
     #
-    ssl_cppflags=
-    ssl_ldflags=
+    # Try pkg-config - OpenSSL >= 0.9.6 has openssl.pc
+    PKG_CHECK_MODULES(OPENSSL, openssl, [with_ssl=yes])
+    ssl_cppflags="$OPENSSL_CFLAGS"
+    ssl_ldflags="$OPENSSL_LIBS"
+    #
+    # If pkg-config doesn't work, search in default system directories
     ;;
 *)
     # --with-openssl=DIR
@@ -1021,7 +1197,11 @@ x|xyes)
     if test -d "$with_ssl"; then
         ssl_cppflags="-I${with_ssl}/include"
         ssl_ldflags=
-        CMU_ADD_LIBPATH_TO(${with_ssl}/lib, ssl_ldflags)
+        if test -d "${with_ssl}/lib64"; then
+            CMU_ADD_LIBPATH_TO(${with_ssl}/lib64, ssl_ldflags)
+        else
+            CMU_ADD_LIBPATH_TO(${with_ssl}/lib, ssl_ldflags)
+        fi
         with_ssl=yes
     else
         AC_WARN([Disabling OpenSSL - no include files found])
@@ -1125,9 +1305,11 @@ esac
 if test "$with_zlib" != "no"; then
     AC_DEFINE(HAVE_ZLIB,[],[Do we have zlib?])
     ZLIB="-lz"
+    HAVE_ZLIB=1
 else
     CPPFLAGS=$save_CPPFLAGS
     LDFLAGS=$save_LDFLAGS
+    HAVE_ZLIB=0
 fi
 
 AC_MSG_CHECKING(for zlib)
@@ -1187,6 +1369,13 @@ esac
 AC_MSG_CHECKING(for libcap)
 AC_MSG_RESULT($have_libcap)
 
+dnl
+dnl Check for jansson library, needed for JSON support
+dnl
+PKG_CHECK_MODULES([JANSSON], [jansson >= 2.3])
+dnl call AC_SUBST macro to support pkg-config version older than 0.24
+AC_SUBST([JANSSON_LIBS])
+AC_SUBST([JANSSON_CFLAGS])
 
 dnl
 dnl Test for mailbox event notification
@@ -1197,27 +1386,8 @@ AC_ARG_ENABLE(event-notification,
         [enable_event_notification="yes";])
 
 if test "$enable_event_notification" != "no"; then
-    PKG_CHECK_MODULES([JANSSON], [jansson >= 2.0],
-        [check_jansson=true]
-          dnl call AC_SUBST macro to support pkg-config version older that 0.24 without any bad consequence for recent version
-          [AC_SUBST([JANSSON_LIBS])]
-          [AC_SUBST([JANSSON_CFLAGS])]
-          [AC_DEFINE(ENABLE_MBOXEVENT,[],[Build with support of mailbox event notification])],
-        [check_jansson=false]
-          [AC_MSG_WARN([jansson 2.0 or later was not found, but is required to enable mailbox event notification])]
-          enable_event_notification="no")
-
-    dnl support for Apple Push Service registration
-    dnl disabled by default
-    AC_ARG_ENABLE(apple-push-service,
-            [AS_HELP_STRING([--enable-apple-push-service], [enable support for Apple Push Service (requires event notifications])],,
-            [enable_apple_push_service="no";])
-
-    if test "$enable_apple_push_service" != "no"; then
-        AC_DEFINE(ENABLE_APPLEPUSHSERVICE,[],[Build with support for Apple Push Service])
-    fi
+    AC_DEFINE(ENABLE_MBOXEVENT,[],[Build with support of mailbox event notification])
 fi
-AM_CONDITIONAL(JANSSON, test x$check_jansson = xtrue)
 
 dnl
 dnl Set pidfile location
@@ -1244,12 +1414,18 @@ dnl
 AC_ARG_ENABLE(idled,
         [AS_HELP_STRING([--enable-idled], [enable IMAP idled support])],,[enable_idled="no";])
 AM_CONDITIONAL([IDLED], [test "$enable_idled" != "no"])
+if test "x$enable_idled" = "xyes"; then
+        AC_DEFINE(USE_IDLED,[],[Build with idled functionality])
+fi
 dnl
 dnl see if we're compiling with NNTP support
 dnl
 AC_ARG_ENABLE(nntp,
         [AS_HELP_STRING([--enable-nntp], [enable NNTP support])],,[enable_nntp="no";])
 AM_CONDITIONAL([NNTPD], [test "$enable_nntp" != "no"])
+if test "x$enable_nntp" = "xyes"; then
+        AC_DEFINE(USE_NNTPD,[],[Build with nntpd functionality])
+fi
 
 dnl
 dnl see if we're compiling the Murder support programs
@@ -1261,13 +1437,9 @@ if test "$enable_murder" != no; then
         # for master/slave auto-selection
         AC_CHECK_HEADERS(sys/sockio.h)
 fi
-
-dnl
-dnl see if we're compiling with calendar alarm support
-dnl
-AC_ARG_ENABLE(calalarmd,
-        [AS_HELP_STRING([--enable-calalarmd], [enable CalDAV alarm support])],,[enable_calalarmd="no";])
-AM_CONDITIONAL([CALALARMD], [test "$enable_calalarmd" != "no"])
+if test "x$enable_murder" = "xyes"; then
+        AC_DEFINE(USE_MURDER,[],[Build with Murder functionality])
+fi
 
 dnl
 dnl see if we're compiling with HTTP support
@@ -1278,12 +1450,27 @@ AM_CONDITIONAL([HTTPD], [test "$enable_http" != "no"])
 
 HTTP_CPPFLAGS=
 HTTP_LIBS=
+with_nghttp2=no
+with_xml2=no
+with_ical=no
+with_icu4c=no
+with_shapelib=no
+with_brotli=no
 if test "$enable_http" != no; then
 dnl
 dnl make sure all the modules we need are present
 dnl
-        PKG_CHECK_MODULES([XML2], [libxml-2.0],
-                LIBS="$LIBS ${XML2_LIBS}",
+        if test "x$HAVE_SQLITE" != x1; then
+            AC_MSG_ERROR([Need sqlite3 for http])
+        else
+            use_sqlite="yes"
+            AC_DEFINE(WITH_DAV,[],[Build *DAV support into httpd?])
+        fi
+
+        PKG_CHECK_MODULES([XML2], [libxml-2.0], [
+                LIBS="$LIBS ${XML2_LIBS}"
+                with_xml2=yes
+                ],
                 AC_MSG_ERROR([Need libxml-2.0 for http]))
 
         AC_CHECK_LIB(xml2, xmlFirstElementChild, [
@@ -1295,15 +1482,25 @@ dnl
                                 [Do we have support for xmlBufferDetach()?]))
                 ])
 
-        PKG_CHECK_MODULES([SQLITE3], [sqlite3],
-                AC_DEFINE(WITH_DAV,[],[Build *DAV support into httpd?]),
-                AC_MSG_ERROR([Need sqlite3 for http]))
-
         PKG_CHECK_MODULES([ICAL], [libical], [
                 AC_DEFINE(HAVE_ICAL,[],[Build CalDAV support into httpd?])
                 LIBS="$LIBS ${ICAL_LIBS}"
+                with_ical=yes
                 ],
                 AC_MSG_ERROR([Need libical for http]))
+
+        AC_CHECK_DECLS([icalproperty_get_parent,
+                        icalrecur_freq_to_string, icalrecur_weekday_to_string],
+                [], [], [[#include <libical/ical.h>]])
+
+        AC_CHECK_MEMBER(icaltimetype.is_utc,
+                AC_DEFINE(ICALTIME_HAS_IS_UTC,[],
+                        [Does icaltimetype have is_utc field?]),
+                        [], [#include <libical/ical.h>])
+
+        AC_CHECK_LIB(ical, icalproperty_new_acknowledged,
+                AC_DEFINE(HAVE_VALARM_EXT_PROPS,[],
+                        [Do we have built-in support for VALARM extensions props?]))
 
         AC_CHECK_LIB(ical, icalparameter_new_iana, [
                 AC_DEFINE(HAVE_IANA_PARAMS,[],
@@ -1321,43 +1518,99 @@ dnl
                         AC_DEFINE(HAVE_TZDIST_PROPS,[],
                                 [Do we have built-in support for TZdist props?]))
                 ],
-                AC_MSG_WARN([Your version of libical can not support scheduling or managed attachments.  Consider upgrading to libical >= 0.48]))
+                AC_MSG_NOTICE([Your version of libical can not support scheduling or managed attachments.  Consider upgrading to libical >= 0.48]))
 
         AC_CHECK_LIB(ical, icaltimezone_set_builtin_tzdata,
                 AC_DEFINE(HAVE_TZ_BY_REF,[],
                         [Build timezones by reference support into httpd?]),
-                AC_MSG_WARN([Your version of libical can not support timezones by reference.  Consider upgrading to libical >= 1.0.1]))
+                AC_MSG_NOTICE([Your version of libical can not support timezones by reference.  Consider upgrading to libical >= 1.0.1]))
 
         AC_CHECK_LIB(ical, icalcomponent_new_vavailability,
                 AC_DEFINE(HAVE_VAVAILABILITY,[],
                         [Build VAVAILABILITY support into httpd?]),
-                AC_MSG_WARN([Your version of libical can not support availability.  Consider upgrading to libical >= 1.0.1]))
+                AC_MSG_NOTICE([Your version of libical can not support availability.  Consider upgrading to libical >= 1.0.1]))
 
         AC_CHECK_LIB(ical, icalcomponent_new_vvoter,
                 AC_DEFINE(HAVE_VPOLL,[], [Build VPOLL support into httpd?]),
-                AC_MSG_WARN([Your version of libical can not support consensus scheduling.  Consider upgrading to libical >= 2.0]))
+                AC_MSG_NOTICE([Your version of libical can not support consensus scheduling.  Consider upgrading to libical >= 2.0]))
 
-        AC_CHECK_LIB(ical, icalrecurrencetype_rscale_is_supported,
-                AC_DEFINE(HAVE_RSCALE,[], [Build RSCALE support into httpd?]),
-                AC_MSG_WARN([Your version of libical can not support non-gregorian recurrences.  Consider upgrading to libical >= 2.0]))
+        AC_CHECK_LIB(ical, icalrecurrencetype_rscale_is_supported, [
+                PKG_CHECK_MODULES([ICU4C], [icu-i18n], [
+                        AC_DEFINE(HAVE_RSCALE,[], [Build RSCALE support into httpd?])
+                        LIBS="$LIBS ${ICU4C_LIBS}"
+                        with_icu4c=yes
+                        ],
+                        AC_MSG_ERROR([Need ICU4C for RSCALE support in httpd]))
+                ],
+                AC_MSG_NOTICE([Your version of libical can not support non-gregorian recurrences.  Consider upgrading to libical >= 2.0]))
 
-        PKG_CHECK_MODULES([JANSSON], [jansson],
-                AC_DEFINE(WITH_JSON,[],
-                        [Build jCal/jCard/JMAP/TZdist support into httpd?]),
-                AC_MSG_ERROR([Need jansson for http]))
+        AC_CHECK_LIB(ical, icalcomponent_new_vpatch,
+                AC_DEFINE(HAVE_VPATCH,[],
+                        [Build VPATCH support into httpd?]),
+                AC_MSG_NOTICE([Your version of libical can not support patching iCalendar objects.  Consider upgrading to libical >= 2.1]))
 
-        PKG_CHECK_MODULES([DKIM], [opendkim >= 2.7.0],
-                AC_EGREP_HEADER(DKIM_CANON_ISCHEDULE, dkim.h,
-                        AC_DEFINE(WITH_DKIM,[],
-                                [Build DKIM support into iSchedule?]),
-                        AC_MSG_WARN([Your version of OpenDKIM can not support iSchedule.  Consider patching OpenDKIM with contrib/dkim_canon_ischedule.patch])),
-                AC_MSG_WARN([Your version of OpenDKIM can not support iSchedule.  Consider upgrading to OpenDKIM >= 2.7.0]))
+        AC_CHECK_LIB(ical, icalrecur_iterator_set_start,
+                AC_DEFINE(HAVE_RECUR_ITERATOR_START,[],
+                        [Do we have support for setting start point of recurrences?]))
 
-        HTTP_CPPFLAGS="${XML2_CFLAGS} ${SQLITE3_CFLAGS} ${ICAL_CFLAGS} ${JANSSON_CFLAGS}"
-        HTTP_LIBS="${XML2_LIBS} ${SQLITE3_LIBS} ${ICAL_LIBS} ${JANSSON_LIBS}"
+dnl  Don't bother checking for DKIM until iSchedule gains traction
+dnl        PKG_CHECK_MODULES([DKIM], [opendkim >= 2.7.0],
+dnl                AC_EGREP_HEADER(DKIM_CANON_ISCHEDULE, dkim.h,
+dnl                        AC_DEFINE(WITH_DKIM,[],
+dnl                                [Build DKIM support into iSchedule?]),
+dnl                        AC_MSG_WARN([Your version of OpenDKIM can not support iSchedule.  Consider patching OpenDKIM with contrib/dkim_canon_ischedule.patch])),
+dnl                AC_MSG_WARN([Your version of OpenDKIM can not support iSchedule.  Consider upgrading to OpenDKIM >= 2.7.0]))
+
+        PKG_CHECK_MODULES([NGHTTP2], [libnghttp2 >= 1.5], [
+                AC_DEFINE(HAVE_NGHTTP2,[],
+                        [Build HTTP/2 support into httpd?])
+                with_nghttp2=yes
+                ],
+                AC_MSG_NOTICE([httpd will not have support for HTTP/2.  Consider installing libnghttp2 >= 1.5]))
+
+
+        PKG_CHECK_MODULES([BROTLI], [libbrotlienc], [
+                AC_DEFINE(HAVE_BROTLI,[],
+                        [Build Brotli compression support into httpd?])
+                with_brotli=yes
+                ],
+                AC_MSG_NOTICE([httpd will not have support for Brotli compression.  Consider installing libbrotli]))
+
+        dnl httpd needs libmath in a few places
+        dnl XXX really should check for this properly but AC_SEARCH_LIBS/AC_CHECK_LIB
+        dnl XXX break under -Werror(!)
+        LIB_MATH="-lm"
+
+        PKG_CHECK_MODULES([SHAPELIB], [shapelib >= 1.3.0],[
+                AC_DEFINE(HAVE_SHAPELIB,[],
+                        [Build geographic support into tzdist?])
+                AC_DEFINE(SHAPELIB_VERSION, ["1.3.0"], [ShapeLib Version])
+                with_shapelib=yes
+                ],
+                AC_MSG_NOTICE([tzdist will not have geolocation support.  Consider installing shapelib]))
+
+        HTTP_CPPFLAGS="${XML2_CFLAGS} ${SQLITE3_CFLAGS} ${ICAL_CFLAGS} ${JANSSON_CFLAGS} ${NGHTTP2_CFLAGS} ${BROTLI_CFLAGS} ${SHAPELIB_CFLAGS}"
+        HTTP_LIBS="${XML2_LIBS} ${SQLITE3_LIBS} ${ICAL_LIBS} ${JANSSON_LIBS} ${NGHTTP2_LIBS} ${BROTLI_LIBS} ${SHAPELIB_LIBS} ${LIB_MATH}"
 fi
 AC_SUBST(HTTP_CPPFLAGS)
 AC_SUBST(HTTP_LIBS)
+if test "x$enable_http" = "xyes"; then
+        AC_DEFINE(USE_HTTPD,[],[Build with HTTP functionality])
+fi
+
+dnl
+dnl see if we're compiling with calendar alarm support
+dnl
+AC_ARG_ENABLE(calalarmd,
+        [AS_HELP_STRING([--enable-calalarmd], [enable CalDAV alarm support])],,[enable_calalarmd="no";])
+if test "x$enable_calalarmd" = "xyes"; then
+    if test "x$enable_http" = "xyes"; then
+	AC_DEFINE(USE_CALALARMD,[],[Build with calendar alarm functionality])
+    else
+	AC_MSG_ERROR([--enable-calalarmd requires --enable-http])
+    fi
+fi
+AM_CONDITIONAL([CALALARMD], [test "$enable_calalarmd" != "no"])
 
 dnl
 dnl see if we're compiling replication support programs
@@ -1365,6 +1618,29 @@ dnl
 AC_ARG_ENABLE(replication,
         [AS_HELP_STRING([--enable-replication], [enable replication support (experimental)])],,[enable_replication="no";])
 AM_CONDITIONAL([REPLICATION], [test "$enable_replication" != no])
+if test "x$enable_replication" = "xyes"; then
+        AC_DEFINE(USE_REPLICATION,[],[Build with replication functionality])
+fi
+
+dnl
+dnl see if we're compiling backup support programs
+dnl
+AC_ARG_ENABLE(backup,
+        [AS_HELP_STRING([--enable-backup], [enable backup support (experimental)])],,[enable_backup="no";])
+AM_CONDITIONAL([BACKUP], [test "$enable_backup" != no])
+
+if test "x$enable_backup" != xno; then
+    if test "x$HAVE_SQLITE" != x1; then
+        AC_MSG_ERROR([Need sqlite3 for backups])
+    else
+        use_sqlite="yes"
+    fi
+    if test "x$HAVE_ZLIB" != x1; then
+        AC_MSG_ERROR([Need zlib for backups])
+    fi
+
+    AC_DEFINE([ENABLE_BACKUP],[],[Build with backup support])
+fi
 
 dnl
 dnl Try and find a system version of com_err.
@@ -1404,8 +1680,8 @@ if test -z "$with_com_err"; then
           with_com_err="yes"
         fi
         if test "${COMPILE_ET}" = "no compile et" -o "${COMPILE_ET}" = ""; then
-          AC_MSG_WARN([Parts of com_err distribuion were found, but not compile_et.])
-          AC_MSG_WARN([Will build com_err from included sources.])
+          AC_MSG_NOTICE([Parts of com_err distribution were found, but not compile_et.])
+          AC_MSG_NOTICE([Will build com_err from included sources.])
           with_com_err="yes" # build it ourselves
         fi
 fi
@@ -1436,10 +1712,13 @@ if test "$with_com_err" != yes ; then
     "${COMPILE_ET}" $TEST1.et > /dev/null
     compile_et_ok=no
     if test -f $TEST1.h ; then
-        if test `awk '/IMAP_TESTING/{print $3}' $TEST1.h 2>/dev/null` = "(-1904809472L)" ; then
-            compile_et_ok=yes
-        fi
         dnl Broken compile_et produces (2390157824L)
+        if test `awk '/IMAP_TESTING/{print $3}' $TEST1.h 2>/dev/null` = "(-1904809472L)" ; then
+            dnl We need a version that exposes et_[foo]_error_table
+            if grep -q '^extern const struct error_table et_imap_error_table;' $TEST1.h; then
+                compile_et_ok=yes
+            fi
+        fi
     fi
     /bin/rm -f $TEST1.et $TEST1.h $TEST1.c
     if test "$compile_et_ok" = no ; then
@@ -1544,6 +1823,27 @@ if test "$with_perl" = "notfound"; then
 elif test "${with_perl}" != "no"; then
 dnl compile perl stuff and perl/cyradm
     PERL="${with_perl}"
+
+dnl Make sure perl modules are in the build directory (which isn't necessarily
+dnl the source directory)
+    AC_CONFIG_LINKS([perl/sieve/managesieve/managesieve.pm:perl/sieve/managesieve/managesieve.pm])
+    AC_CONFIG_FILES([perl/sieve/managesieve/MANIFEST])
+    AC_CONFIG_LINKS([perl/imap/Cyrus/HeaderFile.pm:perl/imap/Cyrus/HeaderFile.pm])
+    AC_CONFIG_LINKS([perl/imap/Cyrus/CacheFile.pm:perl/imap/Cyrus/CacheFile.pm])
+    AC_CONFIG_LINKS([perl/imap/Cyrus/IndexFile.pm:perl/imap/Cyrus/IndexFile.pm])
+    AC_CONFIG_LINKS([perl/imap/Cyrus/DList.pm:perl/imap/Cyrus/DList.pm])
+    AC_CONFIG_LINKS([perl/imap/Cyrus/ImapClone.pm:perl/imap/Cyrus/ImapClone.pm])
+    AC_CONFIG_LINKS([perl/imap/Cyrus/SyncProto.pm:perl/imap/Cyrus/SyncProto.pm])
+    AC_CONFIG_LINKS([perl/imap/IMAP/Shell.pm:perl/imap/IMAP/Shell.pm])
+    AC_CONFIG_LINKS([perl/imap/IMAP/IMSP.pm:perl/imap/IMAP/IMSP.pm])
+    AC_CONFIG_LINKS([perl/imap/IMAP/Admin.pm:perl/imap/IMAP/Admin.pm])
+    AC_CONFIG_LINKS([perl/imap/IMAP.pm:perl/imap/IMAP.pm])
+    AC_CONFIG_FILES([perl/imap/MANIFEST])
+    AC_CONFIG_LINKS([perl/annotator/Message.pm:perl/annotator/Message.pm])
+    AC_CONFIG_LINKS([perl/annotator/AnnotateInlinedCIDs.pm:perl/annotator/AnnotateInlinedCIDs.pm])
+    AC_CONFIG_LINKS([perl/annotator/Daemon.pm:perl/annotator/Daemon.pm])
+    AC_CONFIG_FILES([perl/annotator/MANIFEST])
+
 dnl add perl cccdlflags when building libraries -- this ensures that the
 dnl libraries will be compiled as PIC if perl requires PIC objects
 dnl -- this is needed on NetBSD and Linux, but seems to cause problems on atleast Solaris --
@@ -1597,7 +1897,6 @@ for flag in ${ldflags} ${default_ldflags}; do
 done
 
 AC_SUBST(LIB_SASL)
-AC_SUBST(LIB_RT)
 AC_SUBST(LIB_UUID)
 AC_SUBST(PERL)
 
@@ -1634,10 +1933,76 @@ if test "$enable_unit_tests" = "yes" ; then
     dnl installed.
     AC_CHECK_HEADERS([valgrind/valgrind.h])
 
+    dnl We depend on some data files, which exist in the source directory,
+    dnl but need to be found at runtime by the built unit tests.
+    dnl Under VPATH builds the source and build directories are not the same,
+    dnl so the built unit tests can't easily find their data files.
+    dnl Solution: just link them into the build directory at the same path.
+    AC_CONFIG_LINKS([cunit/cacert.pem:cunit/cacert.pem])
+    AC_CONFIG_LINKS([cunit/cert.pem:cunit/cert.pem])
+    AC_CONFIG_LINKS([cunit/key.pem:cunit/key.pem])
+
     USE_MAINTAINER_MODE=yes
 fi
 
 AM_CONDITIONAL([CUNIT], [test "$enable_unit_tests" = "yes"])
+
+dnl Finally, now that we've checked everything else, we can see whether to link
+dnl in SQLite or not.
+dnl
+if test "x$use_sqlite" = xyes; then
+  if test "x$HAVE_SQLITE" = x1; then
+    if test "x$with_sqlite_lib" != xnone; then
+        CMU_ADD_LIBPATH($with_sqlite_lib)
+    fi
+
+    LIBS="${LIBS} ${SQLITE_LIBADD}"
+    CPPFLAGS="${SQLITE_INCADD} ${CPPFLAGS}"
+    AC_DEFINE(HAVE_SQLITE,[],[Build in SQLite support?])
+    AC_SUBST(SQLITE_LIBADD)
+  else
+    AC_MSG_ERROR([SQLite required but not found])
+  fi
+fi
+AM_CONDITIONAL([USE_SQLITE], [test "x$use_sqlite" = xyes])
+
+
+dnl CRC32 optimisations
+
+dnl if the compiler has support for SSE4.2 then we can compile a hardware
+dnl implementation of CRC32C
+AC_MSG_CHECKING(for compiler support for SSE4.2 instruction)
+AC_CACHE_VAL(cyrus_cv_sse42, AC_TRY_COMPILE([
+    #include <stdint.h>
+],[
+    uint64_t a = 0, b = 1;
+    __asm__("crc32q\t" "(%1), %0"
+            : "=r"(b)
+            : "r"(b), "0"(a));
+    return b;
+], cyrus_cv_sse42=yes, cyrus_cv_sse42=no))
+if test "$cyrus_cv_sse42" = "yes" ; then
+    AC_DEFINE(HAVE_SSE42,1,"Compiler has support for SSE4.2 extensions")
+fi
+AC_MSG_RESULT($cyrus_cv_sse42)
+
+dnl documentation generation (sphinx, perl2rst)
+AC_ARG_VAR(SPHINX_BUILD, [Location of sphinx-build])
+AC_ARG_WITH([sphinx-build],
+            AS_HELP_STRING([--with-sphinx-build=(yes|no|PATH)], [Look for sphinx-build in PATH]),
+            [with_sphinx_build=$withval],
+            [with_sphinx_build=yes])
+AS_CASE([$with_sphinx_build],
+        [yes],  [AC_PATH_PROG(SPHINX_BUILD, sphinx-build)],
+        [no],   [SPHINX_BUILD=''],
+        [*],    [AC_PATH_PROG(SPHINX_BUILD, sphinx-build, [], [$with_sphinx_build])])
+AS_IF([test -z "$SPHINX_BUILD"],
+      [AC_MSG_WARN([No sphinx-build, won't be able to regenerate docs])])
+AC_SUBST([SPHINX_BUILD])
+AX_PROG_PERL_MODULES([Pod::POM::View::Restructured],
+                     [have_ppvr=yes],
+                     [AC_MSG_WARN([No Pod::POM::View::Restructured, won't be able to regenerate docs])])
+AM_CONDITIONAL([HAVE_SPHINX_BUILD], [ test -n "$SPHINX_BUILD" -a x"$have_ppvr" = xyes])
 
 AH_TOP([
 /*
@@ -1761,7 +2126,7 @@ struct sockaddr_storage {
 #endif
 
 #if !defined(HAVE_GETADDRINFO) || !defined(HAVE_GETNAMEINFO)
-#include "gai.h"
+#include "lib/gai.h"
 #endif
 
 /* End IPv6 things */
@@ -1854,6 +2219,7 @@ enum {
 
 dnl make sure that Makefile is the last thing output
 AC_CONFIG_FILES([
+    libcyrus_imap.pc
     libcyrus_min.pc
     libcyrus.pc
     libcyrus_sieve.pc
@@ -1866,12 +2232,16 @@ CMU_PERL_MAKEMAKER(perl/imap)
 CMU_PERL_MAKEMAKER(perl/sieve/managesieve)
 fi
 
+dnl check for libicu. we need this for charset conversions.
+PKG_CHECK_MODULES([ICU], [icu-uc])
+AC_SUBST([ICU_LIBS])
+AC_SUBST([ICU_CFLAGS])
+
 AC_OUTPUT
 echo "
 Cyrus Server configured components
 
    event notification: $enable_event_notification
-   apple push service: $enable_apple_push_service
    gssapi:             $gssapi
    autocreate:         $enable_autocreate
    idled:              $enable_idled
@@ -1882,20 +2252,42 @@ Cyrus Server configured components
    replication:        $enable_replication
    sieve:              $enable_sieve
    calalarmd:          $enable_calalarmd
+   objectstore:        $enable_objectstore
+   backup:             $enable_backup
 
 External dependencies:
    ldap:               $have_ldap
    openssl:            $with_ssl
+   zlib:               $with_zlib
    pcre:               $cyrus_cv_pcre_utf8
    clamav:             $with_clamav
+   -----------------------
+   caringo:            $with_caringo
+   openio:             $with_openio
+   -----------------------
+   nghttp2:            $with_nghttp2
+   brotli:             $with_brotli
+   xml2:               $with_xml2
+   ical:               $with_ical
+   icu4c:              $with_icu4c
+   shapelib:           $with_shapelib
 
 Database support:
    mysql:              $with_mysql
    postgresql:         $use_pgsql
    sqlite:             $use_sqlite
+   lmdb:               $use_lmdb
 
 Search engine:
    squat:              $enable_squat
    sphinx:             $enable_sphinx
    xapian:             $enable_xapian
+   xapian_flavor:      $xapian_flavor
+
+Hardware support:
+   SSE4.2:             $cyrus_cv_sse42
+
+Installation directories:
+   prefix:             $prefix
+   sysconfdir:         $sysconfdir
 "

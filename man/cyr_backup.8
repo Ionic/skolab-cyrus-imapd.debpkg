@@ -1,0 +1,198 @@
+.\" Man page generated from reStructuredText.
+.
+.TH "CYR_BACKUP" "8" "August 10, 2018" "3.0.8" "Cyrus IMAP"
+.SH NAME
+cyr_backup \- Cyrus IMAP documentation
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.sp
+Inspect contents of Cyrus backups.
+.SH SYNOPSIS
+.sp
+.nf
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP list chunks
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP list mailboxes
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP list messages
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP list all
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP show mailboxes [ \fImboxname\fP | \fIuniqueid\fP ]...
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP show messages \fIguid\fP\&...
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP dump chunk \fIid\fP
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP dump message \fIguid\fP
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP json chunks
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP json mailboxes
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP json messages
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP json headers \fIguid\fP\&...
+.fi
+.SH DESCRIPTION
+.sp
+\fBcyr_backup\fP is a tool for inspecting the contents of a Cyrus backup.
+.sp
+\fBcyr_backup\fP reads its configuration options out of the imapd.conf(5) file unless specified otherwise by \fB\-C\fP\&.
+.sp
+In all invocations, \fIbackup\fP is interpreted according to the specified MODE.
+See \fI\%Modes\fP below.
+.sp
+\fBcyr_backup\fP provides the following sub\-commands:
+.INDENT 0.0
+.TP
+.B list
+.sp
+.nf
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP list chunks
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP list mailboxes
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP list messages
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP list all
+.fi
+.sp
+List chunks, mailboxes, or messages contained in \fIbackup\fP\&.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B show
+.sp
+.nf
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP show mailboxes [ \fImboxname\fP | \fIuniqueid\fP ]...
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP show messages \fIguid\fP\&...
+.fi
+.sp
+\fBshow mailboxes\fP shows the contents (i.e. the contained messages) of
+mailboxes matching each given \fImboxname\fP or \fIuniqueid\fP in the named
+\fIbackup\fP\&.  The uid, expunged time, and guid of each message are shown.
+.sp
+\fBshow messages\fP shows details of messages matching each given \fIguid\fP in
+the named \fIbackup\fP\&.  The guid, containing mailboxes, and MIME headers of
+each message are shown.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B dump
+.sp
+.nf
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP dump chunk \fIid\fP
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP dump message \fIguid\fP
+.fi
+.sp
+Dump the contents of the specified chunk or message contained in the named
+\fIbackup\fP to standard out.  Chunks are output as uncompressed backup data
+format (which is a replication protocol stream).  Messages are output in
+their on\-disk format (typically MIME).
+.sp
+\fBdump chunk\fP is mainly useful for diagnostic purposes.
+.sp
+\fBdump message\fP may be useful as part of a manual message restoration
+process, when the restoration destination does not support the
+restore(8) command.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B json
+.sp
+.nf
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP json chunks
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP json mailboxes
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP json messages
+\fBcyr_backup\fP [OPTIONS] [MODE] \fIbackup\fP json headers \fIguid\fP\&...
+.fi
+.sp
+Dump information about the chunks, mailboxes or messages contained in the
+named \fIbackup\fP to standard out, in JSON format.
+.UNINDENT
+.SH OPTIONS
+.INDENT 0.0
+.TP
+.B \-C config\-file
+Use the specified configuration file \fIconfig\-file\fP rather than the default imapd.conf(5)\&.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-v
+Increase the verbosity.  Can be specified multiple times.
+.UNINDENT
+.SH MODES
+.INDENT 0.0
+.TP
+.B \-f
+\fIbackup\fP is interpreted as a filename.  The named file does not need to be
+known about in the backups database.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-m
+\fIbackup\fP is interpreted as a mailbox name.  There must be a known backup
+for the user whose mailbox this is.
+.sp
+Known backups are recorded in the database specified by the \fBbackup_db\fP
+and \fBbackup_db_path\fP configuration options.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-u
+\fIbackup\fP is interpreted as a userid.  There must be a known backup for
+the specified user.
+.sp
+This is the default if no mode is specified.
+.UNINDENT
+.SH EXAMPLES
+.SH HISTORY
+.SH FILES
+.SH SEE ALSO
+.sp
+restore(8)
+.SH AUTHOR
+The Cyrus Team
+.SH COPYRIGHT
+1993-2017, The Cyrus Team
+.\" Generated by docutils manpage writer.
+.

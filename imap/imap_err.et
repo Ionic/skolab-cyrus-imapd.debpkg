@@ -77,6 +77,9 @@ ec IMAP_MAILBOX_BADFORMAT,
 ec IMAP_SYNC_CHECKSUM,
    "Replication inconsistency detected"
 
+ec IMAP_SYNC_BADSIEVE,
+   "Sieve script compilation failure"
+
 ec IMAP_MAILBOX_CHECKSUM,
    "Mailbox format corruption detected"
 
@@ -107,11 +110,17 @@ ec IMAP_MAILBOX_LOCKED,
 ec IMAP_MAILBOX_DISABLED,
    "Delivery to mailbox is disabled"
 
+ec IMAP_MAILBOX_SPECIALUSE,
+   "SPECIAL-USE flag conflict"
+
 ec IMAP_PARTITION_UNKNOWN,
    "Unknown/invalid partition"
 
 ec IMAP_INVALID_IDENTIFIER,
    "Invalid identifier"
+
+ec IMAP_INVALID_RIGHTS,
+   "Invalid rights"
 
 ec IMAP_MESSAGE_CONTAINSNULL,
    "Message contains NUL characters"
@@ -240,6 +249,9 @@ ec IMAP_CANCELLED,
    "Command cancelled by user"
 
 # Used for search engine integration
+
+ec IMAP_SEARCH_SLOW,
+    "Search taking too long - try reducing the set of messages searched"
 
 # Following used for internationalization of untagged BYE response
 

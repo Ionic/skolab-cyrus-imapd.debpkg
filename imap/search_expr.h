@@ -45,6 +45,7 @@
 #ifndef __CYRUS_SEARCH_EXPR_H__
 #define __CYRUS_SEARCH_EXPR_H__
 
+#include "mailbox.h"
 #include "message.h"
 #include "util.h"
 
@@ -72,6 +73,7 @@ enum search_op {
 };
 
 union search_value {
+    time_t t;
     uint64_t u;
     char *s;
     struct searchannot *annot;

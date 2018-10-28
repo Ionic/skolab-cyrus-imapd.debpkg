@@ -1,0 +1,128 @@
+
+Quotas
+******
+
+Cyrus IMAP features a flexible Quota scheme with support for limiting
+various resources, such as storage or number of folders or messages.
+
+* Quota Roots
+
+* Supported Quota Types
+
+
+Monitor and Repair
+==================
+
+Quotas may be monitored and repaired via the quota(8) command:
+
+   * quota
+
+
+Controlling Quota Behavior
+==========================
+
+How restrictive quotas will be may be tailored to the needs of
+different sites, via the use of several settings in imapd.conf(5):
+
+      "lmtp_over_quota_perm_failure:" 0
+
+         If enabled, lmtpd returns a permanent failure code when a
+         user's mailbox is over quota.  By default, the failure is
+         temporary, causing the MTA to queue the message and retry
+         later.
+
+      "lmtp_strict_quota:" 0
+
+         If enabled, lmtpd returns a failure code when the incoming
+         message will cause the user's mailbox to exceed its quota.
+         By default, the failure won't occur until the mailbox is
+         already over quota.
+
+      "quotawarn:" 90
+
+         The percent of quota utilization over which the server
+         generates warnings.
+
+      "quotawarnkb:" 0
+
+         The maximum amount of free space (in kB) at which to give a
+         quota warning (if this value is 0, or if the quota is smaller
+         than this amount, then warnings are always given).
+
+      "quotawarnmsg:" 0
+
+         The maximum amount of messages at which to give a quota
+         warning (if this value is 0, or if the quota is smaller than
+         this amount, then warnings are always given).
+
+      "autocreate_quota:" -1
+
+         If set to a value of zero or higher, users have their INBOX
+         folders created upon a successful login event or upon
+         *lmtpd(8)* message delivery if *autocreate_post* is enabled,
+         provided their INBOX did not yet already exist.
+
+         The user's quota is set to the value if it is greater than
+         zero, otherwise the user has unlimited quota.
+
+         Note that quota is specified in kilobytes.
+
+      "autocreate_quota_messages:" -1
+
+         If set to a value of zero or higher, users who have their
+         INBOX folders created upon a successful login event (see
+         *autocreate_quota*), or upon *lmtpd(8)* message delivery if
+         *autocreate_post* is enabled, receive the message quota
+         configured in this option.
+
+         The default of -1 disables assigning message quota.
+
+         For consistency with *autocreate_quota*, a value of zero is
+         treated as unlimited message quota, rather than a message
+         quota of zero.
+
+
+Quota Database
+==============
+
+Quota information is stored either in a database (i.e. twoskip,
+skiplist) or in "quotalegacy" format, which is a filesystem hierarchy.
+This is controlled by the "quota_db" setting in imapd.conf(5).  Here's
+more about the pertinent settings:
+
+      "quota_db:" quotalegacy
+
+         The cyrusdb backend to use for quotas.
+
+         Allowed values: *flat*, *skiplist*, *sql*, *quotalegacy*,
+         *twoskip*, *lmdb*
+
+      "quota_db_path:" <none>
+
+         The absolute path for the quota database (if you choose a
+         single-file quota DB type - or the base path if you choose
+         quotalegacy).  If not specified will be
+         configdirectory/quotas.db or configdirectory/quota/
+
+
+Converting Quotas Database
+==========================
+
+The cvt_cyrusdb(8) utility may be used to convert between formats.
+It's usage with "quotalegacy" is a special case, in that the first
+argument ("<old db>") will be the path to the *base* of the
+"quotalegacy" directory structure, not to a particular file.
+
+For example, given this typical layout:
+
+   /var/lib/imap/
+   |            /quota/
+   |                  /A/
+   |                    /user/
+   |                         /bob/
+
+The proper "cvt_cyrusdb" command would be:
+
+   cvt_cyrusdb /var/lib/imap/quota quotalegacy /var/lib/imap/quotas.db twoskip
+
+Back to Administrator Guide

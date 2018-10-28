@@ -1,0 +1,88 @@
+
+Mailing Lists
+*************
+
+* cyrus-announce@lists.andrew.cmu.edu
+
+     This is a low-traffic mailing list used  only for announcements
+     related to Cyrus releases.
+
+* info-cyrus@lists.andrew.cmu.edu
+
+     This is the general mailing list regarding all aspects of Cyrus
+     software. The bulk of the discussion is about the IMAP server.
+
+* cyrus-sasl@lists.andrew.cmu.edu
+
+     This is the mailing list specifically about the Cyrus SASL
+     library.
+
+* cyrus-devel@lists.andrew.cmu.edu
+
+     This is a mailing list for the use of Cyrus developers and
+     package maintainers, for all the Cyrus software.
+
+
+Archives
+========
+
+The list archives can be accessed as follows:
+
+* **cyrus-announce**
+
+     Anonymous IMAP : Web/HTTP or Pipermail
+
+* **info-cyrus**
+
+     Anonymous IMAP : Web/HTTP or Pipermail
+
+* **cyrus-sasl**
+
+     Anonymous IMAP: Web/HTTP or Pipermail
+
+* **cyrus-devel**
+
+     Anonymous IMAP : Web/HTTP or Pipermail
+
+
+Subscribe/Unsubscribe
+=====================
+
+The mailing lists are managed by GNU Mailman. You can manage your list
+subscription options by visiting https://lists.andrew.cmu.edu/
+
+or send mail to the following addresses to subscribe:
+
+   To subscribe to cyrus-announce send email to cyrus-announce-
+   subscribe@lists.andrew.cmu.edu.
+
+   To subscribe to info-cyrus send email to info-cyrus-
+   subscribe@lists.andrew.cmu.edu.
+
+   To subscribe to cyrus-sasl send email to cyrus-sasl-
+   subscribe@lists.andrew.cmu.edu.
+
+   To subscribe to cyrus-devel send email to cyrus-devel-
+   subscribe@lists.andrew.cmu.edu.
+
+Or to these addresses to unsubscribe:
+
+   To unsubscribe from cyrus-announce email cyrus-announce-
+   unsubscribe@lists.andrew.cmu.edu
+
+   To unsubscribe from info-cyrus email info-cyrus-
+   unsubscribe@lists.andrew.cmu.edu
+
+   To unsubscribe from cyrus-sasl email cyrus-sasl-
+   unsubscribe@lists.andrew.cmu.edu
+
+   To unsubscribe from cyrus-devel email cyrus-devel-
+   unsubscribe@lists.andrew.cmu.edu
+
+
+Digest Lists
+============
+
+All of the lists have digest versions. To get the list as a digest,
+subscribe normally, and then set your list options by visiting the
+Mailman list info page at https://lists.andrew.cmu.edu/.

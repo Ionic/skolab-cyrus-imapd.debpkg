@@ -114,8 +114,8 @@ const char *icaltime_as_iso_string(const struct icaltimetype tt)
     static char str[21];
     const char *fmt;
 
-    if (tt.is_date) fmt = "%04d-%02d-%02d";
-    else if (tt.is_utc) fmt = "%04d-%02d-%02dT%02d:%02d:%02dZ";
+    if (icaltime_is_date(tt)) fmt = "%04d-%02d-%02d";
+    else if (icaltime_is_utc(tt)) fmt = "%04d-%02d-%02dT%02d:%02d:%02dZ";
     else fmt = "%04d-%02d-%02dT%02d:%02d:%02d";
 
     snprintf(str, sizeof(str), fmt, tt.year, tt.month, tt.day,
@@ -264,6 +264,8 @@ static xmlNodePtr icalparameter_as_xml_element(icalparameter *param)
     default:
         kind_string = icalparameter_kind_to_string(kind);
         if (kind_string) break;
+
+        GCC_FALLTHROUGH
 
     case ICAL_NO_PARAMETER:
     case ICAL_ANY_PARAMETER:
@@ -552,8 +554,9 @@ static xmlNodePtr icalcomponent_as_xml_element(icalcomponent *comp)
 /*
  * Construct a xcal string for an iCalendar component.
  */
-char *icalcomponent_as_xcal_string(icalcomponent *ical)
+struct buf *icalcomponent_as_xcal_string(icalcomponent *ical)
 {
+    struct buf *ret;
     xmlDocPtr doc;
     xmlNodePtr root, xcomp;
     xmlChar *buf;
@@ -587,7 +590,10 @@ char *icalcomponent_as_xcal_string(icalcomponent *ical)
 
     xmlFreeDoc(doc);
 
-    return (char *) buf;
+    ret = buf_new();
+    buf_initm(ret, (char *) buf, bufsiz);
+
+    return ret;
 }
 
 
@@ -942,6 +948,7 @@ static icalproperty *xml_element_to_icalproperty(xmlNodePtr xprop)
             buf_free(&buf);
             break;
         }
+        GCC_FALLTHROUGH
 
     default:
         value = xml_element_to_icalvalue(node, valkind);
@@ -1048,19 +1055,19 @@ static icalcomponent *xml_element_to_icalcomponent(xmlNodePtr xcomp)
 /*
  * Construct an iCalendar component from an xCal string.
  */
-icalcomponent *xcal_string_as_icalcomponent(const char *str)
+icalcomponent *xcal_string_as_icalcomponent(const struct buf *buf)
 {
     xmlParserCtxtPtr ctxt;
     xmlDocPtr doc = NULL;
     xmlNodePtr root;
     icalcomponent *ical = NULL;
 
-    if (!str) return NULL;
+    if (!buf_len(buf)) return NULL;
 
     /* Parse the XML request */
     ctxt = xmlNewParserCtxt();
     if (ctxt) {
-        doc = xmlCtxtReadMemory(ctxt, str, strlen(str), NULL, NULL,
+        doc = xmlCtxtReadMemory(ctxt, buf_base(buf), buf_len(buf), NULL, NULL,
                                 XML_PARSE_NOWARNING);
         xmlFreeParserCtxt(ctxt);
     }

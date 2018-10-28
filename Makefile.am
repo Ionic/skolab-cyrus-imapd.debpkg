@@ -42,8 +42,8 @@
 #
 
 ACLOCAL_AMFLAGS = -I cmulocal
-AM_CFLAGS = @PERL_CCCDLFLAGS@ $(COV_CFLAGS)
-AM_CXXFLAGS = $(COV_CXXFLAGS)
+AM_CFLAGS = @PERL_CCCDLFLAGS@ $(GCOV_CFLAGS)
+AM_CXXFLAGS = $(GCOV_CXXFLAGS)
 
 AM_CPPFLAGS = \
 	$(COM_ERR_CPPFLAGS) \
@@ -57,17 +57,23 @@ AM_CPPFLAGS = \
 	${DEFS} \
 	${LOCALDEFS} \
 	$(SASLFLAGS) \
-	$(SSL_CPPFLAGS)
+	$(SSL_CPPFLAGS) \
+	$(ICU_CFLAGS)
 
 if HAVE_LDAP
 AM_CPPFLAGS += $(LDAP_CPPFLAGS)
 endif # HAVE_LDAP
 
-AM_LDFLAGS = $(COV_LDFLAGS)
+AM_LDFLAGS = $(COV_LDFLAGS) $(ICU_LIBS)
 BUILT_SOURCES = \
-	xversion.h \
 	imap/imap_err.c \
-	lib/imapopts.c
+	lib/imapopts.c \
+	lib/imapopts.h
+
+CLEANFILES = \
+	lib/chartable.c \
+	lib/imapopts.c \
+	lib/imapopts.h
 
 DISTCLEANFILES = \
 	imap/imap_err.c \
@@ -77,48 +83,41 @@ DISTCLEANFILES = \
 	imap/nntp_err.c \
 	imap/nntp_err.h \
 	imap/http_caldav_js.h \
+	imap/http_carddav_js.h \
 	imap/http_err.c \
 	imap/http_err.h \
 	imap/tz_err.c \
 	imap/tz_err.h \
 	com_err/et/compile_et \
-	perl/annotator/Makefile \
-	perl/annotator/Makefile.PL \
-	perl/imap/Makefile \
-	perl/imap/Makefile.PL \
-	perl/sieve/managesieve/Makefile \
-	perl/sieve/managesieve/Makefile.PL \
 	perl/sieve/scripts/installsieve \
 	perl/sieve/scripts/sieveshell \
 	sieve/sieve_err.c \
 	sieve/sieve_err.h
 
 MAINTAINERCLEANFILES = \
-	doc/murder.png \
-	doc/netnews.png \
-	doc/man/cyradm.1.html \
+	doc/legacy/murder.png \
+	doc/legacy/netnews.png \
 	man/imapd.conf.5 \
-	doc/rst/imapd.conf.rst \
 	man/sieveshell.1 \
-	doc/man/sieveshell.1.html \
 	imap/lmtpstats.h \
 	imap/pushstats.h \
-	lib/chartable.c \
-	lib/imapopts.h \
 	sieve/addr.h \
 	sieve/sieve.h
 
 SUBDIRS = .
-DIST_SUBDIRS = .
+DIST_SUBDIRS = . perl/annotator perl/imap perl/sieve/managesieve
 dist_sysconf_DATA =
 lib_LTLIBRARIES = lib/libcyrus_min.la lib/libcyrus.la
-EXTRA_PROGRAMS = doc/text/htmlstrip
+EXTRA_PROGRAMS =
 check_PROGRAMS =
 libexec_PROGRAMS =
 sbin_PROGRAMS =
-CLEANFILES =
+noinst_HEADERS =
+noinst_LTLIBRARIES =
+noinst_PROGRAMS =
 EXTRA_DIST = \
-	$(wildcard tools/vzic/*)
+	$(wildcard tools/vzic/*) \
+	VERSION
 
 if COM_ERR
 COMPILE_ET_DEP = com_err/et/compile_et
@@ -162,29 +161,30 @@ sbin_PROGRAMS += \
 	imap/cyr_deny \
 	imap/cyr_expire \
 	imap/cyr_info \
+	imap/cyr_buildinfo \
 	imap/cyr_sequence \
 	imap/cyr_synclog \
 	imap/cyr_userseen \
+	imap/cyr_virusscan \
 	imap/deliver \
 	imap/ipurge \
 	imap/mbexamine \
 	imap/mbpath \
 	imap/mbtool \
-	imap/message_test \
 	imap/quota \
 	imap/reconstruct \
-	imap/search_test
+	imap/cvt_xlist_specialuse
 
-if HAVE_CLAMAV
-sbin_PROGRAMS += imap/cyr_virusscan
-endif # HAVE_CLAMAV
+noinst_PROGRAMS += \
+	imap/message_test \
+	imap/search_test
 
 if USE_SPHINX
 sbin_PROGRAMS += imap/cyr_sphinxmgr
 endif
 
 if USE_SQUAT
-sbin_PROGRAMS += imap/squat_dump
+noinst_PROGRAMS += imap/squat_dump
 endif
 if SQUATTER
 # Despite the name, the squatter program handles any search engine
@@ -199,7 +199,7 @@ endif # NNTPD
 libexec_PROGRAMS += imap/fud
 
 if IDLED
-sbin_PROGRAMS += imap/idled
+libexec_PROGRAMS += imap/idled
 endif # IDLED
 
 if MURDER
@@ -220,6 +220,7 @@ AM_LDFLAGS += $(HTTP_LIBS)
 
 BUILT_SOURCES += \
 	imap/http_caldav_js.h \
+	imap/http_carddav_js.h \
 	imap/http_err.c \
 	imap/http_err.h \
 	imap/tz_err.c \
@@ -229,13 +230,19 @@ libexec_PROGRAMS += imap/httpd
 sbin_PROGRAMS += \
 	imap/ctl_zoneinfo \
 	imap/dav_reconstruct
-
 endif # HTTPD
 
 if REPLICATION
 libexec_PROGRAMS += imap/sync_server
 sbin_PROGRAMS += imap/sync_client imap/sync_reset
 endif # REPLICATION
+
+if BACKUP
+noinst_LTLIBRARIES += backup/libcyrus_backup.la
+noinst_HEADERS += backup/backup.h
+libexec_PROGRAMS += backup/backupd
+sbin_PROGRAMS += backup/ctl_backups backup/cyr_backup backup/restore
+endif # BACKUP
 
 if HAVE_SSL
 sbin_PROGRAMS += imap/tls_prune
@@ -259,7 +266,6 @@ EXTRA_DIST += \
 
 if !HTTPD
 EXTRA_DIST += \
-	imap/http_caldav_js.h \
 	imap/http_err.c \
 	imap/http_err.h \
 	imap/tz_err.c \
@@ -281,17 +287,18 @@ endif # PTCLIENT
 
 if PERL
 SUBDIRS += perl/annotator perl/imap
-noinst_LTLIBRARIES = perl/libcyrus.la perl/libcyrus_min.la
+noinst_LTLIBRARIES += perl/libcyrus.la perl/libcyrus_min.la
 endif # PERL
 
 if SIEVE
 
 if PERL
 SUBDIRS += perl/sieve/managesieve
-noinst_LIBRARIES = perl/sieve/lib/libisieve.a
+noinst_LTLIBRARIES += perl/sieve/lib/libisieve.la
 endif # PERL
 
 BUILT_SOURCES += sieve/addr.c sieve/sieve.c sieve/sieve_err.c
+noinst_LTLIBRARIES += sieve/libcyrus_sieve_lex.la
 lib_LTLIBRARIES += sieve/libcyrus_sieve.la
 check_PROGRAMS += sieve/test
 sbin_PROGRAMS += sieve/sievec sieve/sieved
@@ -304,10 +311,8 @@ endif # SIEVE
 
 EXTRA_DIST += \
 	COPYING \
-	INSTALL \
-	README.andrew \
+	README.md \
 	SMakefile \
-	xversion.h \
 	com_err/et/et_c.awk \
 	com_err/et/et_h.awk \
 	com_err/et/test1.et \
@@ -330,6 +335,7 @@ EXTRA_DIST += \
 	contrib/cyrus-graphtools.1.0/script/cyrus.pl \
 	contrib/cyrus-graphtools.1.0/script/run \
 	contrib/cyrus-graphtools.1.0/script/cyrusrc \
+	contrib/cyrusv2.mc \
 	contrib/dkim_canon_ischedule.patch \
 	contrib/notify_unix/notify \
 	contrib/notify_unix/net-server-prefork-0.01.tgz \
@@ -345,9 +351,15 @@ EXTRA_DIST += \
 	cunit/cunit-to-junit.pl \
 	cunit/key.pem \
 	cunit/vg.supp \
+	doc/legacy/murder.png \
+	doc/legacy/netnews.png \
 	doc \
+	docsrc \
 	imap/dav_util.h \
+	imap/http_caldav_js.h \
 	imap/http_caldav.js \
+	imap/http_carddav_js.h \
+	imap/http_carddav.js \
 	imap/http_err.et \
 	imap/imap_err.et \
 	imap/mupdate_err.et \
@@ -355,37 +367,9 @@ EXTRA_DIST += \
 	imap/rfc822_header.st \
 	imap/tz_err.et \
 	lib/charset/aliases.txt \
-	lib/charset/big5.t \
-	lib/charset/gb2312.t \
-	lib/charset/iso-2022-jp.t \
-	lib/charset/iso-2022-kr.t \
-	lib/charset/iso-8859-10.t \
-	lib/charset/iso-8859-11.t \
-	lib/charset/iso-8859-13.t \
-	lib/charset/iso-8859-14.t \
-	lib/charset/iso-8859-15.t \
-	lib/charset/iso-8859-16.t \
-	lib/charset/iso-8859-1.t \
-	lib/charset/iso-8859-2.t \
-	lib/charset/iso-8859-3.t \
-	lib/charset/iso-8859-4.t \
-	lib/charset/iso-8859-5.t \
-	lib/charset/iso-8859-6.t \
-	lib/charset/iso-8859-7.t \
-	lib/charset/iso-8859-8.t \
-	lib/charset/iso-8859-9.t \
-	lib/charset/koi8-r.t \
 	lib/charset/UnicodeData.txt \
 	lib/charset/unifix.txt \
 	lib/charset/us-ascii.t \
-	lib/charset/windows-1250.t \
-	lib/charset/windows-1251.t \
-	lib/charset/windows-1252.t \
-	lib/charset/windows-1254.t \
-	lib/charset/windows-1255.t \
-	lib/charset/windows-1256.t \
-	lib/charset/windows-1258.t \
-	lib/charset/windows-874.t \
 	lib/htmlchar.st \
 	lib/imapoptions \
 	lib/test/cyrusdb.c \
@@ -398,24 +382,18 @@ EXTRA_DIST += \
 	lib/test/pool.c \
 	lib/test/rnddb.c \
 	master/CYRUS-MASTER.mib \
-	master/conf/cmu-backend.conf \
-	master/conf/cmu-frontend.conf \
-	master/conf/normal.conf \
-	master/conf/prefork.conf \
-	master/conf/small.conf \
 	master/README \
 	netnews/inn.diffs \
 	perl/annotator/Daemon.pm \
-	perl/annotator/Makefile \
 	perl/annotator/Makefile.PL \
 	perl/annotator/Makefile.PL.in \
 	perl/annotator/MANIFEST \
+	perl/annotator/MANIFEST.in \
 	perl/annotator/Message.pm \
 	perl/annotator/README \
 	perl/imap/Changes \
 	perl/imap/cyradm.sh \
 	perl/imap/cyrperl.h \
-	perl/imap/Cyrus/Shell.pm \
 	perl/imap/examples/auditmbox.pl \
 	perl/imap/examples/imapcollate.pl \
 	perl/imap/examples/imapdu.pl \
@@ -425,22 +403,22 @@ EXTRA_DIST += \
 	perl/imap/IMAP/Shell.pm \
 	perl/imap/IMAP.pm \
 	perl/imap/IMAP.xs \
-	perl/imap/Makefile \
 	perl/imap/Makefile.PL \
 	perl/imap/Makefile.PL.in \
 	perl/imap/MANIFEST \
+	perl/imap/MANIFEST.in \
 	perl/imap/README \
 	perl/imap/t/01-imclient.t \
 	perl/imap/t/02-admin.t \
 	perl/imap/typemap \
 	perl/imap/xsutil.c \
-	perl/sieve/managesieve/Makefile \
 	perl/sieve/managesieve/Makefile.PL \
 	perl/sieve/managesieve/Makefile.PL.in \
 	perl/sieve/managesieve/managesieve.h \
 	perl/sieve/managesieve/managesieve.pm \
 	perl/sieve/managesieve/managesieve.xs \
 	perl/sieve/managesieve/MANIFEST \
+	perl/sieve/managesieve/MANIFEST.in \
 	perl/sieve/managesieve/typemap \
 	ptclient/README \
 	ptclient/test.c \
@@ -542,19 +520,15 @@ dist_noinst_SCRIPTS = \
 	tools/config2header \
 	tools/config2man \
 	tools/config2rst \
-	tools/convert-sieve.pl \
-	tools/dohash \
+	tools/config2sample \
 	tools/fixsearchpath.pl \
+	tools/git-version.sh \
 	tools/jenkins-build.sh \
 	tools/masssievec \
-	tools/migrate-metadata \
 	tools/mkimap \
 	tools/mknewsgroups \
-	tools/mupdate-loadgen.pl \
 	tools/rehash \
 	tools/translatesieve \
-	tools/undohash \
-	tools/upgradesieve \
 	snmp/snmpgen
 noinst_MAN = \
 	com_err/et/com_err.3 \
@@ -588,8 +562,8 @@ com_err/et/compile_et: com_err/et/compile_et.sh com_err/et/config_script \
 # Note that several places in the code use -lcrypto, e.g. for SHA1 or
 # MD5 algorithms, without needing SSL.  Currently we have no way of
 # minimally linking such code.
-LD_BASIC_ADD = lib/libcyrus.la lib/libcyrus_min.la ${LIBS} $(LIB_RT) \
-	${LIB_SASL} $(SSL_LIBS)
+LD_BASIC_ADD = lib/libcyrus.la lib/libcyrus_min.la ${LIBS} \
+	${LIB_SASL} $(SSL_LIBS) $(GCOV_LIBS)
 
 # UTILITY is the libraries that utility programs which use Cyrus'
 # mailbox and message handling code need to link with.
@@ -602,6 +576,17 @@ LD_UTILITY_ADD = imap/libcyrus_imap.la $(LD_BASIC_ADD) $(COM_ERR_LIBS)
 # so that even utilities which never open a socket need to link against
 # the SASL library.
 LD_SERVER_ADD = $(LD_UTILITY_ADD) $(LIB_WRAP)
+
+# SIEVE is the libraries that sieve-using components need to link with
+#
+# This is empty if sieve is not enabled, so it can be used unconditionally
+# elsewhere.
+
+if SIEVE
+LD_SIEVE_ADD = sieve/libcyrus_sieve.la $(LD_BASIC_ADD)
+else
+LD_SIEVE_ADD =
+endif
 
 # ----
 
@@ -625,6 +610,7 @@ cunit_FRAMEWORK = \
 	cunit/timeofday.h
 
 cunit_TESTS = \
+	cunit/aaa-db.testc \
 	cunit/annotate.testc \
 	cunit/backend.testc \
 	cunit/binhex.testc \
@@ -635,7 +621,6 @@ cunit_TESTS = \
 	cunit/command.testc \
 	cunit/conversations.testc \
 	cunit/crc32.testc \
-	cunit/db.testc \
 	cunit/dlist.testc \
 	cunit/duplicate.testc \
 	cunit/getxstring.testc \
@@ -643,6 +628,7 @@ cunit_TESTS = \
 	cunit/guid.testc \
 	cunit/hash.testc \
 	cunit/imapurl.testc \
+	cunit/libconfig.testc \
 	cunit/mboxname.testc \
 	cunit/md5.testc \
 	cunit/message.testc \
@@ -666,24 +652,26 @@ cunit_TESTS += \
 	cunit/strarray.testc \
 	cunit/strconcat.testc \
 	cunit/times.testc \
-	cunit/tok.testc
+	cunit/tok.testc \
+	cunit/vparse.testc
 
 cunit_unit_SOURCES = $(cunit_FRAMEWORK) $(cunit_TESTS) \
 		imap/mutex_fake.c imap/spool.c
-cunit_unit_LDADD =
-
-if SIEVE
-cunit_unit_LDADD += sieve/libcyrus_sieve.la
-endif
-
-cunit_unit_LDADD += $(LD_UTILITY_ADD) -lcunit
+cunit_unit_LDADD = $(LD_SIEVE_ADD) $(LD_UTILITY_ADD) -lcunit
 
 CUNIT_PL = $(top_srcdir)/cunit/cunit.pl --project $(CUNIT_PROJECT)
+
+# don't discard the temporary source file if building with coverage
+if HAVE_COVERAGE
+    CUNIT_RM = true
+else
+    CUNIT_RM = $(RM)
+endif
 
 .testc.o:
 	$(AM_V_at)$(CUNIT_PL) --generate-wrapper $<
 	$(AM_V_CC)$(COMPILE) -c -o $@ $<-cunit.c
-	$(AM_V_at)$(RM) $<-cunit.c
+	$(AM_V_at)$(CUNIT_RM) $<-cunit.c
 
 $(CUNIT_PROJECT):
 	$(AM_V_at)$(RM) $@
@@ -693,7 +681,7 @@ cunit/registers.h: $(CUNIT_PROJECT)
 	$(AM_V_GEN)$(CUNIT_PL) --generate-register-function $@
 
 # To run under Valgrind, do: make VG=1 check
-VALGRIND = valgrind --tool=memcheck --leak-check=full --suppressions=vg.supp
+VALGRIND = libtool --mode=execute valgrind --tool=memcheck --leak-check=full --suppressions=vg.supp
 
 check-local:
 	@echo "Running unit tests"
@@ -714,13 +702,11 @@ check-%: cunit/unit
 	@vg= ; \
 		test -z "$$VG" || vg="$(VALGRIND)" ; \
 		cd cunit ; \
-		./unit -v $* ; \
+		$$vg ./unit -v $* ; \
 		retval=$$? ; \
 		exit $$retval
 
 endif
-
-doc_text_htmlstrip_SOURCE = doc/text/htmlstrip.c
 
 includedir=@includedir@/cyrus
 
@@ -731,12 +717,14 @@ include_HEADERS = \
 	lib/auth.h \
 	lib/auth_pts.h \
 	lib/bitvector.h \
+	lib/bloom.h \
 	lib/bsearch.h \
 	lib/bufarray.h \
 	lib/charset.h \
 	lib/chartable.h \
 	lib/command.h \
 	lib/crc32.h \
+	lib/crc32c.h \
 	lib/cyr_lock.h \
 	lib/cyrusdb.h \
 	lib/exitcodes.h \
@@ -744,7 +732,6 @@ include_HEADERS = \
 	lib/gmtoff.h \
 	lib/hash.h \
 	lib/hashu64.h \
-	lib/imapopts.h \
 	lib/imapurl.h \
 	lib/imclient.h \
 	lib/imparse.h \
@@ -756,6 +743,7 @@ include_HEADERS = \
 	lib/mappedfile.h \
 	lib/mkgmtime.h \
 	lib/mpool.h \
+	lib/murmurhash2.h \
 	lib/nonblock.h \
 	lib/parseaddr.h \
 	lib/retry.h \
@@ -772,10 +760,13 @@ include_HEADERS = \
 	lib/wildmat.h \
 	lib/xmalloc.h
 
+nodist_include_HEADERS = \
+	lib/imapopts.h
+
 nobase_include_HEADERS = sieve/sieve_interface.h
 nobase_nodist_include_HEADERS = sieve/sieve_err.h
 
-noinst_HEADERS = \
+noinst_HEADERS += \
 	lib/byteorder64.h \
 	lib/gai.h \
 	lib/libconfig.h \
@@ -783,8 +774,55 @@ noinst_HEADERS = \
 	lib/prot.h \
 	lib/ptrarray.h \
 	lib/util.h \
+	lib/xsha1.h \
 	lib/xstrlcat.h \
-	lib/xstrlcpy.h
+	lib/xstrlcpy.h \
+	lib/xstrnchr.h
+
+backup_libcyrus_backup_la_SOURCES = \
+    lib/gzuncat.c \
+    lib/gzuncat.h \
+    backup/lcb.c \
+    backup/lcb_append.c \
+    backup/lcb_backupdb.c \
+    backup/lcb_compact.c \
+    backup/lcb_indexr.c \
+    backup/lcb_indexw.c \
+    backup/lcb_internal.c \
+    backup/lcb_internal.h \
+    backup/lcb_partlist.c \
+    backup/lcb_read.c \
+    backup/lcb_sqlconsts.c \
+    backup/lcb_sqlconsts.h \
+    backup/lcb_verify.c
+backup_libcyrus_backup_la_LIBADD = $(LD_BASIC_ADD)
+
+backup_backupd_SOURCES = \
+    imap/mutex_fake.c \
+    imap/sync_support.c \
+    imap/sync_support.h \
+    master/service.c \
+    backup/backupd.c
+backup_backupd_LDADD = backup/libcyrus_backup.la $(LD_SIEVE_ADD) $(LD_SERVER_ADD)
+
+backup_ctl_backups_SOURCES = \
+    imap/mutex_fake.c \
+    imap/sync_support.c \
+    imap/sync_support.h \
+    backup/ctl_backups.c
+backup_ctl_backups_LDADD = backup/libcyrus_backup.la $(LD_SIEVE_ADD) $(LD_UTILITY_ADD)
+
+backup_cyr_backup_SOURCES = \
+    imap/mutex_fake.c \
+    backup/cyr_backup.c
+backup_cyr_backup_LDADD = backup/libcyrus_backup.la $(LD_UTILITY_ADD) $(JANSSON_LIBS)
+
+backup_restore_SOURCES = \
+    imap/mutex_fake.c \
+    imap/sync_support.c \
+    imap/sync_support.h \
+    backup/restore.c
+backup_restore_LDADD = backup/libcyrus_backup.la $(LD_SIEVE_ADD) $(LD_UTILITY_ADD)
 
 imap_arbitron_SOURCES = imap/arbitron.c imap/cli_fatal.c imap/mutex_fake.c
 imap_arbitron_LDADD = $(LD_UTILITY_ADD)
@@ -825,6 +863,9 @@ imap_cyr_expire_LDADD = $(LD_UTILITY_ADD)
 imap_cyr_info_SOURCES = imap/cli_fatal.c imap/cyr_info.c imap/mutex_fake.c master/masterconf.c
 imap_cyr_info_LDADD = $(LD_UTILITY_ADD)
 
+imap_cyr_buildinfo_SOURCES = imap/cli_fatal.c imap/cyr_buildinfo.c imap/mutex_fake.c master/masterconf.c
+imap_cyr_buildinfo_LDADD = $(LD_UTILITY_ADD) $(JANSSON_LIBS)
+
 imap_cyr_sequence_SOURCES = imap/cli_fatal.c imap/cyr_sequence.c imap/mutex_fake.c
 imap_cyr_sequence_LDADD = $(LD_UTILITY_ADD)
 
@@ -834,28 +875,14 @@ imap_cyr_synclog_LDADD = $(LD_UTILITY_ADD)
 imap_cyr_userseen_SOURCES = imap/cli_fatal.c imap/cyr_userseen.c imap/mutex_fake.c
 imap_cyr_userseen_LDADD = $(LD_UTILITY_ADD)
 
-if USE_SPHINX
 imap_cyr_sphinxmgr_SOURCES = imap/cli_fatal.c imap/cyr_sphinxmgr.c imap/mutex_fake.c
 imap_cyr_sphinxmgr_LDADD = $(LD_UTILITY_ADD)
-endif
 
-if HAVE_CLAMAV
 imap_cyr_virusscan_SOURCES = imap/cli_fatal.c imap/cyr_virusscan.c imap/mutex_fake.c
-imap_cyr_virusscan_LDADD = $(LD_UTILITY_ADD) -lclamav
-else # HAVE_CLAMAV
-EXTRA_DIST += \
-	imap/cyr_virusscan.c
+imap_cyr_virusscan_LDADD = $(LD_UTILITY_ADD) $(CLAMAV_LIBS)
 
-endif # HAVE_CLAMAV
-
-if HTTPD
 imap_ctl_zoneinfo_SOURCES = imap/cli_fatal.c imap/ctl_zoneinfo.c imap/mutex_fake.c imap/zoneinfo_db.c
 imap_ctl_zoneinfo_LDADD = $(LD_UTILITY_ADD)
-else # HTTPD
-EXTRA_DIST += \
-	imap/ctl_zoneinfo.c
-
-endif # HTTPD
 
 imap_deliver_SOURCES = \
 	imap/deliver.c \
@@ -876,12 +903,8 @@ imap_fud_LDADD = $(LD_SERVER_ADD)
 imap_idled_SOURCES = imap/idled.c imap/mutex_fake.c
 imap_idled_LDADD = $(LD_UTILITY_ADD)
 
-if CALALARMD
 imap_calalarmd_SOURCES = imap/calalarmd.c imap/mutex_fake.c
-imap_calalarmd_LDADD = $(LD_SERVER_ADD) -lm
-else
-EXTRA_DIST += imap/calalarmd.c
-endif # CALALARMD
+imap_calalarmd_LDADD = $(LD_SERVER_ADD)
 
 imap_imapd_SOURCES = \
 	imap/imap_proxy.c \
@@ -903,13 +926,7 @@ imap_imapd_SOURCES += \
 	imap/autocreate.c
 endif
 
-imap_imapd_LDADD =
-
-if SIEVE
-imap_imapd_LDADD += sieve/libcyrus_sieve.la
-endif
-
-imap_imapd_LDADD += $(LD_SERVER_ADD)
+imap_imapd_LDADD = $(LD_SIEVE_ADD) $(LD_SERVER_ADD)
 
 imap_ipurge_SOURCES = imap/cli_fatal.c imap/ipurge.c imap/mutex_fake.c
 imap_ipurge_LDADD = $(LD_UTILITY_ADD)
@@ -921,8 +938,15 @@ nodist_imap_libcyrus_imap_la_SOURCES = \
 
 dist_imap_libcyrus_imap_la_SOURCES =
 
-imap_libcyrus_imap_la_LIBADD = $(COM_ERR_LIBS) $(LIB_UUID) lib/libcyrus_min.la lib/libcyrus.la
-imap_libcyrus_imap_la_CFLAGS = $(AM_CFLAGS) $(CFLAG_VISIBILITY)
+imap_libcyrus_imap_la_LIBADD = \
+    $(COM_ERR_LIBS) \
+    $(LIB_UUID) \
+    $(GCOV_LIBS) \
+    $(JANSSON_LIBS) \
+    lib/libcyrus_min.la \
+    lib/libcyrus.la
+
+imap_libcyrus_imap_la_CFLAGS = $(AM_CFLAGS) $(CFLAG_VISIBILITY) $(JANSSON_CFLAGS)
 imap_libcyrus_imap_la_CXXFLAGS = $(AM_CXXFLAGS)
 
 imap_libcyrus_imap_la_SOURCES = \
@@ -989,6 +1013,7 @@ imap_libcyrus_imap_la_SOURCES = \
 	imap/search_expr.h \
 	imap/search_query.c \
 	imap/search_query.h \
+	imap/search_part.h \
 	imap/seen.h \
 	imap/seen_db.c \
 	imap/sequence.c \
@@ -1014,6 +1039,24 @@ imap_libcyrus_imap_la_SOURCES = \
 	imap/xstats.h \
 	imap/xstats_metrics.h
 
+if OBJECTSTORE
+imap_libcyrus_imap_la_SOURCES += \
+    imap/objectstore_db.c \
+    imap/objectstore_db.h \
+    imap/objectstore.h
+if WITH_OPENIO
+imap_libcyrus_imap_la_SOURCES += imap/objectstore_openio.c
+else
+if WITH_CARINGO
+imap_libcyrus_imap_la_SOURCES += imap/objectstore_caringo.c
+else
+if WITH_OBJSTR_DUMMY
+imap_libcyrus_imap_la_SOURCES += imap/objectstore_dummy.c
+endif
+endif
+endif
+endif
+
 if USE_SQUAT
 imap_libcyrus_imap_la_SOURCES += \
 	imap/search_squat.c \
@@ -1031,11 +1074,6 @@ imap_libcyrus_imap_la_SOURCES += \
 	imap/sphinxmgr_client.h
 endif
 
-if JANSSON
-imap_libcyrus_imap_la_LIBADD += $(JANSSON_LIBS)
-imap_libcyrus_imap_la_CFLAGS += $(JANSSON_CFLAGS)
-endif
-
 if HTTPD
 imap_libcyrus_imap_la_SOURCES += \
 	imap/caldav_alarm.c \
@@ -1050,6 +1088,8 @@ imap_libcyrus_imap_la_SOURCES += \
 	imap/dav_util.h \
 	imap/ical_support.c \
 	imap/ical_support.h \
+	imap/vcard_support.c \
+	imap/vcard_support.h \
 	imap/webdav_db.c \
 	imap/webdav_db.h
 
@@ -1082,14 +1122,11 @@ imap_lmtpd_SOURCES += \
 	imap/autocreate.h
 endif # AUTOCREATE
 
-imap_lmtpd_LDADD =
-
 if SIEVE
 imap_lmtpd_SOURCES += imap/lmtp_sieve.c imap/lmtp_sieve.h imap/smtpclient.c
-imap_lmtpd_LDADD += sieve/libcyrus_sieve.la
 endif # SIEVE
 
-imap_lmtpd_LDADD += $(LD_SERVER_ADD)
+imap_lmtpd_LDADD = $(LD_SIEVE_ADD) $(LD_SERVER_ADD)
 
 SNMPGEN = $(abs_top_srcdir)/snmp/snmpgen
 
@@ -1119,6 +1156,7 @@ imap_mupdate_SOURCES = \
 	imap/tls_th-lock.c \
 	master/service-thread.c
 imap_mupdate_LDADD = $(LD_SERVER_ADD) -lpthread
+imap_mupdate_CFLAGS =  $(AM_CFLAGS) -pthread
 
 nodist_imap_nntpd_SOURCES = \
 	imap/nntp_err.c \
@@ -1136,6 +1174,7 @@ imap_nntpd_LDADD = $(LD_SERVER_ADD)
 
 nodist_imap_httpd_SOURCES = \
 	imap/http_caldav_js.h \
+	imap/http_carddav_js.h \
 	imap/http_err.c \
 	imap/http_err.h \
 	imap/tz_err.c \
@@ -1144,17 +1183,19 @@ nodist_imap_httpd_SOURCES = \
 imap_httpd_SOURCES = \
 	imap/caldav_db.c \
 	imap/http_admin.c \
+	imap/http_applepush.c \
 	imap/http_caldav.c \
+	imap/http_caldav.h \
 	imap/http_caldav_sched.c \
 	imap/http_caldav_sched.h \
 	imap/http_carddav.c \
+	imap/http_carddav.h \
 	imap/http_client.c \
 	imap/http_client.h \
 	imap/http_dav.c \
 	imap/http_dav.h \
 	imap/http_dblookup.c \
 	imap/http_ischedule.c \
-	imap/http_jmap.c \
 	imap/http_proxy.c \
 	imap/http_proxy.h \
 	imap/http_rss.c \
@@ -1165,10 +1206,12 @@ imap_httpd_SOURCES = \
 	imap/ical_support.c \
 	imap/jcal.c \
 	imap/jcal.h \
+	imap/json_support.h \
 	imap/mutex_fake.c \
 	imap/proxy.c \
 	imap/smtpclient.c \
 	imap/spool.c \
+	imap/vcard_support.c \
 	imap/xcal.c \
 	imap/xcal.h \
 	imap/xml_support.c \
@@ -1192,16 +1235,10 @@ imap_pop3d_SOURCES += \
 	imap/autocreate.h
 endif # AUTOCREATE
 
-imap_pop3d_LDADD =
-
-if SIEVE
-imap_pop3d_LDADD += sieve/libcyrus_sieve.la
-endif # SIEVE
-
-imap_pop3d_LDADD += $(LD_SERVER_ADD)
+imap_pop3d_LDADD = $(LD_SIEVE_ADD) $(LD_SERVER_ADD)
 
 imap_quota_SOURCES = imap/cli_fatal.c imap/mutex_fake.c imap/quota.c imap/quota.h
-imap_quota_LDADD = $(LD_UTILITY_ADD)
+imap_quota_LDADD = $(LD_UTILITY_ADD) $(JANSSON_LIBS)
 
 imap_reconstruct_SOURCES = imap/cli_fatal.c imap/mutex_fake.c imap/reconstruct.c
 imap_reconstruct_LDADD = $(LD_UTILITY_ADD)
@@ -1221,24 +1258,14 @@ imap_squatter_LDADD = $(LD_UTILITY_ADD)
 imap_squat_dump_SOURCES = imap/cli_fatal.c imap/mutex_fake.c imap/squat_dump.c
 imap_squat_dump_LDADD = $(LD_UTILITY_ADD)
 
-if REPLICATION
 imap_sync_client_SOURCES = imap/mutex_fake.c imap/sync_client.c imap/sync_support.c imap/sync_support.h
-imap_sync_client_LDADD = $(LD_UTILITY_ADD)
+imap_sync_client_LDADD = $(LD_SIEVE_ADD) $(LD_UTILITY_ADD)
 
 imap_sync_reset_SOURCES = imap/mutex_fake.c imap/sync_reset.c imap/sync_support.c imap/sync_support.h
-imap_sync_reset_LDADD = $(LD_UTILITY_ADD)
+imap_sync_reset_LDADD = $(LD_SIEVE_ADD) $(LD_UTILITY_ADD)
 
 imap_sync_server_SOURCES = imap/mutex_fake.c imap/sync_server.c imap/sync_support.c imap/sync_support.h master/service.c
-imap_sync_server_LDADD = $(LD_SERVER_ADD)
-else
-EXTRA_DIST += \
-	imap/sync_client.c \
-	imap/sync_reset.c \
-	imap/sync_server.c \
-	imap/sync_support.c \
-	imap/sync_support.h
-
-endif # REPLICATION
+imap_sync_server_LDADD = $(LD_SIEVE_ADD) $(LD_SERVER_ADD)
 
 imap_tls_prune_SOURCES = imap/cli_fatal.c imap/mutex_fake.c imap/tls_prune.c
 imap_tls_prune_LDADD = $(LD_UTILITY_ADD)
@@ -1265,8 +1292,13 @@ imap/tz_err.h imap/tz_err.c: imap/tz_err.et $(COMPILE_ET_DEP)
 
 # xxd cannot have path details in its input filename, otherwise it junks up
 # the variable names in the output file.  so do a tricky directory change.
+# the /dev/null redirection on cd is to prevent shell environments with
+# CDPATH echoing the path change on stdout and consequently into the .h file
 imap/http_caldav_js.h: imap/http_caldav.js
-	$(AM_V_GEN)(cd $(<D) && xxd -i $(<F)) > $@
+	$(AM_V_GEN)(cd $(<D) > /dev/null && xxd -i $(<F)) > $@
+
+imap/http_carddav_js.h: imap/http_carddav.js
+	$(AM_V_GEN)(cd $(<D) > /dev/null && xxd -i $(<F)) > $@
 
 if MAINTAINER_MODE
 imap/rfc822_header.c: imap/rfc822_header.st
@@ -1296,11 +1328,10 @@ lib_libcyrus_la_SOURCES = \
 	lib/auth_pts.c \
 	lib/auth_unix.c \
 	lib/bitvector.c \
+	lib/bloom.c \
 	lib/bsearch.c \
-	lib/byteorder64.c \
 	lib/charset.c \
 	lib/command.c \
-	lib/crc32.c \
 	lib/cyrusdb.c \
 	lib/cyrusdb_flat.c \
 	lib/cyrusdb_quotalegacy.c \
@@ -1317,6 +1348,7 @@ lib_libcyrus_la_SOURCES = \
 	lib/libcyr_cfg.c \
 	lib/lsort.c \
 	lib/mappedfile.c \
+	lib/murmurhash.c \
 	lib/mkgmtime.c \
 	lib/parseaddr.c \
 	lib/prot.c \
@@ -1327,10 +1359,13 @@ lib_libcyrus_la_SOURCES = \
 	lib/times.c \
 	lib/tok.c \
 	lib/wildmat.c
-if USE_SQL
+if USE_CYRUSDB_SQL
 lib_libcyrus_la_SOURCES += lib/cyrusdb_sql.c
 endif
-if HTTPD
+if USE_CYRUSDB_LMDB
+lib_libcyrus_la_SOURCES += lib/cyrusdb_lmdb.c
+endif
+if USE_SQLITE
 lib_libcyrus_la_SOURCES += lib/sqldb.c
 endif
 if GMTOFF_TM
@@ -1343,16 +1378,26 @@ lib_libcyrus_la_SOURCES += lib/nonblock_fcntl.c
 else
 lib_libcyrus_la_SOURCES += lib/nonblock_ioctl.c
 endif
-lib_libcyrus_la_LIBADD = $(LIB_RT) ${LIB_SASL} $(SSL_LIBS)
+lib_libcyrus_la_LIBADD = libcrc32.la ${LIB_SASL} $(SSL_LIBS) $(GCOV_LIBS)
+if USE_CYRUSDB_LMDB
+lib_libcyrus_la_LIBADD += -llmdb
+endif
 lib_libcyrus_la_CFLAGS = $(AM_CFLAGS) $(CFLAG_VISIBILITY)
+
+noinst_LTLIBRARIES += libcrc32.la
+libcrc32_la_SOURCES = lib/crc32.c lib/crc32c.c
+libcrc32_la_CFLAGS = -O3 $(AM_CFLAGS) $(CFLAG_VISIBILITY)
+
+nodist_lib_libcyrus_min_la_SOURCES = \
+	lib/imapopts.c
 
 lib_libcyrus_min_la_SOURCES = \
 	lib/arrayu64.c \
 	lib/assert.c \
 	lib/bufarray.c \
+	lib/byteorder64.c \
 	lib/hash.c \
 	lib/hashu64.c \
-	lib/imapopts.c \
 	lib/libconfig.c \
 	lib/mpool.c \
 	lib/retry.c \
@@ -1362,7 +1407,11 @@ lib_libcyrus_min_la_SOURCES = \
 	lib/vparse.c \
 	lib/xmalloc.c \
 	lib/xstrlcat.c \
-	lib/xstrlcpy.c
+	lib/xstrlcpy.c \
+	lib/xstrnchr.c
+if !HAVE_SSL
+lib_libcyrus_min_la_SOURCES += lib/xsha1.c
+endif
 if IPV6_noGETADDRINFO
 lib_libcyrus_min_la_SOURCES += lib/getaddrinfo.c
 endif
@@ -1383,12 +1432,12 @@ else
 lib_libcyrus_min_la_SOURCES += lib/map_nommap.c
 endif
 endif
-lib_libcyrus_min_la_LIBADD = $(LTLIBOBJS) $(LIB_UUID)
+lib_libcyrus_min_la_LIBADD = $(LTLIBOBJS) $(LIB_UUID) $(GCOV_LIBS)
 lib_libcyrus_min_la_CFLAGS = $(AM_CFLAGS) $(CFLAG_VISIBILITY)
 
 lib/chartable.c: lib/mkchartable.pl lib/charset/unifix.txt \
-	$(top_srcdir)/lib/charset/*.t lib/charset/UnicodeData.txt \
-	lib/charset/aliases.txt
+	$(top_srcdir)/lib/charset/*.t \
+	lib/charset/UnicodeData.txt lib/charset/aliases.txt
 	@echo "### Building chartables..."
 	$(AM_V_GEN)perl $(top_srcdir)/lib/mkchartable.pl -m $(top_srcdir)/lib/charset/unifix.txt -m $(top_srcdir)/lib/charset/UnicodeData.txt -a $(top_srcdir)/lib/charset/aliases.txt -o $@ $(top_srcdir)/lib/charset/*.t || (rm -f $@ && exit 1)
 	@echo "### Done building chartables."
@@ -1398,37 +1447,50 @@ lib/imapopts.h: lib/imapopts.c
 lib/imapopts.c: lib/imapoptions tools/config2header
 	$(AM_V_GEN)$(top_srcdir)/tools/config2header CC="$(CC)" $(top_builddir)/lib/imapopts.c $(top_builddir)/lib/imapopts.h < $(top_srcdir)/lib/imapoptions
 
+imap_cvt_xlist_specialuse_SOURCES = imap/mutex_fake.c imap/cvt_xlist_specialuse.c
+imap_cvt_xlist_specialuse_LDADD = $(LD_UTILITY_ADD)
 
 @SET_MAKE@
 
-dist_man_MANS = \
-	doc/rst/imapd.conf.rst \
+dist_man1_MANS = \
 	man/imtest.1 \
 	man/installsieve.1 \
+	man/httptest.1 \
 	man/lmtptest.1 \
 	man/mupdatetest.1 \
 	man/nntptest.1 \
 	man/pop3test.1 \
 	man/sieveshell.1 \
 	man/sivtest.1 \
-	man/smtptest.1 \
-	man/imclient.3 \
+	man/smtptest.1
+
+dist_man3_MANS = \
+	man/imclient.3
+
+dist_man5_MANS = \
 	man/cyrus.conf.5 \
 	man/imapd.conf.5 \
-	man/krb.equiv.5 \
+	man/krb.equiv.5
+
+dist_man8_MANS = \
 	man/arbitron.8 \
-	man/ctl_conversationsdb.8 \
+	man/backupd.8 \
 	man/chk_cyrus.8 \
+	man/ctl_backups.8 \
+	man/ctl_conversationsdb.8 \
 	man/ctl_cyrusdb.8 \
 	man/ctl_deliver.8 \
 	man/ctl_mboxlist.8 \
-	man/cyr_expire.8 \
 	man/cvt_cyrusdb.8 \
+	man/cyr_backup.8 \
+	man/cyr_buildinfo.8 \
 	man/cyr_dbtool.8 \
 	man/cyr_deny.8 \
 	man/cyr_df.8 \
+	man/cyr_expire.8 \
 	man/cyr_info.8 \
 	man/cyr_synclog.8 \
+	man/cyr_virusscan.8 \
 	man/deliver.8 \
 	man/fud.8 \
 	man/idled.8 \
@@ -1438,28 +1500,30 @@ dist_man_MANS = \
 	man/master.8 \
 	man/mbexamine.8 \
 	man/mbpath.8 \
+	man/mbtool.8 \
 	man/notifyd.8 \
 	man/pop3d.8 \
 	man/quota.8 \
 	man/reconstruct.8 \
+	man/restore.8 \
 	man/rmnews.8 \
 	man/smmapd.8 \
 	man/timsieved.8 \
 	man/tls_prune.8 \
 	man/unexpunge.8
 
-if USE_SQUAT
-dist_man_MANS += \
+if SQUATTER
+dist_man8_MANS += \
 	man/squatter.8
 
 else
 EXTRA_DIST += \
 	man/squatter.8
 
-endif # USE_SQUAT
+endif # SQUATTER
 
 if NNTPD
-dist_man_MANS += \
+dist_man8_MANS += \
 	man/fetchnews.8 \
 	man/nntpd.8
 
@@ -1471,7 +1535,7 @@ EXTRA_DIST += \
 endif # NNTPD
 
 if HTTPD
-dist_man_MANS += \
+dist_man8_MANS += \
 	man/ctl_zoneinfo.8 \
 	man/httpd.8
 
@@ -1483,7 +1547,7 @@ EXTRA_DIST += \
 endif # HTTPD
 
 if REPLICATION
-dist_man_MANS += \
+dist_man8_MANS += \
 	man/sync_client.8 \
 	man/sync_reset.8 \
 	man/sync_server.8
@@ -1504,7 +1568,7 @@ master_master_SOURCES = \
 	master/masterconf.c \
 	master/masterconf.h \
 	master/service.h
-master_master_LDADD = lib/libcyrus_min.la $(LIB_UCDSNMP) $(LIBS) -lm
+master_master_LDADD = lib/libcyrus_min.la $(LIB_UCDSNMP) $(LIBS) $(GCOV_LIBS) -lm
 
 
 netnews_remotepurge_SOURCES = \
@@ -1535,12 +1599,14 @@ notifyd_notifyd_LDADD = $(LD_SERVER_ADD) $(ZEPHYR_LIBS)
 notifyd_notifytest_SOURCES = notifyd/notifytest.c imap/mutex_fake.c
 notifyd_notifytest_LDADD = $(LD_BASIC_ADD)
 
+nodist_perl_libcyrus_la_SOURCES = $(nodist_lib_libcyrus_la_SOURCES)
 perl_libcyrus_la_SOURCES = $(lib_libcyrus_la_SOURCES)
 perl_libcyrus_la_LIBADD = $(lib_libcyrus_la_LIBADD)
+nodist_perl_libcyrus_min_la_SOURCES = $(nodist_lib_libcyrus_min_la_SOURCES)
 perl_libcyrus_min_la_SOURCES = $(lib_libcyrus_min_la_SOURCES)
 perl_libcyrus_min_la_LIBADD = $(lib_libcyrus_min_la_LIBADD)
 
-perl_sieve_lib_libisieve_a_SOURCES = \
+perl_sieve_lib_libisieve_la_SOURCES = \
 	perl/sieve/lib/codes.h \
 	perl/sieve/lib/isieve.c \
 	perl/sieve/lib/isieve.h \
@@ -1574,14 +1640,27 @@ ptclient_ptloader_LDADD += $(AFS_LIBS)
 ptclient_ptloader_LDFLAGS += $(AFS_LDFLAGS)
 endif
 
+# Each new version of flex seems to generate new sign-comparison
+# warnings, while they switch code around between int/yy_size_t.
+#
+# This is a pain because most of us Cyrus devs build with -Werror.
+#
+# Instead of continuing to maintain an ever-growing, increasingly
+# precarious set of post-hoc fixes (see: the former lex-fix rule),
+# let's just ignore sign-comparison warnings from flex-generated
+# sources only.
+sieve_libcyrus_sieve_lex_la_SOURCES = \
+	sieve/addr-lex.l \
+	sieve/sieve-lex.l
+sieve_libcyrus_sieve_lex_la_LIBADD =
+sieve_libcyrus_sieve_lex_la_CFLAGS = $(AM_CFLAGS) $(CFLAG_VISIBILITY) $(NOWARN_SIGN_COMPARE)
+
 nodist_sieve_libcyrus_sieve_la_SOURCES = \
 	sieve/sieve_err.c \
 	sieve/sieve_err.h
 sieve_libcyrus_sieve_la_SOURCES = \
 	sieve/bytecode.h \
 	sieve/addr.y \
-	sieve/addr-lex.l \
-	sieve/bc_dump.c \
 	sieve/bc_emit.c \
 	sieve/bc_eval.c \
 	sieve/bc_generate.c \
@@ -1589,22 +1668,28 @@ sieve_libcyrus_sieve_la_SOURCES = \
 	sieve/comparator.h \
 	sieve/flags.c \
 	sieve/flags.h \
+	sieve/grammar.c \
+	sieve/grammar.h \
 	sieve/interp.c \
 	sieve/interp.h \
 	sieve/message.c \
 	sieve/message.h \
+	sieve/rebuild.c \
 	sieve/script.c \
 	sieve/script.h \
-	sieve/sieve-lex.l \
 	sieve/sieve.y \
 	sieve/tree.c \
 	sieve/tree.h \
+	sieve/variables.c \
+	sieve/variables.h \
 	sieve/varlist.c \
 	sieve/varlist.h
-sieve_libcyrus_sieve_la_LIBADD = $(COM_ERR_LIBS) lib/libcyrus_min.la lib/libcyrus.la
+sieve_libcyrus_sieve_la_LIBADD = \
+    sieve/libcyrus_sieve_lex.la \
+    $(COM_ERR_LIBS) \
+    lib/libcyrus_min.la \
+    lib/libcyrus.la
 sieve_libcyrus_sieve_la_CFLAGS = $(AM_CFLAGS) $(CFLAG_VISIBILITY)
-
-LD_SIEVE_ADD = sieve/libcyrus_sieve.la $(LD_BASIC_ADD)
 
 sieve_sievec_LDADD = $(LD_SIEVE_ADD)
 sieve_sieved_LDADD = $(LD_SIEVE_ADD)
@@ -1613,7 +1698,7 @@ sieve/sieve_err.h sieve/sieve_err.c: sieve/sieve_err.et $(COMPILE_ET_DEP)
 	$(AM_V_GEN)(cd $(@D) && $(COMPILE_ET) $(realpath $<))
 
 sieve_test_SOURCES = sieve/test.c imap/mutex_fake.c
-sieve_test_LDADD = sieve/libcyrus_sieve.la $(LD_UTILITY_ADD)
+sieve_test_LDADD = $(LD_SIEVE_ADD) $(LD_UTILITY_ADD)
 
 timsieved_timsieved_SOURCES = \
 	imap/mutex_fake.c \
@@ -1626,64 +1711,153 @@ timsieved_timsieved_SOURCES = \
 	timsieved/lex.h \
 	timsieved/parser.c \
 	timsieved/parser.h \
-	timsieved/scripttest.c \
-	timsieved/scripttest.h \
 	timsieved/timsieved.c
 
-timsieved_timsieved_LDADD = sieve/libcyrus_sieve.la $(LD_SERVER_ADD)
+timsieved_timsieved_LDADD = $(LD_SIEVE_ADD) $(LD_SERVER_ADD)
 
-# TODO: Should not really stay around, but GNU software is hard to
-# contribute fixes to. Needed when building with the following:
-# CFLAGS="-g -fPIC -W -Wall -Wextra -Werror"
-lex-fix: sieve/addr-lex.c sieve/sieve-lex.c
-	grep -E '^yy_size_t sieveleng;$$' sieve/sieve-lex.c && \
-    	sed -r -i -e 's/int yyl;/yy_size_t yyl;/g' sieve/sieve-lex.c || :
-
-	grep -E ' yy_size_t  _yybytes_len ' sieve/sieve-lex.c && \
-    	sed -r -i -s 's/\tint i;/\tyy_size_t i;/g' sieve/sieve-lex.c || :
-
-	grep -E ' yy_size_t  _yybytes_len ' sieve/addr-lex.c && \
-    	sed -r -i -s 's/\tint i;/\tyy_size_t i;/g' sieve/addr-lex.c || :
-
-GIT_VERSION = $(PACKAGE_VERSION)@git_version@
+# The lex-fix rule is now obsolete, but let's leave a crumb here for a
+# while so that custom build scripts that expect it to exist don't choke.
+lex-fix:
 
 snapshot::
-	@echo "Creating snapshot $(PACKAGE_NAME)-$(GIT_VERSION)"
+	@echo "Creating snapshot $(PACKAGE_NAME)-$(PACKAGE_VERSION)"
 	@$(MKDIR_P) snapshot
-	@git archive --format=tar --prefix=$(PACKAGE_NAME)-$(GIT_VERSION)/ HEAD | tar -C snapshot/ -x -f -
-	@echo "/* $(PACKAGE_NAME) $(GIT_VERSION) */" > snapshot/$(PACKAGE_NAME)-$(GIT_VERSION)/xversion.h
-	@echo "#define _CYRUS_VERSION \"$(GIT_VERSION)\"" >> snapshot/$(PACKAGE_NAME)-$(GIT_VERSION)/xversion.h
-	@echo "#define CYRUS_GITVERSION \"`git log --abbrev=8 --pretty=\"format:%h %ci\" -1 | cut -d\" \" -f1,2`\"" >> snapshot/$(PACKAGE_NAME)-$(GIT_VERSION)/xversion.h
-	@touch snapshot/$(PACKAGE_NAME)-$(GIT_VERSION)/xversion
+	@git archive --format=tar --prefix=$(PACKAGE_NAME)-$(PACKAGE_VERSION)/ HEAD | tar -C snapshot/ -x -f -
 	@echo "creating tarfile"
-	tar -C snapshot -c -f - $(PACKAGE_NAME)-$(GIT_VERSION) | gzip -9 > $(PACKAGE_NAME)-$(GIT_VERSION).tar.gz
+	tar -C snapshot -c -f - $(PACKAGE_NAME)-$(PACKAGE_VERSION) | gzip -9 > $(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz
 	@rm -rf snapshot
 
-man/imapd.conf.5: $(top_srcdir)/tools/config2man $(top_srcdir)/lib/imapoptions
-	@echo creating man/imapd.conf.5
-	@$(MKDIR_P) man
-	$(AM_V_GEN)$(top_srcdir)/tools/config2man $(top_srcdir)/lib/imapoptions > $@
+docsrc/imap/reference/manpages/systemcommands/cyradm.rst: $(top_srcdir)/perl/imap/IMAP/Shell.pm
+	@$(MKDIR_P) $(@D)
+	$(AM_V_GEN)$(top_srcdir)/tools/perl2rst cyradm < $< > $@
 
-doc/rst/imapd.conf.rst: $(top_srcdir)/tools/config2rst $(top_srcdir)/lib/imapoptions
-	@echo creating man/imapd.conf.rst
-	@$(MKDIR_P) doc/rst
+docsrc/imap/reference/manpages/configs/imapd.conf.rst: $(top_srcdir)/tools/config2rst $(top_srcdir)/lib/imapoptions
+	@$(MKDIR_P) $(@D)
 	$(AM_V_GEN)$(top_srcdir)/tools/config2rst $(top_srcdir)/lib/imapoptions > $@
 
-man/sieveshell.1: $(top_srcdir)/perl/sieve/scripts/sieveshell.pl
-	@echo creating man/sieveshell.1
-	@$(MKDIR_P) man
-	$(AM_V_GEN)pod2man $(top_srcdir)/perl/sieve/scripts/sieveshell.pl > $@
+doc/examples/imapd_conf/imapd.conf.sample: $(top_srcdir)/tools/config2sample $(top_srcdir)/lib/imapoptions
+	@$(MKDIR_P) $(@D)
+	$(AM_V_GEN)$(top_srcdir)/tools/config2sample $(top_srcdir)/lib/imapoptions > $@
 
-doc/man/cyradm.1.html: $(top_srcdir)/perl/imap/cyradm.sh
-	@$(MKDIR_P) doc/man
-	$(AM_V_GEN)pod2html $(top_srcdir)/perl/imap/cyradm.sh > $@
-	rm pod2htm*
+docsrc/imap/reference/manpages/usercommands/sieveshell.rst: $(top_srcdir)/perl/sieve/scripts/sieveshell.pl
+	@$(MKDIR_P) $(@D)
+	$(AM_V_GEN)$(top_srcdir)/tools/perl2rst sieveshell < $< > $@
 
-doc/man/sieveshell.1.html: $(top_srcdir)/perl/sieve/scripts/sieveshell.pl
-	@$(MKDIR_P) doc/man
-	$(AM_V_GEN)pod2html $(top_srcdir)/perl/sieve/scripts/sieveshell.pl > $@
-	rm pod2htm*
+%.1: man/.sphinx-build.stamp
+	@$(MKDIR_P) $(@D)
+	$(AM_V_GEN)touch $@
 
+%.3: man/.sphinx-build.stamp
+	@$(MKDIR_P) $(@D)
+	$(AM_V_GEN)touch $@
+
+%.5: man/.sphinx-build.stamp
+	@$(MKDIR_P) $(@D)
+	$(AM_V_GEN)touch $@
+
+%.8: man/.sphinx-build.stamp
+	@$(MKDIR_P) $(@D)
+	$(AM_V_GEN)touch $@
+
+## define this unconditionally because dist-hook references it
+SPHINX_CACHE = docsrc/.doctrees
+
+.PHONY: clean-sphinx-cache clean-docsrc
+clean-sphinx-cache:
+	@$(RM) -r $(SPHINX_CACHE)
+
+if HAVE_SPHINX_BUILD
+GENERATED_RSTS = docsrc/imap/reference/manpages/configs/imapd.conf.rst \
+                 docsrc/imap/reference/manpages/systemcommands/cyradm.rst \
+                 docsrc/imap/reference/manpages/usercommands/sieveshell.rst
+
+SPHINX_OPTS = -d $(SPHINX_CACHE) -n -q
+
+## detect when source directory is not build directory (i.e. VPATH
+## build), and clone the docsrc tree into the build directory, so
+## that we have a single "source directory" for sphinx-build to use.
+docsrc/.sphinx-build.stamp:
+	$(AM_V_GEN)test x"$(top_srcdir)" = x"$(top_builddir)" || \
+        (cd $(top_srcdir) && tar cf - --mode=gu+w docsrc doc/examples) | tar xf -
+	@touch $@
+
+clean-docsrc:
+	test x"$(top_srcdir)" = x"$(top_builddir)" || \
+		$(RM) -r $(top_builddir)/docsrc $(top_builddir)/doc/examples
+
+## XXX doesn't detect if other rst sources are updated...
+man/.sphinx-build.stamp: $(GENERATED_RSTS) docsrc/.sphinx-build.stamp
+	$(AM_V_GEN)DOCSRC=$(top_builddir)/docsrc $(SPHINX_BUILD) $(SPHINX_OPTS) -b cyrman $(top_builddir)/docsrc $(top_builddir)/man
+	@touch $@
+
+clean-man:
+	@$(RM) -r man
+
+## XXX doesn't detect if other rst sources are updated...
+doc/html/.sphinx-build.stamp: $(GENERATED_RSTS) docsrc/.sphinx-build.stamp
+	$(AM_V_GEN)DOCSRC=$(top_builddir)/docsrc $(SPHINX_BUILD) $(SPHINX_OPTS) -b html $(top_builddir)/docsrc $(top_builddir)/doc/html
+	@touch $@
+
+## XXX doesn't detect if other rst sources are updated...
+doc/text/.sphinx-build.stamp: $(GENERATED_RSTS) docsrc/.sphinx-build.stamp
+	$(AM_V_GEN)DOCSRC=$(top_builddir)/docsrc $(SPHINX_BUILD) $(SPHINX_OPTS) -b text $(top_builddir)/docsrc $(top_builddir)/doc/text
+	@touch $@
+else
+clean-docsrc:
+
+man/.sphinx-build.stamp:
+	@$(MKDIR_P) $(@D)
+	$(AM_V_GEN)touch $@
+	@echo "warning: missing documentation dependencies. man pages will be empty" 1>&2
+
+clean-man:
+
+doc/html/.sphinx-build.stamp:
+	@echo "error: missing documentation dependencies. cannot build html documentation" 1>&2
+	@false
+
+doc/text/.sphinx-build.stamp:
+	@echo "error: missing documentation dependencies. cannot build text documentation" 1>&2
+	@false
+endif
+
+.PHONY: man man-force clean-man
+man-force:
+	## trash the timestamps, so we always re-run sphinx-build.
+	## sphinx-build tracks source modifications itself, so forced
+	## rebuilds will still be a lot quicker once it has run once.
+	@$(RM) docsrc/.sphinx-build.stamp man/.sphinx-build.stamp
+
+man: man-force $(dist_man1_MANS) $(dist_man3_MANS) $(dist_man5_MANS) $(dist_man8_MANS)
+
+# clean-man is conditionally defined above. We do not want to remove
+# man pages if the user is unable to rebuild them.
+
+.PHONY: doc-html doc-html-force clean-doc-html
+doc-html-force:
+	@$(RM) docsrc/.sphinx-build.stamp doc/html/.sphinx-build.stamp
+
+doc-html: doc-html-force doc/html/.sphinx-build.stamp
+
+clean-doc-html:
+	@$(RM) -r doc/html
+
+.PHONY: doc-text doc-text-force clean-doc-text
+doc-text-force:
+	@$(RM) docsrc/.sphinx-build.stamp doc/text/.sphinx-build.stamp
+
+doc-text: doc-text-force doc/text/.sphinx-build.stamp
+
+clean-doc-text:
+	@$(RM) -r doc/text
+
+.PHONY: doc clean-doc
+doc: man doc-html doc-text
+
+clean-doc: clean-man clean-doc-html clean-doc-text
+
+.PHONY: clean-local
+clean-local: clean-doc clean-sphinx-cache clean-docsrc
 
 dist-old:: distgit
 	@echo "creating configure"
@@ -1707,35 +1881,14 @@ distgit:
 	$(MKDIR_P) dist
 	@echo "checking out the distribution from tag $(PACKAGE_NAME)-$(PACKAGE_VERSION)"
 	git archive --format=tar --prefix=$(PACKAGE_NAME)-$(PACKAGE_VERSION)/ $(PACKAGE_NAME)-$(PACKAGE_VERSION) | tar -C dist -x -f -
-	echo "/* Release $(PACKAGE_NAME)-$(PACKAGE_VERSION) */" > dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)/xversion.h
-	echo "#define _CYRUS_VERSION \"v$(PACKAGE_VERSION)\"" >> dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)/xversion.h
-	echo "#define CYRUS_GITVERSION \"`git log --abbrev=8 --pretty=\"format:%h %ci\" -1 | cut -d\" \" -f1,2`\"" >> dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)/xversion.h
-	touch dist/$(PACKAGE_NAME)-$(PACKAGE_VERSION)/xversion
 	touch distgit
 
-xversion xversion.h:
-	@echo "/* Development version */" > xversion.h.tmp
-	@echo "#define _CYRUS_VERSION \"$(GIT_VERSION)\"" >> xversion.h.tmp
-	@echo "#define CYRUS_GITVERSION \"`git log --abbrev=8 --pretty=\"format:%h %ci\" -1 | cut -d\" \" -f1,2`\"" >> xversion.h.tmp
-	@cmp -s xversion.h.tmp xversion.h || mv xversion.h.tmp xversion.h
-	@rm -f xversion.h.tmp
+dist-hook:
+	find $(top_distdir) -type f -name .sphinx-build.stamp -delete
+	rm -rf $(top_distdir)/$(SPHINX_CACHE)
 
-dist-hook: doc/text/htmlstrip doc/man/cyradm.1.html doc/man/sieveshell.1.html
-	@$(MKDIR_P) doc/text doc/man
-	for man in $(top_builddir)/man/*.[1-9] $(top_srcdir)/man/*.[1-9]; \
-	do \
-		echo "=== $$man ==="; \
-		groff -man -Thtml $$man > doc/man/`basename $$man`.html; \
-	done
-	rm -f doc/groff-html-*.png
-
-	for file in $(top_srcdir)/doc/*.html; \
-	do \
-		echo "=== $$file ==="; \
-		doc/text/htmlstrip $$file > doc/text/`basename $$file .html`; \
-	done
-	@rm doc/text/htmlstrip doc/text/htmlstrip.o doc/text/.dirstamp
-	@echo "== done =="
+VERSION: tools/git-version.sh
+	$(AM_V_GEN)$< > $@.NEW && mv $@.NEW $@
 
 install-data-hook:
 if CMULOCAL
@@ -1763,6 +1916,7 @@ endif
 ## The @$(MKDIR_P) line is added due to a bug in Automake 1.10 and can be removed if using Automake 1.12.
 	@$(MKDIR_P) $(DESTDIR)$(bindir)
 	cd $(DESTDIR)$(bindir) && \
+	  $(LN_S) -f imtest httptest && \
 	  $(LN_S) -f imtest lmtptest && \
 	  $(LN_S) -f imtest mupdatetest && \
 	  $(LN_S) -f imtest nntptest && \
@@ -1770,6 +1924,30 @@ endif
 	  $(LN_S) -f imtest sivtest && \
 	  $(LN_S) -f imtest smtptest && \
 	  $(LN_S) -f imtest synctest
+
+uninstall-hook: cyrus-makemaker-uninstall-workaround
+if PERL
+	for s in installsieve sieveshell; do \
+	    rm -f $(DESTDIR)$(bindir)/$$s; \
+	done
+endif
+
+.PHONY: cyrus-makemaker-uninstall-workaround
+
+# Workaround for deprecated no-op MakeMaker uninstall.
+# Don't remove the packlists themselves, otherwise MakeMaker uninstall will
+# crash.  Just remove the files MakeMaker uninstall won't remove itself.
+#
+# We have another layer of workaround in each module's Makefile that
+# removes the packlist after MakeMaker uninstall has finished ignoring it.
+cyrus-makemaker-uninstall-workaround:
+if PERL
+	( packlists=`find $(DESTDIR)$(libdir) -type f -name .packlist` && \
+	  echo "uninstalling files from packlists: $$packlists" && \
+	  rm -f `cat $$packlists` )
+	( podfiles=`find $(DESTDIR)$(libdir) -type f -name perllocal.pod` && \
+	  rm -f `echo $$podfiles` )
+endif
 
 install-binsymlinks:
 ## Let's symlink everything else

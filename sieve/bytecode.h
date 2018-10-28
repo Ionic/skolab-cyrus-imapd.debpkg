@@ -43,6 +43,7 @@
 #ifndef SIEVE_BYTECODE_H
 #define SIEVE_BYTECODE_H
 
+#include <stddef.h>
 
 /* for debugging*/
 #define DUMPCODE 0
@@ -105,8 +106,10 @@ typedef union
  * version 0x07 scripts implemented updated INCLUDE (:once and :optional)
  * version 0x08 scripts implemented DATE and INDEX extensions
  * version 0x09 scripts implemented IMAP4FLAGS extension
+ * version 0x10 scripts implemented Mailbox and Metadata (RFC5490)
+ * version 0x11 scripts implemented Variables extension (RFC5229)
  */
-#define BYTECODE_VERSION 0x09
+#define BYTECODE_VERSION 0x11
 #define BYTECODE_MIN_VERSION 0x03 /* minimum supported version */
 #define BYTECODE_MAGIC "CyrSBytecode"
 #define BYTECODE_MAGIC_LEN 12 /* Should be multiple of 4 */
@@ -129,9 +132,9 @@ enum bytecode {
     B_MARK,             /* require imapflags */
     B_UNMARK,           /* require imapflags */
 
-    B_ADDFLAG,          /* require imap4flags */
-    B_SETFLAG,          /* require imap4flags */
-    B_REMOVEFLAG,       /* require imap4flags */
+    B_ADDFLAG_ORIG,	/* legacy addflag w/o support for variables */
+    B_SETFLAG_ORIG,	/* legacy setflag w/o support for variables */
+    B_REMOVEFLAG_ORIG,	/* legacy removeflag w/o support for variables */
 
     B_NOTIFY,           /* require notify */
     B_DENOTIFY,         /* require notify */
@@ -149,7 +152,14 @@ enum bytecode {
     B_VACATION,         /* require vacation */
 
     B_KEEP,
-    B_FILEINTO          /* require fileinto */
+    B_FILEINTO_FLAGS,   /* legacy fileinto w/o support for :create */
+    B_FILEINTO,         /* require mailbox, imap4flags, copy */
+
+    B_SET,		/* require variables */
+
+    B_ADDFLAG,		/* require imap4flags */
+    B_SETFLAG,		/* require imap4flags */
+    B_REMOVEFLAG	/* require imap4flags */
 };
 
 enum bytecode_comps {
@@ -168,20 +178,26 @@ enum bytecode_comps {
     BC_CURRENTDATE,     /* require date */
     BC_ADDRESS,
     BC_HEADER,
-    BC_HASFLAG          /* require imap4flags */
+    BC_HASFLAG,         /* require imap4flags */
+    BC_MAILBOXEXISTS,   /* require mailbox */
+    BC_METADATA,        /* require mboxmetadata */
+    BC_METADATAEXISTS,
+    BC_SERVERMETADATA,  /* require servermetadata */
+    BC_SERVERMETADATAEXISTS,
+    BC_STRING	        /* require variables */
 };
 
 /* currently one enum so as to help determine where values are being misused.
  * we have left placeholders incase we need to add more later to the middle */
 enum bytecode_tags {
-    /* Size Tests */
+    /* Size Tests (0-3) */
     B_OVER,
     B_UNDER,
 
     B_SIZE_PLACEHOLDER_1,
     B_SIZE_PLACEHOLDER_2,
 
-    /* Relational Match Types */
+    /* Relational Match Types (4-11) */
     B_GT,               /* require relational */
     B_GE,               /* require relational */
     B_LT,               /* require relational */
@@ -192,7 +208,7 @@ enum bytecode_tags {
     B_RELATIONAL_PLACEHOLDER_1,
     B_RELATIONAL_PLACEHOLDER_2,
 
-    /* Priorities */
+    /* Priorities (12-19) */
     B_LOW,              /* require notify */
     B_NORMAL,           /* require notify */
     B_HIGH,             /* require notify */
@@ -203,7 +219,7 @@ enum bytecode_tags {
     B_PRIORITY_PLACEHOLDER_3,
     B_PRIORITY_PLACEHOLDER_4,
 
-    /* Address Parts */
+    /* Address Parts (20-28) */
     B_ALL,
     B_LOCALPART,
     B_DOMAIN,
@@ -215,7 +231,7 @@ enum bytecode_tags {
     B_ADDRESS_PLACEHOLDER_3,
     B_ADDRESS_PLACEHOLDER_4,
 
-    /* Comparators */
+    /* Comparators (29-35) */
     B_ASCIICASEMAP,
     B_OCTET,
     B_ASCIINUMERIC,     /* require comparator-i;ascii-numeric */
@@ -225,7 +241,7 @@ enum bytecode_tags {
     B_COMPARATOR_PLACEHOLDER_3,
     B_COMPARATOR_PLACEHOLDER_4,
 
-    /* Match Types */
+    /* Match Types (36-45) */
     B_IS,
     B_CONTAINS,
     B_MATCHES,
@@ -238,7 +254,7 @@ enum bytecode_tags {
     B_MATCH_PLACEHOLDER_3,
     B_MATCH_PLACEHOLDER_4,
 
-    /* Body Transforms */
+    /* Body Transforms (46-53) */
     B_RAW,              /* require body */
     B_TEXT,             /* require body */
     B_CONTENT,          /* require body */
@@ -249,7 +265,7 @@ enum bytecode_tags {
     B_TRANSFORM_PLACEHOLDER_4,
     B_TRANSFORM_PLACEHOLDER_5,
 
-    /* Script locations */
+    /* Script locations (54-59) */
     B_PERSONAL,         /* require include */
     B_GLOBAL,           /* require include */
 
@@ -258,14 +274,14 @@ enum bytecode_tags {
     B_LOCATION_PLACEHOLDER_3,
     B_LOCATION_PLACEHOLDER_4,
 
-    /* Zones */
+    /* Zones (60-63) */
     B_TIMEZONE,
     B_ORIGINALZONE,
 
     B_ZONE_PLACEHOLDER_1,
     B_ZONE_PLACEHOLDER_2,
 
-    /* Date Parts */
+    /* Date Parts (64-80) */
     B_YEAR,
     B_MONTH,
     B_DAY,
@@ -284,6 +300,20 @@ enum bytecode_tags {
     B_DATEPART_PLACEHOLDER_2,
     B_DATEPART_PLACEHOLDER_3,
     B_DATEPART_PLACEHOLDER_4
+};
+
+enum bytecode_variables_bitflags {
+    BFV_LOWER	        = 1<<0,
+    BFV_UPPER	        = 1<<1,
+    BFV_LOWERFIRST      = 1<<2,
+    BFV_UPPERFIRST      = 1<<3,
+    BFV_QUOTEWILDCARD   = 1<<4,
+    BFV_ENCODEURL	= 1<<5,
+    BFV_LENGTH		= 1<<6
+};
+
+enum bytecode_required_extensions {
+    BFE_VARIABLES       = 1<<0
 };
 
 #endif

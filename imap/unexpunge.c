@@ -102,7 +102,6 @@ static void list_expunged(const char *mboxname)
 {
     struct mailbox *mailbox = NULL;
     struct index_record *records = NULL;
-    const struct index_record *record;
     int alloc = 0;
     int num = 0;
     int i;
@@ -118,7 +117,9 @@ static void list_expunged(const char *mboxname)
     /* first pass - read the records.  Don't print until we release the
      * lock */
     struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_UNLINKED);
-    while ((record = mailbox_iter_step(iter))) {
+    const message_t *msg;
+    while ((msg = mailbox_iter_step(iter))) {
+        const struct index_record *record = msg_record(msg);
         /* still active */
         if (!(record->system_flags & FLAG_EXPUNGED))
             continue;
@@ -137,7 +138,7 @@ static void list_expunged(const char *mboxname)
     mailbox_unlock_index(mailbox, NULL);
 
     for (i = 0; i < num; i++) {
-        record = &records[i];
+        const struct index_record *record = &records[i];
         printf("UID: %u\n", record->uid);
         printf("\tSize: %u\n", record->size);
         printf("\tSent: %s", ctime(&record->sentdate));
@@ -170,7 +171,6 @@ static int restore_expunged(struct mailbox *mailbox, int mode, unsigned long *ui
                      unsigned nuids, time_t time_since, unsigned *numrestored,
                      const char *extname)
 {
-    const struct index_record *record;
     struct index_record newrecord;
     annotate_state_t *astate = NULL;
     unsigned uidnum = 0;
@@ -182,7 +182,9 @@ static int restore_expunged(struct mailbox *mailbox, int mode, unsigned long *ui
     *numrestored = 0;
 
     struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_UNLINKED);
-    while ((record = mailbox_iter_step(iter))) {
+    const message_t *msg;
+    while ((msg = mailbox_iter_step(iter))) {
+        const struct index_record *record = msg_record(msg);
         /* still active */
         if (!(record->system_flags & FLAG_EXPUNGED))
             continue;
@@ -218,31 +220,31 @@ static int restore_expunged(struct mailbox *mailbox, int mode, unsigned long *ui
         /* copy the message file */
         fname = mailbox_record_fname(mailbox, &newrecord);
         r = mailbox_copyfile(oldfname, fname, 0);
-        if (r) goto done;
+        if (r) break;
 
         /* add the flag if requested */
         if (addflag) {
             int userflag = 0;
             r = mailbox_user_flag(mailbox, addflag, &userflag, 1);
-            if (r) goto done;
+            if (r) break;
             newrecord.user_flags[userflag/32] |= 1<<(userflag&31);
         }
 
         /* and append the new record */
         r = mailbox_append_index_record(mailbox, &newrecord);
-        if (r) goto done;
+        if (r) break;
 
         /* ensure we have an astate connected to the destination
          * mailbox, so that the annotation txn will be committed
          * when we close the mailbox */
         r = mailbox_get_annotate_state(mailbox, newrecord.uid, &astate);
-        if (r) goto done;
+        if (r) break;
 
         /* and copy over any annotations */
         r = annotate_msg_copy(mailbox, record->uid,
                               mailbox, newrecord.uid,
                               userid);
-        if (r) goto done;
+        if (r) break;
 
         if (verbose)
             printf("Unexpunged %s: %u => %u\n",
@@ -252,17 +254,16 @@ static int restore_expunged(struct mailbox *mailbox, int mode, unsigned long *ui
         struct index_record oldrecord = *record;
         oldrecord.system_flags |= FLAG_UNLINKED | FLAG_NEEDS_CLEANUP;
         r = mailbox_rewrite_index_record(mailbox, &oldrecord);
-        if (r) goto done;
+        if (r) break;
 
         (*numrestored)++;
     }
-    mailbox_iter_done(&iter);
 
     /* better get that seen to */
     if (*numrestored)
         mailbox->i.options |= OPT_MAILBOX_NEEDS_UNLINK;
 
-done:
+    mailbox_iter_done(&iter);
     free(userid);
     return r;
 }
@@ -271,7 +272,7 @@ int main(int argc, char *argv[])
 {
     extern char *optarg;
     int opt, r = 0;
-    char *alt_config = NULL;
+    char *alt_config = NULL, *intname = NULL, *extname = NULL;
     struct mailbox *mailbox = NULL;
     int mode = MODE_UNKNOWN;
     unsigned numrestored = 0;
@@ -376,7 +377,7 @@ int main(int argc, char *argv[])
     }
 
     /* Translate mailboxname */
-    char *intname = mboxname_from_external(argv[optind], &unex_namespace, NULL);
+    intname = mboxname_from_external(argv[optind], &unex_namespace, NULL);
 
     if (mode == MODE_LIST) {
         list_expunged(intname);
@@ -403,7 +404,7 @@ int main(int argc, char *argv[])
         qsort(uids, nuids, sizeof(unsigned long), compare_uid);
     }
 
-    char *extname = mboxname_to_external(intname, &unex_namespace, NULL);
+    extname = mboxname_to_external(intname, &unex_namespace, NULL);
 
     printf("restoring %sexpunged messages in mailbox '%s'\n",
             mode == MODE_ALL ? "all " : "", extname);

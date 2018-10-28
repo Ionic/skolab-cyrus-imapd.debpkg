@@ -52,8 +52,30 @@
 
 #include "mailbox.h"
 
+extern const char *icalparameter_get_value_as_string(icalparameter *param);
+extern struct icaldatetimeperiodtype
+icalproperty_get_datetimeperiod(icalproperty *prop);
+extern time_t icaltime_to_timet(icaltimetype t, const icaltimezone *floatingtz);
+
+/* If range is a NULL period, callback() is executed for ALL occurrences,
+   otherwise callback() is only executed for occurrences that overlap the range.
+   callback() returns true (1) while it wants more occurrences, 0 to finish */
+extern int icalcomponent_myforeach(icalcomponent *comp,
+                                   struct icalperiodtype range,
+                                   const icaltimezone *floatingtz,
+                                   int (*callback) (icalcomponent *comp,
+                                                    icaltimetype start,
+                                                    icaltimetype end,
+                                                    void *data),
+                                   void *callback_data);
+
+
+extern icalcomponent *ical_string_as_icalcomponent(const struct buf *buf);
+extern struct buf *my_icalcomponent_as_ical_string(icalcomponent* comp);
+
 extern icalcomponent *record_to_ical(struct mailbox *mailbox,
-                                     const struct index_record *record);
+                                     const struct index_record *record,
+                                     char **schedule_userid);
 
 extern const char *get_icalcomponent_errstr(icalcomponent *ical);
 
@@ -63,14 +85,83 @@ extern icalproperty *icalcomponent_get_first_invitee(icalcomponent *comp);
 extern icalproperty *icalcomponent_get_next_invitee(icalcomponent *comp);
 extern const char *icalproperty_get_invitee(icalproperty *prop);
 
-#ifndef HAVE_TZDIST_PROPS
+extern icaltimetype icalcomponent_get_recurrenceid_with_zone(icalcomponent *c);
+
+extern icalproperty *icalcomponent_get_x_property_by_name(icalcomponent *comp,
+                                                          const char *name);
+
+extern struct icalperiodtype icalcomponent_get_utc_timespan(icalcomponent *comp,
+                                                            icalcomponent_kind kind);
+
+extern struct icalperiodtype icalrecurrenceset_get_utc_timespan(icalcomponent *ical,
+                                                                icalcomponent_kind kind,
+                                                                unsigned *is_recurring,
+                                                                void (*comp_cb)(icalcomponent*,
+                                                                                void*),
+                                                                void *cb_rock);
+
+extern void icaltime_set_utc(struct icaltimetype *t, int set);
+
+
+/* Functions not declared in in libical < v2.0 */
+
+#if !HAVE_DECL_ICALPROPERTY_GET_PARENT
+extern icalcomponent *icalproperty_get_parent(const icalproperty *property);
+#endif
+
+#if !HAVE_DECL_ICALRECUR_FREQ_TO_STRING
+extern const char *icalrecur_freq_to_string(icalrecurrencetype_frequency kind);
+#endif
+
+#if !HAVE_DECL_ICALRECUR_WEEKDAY_TO_STRING
+extern const char *icalrecur_weekday_to_string(icalrecurrencetype_weekday kind);
+#endif
+
+
+#ifdef HAVE_TZDIST_PROPS
+
+#define icalcomponent_get_tzuntil_property(comp) \
+    icalcomponent_get_first_property(comp, ICAL_TZUNTIL_PROPERTY)
+
+#else /* !HAVE_TZDIST_PROPS */
 
 /* Functions to replace those not available in libical < v2.0 */
+
+#define icalcomponent_get_tzuntil_property(comp) \
+    icalcomponent_get_x_property_by_name(comp, "TZUNTIL")
 
 extern icalproperty *icalproperty_new_tzidaliasof(const char *v);
 extern icalproperty *icalproperty_new_tzuntil(struct icaltimetype v);
 
 #endif /* HAVE_TZDIST_PROPS */
+
+
+#ifdef HAVE_VALARM_EXT_PROPS
+
+#define icalcomponent_get_acknowledged_property(comp) \
+    icalcomponent_get_first_property(comp, ICAL_ACKNOWLEDGED_PROPERTY)
+
+#else /* !HAVE_VALARM_EXT_PROPS */
+
+/* Functions to replace those not available in libical < v1.0 */
+
+#define icalcomponent_get_acknowledged_property(comp) \
+    icalcomponent_get_x_property_by_name(comp, "ACKNOWLEDGED")
+
+extern icalproperty *icalproperty_new_acknowledged(struct icaltimetype v);
+extern struct icaltimetype icalproperty_get_acknowledged(const icalproperty *prop);
+
+#endif /* HAVE_VALARM_EXT_PROPS */
+
+
+#ifndef HAVE_RSCALE
+
+/* Functions to replace those not available in libical < v1.0 */
+
+#define icalrecurrencetype_month_is_leap(month) 0
+#define icalrecurrencetype_month_month(month) month
+
+#endif /* HAVE_RSCALE */
 
 
 #ifdef HAVE_MANAGED_ATTACH_PARAMS
@@ -104,6 +195,8 @@ extern const char *icalparameter_get_managedid(icalparameter *param);
 extern void icalparameter_set_managedid(icalparameter *param, const char *id);
 
 extern icalparameter *icalparameter_new_size(const char *sz);
+
+extern const char *icalparameter_get_size(icalparameter *param);
 
 extern void icalparameter_set_size(icalparameter *param, const char *sz);
 

@@ -1,0 +1,69 @@
+
+Cyrus Murder
+************
+
+The Cyrus Murder provides the ability to horizontally scale your Cyrus
+IMAP environment across multiple servers. It is similar in nature to
+various proxy solutions such as nginx or perdition with the difference
+being that Murder offers a uniform namespace. Those not currently
+using shared mailboxes and who don't intend to use shared mailboxes in
+the future, should probably just consider using a simple proxy
+solution.
+
+* Cyrus Murder: Concepts
+
+  * Overview
+
+  * Architecture
+
+  * Implementation
+
+  * Analysis
+
+  * Futures
+
+  * Appendices
+
+* Cyrus Murder: Installation and Administration
+
+  * Architecture
+
+  * Terminology
+
+  * Installation
+
+  * Administration
+
+  * Gotchas
+
+  * Troubleshooting
+
+* Cyrus Murder Mupdate Details
+
+  * Participants
+
+  * Data Formats
+
+  * Server Responses
+
+  * Server Initial Response
+
+  * Commands
+
+  * Database Synchronization
+
+* Cyrus Murder Failure Modes
+
+  * What happens when the Murder mupdate master is unavailable?
+
+  * What happens when the Murder mupdate master is available again?
+
+  * What if my mupdate master blows up and I have to recover it?
+
+* Cyrus Murder Mail Delivery
+
+  * Standard Way
+
+  * Query local mailboxes.db
+
+  * Contact local mupdate server

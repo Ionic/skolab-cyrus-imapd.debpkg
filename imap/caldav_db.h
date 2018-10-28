@@ -85,6 +85,8 @@ enum {
     CAL_COMP_VCALENDAR =        (1<<15)
 };
 
+#define CAL_COMP_REAL            0xff   /* All "real" components */
+
 struct caldav_db;
 
 struct comp_flags {
@@ -136,6 +138,13 @@ int caldav_lookup_resource(struct caldav_db *caldavdb,
                            struct caldav_data **result,
                            int tombstones);
 
+/* lookup an entry from 'caldavdb' by mailbox and IMAP uid
+   (optionally inside a transaction for updates) */
+int caldav_lookup_imapuid(struct caldav_db *caldavdb,
+                          const char *mailbox, int uid,
+                          struct caldav_data **result,
+                          int tombstones);
+
 /* lookup an entry from 'caldavdb' by iCal UID
    (optionally inside a transaction for updates) */
 int caldav_lookup_uid(struct caldav_db *caldavdb, const char *ical_uid,
@@ -144,6 +153,14 @@ int caldav_lookup_uid(struct caldav_db *caldavdb, const char *ical_uid,
 /* process each entry for 'mailbox' in 'caldavdb' with cb() */
 int caldav_foreach(struct caldav_db *caldavdb, const char *mailbox,
                    caldav_cb_t *cb, void *rock);
+
+/* process each entry for 'mailbox' in 'caldavdb' with cb()
+ * which last recurrence ends after 'after' and first
+ * recurrence starts before 'before'. The largest possible
+ * timerange spans from caldav_epoch to caldav_eternity. */
+int caldav_foreach_timerange(struct caldav_db *caldavdb, const char *mailbox,
+                             time_t after, time_t before,
+                             caldav_cb_t *cb, void *rock);
 
 /* write an entry to 'caldavdb' */
 int caldav_write(struct caldav_db *caldavdb, struct caldav_data *cdata);
@@ -167,11 +184,16 @@ int caldav_abort(struct caldav_db *caldavdb);
 
 char *caldav_mboxname(const char *userid, const char *name);
 
-/* Get time period (start/end) of a component based in RFC 4791 Sec 9.9 */
-void caldav_get_period(icalcomponent *comp, icalcomponent_kind kind, struct icalperiodtype *period);
-
 int caldav_get_events(struct caldav_db *caldavdb,
                       const char *mailbox, const char *ical_uid,
                       caldav_cb_t *cb, void *rock);
+
+/* Process each entry for 'caldavdb' with a modseq higher than oldmodseq,
+ * in ascending order of modseq.
+ * If mailbox is not NULL, only process entries of this mailbox.
+ * If max_records is positive, only call cb for at most this entries. */
+int caldav_get_updates(struct caldav_db *caldavdb,
+                       modseq_t oldmodseq, const char *mailbox, int kind,
+                       int max_records, caldav_cb_t *cb, void *rock);
 
 #endif /* CALDAV_DB_H */

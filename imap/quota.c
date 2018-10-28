@@ -83,6 +83,7 @@
 #include "quota.h"
 #include "convert_code.h"
 #include "util.h"
+#include <jansson.h>
 
 /* generated headers are not necessarily in current directory */
 #include "imap/imap_err.h"
@@ -118,6 +119,8 @@ static int quota_todo = 0;
 
 static int test_sync_mode = 0;
 
+static json_t *jsonout;
+
 int main(int argc,char **argv)
 {
     int opt;
@@ -131,7 +134,7 @@ int main(int argc,char **argv)
         fatal("must run as the Cyrus user", EC_USAGE);
     }
 
-    while ((opt = getopt(argc, argv, "C:d:fqZ")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:d:fqJZ")) != EOF) {
         switch (opt) {
         case 'C': /* alt config file */
             alt_config = optarg;
@@ -147,6 +150,10 @@ int main(int argc,char **argv)
 
         case 'f':
             fflag = 1;
+            break;
+
+        case 'J':
+            jsonout = json_object();
             break;
 
         /* deliberately undocumented option for testing */
@@ -209,6 +216,8 @@ int main(int argc,char **argv)
     for (i = 0; i < quota_num; i++)
         free(quotaroots[i].name);
     free(quotaroots);
+
+    if (jsonout) json_decref(jsonout);
 
     cyrus_done();
 
@@ -529,7 +538,7 @@ int fixquota_fixroot(struct mailbox *mailbox,
 {
     int r;
 
-    printf("%s: quota root %s --> %s\n", mailbox->name,
+    fprintf(stderr, "%s: quota root %s --> %s\n", mailbox->name,
            mailbox->quotaroot ? mailbox->quotaroot : "(none)",
            root ? root : "(none)");
 
@@ -552,7 +561,7 @@ int fixquota_finish(int thisquota)
 
     if (!quotaroots[thisquota].refcount) {
         quotaroots[thisquota].deleted = 1;
-        printf("%s: removed\n", root);
+        fprintf(stderr, "%s: removed\n", root);
         r = quota_deleteroot(root);
         if (r) {
             errmsg("failed deleting quotaroot '%s'", root, r);
@@ -571,7 +580,7 @@ int fixquota_finish(int thisquota)
     /* is it different? */
     for (res = 0; res < QUOTA_NUMRESOURCES; res++) {
         if (localq.scanuseds[res] != localq.useds[res]) {
-            printf("%s: %s usage was " QUOTA_T_FMT ", now " QUOTA_T_FMT "\n",
+            fprintf(stderr, "%s: %s usage was " QUOTA_T_FMT ", now " QUOTA_T_FMT "\n",
                 root,
                 quota_names[res],
                 localq.useds[res],
@@ -658,8 +667,16 @@ int fixquotas(char *domain, char **roots, int nroots)
     return r;
 }
 
-static void reportquota_resource(struct quota * quota, const char *root, int res)
+static void reportquota_resource(struct quota * quota, const char *root, int res, json_t *jsonroot)
 {
+    if (jsonroot) {
+        json_t *obj = json_object();
+        json_object_set_new(obj, "used", json_integer(quota->useds[res]));
+        if (quota->limits[res] > 0)
+            json_object_set_new(obj, "limit", json_integer(quota->limits[res] * quota_units[res]));
+        json_object_set_new(jsonroot, quota_names[res], obj);
+        return;
+    }
     if (quota->limits[res] > 0) {
         printf(" %7lld %8lld", quota->limits[res],
             (quota_t)((quota_t)((quota->useds[res] / quota_units[res])
@@ -684,7 +701,8 @@ static void reportquota(void)
     int i;
     int res;
 
-    printf("   Quota   %% Used     Used             Resource Root\n");
+    if (!jsonout)
+        printf("   Quota   %% Used     Used             Resource Root\n");
 
     for (i = 0; i < quota_num; i++) {
         struct quota localq;
@@ -700,10 +718,26 @@ static void reportquota(void)
             return;
         }
 
-        for (res = 0; res < QUOTA_NUMRESOURCES; res++) {
-            reportquota_resource(&localq, quotaroots[i].name, res);
+        mbname_t *mbname = mbname_from_intname(quotaroots[i].name);
+        const char *extname = mbname_extname(mbname, &quota_namespace, NULL);
+
+        json_t *jsonroot = NULL;
+        if (jsonout) {
+            jsonroot = json_object();
+            json_object_set_new(jsonout, extname, jsonroot);
         }
 
+        for (res = 0; res < QUOTA_NUMRESOURCES; res++) {
+            reportquota_resource(&localq, extname, res, jsonroot);
+        }
+
+        mbname_free(&mbname);
         quota_free(&localq);
+    }
+
+    if (jsonout) {
+        char *buf = json_dumps(jsonout, JSON_INDENT(2));
+        printf("%s\n", buf);
+        free(buf);
     }
 }

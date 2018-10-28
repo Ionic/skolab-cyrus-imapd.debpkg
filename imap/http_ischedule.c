@@ -98,32 +98,32 @@ static time_t compile_time;
 static struct mime_type_t isched_mime_types[] = {
     /* First item MUST be the default type and storage format */
     { "text/calendar; charset=utf-8", "2.0", "ics",
-      (char* (*)(void *)) &icalcomponent_as_ical_string_r,
-      (void * (*)(const char*)) &icalparser_parse_string,
+      (struct buf* (*)(void *)) &my_icalcomponent_as_ical_string,
+      (void * (*)(const struct buf*)) &ical_string_as_icalcomponent,
       (void (*)(void *)) &icalcomponent_free, NULL, NULL
     },
     { "application/calendar+xml; charset=utf-8", NULL, "xcs",
-      (char* (*)(void *)) &icalcomponent_as_xcal_string,
-      (void * (*)(const char*)) &xcal_string_as_icalcomponent,
+      (struct buf* (*)(void *)) &icalcomponent_as_xcal_string,
+      (void * (*)(const struct buf*)) &xcal_string_as_icalcomponent,
       NULL, NULL, NULL
     },
-#ifdef WITH_JSON
     { "application/calendar+json; charset=utf-8", NULL, "jcs",
-      (char* (*)(void *)) &icalcomponent_as_jcal_string,
-      (void * (*)(const char*)) &jcal_string_as_icalcomponent,
+      (struct buf* (*)(void *)) &icalcomponent_as_jcal_string,
+      (void * (*)(const struct buf*)) &jcal_string_as_icalcomponent,
       NULL, NULL, NULL,
     },
-#endif
     { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }
 };
 
 struct namespace_t namespace_ischedule = {
-    URL_NS_ISCHEDULE, 0, "/ischedule", ISCHED_WELLKNOWN_URI, 0 /* auth */,
+    URL_NS_ISCHEDULE, 0, "/ischedule", ISCHED_WELLKNOWN_URI,
+    http_allow_noauth, /*authschemes*/0,
     /*mbtype*/0,
     (ALLOW_READ | ALLOW_POST | ALLOW_ISCHEDULE),
-    isched_init, NULL, NULL, isched_shutdown,
+    isched_init, NULL, NULL, isched_shutdown, NULL, NULL,
     {
         { NULL,                 NULL }, /* ACL          */
+        { NULL,                 NULL }, /* BIND         */
         { NULL,                 NULL }, /* COPY         */
         { NULL,                 NULL }, /* DELETE       */
         { &meth_get_isched,     NULL }, /* GET          */
@@ -133,22 +133,27 @@ struct namespace_t namespace_ischedule = {
         { NULL,                 NULL }, /* MKCOL        */
         { NULL,                 NULL }, /* MOVE         */
         { &meth_options_isched, NULL }, /* OPTIONS      */
+        { NULL,                 NULL }, /* PATCH        */
         { &meth_post_isched,    NULL }, /* POST         */
         { NULL,                 NULL }, /* PROPFIND     */
         { NULL,                 NULL }, /* PROPPATCH    */
         { NULL,                 NULL }, /* PUT          */
         { NULL,                 NULL }, /* REPORT       */
         { &meth_trace,          NULL }, /* TRACE        */
+        { NULL,                 NULL }, /* UNBIND       */
         { NULL,                 NULL }  /* UNLOCK       */
     }
 };
 
 struct namespace_t namespace_domainkey = {
-    URL_NS_DOMAINKEY, 0, "/domainkeys", "/.well-known/domainkey", 0 /* auth */,
+    URL_NS_DOMAINKEY, 0, "/domainkeys", "/.well-known/domainkey",
+    http_allow_noauth, /*authschemes*/0,
     /*mbtype*/0,
-    ALLOW_READ, NULL, NULL, NULL, NULL,
+    ALLOW_READ,
+    NULL, NULL, NULL, NULL, NULL, NULL,
     {
         { NULL,                 NULL }, /* ACL          */
+        { NULL,                 NULL }, /* BIND         */
         { NULL,                 NULL }, /* COPY         */
         { NULL,                 NULL }, /* DELETE       */
         { &meth_get_domainkey,  NULL }, /* GET          */
@@ -164,12 +169,13 @@ struct namespace_t namespace_domainkey = {
         { NULL,                 NULL }, /* PUT          */
         { NULL,                 NULL }, /* REPORT       */
         { &meth_trace,          NULL }, /* TRACE        */
+        { NULL,                 NULL }, /* UNBIND       */
         { NULL,                 NULL }  /* UNLOCK       */
     }
 };
 
 
-void isched_capa_hdr(struct transaction_t *txn, time_t *lastmod)
+void isched_capa_hdr(struct transaction_t *txn, time_t *lastmod, struct stat *sb)
 {
     struct stat sbuf;
     time_t mtime;
@@ -179,6 +185,7 @@ void isched_capa_hdr(struct transaction_t *txn, time_t *lastmod)
     txn->resp_body.iserial = mtime +
         (rscale_calendars ? rscale_calendars->num_elements : 0);
     if (lastmod) *lastmod = mtime;
+    if (sb) *sb = sbuf;
 }
 
 
@@ -200,7 +207,7 @@ static int meth_get_isched(struct transaction_t *txn,
     if (!lastmod) message_guid_set_null(&prev_guid);
 
     /* Fill in iSchedule-Capabilities */
-    isched_capa_hdr(txn, &lastmod);
+    isched_capa_hdr(txn, &lastmod, &sbuf);
 
     /* We don't handle GET on a anything other than ?action=capabilities */
     action = hash_lookup("action", &txn->req_qparams);
@@ -234,6 +241,8 @@ static int meth_get_isched(struct transaction_t *txn,
         txn->flags.cc |= CC_MAXAGE;
 
         if (precond != HTTP_NOT_MODIFIED) break;
+
+        GCC_FALLTHROUGH
 
     default:
         /* We failed a precondition - don't perform the request */
@@ -377,7 +386,7 @@ static int meth_get_isched(struct transaction_t *txn,
 static int meth_options_isched(struct transaction_t *txn, void *params)
 {
     /* Fill in iSchedule-Capabilities */
-    isched_capa_hdr(txn, NULL);
+    isched_capa_hdr(txn, NULL, NULL);
 
     return meth_options(txn, params);
 }
@@ -397,7 +406,7 @@ static int meth_post_isched(struct transaction_t *txn,
     const char *uid = NULL;
 
     /* Fill in iSchedule-Capabilities */
-    isched_capa_hdr(txn, NULL);
+    isched_capa_hdr(txn, NULL, NULL);
 
     /* Response should not be cached */
     txn->flags.cc |= CC_NOCACHE;
@@ -472,7 +481,7 @@ static int meth_post_isched(struct transaction_t *txn,
     }
 
     /* Parse the iCal data for important properties */
-    ical = mime->from_string(buf_cstring(&txn->req_body.payload));
+    ical = mime->to_object(&txn->req_body.payload);
     if (!ical || (icalcomponent_isa(ical) != ICAL_VCALENDAR_COMPONENT)) {
         txn->error.precond = ISCHED_INVALID_DATA;
         return HTTP_BAD_REQUEST;
@@ -516,12 +525,14 @@ static int meth_post_isched(struct transaction_t *txn,
         case ICAL_METHOD_POLLSTATUS:
             if (kind != ICAL_VPOLL_COMPONENT) goto invalid_meth;
 
+            GCC_FALLTHROUGH
+
         case ICAL_METHOD_REQUEST:
         case ICAL_METHOD_REPLY:
         case ICAL_METHOD_CANCEL: {
             struct sched_data sched_data =
-                { 1, meth == ICAL_METHOD_REPLY,
-                  ical, NULL, 0, ICAL_SCHEDULEFORCESEND_NONE, NULL };
+                { 1, meth == ICAL_METHOD_REPLY, 0,
+                  ical, ICAL_SCHEDULEFORCESEND_NONE, NULL };
             xmlNodePtr root = NULL;
             xmlNsPtr ns[NUM_NAMESPACE];
             struct auth_state *authstate;
@@ -545,8 +556,8 @@ static int meth_post_isched(struct transaction_t *txn,
 
                 while ((recipient = tok_next(&tok))) {
                     /* Is recipient remote or local? */
-                    struct sched_param sparam;
-                    int r = caladdress_lookup(recipient, &sparam);
+                    struct caldav_sched_param sparam;
+                    int r = caladdress_lookup(recipient, &sparam, /*myuserid*/NULL);
 
                     /* Don't allow scheduling with remote users via iSchedule */
                     if (sparam.flags & SCHEDTYPE_REMOTE) r = HTTP_FORBIDDEN;
@@ -588,7 +599,7 @@ static int meth_post_isched(struct transaction_t *txn,
 }
 
 
-int isched_send(struct sched_param *sparam, const char *recipient,
+int isched_send(struct caldav_sched_param *sparam, const char *recipient,
                 icalcomponent *ical, xmlNodePtr *xml)
 {
     int r = 0;
@@ -746,7 +757,7 @@ int isched_send(struct sched_param *sparam, const char *recipient,
 
     /* Read response (req_hdr and req_body are actually the response) */
     txn.req_body.flags = BODY_DECODE;
-    r = http_read_response(be, METH_POST, &code, NULL,
+    r = http_read_response(be, METH_POST, &code,
                            &txn.req_hdrs, &txn.req_body, &txn.error.desc);
     syslog(LOG_INFO, "isched_send(%s, %s) => %u",
            recipient, buf_cstring(&txn.buf), code);
@@ -754,7 +765,7 @@ int isched_send(struct sched_param *sparam, const char *recipient,
     if (!r) {
         switch (code) {
         case 200:  /* Successful */
-            r = parse_xml_body(&txn, xml);
+            r = parse_xml_body(&txn, xml, NULL);
             break;
 
         case 301:
@@ -1016,6 +1027,8 @@ static int meth_get_domainkey(struct transaction_t *txn,
 
         if (precond != HTTP_NOT_MODIFIED) break;
 
+        GCC_FALLTHROUGH
+
     default:
         /* We failed a precondition - don't perform the request */
         resp_body->type = NULL;
@@ -1052,7 +1065,7 @@ static void isched_init(struct buf *serverinfo)
     if (config_mupdate_server && config_getstring(IMAPOPT_PROXYSERVERS)) {
         /* If backend server, we require iSchedule (w/o DKIM) */
         namespace_ischedule.enabled = -1;
-        buf_len(serverinfo);  // squash compiler warning when #undef WITH_DKIM
+        buf_cstring(serverinfo);  // squash compiler warning when #undef WITH_DKIM
     }
 #ifdef WITH_DKIM
     else {

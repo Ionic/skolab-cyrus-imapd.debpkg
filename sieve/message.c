@@ -97,7 +97,7 @@ int do_reject(action_list_t *a, const char *msg)
  *
  * incompatible with: reject
  */
-int do_fileinto(action_list_t *a, const char *mbox, int cancel_keep,
+int do_fileinto(action_list_t *a, const char *mbox, int cancel_keep, int do_create,
                 strarray_t *imapflags)
 {
     action_list_t *b = NULL;
@@ -138,6 +138,7 @@ int do_fileinto(action_list_t *a, const char *mbox, int cancel_keep,
     a->cancel_keep |= cancel_keep;
     a->u.fil.mailbox = mbox;
     a->u.fil.imapflags = imapflags;
+    a->u.fil.do_create = do_create;
     return 0;
 }
 
@@ -294,90 +295,6 @@ int do_vacation(action_list_t *a, char *addr, char *fromaddr,
     b->next = a;
     return 0;
 }
-
-/* setflag f on message m
- *
- * incompatible with: reject
- */
-int do_setflag(action_list_t *a)
-{
-    action_list_t *b = NULL;
-
-    /* see if this conflicts with any previous actions taken on this message */
-    while (a != NULL) {
-        b = a;
-        if (a->a == ACTION_REJECT)
-            return SIEVE_RUN_ERROR;
-        a = a->next;
-    }
-
-    /* add to the action list */
-    a = (action_list_t *) xmalloc(sizeof(action_list_t));
-    if (a == NULL)
-        return SIEVE_NOMEM;
-    a->a = ACTION_SETFLAG;
-    a->cancel_keep = 0;
-    b->next = a;
-    a->next = NULL;
-    return 0;
-}
-
-/* addflag f on message m
- *
- * incompatible with: reject
- */
-int do_addflag(action_list_t *a, const char *flag)
-{
-    action_list_t *b = NULL;
-
-    /* see if this conflicts with any previous actions taken on this message */
-    while (a != NULL) {
-        b = a;
-        if (a->a == ACTION_REJECT)
-            return SIEVE_RUN_ERROR;
-        a = a->next;
-    }
-
-    /* add to the action list */
-    a = (action_list_t *) xmalloc(sizeof(action_list_t));
-    if (a == NULL)
-        return SIEVE_NOMEM;
-    a->a = ACTION_ADDFLAG;
-    a->cancel_keep = 0;
-    a->u.fla.flag = flag;
-    b->next = a;
-    a->next = NULL;
-    return 0;
-}
-
-/* removeflag f on message m
- *
- * incompatible with: reject
- */
-int do_removeflag(action_list_t *a, const char *flag)
-{
-    action_list_t *b = NULL;
-
-    /* see if this conflicts with any previous actions taken on this message */
-    while (a != NULL) {
-        b = a;
-        if (a->a == ACTION_REJECT)
-            return SIEVE_RUN_ERROR;
-        a = a->next;
-    }
-
-    /* add to the action list */
-    a = (action_list_t *) xmalloc(sizeof(action_list_t));
-    if (a == NULL)
-        return SIEVE_NOMEM;
-    a->a = ACTION_REMOVEFLAG;
-    a->cancel_keep = 0;
-    a->u.fla.flag = flag;
-    b->next = a;
-    a->next = NULL;
-    return 0;
-}
-
 
 /* mark message m
  *
