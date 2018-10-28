@@ -1,0 +1,296 @@
+
+CalDAV
+******
+
+
+Configuration
+=============
+
+
+calendarprefix
+^^^^^^^^^^^^^^
+
+   *This shows the default value: change it in imapd.conf to suit your
+   needs.*
+
+   "calendarprefix:" #calendars
+
+      The prefix for the calendar mailboxes hierarchies.  The
+      hierarchy delimiter will be automatically appended.  The public
+      calendar hierarchy will be at the toplevel of the shared
+      namespace.  A user's personal calendar hierarchy will be a child
+      of their Inbox.
+
+When enabled, the CalDAV module allows Cyrus to function as a calendar
+and scheduling server. This module uses a subset of the mailbox
+hierarchy as calendar collections, the toplevel of which is specified
+by the "calendarprefix" option. The public calendar hierarchy will
+reside at the toplevel of the shared mailbox namespace. A user's
+personal calendar hierarchy will be a child of their Inbox.
+
+For example, using the default value for calendarprefix, a calendar
+named Default for user "murch" would reside in the mailbox named
+"user.murch.#calendars.Default".
+
+Warning: Note that mailboxes in the calendar hierarchies (those
+  under calendarprefix) **should not** be accessed with an IMAP client
+  as doing so will leave a mailbox in a state unsuitable for CalDAV.
+  To this end, calendar mailboxes will not returned by Cyrus imapd in
+  response to an IMAP client's request for the available calendar
+  list, but Cyrus imapd can not otherwise prevent an IMAP client from
+  accessing them.
+
+
+caldav_allowscheduling
+^^^^^^^^^^^^^^^^^^^^^^
+
+   *This shows the default value: change it in imapd.conf to suit your
+   needs.*
+
+   "caldav_allowscheduling:" on
+
+      Enable calendar scheduling operations. If set to "apple", the
+      server will emulate Apple CalendarServer behavior as closely as
+      possible. Allowed values: *off*, *on*, *apple*
+
+By default, the CalDAV module will automatically perform scheduling
+operations when a scheduling object (invite or reply) is stored on or
+deleted from the server. Support for the calendar-auto-schedule
+feature can be disabled with the "caldav_allowscheduling" option.
+
+
+Administration
+==============
+
+The CalDAV module will *automatically* create the required calendars
+for a user the first time that the user authenticates to the CalDAV
+server. Note that the user MUST have an existing IMAP Inbox in order
+for the calendars to be created.
+
+
+autocreate options
+^^^^^^^^^^^^^^^^^^
+
+   *This shows the default value: change it in imapd.conf to suit your
+   needs.*
+
+   "caldav_create_default:" 1
+
+      Create the 'Default' calendar if it doesn't already exist
+
+   "caldav_create_attach:" 1
+
+      Create the 'Attachments' calendar if it doesn't already exist
+
+   "caldav_create_sched:" 1
+
+      Create the 'Inbox' and 'Outbox' calendars if they don't already
+      exist
+
+Autocreate of the various calendars can be disabled with the
+"caldav_create_default/sched/attach" options, if you have an alternate
+mechanism to create calendars.
+
+There is also a Cyrus web GUI for managing calendar resources. It
+allows you to:
+
+   * Create new collections, with whichever components are required
+
+   * Alter existing collections with different components
+
+   * Subscribe or download existing collections via prepared URLs
+
+   * Set visibility attributes such as Public or Transparent
+
+   * Delete existing collections
+
+To access the Cyrus web GUI for CalDAV Collection Management, point a
+web browser at "https://<servername>/dav/calendars/user/<username>"
+
+
+Calendar access controls
+------------------------
+
+The CalDAV module uses the same access controls as the other Cyrus
+services. The cyradm(8) tool can be used to adjust ACLs on calendars
+as needed. The tables below show how the access controls are used by
+the CalDAV module.
+
+
+
+
+Freebusy URL
+============
+
+When enabled in conjuction with the CalDAV module, the Freebusy URL
+module allows non-CalDAV and/or remote calendaring clients to query
+the freebusy information of Cyrus CalDAV users.
+
+Access to the freebusy information is controlled by the "freebusy" ACL
+(9) on a user's home calendar collection. (e.g. a mailbox named
+"user.murch.#calendars"). To enable unauthenticated users (non-Cyrus)
+to access freebusy information, the freebusy ACL must be given to
+"anyone".
+
+Freebusy information is accessed via URLs of the following form:
+"https://<servername>/freebusy/user/<userid>"
+
+Query parameters can be added to the URL per Section 4 of Freebusy
+Read URL, allowing the user to choose to set the start, end, period
+and format of their query results.
+
+
+Time Zone Distribution Service (TZDist)
+=======================================
+
+
+What is TZDist
+--------------
+
+The Time Zone module allows Cyrus to function as a Time Zone
+Distribution Service (**RFC 7808** and **RFC 7809**), providing time
+zone data for CalDAV and calendaring clients, without having to wait
+for their client vendor and/or OS vendor to update the timezone
+information. The responsibility for keeping the time zone information
+up to date then falls upon the Cyrus administrator.
+
+TZDist is optional: without Cyrus having TZDist enabled, calendar
+clients should still be able to get their timezone information from
+their client or their OS.
+
+TZDist is also required if you want the CalDAV server to strip known
+VTIMEZONEs from incoming iCalendar data (as advertised by the
+"calendar-no-timezone" DAV option from **RFC 7809**).
+
+
+Configuration
+-------------
+
+
+zoneinfo config
+^^^^^^^^^^^^^^^
+
+   *This shows the default value: change it in imapd.conf to suit your
+   needs.*
+
+   "zoneinfo_db_path:" <none>
+
+      The absolute path to the zoneinfo db file.  If not specified,
+      will be configdirectory/zoneinfo.db
+
+
+
+   "zoneinfo_db:" twoskip
+
+      The cyrusdb backend to use for zoneinfo.
+
+      Allowed values: *flat*, *skiplist*, *twoskip*, *lmdb*
+
+This module stores time zone data in the "zoneinfo/" subdirectory of
+the Cyrus configuration directory (as specified by the
+"configdirectory" option). The data is indexed by a database whose
+location is specified by the "zoneinfo_db_path" option, using the
+format specified by the "zoneinfo_db" option.
+
+
+Administration
+--------------
+
+This module is designed to use the IANA Time Zone Database data
+(a.k.a. Olson Database) converted to the iCalendar format.
+
+Cyrus uses a modified vzic to convert IANA formatted data into
+iCalendar format. There is more information on Cyrus vzic in
+"tools/vzic/README".
+
+The steps to populate the Cyrus "zoneinfo/" directory are:
+
+1. Build the local "vzic" utility located in the "tools/vzic/"
+   subdirectory of the Cyrus source code. Run make in the tools/vzic/
+   subdirectory to build.
+
+2. Download the latest version of the Time Zone Database data from
+   IANA. Note you only need the **data**, not the code.
+
+3. Expand the downloaded time zone data into a temporary directory
+   of your choice.
+
+4. Populate "<configdirectory>/zoneinfo/" with iCalendar data:
+
+   *Initial Install Only*
+
+   1. Convert the raw data into iCalendar format by running vzic as
+      follows: "vzic --pure --olson-dir <location-of-raw-data>
+      --output-dir <configdirectory>/zoneinfo"
+
+      This will create and install iCalendar data directly into the
+      "<configdirectory>/zoneinfo/" directory.
+
+   *Updating Data Only*
+
+   2. Convert the raw data into iCalendar format by running vzic as
+      follows: "vzic --pure --olson-dir <location-of-raw-data>"
+
+      This will create a zoneinfo/ subdirectory in your current
+      location (which should be *tools/vzic/*).
+
+   3. Merge new/updated iCalendar data into the
+      "<configdirectory>/zoneinfo/" directory by running vzic-merge.pl
+      in your current location: "vzic-merge.pl"
+
+5. Rebuild the Cyrus zoneinfo index by running ctl_zoneinfo(8) as
+   follows: "ctl_zoneinfo -r <version-string>"
+
+   where <version-string> describes the recently downloaded time zone
+   data (e.g. "IANA Time Zone Database v.2013h").
+
+6. Check that the zoneinfo index database and all iCalendar data
+   files/links are readable by the cyrus user.
+
+
+iSchedule
+=========
+
+
+About iSchedule
+---------------
+
+Note: iSchedule support in Cyrus is a work in progress.
+
+iSchedule allows CalDAV servers to:
+
+* query an event participant's free/busy status prior to invitation
+  in order to set up a good meeting time, which cannot be done over
+  email.
+
+* keep participant's local event current by updating the status of
+  other participants automatically. This is not done when scheduling
+  over email as it would result in too much mail traffic and extra
+  manual overhead for the users.
+
+
+caldav_allowscheduling
+^^^^^^^^^^^^^^^^^^^^^^
+
+   *This shows the default value: change it in imapd.conf to suit your
+   needs.*
+
+   "caldav_allowscheduling:" on
+
+      Enable calendar scheduling operations. If set to "apple", the
+      server will emulate Apple CalendarServer behavior as closely as
+      possible. Allowed values: *off*, *on*, *apple*
+
+iSchedule is automatically enabled in Cyrus if both the CalDAV module
+and the "caldav_allowscheduling" options are enabled in a Cyrus
+Murder. In this instance, Cyrus uses iSchedule to move scheduling
+messages from frontend to backend servers.
+
+Support for scheduling with external servers is currently under
+development as there is the burden of authorization to verify the
+authenticity and integrity of these messages to prevent inadvertent or
+malicious data leaks or corruption.
+
+What mechanism to use for authorization is under discussion with the
+CalConnect standards body, whether this is DKIM or some other type of
+message signature.

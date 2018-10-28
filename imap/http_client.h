@@ -48,6 +48,7 @@
 #include "spool.h"
 
 /* Supported HTTP version */
+#define HTTP2_VERSION    "HTTP/2"
 #define HTTP_VERSION     "HTTP/1.1"
 #define HTTP_VERSION_LEN 8
 
@@ -64,6 +65,7 @@ struct body_t {
 /* Message Framing flags */
 enum {
     FRAMING_UNKNOWN = 0,
+    FRAMING_HTTP2,
     FRAMING_LENGTH,
     FRAMING_CHUNKED,
     FRAMING_CLOSE
@@ -91,6 +93,7 @@ enum {
 /* Index into known HTTP methods - needs to stay in sync with array */
 enum {
     METH_ACL = 0,
+    METH_BIND,
     METH_COPY,
     METH_DELETE,
     METH_GET,
@@ -100,12 +103,14 @@ enum {
     METH_MKCOL,
     METH_MOVE,
     METH_OPTIONS,
+    METH_PATCH,
     METH_POST,
     METH_PROPFIND,
     METH_PROPPATCH,
     METH_PUT,
     METH_REPORT,
     METH_TRACE,
+    METH_UNBIND,
     METH_UNLOCK,
 
     METH_UNKNOWN,  /* MUST be last */
@@ -113,13 +118,15 @@ enum {
 
 
 extern int is_mediatype(const char *pat, const char *type);
-extern int http_parse_framing(hdrcache_t hdrs, struct body_t *body,
+extern int http_parse_framing(int http2, hdrcache_t hdrs, struct body_t *body,
                               const char **errstr);
+extern int http_read_headers(struct protstream *pin, int read_sep,
+                             hdrcache_t *hdrs, const char **errstr);
 extern int http_read_body(struct protstream *pin, struct protstream *pout,
                           hdrcache_t hdrs, struct body_t *body,
                           const char **errstr);
 extern int http_read_response(struct backend *be, unsigned meth, unsigned *code,
-                              const char **statline, hdrcache_t *hdrs,
-                              struct body_t *body, const char **errstr);
+                              hdrcache_t *hdrs, struct body_t *body,
+                              const char **errstr);
 
 #endif /* _HTTP_CLIENT_H */

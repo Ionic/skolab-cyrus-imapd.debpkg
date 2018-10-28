@@ -112,117 +112,6 @@ static int no_copyback     = 0;
 
 static char *prev_userid;
 
-/* parse_success api is undocumented but my current understanding
- * is that the caller expects it to return a pointer to the position
- * within str at which base64 encoded "success data" can be found.
- * status is for passing back other status data (if required) to
- * the original caller.
- *
- * in the case of what we're doing here, there is no base64 encoded
- * 'success data', but there is a capability string that we want to
- * save.  so we grab the capability string (including the []s) and
- * chuck that in status, and then we return NULL to indicate the
- * lack of base64 data.
- */
-static char *imap_sasl_parsesuccess(char *str, const char **status)
-{
-    syslog(LOG_DEBUG, "imap_sasl_parsesuccess(): input is: %s", str);
-    if (NULL == status)  return NULL; /* nothing useful we can do */
-
-    const char *prelude = "A01 OK "; // FIXME don't hardcode this, get it from sasl_cmd->ok
-    const size_t prelude_len = strlen(prelude);
-
-    const char *capability = "[CAPABILITY ";
-    const size_t capability_len = strlen(capability);
-
-    char *start, *end;
-
-    if (strncmp(str, prelude, prelude_len)) {
-        /* this isn't the string we expected */
-        syslog(LOG_INFO, "imap_sasl_parsesuccess(): unexpected initial string contents: %s", str);
-        return NULL;
-    }
-
-    start = str + prelude_len;
-
-    if (strncmp(start, capability, capability_len)) {
-        /* this isn't a capability string */
-        syslog(LOG_INFO, "imap_sasl_parsesuccess(): str does not contain a capability string: %s", str);
-        return NULL;
-    }
-
-    end = start + capability_len;
-    while (*end != ']' && *end != '\0') {
-        end++;
-    }
-
-    if (*end == '\0') {
-        /* didn't find end of capability string */
-        syslog(LOG_INFO, "imap_sasl_parsesuccess(): did not find end of capability string: %s", str);
-        return NULL;
-    }
-
-    /* we want to keep the ], but crop the rest off */
-    *++end = '\0';
-
-    /* status gets the capability string */
-    syslog(LOG_INFO, "imap_sasl_parsesuccess(): found capability string: %s", start);
-    *status = start;
-
-    /* there's no base64 data, so return NULL */
-    return NULL;
-}
-
-static void imap_postcapability(struct backend *s)
-{
-    if (CAPA(s, CAPA_SASL_IR)) {
-        /* server supports initial response in AUTHENTICATE command */
-        s->prot->u.std.sasl_cmd.maxlen = USHRT_MAX;
-    }
-}
-
-struct protocol_t imap_csync_protocol =
-{ "imap", "imap", TYPE_STD,
-  { { { 1, NULL },
-      { "C01 CAPABILITY", NULL, "C01 ", imap_postcapability,
-        CAPAF_MANY_PER_LINE,
-        { { "AUTH", CAPA_AUTH },
-          { "STARTTLS", CAPA_STARTTLS },
-// FIXME doesn't work with compress at the moment for some reason
-//        { "COMPRESS=DEFLATE", CAPA_COMPRESS },
-// FIXME do we need these ones?
-//        { "IDLE", CAPA_IDLE },
-//        { "MUPDATE", CAPA_MUPDATE },
-//        { "MULTIAPPEND", CAPA_MULTIAPPEND },
-//        { "RIGHTS=kxte", CAPA_ACLRIGHTS },
-//        { "LIST-EXTENDED", CAPA_LISTEXTENDED },
-          { "SASL-IR", CAPA_SASL_IR },
-          { "X-REPLICATION", CAPA_REPLICATION },
-          { NULL, 0 } } },
-      { "S01 STARTTLS", "S01 OK", "S01 NO", 0 },
-      { "A01 AUTHENTICATE", 0, 0, "A01 OK", "A01 NO", "+ ", "*",
-        &imap_sasl_parsesuccess, AUTO_CAPA_AUTH_OK },
-      { "Z01 COMPRESS DEFLATE", "* ", "Z01 OK" },
-      { "N01 NOOP", "* ", "N01 OK" },
-      { "Q01 LOGOUT", "* ", "Q01 " } } }
-};
-
-static struct protocol_t csync_protocol =
-{ "csync", "csync", TYPE_STD,
-  { { { 1, "* OK" },
-      { NULL, NULL, "* OK", NULL,
-        CAPAF_ONE_PER_LINE|CAPAF_SKIP_FIRST_WORD,
-        { { "SASL", CAPA_AUTH },
-          { "STARTTLS", CAPA_STARTTLS },
-          { "COMPRESS=DEFLATE", CAPA_COMPRESS },
-          { NULL, 0 } } },
-      { "STARTTLS", "OK", "NO", 1 },
-      { "AUTHENTICATE", USHRT_MAX, 0, "OK", "NO", "+ ", "*", NULL, 0 },
-      { "COMPRESS DEFLATE", NULL, "OK" },
-      { "NOOP", NULL, "OK" },
-      { "EXIT", NULL, "OK" } } }
-};
-
 static void shut_down(int code) __attribute__((noreturn));
 static void shut_down(int code)
 {
@@ -253,6 +142,11 @@ EXPORTED void fatal(const char *s, int code)
     syslog(LOG_ERR, "Fatal error: %s", s);
     exit(code);
 }
+
+#define report_verbose(...) do {                            \
+    if (verbose) printf(__VA_ARGS__);                       \
+    if (verbose_logging) syslog(LOG_INFO, __VA_ARGS__);     \
+} while(0)
 
 /* ====================================================================== */
 
@@ -345,16 +239,25 @@ static void remove_meta(char *user, struct sync_action_list *list)
 
 static int do_sync_mailboxes(struct sync_name_list *mboxname_list,
                              struct sync_action_list *user_list,
+                             const char **channelp,
                              unsigned flags)
 {
+    struct sync_name *mbox;
     int r = 0;
 
     if (mboxname_list->count) {
-        r = sync_do_mailboxes(mboxname_list, sync_backend, flags);
-        if (r) {
+        r = sync_do_mailboxes(mboxname_list, NULL, sync_backend, channelp, flags);
+        if (channelp && r == IMAP_MAILBOX_LOCKED) {
+            for (mbox = mboxname_list->head; mbox; mbox = mbox->next) {
+                if (mbox->mark) continue;
+                sync_log_channel_mailbox(*channelp, mbox->name);
+                report_verbose("  Deferred: MAILBOX %s\n", mbox->name);
+            }
+            r = 0;
+        }
+        else if (r) {
             /* promote failed personal mailboxes to USER */
             int nonuser = 0;
-            struct sync_name *mbox;
 
             for (mbox = mboxname_list->head; mbox; mbox = mbox->next) {
                 /* done OK?  Good :) */
@@ -366,14 +269,8 @@ static int do_sync_mailboxes(struct sync_name_list *mboxname_list,
                     mbox->mark = 1;
 
                     sync_action_list_add(user_list, NULL, userid);
-                    if (verbose) {
-                        printf("  Promoting: MAILBOX %s -> USER %s\n",
-                               mbox->name, userid);
-                    }
-                    if (verbose_logging) {
-                        syslog(LOG_INFO, "  Promoting: MAILBOX %s -> USER %s",
-                               mbox->name, userid);
-                    }
+                    report_verbose("  Promoting: MAILBOX %s -> USER %s\n",
+                                   mbox->name, userid);
                     free(userid);
                 }
                 else
@@ -388,21 +285,17 @@ static int do_sync_mailboxes(struct sync_name_list *mboxname_list,
 
 static int do_restart()
 {
-    static int restartcnt = 0;
+    sync_send_restart(sync_out);
 
-    if (sync_out->userdata) {
-        /* IMAP flavor (w/ tag) */
-        struct buf *tag = (struct buf *) sync_out->userdata;
-        buf_reset(tag);
-        buf_printf(tag, "R%d", restartcnt++);
-        prot_printf(sync_out, "%s SYNC", buf_cstring(tag));
-    }
-    prot_printf(sync_out, "RESTART\r\n");
-    prot_flush(sync_out);
     return sync_parse_response("RESTART", sync_in, NULL);
 }
 
-static int do_sync(sync_log_reader_t *slr)
+/*
+ *   channelp = NULL    => we're not processing a channel
+ *   *channelp = NULL   => we're processing the default channel
+ *   *channelp = "foo"  => we're processing the channel named "foo"
+ */
+static int do_sync(sync_log_reader_t *slr, const char **channelp)
 {
     struct sync_action_list *user_list = sync_action_list_create();
     struct sync_action_list *unuser_list = sync_action_list_create();
@@ -478,21 +371,24 @@ static int do_sync(sync_log_reader_t *slr)
     }
 
     /* And then run tasks. */
+
+    /* we want to be able to defer items to the subsequent sync log */
+    sync_log_init();
+
     for (action = quota_list->head; action; action = action->next) {
         if (!action->active)
             continue;
 
-        if (sync_do_quota(action->name, sync_backend, flags)) {
+        r = sync_do_quota(action->name, sync_backend, flags);
+        if (channelp && r == IMAP_MAILBOX_LOCKED) {
+            sync_log_channel_quota(*channelp, action->name);
+            report_verbose("  Deferred: QUOTA %s\n", action->name);
+        }
+        else if (r) {
             /* XXX - bogus handling, should be user */
             sync_action_list_add(mailbox_list, action->name, NULL);
-            if (verbose) {
-                printf("  Promoting: QUOTA %s -> MAILBOX %s\n",
-                       action->name, action->name);
-            }
-            if (verbose_logging) {
-                syslog(LOG_INFO, "  Promoting: QUOTA %s -> MAILBOX %s",
-                       action->name, action->name);
-            }
+            report_verbose("  Promoting: QUOTA %s -> MAILBOX %s\n",
+                           action->name, action->name);
         }
     }
 
@@ -503,18 +399,18 @@ static int do_sync(sync_log_reader_t *slr)
         /* NOTE: ANNOTATION "" is a special case - it's a server
          * annotation, hence the check for a character at the
          * start of the name */
-        if (sync_do_annotation(action->name, sync_backend,
-                               flags) && *action->name) {
+        r = sync_do_annotation(action->name, sync_backend, flags);
+        if (!*action->name) continue;
+
+        if (channelp && r == IMAP_MAILBOX_LOCKED) {
+            sync_log_channel_annotation(*channelp, action->name);
+            report_verbose("  Deferred: ANNOTATION %s\n", action->name);
+        }
+        else if (r) {
             /* XXX - bogus handling, should be ... er, something */
             sync_action_list_add(mailbox_list, action->name, NULL);
-            if (verbose) {
-                printf("  Promoting: ANNOTATION %s -> MAILBOX %s\n",
-                       action->name, action->name);
-            }
-            if (verbose_logging) {
-                syslog(LOG_INFO, "  Promoting: ANNOTATION %s -> MAILBOX %s",
-                       action->name, action->name);
-            }
+            report_verbose("  Promoting: ANNOTATION %s -> MAILBOX %s\n",
+                           action->name, action->name);
         }
     }
 
@@ -522,28 +418,22 @@ static int do_sync(sync_log_reader_t *slr)
         if (!action->active)
             continue;
 
-        if (sync_do_seen(action->user, action->name, sync_backend, flags)) {
+        r = sync_do_seen(action->user, action->name, sync_backend, flags);
+        if (channelp && r == IMAP_MAILBOX_LOCKED) {
+            sync_log_channel_seen(*channelp, action->user, action->name);
+            report_verbose("  Deferred: SEEN %s %s\n",
+                           action->user, action->name);
+        }
+        else if (r) {
             char *userid = mboxname_to_userid(action->name);
             if (userid && mboxname_isusermailbox(action->name, 1) && !strcmp(userid, action->user)) {
                 sync_action_list_add(user_list, NULL, action->user);
-                if (verbose) {
-                    printf("  Promoting: SEEN %s %s -> USER %s\n",
-                           action->user, action->name, action->user);
-                }
-                if (verbose_logging) {
-                    syslog(LOG_INFO, "  Promoting: SEEN %s %s -> USER %s",
-                           action->user, action->name, action->user);
-                }
+                report_verbose("  Promoting: SEEN %s %s -> USER %s\n",
+                               action->user, action->name, action->user);
             } else {
                 sync_action_list_add(meta_list, NULL, action->user);
-                if (verbose) {
-                    printf("  Promoting: SEEN %s %s -> META %s\n",
-                           action->user, action->name, action->user);
-                }
-                if (verbose_logging) {
-                    syslog(LOG_INFO, "  Promoting: SEEN %s %s -> META %s",
-                           action->user, action->name, action->user);
-                }
+                report_verbose("  Promoting: SEEN %s %s -> META %s\n",
+                               action->user, action->name, action->user);
             }
             free(userid);
         }
@@ -553,16 +443,16 @@ static int do_sync(sync_log_reader_t *slr)
         if (!action->active)
             continue;
 
-        if (user_sub(action->user, action->name)) {
+        r = user_sub(action->user, action->name);
+        if (channelp && r == IMAP_MAILBOX_LOCKED) {
+            sync_log_channel_subscribe(*channelp, action->user, action->name);
+            report_verbose("  Deferred: SUB %s %s\n",
+                           action->user, action->name);
+        }
+        else if (r) {
             sync_action_list_add(meta_list, NULL, action->user);
-            if (verbose) {
-                printf("  Promoting: SUB %s %s -> META %s\n",
-                       action->user, action->name, action->user);
-            }
-            if (verbose_logging) {
-                syslog(LOG_INFO, "  Promoting: SUB %s %s -> META %s",
-                       action->user, action->name, action->name);
-            }
+            report_verbose("  Promoting: SUB %s %s -> META %s\n",
+                           action->user, action->name, action->user);
         }
     }
 
@@ -574,7 +464,7 @@ static int do_sync(sync_log_reader_t *slr)
         /* only do up to 1000 mailboxes at a time */
         if (mboxname_list->count > 1000) {
             syslog(LOG_NOTICE, "sync_mailboxes: doing 1000");
-            r = do_sync_mailboxes(mboxname_list, user_list, flags);
+            r = do_sync_mailboxes(mboxname_list, user_list, channelp, flags);
             if (r) goto cleanup;
             r = do_restart();
             if (r) goto cleanup;
@@ -583,7 +473,7 @@ static int do_sync(sync_log_reader_t *slr)
         }
     }
 
-    r = do_sync_mailboxes(mboxname_list, user_list, flags);
+    r = do_sync_mailboxes(mboxname_list, user_list, channelp, flags);
     if (r) goto cleanup;
     r = do_restart();
     if (r) goto cleanup;
@@ -592,7 +482,11 @@ static int do_sync(sync_log_reader_t *slr)
         if (!action->active)
             continue;
         r = do_unmailbox(action->name, sync_backend, flags);
-        if (r) goto cleanup;
+        if (channelp && r == IMAP_MAILBOX_LOCKED) {
+            sync_log_channel_unmailbox(*channelp, action->name);
+            report_verbose("  Deferred: UNMAILBOX %s\n", action->name);
+        }
+        else if (r) goto cleanup;
     }
 
     for (action = meta_list->head; action; action = action->next) {
@@ -600,26 +494,29 @@ static int do_sync(sync_log_reader_t *slr)
             continue;
 
         r = sync_do_meta(action->user, sync_backend, flags);
-        if (r) {
-            if (r == IMAP_INVALID_USER) goto cleanup;
-
+        if (channelp && r == IMAP_MAILBOX_LOCKED) {
+            sync_log_channel_sieve(*channelp, action->user);
+            report_verbose("  Deferred: META %s\n", action->user);
+        }
+        else if (r == IMAP_INVALID_USER) {
+            goto cleanup;
+        }
+        else if (r) {
             sync_action_list_add(user_list, NULL, action->user);
-            if (verbose) {
-                printf("  Promoting: META %s -> USER %s\n",
-                       action->user, action->user);
-            }
-            if (verbose_logging) {
-                syslog(LOG_INFO, "  Promoting: META %s -> USER %s",
-                       action->user, action->user);
-            }
+            report_verbose("  Promoting: META %s -> USER %s\n",
+                           action->user, action->user);
         }
     }
 
     for (action = user_list->head; action; action = action->next) {
         if (!action->active)
             continue;
-        r = sync_do_user(action->user, sync_backend, flags);
-        if (r) goto cleanup;
+        r = sync_do_user(action->user, NULL, sync_backend, channelp, flags);
+        if (channelp && r == IMAP_MAILBOX_LOCKED) {
+            sync_log_channel_user(*channelp, action->user);
+            report_verbose("  Deferred: USER %s\n", action->user);
+        }
+        else if (r) goto cleanup;
         r = do_restart();
         if (r) goto cleanup;
     }
@@ -628,7 +525,11 @@ static int do_sync(sync_log_reader_t *slr)
         if (!action->active)
             continue;
         r = do_unuser(action->user);
-        if (r) goto cleanup;
+        if (channelp && r == IMAP_MAILBOX_LOCKED) {
+            sync_log_channel_unuser(*channelp, action->user);
+            report_verbose("  Deferred: UNUSER %s\n", action->user);
+        }
+        else if (r) goto cleanup;
     }
 
   cleanup:
@@ -638,6 +539,8 @@ static int do_sync(sync_log_reader_t *slr)
 
         syslog(LOG_ERR, "Error in do_sync(): bailing out! %s", error_message(r));
     }
+
+    sync_log_done();
 
     sync_action_list_free(&user_list);
     sync_action_list_free(&unuser_list);
@@ -665,7 +568,7 @@ static int do_sync_filename(const char *filename)
 
     r = sync_log_reader_begin(slr);
     if (!r)
-        r = do_sync(slr);
+        r = do_sync(slr, NULL);
 
     sync_log_reader_end(slr);
     sync_log_reader_free(slr);
@@ -705,6 +608,10 @@ static int do_daemon_work(const char *channel, const char *sync_shutdown_file,
         /* Check for shutdown file */
         if (sync_shutdown_file && !stat(sync_shutdown_file, &sbuf)) {
             unlink(sync_shutdown_file);
+            /* Have to exit with r == 0 or do_daemon() will call us again.
+             * The value of r is unknown from calls to sync_log_reader_begin() below.
+             */
+            r = 0;
             break;
         }
 
@@ -727,7 +634,7 @@ static int do_daemon_work(const char *channel, const char *sync_shutdown_file,
         }
 
         /* Process the work log */
-        if ((r=do_sync(slr))) {
+        if ((r=do_sync(slr, &channel))) {
             syslog(LOG_ERR,
                    "Processing sync log file %s failed: %s",
                    sync_log_reader_get_file_name(slr), error_message(r));
@@ -758,91 +665,44 @@ static int do_daemon_work(const char *channel, const char *sync_shutdown_file,
     return(r);
 }
 
-static int get_intconfig(const char *channel, const char *val)
-{
-    int response = -1;
-
-    if (channel) {
-        const char *result = NULL;
-        char name[MAX_MAILBOX_NAME]; /* crazy long, but hey */
-        snprintf(name, MAX_MAILBOX_NAME, "%s_%s", channel, val);
-        result = config_getoverflowstring(name, NULL);
-        if (result) response = atoi(result);
-    }
-
-    if (response == -1) {
-        if (!strcmp(val, "sync_repeat_interval"))
-            response = config_getint(IMAPOPT_SYNC_REPEAT_INTERVAL);
-    }
-
-    return response;
-}
-
-static const char *get_config(const char *channel, const char *val)
-{
-    const char *response = NULL;
-
-    if (channel) {
-        char name[MAX_MAILBOX_NAME]; /* crazy long, but hey */
-        snprintf(name, MAX_MAILBOX_NAME, "%s_%s", channel, val);
-        response = config_getoverflowstring(name, NULL);
-    }
-
-    if (!response) {
-        /* get the core value */
-        if (!strcmp(val, "sync_host"))
-            response = config_getstring(IMAPOPT_SYNC_HOST);
-        else if (!strcmp(val, "sync_authname"))
-            response = config_getstring(IMAPOPT_SYNC_AUTHNAME);
-        else if (!strcmp(val, "sync_password"))
-            response = config_getstring(IMAPOPT_SYNC_PASSWORD);
-        else if (!strcmp(val, "sync_realm"))
-            response = config_getstring(IMAPOPT_SYNC_REALM);
-        else if (!strcmp(val, "sync_port"))
-            response = config_getstring(IMAPOPT_SYNC_PORT);
-        else if (!strcmp(val, "sync_shutdown_file"))
-            response = config_getstring(IMAPOPT_SYNC_SHUTDOWN_FILE);
-        else
-            fatal("unknown config variable requested", EC_SOFTWARE);
-    }
-
-    return response;
-}
-
 static void replica_connect(const char *channel)
 {
     int wait;
-    struct protoent *proto;
     sasl_callback_t *cb;
     int timeout;
     const char *port, *auth_status = NULL;
+    int try_imap;
 
     cb = mysasl_callbacks(NULL,
-                          get_config(channel, "sync_authname"),
-                          get_config(channel, "sync_realm"),
-                          get_config(channel, "sync_password"));
+                          sync_get_config(channel, "sync_authname"),
+                          sync_get_config(channel, "sync_realm"),
+                          sync_get_config(channel, "sync_password"));
 
     /* get the right port */
-    port = get_config(channel, "sync_port");
+    port = sync_get_config(channel, "sync_port");
     if (port) {
         imap_csync_protocol.service = port;
         csync_protocol.service = port;
     }
 
-    for (wait = 15;; wait *= 2) {
-        sync_backend = backend_connect(sync_backend, servername,
-                                       &imap_csync_protocol, "", cb, &auth_status,
-                                       (verbose > 1 ? fileno(stderr) : -1));
+    try_imap = sync_get_switchconfig(channel, "sync_try_imap");
 
-        if (sync_backend) {
-            if (sync_backend->capability & CAPA_REPLICATION) {
-                /* attach our IMAP tag buffer to our protstreams as userdata */
-                sync_backend->in->userdata = sync_backend->out->userdata = &tagbuf;
-                break;
-            }
-            else {
-                backend_disconnect(sync_backend);
-                sync_backend = NULL;
+    for (wait = 15;; wait *= 2) {
+        if (try_imap) {
+            sync_backend = backend_connect(sync_backend, servername,
+                                        &imap_csync_protocol, "", cb, &auth_status,
+                                        (verbose > 1 ? fileno(stderr) : -1));
+
+            if (sync_backend) {
+                if (sync_backend->capability & CAPA_REPLICATION) {
+                    /* attach our IMAP tag buffer to our protstreams as userdata */
+                    sync_backend->in->userdata = sync_backend->out->userdata = &tagbuf;
+                    break;
+                }
+                else {
+                    backend_disconnect(sync_backend);
+                    sync_backend = NULL;
+                }
             }
         }
 
@@ -868,61 +728,9 @@ static void replica_connect(const char *channel)
         _exit(1);
     }
 
-    /* Disable Nagle's Algorithm => increase throughput
-     *
-     * http://en.wikipedia.org/wiki/Nagle's_algorithm
-     */
-    if (servername[0] != '/') {
-        if (sync_backend->sock >= 0 && (proto = getprotobyname("tcp")) != NULL) {
-            int on = 1;
-
-            if (setsockopt(sync_backend->sock, proto->p_proto, TCP_NODELAY,
-                           (void *) &on, sizeof(on)) != 0) {
-                syslog(LOG_ERR, "unable to setsocketopt(TCP_NODELAY): %m");
-            }
-
-            /* turn on TCP keepalive if set */
-            if (config_getswitch(IMAPOPT_TCP_KEEPALIVE)) {
-                int r;
-                int optval = 1;
-                socklen_t optlen = sizeof(optval);
-                struct protoent *proto = getprotobyname("TCP");
-
-                r = setsockopt(sync_backend->sock, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen);
-                if (r < 0) {
-                    syslog(LOG_ERR, "unable to setsocketopt(SO_KEEPALIVE): %m");
-                }
-#ifdef TCP_KEEPCNT
-                optval = config_getint(IMAPOPT_TCP_KEEPALIVE_CNT);
-                if (optval) {
-                    r = setsockopt(sync_backend->sock, proto->p_proto, TCP_KEEPCNT, &optval, optlen);
-                    if (r < 0) {
-                        syslog(LOG_ERR, "unable to setsocketopt(TCP_KEEPCNT): %m");
-                    }
-                }
-#endif
-#ifdef TCP_KEEPIDLE
-                optval = config_getint(IMAPOPT_TCP_KEEPALIVE_IDLE);
-                if (optval) {
-                    r = setsockopt(sync_backend->sock, proto->p_proto, TCP_KEEPIDLE, &optval, optlen);
-                    if (r < 0) {
-                        syslog(LOG_ERR, "unable to setsocketopt(TCP_KEEPIDLE): %m");
-                    }
-                }
-#endif
-#ifdef TCP_KEEPINTVL
-                optval = config_getint(IMAPOPT_TCP_KEEPALIVE_INTVL);
-                if (optval) {
-                    r = setsockopt(sync_backend->sock, proto->p_proto, TCP_KEEPINTVL, &optval, optlen);
-                    if (r < 0) {
-                        syslog(LOG_ERR, "unable to setsocketopt(TCP_KEEPINTVL): %m");
-                    }
-                }
-#endif
-            }
-        } else {
-            syslog(LOG_ERR, "unable to getprotobyname(\"tcp\"): %m");
-        }
+    if (servername[0] != '/' && sync_backend->sock >= 0) {
+        tcp_disable_nagle(sync_backend->sock);
+        tcp_enable_keepalive(sync_backend->sock);
     }
 
 #ifdef HAVE_ZLIB
@@ -991,23 +799,24 @@ static void do_daemon(const char *channel, const char *sync_shutdown_file,
     }
 }
 
-static int do_mailbox(const char *mboxname, unsigned flags)
+static int do_mailbox(const char *mboxname, const char **channelp, unsigned flags)
 {
     struct sync_name_list *list = sync_name_list_create();
     int r;
 
     sync_name_list_add(list, mboxname);
 
-    r = sync_do_mailboxes(list, sync_backend, flags);
+    r = sync_do_mailboxes(list, NULL, sync_backend, channelp, flags);
 
     sync_name_list_free(&list);
 
     return r;
 }
 
-static int cb_allmbox(const mbentry_t *mbentry, void *rock __attribute__((unused)))
+static int cb_allmbox(const mbentry_t *mbentry, void *rock)
 {
     int r = 0;
+    const char **channelp = (const char **)rock;
 
     char *userid = mboxname_to_userid(mbentry->name);
 
@@ -1019,8 +828,7 @@ static int cb_allmbox(const mbentry_t *mbentry, void *rock __attribute__((unused
 
         /* only sync if we haven't just done the user */
         if (strcmpsafe(userid, prev_userid)) {
-            printf("USER: %s\n", userid);
-            r = sync_do_user(userid, sync_backend, flags);
+            r = sync_do_user(userid, NULL, sync_backend, channelp, flags);
             if (r) {
                 if (verbose)
                     fprintf(stderr, "Error from do_user(%s): bailing out!\n", userid);
@@ -1030,12 +838,11 @@ static int cb_allmbox(const mbentry_t *mbentry, void *rock __attribute__((unused
             free(prev_userid);
             prev_userid = xstrdup(userid);
         }
-        free(userid);
     }
     else {
         /* all shared mailboxes, including DELETED ones, sync alone */
         /* XXX: batch in hundreds? */
-        r = do_mailbox(mbentry->name, flags);
+        r = do_mailbox(mbentry->name, channelp, flags);
         if (r) {
             if (verbose)
                 fprintf(stderr, "Error from do_user(%s): bailing out!\n", mbentry->name);
@@ -1045,6 +852,7 @@ static int cb_allmbox(const mbentry_t *mbentry, void *rock __attribute__((unused
     }
 
 done:
+    free(userid);
     return r;
 }
 
@@ -1078,6 +886,7 @@ int main(int argc, char **argv)
     int   min_delta = 0;
     const char *channel = NULL;
     const char *sync_shutdown_file = NULL;
+    const char *partition = NULL;
     char buf[512];
     FILE *file;
     int len;
@@ -1089,7 +898,7 @@ int main(int argc, char **argv)
 
     setbuf(stdout, NULL);
 
-    while ((opt = getopt(argc, argv, "C:vlLS:F:f:w:t:d:n:rRumsozOA")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:vlLS:F:f:w:t:d:n:rRumsozOAp:")) != EOF) {
         switch (opt) {
         case 'C': /* alt config file */
             alt_config = optarg;
@@ -1178,6 +987,7 @@ int main(int argc, char **argv)
 #ifdef HAVE_ZLIB
             do_compress = 1;
 #else
+            do_compress = 0;
             fatal("Compress not available without zlib compiled in", EC_SOFTWARE);
 #endif
             break;
@@ -1185,6 +995,10 @@ int main(int argc, char **argv)
         case 'O':
             /* don't copy changes back from server */
             no_copyback = 1;
+            break;
+
+        case 'p':
+            partition = optarg;
             break;
 
         default:
@@ -1219,7 +1033,7 @@ int main(int argc, char **argv)
 
     /* get the server name if not specified */
     if (!servername)
-        servername = get_config(channel, "sync_host");
+        servername = sync_get_config(channel, "sync_host");
 
     if (!servername)
         fatal("sync_host not defined", EC_SOFTWARE);
@@ -1271,7 +1085,7 @@ int main(int argc, char **argv)
                 if ((len == 0) || (buf[0] == '#'))
                     continue;
 
-                if (sync_do_user(buf, sync_backend, flags)) {
+                if (sync_do_user(buf, partition, sync_backend, NULL, flags)) {
                     if (verbose)
                         fprintf(stderr,
                                 "Error from sync_do_user(%s): bailing out!\n",
@@ -1283,7 +1097,7 @@ int main(int argc, char **argv)
             }
             fclose(file);
         } else for (i = optind; !r && i < argc; i++) {
-            if (sync_do_user(argv[i], sync_backend, flags)) {
+            if (sync_do_user(argv[i], partition, sync_backend, NULL, flags)) {
                 if (verbose)
                     fprintf(stderr, "Error from sync_do_user(%s): bailing out!\n",
                             argv[i]);
@@ -1336,7 +1150,7 @@ int main(int argc, char **argv)
             free(intname);
         }
 
-        if (sync_do_mailboxes(mboxname_list, sync_backend, flags)) {
+        if (sync_do_mailboxes(mboxname_list, partition, sync_backend, NULL, flags)) {
             if (verbose) {
                 fprintf(stderr,
                         "Error from sync_do_mailboxes(): bailing out!\n");
@@ -1382,10 +1196,10 @@ int main(int argc, char **argv)
         else {
             /* rolling replication */
             if (!sync_shutdown_file)
-                sync_shutdown_file = get_config(channel, "sync_shutdown_file");
+                sync_shutdown_file = sync_get_config(channel, "sync_shutdown_file");
 
             if (!min_delta)
-                min_delta = get_intconfig(channel, "sync_repeat_interval");
+                min_delta = sync_get_intconfig(channel, "sync_repeat_interval");
 
             do_daemon(channel, sync_shutdown_file, timeout, min_delta);
         }

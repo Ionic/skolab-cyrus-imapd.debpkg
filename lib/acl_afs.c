@@ -61,7 +61,6 @@
 
 /*
  * Calculate the set of rights the user in 'auth_state' has in the ACL 'acl'.
- * 'acl' must be writable, but is restored to its original condition.
  */
 EXPORTED int cyrus_acl_myrights(const struct auth_state *auth_state, const char *origacl)
 {
@@ -90,7 +89,10 @@ EXPORTED int cyrus_acl_myrights(const struct auth_state *auth_state, const char 
             thisid++;
         }
         if (auth_memberof(auth_state, thisid)) {
-            *acl_ptr |= cyrus_acl_strtomask(rights);
+            int mask;
+            cyrus_acl_strtomask(rights, &mask);
+            /* XXX and if strtomask fails? */
+            *acl_ptr |= mask;
         }
     }
 
@@ -116,6 +118,9 @@ EXPORTED int cyrus_acl_set(char **acl, const char *identifier,
     int oldaccess = 0;
     char *rights;
 
+    if (!identifier)
+        return -1;
+
     /* Convert 'identifier' into canonical form */
     canonid = auth_canonifyid(*identifier == '-' ? identifier+1 : identifier, 0);
     if (canonid) {
@@ -131,6 +136,12 @@ EXPORTED int cyrus_acl_set(char **acl, const char *identifier,
         return -1;
     } else {
         /* trying to delete invalid/non-existent identifier */
+    }
+
+    /* Prevent ACLs for empty identifiers */
+    if (strlen(identifier) == 0) {
+        if (newidentifier) free(newidentifier);
+        return -1;
     }
 
     /* Find any existing entry for 'identifier' in 'acl' */
@@ -154,7 +165,8 @@ EXPORTED int cyrus_acl_set(char **acl, const char *identifier,
         *nextid++ = '\0';
 
         if (strcmp(identifier, thisid) == 0) {
-            oldaccess = cyrus_acl_strtomask(rights);
+            cyrus_acl_strtomask(rights, &oldaccess);
+            /* XXX and if strtomask fails? */
             break;
         }
         rights[-1] = '\t';

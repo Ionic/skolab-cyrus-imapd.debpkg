@@ -81,12 +81,10 @@ enum event_type {
     EVENT_MAILBOX_UNSUBSCRIBE = (1<<19),
     EVENT_ACL_CHANGE          = (1<<20),
     EVENT_CALENDAR            = (1<<21),
-    EVENT_CALENDAR_ALARM      = (1<<22)
+    EVENT_CALENDAR_ALARM      = (1<<22),
     /* Other */
-#ifdef ENABLE_APPLEPUSHSERVICE
-    ,
-    EVENT_APPLEPUSHSERVICE    = (1<<23)
-#endif
+    EVENT_APPLEPUSHSERVICE     = (1<<23),
+    EVENT_APPLEPUSHSERVICE_DAV = (1<<24)
 };
 
 /*
@@ -152,13 +150,16 @@ enum event_param {
     EVENT_CALENDAR_ATTENDEE_EMAILS,
     EVENT_CALENDAR_ATTENDEE_STATUS,
     EVENT_CALENDAR_ORGANIZER,
-#ifdef ENABLE_APPLEPUSHSERVICE
     EVENT_APPLEPUSHSERVICE_VERSION,
     EVENT_APPLEPUSHSERVICE_ACCOUNT_ID,
     EVENT_APPLEPUSHSERVICE_DEVICE_TOKEN,
     EVENT_APPLEPUSHSERVICE_SUBTOPIC,
     EVENT_APPLEPUSHSERVICE_MAILBOXES,
-#endif
+    EVENT_APPLEPUSHSERVICE_DAV_TOPIC,
+    EVENT_APPLEPUSHSERVICE_DAV_DEVICE_TOKEN,
+    EVENT_APPLEPUSHSERVICE_DAV_MAILBOX_USER,
+    EVENT_APPLEPUSHSERVICE_DAV_MAILBOX_UNIQUEID,
+    EVENT_APPLEPUSHSERVICE_DAV_EXPIRY,
     /* 31 */ EVENT_MESSAGE_CONTENT
 };
 
@@ -213,7 +214,7 @@ struct mboxevent {
 /*
  * Call this initializer once only at start
  */
-void mboxevent_init();
+int mboxevent_init();
 
 /*
  * Set the namespace to translate internal mailbox name to external name
@@ -241,7 +242,7 @@ struct mboxevent *mboxevent_enqueue(enum event_type type,
 /*
  * Send the queue of event notifications
  */
-void mboxevent_notify(struct mboxevent *mboxevents);
+void mboxevent_notify(struct mboxevent **mboxevents);
 
 /*
  * Release any allocated resources of this given event
@@ -345,7 +346,6 @@ void mboxevent_extract_old_mailbox(struct mboxevent *event,
  */
 void mboxevent_set_client_id(const char *);
 
-#ifdef ENABLE_APPLEPUSHSERVICE
 /* Arguments to XAPPLEPUSHSERVICE */
 struct applepushserviceargs {
     unsigned int aps_version;
@@ -362,6 +362,17 @@ void mboxevent_set_applepushservice(struct mboxevent *event,
                                     struct applepushserviceargs *applepushserviceargs,
                                     strarray_t *mailboxes,
                                     const char *userid);
-#endif
+
+/*
+ * APS subscription for DAV collection
+ */
+void mboxevent_set_applepushservice_dav(struct mboxevent *event,
+                                        const char *aps_topic,
+                                        const char *device_token,
+                                        const char *userid,
+                                        const char *mailbox_userid,
+                                        const char *mailbox_uniqueid,
+                                        int mbtype,
+                                        unsigned int expiry);
 
 #endif /* _MBOXEVENT_H */

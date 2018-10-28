@@ -71,6 +71,11 @@
 #include "xstrlcpy.h"
 #include "strarray.h"
 #include "signals.h"
+#include "util.h"
+
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
 
 extern int optind, opterr;
 extern char *optarg;
@@ -285,13 +290,13 @@ int main(int argc, char **argv, char **envp)
     int opt;
     char *alt_config = NULL;
     int call_debugger = 0;
+    int debug_stdio = 0;
     int max_use = MAX_USE;
     int reuse_timeout = REUSE_TIMEOUT;
     int soctype;
     socklen_t typelen = sizeof(soctype);
     struct sockaddr socname;
     socklen_t addrlen = sizeof(struct sockaddr);
-    strarray_t newargv = STRARRAY_INITIALIZER;
     int id;
     char path[PATH_MAX];
     struct stat sbuf;
@@ -299,12 +304,27 @@ int main(int argc, char **argv, char **envp)
     off_t start_size;
     time_t start_mtime;
 
+    /*
+     * service_init and service_main need argv and argc, so they can process
+     * service-specific options.  They need argv[0] to point into the real argv
+     * memory space, so that setproctitle can work its magic.  But they also
+     * need the generic options handled here to be removed, because they don't
+     * know how to handle them.
+     *
+     * So, we create a strarray_t "service_argv", and populate it with the
+     * options that we aren't handling here, using strarray_appendm (which
+     * simply ptr-copies its argument), and pass that through, and everything
+     * is happy.
+     *
+     * Note that we don't need to strarray_free service_argv, because it
+     * doesn't contain any malloced memory.
+     */
+    strarray_t service_argv = STRARRAY_INITIALIZER;
+    strarray_appendm(&service_argv, argv[0]);
+
     opterr = 0; /* disable error reporting,
                    since we don't know about service-specific options */
-
-    strarray_append(&newargv, argv[0]);
-
-    while ((opt = getopt(argc, argv, "C:U:T:D")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:U:T:DX")) != EOF) {
         if (argv[optind-1][0] == '-' && strlen(argv[optind-1]) > 2) {
             /* we have merged options */
             syslog(LOG_ERR,
@@ -327,19 +347,22 @@ int main(int argc, char **argv, char **envp)
         case 'D':
             call_debugger = 1;
             break;
+        case 'X':
+            debug_stdio = 1;
+            break;
         default:
-            strarray_append(&newargv, argv[optind-1]);
+            strarray_appendm(&service_argv, argv[optind-1]);
 
             /* option has an argument */
             if (optind < argc && argv[optind][0] != '-')
-                strarray_append(&newargv, argv[optind++]);
+                strarray_appendm(&service_argv, argv[optind++]);
 
             break;
         }
     }
     /* grab the remaining arguments */
     for (; optind < argc; optind++)
-        strarray_append(&newargv, argv[optind]);
+        strarray_appendm(&service_argv, argv[optind]);
 
     opterr = 1; /* enable error reporting */
     optind = 1; /* reset the option index for parsing by the service */
@@ -366,10 +389,13 @@ int main(int argc, char **argv, char **envp)
     }
     id = atoi(p);
 
-    /* pick a random timeout between reuse_timeout -> 2*reuse_timeout
-     * to avoid massive IO overload if the network connection goes away */
     srand(time(NULL) * getpid());
-    reuse_timeout = reuse_timeout + (rand() % reuse_timeout);
+
+    /* if timeout is enabled, pick a random timeout between reuse_timeout
+     * and 2*reuse_timeout to avoid massive IO overload if the network
+     * connection goes away */
+    if (reuse_timeout)
+        reuse_timeout = reuse_timeout + (rand() % reuse_timeout);
 
     extern const int config_need_data;
     cyrus_init(alt_config, service, 0, config_need_data);
@@ -388,52 +414,59 @@ int main(int argc, char **argv, char **envp)
     }
     syslog(LOG_DEBUG, "executed");
 
-    /* set close on exec */
-    fdflags = fcntl(LISTEN_FD, F_GETFD, 0);
-    if (fdflags != -1) fdflags = fcntl(LISTEN_FD, F_SETFD,
-                                       fdflags | FD_CLOEXEC);
-    if (fdflags == -1) {
-        syslog(LOG_ERR, "unable to set close on exec: %m");
-        if (MESSAGE_MASTER_ON_EXIT)
-            notify_master(STATUS_FD, MASTER_SERVICE_UNAVAILABLE);
-        return 1;
+    if (debug_stdio) {
+        if (service_init(service_argv.count, service_argv.data, envp) != 0) {
+            return 1;
+        }
     }
-    fdflags = fcntl(STATUS_FD, F_GETFD, 0);
-    if (fdflags != -1) fdflags = fcntl(STATUS_FD, F_SETFD,
-                                       fdflags | FD_CLOEXEC);
-    if (fdflags == -1) {
-        syslog(LOG_ERR, "unable to set close on exec: %m");
-        if (MESSAGE_MASTER_ON_EXIT)
-            notify_master(STATUS_FD, MASTER_SERVICE_UNAVAILABLE);
-        return 1;
-    }
+    else {
+        /* set close on exec */
+        fdflags = fcntl(LISTEN_FD, F_GETFD, 0);
+        if (fdflags != -1) fdflags = fcntl(LISTEN_FD, F_SETFD,
+                                        fdflags | FD_CLOEXEC);
+        if (fdflags == -1) {
+            syslog(LOG_ERR, "unable to set close on exec: %m");
+            if (MESSAGE_MASTER_ON_EXIT)
+                notify_master(STATUS_FD, MASTER_SERVICE_UNAVAILABLE);
+            return 1;
+        }
+        fdflags = fcntl(STATUS_FD, F_GETFD, 0);
+        if (fdflags != -1) fdflags = fcntl(STATUS_FD, F_SETFD,
+                                        fdflags | FD_CLOEXEC);
+        if (fdflags == -1) {
+            syslog(LOG_ERR, "unable to set close on exec: %m");
+            if (MESSAGE_MASTER_ON_EXIT)
+                notify_master(STATUS_FD, MASTER_SERVICE_UNAVAILABLE);
+            return 1;
+        }
 
-    /* figure out what sort of socket this is */
-    if (getsockopt(LISTEN_FD, SOL_SOCKET, SO_TYPE,
-                   (char *) &soctype, &typelen) < 0) {
-        syslog(LOG_ERR, "getsockopt: SOL_SOCKET: failed to get type: %m");
-        if (MESSAGE_MASTER_ON_EXIT)
-            notify_master(STATUS_FD, MASTER_SERVICE_UNAVAILABLE);
-        return 1;
-    }
-    if (getsockname(LISTEN_FD, &socname, &addrlen) < 0) {
-        syslog(LOG_ERR, "getsockname: failed: %m");
-        if (MESSAGE_MASTER_ON_EXIT)
-            notify_master(STATUS_FD, MASTER_SERVICE_UNAVAILABLE);
-        return 1;
-    }
+        /* figure out what sort of socket this is */
+        if (getsockopt(LISTEN_FD, SOL_SOCKET, SO_TYPE,
+                    (char *) &soctype, &typelen) < 0) {
+            syslog(LOG_ERR, "getsockopt: SOL_SOCKET: failed to get type: %m");
+            if (MESSAGE_MASTER_ON_EXIT)
+                notify_master(STATUS_FD, MASTER_SERVICE_UNAVAILABLE);
+            return 1;
+        }
+        if (getsockname(LISTEN_FD, &socname, &addrlen) < 0) {
+            syslog(LOG_ERR, "getsockname: failed: %m");
+            if (MESSAGE_MASTER_ON_EXIT)
+                notify_master(STATUS_FD, MASTER_SERVICE_UNAVAILABLE);
+            return 1;
+        }
 
-    if (service_init(newargv.count, newargv.data, envp) != 0) {
-        if (MESSAGE_MASTER_ON_EXIT)
-            notify_master(STATUS_FD, MASTER_SERVICE_UNAVAILABLE);
-        return 1;
+        if (service_init(service_argv.count, service_argv.data, envp) != 0) {
+            if (MESSAGE_MASTER_ON_EXIT)
+                notify_master(STATUS_FD, MASTER_SERVICE_UNAVAILABLE);
+            return 1;
+        }
     }
 
     /* determine initial process file inode, size and mtime */
-    if (newargv.data[0][0] == '/')
-        strlcpy(path, newargv.data[0], sizeof(path));
+    if (service_argv.data[0][0] == '/')
+        strlcpy(path, service_argv.data[0], sizeof(path));
     else
-        snprintf(path, sizeof(path), "%s/%s", LIBEXEC_DIR, newargv.data[0]);
+        snprintf(path, sizeof(path), "%s/%s", LIBEXEC_DIR, service_argv.data[0]);
 
     stat(path, &sbuf);
     start_ino= sbuf.st_ino;
@@ -441,6 +474,13 @@ int main(int argc, char **argv, char **envp)
     start_mtime = sbuf.st_mtime;
 
     getlockfd(service, id);
+
+    if (debug_stdio) {
+        service_main(service_argv.count, service_argv.data, envp);
+        service_abort(0);
+        return 0;
+    }
+
     for (;;) {
         /* ok, listen to this socket until someone talks to us */
 
@@ -483,7 +523,7 @@ int main(int argc, char **argv, char **envp)
                 if (fd < 0) {
                     switch (errno) {
                     case EINTR:
-            signals_poll();
+                        signals_poll();
                     case ENETDOWN:
 #ifdef EPROTO
                     case EPROTO:
@@ -496,11 +536,13 @@ int main(int argc, char **argv, char **envp)
                     case EHOSTUNREACH:
                     case EOPNOTSUPP:
                     case ENETUNREACH:
+                    case ECONNABORTED:
                     case EAGAIN:
                         break;
 
                     case EINVAL:
                         if (signals_poll() == SIGHUP) break;
+                        GCC_FALLTHROUGH
 
                     default:
                         syslog(LOG_ERR, "accept failed: %m");
@@ -563,45 +605,7 @@ int main(int argc, char **argv, char **envp)
                 continue;
             }
 
-            /* turn on TCP keepalive if set */
-            if (config_getswitch(IMAPOPT_TCP_KEEPALIVE)) {
-                int r;
-                int optval = 1;
-                socklen_t optlen = sizeof(optval);
-                struct protoent *proto = getprotobyname("TCP");
-
-                r = setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen);
-                if (r < 0) {
-                    syslog(LOG_ERR, "unable to setsocketopt(SO_KEEPALIVE): %m");
-                }
-#ifdef TCP_KEEPCNT
-                optval = config_getint(IMAPOPT_TCP_KEEPALIVE_CNT);
-                if (optval) {
-                    r = setsockopt(fd, proto->p_proto, TCP_KEEPCNT, &optval, optlen);
-                    if (r < 0) {
-                        syslog(LOG_ERR, "unable to setsocketopt(TCP_KEEPCNT): %m");
-                    }
-                }
-#endif
-#ifdef TCP_KEEPIDLE
-                optval = config_getint(IMAPOPT_TCP_KEEPALIVE_IDLE);
-                if (optval) {
-                    r = setsockopt(fd, proto->p_proto, TCP_KEEPIDLE, &optval, optlen);
-                    if (r < 0) {
-                        syslog(LOG_ERR, "unable to setsocketopt(TCP_KEEPIDLE): %m");
-                    }
-                }
-#endif
-#ifdef TCP_KEEPINTVL
-                optval = config_getint(IMAPOPT_TCP_KEEPALIVE_INTVL);
-                if (optval) {
-                    r = setsockopt(fd, proto->p_proto, TCP_KEEPINTVL, &optval, optlen);
-                    if (r < 0) {
-                        syslog(LOG_ERR, "unable to setsocketopt(TCP_KEEPINTVL): %m");
-                    }
-                }
-#endif
-            }
+            tcp_enable_keepalive(fd);
         }
 
         notify_master(STATUS_FD, MASTER_SERVICE_UNAVAILABLE);
@@ -627,7 +631,7 @@ int main(int argc, char **argv, char **envp)
 
         notify_master(STATUS_FD, MASTER_SERVICE_CONNECTION);
         use_count++;
-        service_main(newargv.count, newargv.data, envp);
+        service_main(service_argv.count, service_argv.data, envp);
         /* if we returned, we can service another client with this process */
 
         if (signals_poll() || use_count >= max_use) {

@@ -431,6 +431,44 @@ int parser(struct protstream *sieved_out, struct protstream *sieved_in)
 
     break;
 
+  case RENAMESCRIPT:
+    if (timlex(NULL, NULL, sieved_in)!=SPACE)
+    {
+      error_msg = "SPACE must occur after RENAMESCRIPT";
+      goto error;
+    }
+
+    if (timlex(&sieve_name, NULL, sieved_in)!=STRING)
+    {
+      error_msg = "Did not specify old script name";
+      goto error;
+    }
+
+    if (timlex(NULL, NULL, sieved_in)!=SPACE)
+    {
+      error_msg = "Expected SPACE";
+      goto error;
+    }
+
+    if (timlex(&sieve_data, NULL, sieved_in)!=STRING)
+    {
+      error_msg = "Did not specify new script name";
+      goto error;
+    }
+
+    if (timlex(NULL, NULL, sieved_in)!=EOL)
+    {
+      error_msg = "Expected EOL";
+      goto error;
+    }
+
+    if(referral_host)
+        goto do_referral;
+
+    renamescript(sieved_out, &sieve_name, &sieve_data);
+
+    break;
+
   case DELETESCRIPT:
     if (timlex(NULL, NULL, sieved_in)!=SPACE)
     {
@@ -893,7 +931,8 @@ static int cmd_starttls(struct protstream *sieved_out, struct protstream *sieved
 
     result=tls_init_serverengine("sieve",
                                  5,        /* depth to verify */
-                                 1);       /* can client auth? */
+                                 1,        /* can client auth? */
+                                 NULL);
 
     if (result == -1) {
 

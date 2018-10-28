@@ -96,6 +96,10 @@
 
 #include "iostat.h"
 
+#ifndef MAXHOSTNAMELEN
+#define MAXHOSTNAMELEN 256
+#endif
+
 #ifdef HAVE_KRB
 /* kerberos des is purported to conflict with OpenSSL DES */
 #define DES_DEFS
@@ -592,7 +596,7 @@ int service_main(int argc __attribute__((unused)),
         mboxevent_set_access(mboxevent, saslprops.iplocalport,
                              NULL, popd_userid, NULL, 1);
 
-        mboxevent_notify(mboxevent);
+        mboxevent_notify(&mboxevent);
         mboxevent_free(&mboxevent);
     }
 
@@ -880,7 +884,7 @@ static int expunge_deleted(void)
     mboxevent_extract_mailbox(mboxevent, popd_mailbox);
     mboxevent_set_numunseen(mboxevent, popd_mailbox, -1);
     mboxevent_set_access(mboxevent, NULL, NULL, popd_userid, NULL, 0);
-    mboxevent_notify(mboxevent);
+    mboxevent_notify(&mboxevent);
     mboxevent_free(&mboxevent);
 
     return r;
@@ -1238,10 +1242,34 @@ int msg_exists_or_err(uint32_t msgno)
 void uidl_msg(uint32_t msgno)
 {
     if (popd_mailbox->i.options & OPT_POP3_NEW_UIDL) {
-        prot_printf(popd_out, "%u %u.%u\r\n", msgno,
-                    popd_mailbox->i.uidvalidity,
-                    popd_map[msgno-1].uid);
-    } else {
+        switch (config_getenum(IMAPOPT_UIDL_FORMAT)) {
+        case IMAP_ENUM_UIDL_FORMAT_UIDONLY:
+            prot_printf(popd_out, "%u %u\r\n", msgno,
+                        popd_map[msgno-1].uid);
+            break;
+        case IMAP_ENUM_UIDL_FORMAT_CYRUS:
+            prot_printf(popd_out, "%u %u.%u\r\n", msgno,
+                        popd_mailbox->i.uidvalidity,
+                        popd_map[msgno-1].uid);
+            break;
+        case IMAP_ENUM_UIDL_FORMAT_DOVECOT: {
+            char uidl[100];
+            snprintf(uidl, 100, "%08x%08x",
+                     popd_map[msgno-1].uid,
+                     popd_mailbox->i.uidvalidity);
+            prot_printf(popd_out, "%u %s\r\n", msgno, uidl);
+            }
+            break;
+        case IMAP_ENUM_UIDL_FORMAT_COURIER:
+            prot_printf(popd_out, "%u %u-%u\r\n", msgno,
+                        popd_mailbox->i.uidvalidity,
+                        popd_map[msgno-1].uid);
+            break;
+        default:
+            abort();
+        }
+    }
+    else {
         prot_printf(popd_out, "%u %u\r\n", msgno,
                     popd_map[msgno-1].uid);
     }
@@ -1267,7 +1295,8 @@ static void cmd_starttls(int pop3s)
 
     result=tls_init_serverengine("pop3",
                                  5,        /* depth to verify */
-                                 !pop3s);  /* can client auth? */
+                                 !pop3s,   /* can client auth? */
+                                 NULL);
 
     if (result == -1) {
 
@@ -1550,7 +1579,8 @@ static void cmd_pass(char *pass)
                popd_userid, popd_subfolder ? popd_subfolder : "",
                popd_starttls_done ? "+TLS" : "", "User logged in", session_id());
 
-        if ((plaintextloginpause = config_getint(IMAPOPT_PLAINTEXTLOGINPAUSE))
+        if ((!popd_starttls_done) &&
+            (plaintextloginpause = config_getint(IMAPOPT_PLAINTEXTLOGINPAUSE))
              != 0) {
             sleep(plaintextloginpause);
         }
@@ -1794,7 +1824,7 @@ int openinbox(void)
         mboxevent_set_access(mboxevent, saslprops.iplocalport,
                              saslprops.ipremoteport, popd_userid, NULL, 0);
 
-        mboxevent_notify(mboxevent);
+        mboxevent_notify(&mboxevent);
         mboxevent_free(&mboxevent);
     }
 
@@ -1877,7 +1907,6 @@ int openinbox(void)
     else {
         /* local mailbox */
         uint32_t exists;
-        const struct index_record *record;
         int minpoll;
 
         popd_login_time = time(0);
@@ -1929,7 +1958,9 @@ int openinbox(void)
 
         struct mailbox_iter *iter = mailbox_iter_init(popd_mailbox, 0, iterflags);
 
-        while ((record = mailbox_iter_step(iter))) {
+        const message_t *msg;
+        while ((msg = mailbox_iter_step(iter))) {
+            const struct index_record *record = msg_record(msg);
             if (popd_mailbox->i.pop3_show_after &&
                 record->internaldate <= popd_mailbox->i.pop3_show_after) {
                 /* Ignore messages older than the "show after" date */

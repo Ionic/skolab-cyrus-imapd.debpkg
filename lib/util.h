@@ -51,7 +51,10 @@
 #include <sys/types.h>
 #include <limits.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
+
+#include "xmalloc.h"
 
 #ifdef ENABLE_REGEX
 # ifdef HAVE_PCREPOSIX_H
@@ -66,10 +69,6 @@
 # endif /* HAVE_PCREPOSIX_H */
 #endif /* ENABLE_REGEX */
 
-#ifndef __GNUC__
-typedef int (*__compar_fn_t)(const void *, const void *);
-#endif
-
 #define BIT32_MAX 4294967295U
 
 #if UINT_MAX == BIT32_MAX
@@ -81,8 +80,6 @@ typedef unsigned short bit32;
 #else
 #error dont know what to use for bit32
 #endif
-
-typedef int compar_t(const void *a, const void *b);
 
 typedef unsigned long long int bit64;
 typedef unsigned long long int modseq_t;
@@ -208,6 +205,7 @@ enum {
 
 extern int set_caps(int stage, int is_master);
 extern int become_cyrus(int is_master);
+extern const char *cyrus_user(void);
 
 /* Some systems have very inefficient implementations of isdigit,
  * and we use it in a lot of inner loops
@@ -226,6 +224,7 @@ extern void cmdtime_starttimer(void);
 extern void cmdtime_endtimer(double * cmdtime, double * nettime);
 extern void cmdtime_netstart(void);
 extern void cmdtime_netend(void);
+extern int cmdtime_checksearch(void);
 extern double timeval_get_double(const struct timeval *tv);
 extern void timeval_set_double(struct timeval *tv, double d);
 extern void timeval_add_double(struct timeval *tv, double delta);
@@ -243,12 +242,14 @@ struct buf {
 };
 #define BUF_INITIALIZER { NULL, 0, 0, 0 }
 
+#define buf_new() ((struct buf *) xzmalloc(sizeof(struct buf)))
+#define buf_destroy(b) do { buf_free((b)); free((b)); } while (0)
 #define buf_ensure(b, n) do { if ((b)->alloc < (b)->len + (n)) _buf_ensure((b), (n)); } while (0)
 #define buf_putc(b, c) do { buf_ensure((b), 1); (b)->s[(b)->len++] = (c); } while (0)
 
 void _buf_ensure(struct buf *buf, size_t len);
-const char *buf_cstring(struct buf *buf);
-const char *buf_cstringnull(struct buf *buf);
+const char *buf_cstring(const struct buf *buf);
+const char *buf_cstringnull(const struct buf *buf);
 char *buf_release(struct buf *buf);
 char *buf_newcstring(struct buf *buf);
 char *buf_releasenull(struct buf *buf);
@@ -264,6 +265,7 @@ void buf_copy(struct buf *dst, const struct buf *src);
 void buf_append(struct buf *dst, const struct buf *src);
 void buf_appendcstr(struct buf *buf, const char *str);
 void buf_appendbit32(struct buf *buf, bit32 num);
+void buf_appendbit64(struct buf *buf, bit64 num);
 void buf_appendmap(struct buf *buf, const char *base, size_t len);
 void buf_cowappendmap(struct buf *buf, const char *base, unsigned int len);
 void buf_cowappendfree(struct buf *buf, char *base, unsigned int len);
@@ -295,6 +297,7 @@ void buf_init_mmap(struct buf *buf, int onceonly, int fd,
 void buf_free(struct buf *buf);
 void buf_move(struct buf *dst, struct buf *src);
 const char *buf_lcase(struct buf *buf);
+void buf_trim(struct buf *buf);
 
 /*
  * Given a list of strings, terminated by (char *)NULL,
@@ -363,5 +366,17 @@ int warmup_file(const char *filename, off_t offset, off_t length);
 
 const char *makeuuid();
 
-#endif /* INCLUDED_UTIL_H */
+void tcp_enable_keepalive(int fd);
+void tcp_disable_nagle(int fd);
 
+/*
+ * GCC_VERSION macro usage:
+ * #if GCC_VERSION > 60909    //GCC version 7 and above
+ *   do_something();
+ * #endif
+ */
+#define GCC_VERSION (__GNUC__ * 10000           \
+                     + __GNUC_MINOR__ * 100     \
+                     + __GNUC_PATCHLEVEL__)
+
+#endif /* INCLUDED_UTIL_H */

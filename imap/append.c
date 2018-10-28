@@ -58,6 +58,7 @@
 #include "acl.h"
 #include "assert.h"
 #include "mailbox.h"
+#include "notify.h"
 #include "message.h"
 #include "append.h"
 #include "global.h"
@@ -79,6 +80,10 @@
 #include "message_guid.h"
 #include "strarray.h"
 #include "conversations.h"
+
+#if defined ENABLE_OBJECTSTORE
+#include "objectstore.h"
+#endif
 
 struct stagemsg {
     char fname[1024];
@@ -221,6 +226,10 @@ EXPORTED int append_setup_mbox(struct appendstate *as, struct mailbox *mailbox,
 
     as->mailbox = mailbox;
 
+    if (config_getswitch(IMAPOPT_OUTBOX_SENDLATER)) {
+        as->isoutbox = mboxname_isoutbox(mailbox->name);
+    }
+
     return 0;
 }
 
@@ -277,7 +286,7 @@ EXPORTED int append_commit(struct appendstate *as)
     }
 
     /* send the list of MessageCopy or MessageAppend event notifications at once */
-    mboxevent_notify(as->mboxevents);
+    mboxevent_notify(&as->mboxevents);
 
     append_free(as);
     return 0;
@@ -412,7 +421,7 @@ static int callout_receive_reply(const char *callout,
     prot_setisclient(p, 1);
 
     /* read and parse the reply as a dlist */
-    c = dlist_parse(results, /*flags*/0, p);
+    c = dlist_parse(results, /*parsekeys*/0, /*isbackup*/0, p);
     r = (c == EOF ? IMAP_SYS_ERROR : 0);
 
 out:
@@ -781,6 +790,12 @@ static int append_apply_flags(struct appendstate *as,
             append_setseen(as, record);
             mboxevent_add_flag(mboxevent, flag);
         }
+        else if (!strcasecmp(flag, "\\expunged")) {
+            /* NOTE - this is a fake internal name */
+            if (as->myrights & ACL_DELETEMSG) {
+                record->system_flags |= FLAG_EXPUNGED;
+            }
+        }
         else if (!strcasecmp(flag, "\\deleted")) {
             if (as->myrights & ACL_DELETEMSG) {
                 record->system_flags |= FLAG_DELETED;
@@ -836,6 +851,9 @@ EXPORTED int append_fromstage(struct appendstate *as, struct body **body,
     strarray_t *newflags = NULL;
     struct entryattlist *system_annots = NULL;
     struct mboxevent *mboxevent = NULL;
+#if defined ENABLE_OBJECTSTORE
+    int object_storage_enabled = config_getswitch(IMAPOPT_OBJECT_STORAGE_ENABLED) ;
+#endif
 
     /* for staging */
     char stagefile[MAX_MAILBOX_PATH+1];
@@ -917,10 +935,13 @@ EXPORTED int append_fromstage(struct appendstate *as, struct body **body,
     r = message_create_record(&record, *body);
     if (r) goto out;
 
+    /* And make sure it has a timestamp */
+    if (!record.internaldate)
+        record.internaldate = time(NULL);
+
     /* should we archive it straight away? */
-    if (mailbox_should_archive(mailbox, &record, NULL)) {
+    if (mailbox_should_archive(mailbox, &record, NULL))
         record.system_flags |= FLAG_ARCHIVED;
-    }
 
     /* Create message file */
     as->nummsg++;
@@ -954,6 +975,23 @@ EXPORTED int append_fromstage(struct appendstate *as, struct body **body,
         flags = newflags;
     }
 
+    /* straight to archive? */
+    int in_object_storage = 0;
+#if defined ENABLE_OBJECTSTORE
+    if (object_storage_enabled && record.system_flags & FLAG_ARCHIVED)
+    {
+        r = objectstore_put(mailbox, &record, fname);
+        if (!r) {
+            // file in object store now; must delete local copy
+            in_object_storage = 1;
+        }
+        else {
+            // didn't manage to store it, so remove the ARCHIVED flag
+            record.system_flags &= ~FLAG_ARCHIVED;
+        }
+    }
+#endif
+
     /* Handle flags the user wants to set in the message */
     if (flags) {
         r = append_apply_flags(as, mboxevent, &record, flags);
@@ -963,9 +1001,22 @@ EXPORTED int append_fromstage(struct appendstate *as, struct body **body,
         }
     }
 
+    if (as->isoutbox) {
+        char num[10];
+        snprintf(num, 10, "%u", record.uid);
+        r = notify_at(record.internaldate, "sendemail", "append", "", "", as->mailbox->name, 0, NULL, num);
+        if (r) goto out;
+    }
+
     /* Write out index file entry */
     r = mailbox_append_index_record(mailbox, &record);
     if (r) goto out;
+
+    if (in_object_storage) {  // must delete local file
+        if (unlink(fname) != 0) // unlink should do it.
+            if (!remove (fname))  // we must insist
+                syslog(LOG_ERR, "Removing local file <%s> error \n", fname);
+    }
 
     /* Apply the annotations afterwards, so that the record already exists */
     if (user_annots || system_annots) {
@@ -992,7 +1043,6 @@ EXPORTED int append_fromstage(struct appendstate *as, struct body **body,
             goto out;
         }
     }
-
 out:
     if (newflags)
         strarray_free(newflags);
@@ -1226,6 +1276,10 @@ EXPORTED int append_copy(struct mailbox *mailbox, struct appendstate *as,
     struct index_record record;
     char *srcfname = NULL;
     char *destfname = NULL;
+    int object_storage_enabled = 0 ;
+#if defined ENABLE_OBJECTSTORE
+    object_storage_enabled = config_getswitch(IMAPOPT_OBJECT_STORAGE_ENABLED) ;
+#endif
     int r = 0;
     int userflag;
     int i;
@@ -1302,8 +1356,23 @@ EXPORTED int append_copy(struct mailbox *mailbox, struct appendstate *as,
         free(destfname);
         srcfname = xstrdup(mailbox_record_fname(mailbox, &records[msg]));
         destfname = xstrdup(mailbox_record_fname(as->mailbox, &record));
-        r = mailbox_copyfile(srcfname, destfname, nolink);
+
+        if (!(object_storage_enabled && records[msg].system_flags & FLAG_ARCHIVED))   // if object storage do not move file
+           r = mailbox_copyfile(srcfname, destfname, nolink);
+
         if (r) goto out;
+
+#if defined ENABLE_OBJECTSTORE
+        if (object_storage_enabled && records[msg].system_flags & FLAG_ARCHIVED)
+            r = objectstore_put(as->mailbox, &record, destfname);   // put should just add the refcount.
+#endif
+
+        if (as->isoutbox) {
+            char num[10];
+            snprintf(num, 10, "%u", record.uid);
+            r = notify_at(record.internaldate, "sendemail", "append", "", "", as->mailbox->name, 0, NULL, num);
+            if (r) goto out;
+        }
 
         /* Write out index file entry */
         r = mailbox_append_index_record(as->mailbox, &record);

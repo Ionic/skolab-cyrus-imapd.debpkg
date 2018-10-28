@@ -262,22 +262,37 @@ static search_folder_t *query_get_valid_folder(search_query_t *query,
 {
     search_folder_t *folder;
 
-    if (mboxname_isdeletedmailbox(mboxname, 0))
-        return NULL;
-
-    folder = query_get_folder(query, mboxname);
-
-    if (uidvalidity < folder->uidvalidity) {
-        /* these are uids are too old, forget them */
+    if (mboxname_isdeletedmailbox(mboxname, 0) &&
+        !(query->want_mbtype & MBTYPE_DELETED)) {
         return NULL;
     }
-    if (uidvalidity > folder->uidvalidity) {
-        /* these uids are newer than what we have,
-         * forget the old ones; or none at all and
-         * remember the uidvalidity for later */
-        bv_clearall(&folder->uids);
-        bv_clearall(&folder->unchecked_uids);
-        folder->uidvalidity = uidvalidity;
+
+    if (mboxname_iscalendarmailbox(mboxname, 0) &&
+       !(query->want_mbtype & MBTYPE_CALENDAR)) {
+        return NULL;
+    }
+
+    if (mboxname_isaddressbookmailbox(mboxname, 0) &&
+       !(query->want_mbtype & MBTYPE_ADDRESSBOOK)) {
+        return NULL;
+    }
+
+    folder = query_get_folder(query, mboxname);
+    if (uidvalidity) {
+        if (uidvalidity < folder->uidvalidity) {
+            /* these are uids are too old, forget them */
+            return NULL;
+        }
+        if (uidvalidity > folder->uidvalidity) {
+            /* these uids are newer than what we have,
+            * forget the old ones; or none at all and
+            * remember the uidvalidity for later */
+            if (folder->uidvalidity) {
+                bv_clearall(&folder->uids);
+                bv_clearall(&folder->unchecked_uids);
+            }
+            folder->uidvalidity = uidvalidity;
+        }
     }
 
     return folder;
@@ -313,6 +328,8 @@ static int query_begin_index(search_query_t *query,
         init.userid = query->searchargs->userid;
         init.authstate = query->searchargs->authstate;
         init.out = query->state->out;
+        init.want_expunged = query->want_expunged;
+        init.want_mbtype = query->want_mbtype;
 
         r = index_open(mboxname, &init, statep);
         if (r == IMAP_PERMISSION_DENIED) r = IMAP_MAILBOX_NONEXISTENT;
@@ -496,7 +513,7 @@ static void subquery_post_indexed(const char *key, void *data, void *rock)
             continue;
 
         /* can happen if we didn't "tellchanges" yet */
-        if (im->system_flags & FLAG_EXPUNGED)
+        if ((im->system_flags & FLAG_EXPUNGED) && !query->want_expunged)
             continue;
 
         /* run the search program */
@@ -528,7 +545,7 @@ out:
     if (r) query->error = r;
 }
 
-void build_query(search_builder_t *bx, search_expr_t *e)
+EXPORTED void search_build_query(search_builder_t *bx, search_expr_t *e)
 {
     search_expr_t *child;
     int bop = -1;
@@ -561,7 +578,7 @@ void build_query(search_builder_t *bx, search_expr_t *e)
         assert(bop != -1);
         bx->begin_boolean(bx, bop);
         for (child = e->children ; child ; child = child->next)
-            build_query(bx, child);
+            search_build_query(bx, child);
         bx->end_boolean(bx, bop);
     }
 }
@@ -603,7 +620,7 @@ static void subquery_run_indexed(const char *key __attribute__((unused)),
         r = IMAP_INTERNAL;
         goto out;
     }
-    build_query(bx, sub->indexed);
+    search_build_query(bx, sub->indexed);
     r = bx->run(bx, add_unchecked_uid, query);
     search_end_search(bx);
     if (r) goto out;
@@ -636,7 +653,7 @@ static int subquery_run_one_folder(search_query_t *query,
     if (query->sortcrit && query->verbose) {
         char *s = sortcrit_as_string(query->sortcrit);
         syslog(LOG_INFO, "Folder %s: loading MsgData for sort criteria %s",
-                folder->mboxname, s);
+                mboxname, s);
         free(s);
     }
 
@@ -665,7 +682,7 @@ static int subquery_run_one_folder(search_query_t *query,
         if (r) goto out;
 
         /* can happen if we didn't "tellchanges" yet */
-        if (im->system_flags & FLAG_EXPUNGED)
+        if ((im->system_flags & FLAG_EXPUNGED) && !query->want_expunged)
             continue;
 
         /* run the search program */

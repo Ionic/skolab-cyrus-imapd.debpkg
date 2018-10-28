@@ -120,6 +120,7 @@
 /* Application-specific. */
 #include "assert.h"
 #include "nonblock.h"
+#include "util.h"
 #include "xmalloc.h"
 #include "tls.h"
 #include "tls_th-lock.h"
@@ -210,6 +211,7 @@ static void apps_ssl_info_callback(const SSL * s, int where, int ret)
     }
 }
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
 /* taken from OpenSSL apps/s_cb.c
    not thread safe! */
 static RSA *tmp_rsa_cb(SSL * s __attribute__((unused)),
@@ -223,26 +225,51 @@ static RSA *tmp_rsa_cb(SSL * s __attribute__((unused)),
     }
     return (rsa_tmp);
 }
+#endif
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x20700000L)
+/* replacements for new 1.1 API accessors */
+/* XXX probably put these somewhere central */
+static int DH_set0_pqg(DH *dh, BIGNUM *p, BIGNUM *q, BIGNUM *g)
+{
+    if (p == NULL || g == NULL) return 0;
+    dh->p = p;
+    dh->q = q; /* optional */
+    dh->g = g;
+    return 1;
+}
+#endif
 
 #if (OPENSSL_VERSION_NUMBER >= 0x0090800fL)
 /* Logic copied from OpenSSL apps/s_server.c: give the TLS context
  * DH params to work with DHE-* cipher suites. Hardcoded fallback
  * in case no DH params in server_key or server_cert.
+ * Modified quite a bit for openssl 1.1.0 compatibility.
+ * XXX we might be able to just replace this with DH_get_1024_160?
+ * XXX the apps/s_server.c example doesn't use this anymore at all.
  */
 static DH *get_dh1024(void)
 {
     /* Second Oakley group 1024-bits MODP group from RFC2409 */
-    DH *dh=NULL;
+    DH *dh;
+    BIGNUM *p = NULL, *g = NULL;
 
-    if ((dh=DH_new()) == NULL) return(NULL);
-    dh->p=get_rfc2409_prime_1024(NULL);
-    dh->g=NULL;
-    BN_dec2bn(&(dh->g), "2");
-    if ((dh->p == NULL) || (dh->g == NULL)) return(NULL);
+    dh = DH_new();
+    if (!dh) return NULL;
 
-    return(dh);
+    p = get_rfc2409_prime_1024(NULL);
+    BN_dec2bn(&g, "2");
 
+    if (DH_set0_pqg(dh, p, NULL, g))
+        return dh;
+
+    if (g) BN_free(g);
+    if (p) BN_free(p);
+    DH_free(dh);
+
+    return NULL;
 }
+
 static DH *load_dh_param(const char *keyfile, const char *certfile)
 {
     DH *ret=NULL;
@@ -296,9 +323,9 @@ static int verify_callback(int ok, X509_STORE_CTX * ctx)
             verify_error = X509_V_ERR_CERT_CHAIN_TOO_LONG;
         }
     }
-    switch (ctx->error) {
+    switch (err) {
     case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT:
-        X509_NAME_oneline(X509_get_issuer_name(ctx->current_cert), buf, sizeof(buf));
+        X509_NAME_oneline(X509_get_issuer_name(err_cert), buf, sizeof(buf));
         syslog(LOG_NOTICE, "issuer= %s", buf);
         break;
     case X509_V_ERR_CERT_NOT_YET_VALID:
@@ -467,6 +494,8 @@ static int new_session_cb(SSL *ssl __attribute__((unused)),
     time_t expire;
     int ret = -1;
     unsigned char *asn;
+    const unsigned char *session_id = NULL;
+    unsigned int session_id_length = 0;
 
     assert(sess);
 
@@ -492,11 +521,15 @@ static int new_session_cb(SSL *ssl __attribute__((unused)),
 
     if (len) {
         /* store the session in our database */
-        do {
-            ret = cyrusdb_store(sessdb, (const char *) sess->session_id,
-                            sess->session_id_length,
-                            (const char *) data, len + sizeof(time_t), NULL);
-        } while (ret == CYRUSDB_AGAIN);
+
+        session_id = SSL_SESSION_get_id(sess, &session_id_length);
+        if (session_id_length) {
+            do {
+                ret = cyrusdb_store(sessdb, (const char *) session_id,
+                                session_id_length,
+                                (const char *) data, len + sizeof(time_t), NULL);
+            } while (ret == CYRUSDB_AGAIN);
+        }
     }
 
     free(data);
@@ -505,8 +538,8 @@ static int new_session_cb(SSL *ssl __attribute__((unused)),
     if (var_imapd_tls_loglevel > 0) {
         unsigned int i;
         char idstr[SSL_MAX_SSL_SESSION_ID_LENGTH*2 + 1];
-        for (i = 0; i < sess->session_id_length; i++) {
-            sprintf(idstr+i*2, "%02X", sess->session_id[i]);
+        for (i = 0; i < session_id_length; i++) {
+            sprintf(idstr+i*2, "%02X", session_id[i]);
         }
         syslog(LOG_DEBUG, "new TLS session: id=%s, expire=%s, status=%s",
                idstr, ctime(&expire), ret ? "failed" : "ok");
@@ -518,13 +551,14 @@ static int new_session_cb(SSL *ssl __attribute__((unused)),
 /*
  * Function for removing a session from our database.
  */
-static void remove_session(unsigned char *id, int idlen)
+static void remove_session(const unsigned char *id, int idlen)
 {
     int ret;
 
     assert(id);
     assert(idlen <= SSL_MAX_SSL_SESSION_ID_LENGTH);
 
+    if (!idlen) return;
     if (!sess_dbopen) return;
 
     do {
@@ -549,9 +583,14 @@ static void remove_session(unsigned char *id, int idlen)
 static void remove_session_cb(SSL_CTX *ctx __attribute__((unused)),
                               SSL_SESSION *sess)
 {
+    const unsigned char *session_id = NULL;
+    unsigned int session_id_length = 0;
+
     assert(sess);
 
-    remove_session(sess->session_id, sess->session_id_length);
+    session_id = SSL_SESSION_get_id(sess, &session_id_length);
+
+    remove_session(session_id, session_id_length);
 }
 
 /*
@@ -560,8 +599,13 @@ static void remove_session_cb(SSL_CTX *ctx __attribute__((unused)),
  * called, also when session caching was disabled.  We lookup the
  * session in our database in case it was stored by another process.
  */
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+static SSL_SESSION *get_session_cb(SSL *ssl __attribute__((unused)),
+                                   const unsigned char *id, int idlen, int *copy)
+#else
 static SSL_SESSION *get_session_cb(SSL *ssl __attribute__((unused)),
                                    unsigned char *id, int idlen, int *copy)
+#endif
 {
     int ret;
     const char *data = NULL;
@@ -639,7 +683,8 @@ static int tls_rand_init(void)
 // I am the server
 EXPORTED int     tls_init_serverengine(const char *ident,
                               int verifydepth,
-                              int askcert)
+                              int askcert,
+                              SSL_CTX **ret)
 {
     int     off = 0;
     int     verify_flags = SSL_VERIFY_NONE;
@@ -652,6 +697,8 @@ EXPORTED int     tls_init_serverengine(const char *ident,
     enum enum_value tls_client_certs;
     int server_cipher_order;
     int timeout;
+
+    if (ret) *ret = s_ctx;
 
     /* Whether or not to use any client certificate CA context to
      * verify client SSL certificates with.
@@ -674,19 +721,22 @@ EXPORTED int     tls_init_serverengine(const char *ident,
         return -1;
     }
 
-    /* even if we want TLS only, we use SSLv23 server method so we can
-       deal with a client sending an SSLv2 greeting message */
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+    s_ctx = SSL_CTX_new(TLS_server_method());
+#else
     s_ctx = SSL_CTX_new(SSLv23_server_method());
+#endif
+
     if (s_ctx == NULL) {
         return (-1);
     };
 
-    off |= SSL_OP_ALL;          /* Work around all known bugs */
+    off |= SSL_OP_ALL;            /* Work around all known bugs */
+    off |= SSL_OP_NO_SSLv2;       /* Disable insecure SSLv2 */
+    off |= SSL_OP_NO_SSLv3;       /* Disable insecure SSLv3 */
+    off |= SSL_OP_NO_COMPRESSION; /* Disable TLS compression */
 
     const char *tls_versions = config_getstring(IMAPOPT_TLS_VERSIONS);
-
-    off |= SSL_OP_NO_SSLv2;
-    off |= SSL_OP_NO_SSLv3;
 
     if (strstr(tls_versions, "tls1_2") == NULL) {
 #if (OPENSSL_VERSION_NUMBER >= 0x1000105fL)
@@ -714,13 +764,6 @@ EXPORTED int     tls_init_serverengine(const char *ident,
     server_cipher_order = config_getswitch(IMAPOPT_TLS_PREFER_SERVER_CIPHERS);
     if (server_cipher_order)
         off |= SSL_OP_CIPHER_SERVER_PREFERENCE;
-
-#if (OPENSSL_VERSION_NUMBER >= 0x1000000fL)
-    if (!config_getswitch(IMAPOPT_TLS_COMPRESSION)) {
-        off |= SSL_OP_NO_COMPRESSION;
-        syslog(LOG_DEBUG, "TLS client engine: Setting SSL_OP_NO_COMPRESSION");
-    }
-#endif // (OPENSSL_VERSION_NUMBER >= 0x1000000fL)
 
     SSL_CTX_set_options(s_ctx, off);
     SSL_CTX_set_info_callback(s_ctx, apps_ssl_info_callback);
@@ -840,11 +883,13 @@ EXPORTED int     tls_init_serverengine(const char *ident,
     }
 
     if (!set_cert_stuff(s_ctx, server_cert_file, server_key_file)) {
-        syslog(LOG_ERR, "TLS server engine: cannot load server cert/key data.");
+        syslog(LOG_ERR, "TLS server engine: cannot load cert/key data, may be a cert/key mismatch?");
         return (-1);
     }
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
     SSL_CTX_set_tmp_rsa_callback(s_ctx, tmp_rsa_cb);
+#endif
 
 #if (OPENSSL_VERSION_NUMBER >= 0x0090800fL)
     /* Load DH params for DHE-* key exchanges */
@@ -952,6 +997,8 @@ EXPORTED int     tls_init_serverengine(const char *ident,
     }
 
     tls_serverengine = 1;
+    if (ret) *ret = s_ctx;
+
     return (0);
 }
 
@@ -1001,6 +1048,9 @@ EXPORTED int tls_start_servertls(int readfd, int writefd, int timeout,
     X509   *peer;
     const char *tls_protocol = NULL;
     const char *tls_cipher_name = NULL;
+    const unsigned char *alpn = NULL;
+    unsigned int alpn_len = 0;
+    struct buf log = BUF_INITIALIZER;
     int tls_cipher_usebits = 0;
     int tls_cipher_algbits = 0;
     SSL *tls_conn;
@@ -1176,32 +1226,29 @@ EXPORTED int tls_start_servertls(int readfd, int writefd, int timeout,
         *layerbits = tls_cipher_usebits;
     }
 
+#if OPENSSL_VERSION_NUMBER >= 0x10002000L
+    SSL_get0_alpn_selected(tls_conn, &alpn, &alpn_len);
+#endif
+
+    buf_printf(&log, "starttls: %s with cipher %s (%d/%d bits %s) ",
+               tls_protocol, tls_cipher_name,
+               tls_cipher_usebits, tls_cipher_algbits,
+               SSL_session_reused(tls_conn) ? "reused" : "new");
+
     if (authid && *authid) {
-        syslog(
-                LOG_NOTICE,
-                "starttls: %s with cipher %s (%d/%d bits %s) "
-                "authenticated as %s",
-                tls_protocol,
-                tls_cipher_name,
-                tls_cipher_usebits,
-                tls_cipher_algbits,
-                SSL_session_reused(tls_conn) ? "reused" : "new",
-                *authid
-            );
-
-    } else {
-        syslog(
-                LOG_NOTICE,
-                "starttls: %s with cipher %s (%d/%d bits %s) "
-                "no authentication",
-                tls_protocol,
-                tls_cipher_name,
-                tls_cipher_usebits,
-                tls_cipher_algbits,
-                SSL_session_reused(tls_conn) ? "reused" : "new"
-            );
-
+        buf_printf(&log, "authenticated as %s", *authid);
     }
+    else {
+        buf_appendcstr(&log, "no authentication");
+    }
+
+    if (alpn) {
+        buf_printf(&log, "; application protocol = %.*s",
+                   alpn_len, (const char *) alpn);
+    }
+
+    syslog(LOG_NOTICE, "%s", buf_cstring(&log));
+    buf_free(&log);
 
  done:
     nonblock(readfd, 0);
@@ -1339,12 +1386,7 @@ EXPORTED int tls_prune_sessions(void)
     }
 
     ret = cyrusdb_open(DB, fname, 0, &sessdb);
-    if (ret != CYRUSDB_OK) {
-        syslog(LOG_ERR, "DBERROR: opening %s: %s",
-               fname, cyrusdb_strerror(ret));
-        return 1;
-    }
-    else {
+    if (ret == CYRUSDB_OK) {
         /* check each session in our database */
         sess_dbopen = 1;
         prock.count = prock.deletions = 0;
@@ -1356,10 +1398,19 @@ EXPORTED int tls_prune_sessions(void)
         syslog(LOG_NOTICE, "tls_prune: purged %d out of %d entries",
                prock.deletions, prock.count);
     }
+    else if (ret == CYRUSDB_NOTFOUND) {
+        syslog(LOG_NOTICE, "tls_prune: %s not found, nothing to do", fname);
+        ret = 0;
+    }
+    else {
+        syslog(LOG_ERR, "DBERROR: opening %s: %s",
+               fname, cyrusdb_strerror(ret));
+    }
 
-    free(tofree);
+    if (tofree)
+	free(tofree);
 
-    return 0;
+    return ret;
 }
 
 /* fill string buffer with info about tls connection */
@@ -1402,25 +1453,22 @@ HIDDEN int tls_init_clientengine(int verifydepth,
         return -1;
     }
 
-    /* XXX  May need to use only SSLv3 for iSchedule */
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+    c_ctx = SSL_CTX_new(TLS_client_method());
+#else
     c_ctx = SSL_CTX_new(SSLv23_client_method());
+#endif
     if (c_ctx == NULL) {
         return (-1);
     };
 
-    off |= SSL_OP_ALL;          /* Work around all known bugs */
-    off |= SSL_OP_NO_SSLv2;
-    off |= SSL_OP_NO_SSLv3;
+    off |= SSL_OP_ALL;            /* Work around all known bugs */
+    off |= SSL_OP_NO_SSLv2;       /* Disable insecure SSLv2 */
+    off |= SSL_OP_NO_SSLv3;       /* Disable insecure SSLv3 */
+    off |= SSL_OP_NO_COMPRESSION; /* Disable TLS compression */
 
     SSL_CTX_set_options(c_ctx, off);
     SSL_CTX_set_info_callback(c_ctx, apps_ssl_info_callback);
-
-#if (OPENSSL_VERSION_NUMBER >= 0x1000000fL)
-    if (!config_getswitch(IMAPOPT_TLS_COMPRESSION)) {
-        off |= SSL_OP_NO_COMPRESSION;
-        syslog(LOG_DEBUG, "TLS client engine: Setting SSL_OP_NO_COMPRESSION");
-    }
-#endif // (OPENSSL_VERSION_NUMBER >= 0x1000000fL)
 
     server_ca_dir = config_getstring(IMAPOPT_TLS_SERVER_CA_DIR);
     server_ca_file = config_getstring(IMAPOPT_TLS_SERVER_CA_FILE);
@@ -1452,12 +1500,14 @@ HIDDEN int tls_init_clientengine(int verifydepth,
 
     if (client_cert || client_key) {
         if (!set_cert_stuff(c_ctx, client_cert, client_key)) {
-            syslog(LOG_ERR,"TLS client engine: cannot load client cert/key data");
+            syslog(LOG_ERR,"TLS client engine: cannot load cert/key data, may be a cert/key mismatch?");
             return (-1);
         }
     }
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
     SSL_CTX_set_tmp_rsa_callback(c_ctx, tmp_rsa_cb);
+#endif
 
     verify_depth = verifydepth;
     SSL_CTX_set_verify(c_ctx, verify_flags, verify_callback);

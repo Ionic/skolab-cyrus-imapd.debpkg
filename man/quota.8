@@ -1,109 +1,148 @@
-.\" -*- nroff -*-
-.TH QUOTA 8 "Project Cyrus" CMU
-.\"
-.\" Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
-.\"
-.\" Redistribution and use in source and binary forms, with or without
-.\" modification, are permitted provided that the following conditions
-.\" are met:
-.\"
-.\" 1. Redistributions of source code must retain the above copyright
-.\"    notice, this list of conditions and the following disclaimer.
-.\"
-.\" 2. Redistributions in binary form must reproduce the above copyright
-.\"    notice, this list of conditions and the following disclaimer in
-.\"    the documentation and/or other materials provided with the
-.\"    distribution.
-.\"
-.\" 3. The name "Carnegie Mellon University" must not be used to
-.\"    endorse or promote products derived from this software without
-.\"    prior written permission. For permission or any legal
-.\"    details, please contact
-.\"      Carnegie Mellon University
-.\"      Center for Technology Transfer and Enterprise Creation
-.\"      4615 Forbes Avenue
-.\"      Suite 302
-.\"      Pittsburgh, PA  15213
-.\"      (412) 268-7393, fax: (412) 268-7395
-.\"      innovation@andrew.cmu.edu
-.\"
-.\" 4. Redistributions of any form whatsoever must retain the following
-.\"    acknowledgment:
-.\"    "This product includes software developed by Computing Services
-.\"     at Carnegie Mellon University (http://www.cmu.edu/computing/)."
-.\"
-.\" CARNEGIE MELLON UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO
-.\" THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-.\" AND FITNESS, IN NO EVENT SHALL CARNEGIE MELLON UNIVERSITY BE LIABLE
-.\" FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
-.\" AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
-.\" OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\" Man page generated from reStructuredText.
+.
+.TH "QUOTA" "8" "August 10, 2018" "3.0.8" "Cyrus IMAP"
 .SH NAME
-quota \- report and optionally fix quota usage
+quota \- Cyrus IMAP documentation
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.sp
+Report and optionally fix storage and message quota usage.
 .SH SYNOPSIS
-.B quota
-[
-.B \-C
-.I config-file
-]
-[
-.B \-d
-.I domain
-]
-[
-.B \-f
-]
-[
-.IR mailbox-prefix ...
-]
+.sp
+.nf
+\fBquota\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-d\fP \fIdomain\fP ] [ \fB\-f\fP ] [ \fImailbox\-prefix\fP\&... ]
+.fi
 .SH DESCRIPTION
-.I Quota
-generates a report listing quota roots, giving their limits and usage.
-If the
-.I \-f
-option is given,
-.I quota
-first fixes any inconsistencies in the quota subsystem, such as
-mailboxes with the wrong quota root or quota roots with the wrong
-quota usage reported.
-If an optional
-.I domain
-is given, the quota listing (and inconsistency fixing) is performed in
-that domain rather than the default domain.
-If any optional
-.I mailbox-prefix
-arguments are given, the quota listing (and inconsistency fixing) is
-limited to quota roots with names that start with one of the given
-prefixes.
-.PP
-Running
-.I quota
-with both the
-.I \-f
-option and
-.I mailbox-prefix
+.sp
+\fBquota\fP generates a report listing quota roots, giving their limits and
+usage.
+.sp
+If the \fB\-f\fP option is specified, \fBquota\fP first fixes any
+inconsistencies in the quota subsystem, such as mailboxes with the wrong
+quota root or quota roots with the wrong quota usage reported.
+.sp
+If an optional \fIdomain\fP is specified with the \fB\-d\fP option, the quota
+listing (and any inconsistency fixing) is performed only in that domain
+rather than all mailboxes.
+.sp
+If one or more \fImailbox\-prefix\fP arguments are specified, the quota
+listing (and inconsistency fixing) is limited to quota roots with names
+that start with one of the given prefixes.
+.sp
+\fBWARNING:\fP
+.INDENT 0.0
+.INDENT 3.5
+Running \fBquota\fP with both the \fB\-f\fP option and \fImailbox\-prefix\fP
 arguments is not recommended.
-.PP
-.I Quota
-reads its configuration options out of the
-.IR imapd.conf (5)
-file unless specified otherwise by \fB-C\fR.
+.UNINDENT
+.UNINDENT
+.sp
+\fBquota\fP reads its configuration options out of the imapd.conf(5) file unless specified otherwise by \fB\-C\fP\&.
 .SH OPTIONS
+.INDENT 0.0
 .TP
-.BI \-C " config-file"
-Read configuration options from \fIconfig-file\fR.
+.B \-C config\-file
+Use the specified configuration file \fIconfig\-file\fP rather than the default imapd.conf(5)\&.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI \-d " domain"
-List/fix quotas in \fIdomain\fR.
+.B \-d domain
+List and/or fix quota only in \fIdomain\fP\&.
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-f
 Fix any inconsistencies in the quota subsystem before generating a
 report.
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-q
-Quiet.  If -f is specified, then don't print the quota vaules, only
-print messages when things are changed.
-.SH FILES
+Operate quietly. If \fB\-f\fP is specified, then don\(aqt print the quota
+values, only print messages when things are changed.
+.UNINDENT
+.INDENT 0.0
 .TP
-.B /etc/imapd.conf
+.B \-J
+Output the quota values as JSON for automated tooling support
+.UNINDENT
+.INDENT 0.0
+.TP
+.B mailbox\-prefix
+Only report and/or fix quota in mailboxes starting with the
+specified \fImailbox\-prefix\fP\&.
+.UNINDENT
+.SH EXAMPLES
+.sp
+.nf
+\fBquota\fP
+.fi
+.INDENT 0.0
+.INDENT 3.5
+List quotas for all users and mailboxes.
+.UNINDENT
+.UNINDENT
+.SH FILES
+.sp
+/etc/imapd.conf
+.SH SEE ALSO
+.sp
+imapd.conf(5)
+.SH AUTHOR
+The Cyrus Team, Jeroen van Meeuwen (Kolab Systems), Nic Bernstein (Onlight)
+.SH COPYRIGHT
+1993-2017, The Cyrus Team
+.\" Generated by docutils manpage writer.
+.

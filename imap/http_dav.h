@@ -71,9 +71,19 @@
 #define XML_NS_CARDDAV  "urn:ietf:params:xml:ns:carddav"
 #define XML_NS_ISCHED   "urn:ietf:params:xml:ns:ischedule"
 #define XML_NS_CS       "http://calendarserver.org/ns/"
+#define XML_NS_MECOM    "http://me.com/_namespace/"
+#define XML_NS_MOBME    "urn:mobileme:davservices"
 #define XML_NS_APPLE    "http://apple.com/ns/ical/"
 #define XML_NS_USERFLAG "http://cyrusimap.org/ns/userflag/"
 #define XML_NS_SYSFLAG  "http://cyrusimap.org/ns/sysflag/"
+#define XML_NS_DAVMOUNT "http://purl.org/NET/webdav/mount/"
+
+#define USER_COLLECTION_PREFIX  "user"
+#define GROUP_COLLECTION_PREFIX "group"
+
+#define SYNC_TOKEN_URL_SCHEME "data:,"
+
+#define SHARED_COLLECTION_DELIM '.'
 
 /* Index into known namespace array */
 enum {
@@ -83,17 +93,23 @@ enum {
     NS_CARDDAV,
     NS_ISCHED,
     NS_CS,
+    NS_MECOM,
+    NS_MOBME,
     NS_CYRUS,
 };
-#define NUM_NAMESPACE 6
+#define NUM_NAMESPACE 8
 
 /* Cyrus-specific privileges */
+#define DACL_PROPCOL    ACL_WRITE       /* CY:write-properties-collection */
+#define DACL_PROPRES    ACL_ANNOTATEMSG /* CY:write-properties-resource */
 #define DACL_MKCOL      ACL_CREATE      /* CY:make-collection */
-#define DACL_ADDRSRC    ACL_POST        /* CY:add-resource */
+#define DACL_ADDRES     ACL_POST        /* CY:add-resource */
 #define DACL_RMCOL      ACL_DELETEMBOX  /* CY:remove-collection */
-#define DACL_RMRSRC     (ACL_DELETEMSG|ACL_EXPUNGE)     /* CY:remove-resource */
+#define DACL_RMRES      (ACL_DELETEMSG\
+                         |ACL_EXPUNGE)  /* CY:remove-resource */
 #define DACL_ADMIN      ACL_ADMIN       /* CY:admin (aggregates
-                                           DAV:read-acl, write-acl, unlock) */
+                                           DAV:read-acl, DAV:write-acl,
+                                           DAV:unlock and DAV:share) */
 
 /* WebDAV (RFC 3744) privileges */
 #define DACL_READ       (ACL_READ\
@@ -101,12 +117,12 @@ enum {
                                            DAV:read-current-user-privilege-set
                                            and CALDAV:read-free-busy) */
 #define DACL_WRITECONT  ACL_INSERT      /* DAV:write-content */
-#define DACL_WRITEPROPS (ACL_WRITE\
-                         |ACL_ANNOTATEMSG)      /* DAV:write-properties */
+#define DACL_WRITEPROPS (DACL_PROPCOL\
+                         |DACL_PROPRES) /* DAV:write-properties */
 #define DACL_BIND       (DACL_MKCOL\
-                         |DACL_ADDRSRC) /* DAV:bind */
+                         |DACL_ADDRES)  /* DAV:bind */
 #define DACL_UNBIND     (DACL_RMCOL\
-                         |DACL_RMRSRC)  /* DAV:unbind */
+                         |DACL_RMRES)   /* DAV:unbind */
 #define DACL_WRITE      (DACL_WRITECONT\
                          |DACL_WRITEPROPS\
                          |DACL_BIND\
@@ -155,6 +171,11 @@ enum {
                                            schedule-send-reply,
                                            schedule-send-freebusy) */
 
+/* Privileges assigned via WebDAV Sharing (draft-pot-webdav-resource-sharing) */
+#define DACL_SHARE      (DACL_READ|DACL_WRITEPROPS)
+#define DACL_SHARERW    (DACL_READ|DACL_WRITE)
+
+
 /* Index into preconditions array */
 enum {
     /* WebDAV (RFC 4918) preconditons */
@@ -162,10 +183,11 @@ enum {
     DAV_BAD_LOCK_TOKEN,
     DAV_NEED_LOCK_TOKEN,
     DAV_LOCKED,
+    DAV_FINITE_DEPTH,
 
     /* WebDAV Versioning (RFC 3253) preconditions */
     DAV_SUPP_REPORT,
-    DAV_RSRC_EXISTS,
+    DAV_RES_EXISTS,
 
     /* WebDAV ACL (RFC 3744) preconditions */
     DAV_NEED_PRIVS,
@@ -196,15 +218,19 @@ enum {
     CALDAV_UID_CONFLICT,
     CALDAV_SUPP_FILTER,
     CALDAV_VALID_FILTER,
+    CALDAV_SUPP_COLLATION,
 
     /* RSCALE (RFC 7529) preconditions */
     CALDAV_SUPP_RSCALE,
 
-    /* TZ by Ref (draft-ietf-tzdist-caldav-timezone-ref) preconditions */
+    /* Time Zones by Reference (RFC 7809) preconditions */
     CALDAV_VALID_TIMEZONE,
 
-    /* Managed Attachments (draft-daboo-caldav-attachments) preconditions */
+    /* Managed Attachments (draft-ietf-calext-caldav-attachments) preconditions */
     CALDAV_VALID_MANAGEDID,
+
+    /* Bulk Change (draft-daboo-calendarserver-bulk-change) preconditions */
+    CALDAV_CTAG_OK,
 
     /* CalDAV Scheduling (RFC 6638) preconditions */
     CALDAV_VALID_SCHED,
@@ -232,7 +258,8 @@ enum {
     CARDDAV_VALID_DATA,
     CARDDAV_UID_CONFLICT,
     CARDDAV_LOCATION_OK,
-    CARDDAV_SUPP_FILTER
+    CARDDAV_SUPP_FILTER,
+    CARDDAV_SUPP_COLLATION
 };
 
 /* Preference bits */
@@ -273,21 +300,30 @@ struct propfind_entry_list;
 struct prop_entry;
 struct error_t;
 
+/* Propfind return flags */
+struct fctx_flags_t {
+    unsigned long fetcheddata : 1;      /* Did we fetch iCalendar/vCard data? */
+    unsigned long cs_sharing  : 1;      /* Is client using CS sharing? */
+};
+
 struct propfind_ctx {
-    struct request_target_t *req_tgt;   /* parsed request target URL */
+    struct transaction_t *txn;          /* request transaction */
+    struct request_target_t *req_tgt;   /* parsed target URL */
     unsigned mode;                      /* none, allprop, propname, prop */
     unsigned depth;                     /* 0 = root, 1 = calendar, 2 = resrc */
     unsigned prefer;                    /* bitmask of client preferences */
-    hdrcache_t req_hdrs;                /* Cached HTTP headers */
     const char *userid;                 /* userid client has logged in as */
     int userisadmin;                    /* is userid an admin */
     struct auth_state *authstate;       /* authorization state for userid */
     void *davdb;                        /* DAV DB corresponding to collection */
+    const mbentry_t *mbentry;           /* mbentry correspondng to collection */
     struct mailbox *mailbox;            /* mailbox correspondng to collection */
     struct quota quota;                 /* quota info for collection */
     struct index_record *record;        /* cyrus.index record for resource */
     void *data;                         /* DAV record for resource */
     struct buf msg_buf;                 /* mmap()'d resource file */
+    void *obj;                          /* parsed resource */
+    void (*free_obj)(void *);           /* free parsed object */
     unsigned long reqd_privs;           /* privileges req'd on collections */
     int (*filter)(struct propfind_ctx *,
                   void *data);          /* callback to filter resources */
@@ -304,24 +340,21 @@ struct propfind_ctx {
     xmlNsPtr *ns;                       /* Array of our known namespaces */
     struct hash_table *ns_table;        /* Table of all ns attached to resp */
     unsigned prefix_count;              /* Count of new ns added to resp */
-    struct error_t *err;                /* Error info to pass up to caller */
     int *ret;                           /* Return code to pass up to caller */
-    int fetcheddata;                    /* Did we fetch iCalendar/vCard data? */
+    struct fctx_flags_t flags;          /* Return flags for this propfind */
     struct buf buf;                     /* Working buffer */
 };
 
 
 /* Context for patching (writing) properties */
 struct proppatch_ctx {
-    struct request_target_t *req_tgt;   /* parsed request target URL */
-    unsigned meth;                      /* requested Method */
+    struct transaction_t *txn;          /* request transaction */
     struct mailbox *mailbox;            /* mailbox related to the collection */
     struct index_record *record;        /* record of the specific resource */
     const struct prop_entry *lprops;    /* Array of known "live" properties */
     xmlNodePtr root;                    /* root node to add to XML tree */
     xmlNsPtr *ns;                       /* Array of our supported namespaces */
     struct txn *tid;                    /* Transaction ID for annot writes */
-    struct error_t *err;                /* Error info to pass up to caller */
     int *ret;                           /* Return code to pass up to caller */
     struct buf buf;                     /* Working buffer */
 };
@@ -367,12 +400,16 @@ enum {
     PROP_ALLPROP =      (1<<0),         /* Returned in <allprop> request */
     PROP_COLLECTION =   (1<<1),         /* Returned for collection */
     PROP_RESOURCE =     (1<<2),         /* Returned for resource */
-    PROP_PRESCREEN =    (1<<3)          /* Prescreen property using callback */
+    PROP_PRESCREEN =    (1<<3),         /* Prescreen property using callback */
+    PROP_CLEANUP =      (1<<4)          /* Cleanup property using callback */
 };
 
 
 /* Function to check headers for preconditions */
-typedef int (*check_precond_t)(struct transaction_t *txn, const void *data,
+struct meth_params;
+typedef int (*check_precond_t)(struct transaction_t *txn,
+                               struct meth_params *params,
+                               struct mailbox *mailbox, const void *data,
                                const char *etag, time_t lastmod);
 
 /* Function to insert/update DAV resource in 'data' */
@@ -380,9 +417,6 @@ typedef int (*db_write_proc_t)(void *davdb, void *data);
 
 /* Function to delete resource in 'rowid' */
 typedef int (*db_delete_proc_t)(void *davdb, unsigned rowid);
-
-/* Function to delete all entries in 'mailbox' */
-typedef int (*db_delmbox_proc_t)(void *davdb, const char *mailbox);
 
 typedef int (*db_proc_t)(void *davdb);
 
@@ -398,7 +432,6 @@ struct davdb_params {
      * we need to go via mailbox.c for replication support */
     db_write_proc_t write_resourceLOCKONLY;     /* write a specific resource */
     db_delete_proc_t delete_resourceLOCKONLY;   /* delete a specific resource */
-    db_delmbox_proc_t delete_mboxDONTUSE;       /* delete all resources in mailbox */
 };
 
 /*
@@ -415,18 +448,23 @@ typedef int (*delete_proc_t)(struct transaction_t *txn, struct mailbox *mailbox,
 
 /* Function to do special processing for GET method (optional) */
 typedef int (*get_proc_t)(struct transaction_t *txn, struct mailbox *mailbox,
-                          struct index_record *record, void *data);
+                          struct index_record *record, void *data, void **obj);
 
 /* Function to convert to/from MIME type */
 struct mime_type_t {
     const char *content_type;
     const char *version;
     const char *file_ext;
-    char* (*to_string)(void *);
-    void* (*from_string)(const char *);
+    struct buf* (*from_object)(void *);
+    void* (*to_object)(const struct buf *);
     void (*free)(void *);
     const char* (*begin_stream)(struct buf *);
     void (*end_stream)(struct buf *);
+};
+
+struct mkcol_params {
+    unsigned location_precond;          /* precond code for bad location */
+    uint32_t mbtype;                    /* mailbox type collection */
 };
 
 /*
@@ -436,18 +474,44 @@ struct mime_type_t {
  */
 typedef int (*post_proc_t)(struct transaction_t *txn);
 
+typedef int (*import_proc_t)(struct transaction_t *txn, void *obj,
+                             struct mailbox *mailbox, void *davdb,
+                             xmlNodePtr root, xmlNsPtr *ns, unsigned flags);
+
+/* POST "mode" bits */
+enum {
+    POST_ADDMEMBER = (1<<0),
+    POST_SHARE     = (1<<1),
+    POST_BULK      = (1<<2)
+};
+
 /* meth_put() parameters */
 typedef int (*put_proc_t)(struct transaction_t *txn, void *obj,
                           struct mailbox *mailbox, const char *resource,
-                          void *davdb);
+                          void *davdb, unsigned flags);
+
+struct copy_params {
+    unsigned uid_conf_precond;          /* precond code for UID conflict */
+    put_proc_t proc;                    /* function to process & COPY a rsrc */
+};
+
+struct post_params {
+    unsigned allowed;                   /* allowed generic POST "modes" */
+    post_proc_t proc;                   /* special POST handling (optional) */
+    import_proc_t import;               /* func to import multiple rsrcs (opt) */
+};
 
 struct put_params {
     unsigned supp_data_precond;         /* precond code for unsupported data */
     put_proc_t proc;                    /* function to process & PUT a rsrc */
 };
 
+struct propfind_params {
+    unsigned finite_depth_precond;      /* precond code for finite depth */
+    const struct prop_entry *lprops;    /* array of "live" properties */
+};
+
 /* meth_report() parameters */
-struct meth_params;
 typedef int (*report_proc_t)(struct transaction_t *txn,
                              struct meth_params *rparams,
                              xmlNodePtr inroot, struct propfind_ctx *fctx);
@@ -481,17 +545,96 @@ struct meth_params {
     check_precond_t check_precond;      /* check headers for preconditions */
     struct davdb_params davdb;          /* DAV DB access functions */
     acl_proc_t acl_ext;                 /* special ACL handling (extensions) */
-    put_proc_t copy;                    /* function to process & COPY a rsrc */
+    struct copy_params copy;            /* params for copying a resource */
     delete_proc_t delete;               /* special DELETE handling (optional) */
     get_proc_t get;                     /* special GET handling (optional) */
-    uint32_t mkcol_mbtype;              /* mbtype for MKCOL/MKCALENDAR */
-    post_proc_t post;                   /* special POST handling (optional) */
+    struct mkcol_params mkcol;          /* params for creating new collection */
+    struct patch_doc_t *patch_docs;     /* array of patch docs & funcs (opt) */
+    struct post_params post;            /* params for POST handling */
     struct put_params put;              /* params for putting a resource */
-    const struct prop_entry *lprops;    /* array of "live" properties */
+    struct propfind_params propfind;    /* params for finding properties */
     const struct report_type_t *reports;/* array of reports & proc functions */
 };
 
 extern struct meth_params webdav_params;
+
+enum {
+    MATCH_TYPE_CONTAINS = 0,
+    MATCH_TYPE_EQUALS,
+    MATCH_TYPE_PREFIX,
+    MATCH_TYPE_SUFFIX
+};
+
+struct match_type_t {
+    const char *name;
+    unsigned value;
+};
+
+extern const struct match_type_t dav_match_types[];
+
+enum {
+    COLLATION_UNICODE = 0,
+    COLLATION_ASCII,
+    COLLATION_OCTET
+};
+
+struct collation_t {
+    const char *name;
+    unsigned value;
+};
+
+extern const struct collation_t dav_collations[];
+    
+struct text_match_t {
+    xmlChar *text;
+    unsigned negate    : 1;
+    unsigned type      : 3;
+    unsigned collation : 3;
+    struct text_match_t *next;
+};
+
+struct param_filter {
+    xmlChar *name;
+    unsigned kind;
+    unsigned not_defined : 1;
+    struct text_match_t *match;
+    struct param_filter *next;
+};
+
+struct prop_filter {
+    xmlChar *name;
+    unsigned kind;
+    unsigned allof       : 1;
+    unsigned not_defined : 1;
+    void *other;                /* some other filter defined by caller */
+    struct text_match_t *match;
+    struct param_filter *param;
+    struct prop_filter *next;
+};
+
+struct filter_profile_t {
+    unsigned allof      : 1;
+    unsigned collation  : 3;
+    unsigned filter_precond;
+    unsigned collation_precond;
+    unsigned (*prop_string_to_kind)(const char *);
+    unsigned no_prop_value;
+    unsigned (*param_string_to_kind)(const char *);
+    unsigned no_param_value;
+    void (*parse_propfilter)(xmlNodePtr, struct prop_filter *,
+                             struct error_t *);
+};
+
+#define DAV_FILTER_ISNOTDEF_ERR \
+    "is-not-defined can NOT be combined with other elements"
+
+void dav_parse_propfilter(xmlNodePtr root, struct prop_filter **prop,
+                          struct filter_profile_t *profile,
+                          struct error_t *error);
+void dav_free_propfilter(struct prop_filter *prop);
+int dav_apply_textmatch(xmlChar *text, struct text_match_t *match);
+
+int notify_post(struct transaction_t *txn);
 
 int report_expand_prop(struct transaction_t *txn, struct meth_params *rparams,
                        xmlNodePtr inroot, struct propfind_ctx *fctx);
@@ -503,17 +646,21 @@ int report_sync_col(struct transaction_t *txn, struct meth_params *rparams,
                     xmlNodePtr inroot, struct propfind_ctx *fctx);
 
 
-int dav_check_precond(struct transaction_t *txn, const void *data,
+int calcarddav_parse_path(const char *path, struct request_target_t *tgt,
+                          const char *mboxprefix, const char **errstr);
+int dav_check_precond(struct transaction_t *txn, struct meth_params *params,
+                      struct mailbox *mailbox, const void *data,
                       const char *etag, time_t lastmod);
 int dav_store_resource(struct transaction_t *txn,
                        const char *data, size_t datalen,
                        struct mailbox *mailbox, struct index_record *oldrecord,
                        strarray_t *imapflags);
-int target_to_mboxname(struct request_target_t *req_tgt, char *mboxname);
+int dav_premethod(struct transaction_t *txn);
 unsigned get_preferences(struct transaction_t *txn);
 struct mime_type_t *get_accept_type(const char **hdr, struct mime_type_t *types);
 
-int parse_xml_body(struct transaction_t *txn, xmlNodePtr *root);
+int parse_xml_body(struct transaction_t *txn, xmlNodePtr *root,
+                   const char *mimetype);
 
 /* Initialize an XML tree */
 xmlNodePtr init_xml_response(const char *resp, int ns,
@@ -532,11 +679,10 @@ int ensure_ns(xmlNsPtr *respNs, int ns, xmlNodePtr node,
 
 int xml_add_response(struct propfind_ctx *fctx, long code, unsigned precond);
 int propfind_by_resource(void *rock, void *data);
-int propfind_by_collection(const char *mboxname, int matchlen,
-                           int maycreate, void *rock);
+int propfind_by_collection(const mbentry_t *mbentry, void *rock);
 int expand_property(xmlNodePtr inroot, struct propfind_ctx *fctx,
-                    const char *href, parse_path_t parse_path,
-                    const struct prop_entry *lprops,
+                    struct namespace_t *namespace, const char *href,
+                    parse_path_t parse_path, const struct prop_entry *lprops,
                     xmlNodePtr root, int depth);
 
 /* DAV method processing functions */
@@ -548,6 +694,7 @@ int meth_lock(struct transaction_t *txn, void *params);
 int meth_mkcol(struct transaction_t *txn, void *params);
 int meth_propfind(struct transaction_t *txn, void *params);
 int meth_proppatch(struct transaction_t *txn, void *params);
+int meth_patch(struct transaction_t *txn, void *params);
 int meth_post(struct transaction_t *txn, void *params);
 int meth_put(struct transaction_t *txn, void *params);
 int meth_report(struct transaction_t *txn, void *params);
@@ -598,6 +745,15 @@ int propfind_reportset(const xmlChar *name, xmlNsPtr ns,
                        xmlNodePtr prop, xmlNodePtr resp,
                        struct propstat propstat[], void *rock);
 
+int propfind_collationset(const xmlChar *name, xmlNsPtr ns,
+                          struct propfind_ctx *fctx,
+                          xmlNodePtr prop, xmlNodePtr resp,
+                          struct propstat propstat[], void *rock);
+
+int propfind_principalurl(const xmlChar *name, xmlNsPtr ns,
+                          struct propfind_ctx *fctx,
+                          xmlNodePtr prop, xmlNodePtr resp,
+                          struct propstat propstat[], void *rock);
 int propfind_owner(const xmlChar *name, xmlNsPtr ns,
                    struct propfind_ctx *fctx,
                    xmlNodePtr prop, xmlNodePtr resp,
@@ -648,6 +804,11 @@ int propfind_sync_token(const xmlChar *name, xmlNsPtr ns,
                         xmlNodePtr prop, xmlNodePtr resp,
                         struct propstat propstat[], void *rock);
 
+int propfind_bulkrequests(const xmlChar *name, xmlNsPtr ns,
+                          struct propfind_ctx *fctx,
+                          xmlNodePtr prop, xmlNodePtr resp,
+                          struct propstat propstat[], void *rock);
+
 int propfind_calurl(const xmlChar *name, xmlNsPtr ns,
                     struct propfind_ctx *fctx,
                     xmlNodePtr prop, xmlNodePtr resp,
@@ -664,6 +825,30 @@ int propfind_abookhome(const xmlChar *name, xmlNsPtr ns,
                        struct propfind_ctx *fctx,
                        xmlNodePtr prop, xmlNodePtr resp,
                        struct propstat propstat[], void *rock);
+
+void xml_add_shareaccess(struct propfind_ctx *fctx,
+                         xmlNodePtr resp, xmlNodePtr node, int legacy);
+int propfind_shareaccess(const xmlChar *name, xmlNsPtr ns,
+                         struct propfind_ctx *fctx,
+                         xmlNodePtr prop, xmlNodePtr resp,
+                         struct propstat propstat[], void *rock);
+int propfind_invite(const xmlChar *name, xmlNsPtr ns,
+                    struct propfind_ctx *fctx,
+                    xmlNodePtr prop, xmlNodePtr resp,
+                    struct propstat propstat[], void *rock);
+int propfind_sharedurl(const xmlChar *name, xmlNsPtr ns,
+                       struct propfind_ctx *fctx,
+                       xmlNodePtr prop, xmlNodePtr resp,
+                       struct propstat propstat[], void *rock);
+
+int propfind_push_transports(const xmlChar *name, xmlNsPtr ns,
+                             struct propfind_ctx *fctx,
+                             xmlNodePtr prop, xmlNodePtr resp,
+                             struct propstat propstat[], void *rock);
+int propfind_pushkey(const xmlChar *name, xmlNsPtr ns,
+                     struct propfind_ctx *fctx,
+                     xmlNodePtr prop, xmlNodePtr resp,
+                     struct propstat propstat[], void *rock);
 
 /* PROPPATCH callbacks */
 int proppatch_todb(xmlNodePtr prop, unsigned set, struct proppatch_ctx *pctx,

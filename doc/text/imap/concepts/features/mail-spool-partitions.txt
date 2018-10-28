@@ -1,0 +1,78 @@
+
+Mail Spool Partitions
+*********************
+
+A mail spool is divided in partitions. Partitions can give you the
+opportunity to tier your storage, and/or use multiple filesystems to
+apply restrictions to information (contained within mailboxes), such
+as the absolute maximum quantity of storage used.
+
+See also:
+
+  * Storage Considerations
+
+  * Mailbox Distribution
+
+
+Storage Tiering with Partitions
+===============================
+
+As an example, one could imagine a set of disks configured as follows:
+
+* Some small but fast (expensive) disks for the main storage array,
+
+* Some large but slow (cheap) disks for archives.
+
+Note: This particular example is more efficaciously achieved via the
+  new (post 3.0) Archiving feature.
+
+Mounting a filesystem on the fast disks under
+"/var/spool/cyrus/fast/", and mounting a filesystem on the slow disks
+under "/var/spool/cyrus/slow/", you could configure the following in
+imapd.conf(5):
+
+   defaultpartition: fast
+   partition-fast: /var/spool/cyrus/fast/
+   partition-slow: /var/spool/cyrus/slow/
+
+Next, you could set the quota on "user/john@example.org" to a measely
+1 gigabyte:
+
+   $ **cyradm -u localhost**
+   verify error:num=18:self signed certificate
+   IMAP Password:
+   localhost> **sq user/john@example.org 1048576**
+
+You could then also give *John* a mailbox "Archive" for him to clean
+up his Personal Namespace without loosing access to his existing mail:
+
+   $ **cyradm -u localhost**
+   verify error:num=18:self signed certificate
+   IMAP Password:
+   localhost> **cm user/john/Archive@example.org slow**
+   localhost> **sq user/john/Archive@example.org none**
+
+*John* now has unlimited storage in his "Archive" folder on the cheap
+slow disks, while his day-to-day email is on the expensive fast disks.
+
+
+Restricting Storage Used with Partitions
+========================================
+
+Important: It is not recommended to use partitions for the purposes
+  of restricting the amount of storage used by (sets of) mailboxes,
+  unless you can also grow the filesystem (preferrably online) and you
+  have (automated) means to determine what is to end up on each
+  partition.
+
+If a customer "example.org" purchases 5 GB of storage, and
+"example.com" purchases 500 GB of storage, then two partitions sized 5
+GB and 500 GB respectively could be used to restrict the users of each
+customers without individually restricting each user (to a percentage
+of the total storage).
+
+Warning: Monitoring the storage used is critical, because actually
+  running out of disk space is very costly -- and not a problem the
+  customer themselves could recover from.
+
+Back to Features

@@ -147,14 +147,15 @@ static int zero_cid_cb(const mbentry_t *mbentry,
                        void *rock __attribute__((unused)))
 {
     struct mailbox *mailbox = NULL;
-    const struct index_record *record;
     int r;
 
     r = mailbox_open_iwl(mbentry->name, &mailbox);
     if (r) return r;
 
     struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_UNLINKED);
-    while ((record = mailbox_iter_step(iter))) {
+    const message_t *msg;
+    while ((msg = mailbox_iter_step(iter))) {
+        const struct index_record *record = msg_record(msg);
         /* already zero, fine */
         if (record->cid == NULLCONVERSATION)
             continue;
@@ -162,11 +163,10 @@ static int zero_cid_cb(const mbentry_t *mbentry,
         struct index_record oldrecord = *record;
         oldrecord.cid = NULLCONVERSATION;
         r = mailbox_rewrite_index_record(mailbox, &oldrecord);
-        if (r) goto done;
+        if (r) break;
     }
-    mailbox_iter_done(&iter);
 
- done:
+    mailbox_iter_done(&iter);
     mailbox_close(&mailbox);
     return r;
 }
@@ -190,36 +190,47 @@ static int build_cid_cb(const mbentry_t *mbentry,
                         void *rock __attribute__((unused)))
 {
     struct mailbox *mailbox = NULL;
-    const struct index_record *record;
-    int r;
+    int r = 0;
+    int count = 1;
     struct conversations_state *cstate = conversations_get_mbox(mbentry->name);
 
     if (!cstate) return IMAP_CONVERSATIONS_NOT_OPEN;
 
-    r = mailbox_open_iwl(mbentry->name, &mailbox);
-    if (r) return r;
+    while (!r && count) {
+        r = mailbox_open_iwl(mbentry->name, &mailbox);
+        if (r) return r;
 
-    struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_UNLINKED);
-    while ((record = mailbox_iter_step(iter))) {
-        /* already assigned, fine */
-        if (record->cid != NULLCONVERSATION)
-            continue;
+        count = 0;
 
-        struct index_record oldrecord = *record;
-        r = mailbox_cacherecord(mailbox, &oldrecord);
-        if (r) goto done;
+        struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_UNLINKED);
+        const message_t *msg;
+        while ((msg = mailbox_iter_step(iter))) {
+            const struct index_record *record = msg_record(msg);
+            /* already assigned, fine */
+            if (record->cid != NULLCONVERSATION)
+                continue;
 
-        r = message_update_conversations(cstate, &oldrecord, NULL);
-        if (r) goto done;
+            struct index_record oldrecord = *record;
+            r = mailbox_cacherecord(mailbox, &oldrecord);
+            if (r) goto done;
 
-        r = mailbox_rewrite_index_record(mailbox, &oldrecord);
-        if (r) goto done;
+            r = message_update_conversations(cstate, &oldrecord, NULL);
+            if (r) goto done;
+
+            r = mailbox_rewrite_index_record(mailbox, &oldrecord);
+            if (r) goto done;
+
+            count++;
+            /* batch so we don't lock for ages */
+            if (count > 8192) break;
+        }
+
+        mailbox_iter_done(&iter);
+
+    done:
+        mailbox_close(&mailbox);
     }
 
-    mailbox_iter_done(&iter);
-
- done:
-    mailbox_close(&mailbox);
     return r;
 }
 
@@ -721,8 +732,7 @@ out:
         conversations_abort(&state_real);
     conversations_set_suffix(NULL);
     conversations_set_directory(NULL);
-    if (filename_temp)
-        unlink(filename_temp);
+    cyrusdb_unlink(config_conversations_db, filename_temp, 0);
     free(filename_temp);
     free(filename_real);
     return r;

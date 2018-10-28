@@ -88,6 +88,8 @@
 
 #define CALENDAR_EVENTS (EVENT_CALENDAR_ALARM)
 
+#define APPLEPUSHSERVICE_EVENTS (EVENT_APPLEPUSHSERVICE|EVENT_APPLEPUSHSERVICE_DAV)
+
 
 static const char *notifier = NULL;
 static struct namespace namespace;
@@ -162,14 +164,19 @@ static struct mboxevent event_template =
     { EVENT_CALENDAR_ATTENDEE_STATUS, "attendeeStatus", EVENT_PARAM_ARRAY, { 0 }, 0 },
     { EVENT_CALENDAR_ORGANIZER, "organizer", EVENT_PARAM_STRING, { 0 }, 0 },
 
-#ifdef ENABLE_APPLEPUSHSERVICE
     /* apple push params for notifyd */
     { EVENT_APPLEPUSHSERVICE_VERSION,      "apsVersion",     EVENT_PARAM_INT,    { 0 }, 0 },
     { EVENT_APPLEPUSHSERVICE_ACCOUNT_ID,   "apsAccountId",   EVENT_PARAM_STRING, { 0 }, 0 },
     { EVENT_APPLEPUSHSERVICE_DEVICE_TOKEN, "apsDeviceToken", EVENT_PARAM_STRING, { 0 }, 0 },
     { EVENT_APPLEPUSHSERVICE_SUBTOPIC,     "apsSubtopic",    EVENT_PARAM_STRING, { 0 }, 0 },
     { EVENT_APPLEPUSHSERVICE_MAILBOXES,    "mailboxes",      EVENT_PARAM_ARRAY,  { 0 }, 0 },
-#endif
+
+    /* for dav push */
+    { EVENT_APPLEPUSHSERVICE_DAV_TOPIC,            "apsTopic",        EVENT_PARAM_STRING, { 0 }, 0 },
+    { EVENT_APPLEPUSHSERVICE_DAV_DEVICE_TOKEN,     "apsDeviceToken",  EVENT_PARAM_STRING, { 0 }, 0 },
+    { EVENT_APPLEPUSHSERVICE_DAV_MAILBOX_USER,     "mailboxUser",     EVENT_PARAM_STRING, { 0 }, 0 },
+    { EVENT_APPLEPUSHSERVICE_DAV_MAILBOX_UNIQUEID, "mailboxUniqueId", EVENT_PARAM_STRING, { 0 }, 0 },
+    { EVENT_APPLEPUSHSERVICE_DAV_EXPIRY,           "expiry",          EVENT_PARAM_INT,    { 0 }, 0 },
 
     /* always at end to let the parser to easily truncate this part */
     /* 31 */ { EVENT_MESSAGE_CONTENT, "messageContent", EVENT_PARAM_STRING, { 0 }, 0 }
@@ -181,13 +188,12 @@ static char *json_formatter(enum event_type type, struct event_parameter params[
 static int filled_params(enum event_type type, struct mboxevent *mboxevent);
 static int mboxevent_expected_param(enum event_type type, enum event_param param);
 
-EXPORTED void mboxevent_init(void)
+EXPORTED int mboxevent_init(void)
 {
     const char *options;
     int groups;
 
-    if (!(notifier = config_getstring(IMAPOPT_EVENT_NOTIFIER)))
-        return;
+    if (!(notifier = config_getstring(IMAPOPT_EVENT_NOTIFIER))) return 0;
 
     /* some don't want to notify events for some IMAP flags */
     options = config_getstring(IMAPOPT_EVENT_EXCLUDE_FLAGS);
@@ -228,10 +234,10 @@ EXPORTED void mboxevent_init(void)
     if (groups & IMAP_ENUM_EVENT_GROUPS_CALENDAR)
         enabled_events |= CALENDAR_EVENTS;
 
-#ifdef ENABLE_APPLEPUSHSERVICE
     if (groups & IMAP_ENUM_EVENT_GROUPS_APPLEPUSHSERVICE)
-        enabled_events |= EVENT_APPLEPUSHSERVICE;
-#endif
+        enabled_events |= APPLEPUSHSERVICE_EVENTS;
+
+    return enabled_events;
 }
 
 EXPORTED void mboxevent_setnamespace(struct namespace *n)
@@ -239,6 +245,7 @@ EXPORTED void mboxevent_setnamespace(struct namespace *n)
     namespace = *n;
     /* standardize IMAP URL format */
     namespace.isadmin = 1;
+    namespace.isalt = 0;
 }
 
 static int mboxevent_enabled_for_mailbox(struct mailbox *mailbox)
@@ -294,6 +301,11 @@ EXPORTED struct mboxevent *mboxevent_new(enum event_type type)
 
     mboxevent = xmalloc(sizeof(struct mboxevent));
     memcpy(mboxevent, &event_template, sizeof(struct mboxevent));
+
+    unsigned i;
+    for (i = 0; mboxevent->params[i].id; i++) {
+        assert(i == mboxevent->params[i].id);
+    }
 
     mboxevent->type = type;
 
@@ -355,6 +367,7 @@ EXPORTED void mboxevent_free(struct mboxevent **mboxevent)
     seqset_free(event->uidset);
     seqset_free(event->olduidset);
     strarray_fini(&event->midset);
+    strarray_fini(&event->flagnames);
 
     for (i = 0; i <= MAX_PARAM; i++) {
         if (event->params[i].filled && event->params[i].type == EVENT_PARAM_STRING)
@@ -417,7 +430,6 @@ static int mboxevent_expected_calendar_param(enum event_param param)
     }
 }
 
-#ifdef ENABLE_APPLEPUSHSERVICE
 static int mboxevent_expected_applepushservice_param(enum event_param param) {
     switch (param) {
     case EVENT_APPLEPUSHSERVICE_VERSION:
@@ -431,17 +443,30 @@ static int mboxevent_expected_applepushservice_param(enum event_param param) {
         return 0;
     }
 }
-#endif
+
+static int mboxevent_expected_applepushservice_dav_param(enum event_param param) {
+    switch (param) {
+    case EVENT_APPLEPUSHSERVICE_DAV_TOPIC:
+    case EVENT_APPLEPUSHSERVICE_DAV_DEVICE_TOKEN:
+    case EVENT_APPLEPUSHSERVICE_DAV_MAILBOX_USER:
+    case EVENT_APPLEPUSHSERVICE_DAV_MAILBOX_UNIQUEID:
+    case EVENT_APPLEPUSHSERVICE_DAV_EXPIRY:
+    case EVENT_USER:
+        return 1;
+    default:
+        return 0;
+    }
+}
 
 static int mboxevent_expected_param(enum event_type type, enum event_param param)
 {
     if (type == EVENT_CALENDAR_ALARM)
         return mboxevent_expected_calendar_param(param);
 
-#ifdef ENABLE_APPLEPUSHSERVICE
     if (type == EVENT_APPLEPUSHSERVICE)
         return mboxevent_expected_applepushservice_param(param);
-#endif
+    if (type == EVENT_APPLEPUSHSERVICE_DAV)
+        return mboxevent_expected_applepushservice_dav_param(param);
 
     switch (param) {
     case EVENT_BODYSTRUCTURE:
@@ -565,7 +590,7 @@ static int mboxevent_expected_param(enum event_type type, enum event_param param
 }
 
 #define TIMESTAMP_MAX 32
-EXPORTED void mboxevent_notify(struct mboxevent *mboxevents)
+EXPORTED void mboxevent_notify(struct mboxevent **mboxevents)
 {
     enum event_type type;
     struct mboxevent *event;
@@ -574,11 +599,11 @@ EXPORTED void mboxevent_notify(struct mboxevent *mboxevents)
     const char *fname = NULL;
 
     /* nothing to notify */
-    if (!mboxevents)
+    if (!*mboxevents)
         return;
 
     /* loop over the chained list of events */
-    for (event = mboxevents; event; event = event->next) {
+    for (event = *mboxevents; event; event = event->next) {
         if (event->type == EVENT_CANCELLED)
             continue;
 
@@ -591,8 +616,15 @@ EXPORTED void mboxevent_notify(struct mboxevent *mboxevents)
             strarray_find_case(&event->next->flagnames, "\\Seen", 0) >= 0) {
 
             struct mboxevent *other = event->next;
+            // swap the outsides first
+            other->prev = event->prev;
             event->next = other->next;
+            // swap the insides
+            event->prev = other;
             other->next = event;
+            // switch the head if needed
+            if (event == *mboxevents) *mboxevents = other;
+            // and jump to this one for further processing
             event = other;
         }
 
@@ -650,11 +682,11 @@ EXPORTED void mboxevent_notify(struct mboxevent *mboxevents)
 
                 if ((i = strarray_find(&event->flagnames, "\\Deleted", 0)) >= 0) {
                     type = EVENT_MESSAGE_TRASH;
-                    strarray_remove(&event->flagnames, i);
+                    free(strarray_remove(&event->flagnames, i));
                 }
                 else if ((i = strarray_find(&event->flagnames, "\\Seen", 0)) >= 0) {
                     type = EVENT_MESSAGE_READ;
-                    strarray_remove(&event->flagnames, i);
+                    free(strarray_remove(&event->flagnames, i));
                 }
             }
 
@@ -759,7 +791,8 @@ EXPORTED void mboxevent_set_access(struct mboxevent *event,
     imapurl.server = config_servername;
 
     mbname_t *mbname = mbname_from_intname(mailboxname);
-    imapurl.mailbox = xstrdupnull(mbname_extname(mbname, &namespace, NULL));
+    char *extname = xstrdupnull(mbname_extname(mbname, &namespace, NULL));
+    imapurl.mailbox = extname;
     mbname_free(&mbname);
 
     imapurl_toURL(url, &imapurl);
@@ -774,8 +807,14 @@ EXPORTED void mboxevent_set_access(struct mboxevent *event,
     if (mailboxname) {
         mbentry_t *mbentry = NULL;
         r = mboxlist_lookup(mailboxname, &mbentry, NULL);
-        if (!r && mbentry->uniqueid)
+        if (!r && mbentry->uniqueid) {
+            /* mboxevent_extract_mailbox may already have set EVENT_MAILBOX_ID,
+             * so make sure to deallocate its previous value */
+            if (event->params[EVENT_MAILBOX_ID].filled) {
+                free(event->params[EVENT_MAILBOX_ID].value.s);
+            }
             FILL_STRING_PARAM(event, EVENT_MAILBOX_ID, xstrdup(mbentry->uniqueid));
+        }
         mboxlist_entry_free(&mbentry);
     }
 
@@ -790,6 +829,8 @@ EXPORTED void mboxevent_set_access(struct mboxevent *event,
     if (userid && mboxevent_expected_param(event->type, EVENT_USER)) {
         FILL_STRING_PARAM(event, EVENT_USER, xstrdupsafe(userid));
     }
+
+    free(extname);
 }
 
 EXPORTED void mboxevent_set_acl(struct mboxevent *event, const char *identifier,
@@ -907,12 +948,16 @@ EXPORTED void mboxevent_extract_record(struct mboxevent *event, struct mailbox *
                 carddav_lookup_resource(carddavdb, mailbox->name, resource, &cdata, 1);
                 FILL_STRING_PARAM(event, EVENT_DAV_UID, xstrdup(cdata->vcard_uid));
             }
-            if (mailbox->mbtype & MBTYPE_CALENDAR) {
+            else if (mailbox->mbtype & MBTYPE_CALENDAR) {
                 struct caldav_db *caldavdb = NULL;
                 struct caldav_data *cdata = NULL;
                 caldavdb = mailbox_open_caldav(mailbox);
                 caldav_lookup_resource(caldavdb, mailbox->name, resource, &cdata, 1);
                 FILL_STRING_PARAM(event, EVENT_DAV_UID, xstrdup(cdata->ical_uid));
+            }
+            else {
+                /* don't bail for MBTYPE_COLLECTION or any new things */
+                FILL_STRING_PARAM(event, EVENT_DAV_UID, xstrdup(""));
             }
         }
     }
@@ -1123,10 +1168,8 @@ EXPORTED void mboxevent_extract_mailbox(struct mboxevent *event,
 
     free(extname);
 
-#ifdef WITH_DAV
     FILL_STRING_PARAM(event, EVENT_MBTYPE,
         xstrdup(mboxlist_mbtype_to_string(mailbox->mbtype)));
-#endif
 
     FILL_STRING_PARAM(event, EVENT_MAILBOX_ACL, xstrdup(mailbox->acl));
 
@@ -1159,8 +1202,9 @@ EXPORTED void mboxevent_extract_mailbox(struct mboxevent *event,
         mboxevent_expected_param(event->type, EVENT_CONVUNSEEN)) {
         conv_status_t status = CONV_STATUS_INIT;
 
-        if (mailbox->local_cstate)
-            conversation_getstatus(mailbox->local_cstate, mailbox->name, &status);
+        struct conversations_state *cstate = mailbox_get_cstate(mailbox);
+        if (cstate)
+            conversation_getstatus(cstate, mailbox->name, &status);
 
         if (mboxevent_expected_param(event->type, EVENT_CONVEXISTS))
             FILL_UNSIGNED_PARAM(event, EVENT_CONVEXISTS, status.exists);
@@ -1174,10 +1218,12 @@ EXPORTED void mboxevent_extract_mailbox(struct mboxevent *event,
         struct buf value = BUF_INITIALIZER;
 
         int r = mboxname_read_counters(mailbox->name, &counters);
-        if (!r) buf_printf(&value, "%u %llu %llu %llu %llu %llu %u",
+        if (!r) buf_printf(&value, "%u %llu %llu %llu %llu %llu %llu %llu %llu %llu %u",
                            counters.version, counters.highestmodseq,
                            counters.mailmodseq, counters.caldavmodseq,
                            counters.carddavmodseq, counters.notesmodseq,
+                           counters.mailfoldersmodseq, counters.caldavfoldersmodseq,
+                           counters.carddavfoldersmodseq, counters.notesfoldersmodseq,
                            counters.uidvalidity);
 
         FILL_STRING_PARAM(event, EVENT_COUNTERS, buf_release(&value));
@@ -1214,7 +1260,6 @@ EXPORTED void mboxevent_set_client_id(const char *id)
     client_id = xstrdupnull(id);
 }
 
-#ifdef ENABLE_APPLEPUSHSERVICE
 EXPORTED void mboxevent_set_applepushservice(struct mboxevent *event,
                                              struct applepushserviceargs *applepushserviceargs,
                                              strarray_t *mailboxes,
@@ -1228,7 +1273,25 @@ EXPORTED void mboxevent_set_applepushservice(struct mboxevent *event,
 
     FILL_STRING_PARAM(event, EVENT_USER, xstrdupsafe(userid));
 }
-#endif
+
+EXPORTED void mboxevent_set_applepushservice_dav(struct mboxevent *event,
+                                                 const char *aps_topic,
+                                                 const char *device_token,
+                                                 const char *userid,
+                                                 const char *mailbox_userid,
+                                                 const char *mailbox_uniqueid,
+                                                 int mbtype,
+                                                 unsigned int expiry)
+{
+    FILL_STRING_PARAM(event,   EVENT_APPLEPUSHSERVICE_DAV_TOPIC,            xstrdupnull(aps_topic));
+    FILL_STRING_PARAM(event,   EVENT_APPLEPUSHSERVICE_DAV_DEVICE_TOKEN,     xstrdupnull(device_token));
+    FILL_STRING_PARAM(event,   EVENT_USER,                                  xstrdupnull(userid));
+    FILL_STRING_PARAM(event,   EVENT_APPLEPUSHSERVICE_DAV_MAILBOX_USER,     xstrdupnull(mailbox_userid));
+    FILL_STRING_PARAM(event,   EVENT_APPLEPUSHSERVICE_DAV_MAILBOX_UNIQUEID, xstrdupnull(mailbox_uniqueid));
+    FILL_STRING_PARAM(event,   EVENT_MBTYPE,                                xstrdup(mboxlist_mbtype_to_string(mbtype)));
+    FILL_UNSIGNED_PARAM(event, EVENT_APPLEPUSHSERVICE_DAV_EXPIRY,           expiry);
+
+}
 
 static const char *event_to_name(enum event_type type)
 {
@@ -1280,10 +1343,10 @@ static const char *event_to_name(enum event_type type)
         return "AclChange";
     case EVENT_CALENDAR_ALARM:
         return "CalendarAlarm";
-#ifdef ENABLE_APPLEPUSHSERVICE
     case EVENT_APPLEPUSHSERVICE:
         return "ApplePushService";
-#endif
+    case EVENT_APPLEPUSHSERVICE_DAV:
+        return "ApplePushServiceDAV";
     default:
         fatal("Unknown message event", EC_SOFTWARE);
     }
@@ -1431,8 +1494,9 @@ static int filled_params(enum event_type type, struct mboxevent *event)
 
 #else /* !ENABLE_MBOXEVENT */
 
-EXPORTED void mboxevent_init(void)
+EXPORTED int mboxevent_init(void)
 {
+    return 0;
 }
 
 EXPORTED void mboxevent_setnamespace(struct namespace *n __attribute__((unused)))
@@ -1458,7 +1522,7 @@ void mboxevent_freequeue(struct mboxevent **mboxevent __attribute__((unused)))
 {
 }
 
-EXPORTED void mboxevent_notify(struct mboxevent *mboxevents __attribute__((unused)))
+EXPORTED void mboxevent_notify(struct mboxevent **mboxevents __attribute__((unused)))
 {
 }
 
@@ -1533,13 +1597,22 @@ void mboxevent_extract_old_mailbox(struct mboxevent *event __attribute__((unused
 {
 }
 
-#ifdef ENABLE_APPLEPUSHSERVICE
-EXPORTED void mboxevent_set_applepushservice(struct mboxevent *event, __attribute__((unused)),
+EXPORTED void mboxevent_set_applepushservice(struct mboxevent *event __attribute__((unused)),
                                              struct applepushserviceargs *applepushserviceargs __attribute__((unused)),
                                              strarray_t *notif_mailboxes __attribute__((unused)),
                                              const char *userid __attribute__((unused)))
 {
 }
-#endif
+
+EXPORTED void mboxevent_set_applepushservice_dav(struct mboxevent *event __attribute__((unused)),
+                                                 const char *aps_topic __attribute__((unused)),
+                                                 const char *device_token __attribute__((unused)),
+                                                 const char *userid __attribute__((unused)),
+                                                 const char *mailbox_userid __attribute__((unused)),
+                                                 const char *mailbox_uniqueid __attribute__((unused)),
+                                                 int mbtype __attribute__((unused)),
+                                                 unsigned int expiry __attribute__((unused)))
+{
+}
 
 #endif /* !ENABLE_MBOXEVENT */

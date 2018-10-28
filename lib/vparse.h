@@ -21,7 +21,14 @@ PE_PARAMVALUE_EOL,
 PE_QSTRING_EOF,
 PE_QSTRING_EOL,
 PE_QSTRING_COMMA,
+PE_ILLEGAL_CHAR,
 PE_NUMERR /* last */
+};
+
+enum parse_ctrl {
+    VPARSE_CTRL_IGNORE = 0,
+    VPARSE_CTRL_SKIP,
+    VPARSE_CTRL_REJECT
 };
 
 struct vparse_state {
@@ -29,9 +36,11 @@ struct vparse_state {
     const char *base;
     const char *itemstart;
     const char *p;
-    strarray_t *multival;
+    strarray_t *multivalsemi;
+    strarray_t *multivalcomma;
     strarray_t *multiparam;
     int barekeys;
+    int ctrl;
 
     /* current items */
     struct vparse_card *card;
@@ -48,7 +57,7 @@ struct vparse_param {
 struct vparse_entry {
     char *group;
     char *name;
-    int multivalue;
+    char multivaluesep;
     union {
         char *value;
         strarray_t *values;
@@ -78,7 +87,7 @@ extern void vparse_free(struct vparse_state *state);
 extern void vparse_fillpos(struct vparse_state *state, struct vparse_errorpos *pos);
 extern const char *vparse_errstr(int err);
 
-extern void vparse_set_multival(struct vparse_state *state, const char *name);
+extern void vparse_set_multival(struct vparse_state *state, const char *name, char split);
 extern void vparse_set_multiparam(struct vparse_state *state, const char *name);
 
 extern const char *vparse_stringval(const struct vparse_card *card, const char *name);
@@ -87,6 +96,7 @@ extern const strarray_t *vparse_multival(const struct vparse_card *card, const c
 /* editing functions */
 extern struct vparse_card *vparse_new_card(const char *type);
 extern void vparse_free_card(struct vparse_card *card);
+extern void vparse_free_entry(struct vparse_entry *entry);
 extern void vparse_delete_entries(struct vparse_card *card, const char *group, const char *name);
 extern struct vparse_entry *vparse_get_entry(struct vparse_card *card, const char *group, const char *name);
 extern struct vparse_entry *vparse_add_entry(struct vparse_card *card, const char *group, const char *name, const char *value);

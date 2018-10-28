@@ -108,7 +108,9 @@ EXPORTED const char *config_statuscache_db;
 HIDDEN const char *config_userdeny_db;
 EXPORTED const char *config_zoneinfo_db;
 EXPORTED const char *config_conversations_db;
+EXPORTED const char *config_backup_db;
 EXPORTED int charset_flags;
+EXPORTED int charset_snippet_flags;
 
 static char session_id_buf[MAX_SESSIONID_SIZE];
 static int session_id_time = 0;
@@ -232,8 +234,9 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
     config_fulldirhash = config_getswitch(IMAPOPT_FULLDIRHASH);
 
     /* look up and canonify the implicit rights of mailbox owners */
-    config_implicitrights =
-        cyrus_acl_strtomask(config_getstring(IMAPOPT_IMPLICIT_OWNER_RIGHTS));
+    cyrus_acl_strtomask(config_getstring(IMAPOPT_IMPLICIT_OWNER_RIGHTS),
+                        &config_implicitrights);
+    /* XXX and if strtomask fails? */
 
     config_metapartition_files = config_getbitfield(IMAPOPT_METAPARTITION_FILES);
 
@@ -257,6 +260,15 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
     if (config_getswitch(IMAPOPT_SEARCH_SKIPHTML))
         charset_flags |= CHARSET_SKIPHTML;
 
+    if (config_getswitch(IMAPOPT_RFC2047_UTF8))
+        charset_flags |= CHARSET_MIME_UTF8;
+
+    /* Set snippet conversion flags. */
+    charset_snippet_flags = CHARSET_SNIPPET;
+    if (config_getenum(IMAPOPT_SEARCH_ENGINE) != IMAP_ENUM_SEARCH_ENGINE_XAPIAN) {
+        /* All search engines other than Xapian require escaped HTML */
+        charset_snippet_flags |= CHARSET_ESCAPEHTML;
+    }
 
     if (!cyrus_init_nodb) {
         /* lookup the database backends */
@@ -273,6 +285,7 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
         config_userdeny_db = config_getstring(IMAPOPT_USERDENY_DB);
         config_zoneinfo_db = config_getstring(IMAPOPT_ZONEINFO_DB);
         config_conversations_db = config_getstring(IMAPOPT_CONVERSATIONS_DB);
+        config_backup_db = config_getstring(IMAPOPT_BACKUP_DB);
 
         /* configure libcyrus as needed */
         libcyrus_config_setstring(CYRUSOPT_CONFIG_DIR, config_dir);
@@ -974,5 +987,7 @@ EXPORTED int cmd_cancelled()
 {
     if (signals_cancelled())
         return IMAP_CANCELLED;
+    if (cmdtime_checksearch())
+        return IMAP_SEARCH_SLOW;
     return 0;
 }

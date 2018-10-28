@@ -84,7 +84,8 @@ static int align_string(int fd, int string_len)
 /*all functions keep codep up to date as they use it.
   the amount that has been written to the file is maintained by the
   filelen variable in bc_action_emit
-  the other bc_xxx_emit funtions keep track of how much they (and any functions they call) have written and return this value
+  the other bc_xxx_emit funtions keep track of how much they (and any functions
+  they call) have written and return this value
 */
 
 
@@ -247,6 +248,7 @@ static int bc_test_emit(int fd, int *codep, bytecode_info_t *bc)
 
     case BC_HEADER:
     case BC_HASFLAG:
+    case BC_STRING:
     {
         int ret;
         if (BC_HEADER == opcode) {
@@ -360,6 +362,145 @@ static int bc_test_emit(int fd, int *codep, bytecode_info_t *bc)
         ret = bc_stringlist_emit(fd, codep, bc);
         if(ret < 0) return -1;
         wrote+=ret;
+        break;
+    }
+
+    case BC_MAILBOXEXISTS:
+    {
+        int ret;
+
+        /* drop keylist */
+        ret = bc_stringlist_emit(fd, codep, bc);
+        if(ret < 0) return -1;
+        wrote+=ret;
+
+        break;
+    }
+    case BC_METADATA:
+    {
+        int ret;
+        int datalen;
+
+        /* Drop match type */
+        if(write_int(fd, bc->data[(*codep)].value) == -1)
+            return -1;
+        wrote += sizeof(int);
+        (*codep)++;
+        /*now drop relation*/
+        if(write_int(fd, bc->data[(*codep)].value) == -1)
+            return -1;
+        wrote += sizeof(int);
+        (*codep)++;
+        /*drop comparator */
+        if(write_int(fd, bc->data[(*codep)].value) == -1)
+            return -1;
+        wrote += sizeof(int);
+        (*codep)++;
+
+        /* drop extname */
+        datalen = bc->data[(*codep)++].len;
+
+        if(write_int(fd, datalen) == -1) return -1;
+        wrote += sizeof(int);
+
+        if(write(fd, bc->data[(*codep)++].str, datalen) == -1) return -1;
+        wrote += datalen;
+        ret = align_string(fd,datalen);
+        if(ret == -1) return -1;
+        wrote+=ret;
+
+        /* drop keyname */
+        datalen = bc->data[(*codep)++].len;
+
+        if(write_int(fd, datalen) == -1) return -1;
+        wrote += sizeof(int);
+
+        if(write(fd, bc->data[(*codep)++].str, datalen) == -1) return -1;
+        wrote += datalen;
+        ret = align_string(fd,datalen);
+        if(ret == -1) return -1;
+        wrote+=ret;
+
+        /* drop keylist */
+        ret = bc_stringlist_emit(fd, codep, bc);
+        if(ret < 0) return -1;
+        wrote+=ret;
+
+        break;
+    }
+    case BC_METADATAEXISTS:
+    {
+        int ret;
+        int datalen;
+
+        /* drop extname */
+        datalen = bc->data[(*codep)++].len;
+
+        if(write_int(fd, datalen) == -1) return -1;
+        wrote += sizeof(int);
+
+        if(write(fd, bc->data[(*codep)++].str, datalen) == -1) return -1;
+        wrote += datalen;
+        ret = align_string(fd,datalen);
+        if(ret == -1) return -1;
+        wrote+=ret;
+
+        /* drop keylist */
+        ret = bc_stringlist_emit(fd, codep, bc);
+        if(ret < 0) return -1;
+        wrote+=ret;
+
+        break;
+    }
+    case BC_SERVERMETADATA:
+    {
+        int ret;
+        int datalen;
+
+        /* Drop match type */
+        if(write_int(fd, bc->data[(*codep)].value) == -1)
+            return -1;
+        wrote += sizeof(int);
+        (*codep)++;
+        /*now drop relation*/
+        if(write_int(fd, bc->data[(*codep)].value) == -1)
+            return -1;
+        wrote += sizeof(int);
+        (*codep)++;
+        /*drop comparator */
+        if(write_int(fd, bc->data[(*codep)].value) == -1)
+            return -1;
+        wrote += sizeof(int);
+        (*codep)++;
+
+        /* drop keyname */
+        datalen = bc->data[(*codep)++].len;
+
+        if(write_int(fd, datalen) == -1) return -1;
+        wrote += sizeof(int);
+
+        if(write(fd, bc->data[(*codep)++].str, datalen) == -1) return -1;
+        wrote += datalen;
+        ret = align_string(fd,datalen);
+        if(ret == -1) return -1;
+        wrote+=ret;
+
+        /* drop keylist */
+        ret = bc_stringlist_emit(fd, codep, bc);
+        if(ret < 0) return -1;
+        wrote+=ret;
+
+        break;
+    }
+    case BC_SERVERMETADATAEXISTS:
+    {
+        int ret;
+
+        /* drop keylist */
+        ret = bc_stringlist_emit(fd, codep, bc);
+        if(ret < 0) return -1;
+        wrote+=ret;
+
         break;
     }
 
@@ -611,7 +752,12 @@ static int bc_action_emit(int fd, int codep, int stopcodep,
             break;
 
         case B_FILEINTO:
-            /* Flags Stringlist, Copy (word), Folder String */
+            /* Create (word), Flags Stringlist, Copy (word), Folder String */
+
+            /* Write create */
+            if(write_int(fd,bc->data[codep++].value) == -1)
+                return -1;
+            filelen += sizeof(int);
 
             /* Dump a stringlist of flags */
             ret = bc_stringlist_emit(fd, &codep, bc);
@@ -622,7 +768,6 @@ static int bc_action_emit(int fd, int codep, int stopcodep,
             /* Write Copy */
             if(write_int(fd,bc->data[codep++].value) == -1)
                 return -1;
-
             filelen += sizeof(int);
 
             /* Write string length of Folder */
@@ -691,7 +836,25 @@ static int bc_action_emit(int fd, int codep, int stopcodep,
         case B_SETFLAG:
         case B_ADDFLAG:
         case B_REMOVEFLAG:
-            /* Dump just a stringlist */
+            /* Variablename String, Flags Stringlist */
+
+            /* Write string length of Variablename */
+            len = bc->data[codep++].len;
+            if(write_int(fd,len) == -1)
+                return -1;
+
+            filelen+=sizeof(int);
+
+            /* Write Folder */
+            if(write(fd,bc->data[codep++].str,len) == -1)
+                return -1;
+
+            ret = align_string(fd, len);
+            if(ret == -1)
+                return -1;
+
+            filelen += len + ret;
+
             ret = bc_stringlist_emit(fd, &codep, bc);
             if(ret < 0)
                 return -1;
@@ -900,6 +1063,54 @@ static int bc_action_emit(int fd, int codep, int stopcodep,
 
             filelen += len + ret;
             break;
+
+        case B_SET:
+            /* BITFIELD modifiers
+               STRING variable
+               STRING value
+            */
+            /* write modifiers */
+            if(write_int(fd,bc->data[codep++].value) == -1)
+                return -1;
+
+            filelen += sizeof(int);
+
+            /* write string length of variable */
+            len = bc->data[codep++].len;
+            if(write_int(fd,len) == -1)
+                return -1;
+
+            filelen+=sizeof(int);
+
+            /* write variable */
+            if(write(fd,bc->data[codep++].str,len) == -1)
+                return -1;
+
+            ret = align_string(fd, len);
+            if(ret == -1)
+                return -1;
+
+            filelen += len + ret;
+
+            /* write string length of value */
+            len = bc->data[codep++].len;
+            if(write_int(fd,len) == -1)
+                return -1;
+
+            filelen+=sizeof(int);
+
+            /* write value */
+            if(write(fd,bc->data[codep++].str,len) == -1)
+                return -1;
+
+            ret = align_string(fd, len);
+            if(ret == -1)
+                return -1;
+
+            filelen += len + ret;
+
+            break;
+
         case B_NULL:
         case B_STOP:
         case B_DISCARD:
@@ -920,6 +1131,8 @@ static int bc_action_emit(int fd, int codep, int stopcodep,
 /* spew the bytecode to disk */
 EXPORTED int sieve_emit_bytecode(int fd, bytecode_info_t *bc)
 {
+    int codep = 0;
+
     /* First output version number (4 bytes) */
     int data = BYTECODE_VERSION;
 
@@ -929,11 +1142,17 @@ EXPORTED int sieve_emit_bytecode(int fd, bytecode_info_t *bc)
 
     if(write_int(fd, data) == -1) return -1;
 
+    /* write extensions bitfield */
+    if (write_int(fd, bc->data[codep++].value) == -1) return -1;
+
 #if DUMPCODE
     dump(bc, 0);
 #endif
 
-    /*the sizeof(int) is to account for the version # at the beginning*/
-    return bc_action_emit(fd, 0, bc->scriptend, bc, sizeof(int) + BYTECODE_MAGIC_LEN);
+    /* the 2*sizeof(int) is to account for the version number and requires at
+     * the beginning
+     */
+    return bc_action_emit(fd, codep, bc->scriptend, bc,
+                          2*sizeof(int) + BYTECODE_MAGIC_LEN);
 }
 

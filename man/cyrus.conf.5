@@ -1,192 +1,367 @@
-.\" -*- nroff -*-
-.TH CYRUS.CONF 5 "Project Cyrus" CMU
-.\"
-.\" Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
-.\"
-.\" Redistribution and use in source and binary forms, with or without
-.\" modification, are permitted provided that the following conditions
-.\" are met:
-.\"
-.\" 1. Redistributions of source code must retain the above copyright
-.\"    notice, this list of conditions and the following disclaimer.
-.\"
-.\" 2. Redistributions in binary form must reproduce the above copyright
-.\"    notice, this list of conditions and the following disclaimer in
-.\"    the documentation and/or other materials provided with the
-.\"    distribution.
-.\"
-.\" 3. The name "Carnegie Mellon University" must not be used to
-.\"    endorse or promote products derived from this software without
-.\"    prior written permission. For permission or any legal
-.\"    details, please contact
-.\"      Carnegie Mellon University
-.\"      Center for Technology Transfer and Enterprise Creation
-.\"      4615 Forbes Avenue
-.\"      Suite 302
-.\"      Pittsburgh, PA  15213
-.\"      (412) 268-7393, fax: (412) 268-7395
-.\"      innovation@andrew.cmu.edu
-.\"
-.\" 4. Redistributions of any form whatsoever must retain the following
-.\"    acknowledgment:
-.\"    "This product includes software developed by Computing Services
-.\"     at Carnegie Mellon University (http://www.cmu.edu/computing/)."
-.\"
-.\" CARNEGIE MELLON UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO
-.\" THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-.\" AND FITNESS, IN NO EVENT SHALL CARNEGIE MELLON UNIVERSITY BE LIABLE
-.\" FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
-.\" AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
-.\" OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\" Man page generated from reStructuredText.
+.
+.TH "CYRUS.CONF" "5" "August 10, 2018" "3.0.8" "Cyrus IMAP"
 .SH NAME
-cyrus.conf \- Cyrus configuration file
+cyrus.conf \- Cyrus IMAP documentation
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.sp
+Cyrus configuration file
 .SH DESCRIPTION
-\fB/etc/cyrus.conf\fR
-is the configuration file for the Cyrus \fBmaster\fR process.  It
-defines the startup procedures, services and events to be spawned by
-\fBmaster\fR.
-.PP
-The \fB/etc/cyrus.conf\fR file consists of a series of entries divided
+.sp
+\fBcyrus.conf\fP is the configuration file for the Cyrus
+master(8) process.  It defines the startup procedures,
+services, events and daemons to be spawned, managed and tended to by
+\fBmaster\fP\&.
+.sp
+The \fB/etc/cyrus.conf\fP file consists of a series of entries divided
 into sections of the form
-.P
-.RS
-\fIsection\fR {
-.RS
-\fIname arguments
-.br
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+\fIsection\fP {
+    \fIname arguments
         ...
-.br
         ...
-.br
-        ...
-\fR
-.RE
+        ...\fP
 }
-.RE
-.PP
-where \fIsection\fR is the name of the section, \fIname\fR is the name
-of the entry and \fIarguments\fR is the whitespace-separated list of
-arguments for the entry.  The \fIname\fR may be any sequence of
-alphabetic and numeric characters, but may not contain punctuation
-such as '-' or '_'.  In the \fBSERVICES\fP section, names must be
-unique.
-.PP
-Blank lines and lines beginning with ``#'' are ignored.
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+where \fIsection\fP is the name of the section, \fIname\fP is the name of the
+entry and \fIarguments\fP is the whitespace\-separated list of arguments for
+the entry.  The \fIname\fP may be any sequence of alphabetic and numeric
+characters, but may not contain punctuation such as \(aq\-\(aq or \(aq_\(aq.  In the
+\fBSERVICES\fP section, names must be unique.
+.sp
+Blank lines and lines beginning with \(ga\(ga#\(aq\(aq are ignored.
 .SH SECTION DESCRIPTIONS
-The paragraphs below detail the three sections (\fBSTART\fR,
-\fBSERVICES\fR, \fBEVENTS\fR) that can be placed in the
-\fB/etc/cyrus.conf\fR file.  The arguments that are available for each
-entry within the section are described, and each argument's default
-value is shown.
-.PP
-Arguments can appear in any order.
-Some arguments have no default value, these are listed with
-``<no default>''.  For string arguments, the value MUST be enclosed in
-double quotes.
+.sp
+The paragraphs below detail the four sections (\fBSTART\fP, \fBSERVICES\fP,
+\fBEVENTS\fP, \fBDAEMON\fP) that can be placed in the \fB/etc/cyrus.conf\fP
+file.  The arguments that are available for each entry within the
+section are described, and each argument\(aqs default value is shown.
+.sp
+An important distinction exists between \fBSERVICES\fP and \fBDAEMON\fP ;
+the former have sockets which master(8) will listen on
+(either IP or Unix domain) while the latter do not.  Similarly,
+processes listed in \fBSTART\fP will be run to completion before any
+\fBSERVICES\fP are started, while those in \fBDAEMON\fP will be managed by
+master(8)\&.
+.sp
+\fBNOTE:\fP
+.INDENT 0.0
+.INDENT 3.5
+If master(8) is started in debugging mode (\fB\-D\fP) the
+behavior of \fBDAEMON\fP will be altered, as master(8)
+will no longer be backgrounded.  Thus, processes started under
+DAEMON may not be terminated by master(8)\&.
+.UNINDENT
+.UNINDENT
+.sp
+Arguments can appear in any order. Some arguments have no default
+value, these are listed with \(ga\(ga<no default>\(aq\(aq.  For string arguments,
+the value MUST be enclosed in double quotes.
 .SS START
-This section lists the processes to run before any
-\fBSERVICES\fR are spawned.  This section is typically used to
-initialize databases and start long running daemons.
-.IP "\fBcmd=\fR<no default>" 5
-The command (with options) to spawn as a child process.  This string argument
-is required.
+.sp
+This section lists the processes to run before any \fBSERVICES\fP are
+spawned.  This section is typically used to initialize databases.
+Master itself will not startup until all tasks in \fBSTART\fP have
+completed, so put no blocking commands here.
+.sp
+.nf
+\fBcmd=\fP<no default>
+.fi
+.INDENT 0.0
+.INDENT 3.5
+The command (with options) to spawn as a child process.  This
+string argument is required.
+.UNINDENT
+.UNINDENT
+.sp
+\fBNOTE:\fP
+.INDENT 0.0
+.INDENT 3.5
+Prior to v3, non\-service daemons like \fBidled\fP were started from
+\fBSTART\fP but would background themselves, thus not blocking.  Post
+v3 these are better managed through the \fBDAEMON\fP section, under
+which master will provide life\-cycle management (i.e. restarting
+dead processes).
+.UNINDENT
+.UNINDENT
 .SS SERVICES
-This section is the heart of the \fB/etc/cyrus.conf\fR file.  It lists
+.sp
+This section is the heart of the \fB/etc/cyrus.conf\fP file.  It lists
 the processes that should be spawned to handle client connections made
 on certain Internet/UNIX sockets.
-.IP "\fBbabysit=\fR0" 5
-Integer value - if non-zero, will make sure at least one process is
-pre-forked, and will set the maxforkrate to 10 if it's zero.
-.IP "\fBcmd=\fR<no default>" 5
+.sp
+.nf
+\fBbabysit=\fP0
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Integer value \- if non\-zero, will make sure at least one process is
+pre\-forked, and will set the maxforkrate to 10 if it\(aqs zero.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBcmd=\fP<no default>
+.fi
+.INDENT 0.0
+.INDENT 3.5
 The command (with options) to spawn as a child process.  This string
 argument is required.
-.IP "\fBlisten=\fR<no default>" 5
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBlisten=\fP<no default>
+.fi
+.INDENT 0.0
+.INDENT 3.5
 The UNIX or internet socket to listen on.  This
 string field is required and takes one of the following forms:
-
-\fIpath\fR
-.br
-\fR[ \fIhost\fR \fB: \fR] \fIport\fR
-.br
 .sp
-where \fIpath\fR is the explicit path to a UNIX socket, \fIhost\fR is
-either the hostname or bracket-enclosed IP address of a network
-interface, and \fIport\fR is either a port number or service name (as listed
-in \fB/etc/services\fR).
-.IP "\fBproto=\fRtcp" 5
-The protocol used for this service (\fItcp\fR, \fItcp4\fR, \fItcp6\fR,
-\fIudp\fR, \fIudp4\fR, \fIudp6\fR).  This string argument is optional.
-
-\fBtcp4\fR, \fBudp4\fR: These arguments are used to bind the service to IPv4
-only.
-.br
-\fBtcp6\fR, \fBudp6\fR: These arguments are used to bind the service to IPv6
-only, if the operating system supports this.
-.br
-\fBtcp\fR, \fBudp\fR: These arguments are used to bind to both IPv4 and IPv6
-if possible.
-.IP "\fBprefork=\fR0" 5
-The number of instances of this service to always have running and
-waiting for a connection (for faster initial response time).  This
-integer value is optional.  Note that if you are listening on multiple
-network types (i.e. ipv4 and ipv6) then one process will be forked for
-each address, causing twice as many processes as you might expect.
-.IP "\fBmaxchild=\fR-1" 5
-The maximum number of instances of this service to spawn.  A value of
--1 means unlimited.  This integer value is optional.
-.IP "\fBmaxfds=\fR256" 5
-The maximum number of file descriptors to which to limit this process.
-This integer value is optional.
-.IP "\fBmaxforkrate=\fR0" 5
-Maximum number of processes to fork per second - the master will insert
-sleeps to ensure it doesn't fork faster than this on average.
+.nf
+\fIpath\fP
+[ \fIhost\fP \fB:\fP ] \fIport\fP
+.fi
+.sp
+where \fIpath\fP is the explicit path to a UNIX socket, \fIhost\fP is
+either the hostname or bracket\-enclosed IP address of a network
+interface, and \fIport\fP is either a port number or service name
+(as listed in \fB/etc/services\fP).
+.sp
+If \fIhost\fP is missing, 0.0.0.0 (all interfaces) is assumed.  Use
+localhost or 127.0.0.1 to restict access, i.e. when a proxy
+on the same host is front\-ending Cyrus.
+.sp
+Note that on most systems UNIX socket paths are limited to around
+100 characters.  See your system documentation for specifics.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBproto=\fPtcp
+.fi
+.INDENT 0.0
+.INDENT 3.5
+The protocol used for this service (\fItcp\fP, \fItcp4\fP, \fItcp6\fP,
+\fIudp\fP, \fIudp4\fP, \fIudp6\fP).  This string argument is optional.
+.sp
+\fBtcp4\fP, \fBudp4\fP: These arguments are used to bind the
+service to IPv4 only.
+.sp
+\fBtcp6\fP, \fBudp6\fP: These arguments are used to bind the
+service to IPv6 only, if the operating system supports this.
+.sp
+\fBtcp\fP, \fBudp\fP: These arguments are used to bind to both IPv4
+and IPv6 if possible.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBprefork=\fP0
+.fi
+.INDENT 0.0
+.INDENT 3.5
+The number of instances of this service to always have running
+and waiting for a connection (for faster initial response
+time).  This integer value is optional.  Note that if you are
+listening on multiple network types (i.e. ipv4 and ipv6) then
+one process will be forked for each address, causing twice as
+many processes as you might expect.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBmaxchild=\fP\-1
+.fi
+.INDENT 0.0
+.INDENT 3.5
+The maximum number of instances of this service to spawn.  A
+value of \-1 means unlimited.  This integer value is optional.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBmaxfds=\fP256
+.fi
+.INDENT 0.0
+.INDENT 3.5
+The maximum number of file descriptors to which to limit this
+process. This integer value is optional.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBmaxforkrate=\fP0
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Maximum number of processes to fork per second \- the master
+will insert sleeps to ensure it doesn\(aqt fork faster than this
+on average.
+.UNINDENT
+.UNINDENT
 .SS EVENTS
+.sp
 This section lists processes that should be run at specific intervals,
 similar to cron jobs.  This section is typically used to perform
 scheduled cleanup/maintenance.
-.IP "\fBcmd=\fR<no default>" 5
-The command (with options) to spawn as a child process.  This string
-argument is required.
-.IP "\fBperiod=\fR0" 5
-The interval (in minutes) at which to run the command.  This integer value is
-optional, but SHOULD be a positive integer > 10.
-.IP "\fBat=\fR<hhmm>" 5
-The time (24-hour format) at which to run the command each day.  If
-set to a valid time (0000-2359), period is automatically set to 1440.
-This string argument is optional.
-.SH EXAMPLE
+.sp
+.nf
+\fBcmd=\fP<no default>
+.fi
+.INDENT 0.0
+.INDENT 3.5
+The command (with options) to spawn as a child process.  This
+string argument is required.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBperiod=\fP0
+.fi
+.INDENT 0.0
+.INDENT 3.5
+The interval (in minutes) at which to run the command.  This
+integer value is optional, but SHOULD be a positive integer >
+10.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBat=\fP<hhmm>
+.fi
+.INDENT 0.0
+.INDENT 3.5
+The time (24\-hour format) at which to run the command each day.
+If set to a valid time (0000\-2359), period is automatically
+set to 1440. This string argument is optional.
+.UNINDENT
+.UNINDENT
+.SS DAEMON
+.sp
+This section lists long running daemons to start before any
+\fBSERVICES\fP are spawned.  They will be shutdown when
+master(8) is exiting.
+.sp
+.nf
+\fBcmd=\fP<no default>
+.fi
+.INDENT 0.0
+.INDENT 3.5
+The command (with options) to spawn as a child process.  This
+string argument is required.
+.UNINDENT
+.UNINDENT
+.SH EXAMPLES
+.sp
+.nf
 # example cyrus.conf
 
 START {
-  recover       cmd="ctl_cyrusdb -r"
-.br
+    recover       cmd="ctl_cyrusdb \-r"
 }
 
 SERVICES {
-  imap          cmd="imapd" listen="imap" prefork=1
-  imaps         cmd="imapd -s" listen="imaps" prefork=0
-  lmtpunix      cmd="lmtpd" listen="/var/imap/socket/lmtp"
-  lmtp          cmd="lmtpd" listen="localhost:lmtp"
-.br
+    imap          cmd="imapd" listen="imap" prefork=1
+    imaps         cmd="imapd \-s" listen="imaps" prefork=0
+    lmtpunix      cmd="lmtpd" listen="/var/imap/socket/lmtp"
+    lmtp          cmd="lmtpd" listen="localhost:lmtp"
 }
 
 EVENTS {
-  checkpoint    cmd="ctl_cyrusdb -c" period=30
-  delprune      cmd="cyr_expire -E 3" at=0400
-  tlsprune      cmd="tls_prune" at=0400
-.br
+    checkpoint    cmd="ctl_cyrusdb \-c" period=30
+    delprune      cmd="cyr_expire \-E 3" at=0400
+    tlsprune      cmd="tls_prune" at=0400
 }
+
+DAEMON {
+    idled         cmd="idled"
+}
+.fi
 .SH ACCESS CONTROL
+.sp
 When TCP Wrappers is used to control access to Cyrus services, the
-\fIname\fR of the service entry should be used as the process name in
-the \fBhosts_access(5)\fR table.  For instance, in the example above,
+\fIname\fP of the service entry should be used as the process name in
+the \fBhosts_access(5)\fP table.  For instance, in the example above,
 "imap", "imaps", "lmtpunix" and "lmtp" would be used as the process
 names.  This allows a single daemon such as imapd to be run in
-different modes or configurations (i.e., SSL and non-SSL enabled) yet
+different modes or configurations (i.e., SSL and non\-SSL enabled) yet
 still have separate access control rules.
 .SH SEE ALSO
-.PP
-\fBmaster(8)\fR, \fBimapd(8)\fR, \fBpop3d(8)\fR, \fBlmtpd(8)\fR,
-\fBtimsieved(8)\fR, \fBidled(8)\fR, \fBnotifyd(8)\fR, \fBctl_cyrusdb(8)\fR,
-\fBctl_deliver(8)\fR, \fBtls_prune(8)\fR, \fBhosts_access(5)\fR
+.sp
+master(8),
+imapd(8),
+pop3d(8),
+lmtpd(8),
+timsieved(8),
+idled(8),
+notifyd(8),
+ctl_cyrusdb(8),
+ctl_deliver(8),
+tls_prune(8),
+\fBhosts_access(5)\fP
+.SH AUTHOR
+The Cyrus Team, Nic Bernstein (Onlight)
+.SH COPYRIGHT
+1993-2017, The Cyrus Team
+.\" Generated by docutils manpage writer.
+.

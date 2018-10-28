@@ -1,0 +1,3 @@
+
+HOWTO: Using an NGINX IMAP Proxy
+********************************

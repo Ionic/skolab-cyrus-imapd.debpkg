@@ -205,7 +205,7 @@ enum {
 /* Things that may be searched for */
 struct searchargs {
     struct search_expr *root;
-    int charset;
+    charset_t charset;
     int state;
     /* used only during parsing */
     int fuzzy_depth;
@@ -256,7 +256,8 @@ enum {
     SORT_HASCONVFLAG,   /* nonstandard */
     SORT_FOLDER,        /* nonstandard */
     SORT_RELEVANCY,     /* RFC 6203 */
-    SORT_SPAMSCORE      /* nonstandard */
+    SORT_SPAMSCORE,     /* nonstandard */
+    SORT_GUID           /* nonstandard */
     /* values > 255 are reserved for internal use */
 };
 
@@ -341,7 +342,6 @@ struct listargs {
     const char *ref;            /* Reference name */
     strarray_t pat;             /* Mailbox pattern(s) */
     const char *scan;           /* SCAN content */
-    hash_table server_table;    /* for proxying SCAN */
     unsigned statusitems;       /* for RETURN STATUS */
     struct getmetadata_options metaopts; /* for RETURN METADATA */
     strarray_t metaitems;       /* for RETURN METADATA */
@@ -385,14 +385,21 @@ enum {
     MBOX_ATTRIBUTE_MARKED =             (1<<2),
     MBOX_ATTRIBUTE_UNMARKED =           (1<<3),
 
-    /* from draft-ietf-imapext-list-extensions-18.txt */
+    /* from RFC 5258 */
     MBOX_ATTRIBUTE_NONEXISTENT =        (1<<4),
     MBOX_ATTRIBUTE_SUBSCRIBED =         (1<<5),
     MBOX_ATTRIBUTE_REMOTE =             (1<<6),
     MBOX_ATTRIBUTE_HASCHILDREN =        (1<<7),
     MBOX_ATTRIBUTE_HASNOCHILDREN =      (1<<8),
-    MBOX_ATTRIBUTE_CHILDINFO_SUBSCRIBED = (1<<9)
+    MBOX_ATTRIBUTE_CHILDINFO_SUBSCRIBED=(1<<9),
 };
+
+struct mbox_name_attribute {
+    uint32_t flag;   /* MBOX_ATTRIBUTE_* */
+    const char *id;  /* string value */
+};
+
+extern const struct mbox_name_attribute mbox_name_attributes[];
 
 /* Bitmask for client capabilities */
 enum {

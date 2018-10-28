@@ -84,7 +84,10 @@ EXPORTED int getword(struct protstream *in, struct buf *buf)
  * (astring, nstring or string based on type)
  */
 EXPORTED int getxstring(struct protstream *pin, struct protstream *pout,
-               struct buf *buf, enum getxstring_flags flags)
+                        struct buf *buf, enum getxstring_flags flags)
+    __attribute__((optimize("-O3")));
+EXPORTED int getxstring(struct protstream *pin, struct protstream *pout,
+                        struct buf *buf, enum getxstring_flags flags)
 {
     int c;
     int i;
@@ -233,7 +236,7 @@ fail:
 EXPORTED int getint32(struct protstream *pin, int32_t *num)
 {
     int32_t result = 0;
-    char c;
+    int c;
     int gotchar = 0;
 
     /* INT_MAX == 2147483647 */
@@ -284,7 +287,7 @@ EXPORTED int getsint32(struct protstream *pin, int32_t *num)
 EXPORTED int getuint32(struct protstream *pin, uint32_t *num)
 {
     uint32_t result = 0;
-    char c;
+    int c;
     int gotchar = 0;
 
     /* UINT_MAX == 4294967295U */
@@ -306,7 +309,7 @@ EXPORTED int getuint32(struct protstream *pin, uint32_t *num)
 EXPORTED int getint64(struct protstream *pin, int64_t *num)
 {
     int64_t result = 0;
-    char c;
+    int c;
     int gotchar = 0;
 
     /* LLONG_MAX == 9223372036854775807LL */
@@ -357,7 +360,7 @@ EXPORTED int getsint64(struct protstream *pin, int64_t *num)
 EXPORTED int getuint64(struct protstream *pin, uint64_t *num)
 {
     uint64_t result = 0;
-    char c;
+    int c;
     int gotchar = 0;
 
     /* ULLONG_MAX == 18446744073709551615ULL */
@@ -409,7 +412,12 @@ EXPORTED void eatline(struct protstream *pin, int c)
 {
     for (;;) {
         if (c == '\n') return;
-        if (c == EOF) return;
+
+        /* Several of the parser helper functions return EOF
+           even if an unexpected character (other than EOF) is received. 
+           We need to confirm that the stream is actually at EOF. */
+        if (c == EOF && (prot_IS_EOF(pin) || prot_IS_ERROR(pin))) return;
+
         /* see if it's a literal */
         if (c == '{') {
             c = prot_getc(pin);
@@ -748,8 +756,9 @@ static int get_search_criterion(struct protstream *pin,
         c = getcharset(pin, pout, &arg);
         if (c != ' ') goto missingcharset;
         lcase(arg.s);
+        charset_free(&base->charset);
         base->charset = charset_lookupname(arg.s);
-        if (base->charset == -1) goto badcharset;
+        if (base->charset == CHARSET_UNKNOWN_CHARSET) goto badcharset;
         base->state &= ~GETSEARCH_CHARSET_FIRST;
     }
 
@@ -879,8 +888,9 @@ static int get_search_criterion(struct protstream *pin,
             c = getcharset(pin, pout, &arg);
             if (c != ' ') goto missingcharset;
             lcase(arg.s);
+            charset_free(&base->charset);
             base->charset = charset_lookupname(arg.s);
-            if (base->charset == -1) goto badcharset;
+            if (base->charset == CHARSET_UNKNOWN_CHARSET) goto badcharset;
         }
         else if (!strcmp(criteria.s, "cid")) {          /* nonstandard */
             conversation_id_t cid;
@@ -1178,7 +1188,13 @@ static int get_search_criterion(struct protstream *pin,
         break;
 
     case 'x':
-        if (!strcmp(criteria.s, "xlistid")) {           /* nonstandard */
+        if (!strcmp(criteria.s, "xattachmentname")) {  /* nonstandard */
+            if (c != ' ') goto missingarg;
+            c = getastring(pin, pout, &arg);
+            if (c == EOF) goto missingarg;
+            string_match(parent, arg.s, "attachmentname", base);
+        }
+        else if (!strcmp(criteria.s, "xlistid")) {           /* nonstandard */
             if (c != ' ') goto missingarg;
             c = getastring(pin, pout, &arg);
             if (c == EOF) goto missingarg;

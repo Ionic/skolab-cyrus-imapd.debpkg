@@ -49,6 +49,7 @@
 #include "util.h"
 #include "bitvector.h"
 #include "ptrarray.h"
+#include "search_engines.h"
 
 struct sortcrit;            /* imapd.h */
 struct searchargs;          /* imapd.h */
@@ -100,6 +101,8 @@ struct search_query {
     int multiple;
     int need_ids;
     int need_expunge;
+    int want_expunged;
+    uint32_t want_mbtype;
     int verbose;
 
     /*
@@ -149,7 +152,7 @@ struct search_query {
      * sort results as an array of MsgData*.  The MsgData objects might
      * be "fake" ones if the results were retrieved from the cache DB,
      * but the following fields are guaranteed to be usable: uid, cid,
-     * folder.
+     * folder, guid.
      */
     ptrarray_t merged_msgdata;
 };
@@ -175,5 +178,6 @@ extern uint64_t search_folder_get_highest_modseq(const search_folder_t *);
 extern uint64_t search_folder_get_first_modseq(const search_folder_t *);
 extern uint64_t search_folder_get_last_modseq(const search_folder_t *);
 
+extern void search_build_query(search_builder_t *bx, search_expr_t *e);
 
 #endif /* __CYRUS_SEARCH_RESULT_H__ */

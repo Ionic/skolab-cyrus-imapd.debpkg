@@ -78,7 +78,7 @@ static void usage(void)
     fprintf(stderr, "\n");
     fprintf(stderr, "  * conf-all      - listing of all config values\n");
     fprintf(stderr, "  * conf          - listing of non-default config values\n");
-    fprintf(stderr, "  * conf-defaults - listing of all default config values\n");
+    fprintf(stderr, "  * conf-default  - listing of all default config values\n");
     fprintf(stderr, "  * conf-lint     - unknown config keys\n");
     fprintf(stderr, "  * proc          - listing of all open processes\n");
     cyrus_done();
@@ -252,11 +252,23 @@ static int known_overflowkey(const char *key)
             return 1;
     }
 
+    /* only valid if there's a partition with the same name */
+    if (!strncmp(key, "archivepartition-", 17)) {
+        if (config_getoverflowstring(key+8, NULL))
+            return 1;
+    }
+
+    /* no relation to partition- */
+    if (!strncmp(key, "backuppartition-", 16)) return 1;
+
     match = strstr(key, "searchpartition-");
     if (match) {
         if (config_getoverflowstring(match+6, NULL))
             return 1;
     }
+
+    /* legacy xlist-flag settings are OK */
+    if (!strncmp(key, "xlist-", 6)) return 1;
 
     return 0;
 }
@@ -334,42 +346,6 @@ static void do_lint(void)
     }
 }
 
-static void do_reid(const char *mboxname)
-{
-    struct mailbox *mailbox = NULL;
-    mbentry_t *mbentry = NULL;
-    int r;
-
-    annotate_init(NULL, NULL);
-    annotatemore_open();
-
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-
-    r = mailbox_open_iwl(mboxname, &mailbox);
-    if (r) return;
-
-    mailbox_make_uniqueid(mailbox);
-
-    r = mboxlist_lookup(mboxname, &mbentry, NULL);
-    if (r) return;
-
-    free(mbentry->uniqueid);
-    mbentry->uniqueid = xstrdup(mailbox->uniqueid);
-
-    mboxlist_update(mbentry, 0);
-
-    mailbox_close(&mailbox);
-
-    mboxlist_close();
-    mboxlist_done();
-
-    annotatemore_close();
-    annotate_done();
-
-    printf("did reid %s\n", mboxname);
-}
-
 int main(int argc, char *argv[])
 {
     extern char *optarg;
@@ -416,11 +392,6 @@ int main(int argc, char *argv[])
         do_defconf();
     else if (!strcmp(argv[optind], "conf-lint"))
         do_lint();
-    else if (!strcmp(argv[optind], "reid")) {
-        if (optind + 1 >= argc)
-            usage();
-        do_reid(argv[optind+1]);
-    }
     else
         usage();
 

@@ -1,0 +1,66 @@
+
+**ctl_deliver**
+***************
+
+Perform operations on the duplicate delivery database
+
+
+Synopsis
+========
+
+   **ctl_deliver** [ **-C** *config-file* ] **-d** [ **-f** *filename* ]
+
+
+Description
+===========
+
+**ctl_deliver** is used to perform various administrative operations
+on the duplicate delivery database.
+
+**ctl_deliver** reads its configuration options out of the
+imapd.conf(5) file unless specified otherwise by **-C**. The
+*configdirectory* option in imapd.conf(5) is used to determine the
+default location of the delivery database.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+-d
+
+   Dump the contents of the database to standard output in a portable
+   flat-text format.
+
+-f filename
+
+   Use the database specified by *filename* instead of the default
+   (*configdirectory*/**deliver.db**).
+
+
+Examples
+========
+
+   **ctl_deliver -d**
+
+   Dump *configdirectory*/**deliver.db** to STDOUT
+
+   **ctl_deliver -d -f** */tmp/deliverdb.txt*
+
+   Dump *configdirectory*/**deliver.db** to */tmp/deliverdb.txt*.
+
+
+See Also
+========
+
+imapd.conf(5), master(8)
+
+
+Files
+=====
+
+/etc/imapd.conf, <configdirectory>/deliver.db

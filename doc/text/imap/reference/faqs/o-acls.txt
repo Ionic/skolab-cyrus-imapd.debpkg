@@ -1,0 +1,5 @@
+
+How do I view ACLs on a mailbox?
+********************************
+
+Use cyradm(8)

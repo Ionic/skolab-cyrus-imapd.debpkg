@@ -56,7 +56,9 @@ enum cyrusdb_ret {
     CYRUSDB_EXISTS = -3,
     CYRUSDB_INTERNAL = -4,
     CYRUSDB_NOTFOUND = -5,
-    CYRUSDB_LOCKED = -6
+    CYRUSDB_LOCKED = -6,
+    CYRUSDB_NOTIMPLEMENTED = -7,
+    CYRUSDB_FULL = -8
 };
 
 #define cyrusdb_strerror(c) ("cyrusdb error")
@@ -70,9 +72,10 @@ enum cyrusdb_dbflags {
 };
 
 enum cyrusdb_openflags {
-    CYRUSDB_CREATE   = 0x01,    /* Create the database if not existant */
-    CYRUSDB_MBOXSORT = 0x02,    /* Use mailbox sort order ('.' sorts 1st) */
-    CYRUSDB_CONVERT  = 0x04     /* Convert to the named format if not already */
+    CYRUSDB_CREATE    = 0x01,    /* Create the database if not existant */
+    CYRUSDB_MBOXSORT  = 0x02,    /* Use mailbox sort order ('.' sorts 1st) */
+    CYRUSDB_CONVERT   = 0x04,    /* Convert to the named format if not already */
+    CYRUSDB_NOCOMPACT = 0x08     /* Don't run any database compaction routines */
 };
 
 typedef int foreach_p(void *rock,
@@ -106,6 +109,9 @@ struct cyrusdb_backend {
     /* archives this database environment, and specified databases
      * into the specified directory */
     int (*archive)(const strarray_t *fnames, const char *dirname);
+
+    /* unlinks this specific database, including cleaning up any environment */
+    int (*unlink)(const char *fname, int flags);
 
     /* open the specified database in the global environment */
     int (*open)(const char *fname, int flags, struct dbengine **ret, struct txn **tid);
@@ -173,7 +179,9 @@ struct cyrusdb_backend {
        to all db calls during the life of foreach()
 
         The callbacks will never be called with data=NULL.  For a zero
-        length record, data will point to a zero length buffer.  */
+        length record, data will point to a zero length buffer.
+        Calling store, create or delete within a callback may invalidate
+        the memory pointed to by the data parameter. */
     int (*foreach)(struct dbengine *mydb,
                    const char *prefix, size_t prefixlen,
                    foreach_p *p,
@@ -193,11 +201,13 @@ struct cyrusdb_backend {
                  const char *data, size_t datalen,
                  struct txn **tid);
 
-    /* Remove entrys from the database */
-    int (*delete)(struct dbengine *db,
-                  const char *key, size_t keylen,
-                  struct txn **tid,
-                  int force); /* 1 = ignore not found errors */
+    /* Remove entries from the database
+     * n.b. trailing underscore so that C++ apps can also use this API
+     */
+    int (*delete_)(struct dbengine *db,
+                   const char *key, size_t keylen,
+                   struct txn **tid,
+                   int force); /* 1 = ignore not found errors */
 
     /* Commit the transaction.  When commit() returns, the tid will no longer
      * be valid, regardless of if the commit succeeded or failed */
@@ -217,6 +227,8 @@ extern int cyrusdb_copyfile(const char *srcname, const char *dstname);
 
 extern int cyrusdb_convert(const char *fromfname, const char *tofname,
                            const char *frombackend, const char *tobackend);
+
+extern int cyrusdb_unlink(const char *backend, const char *fname, int flags);
 
 extern int cyrusdb_dumpfile(struct db *db,
                             const char *prefix, size_t prefixlen,
@@ -299,5 +311,6 @@ int cyrusdb_generic_done(void);
 int cyrusdb_generic_sync(void);
 int cyrusdb_generic_archive(const strarray_t *fnames, const char *dirname);
 int cyrusdb_generic_noarchive(const strarray_t *fnames, const char *dirname);
+int cyrusdb_generic_unlink(const char *fname, int flags);
 
 #endif /* INCLUDED_CYRUSDB_H */

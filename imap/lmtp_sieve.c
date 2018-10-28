@@ -86,10 +86,11 @@ static const char *sieve_dir = NULL;
 typedef struct script_data {
     const mbname_t *mbname;
     const struct auth_state *authstate;
+    const struct namespace *ns;
 } script_data_t;
 
 static int autosieve_createfolder(const char *userid, const struct auth_state *auth_state,
-                                  const char *internalname);
+                                  const char *internalname, int createsievefolder);
 
 static char *make_sieve_db(const char *user)
 {
@@ -116,6 +117,36 @@ static int getheader(void *v, const char *phead, const char ***body)
     } else {
         return SIEVE_FAIL;
     }
+}
+
+static int getmailboxexists(void *sc, const char *extname)
+{
+    script_data_t *sd = (script_data_t *)sc;
+    char *intname = mboxname_from_external(extname, sd->ns, mbname_userid(sd->mbname));
+    int r = mboxlist_lookup(intname, NULL, NULL);
+    free(intname);
+    return r ? 0 : 1; /* 0 => exists */
+}
+
+static int getmetadata(void *sc, const char *extname, const char *keyname, char **res)
+{
+    script_data_t *sd = (script_data_t *)sc;
+    struct buf attrib = BUF_INITIALIZER;
+    char *intname = extname ? mboxname_from_external(extname, sd->ns, mbname_userid(sd->mbname)) : xstrdup("");
+    int r;
+    if (!strncmp(keyname, "/private/", 9)) {
+        r = annotatemore_lookup(intname, keyname+8, mbname_userid(sd->mbname), &attrib);
+    }
+    else if (!strncmp(keyname, "/shared/", 8)) {
+        r = annotatemore_lookup(intname, keyname+7, "", &attrib);
+    }
+    else {
+        r = IMAP_MAILBOX_NONEXISTENT;
+    }
+    *res = (r || !attrib.len) ? NULL : buf_release(&attrib);
+    free(intname);
+    buf_free(&attrib);
+    return r ? 0 : 1;
 }
 
 static int getfname(void *v, const char **fnamep)
@@ -498,7 +529,7 @@ static int sieve_fileinto(void *ac,
     char namebuf[MAX_MAILBOX_BUFFER];
     int ret;
 
-    char *intname = mboxname_from_external(fc->mailbox, mdata->ns, mbname_userid(sd->mbname));
+    char *intname = mboxname_from_external(fc->mailbox, sd->ns, mbname_userid(sd->mbname));
     strncpy(namebuf, intname, sizeof(namebuf));
     free(intname);
 
@@ -510,7 +541,7 @@ static int sieve_fileinto(void *ac,
 
     if (ret == IMAP_MAILBOX_NONEXISTENT) {
         /* if "plus" folder under INBOX, then try to create it */
-        ret = autosieve_createfolder(mbname_userid(sd->mbname), sd->authstate, namebuf);
+        ret = autosieve_createfolder(mbname_userid(sd->mbname), sd->authstate, namebuf, fc->do_create);
 
         /* Try to deliver the mail again. */
         if (!ret)
@@ -635,7 +666,7 @@ static int send_response(void *ac,
 {
     FILE *sm;
     const char *smbuf[10];
-    char outmsgid[8192], *sievedb;
+    char outmsgid[8192], *sievedb, *subj;
     int i, sl, sm_stat;
     time_t t;
     char datestr[RFC822_DATETIME_MAX+1];
@@ -678,7 +709,9 @@ static int send_response(void *ac,
             src->subj[i] = '\0';
             break;
         }
-    fprintf(sm, "Subject: %s\r\n", src->subj);
+    subj = charset_encode_mimeheader(src->subj, strlen(src->subj));
+    fprintf(sm, "Subject: %s\r\n", subj);
+    free(subj);
     if (md->id) fprintf(sm, "In-Reply-To: %s\r\n", md->id);
     fprintf(sm, "Auto-Submitted: auto-replied (vacation)\r\n");
     fprintf(sm, "MIME-Version: 1.0\r\n");
@@ -778,6 +811,8 @@ sieve_interp_t *setup_sieve(void)
     sieve_register_imapflags(interp, &mark);
     sieve_register_notify(interp, &sieve_notify);
     sieve_register_size(interp, &getsize);
+    sieve_register_mailboxexists(interp, &getmailboxexists);
+    sieve_register_metadata(interp, &getmetadata);
     sieve_register_header(interp, &getheader);
     sieve_register_fname(interp, &getfname);
 
@@ -797,15 +832,11 @@ sieve_interp_t *setup_sieve(void)
     return interp;
 }
 
-static void _rm_dots(char *p)
-{
-    for (; *p; p++) {
-        if (*p == '.') *p = '^';
-    }
-}
 static int sieve_find_script(const char *user, const char *domain,
                              const char *script, char *fname, size_t size)
 {
+    char *ext = NULL;
+
     if (!user && !script) {
         return -1;
     }
@@ -837,19 +868,31 @@ static int sieve_find_script(const char *user, const char *domain,
         }
         else {
             char hash = (char) dir_hash_c(user, config_fulldirhash);
-            char *usercopy = xstrdup(user);  // stupid hashing of names, we SHOULD just allow dots on disk
-            _rm_dots(usercopy);
-            len += snprintf(fname+len, size-len, "/%c/%s/", hash, usercopy);
-            free(usercopy);
+            len += snprintf(fname+len, size-len, "/%c/%s/", hash, user);
 
             if (!script) { /* default script */
+                char *bc_fname;
+
                 strlcat(fname, "defaultbc", size);
+
+                bc_fname = sieve_getdefaultbcfname(fname);
+                if (bc_fname) {
+                    sieve_rebuild(NULL, bc_fname, 0, NULL);
+                    free(bc_fname);
+                }
+
                 return 0;
             }
         }
 
         snprintf(fname+len, size-len, "%s.bc", script);
     }
+
+    /* don't do this for ~username ones */
+    ext = strrchr(fname, '.');
+    if (ext && !strcmp(ext, ".bc"))
+        sieve_rebuild(NULL, fname, 0, NULL);
+
     return 0;
 }
 
@@ -886,6 +929,7 @@ int run_sieve(const mbname_t *mbname, sieve_interp_t *interp, deliver_data_t *ms
     script = NULL;
 
     sdata.mbname = mbname;
+    sdata.ns = msgdata->ns;
 
     if (mbname_userid(mbname)) {
         sdata.authstate = freeauthstate = auth_newstate(mbname_userid(mbname));
@@ -898,7 +942,7 @@ int run_sieve(const mbname_t *mbname, sieve_interp_t *interp, deliver_data_t *ms
                                (void *) &sdata, (void *) msgdata);
 
     if ((r == SIEVE_OK) && (msgdata->m->id)) {
-        const char *sdb = make_sieve_db(mbname_recipient(mbname, msgdata->ns));
+        const char *sdb = make_sieve_db(mbname_recipient(mbname, sdata.ns));
 
         dkey.id = msgdata->m->id;
         dkey.to = sdb;
@@ -919,10 +963,9 @@ int run_sieve(const mbname_t *mbname, sieve_interp_t *interp, deliver_data_t *ms
 #define SEP "|"
 
 static int autosieve_createfolder(const char *userid, const struct auth_state *auth_state,
-                                  const char *internalname)
+                                  const char *internalname, int createsievefolder)
 {
     const char *subf ;
-    int createsievefolder = 0;
     int r = 0;
     int n;
 

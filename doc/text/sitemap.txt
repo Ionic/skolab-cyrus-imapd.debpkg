@@ -1,0 +1,2278 @@
+
+Sitemap
+*******
+
+* What is Cyrus IMAP?
+
+  * Features
+
+    * Download
+
+      * Get Cyrus
+
+        * Distribution Package
+
+          * CentOS
+
+          * Debian
+
+          * Fedora
+
+          * openSUSE
+
+          * Red Hat Enterprise Linux
+
+          * Ubuntu
+
+        * Build and Install Yourself
+
+          * Use a release packaged tarball
+
+          * Use the source from Git
+
+        * External Tools
+
+        * Licensing
+
+      * Release Notes
+
+        * Stable Version
+
+        * Development Version
+
+        * Supported Product Series
+
+          * Series 3.0
+
+            * Cyrus IMAP 3.0 Releases
+
+          * Series 2.5
+
+            * Cyrus IMAP 2.5 Releases
+
+          * Series 2.4
+
+            * Cyrus IMAP 2.4 Releases
+
+            * Cyrus IMAP 2.4-caldav Releases
+
+        * Older Versions
+
+          * Series 1
+
+            * Cyrus IMAP 1.x Release Notes
+
+          * Series 2: 2.0 - 2.3
+
+            * Cyrus IMAP 2.0.x Release Notes
+
+            * Cyrus IMAP 2.1.x Release Notes
+
+            * Cyrus IMAP 2.2.x Release Notes
+
+            * Cyrus IMAP 2.3 Releases
+
+      * Notes for Packagers
+
+        * Sample configuration files
+
+        * Predefined configurations
+
+          * The configuration file for master: cyrus.conf
+
+            * Section Purpose
+
+          * The configuration file for the various programs:
+            imapd.conf
+
+            * Ephemeral files and temporary filesystems
+
+            * New default settings
+
+            * New features
+
+        * Services in "/etc/services"
+
+    * Quickstart Guide
+
+      * Introduction to Cyrus IMAP
+
+        * What is IMAP?
+
+      * Coming Soon
+
+      * Quick install
+
+        * 1. Install Cyrus reference packages
+
+        * 2. Use "apt-get install -f" to complete installation
+
+        * 3. Setup the cyrus:mail user and group
+
+        * 4. Setting up authentication with SASL
+
+        * 5. Setup mail delivery from your MTA
+
+          * Install Sendmail
+
+          * Sendmail communication
+
+          * Install Postfix
+
+        * 6. Protocol ports
+
+        * 7. Configuring Cyrus
+
+        * 8. Launch Cyrus
+
+        * Feature overview
+
+    * Overview
+
+      * Features
+
+        * Security and Authentication
+
+          * Kerberos Authentication
+
+          * LDAP Authentication
+
+          * SQL Authentication
+
+            * Pre-requisites
+
+            * Database structure
+
+            * PAM configuration for use with saslauthd
+
+            * Testing the SASL configuration
+
+            * Create the test mailboxes within Cyrus
+
+            * Testing everything together
+
+          * Access Control
+
+          * Sealed System Design
+
+        * Mailbox Management
+
+          * Automatic Creation of Mailboxes
+
+            * Autocreation of mailboxes
+
+            * Automatic quota settings
+
+            * Autocreation of Sieve scripts
+
+            * Automated folder subscriptions
+
+            * Autocreation of users
+
+          * Mailbox Namespaces
+
+            * Namespace Basics
+
+            * User Access Namespaces
+
+            * User Namespace Mode
+
+            * Administrator Namespaces
+
+          * Virtual Domains
+
+            * What are virtual domains?
+
+            * Concepts
+
+            * Quick Start
+
+            * Configuration
+
+          * Mailbox Annotations (METADATA)
+
+          * Mailbox Distribution
+
+            * Partition Selection Mode
+
+            * Backend Selection Mode (Cyrus IMAP Murder)
+
+        * Message Management
+
+          * Delayed Delete
+
+            * Configuring Cyrus IMAP for Delayed Delete
+
+          * Delayed Expunge
+
+            * Configuring Cyrus IMAP for Delayed Expunge
+
+          * Message Annotations (METADATA)
+
+          * Duplicate Message Delivery Suppression
+
+          * Shared Seen State
+
+          * Server Side Filtering (Sieve)
+
+          * Event Notifications
+
+            * Available Event Notifications
+
+            * Example Event Notifications
+
+        * Calendar and Contact (DAV) Collection Management
+
+          * CalDAV Collections
+
+          * DAV Components
+
+          * DAV Collection Management
+
+          * CardDAV Support
+
+        * Storage
+
+          * Mail Spool Partitions
+
+            * Storage Tiering with Partitions
+
+            * Restricting Storage Used with Partitions
+
+          * Mailbox Metadata Partitions
+
+          * Archiving
+
+            * Description
+
+            * Purpose
+
+            * Enabling
+
+            * Defining
+
+            * Controlling
+
+            * Performing
+
+          * Quota
+
+          * Single-Instance Store
+
+        * Load Management
+
+          * Cyrus IMAP Murder (Server Aggregation)
+
+            * Use-Cases for the Cyrus IMAP Murder
+
+            * Cyrus IMAP Murder Topologies
+
+      * Concepts
+
+        * Access Control Lists
+
+          * Working with ACLs
+
+          * Sample ACL
+
+          * Access Rights
+
+          * Access Control Defaults
+
+            * Administrators
+
+            * Mailbox owners
+
+            * Default
+
+            * Initial ACLs for Newly Created Mailboxes
+
+            * Other Implicit Rights
+
+          * Access Control Identifier (ACI)
+
+            * "anonymous" and "anyone"
+
+            * Kerberos vs. Unix Authorization
+
+          * Negative Rights
+
+          * Calculating a Users' Rights
+
+        * Login Authentication
+
+          * Anonymous Login
+
+          * Plaintext Authentication
+
+          * Kerberos Logins
+
+          * Shared Secrets Logins
+
+        * Quotas
+
+          * Working with Quotas
+
+          * Monitor and Repair
+
+          * Supported Quota Types
+
+            * Storage Quotas
+
+            * Numeric Quotas
+
+          * Quota Roots
+
+          * Controlling Quota Behavior
+
+          * Mail Delivery Behavior
+
+            * Mailboxes Near Quota
+
+            * Mailboxes Over Quota
+
+          * Quota Warnings Upon Select When User Has "d" Rights
+
+          * Quotas and Partitions
+
+        * New Mail Notification
+
+        * Partitions
+
+          * Specifying Partitions with "create"
+
+          * Changing Partitions with "rename"
+
+        * News
+
+        * POP3 Server
+
+        * The syslog facility
+
+        * Mail Directory Recovery
+
+          * Reconstructing Mailbox Directories
+
+          * Reconstructing the Mailboxes File
+
+          * Reconstructing Quota Roots
+
+          * Removing Quota Roots
+
+          * Subscriptions
+
+        * Configuration Directory
+
+          * Log Directory
+
+          * Proc Directory
+
+        * Message Delivery
+
+          * Local Mail Transfer Protocol (lmtp)
+
+          * Single Instance Store
+
+          * Duplicate Delivery Suppression
+
+        * Sieve, a Mail Filtering Language
+
+        * Cyrus Murder, the IMAP Aggregator
+
+    * Setup
+
+      * Compiling
+
+        * Setting up dependencies
+
+          * Required Build Dependencies
+
+          * Optional Build Dependencies
+
+            * Developers only
+
+            * SASL Authentication
+
+            * Alternate database formats
+
+            * CalDAV and/or CardDAV
+
+            * Other
+
+        * Compile Cyrus
+
+          * Default build: mail only
+
+          * Optional dependencies
+
+            * CalDAV and CardDAV
+
+            * Murder
+
+            * Replication
+
+          * Compile
+
+          * Check
+
+      * Installing Cyrus
+
+        * Install Cyrus
+
+        * Optional Components
+
+          * HTTP modules
+
+            * About http module support
+
+            * HTTPD Configuration
+
+            * Module-specific information
+
+            * For end users
+
+          * Virus Scanner
+
+            * About virus scan support
+
+            * Virus Scanner Configuration
+
+        * Setting up syslog
+
+        * Create Cyrus environment
+
+          * Set up the cyrus:mail user and group
+
+          * Authentication with SASL
+
+          * Mail delivery from your MTA
+
+            * Install Sendmail
+
+            * Sendmail communication
+
+          * Protocol ports
+
+          * Cyrus config files
+
+          * Optional: Setting up SSL certificates
+
+          * Prepare ephemeral (run-time) storage directories
+
+        * Launch Cyrus
+
+        * Send a test email
+
+        * Checking CardDAV and CardDAV
+
+        * Troubleshooting
+
+      * Upgrading to 3.0
+
+        * 1. Preparation
+
+          * Installation from tarball
+
+          * How are you planning on upgrading?
+
+          * Do What As Who?
+
+        * 2. Install new 3.0 Cyrus
+
+        * 3. Shut down existing Cyrus
+
+        * 4. Backup and Copy existing data
+
+        * 5. Copy config files and update
+
+        * 6. Upgrade specific items
+
+        * 7. Start new 3.0 Cyrus and verify
+
+        * 8. Reconstruct databases and cache
+
+        * 9. Do you want any new features?
+
+        * 10. Upgrade complete
+
+        * Special note for Murder configurations
+
+      * Configuration Guide
+
+        * Deployment Scenarios
+
+          * Single Server Deployments
+
+          * Multi Server Deployments
+
+            * Cyrus IMAP Murder
+
+            * IMAP Proxy
+
+        * Cyrus Murder: Server aggregation
+
+          * The Discrete Murder
+
+          * The Unified Murder
+
+          * The Shared Murder
+
+        * Cyrus Replication
+
+        * Hosted Environments
+
+        * Databases
+
+          * Overview
+
+          * File list
+
+            * Mailbox List (mailboxes.db)
+
+            * Annotations (annotations.db)
+
+            * Quotas (quotas.db)
+
+            * Duplicate Delivery (deliver.db)
+
+            * TLS cache (tls_sessions.db)
+
+            * PTS cache (ptscache.db)
+
+            * STATUS cache (statuscache.db)
+
+            * User Access (user_deny.db)
+
+            * Backups (backups.db)
+
+            * Conversations (<userid>.conversations)
+
+            * Counters (<userid>.counters)
+
+            * News database (fetchnews.db)
+
+            * Search Indexes (cyrus.squat, <userid>.xapianactive)
+
+            * Zoneinfo db (zoneinfo.db)
+
+            * Seen State (<userid>.seen)
+
+            * Subscriptions (<userid>.sub)
+
+            * Search Index DB List (<userid>.xapianactive)
+
+            * Mailbox Keys (<userid>.mboxkey)
+
+            * DAV Index (<userid>.dav)
+
+          * Storage types
+
+            * Flat
+
+            * Twoskip
+
+            * Skiplist
+
+            * lmdb
+
+            * sql
+
+            * quotalegacy
+
+        * Mailbox Creation Distribution
+
+          * Selection Mode
+
+            * Available Selection Modes
+
+            * Usage convergence
+
+            * Computed weight
+
+          * Special cases
+
+            * What happens when two partitions are equal as most
+              fitting?
+
+            * What happens when two partitions point to the same
+              device?
+
+          * Partitions Exclusion
+
+          * Partitions Usage Data Reset
+
+          * Mailbox Creation Distribution Through "murder frontend"
+
+            * Selection Mode
+
+            * Available Selection Modes on Frontend
+
+          * Backends Exclusion
+
+          * Backends Usage Data Reset
+
+        * Known Protocol Limitations
+
+          * POP3 and Mailbox Locking
+
+          * Cyrus IMAP POP3 Implementation
+
+        * Authentication and Authorization
+
+          * Client Authentication
+
+          * Users and Mailboxes
+
+        * Performance Recommendations
+
+          * Databases on Temporary Filesystems
+
+        * Storage Considerations
+
+          * General Notes on Storage
+
+          * Redundancy
+
+          * Availability
+
+          * Performance
+
+          * Scalability
+
+          * Capacity
+
+          * Cost
+
+        * Supported Platforms and System Requirements
+
+          * Building Cyrus IMAP
+
+          * Required Software Components
+
+          * Recommended Software Components
+
+            * Idled Support
+
+            * Murder Support
+
+            * Replication Support
+
+          * Recommended Software Components Enabled by Default
+
+            * Sieve Support
+
+            * Optional Software Components
+
+    * Operations
+
+      * Man pages
+
+        * (5) Configuration Files
+
+          * **cyrus.conf**
+
+            * Description
+
+            * Section Descriptions
+
+            * Examples
+
+            * Access Control
+
+            * See Also
+
+          * imapd.conf
+
+            * DESCRIPTION
+
+            * FIELD DESCRIPTIONS
+
+            * SEE ALSO
+
+          * **krb.equiv**
+
+            * Description
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+        * (8) System Commands
+
+          * **arbitron**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **backupd**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * History
+
+            * Files
+
+            * See Also
+
+          * **chk_cyrus**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * See Also
+
+          * **ctl_backups**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * List Options
+
+            * Lock Options
+
+            * Modes
+
+            * Examples
+
+            * History
+
+            * Files
+
+            * See Also
+
+          * **ctl_conversationsdb**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * History
+
+            * Files
+
+            * See Also
+
+          * **ctl_cyrusdb**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **ctl_deliver**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * See Also
+
+            * Files
+
+          * **ctl_mboxlist**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **ctl_zoneinfo**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * History
+
+            * Files
+
+            * See Also
+
+          * **cvt_cyrusdb**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **cvt_xlist_specialuse**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * History
+
+            * Files
+
+            * See Also
+
+          * **cyr_backup**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Modes
+
+            * Examples
+
+            * History
+
+            * Files
+
+            * See Also
+
+          * **cyr_buildinfo**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+          * **cyr_dbtool**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **cyr_deny**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * History
+
+            * Files
+
+            * See Also
+
+          * **cyr_df**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **cyr_expire**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * History
+
+            * Files
+
+            * See Also
+
+          * **cyr_info**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * History
+
+            * Files
+
+            * See Also
+
+          * **cyr_sequence**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+          * **cyr_synclog**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * History
+
+            * Files
+
+            * See Also
+
+          * **cyr_userseen**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **cyr_virusscan**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * History
+
+            * Files
+
+            * See Also
+
+          * **cyradm**
+
+            * NAME
+
+            * SYNOPSIS
+
+            * DESCRIPTION
+
+            * COMMAND-LINE ARGUMENTS
+
+            * COMMANDS
+
+            * NOTES
+
+            * AUTHOR
+
+            * SEE ALSO
+
+          * **cyrdump**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+          * **deliver**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * NOTES
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **fetchnews**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Files
+
+            * See Also
+
+          * **fud**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Files
+
+            * Bugs
+
+            * See Also
+
+          * **httpd**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * History
+
+            * Files
+
+            * See Also
+
+          * **idled**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **imapd**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **ipurge**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **lmtpd**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **lmtpproxyd**
+
+          * **masssievec**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * See Also
+
+          * **master**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Configuration
+
+            * Notes
+
+            * Files
+
+            * See Also
+
+          * **mbexamine**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **mbpath**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **mbtool**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **mkimap**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * See Also
+
+          * **mknewsgroups**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+          * **mupdate**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **nntpd**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Files
+
+            * See Also
+
+          * **notifyd**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * NOTIFICATION METHODS
+
+            * Files
+
+            * See Also
+
+          * **pop3d**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **pop3proxyd**
+
+          * **proxyd**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * See Also
+
+          * **ptdump**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Files
+
+            * See Also
+
+          * **ptexpire**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Files
+
+            * See Also
+
+          * **ptloader**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Files
+
+            * See Also
+
+          * **quota**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **reconstruct**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * History
+
+            * Files
+
+            * See Also
+
+          * **rehash**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Files
+
+            * See Also
+
+          * **restore**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Modes
+
+            * Examples
+
+            * History
+
+            * Files
+
+            * See Also
+
+          * **rmnews**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Files
+
+            * See Also
+
+          * **sievec**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * See Also
+
+          * **sieved**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * See Also
+
+          * **smmapd**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **squatter**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * History
+
+            * Files
+
+            * See Also
+
+          * **sync_client**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * History
+
+            * Files
+
+            * See Also
+
+          * **sync_reset**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Files
+
+            * See Also
+
+          * **sync_server**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **timsieved**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+          * **tls_prune**
+
+            * Synopsis
+
+            * Description
+
+            * Description
+
+            * Options
+
+            * Files
+
+            * See Also
+
+          * **translatesieve**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * See Also
+
+          * **unexpunge**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
+        * (1) User Commands
+
+          * **arbitronsort.pl**
+
+            * Synopsis
+
+            * Description
+
+            * Example
+
+            * See Also
+
+          * **dav_reconstruct**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+          * **httptest**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * See Also
+
+          * **imtest**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * See Also
+
+          * **installsieve**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * History
+
+            * See Also
+
+          * **lmtptest**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * See Also
+
+          * **mupdatetest**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * See Also
+
+          * **nntptest**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * See Also
+
+          * **pop3test**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * See Also
+
+          * **sieveshell**
+
+            * NAME
+
+            * SYNOPSIS
+
+            * DESCRIPTION
+
+            * OPTIONS
+
+            * REFERENCES
+
+            * AUTHOR
+
+          * **sivtest**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * See Also
+
+          * **smtptest**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * See Also
+
+          * **synctest**
+
+      * Tools & Utilities
+
+        * arbitron
+
+        * arbitronsort.pl
+
+        * chk_cyrus
+
+        * ctl_cyrusdb
+
+        * ctl_deliver
+
+        * ctl_mboxlist
+
+        * cvt_cyrusdb
+
+        * cvt_cyrusdb_all
+
+        * cyr_dbtool
+
+        * cyr_df
+
+        * cyrdump
+
+        * cyr_expire
+
+        * cyr_virusscan
+
+        * fetchnews
+
+        * cyr_sequence
+
+        * cyr_synclog
+
+        * cyr_userseen
+
+        * masssievec
+
+        * mbexamine
+
+        * mbpath
+
+        * mkimap
+
+        * mknewsgroups
+
+        * rehash
+
+        * translatesieve
+
+        * undohash
+
+      * Administrator Guide
+
+        * Architecture
+
+          * System Architecture
+
+            * High Level Architecture
+
+            * Cyrus Murder
+
+            * Replication
+
+            * Invoking Cyrus
+
+        * Management
+
+          * File & Directory Locations
+
+            * Archive Partitions
+
+            * Configuration file locations
+
+            * State Directories
+
+            * Per-user State Directories
+
+            * Directory Hashing
+
+            * Spool Directories
+
+            * Metadata Partitions
+
+            * Search Tiers
+
+            * Partitions
+
+            * Working With Partitions
+
+          * Ports and Sockets
+
+            * Cyrus Service Definitions
+
+            * Cyrus Socket Locations
+
+          * Access Control
+
+            * Combining Access Rights
+
+            * Access Control Defaults
+
+            * Access Control Identifier (ACI)
+
+            * Access Control Lists Rights Reference
+
+            * Discretionary Access Control
+
+          * Quotas
+
+            * Quota Roots
+
+            * Supported Quota Types
+
+            * Monitor and Repair
+
+            * Controlling Quota Behavior
+
+            * Quota Database
+
+            * Converting Quotas Database
+
+          * Cyrus Sieve
+
+            * Introduction
+
+            * Installing Sieve
+
+            * Managing Sieve Scripts
+
+            * Testing the sieve server
+
+            * Cyrus Sieve Support
+
+            * Writing Sieve
+
+          * Cyrus Backups
+
+            * Introduction
+
+            * Limitations
+
+            * Architecture
+
+            * Installation
+
+            * Administration
+
+            * Tools
+
+          * Cyrus NNTP
+
+            * Overview
+
+            * NNTP Setup
+
+            * Defining Newsgroups
+
+            * Configuration
+
+            * Further information
+
+          * Cyrus Prot Layer
+
+            * Events
+
+          * Standard Operating Procedures
+
+            * Replication: Installation and Administration
+
+            * Mailbox Operations
+
+            * Reloading Cyrus IMAP Services
+
+            * Alternative Namespace
+
+            * Deleting and Undeleting Messages and Folders
+
+            * Running Cyrus IMAP Services on Non-Standard Ports
+
+            * Reconstructing Mailboxes
+
+            * Using Squatter for Faster IMAP SEARCH
+
+            * Splitting Metadata from Partitions
+
+            * Managing user_deny.db
+
+          * Cyrus Event Source
+
+            * Overview
+
+            * Compile options
+
+            * Configuration options
+
+            * Event Types
+
+            * Accessing events
+
+            * Apple Push Service
+
+          * Mailbox Distribution
+
+            * Selection Modes
+
+            * Special cases
+
+            * Application
+
+          * Cyrus Murder
+
+            * Cyrus Murder: Concepts
+
+            * Cyrus Murder: Installation and Administration
+
+            * Cyrus Murder Mupdate Details
+
+            * Cyrus Murder Failure Modes
+
+            * Cyrus Murder Mail Delivery
+
+          * HOWTO: Using an NGINX IMAP Proxy
+
+          * Tweaking Cyrus IMAP
+
+            * Storage Tiering
+
+            * Synchronous File Operations
+
+      * Frequently Asked Questions
+
+        * Features
+
+          * Which database backend should I use for which databases?
+
+          * Duplicate Delivery Suppression
+
+        * Installation Problems
+
+          * Compilation errors about kssl.h and krb5.h on Red Hat
+            Linux/Fedora
+
+          * Problems detecting Berkley DB on Red Hat Linux
+
+          * Help! There must be an easier way to get all this
+            going...
+
+          * OpenSSL Version Mismatches
+
+          * Libical v1.0.1 or v2.0
+
+        * Common Feature Requests
+
+          * Does the Cyrus Murder support High Availability
+            configurations?
+
+          * Can I configure pop3d to log amount and size of messages
+            fetched by user?
+
+          * How can I make CyrusSieve work with public shared
+            folders?
+
+          * Can I have subfolders not appear under INBOX?
+
+        * Common Operational Questions
+
+          * How do I view ACLs on a mailbox?
+
+          * What annotations are available?
+
+          * Why does ctl_cyrusdb -r take so long with Berkeley DB?
+
+          * Is it safe to put <configdirectory>/proc and
+            <configdirectory>/lock on a tmpfs filesystem?
+
+          * How to enable core dumps
+
+          * Is the "db3: x Lockers" log message harmful?
+
+          * Why can I not delete a mailbox as an admin user?
+
+          * When is What ... Deleted, Expired, Expunged or Purged?
+
+            * Users and IMAP Clients Deleting Messages
+
+            * Deleting Folders
+
+            * Where are the Messages?
+
+          * Why is deliver.db so large?
+
+          * I have multiple imapd-SERVICES configured and experience
+            occasional freezes when I try to log in!
+
+          * How to run gdb on Cyrus components
+
+          * Cyrus delivers claims that the mailbox does not exist
+
+          * Why is mail being rejected with No Mailbox found due to
+            MiXed CaSe incoming e-mail?
+
+          * Can I use MySQL (or another SQL database) as the primary
+            mail store?
+
+          * Why do POP3 connections take so long, but once the
+            connection is established all is well?
+
+          * Why does reconstruct -m not work?
+
+          * Shared File Systems GPFS for high availability
+
+          * How to enable telemetry
+
+          * The process count keeps growing!
+
+            * 1. Reuse count
+
+            * 2. Maximum child count
+
+            * 3. Clean up connections that are no longer in use
+
+          * "unable to join environment" error
+
+          * Why does Cyrus set the MAIL FROM address of the sender
+            of vacation responses to '<>'?
+
+        * Common Interoperability Problems
+
+          * Why does Cyrus reject 8-bit characters in the headers of
+            my messages?
+
+          * Why does Cyrus reject messages with "bare newlines"?
+
+          * How do I get Cyrus Sieve to play nice with Exim?
+
+          * Why does mail delivery go slow or hang sometimes?
+
+    * Developers
+
+      * We need your help
+
+      * Contribute docs
+
+        * Overview
+
+        * Documentation Tools
+
+        * Building the files
+
+        * Submitting updates
+
+          * Using GitHub pull requests
+
+          * Patches through the mailing list
+
+        * Special Tags
+
+          * rfc
+
+          * cyrusman
+
+          * imap_current_stable_version
+
+        * Conventions: Man Pages
+
+          * Synopsis
+
+          * Examples
+
+      * Contribute code and tests
+
+        * Getting Started
+
+          * Development Process
+
+            * Coding Style
+
+            * Making changes
+
+            * Useful Developer Information
+
+            * Community Participation
+
+          * Overview of Cyrus development environment
+
+            * The pre-requisites
+
+            * The components
+
+          * GitHub guide
+
+            * 1. Create a GitHub account
+
+            * 2. Add your ssh key
+
+            * 3. Fork the repository
+
+            * 4. Issue a pull request
+
+          * Compiling
+
+            * Setting up dependencies
+
+            * Compile Cyrus
+
+          * Installing Cyrus
+
+            * Install Cyrus
+
+            * Optional Components
+
+            * Setting up syslog
+
+            * Create Cyrus environment
+
+            * Launch Cyrus
+
+            * Send a test email
+
+            * Checking CardDAV and CardDAV
+
+            * Troubleshooting
+
+          * Developer Test Environment
+
+            * Installing Cassandane
+
+            * Rebuild Cyrus for Testing
+
+            * Running the tests
+
+            * Debugging and stacktraces
+
+            * Tips and Tricks
+
+        * System files and Databases
+
+          * Namespaces: a developer view
+
+        * Resources
+
+          * Developer Libraries
+
+            * List of Libraries
+
+        * Releasing
+
+          * Releasing Cyrus IMAP
+
+            * Prerequisites
+
+            * Release notes
+
+            * Pre-release testing
+
+            * Linking up release notes
+
+            * Version tagging
+
+            * Releasing
+
+          * Releasing new builds of ancient Cyrus IMAP versions
+
+            * Introduction
+
+            * Prerequisites
+
+            * Release notes and version update
+
+            * Pre-release testing
+
+            * Cross-pollination of release notes
+
+            * Building the release
+
+            * Releasing
+
+      * Cyrus.Works
+
+        * About Cyrus Works
+
+        * Testing
+
+        * How it works
+
+        * Adding Rules
+
+    * Support/Community
+
+      * Found a bug?
+
+      * Mailing lists
+
+        * Archives
+
+        * Subscribe/Unsubscribe
+
+        * Digest Lists
+
+      * IRC
+
+      * Weekly meetings
+
+      * About
+
+        * What is Cyrus
+
+          * What is Cyrus
+
+          * What is IMAP?
+
+          * IMAP Version 4 (IMAP4)
+
+          * Mime
+
+          * SMTP
+
+        * Who Is Cyrus
+
+          * Core Contributors
+
+          * Individual contributors and past contributors
+
+        * Cyrus Roadmap
+
+          * High Level Roadmap
+
+            * Future
+
+            * 3.0.x
+
+            * 2.5.x
+
+            * 2.4.x
+
+            * 2.3 and earlier
+
+        * Cyrus History
+
+        * Cyrus Bylaws
+
+          * I. The Cyrus Governance Board
+
+          * II. The Cyrus Core Developers Group
+
+          * III. The Release Engineer
+
+          * IV. The Cyrus Roadmap
+
+          * V. Development Process
+
+          * VI. Changes to the Bylaws
+
+* What is Cyrus SASL?
+
+  * Cyrus SASL

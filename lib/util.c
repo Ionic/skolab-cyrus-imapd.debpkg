@@ -48,7 +48,6 @@
 #include <grp.h>
 #include <limits.h>
 #include <pwd.h>
-#include <math.h>
 #include <string.h>
 #include <stdlib.h>
 #include <syslog.h>
@@ -66,8 +65,12 @@
 #endif
 
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 
+#include "byteorder64.h"
 #include "exitcodes.h"
+#include "libconfig.h"
 #include "map.h"
 #include "retry.h"
 #include "util.h"
@@ -590,15 +593,18 @@ static int cap_setuid(int uid, int is_master)
 EXPORTED int become_cyrus(int is_master)
 {
     struct passwd *p;
-    int newuid, newgid;
+    uid_t newuid;
+    gid_t newgid;
     int result;
-    static int uid = 0;
+    static uid_t uid = 0;
 
     if (uid) return cap_setuid(uid, is_master);
 
-    p = getpwnam(CYRUS_USER);
+    const char *cyrus = cyrus_user();
+
+    p = getpwnam(cyrus);
     if (p == NULL) {
-        syslog(LOG_ERR, "no entry in /etc/passwd for user %s", CYRUS_USER);
+        syslog(LOG_ERR, "no entry in /etc/passwd for user %s", cyrus);
         return -1;
     }
 
@@ -606,25 +612,25 @@ EXPORTED int become_cyrus(int is_master)
     newuid = p->pw_uid;
     newgid = p->pw_gid;
 
-    if (newuid == (int)geteuid() &&
-        newuid == (int)getuid() &&
-        newgid == (int)getegid() &&
-        newgid == (int)getgid()) {
+    if (newuid == geteuid() &&
+        newuid == getuid() &&
+        newgid == getegid() &&
+        newgid == getgid()) {
         /* already the Cyrus user, stop trying */
         uid = newuid;
         set_caps(AFTER_SETUID, is_master);
         return 0;
     }
 
-    if (initgroups(CYRUS_USER, newgid)) {
+    if (initgroups(cyrus, newgid)) {
         syslog(LOG_ERR, "unable to initialize groups for user %s: %s",
-               CYRUS_USER, strerror(errno));
+               cyrus, strerror(errno));
         return -1;
     }
 
     if (setgid(newgid)) {
         syslog(LOG_ERR, "unable to set group id to %d for user %s: %s",
-              newgid, CYRUS_USER, strerror(errno));
+              newgid, cyrus, strerror(errno));
         return -1;
     }
 
@@ -636,9 +642,18 @@ EXPORTED int become_cyrus(int is_master)
     return result;
 }
 
+EXPORTED const char *cyrus_user(void)
+{
+    const char *cyrus = getenv("CYRUS_USER");
+    if (!cyrus) cyrus = config_getstring(IMAPOPT_CYRUS_USER);
+    if (!cyrus) cyrus = CYRUS_USER;
+    assert(cyrus != NULL);
+    return cyrus;
+}
+
 static int cmdtime_enabled = 0;
 static struct timeval cmdtime_start, cmdtime_end, nettime_start, nettime_end;
-static double totaltime, cmdtime, nettime;
+static double totaltime, cmdtime, nettime, search_maxtime;
 
 double timeval_get_double(const struct timeval *tv)
 {
@@ -647,11 +662,8 @@ double timeval_get_double(const struct timeval *tv)
 
 EXPORTED void timeval_set_double(struct timeval *tv, double d)
 {
-    double sec;
-    double subsec = modf(d, &sec);
-
-    tv->tv_sec = sec;
-    tv->tv_usec = 1000000.0*subsec;
+    tv->tv_sec = (long) d;
+    tv->tv_usec = (long) (1000000 * (d - tv->tv_sec));
 }
 
 EXPORTED void timeval_add_double(struct timeval *tv, double delta)
@@ -668,6 +680,13 @@ EXPORTED double timesub(const struct timeval *start, const struct timeval *end)
 EXPORTED void cmdtime_settimer(int enable)
 {
     cmdtime_enabled = enable;
+
+    /* always enable cmdtimer if MAXTIME set */
+    const char *maxtime = config_getstring(IMAPOPT_SEARCH_MAXTIME);
+    if (maxtime) {
+        cmdtime_enabled = 1;
+        search_maxtime = atof(maxtime);
+    }
 }
 
 EXPORTED void cmdtime_starttimer(void)
@@ -687,6 +706,19 @@ EXPORTED void cmdtime_endtimer(double *pcmdtime, double *pnettime)
     cmdtime = totaltime - nettime;
     *pcmdtime = cmdtime;
     *pnettime = nettime;
+}
+
+EXPORTED int cmdtime_checksearch(void)
+{
+    struct timeval nowtime;
+    if (!search_maxtime)
+        return 0;
+    gettimeofday(&nowtime, 0);
+    totaltime = timesub(&cmdtime_start, &nowtime);
+    cmdtime = totaltime - nettime;
+    if (cmdtime > search_maxtime)
+        return -1;
+    return 0;
 }
 
 EXPORTED void cmdtime_netstart(void)
@@ -830,7 +862,9 @@ EXPORTED int parsehex(const char *p, const char **ptr, int maxlen, bit64 *res)
 
 /* buffer handling functions */
 
-static size_t roundup(size_t size)
+static inline size_t roundup(size_t size)
+    __attribute__((pure, always_inline, optimize("-O3")));
+static inline size_t roundup(size_t size)
 {
     if (size < 32)
         return 32;
@@ -882,10 +916,11 @@ EXPORTED void _buf_ensure(struct buf *buf, size_t n)
     }
 }
 
-EXPORTED const char *buf_cstring(struct buf *buf)
+EXPORTED const char *buf_cstring(const struct buf *buf)
 {
-    buf_ensure(buf, 1);
-    buf->s[buf->len] = '\0';
+    struct buf *backdoor = (struct buf*)buf;
+    buf_ensure(backdoor, 1);
+    backdoor->s[backdoor->len] = '\0';
     return buf->s;
 }
 
@@ -903,7 +938,7 @@ EXPORTED char *buf_release(struct buf *buf)
     return ret;
 }
 
-EXPORTED const char *buf_cstringnull(struct buf *buf)
+EXPORTED const char *buf_cstringnull(const struct buf *buf)
 {
     if (!buf->s) return NULL;
     return buf_cstring(buf);
@@ -946,12 +981,16 @@ EXPORTED int buf_getline(struct buf *buf, FILE *fp)
     return (!(buf->len == 0 && c == EOF));
 }
 
-EXPORTED size_t buf_len(const struct buf *buf)
+EXPORTED inline size_t buf_len(const struct buf *buf)
+    __attribute__((always_inline, optimize("-O3")));
+EXPORTED inline size_t buf_len(const struct buf *buf)
 {
     return buf->len;
 }
 
-EXPORTED const char *buf_base(const struct buf *buf)
+EXPORTED inline const char *buf_base(const struct buf *buf)
+    __attribute__((always_inline, optimize("-O3")));
+EXPORTED inline const char *buf_base(const struct buf *buf)
 {
     return buf->s;
 }
@@ -1013,6 +1052,12 @@ EXPORTED void buf_appendbit32(struct buf *buf, bit32 num)
 {
     bit32 item = htonl(num);
     buf_appendmap(buf, (char *)&item, 4);
+}
+
+EXPORTED void buf_appendbit64(struct buf *buf, bit64 num)
+{
+    bit64 item = htonll(num);
+    buf_appendmap(buf, (char *)&item, 8);
 }
 
 EXPORTED void buf_appendmap(struct buf *buf, const char *base, size_t len)
@@ -1431,6 +1476,30 @@ EXPORTED const char *buf_lcase(struct buf *buf)
     return buf->s;
 }
 
+EXPORTED void buf_trim(struct buf *buf)
+{
+    size_t i;
+    for (i = 0; i < buf->len; i++) {
+        if (buf->s[i] == ' ') continue;
+        if (buf->s[i] == '\t') continue;
+        if (buf->s[i] == '\r') continue;
+        if (buf->s[i] == '\n') continue;
+        break;
+    }
+    if (i) buf_remove(buf, 0, i);
+
+    for (i = buf->len; i > 1; i--) {
+        if (buf->s[i-1] == ' ') continue;
+        if (buf->s[i-1] == '\t') continue;
+        if (buf->s[i-1] == '\r') continue;
+        if (buf->s[i-1] == '\n') continue;
+        break;
+    }
+    if (i != buf->len) {
+        buf_truncate(buf, i);
+    }
+}
+
 EXPORTED int bin_to_hex(const void *bin, size_t binlen, char *hex, int flags)
 {
     const unsigned char *v = bin;
@@ -1668,4 +1737,98 @@ EXPORTED const char *makeuuid()
     }
 #endif
     return res;
+}
+
+static int is_tcp_socket(int fd)
+{
+    int so_type;
+    socklen_t so_type_len = sizeof(so_type);
+    struct sockaddr sock_addr;
+    socklen_t sock_addr_len = sizeof(sock_addr);
+
+    if (fd < 0) return 0;
+
+    if (getsockopt(fd, SOL_SOCKET, SO_TYPE, &so_type, &so_type_len) == -1) {
+        if (errno != ENOTSOCK)
+            syslog(LOG_ERR, "%s: getsockopt(%d): %m", __func__, fd);
+        return 0;
+    }
+
+    if (so_type != SOCK_STREAM) return 0;
+
+    if (getsockname(fd, &sock_addr, &sock_addr_len) == -1) {
+        if (errno != ENOTSOCK)
+            syslog(LOG_ERR, "%s: getsockname(%d): %m", __func__, fd);
+        return 0;
+    }
+
+    /* XXX be a bit more pedantic? */
+    if (sock_addr.sa_family == AF_UNIX) return 0;
+
+    return 1;
+}
+
+EXPORTED void tcp_enable_keepalive(int fd)
+{
+    if (!is_tcp_socket(fd)) return;
+
+    /* turn on TCP keepalive if set */
+    if (config_getswitch(IMAPOPT_TCP_KEEPALIVE)) {
+        int r;
+        int optval = 1;
+        socklen_t optlen = sizeof(optval);
+        struct protoent *proto = getprotobyname("TCP");
+
+        r = setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen);
+        if (r < 0) {
+            syslog(LOG_ERR, "unable to setsocketopt(SO_KEEPALIVE): %m");
+        }
+#ifdef TCP_KEEPCNT
+        optval = config_getint(IMAPOPT_TCP_KEEPALIVE_CNT);
+        if (optval) {
+            r = setsockopt(fd, proto->p_proto, TCP_KEEPCNT, &optval, optlen);
+            if (r < 0) {
+                syslog(LOG_ERR, "unable to setsocketopt(TCP_KEEPCNT): %m");
+            }
+        }
+#endif
+#ifdef TCP_KEEPIDLE
+        optval = config_getint(IMAPOPT_TCP_KEEPALIVE_IDLE);
+        if (optval) {
+            r = setsockopt(fd, proto->p_proto, TCP_KEEPIDLE, &optval, optlen);
+            if (r < 0) {
+                syslog(LOG_ERR, "unable to setsocketopt(TCP_KEEPIDLE): %m");
+            }
+        }
+#endif
+#ifdef TCP_KEEPINTVL
+        optval = config_getint(IMAPOPT_TCP_KEEPALIVE_INTVL);
+        if (optval) {
+            r = setsockopt(fd, proto->p_proto, TCP_KEEPINTVL, &optval, optlen);
+            if (r < 0) {
+                syslog(LOG_ERR, "unable to setsocketopt(TCP_KEEPINTVL): %m");
+            }
+        }
+#endif
+    }
+}
+
+/* Disable Nagle's Algorithm => increase throughput
+ *
+ * http://en.wikipedia.org/wiki/Nagle's_algorithm
+ */
+EXPORTED void tcp_disable_nagle(int fd)
+{
+    if (!is_tcp_socket(fd)) return;
+
+    struct protoent *proto = getprotobyname("tcp");
+    if (!proto) {
+        syslog(LOG_ERR, "unable to getprotobyname(\"tcp\"): %m");
+        return;
+    }
+
+    int on = 1;
+    if (setsockopt(fd, proto->p_proto, TCP_NODELAY, &on, sizeof(on)) != 0) {
+        syslog(LOG_ERR, "unable to setsocketopt(TCP_NODELAY): %m");
+    }
 }

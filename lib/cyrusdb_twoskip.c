@@ -267,16 +267,17 @@
 
 /********** TUNING *************/
 
-/* don't bother rewriting if the database has less than this much "new" data */
+/* don't bother rewriting if the database has less than this much data */
 #define MINREWRITE 16834
-/* don't bother rewriting if less than this ratio is dirty (50%) */
-#define REWRITE_RATIO 0.5
 /* number of skiplist levels - 31 gives us binary search to 2^32 records.
  * limited to 255 by file format, but skiplist had 20, and that was enough
  * for most real uses.  31 is heaps. */
 #define MAXLEVEL 31
 /* should be 0.5 for binary search semantics */
 #define PROB 0.5
+
+/* release lock in foreach at least every N records */
+#define FOREACH_LOCK_RELEASE 256
 
 /* format specifics */
 #undef VERSION /* defined in config.h */
@@ -1514,6 +1515,7 @@ static int myforeach(struct dbengine *db,
                      struct txn **tidptr)
 {
     int r = 0, cb_r = 0;
+    int num_misses = 0;
     int need_unlock = 0;
     const char *val;
     size_t vallen;
@@ -1563,16 +1565,16 @@ static int myforeach(struct dbengine *db,
 
         if (!goodp || goodp(rock, db->loc.keybuf.s, db->loc.keybuf.len,
                                   val, vallen)) {
+            /* take a copy of they key - just in case cb does actions on this database
+             * and clobbers loc */
+            buf_copy(&keybuf, &db->loc.keybuf);
+
             if (!tidptr) {
                 /* release read lock */
                 r = unlock(db);
                 if (r) goto done;
                 need_unlock = 0;
             }
-
-            /* take a copy of they key - just in case cb does actions on this database
-             * and clobbers loc */
-            buf_copy(&keybuf, &db->loc.keybuf);
 
             /* make callback */
             cb_r = cb(rock, db->loc.keybuf.s, db->loc.keybuf.len,
@@ -1584,11 +1586,37 @@ static int myforeach(struct dbengine *db,
                 r = read_lock(db);
                 if (r) goto done;
                 need_unlock = 1;
+
+                num_misses = 0;
             }
 
             /* should be cheap if we're already here */
             r = find_loc(db, keybuf.s, keybuf.len);
             if (r) goto done;
+        }
+        else if (!tidptr) {
+            num_misses++;
+            if (num_misses > FOREACH_LOCK_RELEASE) {
+                /* take a copy of they key - just in case cb does actions on this database
+                 * and clobbers loc */
+                buf_copy(&keybuf, &db->loc.keybuf);
+
+                /* release read lock */
+                r = unlock(db);
+                if (r) goto done;
+                need_unlock = 0;
+
+                /* grab a r lock */
+                r = read_lock(db);
+                if (r) goto done;
+                need_unlock = 1;
+
+                /* should be cheap if we're already here */
+                r = find_loc(db, keybuf.s, keybuf.len);
+                if (r) goto done;
+
+                num_misses = 0;
+            }
         }
 
         /* move to the next one */
@@ -1681,19 +1709,20 @@ static int mycommit(struct dbengine *db, struct txn *tid)
             syslog(LOG_ERR, "DBERROR: twoskip %s: commit AND abort failed",
                    FNAME(db));
         }
-    } else {
-        /* consider checkpointing */
-        int diff = db->header.current_size - db->header.repack_size;
-        if (diff > MINREWRITE &&
-           ((float)diff / (float)db->header.current_size) > REWRITE_RATIO) {
+    }
+    else {
+        if (!(db->open_flags & CYRUSDB_NOCOMPACT)
+            && db->header.current_size > MINREWRITE
+            && db->header.current_size > 2 * db->header.repack_size) {
             int r2 = mycheckpoint(db);
             if (r2) {
                 syslog(LOG_NOTICE, "twoskip: failed to checkpoint %s: %m",
                        FNAME(db));
             }
         }
-        else
+        else {
             unlock(db);
+        }
 
         free(tid);
         db->current_txn = NULL;
@@ -2225,6 +2254,7 @@ static int recovery1(struct dbengine *db, int *count)
             if (record.nextloc[i] >= db->end) {
                 record.nextloc[i] = 0;
                 r = rewrite_record(db, &record);
+                if (r) return r;
                 changed++;
             }
         }
@@ -2361,6 +2391,7 @@ HIDDEN struct cyrusdb_backend cyrusdb_twoskip =
     &cyrusdb_generic_done,
     &cyrusdb_generic_sync,
     &cyrusdb_generic_archive,
+    &cyrusdb_generic_unlink,
 
     &myopen,
     &myclose,

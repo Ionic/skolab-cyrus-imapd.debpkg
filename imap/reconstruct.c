@@ -81,6 +81,7 @@
 #ifdef WITH_DAV
 #include "caldav_db.h"
 #include "carddav_db.h"
+#include "webdav_db.h"
 #endif
 #include "crc32.h"
 #include "hash.h"
@@ -113,16 +114,22 @@ hash_table unqid_table;
 /* current namespace */
 static struct namespace recon_namespace;
 
+struct reconstruct_rock {
+    strarray_t *discovered;
+    hash_table visited;
+};
+
 /* forward declarations */
 static void do_mboxlist(void);
 static int do_reconstruct_p(const mbentry_t *mbentry, void *rock);
-static int do_reconstruct(const char *name, int matchlen, int maycreate, void *rock);
+static int do_reconstruct(struct findall_data *data, void *rock);
 static void usage(void);
 
 extern cyrus_acl_canonproc_t mboxlist_ensureOwnerRights;
 
 static int reconstruct_flags = RECONSTRUCT_MAKE_CHANGES | RECONSTRUCT_DO_STAT;
 static int setversion = 0;
+static int updateuniqueids = 0;
 
 int main(int argc, char **argv)
 {
@@ -132,10 +139,10 @@ int main(int argc, char **argv)
     int mflag = 0;
     int fflag = 0;
     int xflag = 0;
-    char buf[MAX_MAILBOX_PATH+1];
-    strarray_t discovered = STRARRAY_INITIALIZER;
+    struct buf buf = BUF_INITIALIZER;
     char *alt_config = NULL;
     char *start_part = NULL;
+    struct reconstruct_rock rrock = { NULL, HASH_TABLE_INITIALIZER };
 
     if ((geteuid()) == 0 && (become_cyrus(/*is_master*/0) != 0)) {
         fatal("must run as the Cyrus user", EC_USAGE);
@@ -143,7 +150,7 @@ int main(int argc, char **argv)
 
     construct_hash_table(&unqid_table, 2047, 1);
 
-    while ((opt = getopt(argc, argv, "C:kp:rmfsxgGqRUMoOnV:u")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:kp:rmfsxgGqRUMIoOnV:u")) != EOF) {
         switch (opt) {
         case 'C': /* alt config file */
             alt_config = optarg;
@@ -217,6 +224,10 @@ int main(int argc, char **argv)
             reconstruct_flags |= RECONSTRUCT_PREFER_MBOXLIST;
             break;
 
+        case 'I':
+            updateuniqueids = 1;
+            break;
+
         case 'V':
             if (!strcasecmp(optarg, "max"))
                 setversion = MAILBOX_MINOR_VERSION;
@@ -257,6 +268,7 @@ int main(int argc, char **argv)
 #ifdef WITH_DAV
     caldav_init();
     carddav_init();
+    webdav_init();
 #endif
 
     /* Deal with nonexistent mailboxes */
@@ -309,6 +321,10 @@ int main(int argc, char **argv)
         }
     }
 
+    /* set up reconstruct rock */
+    if (fflag) rrock.discovered = strarray_new();
+    construct_hash_table(&rrock.visited, 2047, 1); /* XXX magic numbers */
+
     /* Normal Operation */
     if (optind == argc) {
         if (rflag || dousers) {
@@ -317,14 +333,15 @@ int main(int argc, char **argv)
             exit(EC_USAGE);
         }
         assert(!rflag);
-        strlcpy(buf, "*", sizeof(buf));
-        mboxlist_findall(&recon_namespace, buf, 1, 0, 0,
-                         do_reconstruct, NULL);
+        buf_setcstr(&buf, "*");
+        mboxlist_findall(&recon_namespace, buf_cstring(&buf), 1, 0, 0,
+                         do_reconstruct, &rrock);
     }
 
     for (i = optind; i < argc; i++) {
         if (dousers) {
-            mboxlist_usermboxtree(argv[i], do_reconstruct_p, NULL, MBOXTREE_TOMBSTONES|MBOXTREE_DELETED);
+            mboxlist_usermboxtree(argv[i], do_reconstruct_p, &rrock,
+                                  MBOXTREE_TOMBSTONES|MBOXTREE_DELETED);
             continue;
         }
         char *domain = NULL;
@@ -332,31 +349,30 @@ int main(int argc, char **argv)
         /* save domain */
         if (config_virtdomains) domain = strchr(argv[i], '@');
 
-        strlcpy(buf, argv[i], sizeof(buf));
+        buf_setcstr(&buf, argv[i]);
 
         /* reconstruct the first mailbox/pattern */
-        mboxlist_findall(&recon_namespace, buf, 1, 0,
-                         0, do_reconstruct,
-                         fflag ? &discovered : NULL);
+        mboxlist_findall(&recon_namespace, buf_cstring(&buf), 1, 0, 0, do_reconstruct, &rrock);
+
         if (rflag) {
             /* build a pattern for submailboxes */
-            char *p = strchr(buf, '@');
-            if (p) *p = '\0';
-            strlcat(buf, ".*", sizeof(buf));
+            int atidx = buf_findchar(&buf, 0, '@');
+            if (atidx >= 0)
+                buf_truncate(&buf, atidx);
+            buf_putc(&buf, recon_namespace.hier_sep);
+            buf_putc(&buf, '*');
 
             /* append the domain */
-            if (domain) strlcat(buf, domain, sizeof(buf));
+            if (domain) buf_appendcstr(&buf, domain);
 
             /* reconstruct the submailboxes */
-            mboxlist_findall(&recon_namespace, buf, 1, 0,
-                             0, do_reconstruct,
-                             fflag ? &discovered : NULL);
+            mboxlist_findall(&recon_namespace, buf_cstring(&buf), 1, 0, 0, do_reconstruct, &rrock);
         }
     }
 
     /* examine our list to see if we discovered anything */
-    while (discovered.count) {
-        char *name = strarray_shift(&discovered);
+    while (rrock.discovered && rrock.discovered->count) {
+        char *name = strarray_shift(rrock.discovered);
         int r = 0;
 
         /* create p (database only) and reconstruct it */
@@ -368,14 +384,19 @@ int main(int argc, char **argv)
             fprintf(stderr, "createmailbox %s: %s\n",
                     name, error_message(r));
         } else {
-            do_reconstruct(name, strlen(name), 0, &discovered);
+            mboxlist_findone(&recon_namespace, name, 1, 0, 0, do_reconstruct, &rrock);
         }
         /* may have added more things into our list */
 
         free(name);
     }
 
+    if (rrock.discovered) strarray_free(rrock.discovered);
+    free_hash_table(&rrock.visited, NULL);
+
     free_hash_table(&unqid_table, free);
+
+    buf_free(&buf);
 
     sync_log_done();
 
@@ -387,13 +408,12 @@ int main(int argc, char **argv)
 
     partlist_local_done();
 #ifdef WITH_DAV
+    webdav_done();
     carddav_done();
     caldav_done();
 #endif
 
     cyrus_done();
-
-    strarray_fini(&discovered);
 
     return 0;
 }
@@ -411,8 +431,11 @@ static void usage(void)
  */
 static int do_reconstruct_p(const mbentry_t *mbentry, void *rock)
 {
-    if (!(mbentry->mbtype & MBTYPE_DELETED))
-        do_reconstruct(mbentry->name, strlen(mbentry->name), 0, rock);
+    if ((mbentry->mbtype & MBTYPE_DELETED))
+        return 0;
+
+    mboxlist_findone(&recon_namespace, mbentry->name, 1, 0, 0,
+                     do_reconstruct, rock);
 
     return 0;
 }
@@ -420,55 +443,63 @@ static int do_reconstruct_p(const mbentry_t *mbentry, void *rock)
 /*
  * mboxlist_findall() callback function to reconstruct a mailbox
  */
-static int do_reconstruct(const char *name,
-                          int matchlen,
-                          int maycreate __attribute__((unused)),
-                          void *rock)
+static int do_reconstruct(struct findall_data *data, void *rock)
 {
-    strarray_t *discovered = (strarray_t *)rock;
+    if (!data) return 0;
+    struct reconstruct_rock *rrock = (struct reconstruct_rock *) rock;
     int r;
-    static char lastname[MAX_MAILBOX_NAME] = "";
     char *other;
     struct mailbox *mailbox = NULL;
     char outpath[MAX_MAILBOX_PATH];
+    const char *name = NULL;
+
+    /* ignore partial matches */
+    if (!data->mbname) return 0;
 
     signals_poll();
 
+    name = mbname_intname(data->mbname);
+
     /* don't repeat */
-    if (matchlen == (int) strlen(lastname) &&
-        !strncmp(name, lastname, matchlen)) return 0;
+    if (hash_lookup(name, &rrock->visited)) return 0;
 
-    if (matchlen >= (int) sizeof(lastname))
-        matchlen = sizeof(lastname) - 1;
-
-    strncpy(lastname, name, matchlen);
-    lastname[matchlen] = '\0';
-
-    r = mailbox_reconstruct(lastname, reconstruct_flags);
+    r = mailbox_reconstruct(name, reconstruct_flags);
     if (r) {
-	com_err(lastname, r, "%s",
-		(r == IMAP_IOERROR) ? error_message(errno) : "Failed to reconstruct mailbox");
-	return 0;
+        com_err(name, r, "%s",
+                (r == IMAP_IOERROR) ? error_message(errno) : "Failed to reconstruct mailbox");
+        return 0;
     }
 
-    r = mailbox_open_iwl(lastname, &mailbox);
+    r = mailbox_open_iwl(name, &mailbox);
     if (r) {
-        com_err(lastname, r, "Failed to open after reconstruct");
+        com_err(name, r, "Failed to open after reconstruct");
         return 0;
     }
 
     other = hash_lookup(mailbox->uniqueid, &unqid_table);
     if (other) {
-        syslog (LOG_ERR, "uniqueid clash with %s for %s - changing %s",
-                other, mailbox->uniqueid, mailbox->name);
-        /* uniqueid change required! */
-        mailbox_make_uniqueid(mailbox);
+        mbentry_t *oldmbentry = NULL;
+        /* check that the old one still exists! */
+        r = mboxlist_lookup(other, &oldmbentry, NULL);
+        if (!r && !strcmpsafe(oldmbentry->uniqueid, mailbox->uniqueid)) {
+            /* uniqueid change required! */
+            if (updateuniqueids) {
+                mailbox_make_uniqueid(mailbox);
+                syslog (LOG_ERR, "uniqueid clash with %s - changed %s (%s => %s)",
+                        other, mailbox->name, oldmbentry->uniqueid, mailbox->uniqueid);
+            }
+            else {
+                syslog (LOG_ERR, "uniqueid clash with %s for %s (%s)",
+                        other, mailbox->name, mailbox->uniqueid);
+            }
+        }
+        mboxlist_entry_free(&oldmbentry);
     }
 
     hash_insert(mailbox->uniqueid, xstrdup(mailbox->name), &unqid_table);
 
     /* Convert internal name to external */
-    char *extname = mboxname_to_external(lastname, &recon_namespace, NULL);
+    char *extname = mboxname_to_external(name, &recon_namespace, NULL);
     if (!(reconstruct_flags & RECONSTRUCT_QUIET))
         printf("%s\n", extname);
 
@@ -487,7 +518,7 @@ static int do_reconstruct(const char *name,
     mailbox_close(&mailbox);
     free(extname);
 
-    if (discovered) {
+    if (rrock->discovered) {
         char fnamebuf[MAX_MAILBOX_PATH];
         char *ptr;
         DIR *dirp;
@@ -534,10 +565,15 @@ static int do_reconstruct(const char *name,
             else r = 0; /* reset error condition */
 
             printf("discovered %s\n", buf);
-            strarray_append(discovered, buf);
+            strarray_append(rrock->discovered, buf);
         }
         closedir(dirp);
     }
+
+    /* mark it as visited
+     * we don't care about the value, it just needs to be a non-NULL pointer
+     */
+    hash_insert(name, &rrock, &rrock->visited);
 
     return 0;
 }

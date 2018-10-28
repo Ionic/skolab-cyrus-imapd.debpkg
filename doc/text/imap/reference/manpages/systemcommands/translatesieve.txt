@@ -1,0 +1,73 @@
+
+**translatesieve**
+******************
+
+Translate sieve scripts to use unixhierarchysep and/or altnamespace.
+
+
+Synopsis
+========
+
+   **translatesieve** [**-f**] [**-a**] [**-u**] [**-n**] [**-v**] [**-C** *imapd.conf*]
+
+
+Description
+===========
+
+**translatesieve** can both translate the mailbox separator characters
+in sieve scripts from traditional netnews style -- '.' -- to new Unix
+style -- '/' -- and vice versa.  It can also convert sieve scripts to
+use "altnamespace" mailbox naming conventions.  Please also see
+Mailbox namespaces for details.
+
+In its default mode, **translatesieve** assumes that the old
+configuration used *both* "unixhierarchysep: no" and "altnamespace:
+no".  If your configuration was already using one of these, then use
+the appropriate flag, **-u** for "unixhierarchysep: yes" or **-a** for
+"altnamespace: yes".  Failure to do so may ruin your sieve scripts.
+
+A "Dry run" mode is available via **-n** and you are strongly
+encouraged to use this.
+
+**translatesieve** reads its configuration options out of the
+imapd.conf(5) file unless specified otherwise by **-C**.
+
+Must be run as the cyrus user.
+
+
+Options
+=======
+
+-f
+
+   Keep going on errors.
+
+-a
+
+   Translate from a configuration which already used "altnamespace:
+   yes".
+
+-u
+
+   Translate from a configuration which already used
+   "unixhierarchysep: yes".
+
+-n
+
+   Dry-run mode.  No changes will be written, but you'll be shown what
+   would be changed.
+
+-v
+
+   Verbose mode.  Note: -n implies -v.
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+
+See Also
+========
+
+imapd.conf(5)

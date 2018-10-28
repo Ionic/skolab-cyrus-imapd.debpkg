@@ -61,6 +61,7 @@
 
 #include "http_dav.h"
 #include "ical_support.h"
+#include "http_caldav.h"
 
 
 #define NEW_STAG (1<<8)         /* Make sure we skip over PREFER bits */
@@ -78,9 +79,8 @@
 struct sched_data {
     unsigned ischedule;
     unsigned is_reply;
+    unsigned is_update;
     icalcomponent *itip;
-    icalcomponent *master;
-    unsigned comp_mask;
     icalparameter_scheduleforcesend force_send;
     const char *status;
 };
@@ -96,16 +96,21 @@ struct proplist {
 };
 
 /* Each calendar user address has the following scheduling protocol params */
-struct sched_param {
+/* All memory must be freed with sched_param_free. */
+struct caldav_sched_param {
     char *userid;       /* Userid corresponding to calendar address */
     char *server;       /* Remote server user lives on */
     unsigned port;      /* Remote server port, default = 80 */
     unsigned flags;     /* Flags dictating protocol to use for scheduling */
+    unsigned isyou;     /* true if the user is the same as the authenticated user */
     struct proplist *props; /* List of attendee iCal properties */
 };
 
+extern void sched_param_free(struct caldav_sched_param *sparam);
+
 struct freebusy {
     struct icalperiodtype per;
+    struct icaltimetype recurid;
     icalparameter_fbtype type;
 };
 
@@ -127,8 +132,7 @@ struct vavailability_array {
     unsigned alloc;
 };
 
-struct calquery_filter {
-    unsigned comp;
+struct freebusy_filter {
     unsigned flags;
     struct icaltimetype start;
     struct icaltimetype end;
@@ -137,11 +141,10 @@ struct calquery_filter {
     struct vavailability_array vavail;  /* array of found vavail components */
 };
 
-/* Bitmask of calquery flags */
+/* Bitmask of freebusy_filter flags */
 enum {
-    BUSYTIME_QUERY =            (1<<0),
-    CHECK_CAL_TRANSP =          (1<<1),
-    CHECK_USER_AVAIL =          (1<<2)
+    CHECK_CAL_TRANSP =          (1<<0),
+    CHECK_USER_AVAIL =          (1<<1)
 };
 
 extern unsigned config_allowsched;
@@ -150,7 +153,6 @@ extern icaltimezone *utc_zone;
 extern struct strlist *cua_domains;
 extern icalarray *rscale_calendars;
 
-extern int apply_calfilter(struct propfind_ctx *fctx, void *data);
 extern icalcomponent *busytime_query_local(struct transaction_t *txn,
                                            struct propfind_ctx *fctx,
                                            char mailboxname[],
@@ -159,23 +161,20 @@ extern icalcomponent *busytime_query_local(struct transaction_t *txn,
                                            const char *organizer,
                                            const char *attendee);
 
-extern int caldav_store_resource(struct transaction_t *txn, icalcomponent *ical,
-                                 struct mailbox *mailbox, const char *resource,
-                                 struct caldav_db *caldavdb, unsigned flags);
-
-extern int isched_send(struct sched_param *sparam, const char *recipient,
+extern int isched_send(struct caldav_sched_param *sparam, const char *recipient,
                        icalcomponent *ical, xmlNodePtr *xml);
 
 extern int sched_busytime_query(struct transaction_t *txn,
                                 struct mime_type_t *mime, icalcomponent *comp);
-extern void sched_request(const char *organizer, struct sched_param *sparam,
-                          icalcomponent *oldical, icalcomponent *newical,
-                          const char *att_update);
-extern void sched_reply(const char *userid,
+extern void sched_request(const char *userid, const char *organizer,
+                          icalcomponent *oldical, icalcomponent *newical);
+extern void sched_reply(const char *userid, const char *attendee,
                         icalcomponent *oldical, icalcomponent *newical);
 extern void sched_deliver(const char *recipient, void *data, void *rock);
 extern xmlNodePtr xml_add_schedresponse(xmlNodePtr root, xmlNsPtr dav_ns,
                                         xmlChar *recipient, xmlChar *status);
-extern int caladdress_lookup(const char *addr, struct sched_param *param);
+extern int caladdress_lookup(const char *addr, struct caldav_sched_param *param,
+                             const char *myuserid);
+
 
 #endif /* HTTP_CALDAV_SCHED_H */

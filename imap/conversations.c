@@ -56,7 +56,9 @@
 #include "annotate.h"
 #include "append.h"
 #include "assert.h"
+#include "bsearch.h"
 #include "charset.h"
+#include "crc32.h"
 #include "dlist.h"
 #include "exitcodes.h"
 #include "hash.h"
@@ -96,6 +98,8 @@
 #define DB config_conversations_db
 
 #define CONVERSATIONS_VERSION 0
+
+static conv_status_t NULLSTATUS = { 0, 0, 0};
 
 static char *convdir = NULL;
 static char *suffix = NULL;
@@ -200,7 +204,7 @@ EXPORTED int conversations_open_path(const char *fname, struct conversations_sta
 
     open = xzmalloc(sizeof(struct conversations_open));
 
-    r = cyrusdb_open(DB, fname, CYRUSDB_CREATE, &open->s.db);
+    r = cyrusdb_open(DB, fname, CYRUSDB_CREATE | CYRUSDB_CONVERT, &open->s.db);
     if (r || open->s.db == NULL) {
         free(open);
         return IMAP_IOERROR;
@@ -223,7 +227,7 @@ EXPORTED int conversations_open_path(const char *fname, struct conversations_sta
                    &val, &vallen, &open->s.txn)) {
         struct dlist *dl = NULL;
         struct dlist *dp;
-        dlist_parsemap(&dl, 0, val, vallen);
+        dlist_parsemap(&dl, 0, 0, val, vallen);
         for (dp = dl->head; dp; dp = dp->next) {
             strarray_append(open->s.folder_names, dlist_cstring(dp));
         }
@@ -232,9 +236,6 @@ EXPORTED int conversations_open_path(const char *fname, struct conversations_sta
 
     /* create the status cache */
     construct_hash_table(&open->s.folderstatus, open->s.folder_names->count/4+4, 0);
-
-    /* create the cid rename table */
-    construct_hashu64_table(&open->s.cidrenames, 1023, 0);
 
     *statep = &open->s;
 
@@ -323,12 +324,6 @@ static void conversations_abortcache(struct conversations_state *state)
     free_hash_table(&state->folderstatus, free);
 }
 
-static void conversations_abortcidrenames(struct conversations_state *state)
-{
-    /* still gotta clean up */
-    free_hashu64_table(&state->cidrenames, free);
-}
-
 static void commitstatus_cb(const char *key, void *data, void *rock)
 {
     conv_status_t *status = (conv_status_t *)data;
@@ -337,7 +332,7 @@ static void commitstatus_cb(const char *key, void *data, void *rock)
     conversation_storestatus(state, key, strlen(key), status);
     /* just in case convdb has a higher modseq for any reason (aka deleted and
      * recreated while a replica was still valid with the old user) */
-    mboxname_setmodseq(key+1, status->modseq, /*mbtype */0);
+    mboxname_setmodseq(key+1, status->modseq, /*mbtype */0, /*dofolder*/0);
     sync_log_mailbox(key+1); /* skip the leading F */
 }
 
@@ -345,114 +340,6 @@ static void conversations_commitcache(struct conversations_state *state)
 {
     hash_enumerate(&state->folderstatus, commitstatus_cb, state);
     free_hash_table(&state->folderstatus, free);
-}
-
-struct rename_rock {
-    struct conversations_state *state;
-    conversation_id_t from_cid;
-    conversation_id_t to_cid;
-    unsigned long entries_seen;
-    unsigned long entries_renamed;
-};
-
-static int do_one_rename(void *rock,
-                         const char *key, size_t keylen,
-                         const char *data, size_t datalen)
-{
-    struct rename_rock *rrock = (struct rename_rock *)rock;
-    arrayu64_t cids = ARRAYU64_INITIALIZER;
-    time_t stamp;
-    int r;
-    int removed;
-
-    r = check_msgid(key, keylen, NULL);
-    if (r) return r;
-
-    r = _conversations_parse(data, datalen, &cids, &stamp);
-    if (r) goto done;
-
-    rrock->entries_seen++;
-
-    removed = arrayu64_remove_all(&cids, rrock->from_cid);
-    if (!removed) goto done;
-
-    arrayu64_add(&cids, rrock->to_cid);
-
-    rrock->entries_renamed++;
-
-    r = _conversations_set_key(rrock->state, key, keylen,
-                               &cids, stamp);
-
-done:
-    arrayu64_fini(&cids);
-    return r;
-}
-
-EXPORTED void conversations_rename_cidentry(struct conversations_state *state,
-                                            conversation_id_t from,
-                                            conversation_id_t to)
-{
-    struct rename_rock rrock;
-
-    if (from == to) return;
-
-    memset(&rrock, 0, sizeof(rrock));
-    rrock.state = state;
-    rrock.from_cid = from;
-    rrock.to_cid = to;
-
-    cyrusdb_foreach(state->db, "<", 1, NULL, do_one_rename, &rrock, &state->txn);
-
-    syslog(LOG_NOTICE, "conversations_rename_cid: saw %lu entries, renamed %lu"
-                       " from " CONV_FMT " to " CONV_FMT,
-                        rrock.entries_seen, rrock.entries_renamed,
-                        from, to);
-}
-
-static void commitrename_cb(uint64_t fromval, void *data, void *rock)
-{
-    conversation_id_t to = *((conversation_id_t *)data);
-    conversation_id_t from = (conversation_id_t)fromval;
-    struct conversations_state *state = (struct conversations_state *)rock;
-
-    conv_folder_t *folder = NULL;
-    conversation_t *conv = NULL;
-    int r = 0;
-
-    while ((data = hashu64_lookup(to, &state->cidrenames))) {
-        /* got renamed again! */
-        to = *((uint64_t *)data);
-    }
-
-    /* Use the B record to find the mailboxes for a CID rename.
-     * The rename events will decrease the NUM_RECORDS count back
-     * to zero, and the record will delete itself! */
-    r = conversation_load(state, from, &conv);
-    if (r) return;
-    if (!conv) return;
-
-    for (folder = conv->folders ; folder ; folder = folder->next) {
-        const char *mboxname = strarray_nth(state->folder_names, folder->number);
-        struct mailbox *mailbox = NULL;
-
-        r = mailbox_open_iwl(mboxname, &mailbox);
-        if (r) break;
-
-        r = mailbox_cid_rename(mailbox, from, to);
-        mailbox_close(&mailbox);
-
-        if (r) break;
-    }
-
-    conversation_free(conv);
-
-    /* XXX - COULD try to read the B key and confirm that it doesn't exist any more... */
-}
-
-static void conversations_commitcidrenames(struct conversations_state *state)
-{
-    hashu64_enumerate(&state->cidrenames, commitrename_cb, state);
-    free_hashu64_table(&state->cidrenames, free);
 }
 
 EXPORTED int conversations_abort(struct conversations_state **statep)
@@ -464,7 +351,6 @@ EXPORTED int conversations_abort(struct conversations_state **statep)
     *statep = NULL;
 
     /* clean up hashes */
-    conversations_abortcidrenames(state);
     conversations_abortcache(state);
 
     if (state->db) {
@@ -487,9 +373,7 @@ EXPORTED int conversations_commit(struct conversations_state **statep)
 
     *statep = NULL;
 
-    /* clean up the renames first, it will update the cache */
-    conversations_commitcidrenames(state);
-    /* cache second - also writes to to DB */
+    /* commit cache, writes to to DB */
     conversations_commitcache(state);
 
     /* finally it's safe to commit the DB itself */
@@ -676,11 +560,14 @@ EXPORTED int conversations_get_msgid(struct conversations_state *state,
                       &data, &datalen,
                       &state->txn);
 
+    if (r == CYRUSDB_NOTFOUND)
+        return 0; /* not an error, but nothing more to do */
+
     if (!r) r = _conversations_parse(data, datalen, cids, NULL);
 
     if (r) arrayu64_truncate(cids, 0);
 
-    return 0;
+    return r;
 }
 
 /*
@@ -726,7 +613,7 @@ EXPORTED void conversation_normalise_subject(struct buf *s)
     if (!initialised_res) {
         r = regcomp(&whitespace_re, "[ \t\r\n]+", REG_EXTENDED);
         assert(r == 0);
-        r = regcomp(&relike_token_re, "^[ \t]*[A-Za-z0-9]+:", REG_EXTENDED);
+        r = regcomp(&relike_token_re, "^[ \t]*[A-Za-z0-9]+(\\[[0-9]+\\])?:", REG_EXTENDED);
         assert(r == 0);
         r = regcomp(&blob_start_re, "^[ \t]*\\[[^]]+\\]", REG_EXTENDED);
         assert(r == 0);
@@ -812,27 +699,29 @@ static int folder_number_rename(struct conversations_state *state,
 }
 
 EXPORTED int conversation_storestatus(struct conversations_state *state,
-                             const char *key, size_t keylen,
-                             const conv_status_t *status)
+                                      const char *key, size_t keylen,
+                                      const conv_status_t *status)
 {
-    struct dlist *dl = NULL;
-    struct buf buf = BUF_INITIALIZER;
-    int version = CONVERSATIONS_VERSION;
-    int r;
+    if (!status || !status->modseq) {
+        return cyrusdb_delete(state->db,
+                              key, keylen,
+                              &state->txn, /*force*/1);
+    }
 
-    dl = dlist_newlist(NULL, NULL);
+    struct dlist *dl = dlist_newlist(NULL, NULL);
     dlist_setnum64(dl, "MODSEQ", status->modseq);
     dlist_setnum32(dl, "EXISTS", status->exists);
     dlist_setnum32(dl, "UNSEEN", status->unseen);
 
-    buf_printf(&buf, "%d ", version);
+    struct buf buf = BUF_INITIALIZER;
+    buf_printf(&buf, "%d ", CONVERSATIONS_VERSION);
     dlist_printbuf(dl, 0, &buf);
     dlist_free(&dl);
 
-    r = cyrusdb_store(state->db,
-                      key, keylen,
-                      buf.s, buf.len,
-                      &state->txn);
+    int r = cyrusdb_store(state->db,
+                          key, keylen,
+                          buf.s, buf.len,
+                          &state->txn);
 
     buf_free(&buf);
 
@@ -853,7 +742,7 @@ EXPORTED int conversation_setstatus(struct conversations_state *state,
     }
 
     /* either way it's in the hash, update the value */
-    *cachestatus = *status;
+    *cachestatus = status ? *status : NULLSTATUS;
 
     free(key);
 
@@ -868,6 +757,7 @@ EXPORTED int conversation_store(struct conversations_state *state,
     struct buf buf = BUF_INITIALIZER;
     const conv_folder_t *folder;
     const conv_sender_t *sender;
+    const conv_thread_t *thread;
     int version = CONVERSATIONS_VERSION;
     int i;
     int r;
@@ -917,6 +807,18 @@ EXPORTED int conversation_store(struct conversations_state *state,
     dlist_setatom(dl, "SUBJECT", conv->subject);
 
     dlist_setnum32(dl, "SIZE", conv->size);
+
+    n = dlist_newlist(dl, "THREAD");
+    for (thread = conv->thread; thread; thread = thread->next) {
+        if (!thread->exists)
+            continue;
+        nn = dlist_newlist(n, "THREAD");
+        dlist_setguid(nn, "GUID", &thread->guid);
+        dlist_setnum32(nn, "EXISTS", thread->exists);
+        dlist_setnum32(nn, "INTERNALDATE", thread->internaldate);
+        dlist_setnum32(nn, "MSGID", thread->msgid);
+        if (thread->inreplyto) dlist_setnum32(nn, "INREPLYTO", thread->inreplyto);
+    }
 
     buf_printf(&buf, "%d ", version);
     dlist_printbuf(dl, 0, &buf);
@@ -1051,7 +953,7 @@ EXPORTED int conversation_parsestatus(const char *data, size_t datalen,
         return IMAP_MAILBOX_BADFORMAT;
     }
 
-    r = dlist_parsemap(&dl, 0, rest, restlen);
+    r = dlist_parsemap(&dl, 0, 0, rest, restlen);
     if (r) return r;
 
     n = dl->head;
@@ -1086,6 +988,8 @@ EXPORTED int conversation_getstatus(struct conversations_state *state,
         *status = *cachestatus;
         goto done;
     }
+
+    *status = NULLSTATUS;
 
     if (!state->db) {
         r = IMAP_IOERROR;
@@ -1146,6 +1050,35 @@ EXPORTED conv_folder_t *conversation_get_folder(conversation_t *conv,
     return folder;
 }
 
+static conv_thread_t *parse_thread(struct dlist *dl)
+{
+    conv_thread_t *res = NULL;
+    conv_thread_t **p = &res;
+    struct dlist *item = dl->head;
+    struct dlist *n;
+    while (item) {
+        conv_thread_t *thread = *p = xzmalloc(sizeof(conv_thread_t));
+        p = &thread->next;
+        n = dlist_getchildn(item, 0);
+        if (n) {
+            struct message_guid *guid = NULL;
+            dlist_toguid(n, &guid);
+            if (guid) message_guid_copy(&thread->guid, guid);
+        }
+        n = dlist_getchildn(item, 1);
+        if (n) thread->exists = dlist_num(n);
+        n = dlist_getchildn(item, 2);
+        if (n) thread->internaldate = dlist_num(n);
+        n = dlist_getchildn(item, 3);
+        if (n) thread->msgid = dlist_num(n);
+        n = dlist_getchildn(item, 4);
+        if (n) thread->inreplyto = dlist_num(n);
+        item = item->next;
+    }
+
+    return res;
+}
+
 EXPORTED int conversation_parse(struct conversations_state *state,
                        const char *data, size_t datalen,
                        conversation_t **convp)
@@ -1171,7 +1104,7 @@ EXPORTED int conversation_parse(struct conversations_state *state,
 
     if (version != CONVERSATIONS_VERSION) return IMAP_MAILBOX_BADFORMAT;
 
-    r = dlist_parsemap(&dl, 0, rest, restlen);
+    r = dlist_parsemap(&dl, 0, 0, rest, restlen);
     if (r) return r;
 
     conv = conversation_new(state);
@@ -1251,6 +1184,9 @@ EXPORTED int conversation_parse(struct conversations_state *state,
 
     n = dlist_getchildn(dl, 8);
     if (n) conv->size = dlist_num(n);
+
+    n = dlist_getchildn(dl, 9);
+    if (n) conv->thread = parse_thread(n);
 
     conv->prev_unseen = conv->unseen;
 
@@ -1428,8 +1364,8 @@ static int sender_preferred_name(const char *a, const char *b)
     char *sa = NULL;
     char *sb = NULL;
 
-    sa = charset_parse_mimeheader((a ? a : ""));
-    sb = charset_parse_mimeheader((b ? b : ""));
+    sa = charset_parse_mimeheader((a ? a : ""), charset_flags);
+    sb = charset_parse_mimeheader((b ? b : ""), charset_flags);
 
     /* A name with characters > 0x7f is preferred to a flat
      * ascii one, on the assumption that this is more likely to
@@ -1451,6 +1387,76 @@ static int sender_preferred_name(const char *a, const char *b)
     free(sa);
     free(sb);
     return d;
+}
+
+static void conversation_update_thread(conversation_t *conv,
+                                       const struct message_guid *guid,
+                                       time_t internaldate,
+                                       const char *msgid,
+                                       const char *inreplyto,
+                                       int delta_exists)
+{
+    conv_thread_t *thread, *parent, **nextp = &conv->thread;
+
+    for (thread = conv->thread; thread; thread = thread->next) {
+        /* does it already exist? */
+        if (message_guid_equal(guid, &thread->guid))
+            break;
+        nextp = &thread->next;
+    }
+
+    if (thread) {
+        /* unstitch */
+        *nextp = thread->next;
+    }
+    else {
+        /* we start with zero */
+        thread = xzmalloc(sizeof(*thread));
+    }
+
+    /* counts first, may be just removing it */
+    if (thread->exists + delta_exists <= 0) {
+        conv->dirty = 1;
+        free(thread);
+        return;
+    }
+
+    message_guid_copy(&thread->guid, guid);
+    thread->internaldate = internaldate;
+    thread->exists += delta_exists;
+    /* just copy, it's not that expensive for a write */
+    thread->msgid = msgid ? crc32_cstring(msgid) : 0;
+    thread->inreplyto = inreplyto ? crc32_cstring(inreplyto) : 0;
+
+    if (thread->inreplyto) {
+        /* see if we can stitch it into the list behind the message it replies to */
+        conv_thread_t *candidate = NULL;
+        for (parent = conv->thread; parent; parent = parent->next) {
+            if (thread->inreplyto == parent->msgid) {
+                candidate = parent;
+            }
+            if (thread->inreplyto == parent->inreplyto) {
+                if (parent->internaldate < internaldate)
+                    candidate = parent;
+            }
+        }
+        if (candidate) {
+            thread->next = candidate->next;
+            candidate->next = thread;
+            return;
+        }
+    }
+
+    /* OK, we didn't find a parent to attach to, so just go through by date and put it
+     * after the last one with an earlier date */
+    nextp = &conv->thread;
+    for (parent = conv->thread; parent; parent = parent->next) {
+        if (parent->internaldate > thread->internaldate) break;
+        nextp = &parent->next;
+    }
+
+    thread->next = *nextp;
+    *nextp = thread;
 }
 
 EXPORTED void conversation_update_sender(conversation_t *conv,
@@ -1555,6 +1561,455 @@ static void _apply_delta(uint32_t *valp, int delta)
     }
 }
 
+EXPORTED const strarray_t *conversations_get_folders(struct conversations_state *state)
+{
+    return state->folder_names;
+}
+
+static int _match1(void *rock,
+                   const char *key __attribute__((unused)),
+                   size_t keylen __attribute__((unused)),
+                   const char *data __attribute__((unused)),
+                   size_t datalen __attribute__((unused)))
+{
+    int *match = (int *)rock;
+    *match = 1;
+    return CYRUSDB_DONE;
+}
+
+EXPORTED int conversations_guid_exists(struct conversations_state *state,
+                                       const char *guidrep)
+{
+    int match = 0;
+
+    char *key = strconcat("G", guidrep, (char *)NULL);
+    cyrusdb_foreach(state->db, key, strlen(key), NULL, _match1, &match, NULL);
+    free(key);
+
+    return match;
+}
+
+struct guid_foreach_rock {
+    struct conversations_state *state;
+    int(*cb)(const conv_guidrec_t *, void *);
+    void *cbrock;
+};
+
+static int _guid_one(const char *s, struct guid_foreach_rock *frock, conversation_id_t cid)
+{
+    const char *p, *err;
+    conv_guidrec_t rec;
+    uint32_t res;
+
+    p = strchr(s, ':');
+    if (!p) return IMAP_INTERNAL;
+
+    /* cid */
+    rec.cid = cid;
+
+    /* mboxname */
+    int r = parseuint32(s, &err, &res);
+    if (r || err != p) return IMAP_INTERNAL;
+    rec.mboxname = strarray_safenth(frock->state->folder_names, res);
+    if (!rec.mboxname) return IMAP_INTERNAL;
+
+    /* uid */
+    r = parseuint32(p + 1, &err, &res);
+    if (r) return IMAP_INTERNAL;
+    rec.uid = res;
+    p = err;
+
+    /* part */
+    rec.part = NULL;
+    char *freeme = NULL;
+    if (*p) {
+        const char *end = strchr(p+1, ']');
+        if (*p != '[' || !end || p+1 == end) {
+            return IMAP_INTERNAL;
+        }
+        rec.part = freeme = xstrndup(p+1, end-p-1);
+    }
+
+    r = frock->cb(&rec, frock->cbrock);
+    free(freeme);
+    return r;
+}
+
+static int _guid_cb(void *rock,
+                    const char *key,
+                    size_t keylen,
+                    const char *data,
+                    size_t datalen)
+{
+    struct guid_foreach_rock *frock = (struct guid_foreach_rock *)rock;
+    int r;
+
+    if (keylen < 41)
+        return IMAP_INTERNAL;
+
+    // oldstyle key
+    if (keylen == 41) {
+        strarray_t *recs = strarray_nsplit(data, datalen, ",", /*flags*/0);
+        int i;
+        for (i = 0; i < recs->count; i++) {
+            r = _guid_one(strarray_nth(recs, i), frock, /*cid*/0);
+            if (r) break;
+        }
+        strarray_free(recs);
+        return r;
+    }
+
+    // newstyle key
+    if (key[41] != ':')
+        return IMAP_INTERNAL;
+
+    conversation_id_t cid = 0;
+    if (datalen >= 16) {
+        const char *p = data;
+        r = parsehex(p, &p, 16, &cid);
+        if (r) return r;
+    }
+
+    char *freeme = xstrndup(key+42, keylen-42);
+    r = _guid_one(freeme, frock, cid);
+    free(freeme);
+
+    return r;
+}
+
+EXPORTED int conversations_guid_foreach(struct conversations_state *state,
+                                        const char *guidrep,
+                                        int(*cb)(const conv_guidrec_t *, void *),
+                                        void *cbrock)
+{
+    struct guid_foreach_rock rock;
+    rock.state = state;
+    rock.cb = cb;
+    rock.cbrock = cbrock;
+
+    char *key = strconcat("G", guidrep, (char *)NULL);
+    int r = cyrusdb_foreach(state->db, key, strlen(key), NULL, _guid_cb, &rock, NULL);
+    free(key);
+
+    return r;
+}
+
+static int _getcid(const conv_guidrec_t *rec, void *rock)
+{
+    conversation_id_t *cidp = (conversation_id_t *)rock;
+    if (!rec->part) {
+        *cidp = rec->cid;
+        return CYRUSDB_DONE;
+    }
+    return 0;
+}
+
+EXPORTED conversation_id_t conversations_guid_cid_lookup(struct conversations_state *state,
+                                                         const char *guidrep)
+{
+    conversation_id_t cid = 0;
+    conversations_guid_foreach(state, guidrep, _getcid, &cid);
+    return cid;
+}
+
+
+static int conversations_guid_setitem(struct conversations_state *state, const char *guidrep,
+                                      const char *item, conversation_id_t cid, int add)
+{
+    struct buf key = BUF_INITIALIZER;
+    buf_setcstr(&key, "G");
+    buf_appendcstr(&key, guidrep);
+    size_t datalen = 0;
+    const char *data;
+
+    // check if we have to upgrade anything?
+    int r = cyrusdb_fetch(state->db, buf_base(&key), buf_len(&key), &data, &datalen, &state->txn);
+    if (!r && datalen) {
+        int i;
+        buf_putc(&key, ':');
+
+        /* add new keys for all the old values */
+        strarray_t *old = strarray_nsplit(data, datalen, ",", /*flags*/0);
+        for (i = 0; i < strarray_size(old); i++) {
+            buf_truncate(&key, 42); // trim back to the colon
+            buf_appendcstr(&key, strarray_nth(old, i));
+            r = cyrusdb_store(state->db, buf_base(&key), buf_len(&key), "", 0, &state->txn);
+            if (r) break;
+        }
+        strarray_free(old);
+        if (r) goto done;
+
+        buf_truncate(&key, 41); // trim back to original key
+
+        /* remove the original key */
+        r = cyrusdb_delete(state->db, buf_base(&key), buf_len(&key), &state->txn, /*force*/0);
+        if (r) goto done;
+    }
+
+    buf_putc(&key, ':');
+    buf_appendcstr(&key, item);
+
+    if (add) {
+        char val[17];
+        size_t len = 0;
+        if (cid) {
+            snprintf(val, 17, "%016llx", cid);
+            len = 16;
+        }
+        r = cyrusdb_store(state->db, buf_base(&key), buf_len(&key), val, len, &state->txn);
+    }
+    else {
+        r = cyrusdb_delete(state->db, buf_base(&key), buf_len(&key), &state->txn, /*force*/1);
+    }
+
+done:
+    buf_free(&key);
+
+    return r;
+}
+
+static int _guid_addbody(struct conversations_state *state, struct body *body,
+                         const char *base, int add)
+{
+    int i;
+    int r = 0;
+
+    if (!body) return 0;
+
+    if (!message_guid_isnull(&body->content_guid) && body->part_id) {
+        struct buf buf = BUF_INITIALIZER;
+
+        buf_setcstr(&buf, base);
+        buf_printf(&buf, "[%s]", body->part_id);
+        const char *guidrep = message_guid_encode(&body->content_guid);
+        r = conversations_guid_setitem(state, guidrep, buf_cstring(&buf), /*cid*/0, add);
+        buf_free(&buf);
+
+        if (r) return r;
+    }
+
+    r = _guid_addbody(state, body->subpart, base, add);
+    if (r) return r;
+
+    for (i = 1; i < body->numparts; i++) {
+        r = _guid_addbody(state, body->subpart + i, base, add);
+        if (r) return r;
+    }
+
+    return 0;
+}
+
+static int conversations_set_guid(struct conversations_state *state,
+                                  struct mailbox *mailbox,
+                                  const struct index_record *record,
+                                  int add)
+{
+    int folder = folder_number(state, mailbox->name, /*create*/1);
+    struct buf item = BUF_INITIALIZER;
+    struct body *body = NULL;
+    int r = 0;
+
+    r = mailbox_cacherecord(mailbox, record);
+    if (r) return r;
+
+    message_read_bodystructure(record, &body);
+
+    /* process the GUID of the full message itself */
+    buf_printf(&item, "%d:%u", folder, record->uid);
+    const char *base = buf_cstring(&item);
+
+    r = conversations_guid_setitem(state, message_guid_encode(&record->guid),
+                                   base, record->cid, add);
+    if (!r) r = _guid_addbody(state, body, base, add);
+
+    message_free_body(body);
+    free(body);
+    buf_free(&item);
+    return r;
+}
+
+EXPORTED int conversations_update_record(struct conversations_state *cstate,
+                                         struct mailbox *mailbox,
+                                         const struct index_record *old,
+                                         struct index_record *new)
+{
+    conversation_t *conv = NULL;
+    int delta_num_records = 0;
+    int delta_exists = 0;
+    int delta_unseen = 0;
+    int is_trash = 0;
+    int delta_size = 0;
+    int *delta_counts = NULL;
+    int i;
+    modseq_t modseq = 0;
+    const struct index_record *record = NULL;
+    int r = 0;
+
+    if (old && new) {
+        /* we're always moving forwards */
+        assert(old->uid == new->uid);
+        assert(old->modseq <= new->modseq);
+
+        /* this flag cannot go away */
+        if ((old->system_flags & FLAG_EXPUNGED))
+            assert((new->system_flags & FLAG_EXPUNGED));
+
+        /* we're changing the CID for any reason at all, treat as
+         * a removal and re-add, so cache gets parsed and msgids
+         * updated */
+        if (old->cid != new->cid) {
+            r = conversations_update_record(cstate, mailbox, old, NULL);
+            if (r) return r;
+            return conversations_update_record(cstate, mailbox, NULL, new);
+        }
+    }
+
+    if (new && !old) {
+        /* add the conversation */
+        r = mailbox_cacherecord(mailbox, new); /* make sure it's loaded */
+        if (r) return r;
+        r = message_update_conversations(cstate, new, &conv);
+        if (r) return r;
+        record = new;
+        /* possible if silent (i.e. replica) */
+        if (!record->cid) return 0;
+    }
+    else {
+        record = new ? new : old;
+        /* skip out on non-CIDed records */
+        if (!record->cid) return 0;
+
+        r = conversation_load(cstate, record->cid, &conv);
+        if (r) return r;
+        if (!conv) {
+            if (!new) {
+                /* We're trying to delete a conversation that's already
+                 * gone...don't try to hard */
+                syslog(LOG_NOTICE, "conversation "CONV_FMT" already "
+                                   "deleted, ignoring", record->cid);
+                return 0;
+            }
+            conv = conversation_new(cstate);
+        }
+    }
+
+    if (cstate->counted_flags)
+        delta_counts = xzmalloc(sizeof(int) * cstate->counted_flags->count);
+
+    /* IRIS-2534: check if it's the trash folder - XXX - should be separate
+     * conversation root or similar more useful method in future */
+    mbname_t *mbname = mbname_from_intname(mailbox->name);
+    if (!mbname)
+        return IMAP_MAILBOX_BADNAME;
+
+    const strarray_t *boxes = mbname_boxes(mbname);
+    if (strarray_size(boxes) == 1 && !strcmpsafe(strarray_nth(boxes, 0), "Trash"))
+        is_trash = 1;
+
+    mbname_free(&mbname);
+
+    /* calculate the changes */
+    if (old) {
+        /* decrease any relevent counts */
+        if (!(old->system_flags & FLAG_EXPUNGED)) {
+            delta_exists--;
+            delta_size -= old->size;
+            /* drafts don't update the 'unseen' counter so that
+             * they never turn a conversation "unread" */
+            if (!is_trash && !(old->system_flags & (FLAG_SEEN|FLAG_DRAFT)))
+                delta_unseen--;
+            if (cstate->counted_flags) {
+                for (i = 0; i < cstate->counted_flags->count; i++) {
+                    const char *flag = strarray_nth(cstate->counted_flags, i);
+                    if (mailbox_record_hasflag(mailbox, old, flag))
+                        delta_counts[i]--;
+                }
+            }
+        }
+        delta_num_records--;
+        modseq = MAX(modseq, old->modseq);
+        if (!new) {
+            r = conversations_set_guid(cstate, mailbox, old, /*add*/0);
+            if (r) return r;
+        }
+    }
+
+    if (new) {
+        /* add any counts */
+        if (!(new->system_flags & FLAG_EXPUNGED)) {
+            delta_exists++;
+            delta_size += new->size;
+            /* drafts don't update the 'unseen' counter so that
+             * they never turn a conversation "unread" */
+            if (!is_trash && !(new->system_flags & (FLAG_SEEN|FLAG_DRAFT)))
+                delta_unseen++;
+            if (cstate->counted_flags) {
+                for (i = 0; i < cstate->counted_flags->count; i++) {
+                    const char *flag = strarray_nth(cstate->counted_flags, i);
+                    if (mailbox_record_hasflag(mailbox, new, flag))
+                        delta_counts[i]++;
+                }
+            }
+        }
+        delta_num_records++;
+        modseq = MAX(modseq, new->modseq);
+        if (!old) {
+            r = conversations_set_guid(cstate, mailbox, new, /*add*/1);
+            if (r) return r;
+        }
+    }
+
+    /* XXX - combine this with the earlier cache parsing */
+    if (!mailbox_cacherecord(mailbox, record)) {
+        char *env = NULL;
+        char *envtokens[NUMENVTOKENS];
+        struct address addr = { NULL, NULL, NULL, NULL, NULL, NULL, 0 };
+
+        /* Need to find the sender */
+
+        /* +1 -> skip the leading paren */
+        env = xstrndup(cacheitem_base(record, CACHE_ENVELOPE) + 1,
+                       cacheitem_size(record, CACHE_ENVELOPE) - 1);
+
+        parse_cached_envelope(env, envtokens, VECTOR_SIZE(envtokens));
+
+        if (envtokens[ENV_FROM])
+            message_parse_env_address(envtokens[ENV_FROM], &addr);
+
+        const char *msgid = envtokens[ENV_MSGID];
+        const char *inreplyto = NULL;
+        if (record->system_flags & FLAG_DRAFT) {
+            /* non-drafts don't get an inreplyto, using it as both a value AND a flag */
+            inreplyto = envtokens[ENV_INREPLYTO];
+        }
+
+        /* XXX - internaldate vs gmtime? */
+        conversation_update_sender(conv,
+                                   addr.name, addr.route,
+                                   addr.mailbox, addr.domain,
+                                   record->gmtime, delta_exists);
+
+        conversation_update_thread(conv,
+                                   &record->guid,
+                                   record->internaldate,
+                                   msgid, inreplyto,
+                                   delta_exists);
+        free(env);
+    }
+
+    conversation_update(cstate, conv, mailbox->name,
+                        delta_num_records,
+                        delta_exists, delta_unseen,
+                        delta_size, delta_counts, modseq);
+
+    r = conversation_save(cstate, record->cid, conv);
+
+    conversation_free(conv);
+    free(delta_counts);
+    return r;
+}
+
+
 EXPORTED void conversation_update(struct conversations_state *state,
                          conversation_t *conv, const char *mboxname,
                          int delta_num_records,
@@ -1622,6 +2077,7 @@ EXPORTED void conversation_free(conversation_t *conv)
 {
     conv_folder_t *folder;
     conv_sender_t *sender;
+    conv_thread_t *thread;
 
     if (!conv) return;
 
@@ -1641,6 +2097,12 @@ EXPORTED void conversation_free(conversation_t *conv)
 
     free(conv->subject);
     free(conv->counts);
+
+    while ((thread = conv->thread)) {
+        conv->thread = thread->next;
+        free(thread);
+    }
+
     free(conv);
 }
 
@@ -1725,66 +2187,24 @@ EXPORTED int conversation_id_decode(conversation_id_t *cid, const char *text)
     return 1;
 }
 
-EXPORTED void conversations_rename_cid(struct conversations_state *state,
-                             conversation_id_t from_cid,
-                             conversation_id_t to_cid)
-{
-    uint64_t *valptr;
-
-    if (!from_cid)
-        return;
-
-    if (from_cid == to_cid)
-        return;
-
-    /* we never rename down! */
-    assert(from_cid < to_cid);
-
-    valptr = hashu64_lookup(from_cid, &state->cidrenames);
-    if (valptr) {
-        /* already there or better? */
-        if (*valptr >= to_cid)
-            return;
-        free(valptr);
-    }
-
-    valptr = xmalloc(sizeof(uint64_t));
-    *valptr = to_cid;
-
-    hashu64_insert(from_cid, valptr, &state->cidrenames);
-}
-
 static int folder_key_rename(struct conversations_state *state,
                              const char *from_name,
                              const char *to_name)
 {
-    const char *val;
-    size_t vallen;
-    char *oldkey = strconcat("F", from_name, (void *)NULL);
-    int r = 0;
+    conv_status_t status;
+    int r = conversation_getstatus(state, from_name, &status);
+    if (r) return r;
 
-    r = cyrusdb_fetch(state->db, oldkey, strlen(oldkey),
-                      &val, &vallen, &state->txn);
-    if (r) {
-        if (r == CYRUSDB_NOTFOUND) r = 0; /* nothing to delete */
-        goto done;
-    }
-
-    /* create before deleting so val is still valid */
     if (to_name) {
-        char *newkey = strconcat("F", to_name, (void *)NULL);
-        r = cyrusdb_store(state->db, newkey, strlen(newkey),
-                          val, vallen, &state->txn);
-        free(newkey);
-        if (r) goto done;
+        r = conversation_setstatus(state, to_name, &status);
+        if (r) return r;
+        return conversation_setstatus(state, from_name, NULL);
     }
 
-    r = cyrusdb_delete(state->db, oldkey, strlen(oldkey), &state->txn, 1);
+    /* you can't delete a folder until the messages are cleared */
+    assert(!status.exists);
 
- done:
-    free(oldkey);
-
-    return r;
+    return 0;
 }
 
 EXPORTED int conversations_rename_folder(struct conversations_state *state,
@@ -1894,6 +2314,17 @@ static int zero_f_cb(void *rock,
     return conversation_storestatus(state, key, keylen, &status);
 }
 
+static int zero_g_cb(void *rock,
+                     const char *key,
+                     size_t keylen,
+                     const char *val __attribute__((unused)),
+                     size_t vallen __attribute__((unused)))
+{
+    struct conversations_state *state = (struct conversations_state *)rock;
+    int r = cyrusdb_delete(state->db, key, keylen, &state->txn, /*force*/1);
+    return r;
+}
+
 EXPORTED int conversations_zero_counts(struct conversations_state *state)
 {
     int r = 0;
@@ -1905,6 +2336,11 @@ EXPORTED int conversations_zero_counts(struct conversations_state *state)
 
     /* wipe F counts */
     r = cyrusdb_foreach(state->db, "F", 1, NULL, zero_f_cb,
+                        state, &state->txn);
+    if (r) return r;
+
+    /* wipe G keys (there's no modseq kept, so we can just wipe them) */
+    r = cyrusdb_foreach(state->db, "G", 1, NULL, zero_g_cb,
                         state, &state->txn);
     if (r) return r;
 

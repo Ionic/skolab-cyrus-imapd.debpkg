@@ -52,32 +52,52 @@
 #define CHARSET_MERGESPACE (1<<2)
 #define CHARSET_SKIPHTML (1<<3)
 #define CHARSET_SNIPPET (1<<4)
+#define CHARSET_UNFOLD_SKIPWS (1<<5)
+#define CHARSET_MIME_UTF8 (1<<6)
+#define CHARSET_ESCAPEHTML (1<<8)
 
-#define CHARSET_UNKNOWN_CHARSET (-1)
+#define CHARSET_UNKNOWN_CHARSET (NULL)
+
+#include "unicode/ucnv.h"
 
 #include "util.h"
 
 typedef int comp_pat;
-typedef int charset_index;
+/*
+ * Charset identifies a character encoding.
+ * Use charset_lookupname to create an instance, and release it
+ * using charset_free.
+ *
+ * Caveats:
+ * * Two instances for the same character encoding are not pointer-equal.
+ *   Use string comparison of the charset_name to test for equality.
+ * * Instances are not safe to use for two simultaneous conversions. It is safe
+ *   (and recommended) to reuse an instance for consecutive conversions.
+ */
+typedef struct charset_converter* charset_t;
 
 extern int encoding_lookupname(const char *name);
 extern const char *encoding_name(int);
 
 /* ensure up to MAXTRANSLATION times expansion into buf */
-extern char *charset_convert(const char *s, charset_index charset, int flags);
+extern char *charset_convert(const char *s, charset_t charset, int flags);
 extern char *charset_decode_mimeheader(const char *s, int flags);
-extern char *charset_parse_mimeheader(const char *s);
+extern char *charset_parse_mimeheader(const char *s, int flags);
 extern char *charset_utf8_to_searchform(const char *s, int flags);
 
-extern const char *charset_name(charset_index);
-extern charset_index charset_lookupname(const char *name);
+
+extern charset_t charset_lookupname(const char *name);
+extern charset_t charset_lookupnumid(int id);
+extern void charset_free(charset_t *charset);
+
+extern const char *charset_name(charset_t);
 extern comp_pat *charset_compilepat(const char *s);
 extern void charset_freepat(comp_pat *pat);
 extern int charset_searchstring(const char *substr, comp_pat *pat,
                                 const char *s, size_t len, int flags);
 extern int charset_searchfile(const char *substr, comp_pat *pat,
                               const char *msg_base, size_t len,
-                              charset_index charset, int encoding, int flags);
+                              charset_t charset, int encoding, int flags);
 extern const char *charset_decode_mimebody(const char *msg_base, size_t len,
                                            int encoding, char **retval,
                                            size_t *outlen);
@@ -86,10 +106,16 @@ extern char *charset_encode_mimebody(const char *msg_base, size_t len,
                                      int *outlines);
 extern char *charset_qpencode_mimebody(const char *msg_base, size_t len,
                                        size_t *outlen);
-extern char *charset_to_utf8(const char *msg_base, size_t len, charset_index charset, int encoding);
+extern char *charset_to_utf8(const char *msg_base, size_t len, charset_t charset, int encoding);
+extern char *charset_to_imaputf7(const char *msg_base, size_t len, charset_t charset, int encoding);
+
 extern int charset_search_mimeheader(const char *substr, comp_pat *pat, const char *s, int flags);
 
 extern char *charset_encode_mimeheader(const char *header, size_t len);
+
+extern char *charset_unfold(const char *s, size_t len, int flags);
+
+extern int charset_decode(struct buf *dst, const char *src, size_t len, int encoding);
 
 /* Extract the body text for the message denoted by 'uid', convert its
    text to the canonical form for searching, and pass the converted text
@@ -98,7 +124,7 @@ extern char *charset_encode_mimeheader(const char *header, size_t len);
 extern int charset_extract(void (*cb)(const struct buf *text, void *rock),
                            void *rock,
                            const struct buf *data,
-                           charset_index charset, int encoding,
+                           charset_t charset, int encoding,
                            const char *subtype, int flags);
 
 #endif /* INCLUDED_CHARSET_H */

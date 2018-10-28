@@ -1,0 +1,68 @@
+
+**chk_cyrus**
+*************
+
+Perform a consistency check of the Cyrus IMAP mail spool.
+
+
+Synopsis
+========
+
+   **chk_cyrus** [ **-C** *config-file* ] [ **-P** *partition* | **-M** *mailbox* ]
+
+
+Description
+===========
+
+**chk_cyrus** is used to perform a consistency check on the cyrus
+datastore, and output a list of files/directories that are expected to
+exist, but do not.  Status messages are output to stderr, the list of
+files/directories is output to stdout.  This list can be passed to a
+backup program to aid a partial restoration, for instance.
+
+**chk_cyrus** reads its configuration options out of the imapd.conf(5)
+file unless specified otherwise by **-C**.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+-P partition
+
+   Limit to partition *partition*.  May not be specified with **-M**.
+
+-M mailbox
+
+   Only check mailbox *mailbox*.  May not be specified with **-P**.
+
+   Important: The mailbox must be specified in the internal format,
+     so rather than specifying "user/john/Trash@example.org", you will
+     want to specify "example.org!user.john.Trash".
+
+
+Examples
+========
+
+   **chk_cyrus -P** *default*
+
+   Perform consistancy checks on *default* partition.
+
+   **chk_cyrus -C** */usr/local/etc/imapd-slot1.conf* **-P** *default*
+
+   Perform consistancy checks on *default* partition using specified
+   configuration file.
+
+   **chk_cyrus -M** *user.marysmith*
+
+   Perform consistancy checks on mailbox *user.marysmith*.
+
+
+See Also
+========
+
+imapd.conf(5), master(8)

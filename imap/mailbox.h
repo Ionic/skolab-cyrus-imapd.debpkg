@@ -51,10 +51,10 @@
 #include "byteorder64.h"
 #include "conversations.h"
 #include "message_guid.h"
+#include "message.h"
 #include "ptrarray.h"
 #include "quota.h"
 #include "sequence.h"
-#include "sqldb.h"
 #include "util.h"
 
 #define MAX_MAILBOX_NAME 490
@@ -75,7 +75,7 @@
  * changed to be able to convert both backwards and forwards between the
  * new version and all supported previous versions */
 #define MAILBOX_MINOR_VERSION   13
-#define MAILBOX_CACHE_MINOR_VERSION 3
+#define MAILBOX_CACHE_MINOR_VERSION 6
 
 #define FNAME_HEADER "/cyrus.header"
 #define FNAME_INDEX "/cyrus.index"
@@ -215,6 +215,8 @@ struct index_change {
     uint32_t flags;
 };
 
+#define INDEX_MAP_SIZE 65536
+
 struct mailbox {
     int index_fd;
     int header_fd;
@@ -256,12 +258,12 @@ struct mailbox {
 
 #ifdef WITH_DAV
     struct caldav_db *local_caldav;
-    sqldb_t *local_caldav_alarm;
     struct carddav_db *local_carddav;
     struct webdav_db *local_webdav;
 #endif
 
     /* change management */
+    int silentchanges;
     int modseq_dirty;
     int header_dirty;
     int quota_dirty;
@@ -270,7 +272,7 @@ struct mailbox {
     quota_t quota_previously_used[QUOTA_NUMRESOURCES]; /* for quota change */
 
     /* index change map */
-    uint32_t index_change_map[256];
+    uint32_t index_change_map[INDEX_MAP_SIZE];
     struct index_change *index_changes;
     uint32_t index_change_alloc;
     uint32_t index_change_count;
@@ -280,9 +282,12 @@ struct mailbox {
 #define ITER_SKIP_EXPUNGED (1<<1)
 #define ITER_SKIP_DELETED (1<<2)
 
+/* pre-declare message_t to avoid circular dependency problems */
+typedef struct message message_t;
+
 struct mailbox_iter {
     struct mailbox *mailbox;
-    struct index_record record;
+    message_t *msg;
     modseq_t changedsince;
     uint32_t recno;
     uint32_t num_records;
@@ -515,7 +520,6 @@ extern void mailbox_close(struct mailbox **mailboxptr);
 extern int mailbox_delete(struct mailbox **mailboxptr);
 
 struct caldav_db *mailbox_open_caldav(struct mailbox *mailbox);
-sqldb_t *mailbox_open_caldav_alarm(struct mailbox *mailbox);
 struct carddav_db *mailbox_open_carddav(struct mailbox *mailbox);
 struct webdav_db *mailbox_open_webdav(struct mailbox *mailbox);
 
@@ -523,7 +527,7 @@ struct webdav_db *mailbox_open_webdav(struct mailbox *mailbox);
 extern int mailbox_refresh_index_header(struct mailbox *mailbox);
 extern int mailbox_write_header(struct mailbox *mailbox, int force);
 extern void mailbox_index_dirty(struct mailbox *mailbox);
-extern void mailbox_modseq_dirty(struct mailbox *mailbox);
+extern modseq_t mailbox_modseq_dirty(struct mailbox *mailbox);
 extern int mailbox_reload_index_record(struct mailbox *mailbox,
                                      struct index_record *record);
 extern int mailbox_rewrite_index_record(struct mailbox *mailbox,
@@ -565,7 +569,8 @@ extern int mailbox_expunge(struct mailbox *mailbox,
                            mailbox_decideproc_t *decideproc, void *deciderock,
                            unsigned *nexpunged, int event_type);
 extern void mailbox_archive(struct mailbox *mailbox,
-                            mailbox_decideproc_t *decideproc, void *deciderock);
+                            mailbox_decideproc_t *decideproc, void *deciderock, unsigned flags);
+extern void mailbox_remove_files_from_object_storage(struct mailbox *mailbox, unsigned flags);
 extern int mailbox_cleanup(struct mailbox *mailbox, int iscurrentdir,
                            mailbox_decideproc_t *decideproc, void *deciderock);
 extern void mailbox_unlock_index(struct mailbox *mailbox, struct statusdata *sd);
@@ -579,7 +584,7 @@ extern int mailbox_create(const char *name, uint32_t mbtype, const char *part, c
 
 extern int mailbox_copy_files(struct mailbox *mailbox, const char *newpart,
                               const char *newname, const char *newuniqueid);
-extern int mailbox_delete_cleanup(const char *part, const char *name, const char *uniqueid);
+extern int mailbox_delete_cleanup(struct mailbox *mailbox, const char *part, const char *name, const char *uniqueid);
 
 extern int mailbox_rename_copy(struct mailbox *oldmailbox,
                                const char *newname, const char *newpart,
@@ -613,11 +618,28 @@ extern int mailbox_get_annotate_state(struct mailbox *mailbox,
                                       unsigned int uid,
                                       struct annotate_state **statep);
 
+extern int mailbox_annotation_write(struct mailbox *mailbox, uint32_t uid,
+                                    const char *entry, const char *userid,
+                                    const struct buf *value);
+
+extern int mailbox_annotation_writemask(struct mailbox *mailbox, uint32_t uid,
+                                        const char *entry, const char *userid,
+                                        const struct buf *value);
+
+extern int mailbox_annotation_lookup(struct mailbox *mailbox, uint32_t uid,
+                                     const char *entry, const char *userid,
+                                     struct buf *value);
+
+
+extern int mailbox_annotation_lookupmask(struct mailbox *mailbox, uint32_t uid,
+                                         const char *entry, const char *userid,
+                                         struct buf *value);
+
 extern struct mailbox_iter *mailbox_iter_init(struct mailbox *mailbox,
                                               modseq_t changedsince,
                                               unsigned flags);
 extern void mailbox_iter_startuid(struct mailbox_iter *iter, uint32_t uid);
-extern const struct index_record *mailbox_iter_step(struct mailbox_iter *iter);
+extern const message_t *mailbox_iter_step(struct mailbox_iter *iter);
 extern void mailbox_iter_done(struct mailbox_iter **iterp);
 
 struct synccrcs mailbox_synccrcs(struct mailbox *mailbox, int recalc);
@@ -632,5 +654,8 @@ extern int mailbox_add_conversations(struct mailbox *mailbox);
 extern int mailbox_get_xconvmodseq(struct mailbox *mailbox, modseq_t *);
 extern int mailbox_update_xconvmodseq(struct mailbox *mailbox, modseq_t, int force);
 extern int mailbox_has_conversations(struct mailbox *mailbox);
+
+extern struct conversations_state *mailbox_get_cstate(struct mailbox *mailbox);
+
 
 #endif /* INCLUDED_MAILBOX_H */

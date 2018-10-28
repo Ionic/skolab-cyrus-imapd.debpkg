@@ -1,0 +1,65 @@
+
+IMAP Developer Guide
+********************
+
+
+Getting Started
+===============
+
+* Development Process
+
+* Overview of Cyrus development environment
+
+* GitHub guide
+
+* Compiling
+
+* Installing Cyrus
+
+* Developer Test Environment
+
+
+System files and Databases
+==========================
+
+* Namespaces: a developer view
+
+
+Resources
+=========
+
+* Developer Libraries
+
+
+Releasing
+=========
+
+* Releasing Cyrus IMAP
+
+  * Prerequisites
+
+  * Release notes
+
+  * Pre-release testing
+
+  * Linking up release notes
+
+  * Version tagging
+
+  * Releasing
+
+* Releasing new builds of ancient Cyrus IMAP versions
+
+  * Introduction
+
+  * Prerequisites
+
+  * Release notes and version update
+
+  * Pre-release testing
+
+  * Cross-pollination of release notes
+
+  * Building the release
+
+  * Releasing

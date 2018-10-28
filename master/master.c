@@ -71,6 +71,10 @@
 #include <math.h>
 #include <inttypes.h>
 
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
 #ifndef INADDR_NONE
 #define INADDR_NONE 0xffffffff
 #endif
@@ -136,7 +140,8 @@ const char *MASTER_CONFIG_FILENAME = DEFAULT_MASTER_CONFIG_FILENAME;
 #define SERVICE_MAX  INT_MAX-10
 #define SERVICEPARAM(x) ((x) ? x : "unknown")
 
-#define MAX_READY_FAILS     5
+#define MAX_READY_FAILS              5
+#define MAX_READY_FAIL_INTERVAL     10  /* 10 seconds */
 
 struct service *Services = NULL;
 static int allocservices = 0;
@@ -224,22 +229,38 @@ static void event_free(struct event *a)
     free(a);
 }
 
-static void get_daemon(char *path, unsigned size, const strarray_t *cmd)
+static void get_daemon(char *path, size_t size, const strarray_t *cmd)
 {
+    if (!size) return;
     if (cmd->data[0][0] == '/') {
         /* master lacks strlcpy, due to no libcyrus */
-        snprintf(path, size, "%s", cmd->data[0]);
+        strncpy(path, cmd->data[0], size - 1);
     }
     else snprintf(path, size, "%s/%s", LIBEXEC_DIR, cmd->data[0]);
+    path[size-1] = '\0';
 }
 
-static void get_prog(char *path, unsigned size, const strarray_t *cmd)
+static void get_prog(char *path, size_t size, const strarray_t *cmd)
 {
+    if (!size) return;
     if (cmd->data[0][0] == '/') {
         /* master lacks strlcpy, due to no libcyrus */
-        snprintf(path, size, "%s", cmd->data[0]);
+        strncpy(path, cmd->data[0], size - 1);
     }
     else snprintf(path, size, "%s/%s", SBIN_DIR, cmd->data[0]);
+    path[size-1] = '\0';
+}
+
+static void get_executable(char *path, size_t size, const strarray_t *cmd)
+{
+    struct stat statbuf;
+
+    if (!size) return;
+    get_daemon(path, size, cmd);
+    if (!stat(path, &statbuf)) return;
+    get_prog(path, size, cmd);
+    if (!stat(path, &statbuf)) return;
+    /* XXX - abort? */
 }
 
 static void get_statsock(int filedes[2])
@@ -412,7 +433,7 @@ static int verify_service_file(const strarray_t *filename)
     char path[PATH_MAX];
     struct stat statbuf;
 
-    get_daemon(path, sizeof(path), filename);
+    get_executable(path, sizeof(path), filename);
     if (stat(path, &statbuf)) return 0;
     if (! S_ISREG(statbuf.st_mode)) return 0;
     return statbuf.st_mode & S_IXUSR;
@@ -475,6 +496,12 @@ static void service_create(struct service *s)
                 EX_SOFTWARE);
 
     if (s->listen[0] == '/') { /* unix socket */
+        if (strlen(s->listen) >= sizeof(sunsock.sun_path)) {
+            syslog(LOG_ERR, "invalid listen '%s' (too long), disabling %s",
+                   s->listen, s->name);
+            service_forget_exec(s);
+            return;
+        }
         res0_is_local = 1;
         res0 = (struct addrinfo *)xzmalloc(sizeof(struct addrinfo));
         res0->ai_flags = AI_PASSIVE;
@@ -492,7 +519,14 @@ static void service_create(struct service *s)
         sunsock.sun_len = res0->ai_addrlen;
 #endif
         sunsock.sun_family = AF_UNIX;
-        strcpy(sunsock.sun_path, s->listen);
+
+        int r = snprintf(sunsock.sun_path, sizeof(sunsock.sun_path), "%s", s->listen);
+        if (r < 0 || (size_t) r >= sizeof(sunsock.sun_path)) {
+            /* belt and suspenders */
+            fatal("Serious software bug found: "
+                  "over-long listen path not detected earlier!",
+                  EX_SOFTWARE);
+        }
         unlink(s->listen);
     } else { /* inet socket */
         char *port;
@@ -697,7 +731,7 @@ static void run_startup(const char *name, const strarray_t *cmd)
     struct centry *c;
     char path[PATH_MAX];
 
-    get_prog(path, sizeof(path), cmd);
+    get_executable(path, sizeof(path), cmd);
 
     switch (pid = fork()) {
     case -1:
@@ -810,7 +844,7 @@ static void spawn_service(int si)
     if (service_is_fork_limited(s))
         return;
 
-    get_daemon(path, sizeof(path), s->exec);
+    get_executable(path, sizeof(path), s->exec);
 
     switch (p = fork()) {
     case -1:
@@ -936,7 +970,7 @@ static void spawn_schedule(struct timeval now)
         /* if a->exec is NULL, we just used the event to wake up,
          * so we actually don't need to exec anything at the moment */
         if(a->exec) {
-            get_prog(path, sizeof(path), a->exec);
+            get_executable(path, sizeof(path), a->exec);
             switch (p = fork()) {
             case -1:
                 syslog(LOG_CRIT,
@@ -1053,11 +1087,17 @@ static void reap_child(void)
                     s->nactive--;
                     s->ready_workers--;
                     if (!in_shutdown && failed) {
+                        time_t now = time(NULL);
+
                         syslog(LOG_WARNING,
                                "service %s/%s pid %d in READY state: "
                                "terminated abnormally",
                                SERVICEPARAM(s->name),
                                SERVICEPARAM(s->familyname), pid);
+                        if (now - s->lastreadyfail > MAX_READY_FAIL_INTERVAL) {
+                            s->nreadyfails = 0;
+                        }
+                        s->lastreadyfail = now;
                         if (++s->nreadyfails >= MAX_READY_FAILS && s->exec) {
                             syslog(LOG_ERR, "too many failures for "
                                    "service %s/%s, disabling until next SIGHUP",
@@ -2040,9 +2080,9 @@ int main(int argc, char **argv)
     p = getenv("CYRUS_VERBOSE");
     if (p) verbose = atoi(p) + 1;
 #ifdef HAVE_NETSNMP
-    while ((opt = getopt(argc, argv, "C:L:M:p:l:Ddj:vP:x:")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:L:M:p:l:Ddj:vVP:x:")) != EOF) {
 #else
-    while ((opt = getopt(argc, argv, "C:L:M:p:l:Ddj:v")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:L:M:p:l:Ddj:vV")) != EOF) {
 #endif
         switch (opt) {
         case 'C': /* alt imapd.conf file */
@@ -2086,8 +2126,20 @@ int main(int argc, char **argv)
             break;
 #endif
         case 'v':
-                verbose++;
-                break;
+            verbose++;
+            break;
+        case 'V':
+            /* print version information and exit */
+            /* XXX can't just call cyrus_version() because that would require
+             * XXX linking against libcyrus_imap */
+            printf("%s %s%s\n", PACKAGE_NAME, PACKAGE_VERSION,
+#ifdef EXTRA_IDENT
+                   "-" EXTRA_IDENT
+#else
+                   ""
+#endif
+            );
+            return 0;
         default:
             break;
         }
@@ -2360,7 +2412,7 @@ int main(int argc, char **argv)
     syslog(LOG_DEBUG, "ready for work");
 
     for (;;) {
-        int r, i, maxfd, total_children = 0;
+        int i, maxfd, ready_fds, total_children = 0;
         struct timeval tv, *tvptr;
         struct notify_message msg;
 #if defined(HAVE_UCDSNMP) || defined(HAVE_NETSNMP)
@@ -2479,73 +2531,99 @@ int main(int argc, char **argv)
         }
         maxfd++;                /* need 1 greater than maxfd */
 
-        /* how long to wait? - do now so that any scheduled wakeup
-         * calls get accounted for*/
-        tvptr = NULL;
-        if (schedule && !in_shutdown) {
-            double delay = timesub(&now, &schedule->mark);
-            if (delay > 0.0) {
-                timeval_set_double(&tv, delay);
+        int interrupted = 0;
+        do {
+            /* how long to wait? - do now so that any scheduled wakeup
+            * calls get accounted for*/
+            gettimeofday(&now, 0);
+            tvptr = NULL;
+            if (schedule && !in_shutdown) {
+                double delay = timesub(&now, &schedule->mark);
+                if (!interrupted && delay > 0.0) {
+                    timeval_set_double(&tv, delay);
+                }
+                else {
+                    tv.tv_sec = 0;
+                    tv.tv_usec = 0;
+                }
+                tvptr = &tv;
             }
-            else {
-                tv.tv_sec = 0;
-                tv.tv_usec = 0;
-            }
-            tvptr = &tv;
-        }
 
 #if defined(HAVE_UCDSNMP) || defined(HAVE_NETSNMP)
-        if (tvptr == NULL) blockp = 1;
-        snmp_select_info(&maxfd, &rfds, tvptr, &blockp);
+            if (tvptr == NULL) blockp = 1;
+            snmp_select_info(&maxfd, &rfds, tvptr, &blockp);
 #endif
-        errno = 0;
-        r = myselect(maxfd, &rfds, NULL, NULL, tvptr);
-        if (r == -1 && errno == EAGAIN) continue;
-        if (r == -1 && errno == EINTR) continue;
-        if (r == -1) {
-            /* uh oh */
-            fatalf(1, "select failed: %m");
-        }
+            errno = 0;
+            ready_fds = myselect(maxfd, &rfds, NULL, NULL, tvptr);
+
+            if (ready_fds < 0) {
+                switch (errno) {
+                case EAGAIN:
+                case EINTR:
+                    /* Try again to get valid rfds, this time without blocking so we
+                     * will definitely process messages without getting interrupted
+                     * again. */
+                    interrupted++;
+                    if (interrupted > 5) {
+                        syslog(LOG_WARNING, "Repeatedly interrupted, too many signals?");
+                        /* Fake a timeout */
+                        ready_fds = 0;
+                        FD_ZERO(&rfds);
+                    }
+                    break;
+                default:
+                    /* uh oh */
+                    fatalf(1, "select failed: %m");
+                }
+            }
+        } while (!in_shutdown && ready_fds < 0);
 
 #if defined(HAVE_UCDSNMP) || defined(HAVE_NETSNMP)
         /* check for SNMP queries */
-        snmp_read(&rfds);
-        snmp_timeout();
+        if (ready_fds > 0)
+            snmp_read(&rfds);
+        if (ready_fds == 0)
+            snmp_timeout();
 #endif
-        for (i = 0; i < nservices; i++) {
-            int x = Services[i].stat[0];
-            int y = Services[i].socket;
 
-            if ((x >= 0) && FD_ISSET(x, &rfds)) {
-                while ((r = read_msg(x, &msg)) == 0)
-                    process_msg(i, &msg);
+        if (ready_fds > 0) {
+            for (i = 0; i < nservices; i++) {
+                int x = Services[i].stat[0];
+                int y = Services[i].socket;
 
-                if (r == 2) {
-                    syslog(LOG_ERR,
-                        "got incorrectly sized response from child: %x", i);
-                    continue;
+                if ((x >= 0) && FD_ISSET(x, &rfds)) {
+                    while ((r = read_msg(x, &msg)) == 0)
+                        process_msg(i, &msg);
+
+                    if (r == 2) {
+                        syslog(LOG_ERR,
+                            "got incorrectly sized response from child: %x", i);
+                        continue;
+                    }
+                    if (r < 0) {
+                        syslog(LOG_ERR,
+                            "error while receiving message from child %x: %m", i);
+                        continue;
+                    }
                 }
-                if (r < 0) {
-                    syslog(LOG_ERR,
-                        "error while receiving message from child %x: %m", i);
-                    continue;
-                }
-            }
 
-            if (!in_shutdown && Services[i].exec &&
-                Services[i].nactive < Services[i].max_workers &&
-                Services[i].ready_workers == 0 &&
-                y >= 0 && FD_ISSET(y, &rfds))
-            {
-                /* huh, someone wants to talk to us */
-                spawn_service(i);
+                if (!in_shutdown && Services[i].exec &&
+                    Services[i].nactive < Services[i].max_workers &&
+                    Services[i].ready_workers == 0 &&
+                    y >= 0 && FD_ISSET(y, &rfds))
+                {
+                    /* huh, someone wants to talk to us */
+                    spawn_service(i);
+                }
             }
         }
+
         gettimeofday(&now, 0);
         child_janitor(now);
 
 #ifdef HAVE_NETSNMP
-        run_alarms();
+        if (ready_fds == 0)
+            run_alarms();
 #endif
     }
 

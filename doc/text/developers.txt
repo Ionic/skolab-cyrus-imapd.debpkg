@@ -1,0 +1,39 @@
+
+Developers
+**********
+
+* We need your help
+
+* Contribute docs
+
+  * Overview
+
+  * Documentation Tools
+
+  * Building the files
+
+  * Submitting updates
+
+  * Special Tags
+
+  * Conventions: Man Pages
+
+* Contribute code and tests
+
+  * Getting Started
+
+  * System files and Databases
+
+  * Resources
+
+  * Releasing
+
+* Cyrus.Works
+
+  * About Cyrus Works
+
+  * Testing
+
+  * How it works
+
+  * Adding Rules

@@ -107,12 +107,16 @@ static const struct search_engine *engine(void)
     }
 }
 
+EXPORTED search_snippet_markup_t default_snippet_markup = {
+    "<b>", "</b>", "..."
+};
+
 EXPORTED const char *search_part_as_string(int part)
 {
     static const char *names[SEARCH_NUM_PARTS] = {
         /* ANY */NULL, "FROM", "TO", "CC",
         "BCC", "SUBJECT", "LISTID", "TYPE",
-        "HEADERS", "BODY"
+        "HEADERS", "BODY", "LOCATION", "ATTACHMENTNAME"
     };
 
     return (part < 0 || part >= SEARCH_NUM_PARTS ? NULL : names[part]);
@@ -167,8 +171,8 @@ static int flush_batch(search_text_receiver_t *rx,
     /* prefetch files */
     for (i = 0 ; i < batch->count ; i++) {
         message_t *msg = ptrarray_nth(batch, i);
-        const char *fname;
 
+        const char *fname;
         r = message_get_fname(msg, &fname);
         if (r) return r;
         r = warmup_file(fname, 0, 0);
@@ -178,8 +182,7 @@ static int flush_batch(search_text_receiver_t *rx,
 
     for (i = 0 ; i < batch->count ; i++) {
         message_t *msg = ptrarray_nth(batch, i);
-        if (!r)
-            r = index_getsearchtext(msg, rx, 0);
+        if (!r) r = index_getsearchtext(msg, rx, 0);
         message_unref(&msg);
     }
     ptrarray_truncate(batch, 0);
@@ -203,27 +206,29 @@ EXPORTED int search_update_mailbox(search_text_receiver_t *rx,
     int was_partial = 0;
     int batch_size = search_batch_size();
     ptrarray_t batch = PTRARRAY_INITIALIZER;
-    const struct index_record *record;
-    int incremental = (flags & SEARCH_UPDATE_INCREMENTAL);
+    const message_t *msg;
 
     r = rx->begin_mailbox(rx, mailbox, flags);
     if (r) goto done;
 
     struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_EXPUNGED);
-    mailbox_iter_startuid(iter, rx->first_unindexed_uid(rx));
+    if (flags & SEARCH_UPDATE_INCREMENTAL) mailbox_iter_startuid(iter, rx->first_unindexed_uid(rx));
 
-    while ((record = mailbox_iter_step(iter))) {
-        if (rx->is_indexed(rx, record->uid))
-            continue;
-
-        if (incremental && batch.count >= batch_size) {
+    while ((msg = mailbox_iter_step(iter))) {
+        const struct index_record *record = msg_record(msg);
+        if ((flags & SEARCH_UPDATE_BATCH) && batch.count >= batch_size) {
             syslog(LOG_INFO, "search_update_mailbox batching %u messages to %s",
                    batch.count, mailbox->name);
             was_partial = 1;
             break;
         }
 
-        ptrarray_append(&batch, message_new_from_record(mailbox, record));
+        message_t *msg = message_new_from_record(mailbox, record);
+
+        if (!rx->is_indexed(rx, msg))
+            ptrarray_append(&batch, msg);
+        else
+            message_unref(&msg);
     }
     mailbox_iter_done(&iter);
 
@@ -249,12 +254,13 @@ EXPORTED int search_end_update(search_text_receiver_t *rx)
 
 EXPORTED search_text_receiver_t *search_begin_snippets(void *internalised,
                                                        int verbose,
+                                                       search_snippet_markup_t *markup,
                                                        search_snippet_cb_t proc,
                                                        void *rock)
 {
     const struct search_engine *se = engine();
     return (se->begin_snippets ? se->begin_snippets(internalised,
-                                    verbose, proc, rock) : NULL);
+                                    verbose, markup, proc, rock) : NULL);
 }
 
 EXPORTED int search_end_snippets(search_text_receiver_t *rx)

@@ -43,6 +43,8 @@
 #ifndef MESSAGE_GUID_H
 #define MESSAGE_GUID_H
 
+#include <stdint.h>
+
 /* Public interface */
 
 #define MESSAGE_GUID_SIZE         (20)    /* Size of GUID byte sequence */
@@ -61,6 +63,8 @@ struct message_guid {
 /* Generate GUID from message */
 void message_guid_generate(struct message_guid *guid,
                            const char *msg_base, unsigned long msg_len);
+
+void message_guid_permute32(struct message_guid *guid, uint32_t val);
 
 /* Copy a GUID */
 void message_guid_copy(struct message_guid *dst, const struct message_guid *src);
@@ -85,13 +89,13 @@ int message_guid_isnull(const struct message_guid *guid);
 /* Export Message GUID as byte sequence (MESSAGE_GUID_SIZE)
  * (Wrapper for memcpy() with current implementation)
  */
-void message_guid_export(const struct message_guid *guid, unsigned char *buf);
+void message_guid_export(const struct message_guid *guid, char *buf);
 
 /* Import Message GUID from packed sequence (MESSAGE_GUID_SIZE)
  * (Wrapper for memcpy() with current implementation)
  */
-void message_guid_import(struct message_guid *guid,
-                         const unsigned char *buf);
+const char *message_guid_import(struct message_guid *guid,
+                                const char *buf);
 
 
 /* Routines for manipulating text value */
@@ -100,6 +104,8 @@ void message_guid_import(struct message_guid *guid,
  * NULL => error. Should be impossible as entire range covered
  */
 const char *message_guid_encode(const struct message_guid *guid);
+
+const char *message_guid_encode_short(const struct message_guid *guid, size_t len);
 
 /* Sets Message GUID from text form. Returns 1 if valid
  */

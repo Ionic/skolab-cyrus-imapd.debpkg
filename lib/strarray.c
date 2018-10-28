@@ -144,6 +144,8 @@ EXPORTED strarray_t *strarray_dup(const strarray_t *sa)
     strarray_t *new = strarray_new();
     int i;
 
+    if (!sa) return new;
+
     strarray_truncate(new, sa->count);
     for (i = 0 ; i < sa->count ; i++)
         new->data[i] = xstrdup(sa->data[i]);
@@ -379,9 +381,9 @@ EXPORTED char **strarray_takevf(strarray_t *sa)
     return d;
 }
 
-EXPORTED void strarray_sort(strarray_t *sa, compar_t *cmp)
+EXPORTED void strarray_sort(strarray_t *sa, strarray_cmp_fn_t *cmp)
 {
-    qsort(sa->data, sa->count, sizeof(char *), (__compar_fn_t)cmp);
+    qsort(sa->data, sa->count, sizeof(char *), cmp);
 }
 
 

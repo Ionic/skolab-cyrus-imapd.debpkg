@@ -59,6 +59,7 @@
 
 #include <config.h>
 
+#include <libgen.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <errno.h>
@@ -90,7 +91,6 @@ struct mappedfile {
     size_t map_size;
 
     /* the file itself */
-    ino_t map_ino;
     int fd;
 
     /* tracking */
@@ -226,6 +226,7 @@ EXPORTED int mappedfile_readlock(struct mappedfile *mf)
             return -EIO;
         }
         if (sbuf.st_ino == sbuffile.st_ino) break;
+        buf_free(&mf->map_buf);
 
         newfd = open(mf->fname, O_RDWR, 0644);
         if (newfd == -1) {
@@ -240,11 +241,6 @@ EXPORTED int mappedfile_readlock(struct mappedfile *mf)
 
     mf->lock_status = MF_READLOCKED;
 
-    /* XXX - can we guarantee the fd isn't reused? */
-    if (mf->map_ino != sbuf.st_ino) {
-        buf_free(&mf->map_buf);
-    }
-
     _ensure_mapped(mf, sbuf.st_size, /*update*/0);
 
     return 0;
@@ -255,23 +251,21 @@ EXPORTED int mappedfile_writelock(struct mappedfile *mf)
     int r;
     struct stat sbuf;
     const char *lockfailaction;
+    int changed = 0;
 
     assert(mf->lock_status == MF_UNLOCKED);
     assert(mf->fd != -1);
     assert(mf->is_rw);
     assert(!mf->dirty);
 
-    r = lock_reopen(mf->fd, mf->fname, &sbuf, &lockfailaction);
+    r = lock_reopen_ex(mf->fd, mf->fname, &sbuf, &lockfailaction, &changed);
     if (r < 0) {
         syslog(LOG_ERR, "IOERROR: %s %s: %m", lockfailaction, mf->fname);
         return r;
     }
     mf->lock_status = MF_WRITELOCKED;
 
-    /* XXX - can we guarantee the fd isn't reused? */
-    if (mf->map_ino != sbuf.st_ino) {
-        buf_free(&mf->map_buf);
-    }
+    if (changed) buf_free(&mf->map_buf);
 
     _ensure_mapped(mf, sbuf.st_size, /*update*/0);
 
@@ -441,18 +435,40 @@ EXPORTED int mappedfile_truncate(struct mappedfile *mf, off_t offset)
 
 EXPORTED int mappedfile_rename(struct mappedfile *mf, const char *newname)
 {
-    int r;
+    char *copy = xstrdup(newname);
+    const char *dir = dirname(copy);
+    int r = 0;
+
+#if defined(O_DIRECTORY)
+    int dirfd = open(dir, O_RDONLY|O_DIRECTORY, 0600);
+#else
+    int dirfd = open(dir, O_RDONLY, 0600);
+#endif
+    if (dirfd < 0) {
+        syslog(LOG_ERR, "IOERROR: mappedfile opendir (%s, %s): %m", mf->fname, newname);
+        r = dirfd;
+        goto done;
+    }
 
     r = rename(mf->fname, newname);
     if (r < 0) {
-        syslog(LOG_ERR, "IOERROR: rename (%s, %s): %m", mf->fname, newname);
-        return r;
+        syslog(LOG_ERR, "IOERROR: mappedfile rename (%s, %s): %m", mf->fname, newname);
+        goto done;
+    }
+
+    r = fsync(dirfd);
+    if (r < 0) {
+        syslog(LOG_ERR, "IOERROR: mappedfile rename (%s, %s): %m", mf->fname, newname);
+        goto done;
     }
 
     free(mf->fname);
     mf->fname = xstrdup(newname);
 
-    return 0;
+ done:
+    if (dirfd >= 0) close(dirfd);
+    free(copy);
+    return r;
 }
 
 

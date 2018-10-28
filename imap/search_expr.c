@@ -1462,6 +1462,62 @@ static int search_keyword_match(message_t *m,
 
 /* ====================================================================== */
 
+static int search_time_t_cmp(message_t *m, const union search_value *v,
+                             void *internalised __attribute__((unused)),
+                             void *data1)
+{
+    int r;
+    time_t t;
+    int (*getter)(message_t *, time_t *) = (int(*)(message_t *, time_t *))data1;
+
+    r = getter(m, &t);
+    if (!r) {
+        if (t < v->t)
+            r = -1;
+        else if (t == v->t)
+            r = 0;
+        else
+            r = 1;
+    }
+    else
+        r = 0;
+    return r;
+}
+
+static int search_time_t_match(message_t *m, const union search_value *v,
+                               void *internalised __attribute__((unused)),
+                               void *data1)
+{
+    int r;
+    time_t t;
+    int (*getter)(message_t *, time_t *) = (int(*)(message_t *, time_t *))data1;
+
+    r = getter(m, &t);
+    if (!r)
+        r = (v->t == t);
+    else
+        r = 0;
+
+    return r;
+}
+
+static void search_time_t_serialise(struct buf *b, const union search_value *v)
+{
+    buf_printf(b, "%lld", (long long)v->t);
+}
+
+static int search_time_t_unserialise(struct protstream *prot, union search_value *v)
+{
+    int c;
+    char tmp[32];
+
+    c = getseword(prot, tmp, sizeof(tmp));
+    v->t = strtoll(tmp, NULL, 10);
+    return c;
+}
+
+/* ====================================================================== */
+
 static int search_uint64_cmp(message_t *m, const union search_value *v,
                              void *internalised __attribute__((unused)),
                              void *data1)
@@ -1929,13 +1985,17 @@ struct searchmsg_rock
     int result;
 };
 
-static int searchmsg_cb(int partno, int charset, int encoding,
-                        const char *subtype __attribute((unused)),
+static int searchmsg_cb(int isbody, charset_t charset, int encoding,
+                        const char *type __attribute__((unused)),
+                        const char *subtype __attribute__((unused)),
+                        const struct param *type_params __attribute__((unused)),
+                        const char *disposition __attribute__((unused)),
+                        const struct param *disposition_params __attribute__((unused)),
                         struct buf *data, void *rock)
 {
     struct searchmsg_rock *sr = (struct searchmsg_rock *)rock;
 
-    if (!partno) {
+    if (!isbody) {
         /* header-like */
         if (sr->skipheader) {
             sr->skipheader = 0; /* Only skip top-level message header */
@@ -1946,8 +2006,7 @@ static int searchmsg_cb(int partno, int charset, int encoding,
     }
     else {
         /* body-like */
-        if (charset < 0 || charset == 0xffff)
-             return 0;
+        if (charset == CHARSET_UNKNOWN_CHARSET) return 0;
         sr->result = charset_searchfile(sr->substr, sr->pat,
                                         data->s, data->len,
                                         charset, encoding, charset_flags);
@@ -1965,7 +2024,7 @@ static int search_text_match(message_t *m, const union search_value *v,
     sr.pat = (comp_pat *)internalised;
     sr.skipheader = (int)(unsigned long)data1;
     sr.result = 0;
-    message_foreach_text_section(m, searchmsg_cb, &sr);
+    message_foreach_section(m, searchmsg_cb, &sr);
     return sr.result;
 }
 
@@ -2277,10 +2336,10 @@ EXPORTED void search_attr_init(void)
             SEARCH_PART_NONE,
             SEARCH_COST_INDEX,
             /*internalise*/NULL,
-            search_uint32_cmp,
-            search_uint32_match,
-            search_uint32_serialise,
-            search_uint32_unserialise,
+            search_time_t_cmp,
+            search_time_t_match,
+            search_time_t_serialise,
+            search_time_t_unserialise,
             /*get_countability*/NULL,
             /*duplicate*/NULL,
             /*free*/NULL,
@@ -2291,10 +2350,10 @@ EXPORTED void search_attr_init(void)
             SEARCH_PART_NONE,
             SEARCH_COST_INDEX,
             /*internalise*/NULL,
-            search_uint32_cmp,
-            search_uint32_match,
-            search_uint32_serialise,
-            search_uint32_unserialise,
+            search_time_t_cmp,
+            search_time_t_match,
+            search_time_t_serialise,
+            search_time_t_unserialise,
             /*get_countability*/NULL,
             /*duplicate*/NULL,
             /*free*/NULL,
@@ -2341,6 +2400,48 @@ EXPORTED void search_attr_init(void)
             search_string_duplicate,
             search_string_free,
             (void *)0       /* skipheader flag */
+        },{
+            "date",
+            /*flags*/0,
+            SEARCH_PART_NONE,
+            SEARCH_COST_INDEX,
+            /*internalise*/NULL,
+            search_time_t_cmp,
+            search_time_t_match,
+            search_time_t_serialise,
+            search_time_t_unserialise,
+            /*get_countability*/NULL,
+            /*duplicate*/NULL,
+            /*free*/NULL,
+            (void *)message_get_gmtime
+        },{
+            "location",     /* for iCalendar */
+            SEA_FUZZABLE,
+            SEARCH_PART_LOCATION,
+            SEARCH_COST_BODY,
+            search_string_internalise,
+            /*cmp*/NULL,
+            search_string_match,
+            search_string_serialise,
+            search_string_unserialise,
+            /*get_countability*/NULL,
+            search_string_duplicate,
+            search_string_free,
+            (void *)0
+        },{
+            "attachmentname",
+            SEA_FUZZABLE,
+            SEARCH_PART_ATTACHMENTNAME,
+            SEARCH_COST_BODY,
+            search_string_internalise,
+            /*cmp*/NULL,
+            search_string_match,
+            search_string_serialise,
+            search_string_unserialise,
+            /*get_countability*/NULL,
+            search_string_duplicate,
+            search_string_free,
+            (void *)0
         }
     };
 
@@ -2407,6 +2508,8 @@ EXPORTED const search_attr_t *search_attr_find_field(const char *field)
         attr = (search_attr_t *)xzmalloc(sizeof(search_attr_t));
         *attr = proto;
         attr->name = key;
+        attr->cost = (mailbox_cached_header(field) != BIT32_MAX)
+                   ? SEARCH_COST_CACHE : SEARCH_COST_BODY;
         attr->part = (config_getswitch(IMAPOPT_SEARCH_INDEX_HEADERS)
                         ? SEARCH_PART_HEADERS : -1);
         attr->data1 = strchr(key, ':')+1;

@@ -58,6 +58,9 @@
 #include <sys/wait.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <time.h>
+#include <stdbool.h>
+#include <errno.h>
 
 #include <sasl/sasl.h>
 
@@ -131,6 +134,7 @@ const int config_need_data = CONFIG_NEED_PARTITION_DATA;
 static int imaps = 0;
 static sasl_ssf_t extprops_ssf = 0;
 static int nosaslpasswdcheck = 0;
+static int apns_enabled = 0;
 
 /* PROXY STUFF */
 /* we want a list of our outgoing connections here and which one we're
@@ -156,6 +160,9 @@ struct backend *backend_current = NULL;
 
 /* our cached connections */
 struct backend **backend_cached = NULL;
+
+/* cached connection to mupdate master (for multiple XFER and MUPDATEPUSH) */
+static mupdate_handle *mupdate_h = NULL;
 
 /* are we doing virtdomains with multiple IPs? */
 static int disable_referrals;
@@ -222,17 +229,14 @@ struct namespace imapd_namespace;
 /* track if we're idling */
 static int idling = 0;
 
-static const struct mbox_name_attribute {
-    int flag;
-    const char *id;
-} mbox_name_attributes[] = {
+const struct mbox_name_attribute mbox_name_attributes[] = {
     /* from RFC 3501 */
     { MBOX_ATTRIBUTE_NOINFERIORS,   "\\Noinferiors"   },
     { MBOX_ATTRIBUTE_NOSELECT,      "\\Noselect"      },
     { MBOX_ATTRIBUTE_MARKED,        "\\Marked"        },
     { MBOX_ATTRIBUTE_UNMARKED,      "\\Unmarked"      },
 
-    /* from draft-ietf-imapext-list-extensions-18.txt */
+    /* from RFC 5258 */
     { MBOX_ATTRIBUTE_NONEXISTENT,   "\\NonExistent"   },
     { MBOX_ATTRIBUTE_SUBSCRIBED,    "\\Subscribed"    },
     { MBOX_ATTRIBUTE_REMOTE,        "\\Remote"        },
@@ -257,20 +261,24 @@ struct list_rock {
     struct listargs *listargs;
     strarray_t *subs;
     char *last_name;
-    int last_attributes;
+    mbentry_t *last_mbentry;
+    uint32_t last_attributes;
+    int last_category;
+    hash_table server_table;    /* for proxying */
 };
 
 /* Information about one mailbox name that LIST returns */
 struct list_entry {
-    const char *name;
-    int attributes; /* bitmap of MBOX_ATTRIBUTE_* */
+    char *extname;
+    mbentry_t *mbentry;
+    uint32_t attributes; /* bitmap of MBOX_ATTRIBUTE_* */
 };
 
 /* structure that list_data_recursivematch passes its callbacks */
 struct list_rock_recursivematch {
     struct listargs *listargs;
-    struct hash_table table;    /* maps mailbox names to attributes (int *) */
-    int count;                  /* # of entries in table */
+    struct hash_table table;  /* maps mailbox names to list_entries */
+    int count;                /* # of entries in table */
     struct list_entry *array;
 };
 
@@ -293,9 +301,6 @@ static struct capa_struct base_capabilities[] = {
     { "LITERAL+",              3 },
     { "ID",                    3 },
     { "ENABLE",                3 },
-#ifdef ENABLE_APPLEPUSHSERVICE
-    { "XAPPLEPUSHSERVICE",     3 }, /* apple push service for mail.app */
-#endif
 /* post-auth capabilities */
     { "ACL",                   2 },
     { "RIGHTS=kxten",          2 },
@@ -315,9 +320,10 @@ static struct capa_struct base_capabilities[] = {
     { "SORT",                  2 },
     { "SORT=MODSEQ",           2 },
     { "SORT=DISPLAY",          2 },
-    { "SORT=UID",              2 },  /* not standard */
+    { "SORT=UID",              2 }, /* not standard */
     { "THREAD=ORDEREDSUBJECT", 2 },
     { "THREAD=REFERENCES",     2 },
+    { "THREAD=REFS",           2 }, /* draft-ietf-morg-inthread */
     { "ANNOTATEMORE",          2 },
     { "ANNOTATE-EXPERIMENT-1", 2 },
     { "METADATA",              2 },
@@ -328,9 +334,9 @@ static struct capa_struct base_capabilities[] = {
     { "WITHIN",                2 },
     { "QRESYNC",               2 },
     { "SCAN",                  2 },
-    { "XLIST",                 2 },
-    { "XMOVE",                 2 },
-    { "MOVE",                  2 }, /* draft */
+    { "XLIST",                 2 }, /* not standard */
+    { "XMOVE",                 2 }, /* not standard */
+    { "MOVE",                  2 },
     { "SPECIAL-USE",           2 },
     { "CREATE-SPECIAL-USE",    2 },
     { "DIGEST=SHA1",           2 }, /* not standard */
@@ -407,9 +413,10 @@ static int do_xconvfetch(struct dlist *cidlist,
 static void cmd_xsnippets(char *tag);
 static void cmd_xstats(char *tag, int c);
 
-#ifdef ENABLE_APPLEPUSHSERVICE
-static void cmd_xapplepushservice(const char *tag, struct applepushserviceargs *applepushserviceargs);
-#endif
+static void cmd_xapplepushservice(const char *tag,
+                                  struct applepushserviceargs *applepushserviceargs);
+static void cmd_xbackup(const char *tag, const char *mailbox,
+                        const char *channel);
 
 #ifdef HAVE_SSL
 static void cmd_urlfetch(char *tag);
@@ -436,6 +443,8 @@ static void cmd_syncapply(const char *tag, struct dlist *kl,
                       struct sync_reserve_list *reserve_list);
 static void cmd_syncrestart(const char *tag, struct sync_reserve_list **reserve_listp,
                        int realloc);
+static void cmd_syncrestore(const char *tag, struct dlist *kin,
+                            struct sync_reserve_list *reserve_list);
 static void cmd_xkillmy(const char *tag, const char *cmdname);
 static void cmd_xforever(const char *tag);
 static void cmd_xmeid(const char *tag, const char *id);
@@ -476,12 +485,11 @@ static char *canonical_list_pattern(const char *reference,
                                     const char *pattern);
 static void canonical_list_patterns(const char *reference,
                                     strarray_t *patterns);
-static int list_cb(const char *name, int matchlen, int maycreate,
-                   void *rock);
-static int subscribed_cb(const char *name, int matchlen, int maycreate,
-                         void *rock);
+static int list_cb(struct findall_data *data, void *rock);
+static int subscribed_cb(struct findall_data *data, void *rock);
 static void list_data(struct listargs *listargs);
-static int list_data_remote(char *tag, struct listargs *listargs);
+static int list_data_remote(struct backend *be, char *tag,
+                            struct listargs *listargs, strarray_t *subs);
 
 static void clear_id();
 
@@ -649,6 +657,8 @@ static void imapd_refer(const char *tag,
 
     prot_printf(imapd_out, "%s NO [REFERRAL %s] Remote mailbox.\r\n",
                 tag, url);
+
+    free(imapurl.freeme);
 }
 
 /* wrapper for mboxlist_lookup that will force a referral if we are remote
@@ -725,6 +735,8 @@ static void imapd_reset(void)
     if (backend_cached) free(backend_cached);
     backend_cached = NULL;
     backend_inbox = backend_current = NULL;
+    if (mupdate_h) mupdate_disconnect(&mupdate_h);
+    mupdate_h = NULL;
     proxy_cmdcnt = 0;
     disable_referrals = 0;
     supports_referrals = 0;
@@ -822,7 +834,7 @@ static void imapd_reset(void)
  */
 int service_init(int argc, char **argv, char **envp)
 {
-    int opt;
+    int opt, events;
 
     if (geteuid() == 0) fatal("must run as the Cyrus user", EC_USAGE);
     setproctitle_init(argc, argv, envp);
@@ -850,7 +862,9 @@ int service_init(int argc, char **argv, char **envp)
     idle_init();
 
     /* setup for mailbox event notifications */
-    mboxevent_init();
+    events = mboxevent_init();
+    apns_enabled =
+      (events & EVENT_APPLEPUSHSERVICE) && config_getstring(IMAPOPT_APS_TOPIC);
 
     search_attr_init();
 
@@ -994,7 +1008,7 @@ int service_main(int argc __attribute__((unused)),
         mboxevent_set_access(mboxevent, saslprops.iplocalport,
                              saslprops.ipremoteport, imapd_userid, NULL, 1);
 
-        mboxevent_notify(mboxevent);
+        mboxevent_notify(&mboxevent);
         mboxevent_free(&mboxevent);
     }
 
@@ -1077,6 +1091,7 @@ void shut_down(int code)
         i++;
     }
     if (backend_cached) free(backend_cached);
+    if (mupdate_h) mupdate_disconnect(&mupdate_h);
 
     if (idling)
         idle_stop(index_mboxname(imapd_index));
@@ -1208,9 +1223,7 @@ static void cmdloop(void)
     double commandmintimerd = 0.0;
     struct sync_reserve_list *reserve_list =
         sync_reserve_list_create(SYNC_MESSAGE_LIST_HASH_SIZE);
-#ifdef ENABLE_APPLEPUSHSERVICE
     struct applepushserviceargs applepushserviceargs;
-#endif
 
     prot_printf(imapd_out, "* OK [CAPABILITY ");
     capa_response(CAPA_PREAUTH);
@@ -2050,6 +2063,8 @@ static void cmdloop(void)
                 snmp_increment(SCAN_COUNT, 1);
             }
             else if (!strcmp(cmd.s, "Syncapply")) {
+                if (!imapd_userisadmin) goto badcmd;
+
                 struct dlist *kl = sync_parseline(imapd_in);
 
                 if (kl) {
@@ -2059,6 +2074,8 @@ static void cmdloop(void)
                 else goto extraargs;
             }
             else if (!strcmp(cmd.s, "Syncget")) {
+                if (!imapd_userisadmin) goto badcmd;
+
                 struct dlist *kl = sync_parseline(imapd_in);
 
                 if (kl) {
@@ -2068,11 +2085,24 @@ static void cmdloop(void)
                 else goto extraargs;
             }
             else if (!strcmp(cmd.s, "Syncrestart")) {
+                if (!imapd_userisadmin) goto badcmd;
+
                 if (c == '\r') c = prot_getc(imapd_in);
                 if (c != '\n') goto extraargs;
 
                 /* just clear the GUID cache */
                 cmd_syncrestart(tag.s, &reserve_list, 1);
+            }
+            else if (!strcmp(cmd.s, "Syncrestore")) {
+                if (!imapd_userisadmin) goto badcmd;
+
+                struct dlist *kl = sync_parseline(imapd_in);
+
+                if (kl) {
+                    cmd_syncrestore(tag.s, kl, reserve_list);
+                    dlist_free(&kl);
+                }
+                else goto extraargs;
             }
             else goto badcmd;
             break;
@@ -2191,7 +2221,31 @@ static void cmdloop(void)
             break;
 
         case 'X':
-            if (!strcmp(cmd.s, "Xconvfetch")) {
+            if (!strcmp(cmd.s, "Xbackup")) {
+                int havechannel = 0;
+
+                if (!config_getswitch(IMAPOPT_XBACKUP_ENABLED))
+                    goto badcmd;
+
+                /* user */
+                if (c != ' ') goto missingargs;
+                c = getastring(imapd_in, imapd_out, &arg1);
+
+                /* channel */
+                if (c == ' ') {
+                    havechannel = 1;
+                    c = getword(imapd_in, &arg2);
+                    if (c == EOF) goto missingargs;
+                }
+
+                if (c == '\r') c = prot_getc(imapd_in);
+                if (c != '\n') goto extraargs;
+
+                cmd_xbackup(tag.s, arg1.s, havechannel ? arg2.s : NULL);
+
+//              snmp_increment(XBACKUP_COUNT, 1);
+            }
+            else if (!strcmp(cmd.s, "Xconvfetch")) {
                 cmd_xconvfetch(tag.s);
 
 //              snmp_increment(XCONVFETCH_COUNT, 1);
@@ -2312,8 +2366,7 @@ static void cmdloop(void)
                 cmd_xmeid(tag.s, arg1.s);
             }
 
-#ifdef ENABLE_APPLEPUSHSERVICE
-            else if (!strcmp(cmd.s, "Xapplepushservice")) {
+            else if (apns_enabled && !strcmp(cmd.s, "Xapplepushservice")) {
                 if (c != ' ') goto missingargs;
 
                 memset(&applepushserviceargs, 0, sizeof(struct applepushserviceargs));
@@ -2366,7 +2419,6 @@ static void cmdloop(void)
 
                 cmd_xapplepushservice(tag.s, &applepushserviceargs);
             }
-#endif
 
             else goto badcmd;
             break;
@@ -2397,42 +2449,44 @@ static void cmdloop(void)
         continue;
 
     nomailbox:
-        prot_printf(imapd_out, "%s BAD Please select a mailbox first\r\n", tag.s);
+        prot_printf(imapd_out,
+                    "%s BAD Please select a mailbox first\r\n", tag.s);
         eatline(imapd_in, c);
         continue;
 
-#ifdef ENABLE_APPLEPUSHSERVICE
     aps_missingargs:
         buf_free(&applepushserviceargs.aps_account_id);
         buf_free(&applepushserviceargs.aps_device_token);
         buf_free(&applepushserviceargs.aps_subtopic);
         strarray_fini(&applepushserviceargs.mailboxes);
-#endif
+
     missingargs:
-        prot_printf(imapd_out, "%s BAD Missing required argument to %s\r\n", tag.s, cmd.s);
+        prot_printf(imapd_out,
+                    "%s BAD Missing required argument to %s\r\n", tag.s, cmd.s);
         eatline(imapd_in, c);
         continue;
 
-#ifdef ENABLE_APPLEPUSHSERVICE
     aps_extraargs:
         buf_free(&applepushserviceargs.aps_account_id);
         buf_free(&applepushserviceargs.aps_device_token);
         buf_free(&applepushserviceargs.aps_subtopic);
         strarray_fini(&applepushserviceargs.mailboxes);
-#endif
+
     extraargs:
-        prot_printf(imapd_out, "%s BAD Unexpected extra arguments to %s\r\n", tag.s, cmd.s);
+        prot_printf(imapd_out,
+                    "%s BAD Unexpected extra arguments to %s\r\n", tag.s, cmd.s);
         eatline(imapd_in, c);
         continue;
 
     badsequence:
-        prot_printf(imapd_out, "%s BAD Invalid sequence in %s\r\n", tag.s, cmd.s);
+        prot_printf(imapd_out,
+                    "%s BAD Invalid sequence in %s\r\n", tag.s, cmd.s);
         eatline(imapd_in, c);
         continue;
 
     badpartition:
-        prot_printf(imapd_out, "%s BAD Invalid partition name in %s\r\n",
-               tag.s, cmd.s);
+        prot_printf(imapd_out,
+                    "%s BAD Invalid partition name in %s\r\n", tag.s, cmd.s);
         eatline(imapd_in, c);
         continue;
     }
@@ -2490,7 +2544,7 @@ static void authentication_success(void)
         mboxevent_set_access(mboxevent, saslprops.iplocalport,
                              saslprops.ipremoteport, imapd_userid, NULL, 1);
 
-        mboxevent_notify(mboxevent);
+        mboxevent_notify(&mboxevent);
         mboxevent_free(&mboxevent);
     }
 
@@ -2539,7 +2593,7 @@ static void cmd_login(char *tag, char *user)
     unsigned userlen;
     const char *canon_user = userbuf;
     const void *val;
-    char c;
+    int c;
     struct buf passwdbuf;
     char *passwd;
     const char *reply = NULL;
@@ -2896,14 +2950,11 @@ static void clear_id() {
 static void cmd_id(char *tag)
 {
     int c = EOF, npair = 0;
-    int is_ios = 0;
     static struct buf arg, field;
 
     /* check if we've already had an ID in non-authenticated state */
     if (!imapd_userid && imapd_id.did_id) {
-        prot_printf(imapd_out,
-                    "%s NO Only one Id allowed in non-authenticated state\r\n",
-                    tag);
+        prot_printf(imapd_out, "%s OK NIL\r\n", tag);
         eatline(imapd_in, c);
         return;
     }
@@ -2971,9 +3022,6 @@ static void cmd_id(char *tag)
             }
 
             if (!strcmp(field.s, "os") && !strcmp(arg.s, "iOS")) {
-                is_ios = 1;
-            }
-            if (is_ios && !strcmp(field.s, "os-version") && (arg.s[0] == '7' || arg.s[0] == '8' || arg.s[0] == '9')) {
                 imapd_id.quirks |= QUIRK_SEARCHFUZZY;
             }
 
@@ -3015,7 +3063,7 @@ static void cmd_id(char *tag)
                 buf_printf(&logbuf, "\"%s\"", val);
         }
 
-        syslog(LOG_INFO, "client id:%s", buf_cstring(&logbuf));
+        syslog(LOG_INFO, "client id sessionid=<%s>:%s", session_id(), buf_cstring(&logbuf));
         buf_free(&logbuf);
     }
 
@@ -3037,6 +3085,25 @@ static void cmd_id(char *tag)
     imapd_id.did_id = 1;
 }
 
+static bool deadline_exceeded(const struct timespec *d)
+{
+    struct timespec now;
+
+    if (d->tv_sec <= 0) {
+        /* No deadline configured */
+        return false;
+    }
+
+    errno = 0;
+    if (clock_gettime(CLOCK_MONOTONIC, &now) == -1) {
+        syslog(LOG_ERR, "clock_gettime (%d %m): error reading clock", errno);
+        return false;
+    }
+
+    return now.tv_sec > d->tv_sec ||
+           (now.tv_sec == d->tv_sec && now.tv_nsec > d->tv_nsec);
+}
+
 /*
  * Perform an IDLE command
  */
@@ -3046,6 +3113,26 @@ static void cmd_idle(char *tag)
     int flags;
     static struct buf arg;
     static int idle_period = -1;
+    static time_t idle_timeout = -1;
+    struct timespec deadline = { 0, 0 };
+
+    if (idle_timeout == -1) {
+        idle_timeout = config_getint(IMAPOPT_IMAPIDLETIMEOUT);
+        if (idle_timeout <= 0) {
+            idle_timeout = config_getint(IMAPOPT_TIMEOUT);
+        }
+        idle_timeout *= 60; /* unit is minutes */
+    }
+
+    if (idle_timeout > 0) {
+        errno = 0;
+        if (clock_gettime(CLOCK_MONOTONIC, &deadline) == -1) {
+            syslog(LOG_ERR, "clock_gettime (%d %m): error reading clock",
+                   errno);
+        } else {
+            deadline.tv_sec += idle_timeout;
+        }
+    }
 
     if (!backend_current) {  /* Local mailbox */
 
@@ -3062,6 +3149,13 @@ static void cmd_idle(char *tag)
 
         index_release(imapd_index);
         while ((flags = idle_wait(imapd_in->fd))) {
+            if (deadline_exceeded(&deadline)) {
+                syslog(LOG_DEBUG, "timeout for user '%s' while idling",
+                       imapd_userid);
+                shut_down(0);
+                break;
+            }
+
             if (flags & IDLE_INPUT) {
                 /* Get continuation data */
                 c = getword(imapd_in, &arg);
@@ -3094,7 +3188,8 @@ static void cmd_idle(char *tag)
         idle_stop(index_mboxname(imapd_index));
     }
     else {  /* Remote mailbox */
-        int done = 0, shutdown = 0;
+        int done = 0;
+        enum { shutdown_skip, shutdown_bye, shutdown_silent } shutdown = shutdown_skip;
         char buf[2048];
 
         /* get polling period */
@@ -3126,6 +3221,14 @@ static void cmd_idle(char *tag)
 
         /* Pipe updates to client while waiting for end of command */
         while (!done) {
+            if (deadline_exceeded(&deadline)) {
+                syslog(LOG_DEBUG,
+                       "timeout for user '%s' while idling on remote mailbox",
+                       imapd_userid);
+                shutdown = shutdown_silent;
+                goto done;
+            }
+
             /* Flush any buffered output */
             prot_flush(imapd_out);
 
@@ -3134,7 +3237,8 @@ static void cmd_idle(char *tag)
                 (shutdown_file(buf, sizeof(buf)) ||
                  (imapd_userid &&
                   userdeny(imapd_userid, config_ident, buf, sizeof(buf))))) {
-                shutdown = done = 1;
+                done = 1;
+                shutdown = shutdown_bye;
                 goto done;
             }
 
@@ -3158,12 +3262,22 @@ static void cmd_idle(char *tag)
             pipe_until_tag(backend_current, tag, 0);
         }
 
-        if (shutdown) {
+        switch (shutdown) {
+        case shutdown_bye:
+            ;
             char *p;
 
             for (p = buf; *p == '['; p++); /* can't have [ be first char */
             prot_printf(imapd_out, "* BYE [ALERT] %s\r\n", p);
+            /* fallthrough */
+            GCC_FALLTHROUGH
+
+        case shutdown_silent:
             shut_down(0);
+            break;
+        case shutdown_skip:
+        default:
+            break;
         }
     }
 
@@ -3191,17 +3305,23 @@ static void capa_response(int flags)
     int need_space = 0;
     int i;
 
+    int lminus = config_getswitch(IMAPOPT_LITERALMINUS);
+
     for (i = 0; base_capabilities[i].str; i++) {
+        const char *capa = base_capabilities[i].str;
         /* Filter capabilities if requested */
-        if (capa_is_disabled(base_capabilities[i].str))
+        if (capa_is_disabled(capa))
             continue;
         /* Don't show "MAILBOX-REFERRALS" if disabled by config */
         if (config_getswitch(IMAPOPT_PROXYD_DISABLE_MAILBOX_REFERRALS) &&
-            !strcmp(base_capabilities[i].str, "MAILBOX-REFERRALS"))
+            !strcmp(capa, "MAILBOX-REFERRALS"))
             continue;
         /* Don't show if they're not shown at this level of login */
         if (!(base_capabilities[i].mask & flags))
             continue;
+        /* cheap and nasty version of LITERAL- support - just say so */
+        if (lminus && !strcmp(capa, "LITERAL+"))
+            capa = "LITERAL-";
         /* print the capability */
         if (need_space) prot_putc(' ', imapd_out);
         else need_space = 1;
@@ -3210,6 +3330,10 @@ static void capa_response(int flags)
 
     if (config_mupdate_server) {
         prot_printf(imapd_out, " MUPDATE=mupdate://%s/", config_mupdate_server);
+    }
+
+    if (apns_enabled) {
+        prot_printf(imapd_out, " XAPPLEPUSHSERVICE");
     }
 
     if (tls_enabled() && !imapd_starttls_done && !imapd_authstate) {
@@ -3365,7 +3489,7 @@ static int catenate_text(FILE *f, unsigned *totalsize, int *binary,
         n = prot_read(imapd_in, buf, size > 4096 ? 4096 : size);
         if (!n) {
             syslog(LOG_ERR,
-                   "IOERROR: reading message: unexpected end of file");
+                   "DISCONNECT: client disconnected during upload of literal");
             return IMAP_IOERROR;
         }
 
@@ -5026,13 +5150,180 @@ static void do_xconvmeta(const char *tag,
     prot_printf(imapd_out, "%s OK Completed\r\n", tag);
 }
 
+static int do_xbackup(const char *channel,
+                      const ptrarray_t *list)
+{
+    sasl_callback_t *cb = NULL;
+    struct backend *backend = NULL;
+    const char *hostname;
+    const char *port;
+    unsigned sync_flags = 0; // FIXME ??
+    int partial_success = 0;
+    int mbox_count = 0;
+    int i, r = 0;
+
+    hostname = sync_get_config(channel, "sync_host");
+    if (!hostname) {
+        syslog(LOG_ERR, "XBACKUP: couldn't find hostname for channel '%s'", channel);
+        return IMAP_BAD_SERVER;
+    }
+
+    port = sync_get_config(channel, "sync_port");
+    if (port) csync_protocol.service = port;
+
+    cb = mysasl_callbacks(NULL,
+                          sync_get_config(channel, "sync_authname"),
+                          sync_get_config(channel, "sync_realm"),
+                          sync_get_config(channel, "sync_password"));
+
+    syslog(LOG_INFO, "XBACKUP: connecting to server '%s' for channel '%s'",
+                     hostname, channel);
+
+    backend = backend_connect(NULL, hostname, &csync_protocol, NULL, cb, NULL, -1);
+    if (!backend) {
+        syslog(LOG_ERR, "XBACKUP: failed to connect to server '%s' for channel '%s'",
+                        hostname, channel);
+        return IMAP_SERVER_UNAVAILABLE;
+    }
+
+    free_callbacks(cb);
+    cb = NULL;
+
+    for (i = 0; i < list->count; i++) {
+        const mbname_t *mbname = ptrarray_nth(list, i);
+        if (!mbname) continue;
+        const char *userid = mbname_userid(mbname);
+        const char *intname = mbname_intname(mbname);
+
+        if (userid) {
+            syslog(LOG_INFO, "XBACKUP: replicating user %s", userid);
+
+            r = sync_do_user(userid, NULL, backend, /*channelp*/ NULL, sync_flags);
+        }
+        else {
+            struct sync_name_list *mboxname_list = sync_name_list_create();
+
+            syslog(LOG_INFO, "XBACKUP: replicating mailbox %s", intname);
+            sync_name_list_add(mboxname_list, intname);
+
+            r = sync_do_mailboxes(mboxname_list, NULL, backend,
+                                  /*channelp*/ NULL, sync_flags);
+            mbox_count++;
+            sync_name_list_free(&mboxname_list);
+        }
+
+        if (r) {
+            prot_printf(imapd_out, "* NO %s %s (%s)\r\n",
+                        userid ? "USER" : "MAILBOX",
+                        userid ? userid : intname,
+                        error_message(r));
+        }
+        else {
+            partial_success++;
+            prot_printf(imapd_out, "* OK %s %s\r\n",
+                        userid ? "USER" : "MAILBOX",
+                        userid ? userid : intname);
+        }
+        prot_flush(imapd_out);
+
+        /* send RESTART after each user, or 1000 mailboxes */
+        if (!r && i < list->count - 1 && (userid || mbox_count >= 1000)) {
+            mbox_count = 0;
+
+            sync_send_restart(backend->out);
+            r = sync_parse_response("RESTART", backend->in, NULL);
+            if (r) goto done;
+        }
+    }
+
+    /* send a final RESTART */
+    sync_send_restart(backend->out);
+    sync_parse_response("RESTART", backend->in, NULL);
+
+    if (partial_success) r = 0;
+
+done:
+    backend_disconnect(backend);
+    free(backend);
+
+    return r;
+}
+
+static int xbackup_addmbox(struct findall_data *data, void *rock)
+{
+    if (!data) return 0;
+    ptrarray_t *list = (ptrarray_t *) rock;
+
+    if (!data->mbname) {
+        /* No partial matches */ /* FIXME ??? */
+        return 0;
+    }
+
+    /* Only add shared mailboxes or user INBOXes */
+    if (!mbname_localpart(data->mbname) ||
+        (!mbname_isdeleted(data->mbname) &&
+         !strarray_size(mbname_boxes(data->mbname)))) {
+
+        ptrarray_append(list, mbname_dup(data->mbname));
+    }
+
+    return 0;
+}
+
+/* Parse and perform an XBACKUP command. */
+void cmd_xbackup(const char *tag,
+                 const char *mailbox,
+                 const char *channel)
+{
+    ptrarray_t list = PTRARRAY_INITIALIZER;
+    int i, r = 0;
+
+    /* admins only please */
+    if (!imapd_userisadmin && !imapd_userisproxyadmin) {
+        r = IMAP_PERMISSION_DENIED;
+        goto done;
+    }
+
+    if (!config_getswitch(IMAPOPT_XBACKUP_ENABLED)) {
+        /* shouldn't get here, but just in case */
+        r = IMAP_PERMISSION_DENIED;
+        goto done;
+    }
+
+    mboxlist_findall(NULL, mailbox, 1, NULL, NULL, xbackup_addmbox, &list);
+
+    if (list.count) {
+        r = do_xbackup(channel, &list);
+
+        for (i = 0; i < list.count; i++) {
+            mbname_t *mbname = ptrarray_nth(&list, i);
+            if (mbname)
+                mbname_free(&mbname);
+        }
+        ptrarray_fini(&list);
+    }
+    else {
+        r = IMAP_MAILBOX_NONEXISTENT;
+    }
+
+done:
+    imapd_check(NULL, 0);
+
+    if (r) {
+        prot_printf(imapd_out, "%s NO %s\r\n", tag, error_message(r));
+    } else {
+        prot_printf(imapd_out, "%s OK %s\r\n", tag,
+                    error_message(IMAP_OK_COMPLETED));
+    }
+}
+
 /*
  * Parse and perform a XCONVMETA command.
  */
 void cmd_xconvmeta(const char *tag)
 {
     int r;
-    char c = ' ';
+    int c = ' ';
     struct conversations_state *state = NULL;
     struct dlist *cidlist = NULL;
     struct dlist *itemlist = NULL;
@@ -5539,9 +5830,12 @@ static void cmd_search(char *tag, int usinguid)
                                 &imapd_namespace, imapd_userid, imapd_authstate,
                                 imapd_userisadmin || imapd_userisproxyadmin);
 
-    /* special case quirk for iPhones */
-    if (imapd_id.quirks & QUIRK_SEARCHFUZZY)
+    /* Set FUZZY search according to config and quirks */
+    if (config_getswitch(IMAPOPT_SEARCH_FUZZY_ALWAYS) ||
+        (imapd_id.quirks & QUIRK_SEARCHFUZZY)) {
         searchargs->fuzzy_depth++;
+    }
+
 
     c = get_search_program(imapd_in, imapd_out, searchargs);
     if (c == EOF) {
@@ -5558,7 +5852,7 @@ static void cmd_search(char *tag, int usinguid)
         return;
     }
 
-    if (searchargs->charset == -1) {
+    if (searchargs->charset == CHARSET_UNKNOWN_CHARSET) {
         prot_printf(imapd_out, "%s NO %s\r\n", tag,
                error_message(IMAP_UNRECOGNIZED_CHARSET));
     }
@@ -6181,7 +6475,7 @@ static void cmd_copy(char *tag, char *sequence, char *name, int usinguid, int is
     }
 
     /* need permission to delete from source if it's a move */
-    if (ismove && !(imapd_index->myrights & ACL_EXPUNGE))
+    if (!r && ismove && !(imapd_index->myrights & ACL_EXPUNGE))
         r = IMAP_PERMISSION_DENIED;
 
     /* local mailbox -> local mailbox */
@@ -6284,7 +6578,13 @@ static void cmd_create(char *tag, char *name, struct dlist *extargs, int localon
     const char *server = NULL;
     struct buf specialuse = BUF_INITIALIZER;
     struct dlist *use;
-    char *intname = NULL;
+
+    /* We don't care about trailing hierarchy delimiters. */
+    if (name[0] && name[strlen(name)-1] == imapd_namespace.hier_sep) {
+        name[strlen(name)-1] = '\0';
+    }
+
+    mbname_t *mbname = mbname_from_extname(name, &imapd_namespace, imapd_userid);
 
     dlist_getatom(extargs, "PARTITION", &partition);
     dlist_getatom(extargs, "SERVER", &server);
@@ -6304,19 +6604,24 @@ static void cmd_create(char *tag, char *name, struct dlist *extargs, int localon
     }
     use = dlist_getchild(extargs, "USE");
     if (use) {
-        struct dlist *item;
-        char *raw;
+        /* only user mailboxes can have specialuse, and they must be user toplevel folders */
+        if (!mbname_userid(mbname) || strarray_size(mbname_boxes(mbname)) != 1) {
+            r = IMAP_MAILBOX_SPECIALUSE;
+            goto err;
+        }
         /* I would much prefer to create the specialuse annotation FIRST
          * and do the sanity check on the values, so we can return the
          * correct error.  Sadly, that's a pain - so we compromise by
          * "normalising" first */
+        struct dlist *item;
+        char *raw;
         strarray_t *su = strarray_new();
         for (item = use->head; item; item = item->next) {
             strarray_append(su, dlist_cstring(item));
         }
         raw = strarray_join(su, " ");
         strarray_free(su);
-        r = specialuse_validate(raw, &specialuse);
+        r = specialuse_validate(imapd_userid, raw, &specialuse);
         free(raw);
         if (r) {
             prot_printf(imapd_out, "%s NO [USEATTR] %s\r\n", tag, error_message(r));
@@ -6340,21 +6645,12 @@ static void cmd_create(char *tag, char *name, struct dlist *extargs, int localon
         }
     }
 
-    /* We don't care about trailing hierarchy delimiters. */
-    if (name[0] && name[strlen(name)-1] == imapd_namespace.hier_sep) {
-        name[strlen(name)-1] = '\0';
-    }
-
-    intname = mboxname_from_external(name, &imapd_namespace, imapd_userid);
-
     /* check for INBOX.INBOX creation by broken Apple clients */
-    char *copy = xstrdup(intname);
-    lcase(copy);
-
-    if (strstr(copy, "inbox.inbox."))
+    const strarray_t *boxes = mbname_boxes(mbname);
+    if (strarray_size(boxes) > 1
+        && !strcasecmp(strarray_nth(boxes, 0), "INBOX")
+        && !strcasecmp(strarray_nth(boxes, 1), "INBOX"))
         r = IMAP_MAILBOX_BADNAME;
-
-    free(copy);
 
     if (r) {
     err:
@@ -6387,7 +6683,7 @@ static void cmd_create(char *tag, char *name, struct dlist *extargs, int localon
 
                     // mboxlist_findparent either supplies the parent
                     // or has a return code of IMAP_MAILBOX_NONEXISTENT.
-                    r = mboxlist_findparent(intname, &parent);
+                    r = mboxlist_findparent(mbname_intname(mbname), &parent);
 
                     if (r) {
                         if (r != IMAP_MAILBOX_NONEXISTENT) {
@@ -6407,7 +6703,13 @@ static void cmd_create(char *tag, char *name, struct dlist *extargs, int localon
 
                         } else {
                             server = parent->server;
+                            /* DO NOT set the partition:
+                               only admins are allowed to do this
+                               and the backend will use the partition
+                               of the parent by default anyways.
+
                             partition = parent->partition;
+                            */
                         }
                     }
 
@@ -6450,7 +6752,7 @@ static void cmd_create(char *tag, char *name, struct dlist *extargs, int localon
 
                     // special use needs extended support, so pass through extargs
                     if (specialuse.len) {
-                        prot_printf(s_conn->out, "(USE (%s)", buf_cstring(&specialuse));
+                        prot_printf(s_conn->out, " (USE (%s)", buf_cstring(&specialuse));
 
                         if (partition) {
                             prot_printf(s_conn->out, " PARTITION ");
@@ -6515,7 +6817,7 @@ static void cmd_create(char *tag, char *name, struct dlist *extargs, int localon
 
 localcreate:
     r = mboxlist_createmailbox(
-            intname,                                            // const char name
+            mbname_intname(mbname),                             // const char name
             mbtype,                                             // int mbtype
             partition,                                          // const char partition
             imapd_userisadmin || imapd_userisproxyadmin,        // int isadmin
@@ -6536,7 +6838,7 @@ localcreate:
 
             if (autocreatequotastorage > 0) {
                 r = mboxlist_createmailbox(
-                        intname,
+                        mbname_intname(mbname),
                         0,
                         partition,
                         1,
@@ -6567,7 +6869,7 @@ localcreate:
                     newquotas[QUOTA_STORAGE] = autocreatequotastorage;
                     newquotas[QUOTA_MESSAGE] = autocreatequotamessage;
 
-                    (void) mboxlist_setquotas(intname, newquotas, 0);
+                    (void) mboxlist_setquotas(mbname_intname(mbname), newquotas, 0);
                 } // (autocreatequotastorage > 0) || (autocreatequotamessage > 0)
 
             } else { // (autocreatequotastorage = config_getint(IMAPOPT_AUTOCREATEQUOTA))
@@ -6598,17 +6900,14 @@ localcreate:
 #endif // USE_AUTOCREATE
 
     if (specialuse.len) {
-        char *userid = mboxname_to_userid(intname);
-        if (!userid) userid = xstrdup(imapd_userid);
-        r = annotatemore_write(intname, "/specialuse", userid, &specialuse);
-        free(userid);
+        r = annotatemore_write(mbname_intname(mbname), "/specialuse", mbname_userid(mbname), &specialuse);
         if (r) {
             /* XXX - failure here SHOULD cause a cleanup of the created mailbox */
             syslog(
                     LOG_ERR,
                     "IOERROR: failed to write specialuse for %s on %s (%s) (%s:%d)",
                     imapd_userid,
-                    intname,
+                    mbname_intname(mbname),
                     buf_cstring(&specialuse),
                     __FILE__,
                     __LINE__
@@ -6625,7 +6924,7 @@ localcreate:
 
 done:
     buf_free(&specialuse);
-    free(intname);
+    mbname_free(&mbname);
 }
 
 /* Callback for use by cmd_delete */
@@ -6743,7 +7042,7 @@ static void cmd_delete(char *tag, char *name, int localonly, int force)
 
     /* send a MailboxDelete event notification */
     if (!r)
-        mboxevent_notify(mboxevent);
+        mboxevent_notify(&mboxevent);
     mboxevent_free(&mboxevent);
 
     /* was it a top-level user mailbox? */
@@ -6755,6 +7054,11 @@ static void cmd_delete(char *tag, char *name, int localonly, int force)
             if (!r) r = user_deletedata(userid, 1);
             free(userid);
         }
+    }
+
+    if (!r && config_getswitch(IMAPOPT_DELETE_UNSUBSCRIBE)) {
+        mboxlist_changesub(intname, imapd_userid, imapd_authstate,
+                           /* add */ 0, /* force */ 0, /* notify? */ 1);
     }
 
     imapd_check(NULL, 0);
@@ -6808,21 +7112,41 @@ static int checkmboxname(const mbentry_t *mbentry, void *rock)
 static int renmbox(const mbentry_t *mbentry, void *rock)
 {
     struct renrock *text = (struct renrock *)rock;
+    char *oldextname = NULL, *newextname = NULL;
     int r = 0;
+    uint32_t uidvalidity = mbentry->uidvalidity;
 
     if((text->nl + strlen(mbentry->name + text->ol)) >= MAX_MAILBOX_BUFFER)
         goto done;
 
     strcpy(text->newmailboxname + text->nl, mbentry->name + text->ol);
 
+    /* check if a previous deleted mailbox existed */
+    mbentry_t *newmbentry = NULL;
+    r = mboxlist_lookup_allow_all(text->newmailboxname, &newmbentry, NULL);
+    /* XXX - otherwise we should probably reject now, but meh, save it for
+     * a real cleanup */
+    if (!r && newmbentry->mbtype == MBTYPE_DELETED) {
+        /* changing the unique id since last time? */
+        if (strcmpsafe(mbentry->uniqueid, newmbentry->uniqueid)) {
+            /* then the UIDVALIDITY must be higher than before */
+            if (uidvalidity <= newmbentry->uidvalidity)
+                uidvalidity = newmbentry->uidvalidity+1;
+        }
+    }
+    mboxlist_entry_free(&newmbentry);
+
+
     /* don't notify implied rename in mailbox hierarchy */
     r = mboxlist_renamemailbox(mbentry->name, text->newmailboxname,
-                               text->partition, 0 /* uidvalidity */,
+                               text->partition, uidvalidity,
                                1, imapd_userid, imapd_authstate, NULL, 0, 0,
                                text->rename_user);
 
-    char *oldextname = mboxname_to_external(mbentry->name, &imapd_namespace, imapd_userid);
-    char *newextname = mboxname_to_external(text->newmailboxname, &imapd_namespace, imapd_userid);
+    oldextname =
+        mboxname_to_external(mbentry->name, &imapd_namespace, imapd_userid);
+    newextname =
+        mboxname_to_external(text->newmailboxname, &imapd_namespace, imapd_userid);
 
     if(r) {
         prot_printf(imapd_out, "* NO rename %s %s: %s\r\n",
@@ -6878,6 +7202,13 @@ static void cmd_rename(char *tag, char *oldname, char *newname, char *location)
         return;
     }
 
+    if (location && strcmp(oldname, newname)) {
+        prot_printf(imapd_out,
+                    "%s NO Cross-server or cross-partition move w/rename not supported\r\n",
+                    tag);
+        return;
+    }
+
     oldintname = mboxname_from_external(oldname, &imapd_namespace, imapd_userid);
     strncpy(oldmailboxname, oldintname, MAX_MAILBOX_NAME);
     free(oldintname);
@@ -6914,38 +7245,40 @@ static void cmd_rename(char *tag, char *oldname, char *newname, char *location)
             char *destserver = NULL;
             char *destpart = NULL;
 
-            destserver = xstrdupnull(location);
             c = strchr(location, '!');
             if (c) {
-                *c++ = '\0';
-                destpart = xstrdupnull(c);
+                destserver = xstrndup(location, c - location);
+                destpart = xstrdup(c + 1);
             } else {
                 destpart = xstrdup(location);
-                free(destserver);
             }
 
-            if (destserver) {
-                if (destpart && !strcmp(destserver,config_servername)) {
-                    // XFER
-                    prot_printf(s->out,
-                            "%s XFER \"%s\" \"%s\" %s\r\n",
-                            tag,
-                            oldname,
-                            newname,
-                            location
-                        );
+            if (*destpart == '\0') {
+                free(destpart);
+                destpart = NULL;
+            }
 
-                } else {
-                    // RENAME
-                    prot_printf(s->out,
-                            "%s RENAME \"%s\" \"%s\" %s\r\n",
-                            tag,
-                            oldname,
-                            newname,
-                            location
-                        );
-                }
-            } // (destserver)
+            if (!destserver || !strcmp(destserver, mbentry->server)) {
+                /* same server: proxy a rename */
+                prot_printf(s->out,
+                        "%s RENAME \"%s\" \"%s\" %s\r\n",
+                        tag,
+                        oldname,
+                        newname,
+                        location);
+            } else {
+                /* different server: proxy an xfer */
+                prot_printf(s->out,
+                        "%s XFER \"%s\" %s%s%s\r\n",
+                        tag,
+                        oldname,
+                        destserver,
+                        destpart ? " " : "",
+                        destpart ? destpart : "");
+            }
+
+            if (destserver) free(destserver);
+            if (destpart) free(destpart);
 
             res = pipe_until_tag(s, tag, 0);
 
@@ -6985,27 +7318,19 @@ static void cmd_rename(char *tag, char *oldname, char *newname, char *location)
         goto done;
     }
 
-    mboxlist_entry_free(&mbentry);
-
     /* local mailbox */
 
     if (location && !config_partitiondir(location)) {
         /* invalid partition, assume its a server (remote destination) */
         char *server;
-
-        if (strcmp(oldname, newname)) {
-            prot_printf(imapd_out,
-                        "%s NO Cross-server or cross-partition move w/rename not supported\r\n",
-                        tag);
-            goto done;
-        }
+        char *partition;
 
         /* dest partition? */
         server = location;
-        location = strchr(server, '!');
-        if (location) *location++ = '\0';
+        partition = strchr(location, '!');
+        if (partition) *partition++ = '\0';
 
-        cmd_xfer(tag, oldname, server, location);
+        cmd_xfer(tag, oldname, server, partition);
 
         goto done;
     }
@@ -7086,15 +7411,32 @@ static void cmd_rename(char *tag, char *oldname, char *newname, char *location)
     /* attempt to rename the base mailbox */
     if (!r) {
         struct mboxevent *mboxevent = NULL;
+        uint32_t uidvalidity = mbentry ? mbentry->uidvalidity : 0;
 
         /* don't send rename notification if we only change the partition */
         if (strcmp(oldmailboxname, newmailboxname))
             mboxevent = mboxevent_new(EVENT_MAILBOX_RENAME);
 
+        /* check if a previous deleted mailbox existed */
+        mbentry_t *newmbentry = NULL;
+        r = mboxlist_lookup_allow_all(newmailboxname, &newmbentry, NULL);
+        /* XXX - otherwise we should probably reject now, but meh, save it for
+         * a real cleanup */
+        if (!r && newmbentry->mbtype == MBTYPE_DELETED) {
+            /* changing the unique id since last time? */
+            if (!mbentry || strcmpsafe(mbentry->uniqueid, newmbentry->uniqueid)) {
+                /* then the UIDVALIDITY must be higher than before */
+                if (uidvalidity <= newmbentry->uidvalidity)
+                    uidvalidity = newmbentry->uidvalidity+1;
+            }
+        }
+        mboxlist_entry_free(&newmbentry);
+
         r = mboxlist_renamemailbox(oldmailboxname, newmailboxname, location,
                                    0 /* uidvalidity */, imapd_userisadmin,
                                    imapd_userid, imapd_authstate, mboxevent,
                                    0, 0, rename_user);
+
         /* it's OK to not exist if there are subfolders */
         if (r == IMAP_MAILBOX_NONEXISTENT && subcount && !rename_user &&
            mboxname_userownsmailbox(imapd_userid, oldmailboxname) &&
@@ -7107,7 +7449,7 @@ static void cmd_rename(char *tag, char *oldname, char *newname, char *location)
 
         /* send a MailboxRename event notification if enabled */
         if (!r)
-            mboxevent_notify(mboxevent);
+            mboxevent_notify(&mboxevent);
         mboxevent_free(&mboxevent);
     }
 
@@ -7116,7 +7458,7 @@ static void cmd_rename(char *tag, char *oldname, char *newname, char *location)
     if (!r && rename_user) {
         user_copyquotaroot(oldmailboxname, newmailboxname);
         user_renameacl(&imapd_namespace, newmailboxname, olduser, newuser);
-        user_renamedata(olduser, newuser, imapd_userid, imapd_authstate);
+        user_renamedata(olduser, newuser);
 
         /* XXX report status/progress of meta-data */
     }
@@ -7343,7 +7685,6 @@ static void getlistargs(char *tag, struct listargs *listargs)
     c = prot_getc(imapd_in);
     if (c == '(') {
         listargs->cmd = LIST_CMD_EXTENDED;
-        listargs->ret = 0;
         c = getlistselopts(tag, listargs);
         if (c == EOF) {
             eatline(imapd_in, c);
@@ -7378,7 +7719,6 @@ static void getlistargs(char *tag, struct listargs *listargs)
     c = prot_getc(imapd_in);
     if (c == '(') {
         listargs->cmd = LIST_CMD_EXTENDED;
-        listargs->ret = 0;
         for (;;) {
             c = getastring(imapd_in, imapd_out, &buf);
             if (*buf.s)
@@ -7409,7 +7749,6 @@ static void getlistargs(char *tag, struct listargs *listargs)
     /* Check for and parse LIST-EXTENDED return options */
     if (c == ' ') {
         listargs->cmd = LIST_CMD_EXTENDED;
-        listargs->ret = 0;
         c = getlistretopts(tag, listargs);
         if (c == EOF) {
             eatline(imapd_in, c);
@@ -7462,17 +7801,10 @@ static void cmd_list(char *tag, struct listargs *listargs)
         /* special case: query top-level hierarchy separator */
         prot_printf(imapd_out, "* XLIST (\\Noselect) \"%c\" \"\"\r\n",
                     imapd_namespace.hier_sep);
-    } else if (((listargs->sel & LIST_SEL_SUBSCRIBED) ||
-                (listargs->ret & LIST_RET_SUBSCRIBED)) &&
+    } else if ((listargs->cmd == LIST_CMD_LSUB) &&
                (backend_inbox || (backend_inbox = proxy_findinboxserver(imapd_userid)))) {
         /* remote inbox */
-
-        /* XXX   If we are in a standard Murder, and are given
-           LIST () RETURN (SUBSCRIBED), we need to get the matching
-           mailboxes locally (frontend) and the subscriptions remotely
-           (INBOX backend).  We can only pass the buck to the INBOX backend
-           if its running a unified config */
-        if (list_data_remote(tag, listargs))
+        if (list_data_remote(backend_inbox, tag, listargs, NULL))
             return;
     } else {
         list_data(listargs);
@@ -7738,7 +8070,7 @@ static void cmd_listrights(char *tag, char *name, char *identifier)
     free(intname);
 }
 
-static int printmyrights(const char *extname, mbentry_t *mbentry)
+static int printmyrights(const char *extname, const mbentry_t *mbentry)
 {
     int rights = 0;
     char str[ACL_MAXSTR];
@@ -7871,6 +8203,19 @@ static void cmd_setacl(char *tag, const char *name,
 
     /* local mailbox */
     if (!r) {
+        char *err;
+
+        /* send BAD response if rights string contains unrecognised chars */
+        if (rights && *rights) {
+            r = cyrus_acl_checkstr(rights, &err);
+            if (r) {
+                prot_printf(imapd_out, "%s BAD %s\r\n", tag, err);
+                free(err);
+                free(intname);
+                return;
+            }
+        }
+
         r = mboxlist_setacl(&imapd_namespace, intname, identifier, rights,
                             imapd_userisadmin || imapd_userisproxyadmin,
                             proxy_userid, imapd_authstate);
@@ -7956,58 +8301,46 @@ static void cmd_getquota(const char *tag, const char *name)
     struct quota q;
     char *intname = mboxname_from_external(name, &imapd_namespace, imapd_userid);
 
+    quota_init(&q, intname);
+
     imapd_check(NULL, 0);
 
     if (!imapd_userisadmin && !imapd_userisproxyadmin) {
         r = IMAP_PERMISSION_DENIED;
-        goto err;
+        goto done;
     }
 
     r = mlookup(NULL, NULL, intname, &mbentry);
-
     if (!r && (mbentry->mbtype & MBTYPE_REMOTE)) {
         /* remote mailbox */
 
         snprintf(quotarootbuf, sizeof(quotarootbuf), "%s.", intname);
 
         r = mboxlist_allmbox(quotarootbuf, quota_cb, (void *)mbentry->server, 0);
+        if (r) goto done;
 
-        if (!r) {
-            struct backend *s;
-
-            s = proxy_findserver(mbentry->server, &imap_protocol,
-                                 proxy_userid, &backend_cached,
-                                 &backend_current, &backend_inbox, imapd_in);
-            if (!s) r = IMAP_SERVER_UNAVAILABLE;
-
-            imapd_check(s, 0);
-
-            if (!r) {
-                prot_printf(s->out, "%s Getquota {" SIZE_T_FMT "+}\r\n%s\r\n",
-                            tag, strlen(name), name);
-                pipe_including_tag(s, tag, 0);
-            }
+        struct backend *s;
+        s = proxy_findserver(mbentry->server, &imap_protocol,
+                             proxy_userid, &backend_cached,
+                             &backend_current, &backend_inbox, imapd_in);
+        if (!s) {
+            r = IMAP_SERVER_UNAVAILABLE;
+            goto done;
         }
 
-        if (r) prot_printf(imapd_out, "%s NO %s\r\n", tag, error_message(r));
+        imapd_check(s, 0);
 
-        mboxlist_entry_free(&mbentry);
-        free(intname);
+        prot_printf(s->out, "%s Getquota {" SIZE_T_FMT "+}\r\n%s\r\n",
+                    tag, strlen(name), name);
+        pipe_including_tag(s, tag, 0);
 
-        return;
+        goto done;
     }
-
-    mboxlist_entry_free(&mbentry);
 
     /* local mailbox */
 
-    quota_init(&q, intname);
     r = quota_read(&q, NULL, 0);
-    if (r) {
-    err:
-        prot_printf(imapd_out, "%s NO %s\r\n", tag, error_message(r));
-        goto done;
-    }
+    if (r) goto done;
 
     prot_printf(imapd_out, "* QUOTA ");
     prot_printastring(imapd_out, name);
@@ -8019,6 +8352,8 @@ static void cmd_getquota(const char *tag, const char *name)
                 error_message(IMAP_OK_COMPLETED));
 
  done:
+    if (r) prot_printf(imapd_out, "%s NO %s\r\n", tag, error_message(r));
+    mboxlist_entry_free(&mbentry);
     quota_free(&q);
     free(intname);
 }
@@ -8133,7 +8468,7 @@ void cmd_setquota(const char *tag, const char *quotaroot)
     static struct buf arg;
     int r;
     mbentry_t *mbentry = NULL;
-    char *intname;
+    char *intname = NULL;
 
     if (!imapd_userisadmin && !imapd_userisproxyadmin) {
         /* need to allow proxies so that mailbox moves can set initial quota
@@ -8279,7 +8614,8 @@ static void cmd_starttls(char *tag, int imaps)
 
     result=tls_init_serverengine("imap",
                                  5,        /* depth to verify */
-                                 !imaps);  /* can client auth? */
+                                 !imaps,   /* can client auth? */
+                                 NULL);
 
     if (result == -1) {
 
@@ -8580,6 +8916,7 @@ static void cmd_status(char *tag, char *name)
     c = parse_statusitems(&statusitems, &errstr);
     if (c == EOF) {
         prot_printf(imapd_out, "%s BAD %s\r\n", tag, errstr);
+        eatline(imapd_in, c);
         goto done;
     }
 
@@ -8629,26 +8966,25 @@ static void cmd_status(char *tag, char *name)
  * order to ensure the namespace response is correct on a server with
  * no shared namespace.
  */
-static int namespacedata(const char *name,
-                         int matchlen __attribute__((unused)),
-                         int maycreate __attribute__((unused)),
-                         void *rock)
+static int namespacedata(struct findall_data *data, void *rock)
 {
+    if (!data) return 0;
     int* sawone = (int*) rock;
 
-    if (!name) {
-        return 0;
-    }
-
-    if ((!strncasecmp(name, "INBOX", 5) && (!name[5] || name[5] == '.'))) {
-        /* The user has a "personal" namespace. */
+    switch (data->mb_category) {
+    case MBNAME_INBOX:
+    case MBNAME_ALTINBOX:
+    case MBNAME_ALTPREFIX:
         sawone[NAMESPACE_INBOX] = 1;
-    } else if (mboxname_isusermailbox(name, 0)) {
-        /* The user can see the "other users" namespace. */
+        break;
+
+    case MBNAME_OTHERUSER:
         sawone[NAMESPACE_USER] = 1;
-    } else {
-        /* The user can see the "shared" namespace. */
+        break;
+
+    case MBNAME_SHARED:
         sawone[NAMESPACE_SHARED] = 1;
+        break;
     }
 
     return 0;
@@ -9203,7 +9539,9 @@ static void getannotation_response(const char *mboxname,
 {
     int sep = '(';
     struct attvaluelist *l;
-    char *extname = mboxname_to_external(mboxname, &imapd_namespace, imapd_userid);
+    char *extname = *mboxname ?
+        mboxname_to_external(mboxname, &imapd_namespace, imapd_userid) :
+        xstrdup("");  /* server annotation */
 
     prot_printf(imapd_out, "* ANNOTATION ");
     prot_printastring(imapd_out, extname);
@@ -9261,41 +9599,33 @@ struct apply_rock {
     unsigned int nseen;
 };
 
-static int apply_cb(const char *name, int matchlen,
-                    int maycreate __attribute__((unused)), void* rock)
+static int apply_cb(struct findall_data *data, void* rock)
 {
+    if (!data) return 0;
     struct apply_rock *arock = (struct apply_rock *)rock;
     annotate_state_t *state = arock->state;
-    mbentry_t *mbentry = NULL;
     int r;
 
     /* Suppress any output of a partial match */
-    if (name[matchlen])
+    if (!data->mbname)
         return 0;
 
-    strlcpy(arock->lastname, name, sizeof(arock->lastname));
-    arock->lastname[matchlen] = '\0';
+    strlcpy(arock->lastname, mbname_intname(data->mbname), sizeof(arock->lastname));
 
-    r = 0;
-    if (mboxlist_lookup(name, &mbentry, NULL))
-        goto out;
-
-    // Store the external name in the mbentry as ext_name, for later reference
-    char *extname = mboxname_to_external(name, &imapd_namespace, imapd_userid);
     // malloc extra-long to have room for pattern shenanigans later
-    mbentry->ext_name = xmalloc(strlen(extname)+1);
-    strcpy(mbentry->ext_name, extname);
-    free(extname);
+    /* NOTE: this is a fricking horrible abuse of layers.  We'll be passing the
+     * extname less horribly one day */
+    const char *extname = mbname_extname(data->mbname, &imapd_namespace, imapd_userid);
+    mbentry_t *backdoor = (mbentry_t *)data->mbentry;
+    backdoor->ext_name = xmalloc(strlen(extname)+1);
+    strcpy(backdoor->ext_name, extname);
 
-    r = annotate_state_set_mailbox_mbe(state, mbentry);
-    if (r)
-        goto out;
+    r = annotate_state_set_mailbox_mbe(state, data->mbentry);
+    if (r) return r;
 
     r = arock->proc(state, arock->data);
     arock->nseen++;
 
-out:
-    mboxlist_entry_free(&mbentry);
     return r;
 }
 
@@ -10107,12 +10437,12 @@ static int get_snippetargs(struct snippetargs **sap)
     if (c != ' ') goto syntax_error;
 
 out:
+    free(intname);
     buf_free(&arg);
     return c;
 
 syntax_error:
     free_snippetargs(sap);
-    free(intname);
     c = EOF;
     goto out;
 }
@@ -10335,6 +10665,7 @@ static int dumpacl(struct protstream *pin, struct protstream *pout,
 }
 
 enum {
+    XFER_MOVING_USER = -1,
     XFER_DEACTIVATED = 1,
     XFER_REMOTE_CREATED,
     XFER_LOCAL_MOVING,
@@ -10350,7 +10681,6 @@ struct xfer_item {
 };
 
 struct xfer_header {
-    mupdate_handle *mupdate_h;
     struct backend *be;
     int remoteversion;
     unsigned long use_replication;
@@ -10362,7 +10692,7 @@ struct xfer_header {
     struct xfer_item *items;
 };
 
-static int xfer_mupdate(struct xfer_header *xfer, int isactivate,
+static int xfer_mupdate(int isactivate,
                         const char *mboxname, const char *part,
                         const char *servername, const char *acl)
 {
@@ -10371,37 +10701,38 @@ static int xfer_mupdate(struct xfer_header *xfer, int isactivate,
     int r = 0;
 
     /* no mupdate handle */
-    if (!xfer->mupdate_h)
-        return 0;
+    if (!mupdate_h) return 0;
 
     snprintf(buf, sizeof(buf), "%s!%s", servername, part);
 
 retry:
     /* make the change */
     if (isactivate)
-        r = mupdate_activate(xfer->mupdate_h, mboxname, buf, acl);
+        r = mupdate_activate(mupdate_h, mboxname, buf, acl);
     else
-        r = mupdate_deactivate(xfer->mupdate_h, mboxname, buf);
+        r = mupdate_deactivate(mupdate_h, mboxname, buf);
 
     if (r && !retry) {
         syslog(LOG_INFO, "MUPDATE: lost connection, retrying");
-        mupdate_disconnect(&xfer->mupdate_h);
-        r = mupdate_connect(config_mupdate_server, NULL,
-                            &xfer->mupdate_h, NULL);
-        retry = 1;
-        goto retry;
+        mupdate_disconnect(&mupdate_h);
+        r = mupdate_connect(config_mupdate_server, NULL, &mupdate_h, NULL);
+        if (r) {
+            syslog(LOG_INFO, "Failed to connect to mupdate '%s'",
+                   config_mupdate_server);
+        }
+        else {
+            retry = 1;
+            goto retry;
+        }
     }
 
     return r;
 }
 
 /* nothing you can do about failures, just try to clean up */
-static void xfer_done(struct xfer_header **xferptr)
+static void xfer_cleanup(struct xfer_header *xfer)
 {
-    struct xfer_header *xfer = *xferptr;
     struct xfer_item *item, *next;
-
-    syslog(LOG_INFO, "XFER: disconnecting from servers");
 
     /* remove items */
     item = xfer->items;
@@ -10411,17 +10742,27 @@ static void xfer_done(struct xfer_header **xferptr)
         free(item);
         item = next;
     }
+    xfer->items = NULL;
 
-    /* disconnect */
-    if (xfer->mupdate_h) mupdate_disconnect(&xfer->mupdate_h);
-    if (xfer->be) backend_disconnect(xfer->be);
-    free(xfer->toserver);
     free(xfer->topart);
     free(xfer->userid);
+    xfer->topart = xfer->userid = NULL;
 
     seen_close(&xfer->seendb);
+    xfer->seendb = NULL;
+}
+
+static void xfer_done(struct xfer_header **xferptr)
+{
+    struct xfer_header *xfer = *xferptr;
+
+    syslog(LOG_INFO, "XFER: disconnecting from servers");
+
+    free(xfer->toserver);
 
     buf_free(&xfer->tagbuf);
+
+    xfer_cleanup(xfer);
 
     free(xfer);
 
@@ -10431,6 +10772,16 @@ static void xfer_done(struct xfer_header **xferptr)
 static int backend_version(struct backend *be)
 {
     const char *minor;
+
+    /* IMPORTANT:
+     *
+     * When adding checks for new versions, you must also backport these
+     * checks to previous versions (especially 2.4 and 2.5).
+     *
+     * Otherwise, old versions will be unable to recognise the new version,
+     * assume it is ancient, and downgrade the index to the oldest version
+     * supported (version 6, prior to v2.3).
+     */
 
     /* It's like looking in the mirror and not suffering from schizophrenia */
     if (strstr(be->banner, cyrus_version())) {
@@ -10487,8 +10838,7 @@ static int backend_version(struct backend *be)
     return 6;
 }
 
-static int xfer_init(const char *toserver, const char *topart,
-                     struct xfer_header **xferptr)
+static int xfer_init(const char *toserver, struct xfer_header **xferptr)
 {
     struct xfer_header *xfer = xzmalloc(sizeof(struct xfer_header));
     int r;
@@ -10496,8 +10846,8 @@ static int xfer_init(const char *toserver, const char *topart,
     syslog(LOG_INFO, "XFER: connecting to server '%s'", toserver);
 
     /* Get a connection to the remote backend */
-    xfer->be = backend_connect(NULL, toserver, &imap_protocol,
-                               "", NULL, NULL, -1);
+    xfer->be = proxy_findserver(toserver, &imap_protocol, "", &backend_cached,
+                                NULL, NULL, imapd_in);
     if (!xfer->be) {
         syslog(LOG_ERR, "Failed to connect to server '%s'", toserver);
         r = IMAP_SERVER_UNAVAILABLE;
@@ -10514,16 +10864,15 @@ static int xfer_init(const char *toserver, const char *topart,
     }
 
     xfer->toserver = xstrdup(toserver);
-    xfer->topart = xstrdup(topart);
+    xfer->topart = NULL;
     xfer->seendb = NULL;
 
     /* connect to mupdate server if configured */
-    if (config_mupdate_server) {
+    if (config_mupdate_server && !mupdate_h) {
         syslog(LOG_INFO, "XFER: connecting to mupdate '%s'",
                config_mupdate_server);
 
-        r = mupdate_connect(config_mupdate_server, NULL,
-                            &xfer->mupdate_h, NULL);
+        r = mupdate_connect(config_mupdate_server, NULL, &mupdate_h, NULL);
         if (r) {
             syslog(LOG_INFO, "Failed to connect to mupdate '%s'",
                    config_mupdate_server);
@@ -10573,7 +10922,6 @@ static int xfer_backport_seen_item(struct xfer_item *item,
 {
     struct mailbox *mailbox = item->mailbox;
     struct seqset *outlist = NULL;
-    const struct index_record *record;
     struct seendata sd = SEENDATA_INITIALIZER;
     int r;
 
@@ -10581,7 +10929,9 @@ static int xfer_backport_seen_item(struct xfer_item *item,
 
     struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_EXPUNGED);
 
-    while ((record = mailbox_iter_step(iter))) {
+    const message_t *msg;
+    while ((msg = mailbox_iter_step(iter))) {
+        const struct index_record *record = msg_record(msg);
         if (record->system_flags & FLAG_SEEN)
             seqset_add(outlist, record->uid, 1);
         else
@@ -10613,7 +10963,7 @@ static int xfer_deactivate(struct xfer_header *xfer)
 
     /* Step 3: mupdate.DEACTIVATE(mailbox, newserver) */
     for (item = xfer->items; item; item = item->next) {
-        r = xfer_mupdate(xfer, 0, item->mbentry->name, item->mbentry->partition,
+        r = xfer_mupdate(0, item->mbentry->name, item->mbentry->partition,
                          config_servername, item->mbentry->acl);
         if (r) {
             syslog(LOG_ERR,
@@ -10724,8 +11074,7 @@ static int xfer_undump(struct xfer_header *xfer)
     return 0;
 }
 
-static int xfer_addmbox(const mbentry_t *mbentry,
-                        void *rock)
+static int xfer_addusermbox(const mbentry_t *mbentry, void *rock)
 {
     struct xfer_header *xfer = (struct xfer_header *)rock;
 
@@ -10761,13 +11110,15 @@ static int xfer_initialsync(struct xfer_header *xfer)
 
         syslog(LOG_INFO, "XFER: initial sync of user %s", xfer->userid);
 
-        r = sync_do_user(xfer->userid, xfer->be, flags);
+        r = sync_do_user(xfer->userid, xfer->topart, xfer->be,
+                         /*channelp*/NULL, flags);
         if (r) return r;
 
         /* User moves may take a while, do another non-blocking sync */
         syslog(LOG_INFO, "XFER: second sync of user %s", xfer->userid);
 
-        r = sync_do_user(xfer->userid, xfer->be, flags);
+        r = sync_do_user(xfer->userid, xfer->topart, xfer->be,
+                         /*channelp*/NULL, flags);
         if (r) return r;
 
         /* User may have renamed/deleted a mailbox while syncing,
@@ -10779,7 +11130,8 @@ static int xfer_initialsync(struct xfer_header *xfer)
         }
         xfer->items = NULL;
 
-        r = mboxlist_usermboxtree(xfer->userid, xfer_addmbox, xfer, MBOXTREE_DELETED);
+        r = mboxlist_usermboxtree(xfer->userid, xfer_addusermbox,
+                                  xfer, MBOXTREE_DELETED);
     }
     else {
         struct sync_name_list *mboxname_list = sync_name_list_create();
@@ -10788,7 +11140,8 @@ static int xfer_initialsync(struct xfer_header *xfer)
                xfer->items->mbentry->name);
 
         sync_name_list_add(mboxname_list, xfer->items->mbentry->name);
-        r = sync_do_mailboxes(mboxname_list, xfer->be, flags);
+        r = sync_do_mailboxes(mboxname_list, xfer->topart, xfer->be,
+                              /*channelp*/NULL, flags);
         sync_name_list_free(&mboxname_list);
     }
 
@@ -10796,25 +11149,28 @@ static int xfer_initialsync(struct xfer_header *xfer)
 }
 
 /*
- * FIXME sync_mailbox is duplicated (quite differently) in sync_support.c
- * it's not immediately apparent which implementation is the better, nor
- * which alterations need to be merged in from the other
+ * This is similar to do_folders() from sync_support, but for a single mailbox.
+ * It is needed for xfer_finalsync(), which needs to hold a single exclusive
+ * lock on the mailbox for the duration of this operation.
  */
 static int sync_mailbox(struct mailbox *mailbox,
                         struct sync_folder_list *replica_folders,
+                        const char *topart,
                         struct backend *be)
 {
     int r = 0;
-    struct sync_folder_list *master_folders;
-    struct sync_reserve_list *reserve_guids;
+    struct sync_folder_list *master_folders = NULL;
+    struct sync_reserve_list *reserve_guids = NULL;
     struct sync_msgid_list *part_list;
     struct sync_reserve *reserve;
     struct sync_folder *mfolder, *rfolder;
     struct sync_annot_list *annots = NULL;
     modseq_t xconvmodseq = 0;
+    unsigned flags = SYNC_FLAG_LOGGING | SYNC_FLAG_LOCALONLY;
 
+    if (!topart) topart = mailbox->part;
     reserve_guids = sync_reserve_list_create(SYNC_MSGID_LIST_HASH_SIZE);
-    part_list = sync_reserve_partlist(reserve_guids, mailbox->part);
+    part_list = sync_reserve_partlist(reserve_guids, topart);
 
     /* always send mailbox annotations */
     r = read_annotations(mailbox, NULL, &annots);
@@ -10850,19 +11206,23 @@ static int sync_mailbox(struct mailbox *mailbox,
                          mailbox->i.pop3_last_login,
                          mailbox->i.pop3_show_after,
                          annots,
-                         xconvmodseq);
+                         xconvmodseq,
+                         /* ispartial */0);
     annots = NULL; /* list took ownership */
 
     mfolder = master_folders->head;
+    /* when mfolder->mailbox is set, sync_update_mailbox will use it rather
+     * than obtaining its own (short-lived) locks */
     mfolder->mailbox = mailbox;
 
+    uint32_t fromuid = 0;
     rfolder = sync_folder_lookup(replica_folders, mfolder->uniqueid);
     if (rfolder) {
         rfolder->mark = 1;
 
         /* does it need a rename? */
         if (strcmp(mfolder->name, rfolder->name) ||
-            strcmp(mfolder->part, rfolder->part)) {
+            strcmp(topart, rfolder->part)) {
             /* bail and retry */
             syslog(LOG_NOTICE,
                    "XFER: rename %s!%s -> %s!%s during final sync"
@@ -10871,10 +11231,9 @@ static int sync_mailbox(struct mailbox *mailbox,
             r = IMAP_AGAIN;
             goto cleanup;
         }
-
-        sync_find_reserve_messages(mailbox, rfolder->last_uid, part_list);
+        fromuid = rfolder->last_uid;
     }
-    else sync_find_reserve_messages(mailbox, 0, part_list);
+    sync_find_reserve_messages(mailbox, fromuid, mailbox->i.last_uid, part_list);
 
     reserve = reserve_guids->head;
     r = sync_reserve_partition(reserve->part, replica_folders,
@@ -10885,8 +11244,7 @@ static int sync_mailbox(struct mailbox *mailbox,
         goto cleanup;
     }
 
-    r = sync_update_mailbox(mfolder, rfolder, reserve_guids, be,
-                            SYNC_FLAG_LOCALONLY);
+    r = sync_update_mailbox(mfolder, rfolder, topart, reserve_guids, be, flags);
     if (r) {
         syslog(LOG_ERR, "sync_mailbox(): update failed: %s '%s'",
                 mfolder->name, error_message(r));
@@ -10913,7 +11271,7 @@ static int xfer_finalsync(struct xfer_header *xfer)
     struct dlist *kl = NULL;
     struct xfer_item *item;
     struct mailbox *mailbox = NULL;
-    mbentry_t *newentry;
+    mbentry_t newentry;
     unsigned flags = SYNC_FLAG_LOGGING | SYNC_FLAG_LOCALONLY;
     int r;
 
@@ -10928,7 +11286,8 @@ static int xfer_finalsync(struct xfer_header *xfer)
         kl = dlist_setatom(NULL, cmd, xfer->userid);
     }
     else {
-        syslog(LOG_INFO, "XFER: final sync of mailbox %s", xfer->items->mbentry->name);
+        syslog(LOG_INFO, "XFER: final sync of mailbox %s",
+               xfer->items->mbentry->name);
 
         cmd = "MAILBOXES";
         kl = dlist_newlist(NULL, cmd);
@@ -10945,6 +11304,7 @@ static int xfer_finalsync(struct xfer_header *xfer)
 
     for (item = xfer->items; item; item = item->next) {
         r = mailbox_open_iwl(item->mbentry->name, &mailbox);
+        if (!r) r = sync_mailbox_version_check(&mailbox);
         if (r) {
             syslog(LOG_ERR,
                    "Failed to open mailbox %s for xfer_final_sync() %s",
@@ -10952,16 +11312,28 @@ static int xfer_finalsync(struct xfer_header *xfer)
             goto done;
         }
 
+        /* Open cyrus.annotations before we set mailbox to MOVING and
+           change its location to destination server and partition */
+        r = mailbox_get_annotate_state(mailbox, ANNOTATE_ANY_UID, NULL);
+        if (r) {
+            syslog(LOG_ERR,
+                   "Failed to get annotate state for mailbox %s"
+                   " for xfer_final_sync() %s",
+                   mailbox->name, error_message(r));
+            mailbox_close(&mailbox);
+            goto done;
+        }
+
         /* Step 3.5: Set mailbox as MOVING on local server */
         /* XXX - this code is awful... need a sane way to manage mbentries */
-        newentry = mboxlist_entry_create();
-        newentry->name = xstrdupnull(item->mbentry->name);
-        newentry->acl = xstrdupnull(item->mbentry->acl);
-        newentry->server = xstrdupnull(xfer->toserver);
-        newentry->partition = xstrdupnull(xfer->topart);
-        newentry->mbtype = item->mbentry->mbtype|MBTYPE_MOVING;
-        r = mboxlist_update(newentry, 1);
-        mboxlist_entry_free(&newentry);
+        newentry.name = item->mbentry->name;
+        newentry.acl = item->mbentry->acl;
+        newentry.uniqueid = item->mbentry->uniqueid;
+        newentry.uidvalidity = item->mbentry->uidvalidity;
+        newentry.mbtype = item->mbentry->mbtype|MBTYPE_MOVING;
+        newentry.server = xfer->toserver;
+        newentry.partition = xfer->topart;
+        r = mboxlist_update(&newentry, 1);
 
         if (r) {
             syslog(LOG_ERR,
@@ -10972,7 +11344,7 @@ static int xfer_finalsync(struct xfer_header *xfer)
 
         /* Step 4: Sync local -> remote */
         if (!r) {
-            r = sync_mailbox(mailbox, replica_folders, xfer->be);
+            r = sync_mailbox(mailbox, replica_folders, xfer->topart, xfer->be);
             if (r) {
                 syslog(LOG_ERR,
                        "Could not move mailbox: %s, sync_mailbox() failed %s",
@@ -11013,11 +11385,13 @@ static int xfer_finalsync(struct xfer_header *xfer)
     }
 
     /* Handle any mailbox/user metadata */
-    r = sync_do_user_quota(master_quotaroots, replica_quota, xfer->be);
+    r = sync_do_user_quota(master_quotaroots, replica_quota, xfer->be, flags);
     if (!r && xfer->userid) {
-        r = sync_do_user_seen(xfer->userid, replica_seen, xfer->be);
-        if (!r) r = sync_do_user_sub(xfer->userid, replica_subs, xfer->be, flags);
-        if (!r) r = sync_do_user_sieve(xfer->userid, replica_sieve, xfer->be);
+        r = sync_do_user_seen(xfer->userid, replica_seen, xfer->be, flags);
+        if (!r) r = sync_do_user_sub(xfer->userid, replica_subs,
+                                     xfer->be, flags);
+        if (!r) r = sync_do_user_sieve(xfer->userid, replica_sieve,
+                                       xfer->be, flags);
     }
 
   done:
@@ -11038,7 +11412,7 @@ static int xfer_reactivate(struct xfer_header *xfer)
 
     syslog(LOG_INFO, "XFER: reactivating mailboxes");
 
-    if (!xfer->mupdate_h) return 0;
+    if (!mupdate_h) return 0;
 
     /* 6.5) Kick remote server to correct mupdate entry */
     for (item = xfer->items; item; item = item->next) {
@@ -11046,9 +11420,8 @@ static int xfer_reactivate(struct xfer_header *xfer)
                     strlen(item->extname), item->extname);
         r = getresult(xfer->be->in, "MP1");
         if (r) {
-            syslog(LOG_ERR, "MUPDATE: can't activate mailbox entry '%s'",
-                   item->mbentry->name);
-            return r;
+            syslog(LOG_ERR, "MUPDATE: can't activate mailbox entry '%s': %s",
+                   item->mbentry->name, error_message(r));
         }
     }
 
@@ -11105,7 +11478,6 @@ static int xfer_delete(struct xfer_header *xfer)
 
 static void xfer_recover(struct xfer_header *xfer)
 {
-    mbentry_t *newentry = NULL;
     struct xfer_item *item;
     int r;
 
@@ -11117,21 +11489,14 @@ static void xfer_recover(struct xfer_header *xfer)
         case XFER_UNDUMPED:
         case XFER_LOCAL_MOVING:
             /* Unset mailbox as MOVING on local server */
-            /* XXX - this code is awful... need a sane way to manage mbentries */
-            newentry = mboxlist_entry_create();
-            newentry->name = xstrdupnull(item->mbentry->name);
-            newentry->acl = xstrdupnull(item->mbentry->acl);
-            newentry->server = xstrdupnull(item->mbentry->server);
-            newentry->partition = xstrdupnull(item->mbentry->partition);
-            newentry->mbtype = item->mbentry->mbtype;
-            r = mboxlist_update(newentry, 1);
-            mboxlist_entry_free(&newentry);
+            r = mboxlist_update(item->mbentry, 1);
 
             if (r) {
                 syslog(LOG_ERR,
                        "Could not back out MOVING flag during move of %s (%s)",
                        item->mbentry->name, error_message(r));
             }
+            GCC_FALLTHROUGH
 
         case XFER_REMOTE_CREATED:
             if (!xfer->use_replication) {
@@ -11146,10 +11511,11 @@ static void xfer_recover(struct xfer_header *xfer)
                         item->mbentry->name, error_message(r));
                 }
             }
+            GCC_FALLTHROUGH
 
         case XFER_DEACTIVATED:
             /* Tell murder it's back here and active */
-            r = xfer_mupdate(xfer, 1, item->mbentry->name, item->mbentry->partition,
+            r = xfer_mupdate(1, item->mbentry->name, item->mbentry->partition,
                              config_servername, item->mbentry->acl);
             if (r) {
                 syslog(LOG_ERR,
@@ -11228,14 +11594,57 @@ static int xfer_setquotaroot(struct xfer_header *xfer, const char *mboxname)
     return r;
 }
 
-static void cmd_xfer(const char *tag, const char *name,
-              const char *toserver, const char *topart)
+struct xfer_list {
+    const struct namespace *ns;
+    const char *userid;
+    const char *part;
+    short allow_usersubs;
+    struct xfer_item *mboxes;
+};
+
+static int xfer_addmbox(struct findall_data *data, void *rock)
 {
-    int r = 0;
-    int moving_user = 0;
-    char *p;
-    mbentry_t *mbentry = NULL;
+    if (!data) return 0;
+    struct xfer_list *list = (struct xfer_list *) rock;
+
+    if (!data->mbentry || !data->mbname) {
+        /* No partial matches */
+        return 0;
+    }
+
+    if (list->part && strcmp(data->mbentry->partition, list->part)) {
+        /* Not on specified partition */
+        return 0;
+    }
+
+    /* Only add shared mailboxes, targeted user submailboxes, or user INBOXes */
+    if (!mbname_localpart(data->mbname) || list->allow_usersubs ||
+        (!mbname_isdeleted(data->mbname) && !strarray_size(mbname_boxes(data->mbname)))) {
+        const char *extname = mbname_extname(data->mbname, list->ns, list->userid);
+        struct xfer_item *mbox = xzmalloc(sizeof(struct xfer_item));
+
+        mbox->mbentry = mboxlist_entry_copy(data->mbentry);
+        strncpy(mbox->extname, extname, sizeof(mbox->extname));
+        if (mbname_localpart(data->mbname) && !list->allow_usersubs) {
+            /* User INBOX */
+            mbox->state = XFER_MOVING_USER;
+        }
+
+        /* Add link on to the list (reverse order) */
+        mbox->next = list->mboxes;
+        list->mboxes = mbox;
+    }
+
+    return 0;
+}
+
+static void cmd_xfer(const char *tag, const char *name,
+                     const char *toserver, const char *topart)
+{
+    int r = 0, partial_success = 0, mbox_count = 0;
     struct xfer_header *xfer = NULL;
+    struct xfer_list list = { &imapd_namespace, imapd_userid, NULL, 0, NULL };
+    struct xfer_item *item, *next;
     char *intname = NULL;
 
     /* administrators only please */
@@ -11250,94 +11659,142 @@ static void cmd_xfer(const char *tag, const char *name,
         goto done;
     }
 
-    intname = mboxname_from_external(name, &imapd_namespace, imapd_userid);
-    const char *mbox = intname;
-
-    /* NOTE: Since XFER can only be used by an admin, and we always connect
-     * to the destination backend as an admin, we take advantage of the fact
-     * that admins *always* use a consistent mailbox naming scheme.
-     * So, 'name' should be used in any command we send to a backend, and
-     * 'mailboxname' is the internal name to be used for mupdate and findall.
-     */
-
-    if (config_virtdomains && (p = strchr(intname, '!'))) {
-        /* pointer to mailbox w/o domain prefix */
-        mbox = p + 1;
-    }
-
-    if (!strncmp(mbox, "user.", 5) && !strchr(mbox+5, '.')) {
-        if ((strlen(mbox+5) == (strlen(imapd_userid) - (mbox - intname))) &&
-            !strncmp(mbox+5, imapd_userid, strlen(mbox+5))) {
-            /* don't move your own inbox, that could be troublesome */
-            r = IMAP_MAILBOX_NOTSUPPORTED;
-        } else if (!config_getswitch(IMAPOPT_ALLOWUSERMOVES)) {
-            /* not configured to allow user moves */
-            r = IMAP_MAILBOX_NOTSUPPORTED;
-        } else {
-            moving_user = 1;
-        }
-    }
-    if (r) goto done;
-
-    r = mboxlist_lookup(intname, &mbentry, NULL);
-    if (r) goto done;
-
-    if (!topart) topart = mbentry->partition;
-    r = xfer_init(toserver, topart, &xfer);
-    if (r) goto done;
-
-    /* if we are not moving a user, just move the one mailbox */
-    if (!moving_user) {
-
-        syslog(LOG_INFO, "XFER: mailbox '%s' -> %s!%s",
-               xfer->items->mbentry->name, toserver, topart);
-
-        /* is the selected mailbox the one we're moving? */
-        if (!strcmpsafe(intname, index_mboxname(imapd_index))) {
-            r = IMAP_MAILBOX_LOCKED;
-            goto done;
-        }
-
-        /* we're moving this mailbox */
-        xfer_addmbox(mbentry, xfer);
-
-        r = do_xfer(xfer);
+    /* Build list of users/mailboxes to transfer */
+    if (config_partitiondir(name)) {
+        /* entire partition */
+        list.part = name;
+        mboxlist_findall(NULL, "*", 1, NULL, NULL, xfer_addmbox, &list);
     } else {
-        xfer->userid = mboxname_to_userid(intname);
+        /* mailbox pattern */
+        mbname_t *mbname;
 
-        syslog(LOG_INFO, "XFER: user '%s' -> %s!%s",
-               xfer->userid, toserver, topart);
+        intname = mboxname_from_external(name, &imapd_namespace, imapd_userid);
 
-        /* is the selected mailbox in the namespace we're moving? */
-        if (!strncmpsafe(intname, index_mboxname(imapd_index),
-                         strlen(intname))) {
-            r = IMAP_MAILBOX_LOCKED;
-            goto done;
+        mbname = mbname_from_intname(intname);
+        if (mbname_localpart(mbname) &&
+            (mbname_isdeleted(mbname) || strarray_size(mbname_boxes(mbname)))) {
+            /* targeted a user submailbox */
+            list.allow_usersubs = 1;
         }
+        mbname_free(&mbname);
 
-        if (!xfer->use_replication) {
-            /* set the quotaroot if needed */
-            r = xfer_setquotaroot(xfer, intname);
-            if (r) goto done;
+        mboxlist_findall(NULL, intname, 1, NULL, NULL, xfer_addmbox, &list);
+        free(intname);
+    }
 
-            /* backport the seen file if needed */
-            if (xfer->remoteversion < 12) {
-                r = seen_open(xfer->userid, SEEN_CREATE, &xfer->seendb);
-                if (r) goto done;
+    r = xfer_init(toserver, &xfer);
+    if (r) goto done;
+
+    for (item = list.mboxes; item; item = next) {
+        mbentry_t *mbentry = item->mbentry;
+
+        /* NOTE: Since XFER can only be used by an admin, and we always connect
+         * to the destination backend as an admin, we take advantage of the fact
+         * that admins *always* use a consistent mailbox naming scheme.
+         * So, 'name' should be used in any command we send to a backend, and
+         * 'intname' is the internal name to be used for mupdate and findall.
+         */
+
+        r = 0;
+        intname = mbentry->name;
+        xfer->topart = xstrdup(topart ? topart : mbentry->partition);
+
+        /* if we are not moving a user, just move the one mailbox */
+        if (item->state != XFER_MOVING_USER) {
+
+            syslog(LOG_INFO, "XFER: mailbox '%s' -> %s!%s",
+                   mbentry->name, xfer->toserver, xfer->topart);
+
+            /* is the selected mailbox the one we're moving? */
+            if (!strcmpsafe(intname, index_mboxname(imapd_index))) {
+                r = IMAP_MAILBOX_LOCKED;
+                goto next;
             }
+
+            /* we're moving this mailbox */
+            xfer_addusermbox(mbentry, xfer);
+            mbox_count++;
+
+            r = do_xfer(xfer);
+        } else {
+            xfer->userid = mboxname_to_userid(intname);
+
+            syslog(LOG_INFO, "XFER: user '%s' -> %s!%s",
+                   xfer->userid, xfer->toserver, xfer->topart);
+
+            if (!config_getswitch(IMAPOPT_ALLOWUSERMOVES)) {
+                /* not configured to allow user moves */
+                r = IMAP_MAILBOX_NOTSUPPORTED;
+            } else if (!strcmp(xfer->userid, imapd_userid)) {
+                /* don't move your own inbox, that could be troublesome */
+                r = IMAP_MAILBOX_NOTSUPPORTED;
+            } else if (!strncmpsafe(intname, index_mboxname(imapd_index),
+                             strlen(intname))) {
+                /* selected mailbox is in the namespace we're moving */
+                r = IMAP_MAILBOX_LOCKED;
+            }
+            if (r) goto next;
+
+            if (!xfer->use_replication) {
+                /* set the quotaroot if needed */
+                r = xfer_setquotaroot(xfer, intname);
+                if (r) goto next;
+
+                /* backport the seen file if needed */
+                if (xfer->remoteversion < 12) {
+                    r = seen_open(xfer->userid, SEEN_CREATE, &xfer->seendb);
+                    if (r) goto next;
+                }
+            }
+
+            r = mboxlist_usermboxtree(xfer->userid, xfer_addusermbox,
+                                      xfer, MBOXTREE_DELETED);
+
+            /* NOTE: mailboxes were added in reverse, so the inbox is
+             * done last */
+            r = do_xfer(xfer);
+            if (r) goto next;
+
+            /* this was a successful user move, and we need to delete
+               certain user meta-data (but not seen state!) */
+            syslog(LOG_INFO, "XFER: deleting user metadata");
+            user_deletedata(xfer->userid, 0);
         }
 
-        r = mboxlist_usermboxtree(xfer->userid, xfer_addmbox, xfer, MBOXTREE_DELETED);
+      next:
+        if (r) {
+            if (xfer->userid)
+                prot_printf(imapd_out, "* NO USER %s (%s)\r\n",
+                            xfer->userid, error_message(r));
+            else
+                prot_printf(imapd_out, "* NO MAILBOX \"%s\" (%s)\r\n",
+                            item->extname, error_message(r));
+        } else {
+            partial_success = 1;
 
-        /* NOTE: mailboxes were added in reverse, so the inbox is
-         * done last */
-        r = do_xfer(xfer);
-        if (r) goto done;
+            if (xfer->userid)
+                prot_printf(imapd_out, "* OK USER %s\r\n", xfer->userid);
+            else
+                prot_printf(imapd_out, "* OK MAILBOX \"%s\"\r\n", item->extname);
+        }
+        prot_flush(imapd_out);
 
-        /* this was a successful user delete, and we need to delete
-           certain user meta-data (but not seen state!) */
-        syslog(LOG_INFO, "XFER: deleting user metadata");
-        user_deletedata(xfer->userid, 0);
+        mboxlist_entry_free(&mbentry);
+        next = item->next;
+        free(item);
+
+        if (xfer->userid || mbox_count > 1000) {
+            /* RESTART after each user or after every 1000 mailboxes */
+            mbox_count = 0;
+
+            sync_send_restart(xfer->be->out);
+            r = sync_parse_response("RESTART", xfer->be->in, NULL);
+            if (r) goto done;
+        }
+
+        xfer_cleanup(xfer);
+
+        if (partial_success) r = 0;
     }
 
 done:
@@ -11352,8 +11809,6 @@ done:
         prot_printf(imapd_out, "%s OK %s\r\n", tag,
                     error_message(IMAP_OK_COMPLETED));
     }
-
-    free(intname);
 
     return;
 }
@@ -11714,6 +12169,7 @@ static int getlistselopts(char *tag, struct listargs *args)
 
         if (!strcmp(buf.s, "subscribed")) {
             args->sel |= LIST_SEL_SUBSCRIBED;
+            args->ret |= LIST_RET_SUBSCRIBED;
         } else if (!strcmp(buf.s, "vendor.cmu-dav")) {
             args->sel |= LIST_SEL_DAV;
         } else if (!strcmp(buf.s, "remote")) {
@@ -11722,9 +12178,12 @@ static int getlistselopts(char *tag, struct listargs *args)
             args->sel |= LIST_SEL_RECURSIVEMATCH;
         } else if (!strcmp(buf.s, "special-use")) {
             args->sel |= LIST_SEL_SPECIALUSE;
+            args->ret |= LIST_RET_SPECIALUSE;
         } else if (!strcmp(buf.s, "metadata")) {
             struct getmetadata_options opts = OPTS_INITIALIZER;
             args->sel |= LIST_SEL_METADATA;
+            args->ret |= LIST_RET_METADATA;
+
             strarray_t options = STRARRAY_INITIALIZER;
             c = parse_metadata_string_or_list(tag, &options, NULL);
             parse_getmetadata_options(&options, &opts);
@@ -11816,7 +12275,7 @@ static int getlistretopts(char *tag, struct listargs *args)
             args->ret |= LIST_RET_STATUS;
             c = parse_statusitems(&args->statusitems, &errstr);
             if (c == EOF) {
-                prot_printf(imapd_out, "%s BAD %s", tag, errstr);
+                prot_printf(imapd_out, "%s BAD %s\r\n", tag, errstr);
                 return EOF;
             }
         }
@@ -11925,15 +12384,16 @@ static void freefieldlist(struct fieldlist *l)
     }
 }
 
-static int set_haschildren(const mbentry_t *mbentry __attribute__((unused)), void *rock)
+static int set_haschildren(const mbentry_t *mbentry __attribute__((unused)),
+                           void *rock)
 {
-    int *attributes = (int *)rock;
+    uint32_t *attributes = (uint32_t *)rock;
     list_callback_calls++;
     *attributes |= MBOX_ATTRIBUTE_HASCHILDREN;
     return CYRUSDB_DONE;
 }
 
-static void specialuse_flags(mbentry_t *mbentry, const char *sep,
+static void specialuse_flags(const mbentry_t *mbentry, struct buf *attrib,
                              int isxlist)
 {
     if (!mbentry) return;
@@ -11949,24 +12409,19 @@ static void specialuse_flags(mbentry_t *mbentry, const char *sep,
 
     /* inbox - only print if command is XLIST */
     if (mbentry->name[inboxlen] == '\0') {
-        if (isxlist) prot_printf(imapd_out, "%s\\Inbox", sep);
+        if (isxlist) buf_init_ro_cstr(attrib, "\\Inbox");
     }
     /* subdir */
     else if (mbentry->name[inboxlen] == '.') {
-        struct buf attrib = BUF_INITIALIZER;
         /* check if there's a special use flag set */
-        if (!annotatemore_lookup(mbentry->name, "/specialuse", imapd_userid, &attrib)) {
-            if (attrib.len)
-                prot_printf(imapd_out, "%s%s", sep, buf_cstring(&attrib));
-        }
-        buf_free(&attrib);
+        annotatemore_lookup(mbentry->name, "/specialuse", imapd_userid, attrib);
     }
     free(inbox);
     /* otherwise it's actually another user who matches for
      * the substr.  Ok to just print nothing */
 }
 
-static void printmetadata(mbentry_t *mbentry,
+static void printmetadata(const mbentry_t *mbentry,
                           const strarray_t *entries,
                           struct getmetadata_options *opts)
 {
@@ -11989,61 +12444,27 @@ done:
 }
 
 /* Print LIST or LSUB untagged response */
-static void list_response(const char *name, int attributes,
-                          struct listargs *listargs)
+static void list_response(const char *extname, const mbentry_t *mbentry,
+                          uint32_t attributes, struct listargs *listargs)
 {
-    const struct mbox_name_attribute *attr;
     int r;
-    const char *sep;
-    const char *cmd;
-    mbentry_t *mbentry = NULL;
     struct statusdata sdata = STATUSDATA_INIT;
+    struct buf specialuse = BUF_INITIALIZER;
 
-    if (!name) return;
-
-    /* get info and set flags */
-    r = mboxlist_lookup(name, &mbentry, NULL);
-
-    if (r == IMAP_MAILBOX_NONEXISTENT) {
-        attributes |= (listargs->cmd & LIST_CMD_EXTENDED) ?
-                       MBOX_ATTRIBUTE_NONEXISTENT : MBOX_ATTRIBUTE_NOSELECT;
+    if ((attributes & MBOX_ATTRIBUTE_NONEXISTENT)) {
+        if (!(listargs->cmd == LIST_CMD_EXTENDED)) {
+            attributes |= MBOX_ATTRIBUTE_NOSELECT;
+            attributes &= ~MBOX_ATTRIBUTE_NONEXISTENT;
+        }
     }
-    else if (r) return;
 
     else if (listargs->scan) {
         /* SCAN mailbox for content */
 
-        if ((mbentry->mbtype & MBTYPE_REMOTE) &&
-            !hash_lookup(mbentry->partition, &listargs->server_table)) {
-            /* remote mailbox that we haven't proxied to yet */
-            struct backend *s;
-
-            hash_insert(mbentry->server, (void *)0xDEADBEEF, &listargs->server_table);
-            s = proxy_findserver(mbentry->server, &imap_protocol,
-                                 proxy_userid, &backend_cached,
-                                 &backend_current, &backend_inbox, imapd_in);
-            if (!s) r = IMAP_SERVER_UNAVAILABLE;
-
-            if (!r) {
-                char mytag[128];
-                proxy_gentag(mytag, sizeof(mytag));
-
-                prot_printf(s->out,
-                            "%s Scan {%tu+}\r\n%s {%tu+}\r\n%s {%tu+}\r\n%s\r\n",
-                            mytag,
-                            strlen(listargs->ref), listargs->ref,
-                            strlen(listargs->pat.data[0]), listargs->pat.data[0],
-                            strlen(listargs->scan), listargs->scan);
-
-                r = pipe_until_tag(s, mytag, 0);
-            }
-
-            goto done;
-        }
-        else if (!strcmpsafe(name, index_mboxname(imapd_index))) {
+        if (!strcmpsafe(mbentry->name, index_mboxname(imapd_index))) {
             /* currently selected mailbox */
             if (!index_scan(imapd_index, listargs->scan))
-                goto done; /* no matching messages */
+                return; /* no matching messages */
         }
         else {
             /* other local mailbox */
@@ -12056,7 +12477,7 @@ static void list_response(const char *name, int attributes,
             init.authstate = imapd_authstate;
             init.out = imapd_out;
 
-            r = index_open(name, &init, &state);
+            r = index_open(mbentry->name, &init, &state);
 
             if (!r)
                 doclose = 1;
@@ -12074,29 +12495,44 @@ static void list_response(const char *name, int attributes,
 
             if (doclose) index_close(&state);
 
-            if (r) goto done;
+            if (r) return;
         }
     }
 
     /* figure out \Has(No)Children if necessary
        This is mainly used for LIST (SUBSCRIBED) RETURN (CHILDREN)
     */
-    if (listargs->ret & LIST_RET_CHILDREN
-        && ! (attributes & MBOX_ATTRIBUTE_HASCHILDREN)
-        && ! (attributes & MBOX_ATTRIBUTE_HASNOCHILDREN) ) {
-        mboxlist_mboxtree(name, set_haschildren, &attributes, MBOXTREE_SKIP_ROOT);
-        if ( ! (attributes & MBOX_ATTRIBUTE_HASCHILDREN) )
+    uint32_t have_childinfo =
+        MBOX_ATTRIBUTE_HASCHILDREN | MBOX_ATTRIBUTE_HASNOCHILDREN;
+    if ((listargs->ret & LIST_RET_CHILDREN) && !(attributes & have_childinfo)) {
+        if (imapd_namespace.isalt && !strcmp(extname, "INBOX")) {
+            /* don't look inside INBOX under altnamespace, its children aren't children */
+        }
+        else {
+            char *intname = NULL, *freeme = NULL;
+
+            /* if we got here via subscribed_cb, mbentry isn't set */
+            if (mbentry)
+                intname = mbentry->name;
+            else
+                intname = freeme = mboxname_from_external(extname, &imapd_namespace, imapd_userid);
+
+            mboxlist_mboxtree(intname, set_haschildren, &attributes, MBOXTREE_SKIP_ROOT);
+            if (freeme) free(freeme);
+        }
+
+        if (!(attributes & MBOX_ATTRIBUTE_HASCHILDREN))
             attributes |= MBOX_ATTRIBUTE_HASNOCHILDREN;
     }
 
     if (attributes & (MBOX_ATTRIBUTE_NONEXISTENT | MBOX_ATTRIBUTE_NOSELECT)) {
         int keep = 0;
         /* extended get told everything */
-        if (listargs->cmd & LIST_CMD_EXTENDED) {
+        if (listargs->cmd == LIST_CMD_EXTENDED) {
             keep = 1;
         }
         /* we have to mention this, it has children */
-        if (listargs->cmd & LIST_CMD_LSUB) {
+        if (listargs->cmd == LIST_CMD_LSUB) {
             /* subscribed children need a mention */
             if (attributes & MBOX_ATTRIBUTE_CHILDINFO_SUBSCRIBED)
                 keep = 1;
@@ -12110,19 +12546,20 @@ static void list_response(const char *name, int attributes,
         else if (attributes & MBOX_ATTRIBUTE_HASCHILDREN)
             keep = 1;
 
-        if (!keep) goto done;
+        if (!keep) return;
     }
 
-    if (listargs->cmd & LIST_CMD_LSUB) {
+    if (listargs->cmd == LIST_CMD_LSUB) {
         /* \Noselect has a special second meaning with (R)LSUB */
         if ( !(attributes & MBOX_ATTRIBUTE_SUBSCRIBED)
              && attributes & MBOX_ATTRIBUTE_CHILDINFO_SUBSCRIBED)
             attributes |= MBOX_ATTRIBUTE_NOSELECT | MBOX_ATTRIBUTE_HASCHILDREN;
         attributes &= ~MBOX_ATTRIBUTE_SUBSCRIBED;
     }
+
     /* As CHILDINFO extended data item is not allowed if the
      * RECURSIVEMATCH selection option is not specified */
-    else if (!(listargs->sel & LIST_SEL_RECURSIVEMATCH)) {
+    if (!(listargs->sel & LIST_SEL_RECURSIVEMATCH)) {
         attributes &= ~MBOX_ATTRIBUTE_CHILDINFO_SUBSCRIBED;
     }
 
@@ -12131,8 +12568,12 @@ static void list_response(const char *name, int attributes,
     if (attributes & MBOX_ATTRIBUTE_NOINFERIORS)
         attributes &= ~MBOX_ATTRIBUTE_HASCHILDREN;
 
+    /* you can't have both!  If it's had children, it has children */
+    if (attributes & MBOX_ATTRIBUTE_HASCHILDREN)
+        attributes &= ~MBOX_ATTRIBUTE_HASNOCHILDREN;
+
     /* remove redundant flags */
-    if (listargs->cmd & LIST_CMD_EXTENDED) {
+    if (listargs->cmd == LIST_CMD_EXTENDED) {
         /* \NoInferiors implies \HasNoChildren */
         if (attributes & MBOX_ATTRIBUTE_NOINFERIORS)
             attributes &= ~MBOX_ATTRIBUTE_HASNOCHILDREN;
@@ -12141,23 +12582,20 @@ static void list_response(const char *name, int attributes,
             attributes &= ~MBOX_ATTRIBUTE_NOSELECT;
     }
 
+    if (config_getswitch(IMAPOPT_SPECIALUSEALWAYS) ||
+        listargs->cmd == LIST_CMD_XLIST ||
+        listargs->ret & LIST_RET_SPECIALUSE) {
+        specialuse_flags(mbentry, &specialuse, listargs->cmd == LIST_CMD_XLIST);
+    }
+
     if (listargs->sel & LIST_SEL_SPECIALUSE) {
-        struct buf attrib = BUF_INITIALIZER;
-        if (!mbentry) goto done;
         /* check that this IS a specialuse folder */
-        if (annotatemore_lookup(mbentry->name, "/specialuse", imapd_userid, &attrib))
-            goto done;
-        if (!attrib.len) {
-            buf_free(&attrib);
-            goto done;
-        }
-        buf_free(&attrib);
+        if (!buf_len(&specialuse)) return;
     }
 
     /* can we read the status data ? */
-    if ((listargs->ret & LIST_RET_STATUS) &&
-        !(attributes & MBOX_ATTRIBUTE_NOSELECT)) {
-        r = imapd_statusdata(name, listargs->statusitems, &sdata);
+    if ((listargs->ret & LIST_RET_STATUS) && mbentry) {
+        r = imapd_statusdata(mbentry->name, listargs->statusitems, &sdata);
         if (r) {
             /* RFC 5819: the STATUS response MUST NOT be returned and the
              * LIST response MUST include the \NoSelect attribute. */
@@ -12165,197 +12603,225 @@ static void list_response(const char *name, int attributes,
         }
     }
 
-    switch (listargs->cmd) {
-    case LIST_CMD_LSUB:
-        cmd = "LSUB";
-        break;
-    case LIST_CMD_XLIST:
-        cmd = "XLIST";
-        break;
-    default:
-        cmd = "LIST";
-        break;
-    }
-    prot_printf(imapd_out, "* %s (", cmd);
-    for (sep = "", attr = mbox_name_attributes; attr->id; attr++) {
-        if (attributes & attr->flag) {
-            prot_printf(imapd_out, "%s%s", sep, attr->id);
-            sep = " ";
-        }
-    }
-
-    if (config_getswitch(IMAPOPT_SPECIALUSEALWAYS) ||
-        listargs->cmd == LIST_CMD_XLIST ||
-        listargs->ret & LIST_RET_SPECIALUSE ||
-        listargs->sel & LIST_SEL_SPECIALUSE) {
-        specialuse_flags(mbentry, sep, listargs->cmd == LIST_CMD_XLIST);
-    }
-
-    prot_printf(imapd_out, ") ");
-
-    prot_printf(imapd_out, "\"%c\" ", imapd_namespace.hier_sep);
-
-    char *extname = mboxname_to_external(name, &imapd_namespace, imapd_userid);
-    prot_printastring(imapd_out, extname);
-
-    if (listargs->cmd & LIST_CMD_EXTENDED &&
-        attributes & MBOX_ATTRIBUTE_CHILDINFO_SUBSCRIBED) {
-        prot_printf(imapd_out, " (CHILDINFO (");
-        /* RFC 5258:
-         *     ; Note 2: The selection options are always returned
-         *     ; quoted, unlike their specification in
-         *     ; the extended LIST command.
-         */
-        if (attributes & MBOX_ATTRIBUTE_CHILDINFO_SUBSCRIBED)
-            prot_printf(imapd_out, "\"SUBSCRIBED\"");
-        prot_printf(imapd_out, "))");
-    }
-
-    prot_printf(imapd_out, "\r\n");
+    print_listresponse(listargs->cmd, extname,
+                       imapd_namespace.hier_sep, attributes, &specialuse);
+    buf_free(&specialuse);
 
     if ((listargs->ret & LIST_RET_STATUS) &&
         !(attributes & MBOX_ATTRIBUTE_NOSELECT)) {
         /* output the status line now, per rfc 5819 */
-        print_statusline(extname, listargs->statusitems, &sdata);
+        if (mbentry) print_statusline(extname, listargs->statusitems, &sdata);
     }
 
     if ((listargs->ret & LIST_RET_MYRIGHTS) &&
         !(attributes & MBOX_ATTRIBUTE_NOSELECT)) {
-        /*ignore result*/printmyrights(extname, mbentry);
+        if (mbentry) printmyrights(extname, mbentry);
     }
 
     if ((listargs->ret & LIST_RET_METADATA) &&
         !(attributes & MBOX_ATTRIBUTE_NOSELECT)) {
-        printmetadata(mbentry, &listargs->metaitems, &listargs->metaopts);
+        if (mbentry)
+            printmetadata(mbentry, &listargs->metaitems, &listargs->metaopts);
     }
-    free(extname);
-
-done:
-    mboxlist_entry_free(&mbentry);
 }
 
 static void _addsubs(struct list_rock *rock)
 {
     if (!rock->subs) return;
-    if (rock->last_attributes & MBOX_ATTRIBUTE_NOINFERIORS) return;
-    if (!strcmp(rock->last_name, "")) return;
-    if (!strcmp(rock->last_name, "user")) return;
+    if (!rock->last_mbentry) return;
     int i;
-    int namelen = strlen(rock->last_name);
+    const char *last_name = rock->last_mbentry->name;
+    int namelen = strlen(last_name);
     for (i = 0; i < rock->subs->count; i++) {
         const char *name = strarray_nth(rock->subs, i);
-        if (strncmp(rock->last_name, name, namelen))
+        if (strncmp(last_name, name, namelen))
             continue;
-        else if (!name[namelen])
-            rock->last_attributes |= MBOX_ATTRIBUTE_SUBSCRIBED;
+        else if (!name[namelen]) {
+            if ((rock->last_attributes & MBOX_ATTRIBUTE_NONEXISTENT))
+                rock->last_attributes |= MBOX_ATTRIBUTE_CHILDINFO_SUBSCRIBED;
+            else
+                rock->last_attributes |= MBOX_ATTRIBUTE_SUBSCRIBED;
+        }
         else if (name[namelen] == '.')
             rock->last_attributes |= MBOX_ATTRIBUTE_CHILDINFO_SUBSCRIBED;
     }
 }
 
-static int perform_output(const char *name, size_t matchlen,
-                          struct list_rock *rock)
+static int perform_output(const char *extname, const mbentry_t *mbentry, struct list_rock *rock)
 {
+    /* skip non-responsive mailboxes early, so they don't break sub folder detection */
+    if (mbentry && !imapd_userisadmin) {
+        if (mbentry->mbtype == MBTYPE_NETNEWS) return 0;
+        if (!(rock->listargs->sel & LIST_SEL_DAV)) {
+            if (mboxname_iscalendarmailbox(mbentry->name, mbentry->mbtype)) return 0;
+            if (mboxname_isaddressbookmailbox(mbentry->name, mbentry->mbtype)) return 0;
+            if (mboxname_isdavdrivemailbox(mbentry->name, mbentry->mbtype)) return 0;
+            if (mboxname_isdavnotificationsmailbox(mbentry->name, mbentry->mbtype)) return 0;
+        }
+    }
+
+    if (mbentry && (mbentry->mbtype & MBTYPE_REMOTE)) {
+        struct listargs *listargs = rock->listargs;
+
+        if (hash_lookup(mbentry->server, &rock->server_table)) {
+            /* already proxied to this backend server */
+            return 0;
+        }
+        if (listargs->scan ||
+            (listargs->ret &
+             (LIST_RET_SPECIALUSE | LIST_RET_STATUS | LIST_RET_METADATA))) {
+            /* remote mailbox that we need to fetch metadata from */
+            struct backend *s;
+
+            hash_insert(mbentry->server,
+                        (void *)0xDEADBEEF, &rock->server_table);
+            s = proxy_findserver(mbentry->server, &imap_protocol,
+                                 proxy_userid, &backend_cached,
+                                 &backend_current, &backend_inbox, imapd_in);
+            if (s) {
+                char mytag[128];
+
+                proxy_gentag(mytag, sizeof(mytag));
+
+                if (listargs->scan) {
+                    /* Send SCAN command to backend */
+                    prot_printf(s->out, "%s Scan {%tu+}\r\n%s {%tu+}\r\n%s"
+                                " {%tu+}\r\n%s\r\n",
+                                mytag, strlen(listargs->ref), listargs->ref,
+                                strlen(listargs->pat.data[0]),
+                                listargs->pat.data[0],
+                                strlen(listargs->scan), listargs->scan);
+
+                    pipe_until_tag(s, mytag, 0);
+                }
+                else {
+                    /* Send LIST command to backend */
+                    list_data_remote(s, mytag, listargs, rock->subs);
+                }
+            }
+
+            return 0;
+        }
+    }
+
     if (rock->last_name) {
-        if (strlen(rock->last_name) == matchlen && name &&
-            !strncmp(rock->last_name, name, matchlen))
-            return 0; /* skip duplicate calls */
+        if (extname) {
+            /* same again */
+            if (!strcmp(rock->last_name, extname)) return 0;
+            size_t extlen = strlen(extname);
+            if (extlen < strlen(rock->last_name)
+             && rock->last_name[extlen] == imapd_namespace.hier_sep
+             && !strncmp(rock->last_name, extname, extlen))
+                return 0; /* skip duplicate or reversed calls */
+        }
         _addsubs(rock);
-        list_response(rock->last_name, rock->last_attributes, rock->listargs);
+        /* check if we need to filter out this mailbox */
+        if (!(rock->listargs->sel & LIST_SEL_SUBSCRIBED) ||
+            (rock->last_attributes &
+             (MBOX_ATTRIBUTE_SUBSCRIBED | MBOX_ATTRIBUTE_CHILDINFO_SUBSCRIBED))) {
+            list_response(rock->last_name, rock->last_mbentry,
+                          rock->last_attributes, rock->listargs);
+        }
         free(rock->last_name);
         rock->last_name = NULL;
+        mboxlist_entry_free(&rock->last_mbentry);
     }
 
-    if (name) {
-        mbentry_t *mbentry = NULL;
-        if (!imapd_userisadmin && !mboxlist_lookup(name, &mbentry, NULL)) {
-            /* skip all non-IMAP folders */
-            int mbtype = mbentry->mbtype;
-
-            mboxlist_entry_free(&mbentry);
-            switch (mbtype) {
-            case MBTYPE_CALENDAR:
-            case MBTYPE_ADDRESSBOOK:
-            case MBTYPE_COLLECTION:
-                if (rock->listargs->sel & LIST_SEL_DAV) break;
-
-            case MBTYPE_NETNEWS:
-                return 0;
-            }
-        }
-        rock->last_name = xstrndup(name, matchlen);
-        rock->last_attributes = 0;
+    if (extname) {
+        rock->last_name = xstrdup(extname);
+        if (mbentry) rock->last_mbentry = mboxlist_entry_copy(mbentry);
     }
+
+    rock->last_attributes = 0;
+    rock->last_category = 0;
 
     return 1;
 }
 
 /* callback for mboxlist_findall
  * used when the SUBSCRIBED selection option is NOT given */
-static int list_cb(const char *name, int matchlen, int maycreate,
-                   void *rockp)
+static int list_cb(struct findall_data *data, void *rockp)
 {
     struct list_rock *rock = (struct list_rock *)rockp;
-    int last_len;
+    if (!data) {
+        if (!(rock->last_attributes & MBOX_ATTRIBUTE_HASCHILDREN))
+            rock->last_attributes |= MBOX_ATTRIBUTE_HASNOCHILDREN;
+        perform_output(NULL, NULL, rock);
+        return 0;
+    }
+    size_t last_len = (rock->last_name ? strlen(rock->last_name) : 0);
+    const char *extname = data->extname;
     int last_name_is_ancestor =
         rock->last_name
-        && matchlen >= (last_len = strlen(rock->last_name))
-        && name[last_len] == '.'
-        && !(rock->last_attributes & MBOX_ATTRIBUTE_NOINFERIORS)
-        && !memcmp(rock->last_name, name, last_len);
+        && strlen(extname) >= last_len
+        && extname[last_len] == imapd_namespace.hier_sep
+        && !memcmp(rock->last_name, extname, last_len);
 
     list_callback_calls++;
 
-    if (last_name_is_ancestor)
+    /* list_response will calculate haschildren/hasnochildren flags later
+     * if they're required but not yet set, but it's a little cheaper to
+     * precalculate them now while we're iterating the mailboxes anyway.
+     */
+    if (last_name_is_ancestor || (rock->last_name && !data->mbname && !strcmp(rock->last_name, extname)))
         rock->last_attributes |= MBOX_ATTRIBUTE_HASCHILDREN;
 
-    /* tidy up flags */
-    if (!(rock->last_attributes & MBOX_ATTRIBUTE_HASCHILDREN))
+    else if (!(rock->last_attributes & MBOX_ATTRIBUTE_HASCHILDREN))
         rock->last_attributes |= MBOX_ATTRIBUTE_HASNOCHILDREN;
 
-    if (!perform_output(name, matchlen, rock))
+    if (!perform_output(data->extname, data->mbentry, rock))
         return 0;
 
-    if (!maycreate)
+    if (!data->mbname)
+        rock->last_attributes |= MBOX_ATTRIBUTE_HASCHILDREN | MBOX_ATTRIBUTE_NONEXISTENT;
+
+    else if (data->mb_category == MBNAME_ALTINBOX)
         rock->last_attributes |= MBOX_ATTRIBUTE_NOINFERIORS;
-    else if (name[matchlen] == '.')
-        rock->last_attributes |= MBOX_ATTRIBUTE_HASCHILDREN;
 
     return 0;
 }
 
 /* callback for mboxlist_findsub
  * used when SUBSCRIBED but not RECURSIVEMATCH is given */
-static int subscribed_cb(const char *name, int matchlen, int maycreate,
-                         void *rockp)
+static int subscribed_cb(struct findall_data *data, void *rockp)
 {
     struct list_rock *rock = (struct list_rock *)rockp;
-    int last_len;
+    if (!data) {
+        perform_output(NULL, NULL, rock);
+        return 0;
+    }
+    size_t last_len = (rock->last_name ? strlen(rock->last_name) : 0);
+    const char *extname = data->extname;
     int last_name_is_ancestor =
         rock->last_name
-        && matchlen >= (last_len = strlen(rock->last_name))
-        && name[last_len] == '.'
-        && !(rock->last_attributes & MBOX_ATTRIBUTE_NOINFERIORS)
-        && !memcmp(rock->last_name, name, last_len);
+        && strlen(extname) >= last_len
+        && extname[last_len] == imapd_namespace.hier_sep
+        && !memcmp(rock->last_name, extname, last_len);
 
     list_callback_calls++;
 
-    if (last_name_is_ancestor)
+    if (last_name_is_ancestor ||
+        (rock->last_name && !data->mbname && !strcmp(rock->last_name, extname)))
         rock->last_attributes |= MBOX_ATTRIBUTE_HASCHILDREN;
 
-    if (!name[matchlen]) {
-        perform_output(name, matchlen, rock);
+    if (data->mbname) { /* exact match */
+        mbentry_t *mbentry = NULL;
+        mboxlist_lookup(mbname_intname(data->mbname), &mbentry, NULL);
+        perform_output(extname, mbentry, rock);
+        mboxlist_entry_free(&mbentry);
+
         rock->last_attributes |= MBOX_ATTRIBUTE_SUBSCRIBED;
-        if (!maycreate)
+        if (mboxlist_lookup(mbname_intname(data->mbname), NULL, NULL))
+            rock->last_attributes |= MBOX_ATTRIBUTE_NONEXISTENT;
+        if (data->mb_category == MBNAME_ALTINBOX)
             rock->last_attributes |= MBOX_ATTRIBUTE_NOINFERIORS;
     }
-    else if (name[matchlen] == '.' &&
-             rock->listargs->cmd & LIST_CMD_LSUB) {
+    else if (rock->listargs->cmd == LIST_CMD_LSUB) {
         /* special case: for LSUB,
          * mailbox names that match the pattern but aren't subscribed
          * must also be returned if they have a child mailbox that is
          * subscribed */
-        perform_output(name, matchlen, rock);
+        perform_output(extname, data->mbentry, rock);
         rock->last_attributes |= MBOX_ATTRIBUTE_CHILDINFO_SUBSCRIBED;
     }
 
@@ -12412,51 +12878,129 @@ static void canonical_list_patterns(const char *reference,
     }
 }
 
+static void list_data_remotesubscriptions(struct listargs *listargs)
+{
+    /* Need to fetch subscription list from backend_inbox */
+    struct list_rock rock;
+    char mytag[128];
+
+    memset(&rock, 0, sizeof(struct list_rock));
+    rock.listargs = listargs;
+    rock.subs = strarray_new();
+    construct_hash_table(&rock.server_table, 10, 1);
+
+    proxy_gentag(mytag, sizeof(mytag));
+
+    if ((listargs->sel & LIST_SEL_SUBSCRIBED) &&
+        !(listargs->sel & (LIST_SEL_SPECIALUSE | LIST_SEL_METADATA))) {
+        /* Subscriptions are the only selection criteria.
+
+           Send client request as-is to backend_inbox.
+           Responses will be piped to the client as we build subs list.
+        */
+        list_data_remote(backend_inbox, mytag, listargs, rock.subs);
+
+        /* Don't proxy to backend_inbox again */
+        hash_insert(backend_inbox->hostname,
+                    (void *)0xDEADBEEF, &rock.server_table);
+    }
+    else {
+        /* Multiple selection criteria or need to return subscription info.
+
+           Just fetch subscriptions without piping responses to the client.
+           If we send entire client request, subscribed mailboxes on
+           non-Inbox servers might be filtered out due to lack of metadata
+           to meet the selection criteria.
+
+           Note that we end up sending two requests to backend_inbox,
+           but there doesn't appear to be any way around this.
+        */
+        struct listargs myargs;
+
+        memcpy(&myargs, listargs, sizeof(struct listargs));
+        myargs.sel = LIST_SEL_SUBSCRIBED;
+        myargs.ret = 0;
+
+        list_data_remote(backend_inbox, mytag, &myargs, rock.subs);
+    }
+
+    /* find */
+    mboxlist_findallmulti(&imapd_namespace, &listargs->pat,
+                          imapd_userisadmin, imapd_userid,
+                          imapd_authstate, list_cb, &rock);
+
+    strarray_free(rock.subs);
+    free_hash_table(&rock.server_table, NULL);
+    if (rock.last_name) free(rock.last_name);
+}
+
 /* callback for mboxlist_findsub
  * used by list_data_recursivematch */
-static int recursivematch_cb(const char *name, int matchlen, int maycreate, void *rockp)
+static int recursivematch_cb(struct findall_data *data, void *rockp)
 {
+    if (!data) return 0;
+
     struct list_rock_recursivematch *rock = (struct list_rock_recursivematch *)rockp;
     list_callback_calls++;
 
-    char c = name[matchlen];
-    if (c) {
-        if (c == '.') {
-            int *parent_info;
-            char *parentname = xstrndup(name, matchlen);
-            parent_info = hash_lookup(parentname, &rock->table);
-            if (!parent_info) {
-                parent_info = xzmalloc(sizeof(int));
-                hash_insert(parentname, parent_info, &rock->table);
-                rock->count++;
-            }
-            if (!(*parent_info & MBOX_ATTRIBUTE_NOINFERIORS))
-                *parent_info |= MBOX_ATTRIBUTE_CHILDINFO_SUBSCRIBED;
-            free(parentname);
+    const char *extname = data->extname;
+
+    /* skip non-responsive mailboxes early, so they don't break sub folder detection */
+    if (!(imapd_userisadmin || (rock->listargs->sel & LIST_SEL_DAV))) {
+        mbname_t *mbname = (mbname_t *) data->mbname;
+        const char *intname;
+        int r;
+
+        if (!mbname) {
+            mbname = mbname_from_extname(extname, &imapd_namespace, imapd_userid);
         }
-    } else {
-        int *list_info = hash_lookup(name, &rock->table);
-        if (!list_info) {
-            list_info = xzmalloc(sizeof(int));
-            *list_info |= MBOX_ATTRIBUTE_SUBSCRIBED;
-            if (!maycreate) *list_info |= MBOX_ATTRIBUTE_NOINFERIORS;
-            hash_insert(name, list_info, &rock->table);
-            rock->count++;
+
+        if (mbname) {
+            intname = mbname_intname(mbname);
+            r = mboxname_iscalendarmailbox(intname, 0) ||
+                mboxname_isaddressbookmailbox(intname, 0) ||
+                mboxname_isdavdrivemailbox(intname, 0) ||
+                mboxname_isdavnotificationsmailbox(intname, 0);
+
+            if (!data->mbname) mbname_free(&mbname);
+
+            if (r) return 0;
         }
+    }
+
+    struct list_entry *entry = hash_lookup(extname, &rock->table);
+    if (!entry) {
+        entry = xzmalloc(sizeof(struct list_entry));
+        entry->extname = xstrdupsafe(extname);
+        entry->attributes |= MBOX_ATTRIBUTE_NONEXISTENT;
+
+        hash_insert(extname, entry, &rock->table);
+        rock->count++;
+    }
+
+
+    if (data->mbname) { /* exact match */
+        entry->attributes |= MBOX_ATTRIBUTE_SUBSCRIBED;
+        if (!data->mbentry) {
+            mboxlist_lookup(mbname_intname(data->mbname), &entry->mbentry, NULL);
+            if (entry->mbentry) entry->attributes &= ~MBOX_ATTRIBUTE_NONEXISTENT;
+        }
+    }
+    else {
+        entry->attributes |= MBOX_ATTRIBUTE_CHILDINFO_SUBSCRIBED | MBOX_ATTRIBUTE_HASCHILDREN;
     }
 
     return 0;
 }
 
 /* callback for hash_enumerate */
-static void copy_to_array(const char *key, void *data, void *void_rock)
+static void copy_to_array(const char *key __attribute__((unused)), void *data, void *void_rock)
 {
-    int *attributes = (int *)data;
+    struct list_entry *entry = (struct list_entry *)data;
     struct list_rock_recursivematch *rock =
         (struct list_rock_recursivematch *)void_rock;
     assert(rock->count > 0);
-    rock->array[--rock->count].name = key;
-    rock->array[rock->count].attributes = *attributes;
+    rock->array[--rock->count] = *entry;
 }
 
 /* Comparator for sorting an array of struct list_entry by mboxname. */
@@ -12464,7 +13008,15 @@ static int list_entry_comparator(const void *p1, const void *p2) {
     const struct list_entry *e1 = (struct list_entry *)p1;
     const struct list_entry *e2 = (struct list_entry *)p2;
 
-    return bsearch_compare_mbox(e1->name, e2->name);
+    return bsearch_compare_mbox(e1->extname, e2->extname);
+}
+
+static void free_list_entry(void *rock)
+{
+    struct list_entry *entry = (struct list_entry *)rock;
+    mboxlist_entry_free(&entry->mbentry);
+    free(entry->extname);
+    free(entry);
 }
 
 static void list_data_recursivematch(struct listargs *listargs) {
@@ -12491,7 +13043,9 @@ static void list_data_recursivematch(struct listargs *listargs) {
 
         /* print */
         for (i = 0; i < entries; i++) {
-            list_response(rock.array[i].name,
+            if (!rock.array[i].extname) continue;
+            list_response(rock.array[i].extname,
+                          rock.array[i].mbentry,
                           rock.array[i].attributes,
                           rock.listargs);
         }
@@ -12499,7 +13053,7 @@ static void list_data_recursivematch(struct listargs *listargs) {
         free(rock.array);
     }
 
-    free_hash_table(&rock.table, free);
+    free_hash_table(&rock.table, free_list_entry);
 }
 
 /* Retrieves the data and prints the untagged responses for a LIST command. */
@@ -12508,41 +13062,50 @@ static void list_data(struct listargs *listargs)
     canonical_list_patterns(listargs->ref, &listargs->pat);
 
     /* Check to see if we should only list the personal namespace */
-    if (!(listargs->cmd & LIST_CMD_EXTENDED)
+    if (!(listargs->cmd == LIST_CMD_EXTENDED)
             && !strcmp(listargs->pat.data[0], "*")
             && config_getswitch(IMAPOPT_FOOLSTUPIDCLIENTS)) {
         strarray_set(&listargs->pat, 0, "INBOX*");
     }
 
-    if (listargs->sel & LIST_SEL_RECURSIVEMATCH) {
+    if ((listargs->ret & LIST_RET_SUBSCRIBED) &&
+        (backend_inbox || (backend_inbox = proxy_findinboxserver(imapd_userid)))) {
+        list_data_remotesubscriptions(listargs);
+    }
+    else if (listargs->sel & LIST_SEL_RECURSIVEMATCH) {
         list_data_recursivematch(listargs);
-    } else {
+    }
+    else {
         struct list_rock rock;
         memset(&rock, 0, sizeof(struct list_rock));
         rock.listargs = listargs;
 
         if (listargs->sel & LIST_SEL_SUBSCRIBED) {
-            mboxlist_findsubmulti(&imapd_namespace, &listargs->pat, imapd_userisadmin,
-                                  imapd_userid, imapd_authstate, subscribed_cb, &rock, 1);
-            perform_output(NULL, 0, &rock);
-        } else {
-            if (listargs->scan) {
-                construct_hash_table(&listargs->server_table, 10, 1);
+            mboxlist_findsubmulti(&imapd_namespace, &listargs->pat,
+                                  imapd_userisadmin, imapd_userid,
+                                  imapd_authstate, subscribed_cb, &rock, 1);
+        }
+        else {
+            if (config_mupdate_server) {
+                /* In case we proxy to backends due to select/return criteria */
+                construct_hash_table(&rock.server_table, 10, 1);
             }
 
             /* XXX: is there a cheaper way to figure out \Subscribed? */
-            if (listargs->ret & LIST_RET_SUBSCRIBED)
+            if (listargs->ret & LIST_RET_SUBSCRIBED) {
                 rock.subs = mboxlist_sublist(imapd_userid);
+            }
 
-            mboxlist_findallmulti(&imapd_namespace, &listargs->pat, imapd_userisadmin,
-                                  imapd_userid, imapd_authstate, list_cb, &rock);
-            perform_output(NULL, 0, &rock);
+            mboxlist_findallmulti(&imapd_namespace, &listargs->pat,
+                                  imapd_userisadmin, imapd_userid,
+                                  imapd_authstate, list_cb, &rock);
 
-            if (listargs->scan)
-                free_hash_table(&listargs->server_table, NULL);
-            if (rock.subs)
-                strarray_free(rock.subs);
+            if (rock.subs) strarray_free(rock.subs);
+            if (rock.server_table.size)
+                free_hash_table(&rock.server_table, NULL);
         }
+
+        if (rock.last_name) free(rock.last_name);
     }
 }
 
@@ -12550,10 +13113,11 @@ static void list_data(struct listargs *listargs)
  * Retrieves the data and prints the untagged responses for a LIST command in
  * the case of a remote inbox.
  */
-static int list_data_remote(char *tag, struct listargs *listargs)
+static int list_data_remote(struct backend *be, char *tag,
+                            struct listargs *listargs, strarray_t *subs)
 {
-    if ((listargs->cmd & LIST_CMD_EXTENDED) &&
-        !CAPA(backend_inbox, CAPA_LISTEXTENDED)) {
+    if ((listargs->cmd == LIST_CMD_EXTENDED) &&
+        !CAPA(be, CAPA_LISTEXTENDED)) {
         /* client wants to use extended list command but backend doesn't
          * support it */
         prot_printf(imapd_out,
@@ -12563,48 +13127,61 @@ static int list_data_remote(char *tag, struct listargs *listargs)
     }
 
     /* print tag, command and list selection options */
-    if (listargs->cmd & LIST_CMD_LSUB) {
-        prot_printf(backend_inbox->out, "%s Lsub ", tag);
+    if (listargs->cmd == LIST_CMD_LSUB) {
+        prot_printf(be->out, "%s Lsub ", tag);
+    } else if (listargs->cmd == LIST_CMD_XLIST) {
+        prot_printf(be->out, "%s Xlist ", tag);
     } else {
-        const char *select_opts[] = {
-            /* XXX  MUST be in same order as LIST_SEL_* bitmask */
-            "subscribed", "remote", "recursivematch",
-            "special-use", "vendor.cmu-dav", "metadata", NULL
-        };
-        char c = '(';
-        int i;
+        prot_printf(be->out, "%s List ", tag);
 
-        prot_printf(backend_inbox->out, "%s List ", tag);
-        for (i = 0; select_opts[i]; i++) {
-            unsigned opt = (1 << i);
+        uint32_t select_mask = listargs->sel;
 
-            if (!(listargs->sel & opt)) continue;
-
-            prot_printf(backend_inbox->out, "%c%s", c, select_opts[i]);
-            c = ' ';
-
-            if (opt == LIST_SEL_METADATA) {
-                /* print metadata options */
-                prot_puts(backend_inbox->out, " (depth ");
-                if (listargs->metaopts.depth < 0) {
-                    prot_puts(backend_inbox->out, "infinity");
-                }
-                else {
-                    prot_printf(backend_inbox->out, "%d",
-                                listargs->metaopts.depth);
-                }
-                if (listargs->metaopts.maxsize) {
-                    prot_printf(backend_inbox->out, " maxsize %zu",
-                                listargs->metaopts.maxsize);
-                }
-                (void)prot_putc(')', backend_inbox->out);
-            }
+        if (be != backend_inbox) {
+            /* don't send subscribed selection options to non-Inbox backend */
+            select_mask &= ~(LIST_SEL_SUBSCRIBED | LIST_SEL_RECURSIVEMATCH);
         }
-        prot_puts(backend_inbox->out, ") ");
+
+        /* print list selection options */
+        if (select_mask) {
+            const char *select_opts[] = {
+                /* XXX  MUST be in same order as LIST_SEL_* bitmask */
+                "subscribed", "remote", "recursivematch",
+                "special-use", "vendor.cmu-dav", "metadata", NULL
+            };
+            char c = '(';
+            int i;
+
+            for (i = 0; select_opts[i]; i++) {
+                unsigned opt = (1 << i);
+
+                if (!(select_mask & opt)) continue;
+
+                prot_printf(be->out, "%c%s", c, select_opts[i]);
+                c = ' ';
+
+                if (opt == LIST_SEL_METADATA) {
+                    /* print metadata options */
+                    prot_puts(be->out, " (depth ");
+                    if (listargs->metaopts.depth < 0) {
+                        prot_puts(be->out, "infinity");
+                    }
+                    else {
+                        prot_printf(be->out, "%d",
+                                    listargs->metaopts.depth);
+                    }
+                    if (listargs->metaopts.maxsize) {
+                        prot_printf(be->out, " maxsize %zu",
+                                    listargs->metaopts.maxsize);
+                    }
+                    (void)prot_putc(')', be->out);
+                }
+            }
+            prot_puts(be->out, ") ");
+        }
     }
 
     /* print reference argument */
-    prot_printf(backend_inbox->out,
+    prot_printf(be->out,
                 "{%tu+}\r\n%s ", strlen(listargs->ref), listargs->ref);
 
     /* print mailbox pattern(s) */
@@ -12613,18 +13190,18 @@ static int list_data_remote(char *tag, struct listargs *listargs)
         char c = '(';
 
         for (p = listargs->pat.data ; *p ; p++) {
-            prot_printf(backend_inbox->out,
+            prot_printf(be->out,
                         "%c{%tu+}\r\n%s", c, strlen(*p), *p);
             c = ' ';
         }
-        (void)prot_putc(')', backend_inbox->out);
+        (void)prot_putc(')', be->out);
     } else {
-        prot_printf(backend_inbox->out,
-                    "{%tu+}\r\n%s", strlen(listargs->pat.data[0]), listargs->pat.data[0]);
+        prot_printf(be->out, "{%tu+}\r\n%s",
+                    strlen(listargs->pat.data[0]), listargs->pat.data[0]);
     }
 
     /* print list return options */
-    if (listargs->ret) {
+    if (listargs->ret && listargs->cmd == LIST_CMD_EXTENDED) {
         const char *return_opts[] = {
             /* XXX  MUST be in same order as LIST_RET_* bitmask */
             "subscribed", "children", "special-use",
@@ -12633,13 +13210,13 @@ static int list_data_remote(char *tag, struct listargs *listargs)
         char c = '(';
         int i, j;
 
-        prot_puts(backend_inbox->out, " return ");
+        prot_puts(be->out, " return ");
         for (i = 0; return_opts[i]; i++) {
             unsigned opt = (1 << i);
 
             if (!(listargs->ret & opt)) continue;
 
-            prot_printf(backend_inbox->out, "%c%s", c, return_opts[i]);
+            prot_printf(be->out, "%c%s", c, return_opts[i]);
             c = ' ';
 
             if (opt == LIST_RET_STATUS) {
@@ -12655,11 +13232,10 @@ static int list_data_remote(char *tag, struct listargs *listargs)
                 for (j = 0; status_items[j]; j++) {
                     if (!(listargs->statusitems & (1 << j))) continue;
 
-                    prot_printf(backend_inbox->out, "%c%s", c,
-                                status_items[j]);
+                    prot_printf(be->out, "%c%s", c, status_items[j]);
                     c = ' ';
                 }
-                (void)prot_putc(')', backend_inbox->out);
+                (void)prot_putc(')', be->out);
             }
             else if (opt == LIST_RET_METADATA) {
                 /* print metadata items */
@@ -12667,19 +13243,18 @@ static int list_data_remote(char *tag, struct listargs *listargs)
 
                 c = '(';
                 for (j = 0; j < n; j++) {
-                    prot_printf(backend_inbox->out, "%c\"%s\"", c,
+                    prot_printf(be->out, "%c\"%s\"", c,
                                 strarray_nth(&listargs->metaitems, j));
                     c = ' ';
                 }
-                (void)prot_putc(')', backend_inbox->out);
+                (void)prot_putc(')', be->out);
             }
         }
-        (void)prot_putc(')', backend_inbox->out);
+        (void)prot_putc(')', be->out);
     }
 
-    prot_printf(backend_inbox->out, "\r\n");
-    pipe_lsub(backend_inbox, imapd_userid, tag, 0,
-              (listargs->cmd & LIST_CMD_LSUB) ? "LSUB" : "LIST");
+    prot_printf(be->out, "\r\n");
+    pipe_lsub(be, imapd_userid, tag, 0, listargs, subs);
 
     return 0;
 }
@@ -12731,9 +13306,8 @@ static int reset_saslconn(sasl_conn_t **conn)
 
 static void cmd_mupdatepush(char *tag, char *name)
 {
-    int r = 0;
+    int r = 0, retry = 0;
     mbentry_t *mbentry = NULL;
-    mupdate_handle *mupdate_h = NULL;
     char buf[MAX_PARTITION_LEN + HOSTNAME_SIZE + 2];
     char *intname = mboxname_from_external(name, &imapd_namespace, imapd_userid);
 
@@ -12750,15 +13324,37 @@ static void cmd_mupdatepush(char *tag, char *name)
     if (r) goto done;
 
     /* Push mailbox to mupdate server */
-    r = mupdate_connect(config_mupdate_server, NULL, &mupdate_h, NULL);
-    if (r) goto done;
+    if (!mupdate_h) {
+        syslog(LOG_INFO, "XFER: connecting to mupdate '%s'",
+               config_mupdate_server);
+
+        r = mupdate_connect(config_mupdate_server, NULL, &mupdate_h, NULL);
+        retry = 1;
+        if (r) {
+            syslog(LOG_INFO, "Failed to connect to mupdate '%s'",
+                   config_mupdate_server);
+            goto done;
+        }
+    }
 
     snprintf(buf, sizeof(buf), "%s!%s",
              config_servername, mbentry->partition);
+
+  retry:
     r = mupdate_activate(mupdate_h, intname, buf, mbentry->acl);
 
-    if (mupdate_h) {
+    if (r && !retry) {
+        syslog(LOG_INFO, "MUPDATE: lost connection, retrying");
         mupdate_disconnect(&mupdate_h);
+        r = mupdate_connect(config_mupdate_server, NULL, &mupdate_h, NULL);
+        if (r) {
+            syslog(LOG_INFO, "Failed to connect to mupdate '%s'",
+                   config_mupdate_server);
+        }
+        else {
+            retry = 1;
+            goto retry;
+        }
     }
 
 done:
@@ -13078,6 +13674,7 @@ static void cmd_genurlauth(char *tag)
                         "%s BAD Poorly specified URL to Genurlauth %s\r\n",
                         tag, arg1.s);
             eatline(imapd_in, c);
+            free(url.freeme);
             free(intname);
             return;
         }
@@ -13085,6 +13682,7 @@ static void cmd_genurlauth(char *tag)
         if (mbentry->mbtype & MBTYPE_REMOTE) {
             /* XXX  proxy to backend */
             mboxlist_entry_free(&mbentry);
+            free(url.freeme);
             free(intname);
             continue;
         }
@@ -13115,6 +13713,7 @@ static void cmd_genurlauth(char *tag)
             prot_printf(imapd_out,
                         "%s NO Error authorizing %s: %s\r\n",
                         tag, arg1.s, cyrusdb_strerror(r));
+            free(url.freeme);
             free(intname);
             return;
         }
@@ -13138,6 +13737,7 @@ static void cmd_genurlauth(char *tag)
         (void)prot_putc(' ', imapd_out);
         prot_printstring(imapd_out, urlauth);
         free(intname);
+        free(url.freeme);
     } while (c == ' ');
 
     if (!first) prot_printf(imapd_out, "\r\n");
@@ -13484,8 +14084,34 @@ static void cmd_syncrestart(const char *tag, struct sync_reserve_list **reserve_
         *reserve_listp = NULL;
 }
 
-#ifdef ENABLE_APPLEPUSHSERVICE
-static void cmd_xapplepushservice(const char *tag, struct applepushserviceargs *applepushserviceargs)
+static void cmd_syncrestore(const char *tag, struct dlist *kin,
+                            struct sync_reserve_list *reserve_list)
+{
+    struct sync_state sync_state = {
+        imapd_userid,
+        imapd_userisadmin || imapd_userisproxyadmin,
+        imapd_authstate,
+        &imapd_namespace,
+        imapd_out,
+        0 /* local_only */
+    };
+
+    /* administrators only please */
+    if (!imapd_userisadmin) {
+        syslog(LOG_ERR, "SYNCERROR: invalid user %s trying to sync", imapd_userid);
+        prot_printf(imapd_out, "%s NO only admininstrators may use sync commands\r\n", tag);
+        return;
+    }
+
+    const char *resp = sync_restore(kin, reserve_list, &sync_state);
+    prot_printf(imapd_out, "%s %s\r\n", tag, resp);
+
+    /* Reset inactivity timer in case we spent a long time processing data */
+    prot_resettimeout(imapd_in);
+}
+
+static void cmd_xapplepushservice(const char *tag,
+                                  struct applepushserviceargs *applepushserviceargs)
 {
     int r = 0;
     strarray_t notif_mailboxes = STRARRAY_INITIALIZER;
@@ -13494,7 +14120,8 @@ static void cmd_xapplepushservice(const char *tag, struct applepushserviceargs *
 
     const char *aps_topic = config_getstring(IMAPOPT_APS_TOPIC);
     if (!aps_topic) {
-        syslog(LOG_ERR, "aps_topic not configured, can't complete XAPPLEPUSHSERVICE response");
+        syslog(LOG_ERR,
+               "aps_topic not configured, can't complete XAPPLEPUSHSERVICE response");
         prot_printf(imapd_out, "%s NO Server configuration error\r\n", tag);
         return;
     }
@@ -13525,7 +14152,8 @@ static void cmd_xapplepushservice(const char *tag, struct applepushserviceargs *
 
     for (i = 0; i < strarray_size(&applepushserviceargs->mailboxes); i++) {
         const char *name = strarray_nth(&applepushserviceargs->mailboxes, i);
-        char *intname = mboxname_from_external(name, &imapd_namespace, imapd_userid);
+        char *intname =
+            mboxname_from_external(name, &imapd_namespace, imapd_userid);
         r = mlookup(tag, name, intname, &mbentry);
         if (!r && mbentry->mbtype == 0) {
             strarray_push(&notif_mailboxes, name);
@@ -13539,12 +14167,15 @@ static void cmd_xapplepushservice(const char *tag, struct applepushserviceargs *
         free(intname);
     }
 
-    prot_printf(imapd_out, "* XAPPLEPUSHSERVICE \"aps-version\" \"%d\" \"aps-topic\" \"%s\"\r\n", applepushserviceargs->aps_version, aps_topic);
+    prot_printf(imapd_out,
+                "* XAPPLEPUSHSERVICE \"aps-version\" \"%d\" \"aps-topic\" \"%s\"\r\n",
+                applepushserviceargs->aps_version, aps_topic);
     prot_printf(imapd_out, "%s OK XAPPLEPUSHSERVICE completed.\r\n", tag);
 
     struct mboxevent *mboxevent = mboxevent_new(EVENT_APPLEPUSHSERVICE);
-    mboxevent_set_applepushservice(mboxevent, applepushserviceargs, &notif_mailboxes, imapd_userid);
-    mboxevent_notify(mboxevent);
+    mboxevent_set_applepushservice(mboxevent, applepushserviceargs,
+                                   &notif_mailboxes, imapd_userid);
+    mboxevent_notify(&mboxevent);
     mboxevent_free(&mboxevent);
 
     buf_release(&applepushserviceargs->aps_account_id);
@@ -13553,4 +14184,3 @@ static void cmd_xapplepushservice(const char *tag, struct applepushserviceargs *
     strarray_fini(&applepushserviceargs->mailboxes);
     strarray_fini(&notif_mailboxes);
 }
-#endif

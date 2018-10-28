@@ -1,0 +1,61 @@
+
+Download
+********
+
+* Get Cyrus
+
+  * Distribution Package
+
+    * CentOS
+
+    * Debian
+
+    * Fedora
+
+    * openSUSE
+
+    * Red Hat Enterprise Linux
+
+    * Ubuntu
+
+  * Build and Install Yourself
+
+    * Use a release packaged tarball
+
+    * Use the source from Git
+
+  * External Tools
+
+  * Licensing
+
+* Release Notes
+
+  * Stable Version
+
+  * Development Version
+
+  * Supported Product Series
+
+    * Series 3.0
+
+    * Series 2.5
+
+    * Series 2.4
+
+  * Older Versions
+
+    * Series 1
+
+    * Series 2: 2.0 - 2.3
+
+* Notes for Packagers
+
+  * Sample configuration files
+
+  * Predefined configurations
+
+    * The configuration file for master: cyrus.conf
+
+    * The configuration file for the various programs: imapd.conf
+
+  * Services in "/etc/services"

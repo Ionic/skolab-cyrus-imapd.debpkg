@@ -56,12 +56,14 @@ static int meth_get_db(struct transaction_t *txn, void *params);
 
 /* Namespace for DB lookups */
 struct namespace_t namespace_dblookup = {
-    URL_NS_DBLOOKUP, /*enabled*/1, "/dblookup", NULL, 0 /* auth */,
+    URL_NS_DBLOOKUP, /*enabled*/1, "/dblookup", NULL,
+    http_allow_noauth, /*authschemes*/0,
     /*mbtype*/0,
     ALLOW_READ,
-    NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL,
     {
         { NULL,                 NULL },                 /* ACL          */
+        { NULL,                 NULL },                 /* BIND         */
         { NULL,                 NULL },                 /* COPY         */
         { NULL,                 NULL },                 /* DELETE       */
         { &meth_get_db,         NULL },                 /* GET          */
@@ -71,12 +73,14 @@ struct namespace_t namespace_dblookup = {
         { NULL,                 NULL },                 /* MKCOL        */
         { NULL,                 NULL },                 /* MOVE         */
         { NULL,                 NULL },                 /* OPTIONS      */
+        { NULL,                 NULL },                 /* PATCH        */
         { NULL,                 NULL },                 /* POST         */
         { NULL,                 NULL },                 /* PROPFIND     */
         { NULL,                 NULL },                 /* PROPPATCH    */
         { NULL,                 NULL },                 /* PUT          */
         { NULL,                 NULL },                 /* REPORT       */
         { NULL,                 NULL },                 /* TRACE        */
+        { NULL,                 NULL },                 /* UNBIND       */
         { NULL,                 NULL }                  /* UNLOCK       */
     }
 };
@@ -201,9 +205,9 @@ static int get_uid2groups(struct transaction_t *txn,
     array = carddav_getuid2groups(db, key, mboxname, otheruser);
     if (!array) goto done;
 
-    json = json_array();
-    for (i = 0; i < strarray_size(array); i++) {
-        json_array_append_new(json, json_string(strarray_nth(array, i)));
+    json = json_pack("{}");
+    for (i = 0; i < strarray_size(array); i += 2) {
+        json_object_set_new(json, strarray_nth(array, i), json_string(strarray_nth(array, i+1)));
     }
 
     result = json_dumps(json, JSON_PRESERVE_ORDER|JSON_COMPACT);
@@ -300,8 +304,10 @@ static int meth_get_db(struct transaction_t *txn,
     /* XXX - hack to allow @domain parts for non-domain-split users */
     if (httpd_extradomain) {
         /* not allowed to be cross domain */
-        if (mbname_localpart(mbname) && strcmpsafe(mbname_domain(mbname), httpd_extradomain))
+        if (mbname_localpart(mbname) && strcmpsafe(mbname_domain(mbname), httpd_extradomain)) {
+            mbname_free(&mbname);
             return HTTP_NOT_FOUND;
+        }
         //free(parts.domain); - XXX fix when converting to real parts
         mbname_set_domain(mbname, NULL);
     }

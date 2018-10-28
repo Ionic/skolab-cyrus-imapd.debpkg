@@ -240,7 +240,7 @@ static int archive(const mbentry_t *mbentry, void *rock)
     if (verbose)
         fprintf(stderr, "archiving mailbox %s\n", mbentry->name);
 
-    mailbox_archive(mailbox, NULL, rock);
+    mailbox_archive(mailbox, NULL, rock, ITER_SKIP_EXPUNGED);
 
 done:
     mailbox_close(&mailbox);
@@ -281,7 +281,7 @@ static int expire(const mbentry_t *mbentry, void *rock)
             if (verbose)
                 fprintf(stderr, "Removing stale tombstone for %s\n", mbentry->name);
             syslog(LOG_NOTICE, "Removing stale tombstone for %s", mbentry->name);
-            mboxlist_delete(mbentry->name, /*force*/1);
+            mboxlist_delete(mbentry->name);
         }
         goto done;
     }
@@ -418,6 +418,9 @@ static int expire_conversations(const mbentry_t *mbentry, void *rock)
         goto done;
 
     if (mbentry->mbtype & MBTYPE_REMOTE)
+        goto done;
+
+    if (mboxname_isdeletedmailbox(mbentry->name, NULL))
         goto done;
 
     filename = conversations_getmboxpath(mbentry->name);

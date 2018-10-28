@@ -1,0 +1,302 @@
+.\" Man page generated from reStructuredText.
+.
+.TH "RESTORE" "8" "August 10, 2018" "3.0.8" "Cyrus IMAP"
+.SH NAME
+restore \- Cyrus IMAP documentation
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.sp
+Restore content from Cyrus backups.
+.SH SYNOPSIS
+.sp
+.nf
+\fBrestore\fP [OPTIONS] \fIserver\fP [MODE] \fIbackup\fP [ \fImboxname\fP | \fIuniqueid\fP | \fIguid\fP ]...
+.fi
+.SH DESCRIPTION
+.sp
+\fBrestore\fP is a tool for restoring messages and mailboxes from a Cyrus backup
+to a Cyrus IMAP server.  It must be run from the server containing the backup
+storage.
+.sp
+\fBrestore\fP reads its configuration options out of the imapd.conf(5) file unless specified otherwise by \fB\-C\fP\&.
+.sp
+\fIserver\fP specifies the destination server to which content should be restored.
+It should be of the form \(aq\fIhost\fP[:\fIport\fP]\(aq, where \fIhost\fP is either a
+hostname, an IPv4 address, or an IPv6 address, and where the optional \fIport\fP is
+either a known service name (see \fBservices(5)\fP) or a decimal port
+number.  If \fIport\fP is omitted, \fBimap\fP will be tried first, followed by
+\fBcsync\fP\&.
+.sp
+The destination server must point to either an imapd(8) instance
+with the replication capability enabled, or a sync_server(8)
+instance.  In either case it must be Cyrus version 3.0 or newer.
+.sp
+\fBrestore\fP will authenticate to the destination server according to the
+\fBrestore_authname\fP, \fBrestore_password\fP and \fBrestore_realm\fP configuration
+options.  The credentials should correspond with one of the destination
+server\(aqs \fBadmins\fP\&.
+.sp
+\fIbackup\fP is interpreted according to the specified MODE.
+See \fI\%Modes\fP below.
+.sp
+If neither \fB\-a\fP nor \fB\-F\fP options were provided, then the remaining
+arguments constitute a list of objects to be restored.  These may be mailboxes
+(specified by either \fImboxname\fP or \fIuniqueid\fP) or messages (specified by their
+\fIguid\fP).  The objects may be specified in any order, and both mailboxes and
+individual messages may be restored in one go.  cyr_backup(8) can
+be used to identify objects to restore from a Cyrus backup.
+.sp
+Selected mailboxes will have their messages restored to a mailbox of the same
+name, which will be created if necessary.  Individually\-selected messages will
+be restored to the mailboxes in which they previously existed.  In both cases
+the \fB\-M\fP option can be used to overrride the destination mailbox (see below),
+but note the consequences of doing this when multiple mailbox objects have
+been specified, or when the \fB\-r\fP option is in use.
+.sp
+Mailboxes that are created during the restoration process will have their ACL
+set to the one stored in the backup.  The \fB\-A\fP option can be used to override
+this.  Mailboxes that are not created during the restoration process (i.e. when
+restoring into mailboxes that already exists) will not have their ACLs altered.
+.SH OPTIONS
+.INDENT 0.0
+.TP
+.B \-A [acl]
+Apply specified \fIacl\fP to restored mailboxes, rather than their ACLs as
+stored in the backup.
+.sp
+If \fIacl\fP is the empty string (e.g. \fB\-A ""\fP) or is unspecified, mailboxes
+will be restored with the default ACL for their destination owner.  This
+is mostly useful when restoring folders from one user\(aqs backup into a
+different user\(aqs mailbox.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-C config\-file
+Use the specified configuration file \fIconfig\-file\fP rather than the default imapd.conf(5)\&.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-D
+Don\(aqt trim \fBdeletedprefix\fP from mailbox names prior to restoring.  This
+is mainly useful for rebuilding failed servers, where deleted mailboxes
+should be restored as deleted mailboxes, not as new ones.
+.sp
+The default is to trim the prefix before restoring.
+.sp
+If the original server from which the backups were produced had
+\fBdelete_mode\fP set to \fIimmediate\fP, then the mailboxes in the backup will
+not have such a prefix, and this option won\(aqt have any useful effect.
+.sp
+See imapd.conf(5) for information about the \fBdeletedprefix\fP
+and \fBdelete_mode\fP configuration options.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-F input\-file
+Get the list of mailboxes or messages from \fIinput\-file\fP instead of from
+the command line arguments.
+.sp
+\fIinput\-file\fP should contain one object specification (either an \fImboxname\fP,
+a \fIuniqueid\fP, or a \fIguid\fP) per line.  Empty lines, and lines beginning with
+a \(aq#\(aq character, are ignored.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-L
+Local operations only.  Actions required to restore the requested mailboxes
+and messages will be performed on the destination server only.
+mupdate(8) actions will not occur.
+.sp
+The default is for mupdate actions to occur if the destination server is
+part of a murder.
+.sp
+This option has no effect if the destination server is not part of a murder.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-M mboxname
+Messages are restored to the mailbox with the specified \fImboxname\fP\&.  If no
+mailbox of this name exists, one will be created.
+.sp
+If multiple mailbox objects are to be restored, whether due to being
+specified on the command line, in an \fIinput\-file\fP, or via the \fB\-r\fP
+option, then the collective contents of all such mailboxes will be
+restored to the single mailbox \fImboxname\fP\&.  This may not be what you want!
+.sp
+The default when restoring mailboxes is to restore their respective
+contents into mailboxes of the same names.
+.sp
+The default when restoring individual messages is to restore them into
+their original mailboxes.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-P partition
+Restore mailboxes to the specified \fIpartition\fP
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-U
+Try to preserve uidvalidity and other related fields, such that the
+restored mailboxes and messages appear like they never left, and IMAP
+clients can avoid expensive state updates.
+.sp
+This can only occur if the mailboxes to be restored \fBdo not\fP already
+exist on the destination server.  As such, this option is mainly useful
+when rebuilding a failed server.
+.sp
+If the destination mailboxes already exist, restored messages will be
+appended as if newly delivered, regardless of whether the \fB\-U\fP option
+was specified.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-X
+Do not restore messages that are marked as expunged in the \fIbackup\fP\&.
+.sp
+See also \fB\-x\fP\&.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-a
+Try to restore all mailboxes in the specified \fIbackup\fP\&.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-n
+Do nothing.  The work required to perform the restoration will be
+calculated (and reported depending on verbosity level), but no
+restoration will take place, and no connection will be made to
+the destination server.
+.sp
+Note that the \fIserver\fP argument is still mandatory with this option.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-r
+Recurse into submailboxes.  When restoring mailboxes, also restore
+any mailboxes contained within them.
+.sp
+The default is to restore only explicitly\-specified mailboxes.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-v
+Increase the verbosity level.  This option can be specified multiple times
+for additional verbosity.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-w seconds
+Wait \fIseconds\fP before starting.  This is useful for attaching a debugger.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-x
+Only restore messages that are marked as expunged in the \fIbackup\fP\&.
+.sp
+This can be convenient for restoring messages that were accidentally
+deleted by the user, without needing to track down individual message
+guids.
+.sp
+See also \fB\-X\fP\&.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-z
+Require compression for server connection.  The restore will abort
+if compression is unavailable.
+.UNINDENT
+.SH MODES
+.INDENT 0.0
+.TP
+.B \-f
+\fIbackup\fP is interpreted as a filename.  The named file does not need to be
+known about in the backups database.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-m
+\fIbackup\fP is interpreted as a mailbox name.  There must be a known backup
+for the user whose mailbox this is.
+.sp
+Known backups are recorded in the database specified by the \fBbackup_db\fP
+and \fBbackup_db_path\fP configuration options.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-u
+\fIbackup\fP is interpreted as a userid.  There must be a known backup for
+the specified user.
+.sp
+This is the default if no mode is specified.
+.UNINDENT
+.SH EXAMPLES
+.SH HISTORY
+.SH FILES
+.SH SEE ALSO
+.sp
+imapd.conf(5),
+\fBservices(5)\fP,
+cyr_backup(8),
+imapd(8),
+mupdate(8),
+sync_server(8)
+.SH AUTHOR
+The Cyrus Team
+.SH COPYRIGHT
+1993-2017, The Cyrus Team
+.\" Generated by docutils manpage writer.
+.

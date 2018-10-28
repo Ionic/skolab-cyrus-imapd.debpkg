@@ -637,7 +637,7 @@ static int foreach(struct dbengine *db,
 
     /* sort the quotaroots (ignoring paths) */
     if (pathbuf.data)
-        qsort(pathbuf.data, pathbuf.count, sizeof(char *), (__compar_fn_t)db->compar);
+        qsort(pathbuf.data, pathbuf.count, sizeof(char *), db->compar);
 
     for (i = 0; i < pathbuf.count; i++) {
         const char *data, *key;
@@ -881,6 +881,7 @@ HIDDEN struct cyrusdb_backend cyrusdb_quotalegacy =
     &cyrusdb_generic_done,
     &cyrusdb_generic_sync,
     &cyrusdb_generic_noarchive,
+    &cyrusdb_generic_unlink,
 
     &myopen,
     &myclose,

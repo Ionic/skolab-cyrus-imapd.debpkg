@@ -168,8 +168,7 @@ static void downgrade_record(const struct index_record *record, char *buf,
     }
     *((bit32 *)(buf+OFFSET_CONTENT_LINES)) = htonl(record->content_lines);
     *((bit32 *)(buf+OFFSET_CACHE_VERSION)) = htonl(record->cache_version);
-    message_guid_export(&record->guid,
-                        (unsigned char *)buf+OFFSET_MESSAGE_GUID);
+    message_guid_export(&record->guid, buf+OFFSET_MESSAGE_GUID);
     *((bit64 *)(buf+UP_modseqbase)) = htonll(record->modseq);
 }
 
@@ -194,7 +193,6 @@ static int dump_index(struct mailbox *mailbox, int oldversion,
     int header_size;
     int record_size;
     int n, r;
-    const struct index_record *record;
 
     if (oldversion == 6) {
         header_size = 76;
@@ -234,8 +232,9 @@ static int dump_index(struct mailbox *mailbox, int oldversion,
     if (n == -1) goto fail;
 
     struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_UNLINKED);
-
-    while ((record = mailbox_iter_step(iter))) {
+    const message_t *msg;
+    while ((msg = mailbox_iter_step(iter))) {
+        const struct index_record *record = msg_record(msg);
         /* we have to make sure expunged records don't get the
          * file copied, or a reconstruct could bring them back
          * to life!  It we're not creating an expunged file... */
@@ -246,10 +245,10 @@ static int dump_index(struct mailbox *mailbox, int oldversion,
         /* not making sure exists matches, we do trust a bit */
         downgrade_record(record, rbuf, oldversion);
         n = retry_write(oldindex_fd, rbuf, record_size);
-        if (n == -1) goto fail;
+        if (n == -1) break;
     }
-
     mailbox_iter_done(&iter);
+    if (n == -1) goto fail;
 
     close(oldindex_fd);
     r = dump_file(first, sync, pin, pout, oldname, "cyrus.index", NULL, 0);
@@ -272,7 +271,8 @@ static int dump_index(struct mailbox *mailbox, int oldversion,
         if (n == -1) goto fail;
 
         iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_UNLINKED);
-        while ((record = mailbox_iter_step(iter))) {
+        while ((msg = mailbox_iter_step(iter))) {
+            const struct index_record *record = msg_record(msg);
             /* ignore non-expunged records */
             if (!(record->system_flags & FLAG_EXPUNGED))
                 continue;
@@ -378,7 +378,7 @@ static int dump_file(int first, int sync,
     const char *base;
     size_t len;
     struct stat sbuf;
-    char c;
+    int c;
 
     /* map file */
     syslog(LOG_DEBUG, "wanting to dump %s", filename);
@@ -759,8 +759,8 @@ static int cleanup_seen_cb(const mbentry_t *mbentry, void *rock)
     int r;
     struct seqset *seq = NULL;
     struct mailbox *mailbox = NULL;
+    const message_t *msg;
     struct seendata sd = SEENDATA_INITIALIZER;
-    const struct index_record *record;
 
     r = mailbox_open_iwl(mbentry->name, &mailbox);
     if (r) goto done;
@@ -774,7 +774,8 @@ static int cleanup_seen_cb(const mbentry_t *mbentry, void *rock)
 
     /* update all the seen records */
     struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_EXPUNGED);
-    while ((record = mailbox_iter_step(iter))) {
+    while ((msg = mailbox_iter_step(iter))) {
+        const struct index_record *record = msg_record(msg);
         if (record->system_flags & FLAG_SEEN)
             continue; /* no need to rewrite */
         if (!seqset_ismember(seq, record->uid))
@@ -801,7 +802,7 @@ static int cleanup_seen_cb(const mbentry_t *mbentry, void *rock)
 
 static int cleanup_seen_subfolders(const char *mbname)
 {
-    const char *userid = mboxname_to_userid(mbname);
+    char *userid = mboxname_to_userid(mbname);
     struct seen *seendb = NULL;
     char buf[MAX_MAILBOX_NAME];
     int r;
@@ -818,6 +819,8 @@ static int cleanup_seen_subfolders(const char *mbname)
     if (!r) mboxlist_allmbox(buf, cleanup_seen_cb, seendb, /*incdel*/0);
     seen_close(&seendb);
 
+    free(userid);
+
     return 0;
 }
 
@@ -826,13 +829,14 @@ EXPORTED int undump_mailbox(const char *mbname,
                    struct auth_state *auth_state __attribute((unused)))
 {
     struct buf file, data;
-    char c;
+    int c;
     int r = 0;
     int curfile = -1;
     struct mailbox *mailbox = NULL;
     const char *sieve_path = NULL;
     int sieve_usehomedir = config_getswitch(IMAPOPT_SIEVEUSEHOMEDIR);
-    const char *userid = NULL;
+    char *userid = NULL;
+    int first_annotation = 1;
     char *annotation = NULL;
     struct buf content = BUF_INITIALIZER;
     char *seen_file = NULL;
@@ -846,6 +850,11 @@ EXPORTED int undump_mailbox(const char *mbname,
     memset(&file, 0, sizeof(file));
     memset(&data, 0, sizeof(data));
 
+    /* Set a Quota (may be -1 for "unlimited") */
+    for (res = 0; res < QUOTA_NUMRESOURCES; res++) {
+       newquotas[res] = QUOTA_UNLIMITED;
+    }
+
     if (mboxname_isusermailbox(mbname, 1)) {
         userid = mboxname_to_userid(mbname);
         if(!sieve_usehomedir) {
@@ -858,6 +867,7 @@ EXPORTED int undump_mailbox(const char *mbname,
     /* we better be in a list now */
     if (c != '(' || data.s[0]) {
         buf_free(&data);
+        free(userid);
         eatline(pin, c);
         return IMAP_PROTOCOL_BAD_PARAMETERS;
     }
@@ -868,21 +878,19 @@ EXPORTED int undump_mailbox(const char *mbname,
         /* Remove any existing quotaroot */
         mboxlist_unsetquota(mbname);
     } else if (sscanf(data.s, QUOTA_T_FMT, &quotalimit) == 1) {
-        /* Set a Quota (may be -1 for "unlimited") */
-        for (res = 0; res < QUOTA_NUMRESOURCES; res++) {
-            newquotas[res] = QUOTA_UNLIMITED;
-        }
-        newquotas[QUOTA_STORAGE] = quotalimit;
         /* quota will actually be applied later */
+        newquotas[QUOTA_STORAGE] = quotalimit;
     } else {
         /* Huh? */
         buf_free(&data);
+        free(userid);
         eatline(pin, c);
         return IMAP_PROTOCOL_BAD_PARAMETERS;
     }
 
     if(c != ' ' && c != ')') {
         buf_free(&data);
+        free(userid);
         eatline(pin, c);
         return IMAP_PROTOCOL_BAD_PARAMETERS;
     } else if(c == ')') {
@@ -904,8 +912,6 @@ EXPORTED int undump_mailbox(const char *mbname,
     mailbox_get_usage(mailbox, old_quota_usage);
 
     astate = annotate_state_new();
-    r = annotate_state_set_mailbox(astate, mailbox);
-    if (r) goto done;
 
     while(1) {
         char fnamebuf[MAX_MAILBOX_PATH + 1024];
@@ -928,6 +934,16 @@ EXPORTED int undump_mailbox(const char *mbname,
             /* Annotation */
             int i;
             char *tmpuserid;
+
+            /* is this the first annotation? re-read cyrus.header/index */
+            if (first_annotation) {
+                first_annotation = 0;
+                mailbox_close(&mailbox);
+                r = mailbox_open_exclusive(mbname, &mailbox);
+                if (r) goto done;
+                r = annotate_state_set_mailbox(astate, mailbox);
+                if (r) goto done;
+            }
 
             for(i=2; file.s[i]; i++) {
                 if(file.s[i] == '/') break;
@@ -997,10 +1013,6 @@ EXPORTED int undump_mailbox(const char *mbname,
             if (prot_getc(pin) != '(') {
                 r = IMAP_PROTOCOL_ERROR;
                 goto done;
-            }
-
-            for (res = 0; res < QUOTA_NUMRESOURCES; res++) {
-                newquotas[res] = QUOTA_UNLIMITED;
             }
 
             for (;;) {
@@ -1259,7 +1271,6 @@ EXPORTED int undump_mailbox(const char *mbname,
 
     /* let's make sure the modification times are right */
     if (!r) {
-        const struct index_record *record;
         struct utimbuf settime;
         const char *fname;
 
@@ -1291,7 +1302,9 @@ EXPORTED int undump_mailbox(const char *mbname,
         }
 
         struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_UNLINKED);
-        while ((record = mailbox_iter_step(iter))) {
+        const message_t *msg;
+        while ((msg = mailbox_iter_step(iter))) {
+            const struct index_record *record = msg_record(msg);
             fname = mailbox_record_fname(mailbox, record);
             settime.actime = settime.modtime = record->internaldate;
             if (utime(fname, &settime) == -1) {
@@ -1313,6 +1326,7 @@ EXPORTED int undump_mailbox(const char *mbname,
     buf_free(&content);
     free(seen_file);
     free(mboxkey_file);
+    free(userid);
 
     return r;
 }

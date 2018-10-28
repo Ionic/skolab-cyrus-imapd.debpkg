@@ -1,0 +1,624 @@
+
+Event Notifications
+*******************
+
+**RFC 5423** standardizes the emission of message store event
+notifications, and **RFC 5465** outlines the IMAP NOTIFY extensions.
+
+New in version 2.5.0.
+
+
+Available Event Notifications
+=============================
+
+* Message Events
+
+     * MessageAppend
+
+     * MessageCopy
+
+     * MessageExpire
+
+     * MessageExpunge
+
+     * MessageMove
+
+     * MessageNew
+
+* Flag Events
+
+     * FlagsClear
+
+     * FlagsSet
+
+     * MessageRead
+
+     * MessageTrash
+
+* Mailbox Events
+
+     * AclChange
+
+     * MailboxCreate
+
+     * MailboxDelete
+
+     * MailboxRename
+
+* Subscription Events
+
+     * MailboxSubscribe
+
+     * MailboxUnSubscribe
+
+* Quota Events
+
+     * QuotaExceed
+
+     * QuotaWithin
+
+     * QuotaChange
+
+* Calendar Events
+
+     * CalendarAlarm
+
+* Access Accounting
+
+     * Login
+
+     * Logout
+
+* Apple Push
+
+     * ApplePushService
+
+
+Example Event Notifications
+===========================
+
+
+AclChange
+---------
+
+The ACL Change notification is emitted when a command "SETACL" is
+issued.
+
+Note: This event notification is added to Cyrus IMAP outside of any
+  RFC.
+
+   {
+       "aclRights": "lrs",
+       "aclSubject": "jane@example.org",
+       "event": "AclChange",
+       "mailboxID": "imap://john@example.org@imap.example.org/Testfolder_renamed;UIDVALIDITY=1424699807",
+       "pid": 8048,
+       "service": "imap",
+       "timestamp": "2015-02-23T14:57:59.736+01:00",
+       "uri": "imap://john@example.org@imap.example.org/Testfolder_renamed;UIDVALIDITY=1424699807",
+       "user": "john@example.org",
+       "vnd.cmu.sessionId": "imap.example.org-8048-1424699879-1-8051832424702584527"
+   }
+
+
+FlagsClear
+----------
+
+The FlagsClear notification is emitted when all flags are removed from
+a message.
+
+This includes "\Deleted", "\Seen" and "\Flagged", and as such are, in
+part, the counter-parts to MessageTrash, MessageRead, and FlagsSet.
+
+   {
+       "event": "FlagsClear",
+       "flagNames": "\\Flagged",
+       "messages": 1,
+       "modseq": 43,
+       "pid": 7721,
+       "service": "imap",
+       "timestamp": "2015-02-23T14:50:43.640+01:00",
+       "uidnext": 4,
+       "uidset": "3",
+       "uri": "imap://john@example.org@imap.example.org/INBOX;UIDVALIDITY=1424683682",
+       "user": "john@example.org",
+       "vnd.cmu.midset": [
+           "<4d9618acd0aea6b33683766358351459@example.org>"
+       ],
+       "vnd.cmu.sessionId": "imap.example.org-7721-1424699443-1-8479002111695998134",
+       "vnd.cmu.unseenMessages": 0
+   }
+
+
+FlagsSet
+--------
+
+The FlagsSet notification is emitted when flags are set on a message,
+but not including the "\Deleted" and "\Seen" flags, which emit
+MessageTrash and MessageRead event notifications respectively.
+
+   {
+       "event": "FlagsSet",
+       "flagNames": "\\Flagged",
+       "messages": 1,
+       "modseq": 42,
+       "pid": 7649,
+       "service": "imap",
+       "timestamp": "2015-02-23T14:50:21.858+01:00",
+       "uidnext": 4,
+       "uidset": "3",
+       "uri": "imap://john@example.org@imap.example.org/INBOX;UIDVALIDITY=1424683682",
+       "user": "john@example.org",
+       "vnd.cmu.midset": [
+           "<4d9618acd0aea6b33683766358351459@example.org>"
+       ],
+       "vnd.cmu.sessionId": "imap.example.org-7649-1424699421-1-11813528620713894618",
+       "vnd.cmu.unseenMessages": 0
+   }
+
+
+Login
+-----
+
+   {
+       "clientIP": "::1",
+       "clientPort": 46461,
+       "event": "Login",
+       "pid": 7629,
+       "serverDomain": "::1",
+       "serverPort": 143,
+       "service": "imap",
+       "timestamp": "2015-02-23T14:47:36.097+01:00",
+       "uri": "imap://imap.example.org",
+       "user": "john@example.org",
+       "vnd.cmu.sessionId": "imap.example.org-7629-1424699256-1-3981462903180119079"
+   }
+
+
+Logout
+------
+
+   {
+       "clientIP": "::1",
+       "clientPort": 46461,
+       "event": "Logout",
+       "pid": 7629,
+       "serverDomain": "::1",
+       "serverPort": 143,
+       "service": "imap",
+       "timestamp": "2015-02-23T14:47:36.183+01:00",
+       "uri": "imap://imap.example.org",
+       "user": "john@example.org",
+       "vnd.cmu.sessionId": "imap.example.org-7629-1424699256-1-3981462903180119079"
+   }
+
+
+MailboxCreate
+-------------
+
+   {
+       "event": "MailboxCreate",
+       "mailboxID": "imap://john@example.org@imap.example.org/Testfolder;UIDVALIDITY=1424690388",
+       "pid": 7721,
+       "service": "imap",
+       "timestamp": "2015-02-23T14:55:57.621+01:00",
+       "uri": "imap://john@example.org@imap.example.org/Testfolder;UIDVALIDITY=1424690388",
+       "user": "john@example.org",
+       "vnd.cmu.sessionId": "imap.example.org-7721-1424699757-1-18345110432907898457"
+   }
+
+
+MailboxDelete
+-------------
+
+Note: A mailbox deletion event notification is issued once for each
+  top- level mailbox in a hierarchy being deleted.
+
+   {
+       "event": "MailboxDelete",
+       "mailboxID": "imap://john@example.org@imap.example.org/Testfolder_renamed;UIDVALIDITY=1424699807",
+       "pid": 8070,
+       "service": "imap",
+       "timestamp": "2015-02-23T14:58:37.145+01:00",
+       "uri": "imap://john@example.org@imap.example.org/Testfolder_renamed;UIDVALIDITY=1424699807",
+       "user": "john@example.org",
+       "vnd.cmu.sessionId": "imap.example.org-8070-1424699917-1-11277155374959916506"
+   }
+
+
+MailboxRename
+-------------
+
+   {
+       "event": "MailboxRename",
+       "mailboxID": "imap://john@example.org@imap.example.org/Testfolder_renamed;UIDVALIDITY=1424699807",
+       "oldMailboxID": "imap://john@example.org@imap.example.org/Testfolder;UIDVALIDITY=1424690388",
+       "pid": 8026,
+       "service": "imap",
+       "timestamp": "2015-02-23T14:56:47.466+01:00",
+       "uri": "imap://john@example.org@imap.example.org/Testfolder_renamed;UIDVALIDITY=1424699807",
+       "user": "john@example.org",
+       "vnd.cmu.sessionId": "imap.example.org-8026-1424699807-1-3097981731339369225"
+   }
+
+
+MailboxSubscribe
+----------------
+
+   {
+       "event": "MailboxSubscribe",
+       "pid": 3004,
+       "service": "imap",
+       "timestamp": "2015-02-23T18:37:02.344+01:00",
+       "uri": "imap://john@example.org@imap.example.org/Archive",
+       "user": "john@example.org",
+       "vnd.cmu.sessionId": "imap.example.org-3004-1424713022-1-7149274646509524617"
+   }
+
+
+MailboxUnSubscribe
+------------------
+
+   {
+       "event": "MailboxUnSubscribe",
+       "pid": 3003,
+       "service": "imap",
+       "timestamp": "2015-02-23T18:37:19.482+01:00",
+       "uri": "imap://john@example.org@imap.example.org/Testfolder_renamed",
+       "user": "john@example.org",
+       "vnd.cmu.sessionId": "imap.example.org-3003-1424713039-1-2806700531460584176"
+   }
+
+
+MessageAppend
+-------------
+
+   {
+       "bodyStructure": "((\"TEXT\" \"PLAIN\" (\"CHARSET\" \"ISO-8859-1\") NIL NIL \"QUOTED-PRINTABLE\" 206 4 NIL NIL NIL NIL)(\"APPLICATION\" \"CALENDAR+XML\" (\"CHARSET\" \"UTF-8\" \"NAME\" \"kolab.xml\") NIL NIL \"8BIT\" 2030 NIL (\"ATTACHMENT\" (\"FILENAME\" \"kolab.xml\" \"SIZE\" \"2030\")) NIL NIL) \"MIXED\" (\"BOUNDARY\" \"=_d9aa3c2dd73a9166113254d4ebe07bc8\") NIL NIL NIL)",
+       "event": "MessageAppend",
+       "messageSize": 2992,
+       "messages": 3,
+       "modseq": 12,
+       "pid": 7721,
+       "service": "imap",
+       "timestamp": "2015-02-23T14:51:29.008+01:00",
+       "uidnext": 6,
+       "uri": "imap://john@example.org@imap.example.org/Calendar;UIDVALIDITY=1424683684/;UID=5",
+       "user": "john@example.org",
+       "vnd.cmu.envelope": "(\"Mon, 23 Feb 2015 13:51:28 +0000\" \"BBA47B13E4839F49AB1C8047EE7B4FDB-A4BF5BBB9FEAA271\" ((NIL NIL \"john\" \"example.org\")) ((NIL NIL \"john\" \"example.org\")) ((NIL NIL \"john\" \"example.org\")) ((NIL NIL \"john\" \"example.org\")) NIL NIL NIL NIL)",
+       "vnd.cmu.midset": [
+           "NIL"
+       ],
+       "vnd.cmu.sessionId": "imap.example.org-7721-1424699488-1-10167054345787041319",
+       "vnd.cmu.unseenMessages": 3
+   }
+
+
+MessageCopy
+-----------
+
+   {
+       "event": "vnd.cmu.MessageCopy",
+       "messages": 1,
+       "modseq": 9,
+       "oldMailboxID": "imap://john@example.org@imap.example.org/Sent;UIDVALIDITY=1424683683",
+       "pid": 8107,
+       "service": "imap",
+       "timestamp": "2015-02-23T14:59:49.717+01:00",
+       "uidnext": 5,
+       "uidset": "4",
+       "uri": "imap://john@example.org@imap.example.org/Archive;UIDVALIDITY=1424683684",
+       "user": "john@example.org",
+       "vnd.cmu.midset": [
+           "<4d9618acd0aea6b33683766358351459@example.org>"
+       ],
+       "vnd.cmu.oldUidset": "2",
+       "vnd.cmu.sessionId": "imap.example.org-8107-1424699989-1-8439907626481649843",
+       "vnd.cmu.unseenMessages": 0
+   }
+
+
+MessageExpire
+-------------
+
+
+MessageExpunge
+--------------
+
+   {
+       "event": "MessageExpunge",
+       "messages": 0,
+       "modseq": 53,
+       "pid": 7813,
+       "service": "imap",
+       "timestamp": "2015-02-23T14:55:20.562+01:00",
+       "uidnext": 5,
+       "uidset": "4",
+       "uri": "imap://john@example.org@imap.example.org/INBOX;UIDVALIDITY=1424683682",
+       "user": "john@example.org",
+       "vnd.cmu.midset": [
+           "<4d9618acd0aea6b33683766358351459@example.org>"
+       ],
+       "vnd.cmu.sessionId": "imap.example.org-7813-1424699720-1-13590468293654033744",
+       "vnd.cmu.unseenMessages": 0
+   }
+
+
+MessageMove
+-----------
+
+Important: The "MessageMove" event is an event type not documented
+  in an RFC.
+
+   {
+       "event": "vnd.cmu.MessageMove",
+       "messages": 2,
+       "modseq": 5,
+       "oldMailboxID": "imap://john@example.org@imap.example.org/INBOX;UIDVALIDITY=1424683682",
+       "pid": 7685,
+       "service": "imap",
+       "timestamp": "2015-02-23T14:52:41.676+01:00",
+       "uidnext": 4,
+       "uidset": "3",
+       "uri": "imap://john@example.org@imap.example.org/Archive;UIDVALIDITY=1424683684",
+       "user": "john@example.org",
+       "vnd.cmu.midset": [
+           "<4d9618acd0aea6b33683766358351459@example.org>"
+       ],
+       "vnd.cmu.oldUidset": "3",
+       "vnd.cmu.sessionId": "imap.example.org-7685-1424699561-1-7444588115769591371",
+       "vnd.cmu.unseenMessages": 0
+   }
+
+
+MessageNew
+----------
+
+   {
+       "event": "MessageNew",
+       "messageContent": {
+           "6": "Return-Path: <john@example.org>\r\nReceived: from imap.example.org ([unix socket])\r\n\t by imap.example.org (Cyrus git2.5+0-Kolab-2.5-67.el6.kolab_3.4) with LMTPA;\r\n\t Mon, 20 Oct 2014 13:34:14 +0200\r\nX-Sieve: CMU Sieve 2.4\r\nX-Virus-Scanned: amavisd-new at example.org\r\nX-Spam-Flag: NO\r\nX-Spam-Score: -0.002\r\nX-Spam-Level: \r\nX-Spam-Status: No, score=-0.002 tagged_above=-10 required=6.2\r\n\ttests=[NO_RECEIVED=-0.001, NO_RELAYS=-0.001] autolearn=ham\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=US-ASCII;\r\n format=flowed\r\nContent-Transfer-Encoding: 7bit\r\nDate: Mon, 20 Oct 2014 13:32:41 +0200\r\nFrom: =?UTF-8?Q?Br=C3=BCederli=2C_Thomas?= <john@example.org>\r\nTo: \"Doe, John\" <john@example.org>\r\nSubject: MessageNew event test\r\nMessage-ID: <a8486f5db6ec207de9b9f069850546ee@example.org>\r\nX-Sender: john@example.org\r\n\r\nThis message should trigger the MessageNew event for john...\r\n...and MessageAppend to /Sent for the sender.\r\n"
+       },
+       "messageHeaders": {
+           "6": {
+               "Content-Transfer-Encoding": "7bit",
+               "Content-Type": "text/plain",
+               "Date": "2014-10-20T11:32:41Z",
+               "From": [
+                   "Br\u00fcederli, Thomas <john@example.org>"
+               ],
+               "MIME-Version": "1.0",
+               "Message-ID": "<a8486f5db6ec207de9b9f069850546ee@example.org>",
+               "Received": "from imap.example.org ([unix socket])\r\n\t by imap.example.org (Cyrus git2.5+0-Kolab-2.5-67.el6.kolab_3.4) with LMTPA;\r\n\t Mon, 20 Oct 2014 13:34:14 +0200",
+               "Return-Path": "<john@example.org>",
+               "Subject": "MessageNew event test",
+               "To": [
+                   "Doe, John <john@example.org>"
+               ],
+               "X-Sender": "john@example.org",
+               "X-Sieve": "CMU Sieve 2.4",
+               "X-Spam-Flag": "NO",
+               "X-Spam-Level": "",
+               "X-Spam-Score": "-0.002",
+               "X-Spam-Status": "No, score=-0.002 tagged_above=-10 required=6.2\r\n\ttests=[NO_RECEIVED=-0.001, NO_RELAYS=-0.001] autolearn=ham",
+               "X-Virus-Scanned": "amavisd-new at example.org"
+           }
+       },
+       "messageSize": 976,
+       "messages": 6,
+       "modseq": 20,
+       "pid": 2340,
+       "service": "lmtpunix",
+       "timestamp": "2014-10-20T13:34:14.966+02:00",
+       "uidnext": 7,
+       "uidset": "6",
+       "uri": "imap://john@example.org@imap.example.org/INBOX;UIDVALIDITY=1411487714/;UID=6",
+       "user": "john@example.org",
+       "vnd.cmu.midset": [
+           "<a8486f5db6ec207de9b9f069850546ee@example.org>"
+       ],
+       "vnd.cmu.sessionId": "imap.example.org-2340-1413804854-1",
+       "vnd.cmu.unseenMessages": 3
+   }
+
+
+MessageRead
+-----------
+
+   {
+       "event": "MessageRead",
+       "messages": 1,
+       "modseq": 47,
+       "pid": 7685,
+       "service": "imap",
+       "timestamp": "2015-02-23T14:53:44.476+01:00",
+       "uidnext": 5,
+       "uidset": "4",
+       "uri": "imap://john@example.org@imap.example.org/INBOX;UIDVALIDITY=1424683682",
+       "user": "john@example.org",
+       "vnd.cmu.midset": [
+           "<4d9618acd0aea6b33683766358351459@example.org>"
+       ],
+       "vnd.cmu.sessionId": "imap.example.org-7685-1424699624-1-9701853636551497828",
+       "vnd.cmu.unseenMessages": 0
+   }
+
+
+MessageTrash
+------------
+
+   {
+       "event": "MessageTrash",
+       "messages": 1,
+       "modseq": 48,
+       "pid": 7809,
+       "service": "imap",
+       "timestamp": "2015-02-23T14:54:02.616+01:00",
+       "uidnext": 5,
+       "uidset": "4",
+       "uri": "imap://john@example.org@imap.example.org/INBOX;UIDVALIDITY=1424683682",
+       "user": "john@example.org",
+       "vnd.cmu.midset": [
+           "<4d9618acd0aea6b33683766358351459@example.org>"
+       ],
+       "vnd.cmu.sessionId": "imap.example.org-7809-1424699642-1-2896189896878960640",
+       "vnd.cmu.unseenMessages": 0
+   }
+
+
+QuotaChange
+-----------
+
+Note: This event may be followed by a QuotaWithin event
+  notification, if the quota change leads the quota root to allow more
+  resources than currently in use.
+
+   {
+       "diskQuota": 123456789,
+       "diskUsed": 2,
+       "event": "QuotaChange",
+       "maxMessages": -1,
+       "messages": 3,
+       "pid": 8140,
+       "service": "imaps",
+       "timestamp": "2015-03-10T16:16:19.255+01:00",
+       "uri": "imap://john.doe@example.org@kolab.example.org/INBOX",
+       "user": "john.doe@example.org",
+       "vnd.cmu.sessionId": "kolab.example.org-8140-1426000578-1-14068443041501787710"
+   }
+
+
+QuotaExceed
+-----------
+
+The "user" parameter in the event notification is the user to whom the
+quota applies, that is being exceeded, otherwise known as the owner of
+the Personal Namespace.
+
+Note: Quota being exceeded on shared folders cannot include an
+  "owner" for the quota root.
+
+   {
+       "diskQuota": 2,
+       "diskUsed": 2,
+       "event": "QuotaExceed",
+       "maxMessages": -1,
+       "messages": 3,
+       "pid": 8210,
+       "service": "lmtpunix",
+       "timestamp": "2015-03-10T16:13:40.218+01:00",
+       "uri": "imap://john.doe@example.org@kolab.example.org/INBOX",
+       "user": "john.doe@example.org",
+       "vnd.cmu.sessionId": "kolab.example.org-8210-1426000420-4-9494635035963533515"
+   }
+
+
+QuotaWithin
+-----------
+
+The "QuotaWithin" event typically follows a MailboxDelete [1],
+MessageExpunge [2], MessageMove [3], or QuotaChange [4].
+
+   {
+       "diskQuota": 123456789,
+       "diskUsed": 2,
+       "event": "QuotaWithin",
+       "maxMessages": -1,
+       "messages": 3,
+       "pid": 8140,
+       "service": "imaps",
+       "timestamp": "2015-03-10T16:16:19.255+01:00",
+       "uri": "imap://john.doe@example.org@kolab.example.org/INBOX",
+       "user": "john.doe@example.org",
+       "vnd.cmu.sessionId": "kolab.example.org-8140-1426000578-1-14068443041501787710"
+   }
+
+-[ Footnotes for QuotaWithin ]-
+
+[1] A "QuotaWithin" event follows a "MailboxDelete" event if the
+    mailbox deleted resides inside a quota root, and lowers the
+    resources used to below the existing quota thresholds.
+
+[2] A "QuotaWithin" event follows a "MessageExpunge" event if the
+    messages purged reside inside a quota root, and amount to a number
+    or size that lowers the amount of resources used to below the
+    existing quota thresholds.
+
+[3] A "QuotaWithin" event follows a "MessageMove" event if the
+    source folder of the messages moved resides inside a quota root,
+    and the target folder to which the messages have been moved does
+    not reside within the same quota root, and the number or size of
+    the messages moves lowers the amount of resources used in the
+    quota root for the source folder of the messages to below the
+    existing quota thresholds.
+
+[4] A "QuotaWithin" event follows a "QuotaChange" event if the
+    quota change raised the threshold on the amount of resources used
+    within the quota root to a level higher than the existing amount
+    of resources used.
+
+
+CalendarAlarm
+-------------
+
+The "CalendarAlarm" event occurs when a calendar event triggers an
+alarm.
+
+   {
+       "event":"CalendarAlarm",
+       "pid":3164225,
+       "serverFQDN":"sloti30t15",
+       "alarmTime":"20151119T063000Z",
+       "alarmRecipients":["mailto:mary@example.org"],
+       "userId":"mary@example.org",
+       "calendarName":"Calendar",
+       "uid":"49ba20f5-cb44-4863-aea7-255f37ffc2e7",
+       "action":"email",
+       "summary":"Here's a lovely event.  Remind me",
+       "description":"",
+       "location":"",
+       "timezone":"Australia/Melbourne",
+       "start":"20151119T073000Z",
+       "end":"20151119T083000Z",
+       "allDay":0,
+       "attendeeNames":[],
+       "attendeeEmails":[],
+       "attendeeStatus":[],
+       "organizer":""
+   }
+
+
+ApplePushService
+----------------
+
+While Cyrus supports the Apple Push Service, Apple has only licensed
+Apple Push for mail to a couple of large mail providers: FastMail and
+Yahoo. If you own an OS X Server license, you also get a key for
+personal use. But it's not a supported option for third party
+developers at this time.
+
+The "ApplePushService" event occurs when
+
+   {
+       "event":"ApplePushService",
+       "user": "john@example.org",
+       "apsVersion": "",
+       "apsAccountId": "",
+       "apsDeviceToken": "",
+       "apsSubtopic": "",
+       "mailboxes": "[array of mailboxIDs]"
+   }
+
+apsVersion
+   Version of the Apple Push Service this message is compliant with.
+
+apsAccountId
+   Service Provider's accountID with the Apple Push Service.
+
+apsDeviceToken
+   Unique identifier for the user's device registered with Apple.
+
+apsSubtopic
+   TODO: describe this
+
+Back to Features
