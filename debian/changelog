@@ -1,3 +1,27 @@
+cyrus-imapd (3.0.8-1) UNRELEASED; urgency=medium
+
+  [ Ondřej Surý ]
+  * Drop --parallel from dh invocation for easier debugging
+  * Remove -Wl,-z,defs as it breaks shared library building
+  * Depend on vim-common for xxd (needs better fix)
+  * Update TLS 1.2 patch to be compatible with openssl < 1.1.0
+  * Delete obsolete patch(es)
+  * Add patch to change libisieve to libtool convenience library as fPIC doesn't work without it
+  * Update the dh_auto_install and dh_install targets to match the new version
+  * Add patch that fixes accidentally disabled squat indexing
+  * Export correct PERL_MM_OPT
+  * And finally install perl files
+  * Only install perl manpages to libcyrus-imap-perl
+  * Tidy-up dpatch comments
+  * Remove dpkg-maintscript-helper scripts
+
+  [ Anthony Prades ]
+  * New upstream version 3.0.8
+  * Rebase patches on top of Cyrus IMAP 3.0.8
+  * REWORD
+
+ -- Anthony Prades <toony.debian@chezouam.net>  Sun, 16 Dec 2018 17:30:01 +0100
+
 cyrus-imapd (3.0.0~beta1-82-g1b5369a-1) unstable; urgency=medium
 
   * Pass a /usr directory to --enable-gssapi and --with-sasl
