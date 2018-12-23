@@ -125,7 +125,7 @@ override_dh_auto_build:
 # former build-indep
 	cd doc &&\
 	pod2man ../perl/sieve/scripts/sieveshell.pl > ../man/sieveshell.1 &&\
-	fig2dev -L png murder.fig murder.png &&\
+	fig2dev -L png legacy/murder.fig murder.png &&\
 	rm -f groff-html-*.png pod2htm*
 	cd doc &&\
 	mkdir -p man &&\
