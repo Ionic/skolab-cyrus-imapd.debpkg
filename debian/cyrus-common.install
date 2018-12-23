@@ -68,7 +68,7 @@ usr/share/man/man8/cyrus-lmtpd.8
 usr/share/man/man8/cyrus-makedirs.8
 usr/share/man/man8/cyrus-master.8
 usr/share/man/man8/cyrus-mbpath.8
-usr/share/man/man8/cyrus-notifyd.8
+usr/share/man/man8/cyrus-mbtool.8
 usr/share/man/man8/cyrus-quota.8
 usr/share/man/man8/cyrus-reconstruct.8
 usr/share/man/man8/cyrus-smmapd.8
