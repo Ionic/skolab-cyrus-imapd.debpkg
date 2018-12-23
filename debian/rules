@@ -202,7 +202,7 @@ override_dh_auto_install:
 	install -m 644 doc/legacy/*.html doc/murder.png $(DOCDIR)/html
 	cp -a doc/man $(DOCDIR)/html
 	cp -a debian/examples $(DOCDIR)
-	install -m 644 doc/cyrusv2.mc $(DOCDIR)/examples
+	install -m 644 contrib/cyrusv2.mc $(DOCDIR)/examples
 	#
 	# Install contrib/ files
 	install -d -m 755 $(DOCDIR)/contrib
