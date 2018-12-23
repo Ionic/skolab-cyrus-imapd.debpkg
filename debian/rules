@@ -178,7 +178,7 @@ override_dh_auto_install:
 
 	# We rename some utils, so we need to sort out the manpages
 	for i in master reconstruct quota deliver \
-	         mbpath ctl_mboxlist ctl_deliver ctl_cyrusdb squatter \
+	         mbpath mbtool ctl_mboxlist ctl_deliver ctl_cyrusdb squatter \
 	         tls_prune ipurge cyrdump cvt_cyrusdb chk_cyrus arbitron \
 		 cyr_expire unexpunge sync_client sync_reset cyr_synclog \
 		 cyr_dbtool cyr_df ctl_zoneinfo; do \
