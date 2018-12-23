@@ -17,6 +17,7 @@ usr/lib/cyrus/bin/cyr_info
 usr/lib/cyrus/bin/cyr_sequence
 usr/lib/cyrus/bin/cyr_userseen
 usr/lib/cyrus/bin/cyrdump
+usr/lib/cyrus/bin/cyr_virusscan
 usr/lib/cyrus/bin/deliver
 usr/lib/cyrus/bin/fud
 usr/lib/cyrus/bin/init-helper
@@ -58,6 +59,7 @@ usr/share/man/man8/cyrus-cvt_*.8
 usr/share/man/man8/cyrus-cyr_dbtool.8
 usr/share/man/man8/cyrus-cyr_df.8
 usr/share/man/man8/cyrus-cyr_expire.8
+usr/share/man/man8/cyr_virusscan.8
 usr/share/man/man8/cyrus-deliver.8
 usr/share/man/man8/cyrus-dump.8
 usr/share/man/man8/cyrus-ipurge.8
