@@ -208,7 +208,7 @@ override_dh_auto_install:
 
 	# Install the html docs and examples
 	install -d -m 755 $(DOCDIR)/html
-	install -m 644 doc/*.html doc/murder.png $(DOCDIR)/html
+	install -m 644 doc/legacy/*.html doc/murder.png $(DOCDIR)/html
 	cp -a doc/man $(DOCDIR)/html
 	cp -a debian/examples $(DOCDIR)
 	install -m 644 doc/cyrusv2.mc $(DOCDIR)/examples
