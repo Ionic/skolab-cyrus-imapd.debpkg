@@ -1,3 +1,0 @@
-cyrus-common: script-in-etc-init.d-not-registered-via-update-rc.d etc/init.d/cyrus-imapd
-cyrus-common: init.d-script-not-marked-as-conffile etc/init.d/cyrus-imapd
-cyrus-common: init.d-script-not-included-in-package etc/init.d/cyrus-imapd
