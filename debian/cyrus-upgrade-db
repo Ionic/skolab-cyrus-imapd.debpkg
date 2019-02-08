@@ -10,16 +10,16 @@ set -e
 
 export PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
-CONFIG_DIR=$(LC_ALL=C gawk '/^configdirectory:[[:blank:]]/ { print $2 }' < /etc/imapd.conf)
+CONFIG_DIR="$(LC_ALL=C gawk '/^configdirectory:[[:blank:]]/ { print $2 }' < /etc/imapd.conf)"
 
-BACKUP_DIR=/var/backup/cyrus-imapd/$(date +%Y%m%d-%H%M%S)
+BACKUP_DIR="/var/backup/cyrus-imapd/$(date +%Y%m%d-%H%M%S)"
 
-mkdir -p $BACKUP_DIR
+mkdir -p "$BACKUP_DIR"
 
 backupdb() {
     case "$2" in
 	twoskip|skiplist|flat)
-	    cp -a $CONFIG_DIR/$1 $BACKUP_DIR
+	    cp -a "$CONFIG_DIR/$1" "$BACKUP_DIR"
 	    ;;
 	quotalegacy)
 	    echo "$0: Cannot backup $2 format" 1>&2
@@ -32,29 +32,28 @@ backupdb() {
 }
 
 upgradedb() {
-    TMPFILE=$(mktemp /tmp/$1.XXXXXXXX)
-    /usr/lib/cyrus/bin/cvt_cyrusdb $CONFIG_DIR/$1 $2 $TMPFILE $3
-    rm -f $CONFIG_DIR/$1
-    mv $TMPFILE $CONFIG_DIR/$1
-    chown cyrus:mail $CONFIG_DIR/$1
+    TMPFILE="$(mktemp /tmp/"$1".XXXXXXXX)"
+    /usr/lib/cyrus/bin/cvt_cyrusdb "$CONFIG_DIR/$1" "$2" "$TMPFILE" "$3"
+    rm -f "$CONFIG_DIR/$1"
+    mv "$TMPFILE" "$CONFIG_DIR/$1"
+    chown cyrus:mail "$CONFIG_DIR/$1"
 }
 
 removedb() {
-    rm -f $CONFIG_DIR/$1
+    rm -f "$CONFIG_DIR/$1"
 }
 
 touchdb() {
-    touch $CONFIG_DIR/$1
-    chown cyrus:mail $CONFIG_DIR/$1
+    touch "$CONFIG_DIR/$1"
+    chown cyrus:mail "$CONFIG_DIR/$1"
 }    
 
 upgradealldb() {
-    OLD_LIST=$2
-    NEW_LIST=$1
+    OLD_LIST="$2"
+    NEW_LIST="$1"
 
-    BERKELEY_DB_FOUND=
     while read -r OLD_DBKEY OLD_DBVALUE ; do
-	NEW_DBVALUE=$(LC_ALL=C gawk "/^${OLD_DBKEY}[[:blank:]]/ { print \$2 }" $NEW_LIST)
+	NEW_DBVALUE="$(LC_ALL=C gawk "/^${OLD_DBKEY}[[:blank:]]/ { print \$2 }" "$NEW_LIST")"
 
 	if [ -z "${NEW_DBVALUE}" ]; then
 	    echo "$0: Cannot upgrade $OLD_DBKEY from $OLD_DBVALUE to empty" 1>&2
@@ -121,17 +120,17 @@ upgradealldb() {
 	fi
 
 	# Operate only if the database exists
-	if [ -f $CONFIG_DIR/$DBFILE ]; then
+	if [ -f "$CONFIG_DIR/$DBFILE" ]; then
 	    # Backup database if we are changing format or upgrading Berkeley DB version
 	    if [ -n "${DO_UPGRADE_DB}" ]; then
-		backupdb $DBFILE $OLD_DBVALUE $OLD_DBVERSION;
+		backupdb "$DBFILE" "$OLD_DBVALUE" "$OLD_DBVERSION";
 	    fi
 	    # Upgrade cyrus database format
 	    if [ -n "${DO_UPGRADE_DB}" ]; then
-		upgradedb $DBFILE $OLD_DBVALUE $NEW_DBVALUE
+		upgradedb "$DBFILE" "$OLD_DBVALUE" "$NEW_DBVALUE"
 	    fi
 	fi
-    done < $OLD_LIST
+    done < "$OLD_LIST"
     return 0
 }
 
@@ -141,4 +140,4 @@ RET="$?"
 [ "$RET" -eq "0" ] && \
     cp -p /usr/lib/cyrus/cyrus-db-types.txt  /usr/lib/cyrus/cyrus-db-types.active
 
-exit $RET
+exit "$RET"
