@@ -5,12 +5,9 @@ Maintainer: Debian Cyrus Team <team+cyrus@tracker.debian.org>
 Uploaders: Henrique de Moraes Holschuh <hmh@debian.org>,
            Ondřej Surý <ondrej@debian.org>
 Standards-Version: 3.9.6
-Build-Depends: autotools-dev,
-               bison,
+Build-Depends: bison,
                comerr-dev,
-               debhelper (>= 9),
-               dh-autoreconf,
-               dh-systemd,
+               debhelper-compat (= 12),
                flex,
                ghostscript,
                groff,
