@@ -1,0 +1,41 @@
+
+About Cyrus
+***********
+
+* What is Cyrus
+
+  * What is Cyrus
+
+  * What is IMAP?
+
+  * IMAP Version 4 (IMAP4)
+
+  * Mime
+
+  * SMTP
+
+* Who Is Cyrus
+
+  * Core Contributors
+
+  * Individual contributors and past contributors
+
+* Cyrus Roadmap
+
+  * High Level Roadmap
+
+* Cyrus History
+
+* Cyrus Bylaws
+
+  * I. The Cyrus Governance Board
+
+  * II. The Cyrus Core Developers Group
+
+  * III. The Release Engineer
+
+  * IV. The Cyrus Roadmap
+
+  * V. Development Process
+
+  * VI. Changes to the Bylaws

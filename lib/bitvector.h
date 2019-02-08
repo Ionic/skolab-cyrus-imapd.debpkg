@@ -53,10 +53,12 @@ struct bitvector
 {
     unsigned int length;
     unsigned int alloc;
+    /* TODO: should use natural word size, uint32_t or uint64_t,
+     * for faster searching in bv_next_set() */
     unsigned char *bits;
 };
 
-#define BV_INITIALIZER	{ 0, 0, NULL }
+#define BV_INITIALIZER  { 0, 0, NULL }
 
 extern void bv_init(bitvector_t *);
 extern void bv_setsize(bitvector_t *, unsigned int i);
@@ -69,6 +71,11 @@ extern void bv_set(bitvector_t *, unsigned int);
 extern void bv_clear(bitvector_t *, unsigned int);
 extern void bv_andeq(bitvector_t *a, const bitvector_t *b);
 extern void bv_oreq(bitvector_t *a, const bitvector_t *b);
+extern int bv_next_set(const bitvector_t *, int start);
+extern int bv_prev_set(const bitvector_t *, int start);
+extern int bv_first_set(const bitvector_t *);
+extern int bv_last_set(const bitvector_t *);
+extern unsigned bv_count(const bitvector_t *);
 extern char *bv_cstring(const bitvector_t *);
 extern void bv_free(bitvector_t *);
 

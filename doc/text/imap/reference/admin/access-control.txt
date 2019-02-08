@@ -1,0 +1,31 @@
+
+Access Control
+**************
+
+Cyrus IMAP features rich access control compliant with **RFC 2086**,
+**RFC 4314**, **RFC 5257** and **RFC 5464**.
+
+* Combining Access Rights
+
+* Access Control Defaults
+
+* Access Control Identifier (ACI)
+
+* Access Control Lists Rights Reference
+
+
+Discretionary Access Control
+============================
+
+Cyrus IMAP employs discretionary access control, meaning that users
+themselves are in charge of what folders are shared, and with whom.
+
+Two means exist to suppress sharing folders between users:
+
+1. Revoke the a (administration) right on all mailboxes in the
+   personal namespace for each user.
+
+2. Suppress the listing of the Other Users Namespace by enabling
+   "disable_user_namespace" in imapd.conf(5).
+
+Back to Administrator Guide

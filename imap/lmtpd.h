@@ -56,37 +56,35 @@ typedef struct deliver_data {
 
     int cur_rcpt;
 
-    struct stagemsg *stage;	/* staging location for single instance
-				   store */
+    struct stagemsg *stage;     /* staging location for single instance
+                                   store */
     char *notifyheader;
-    const char *temp[2];	/* used to avoid extra indirection in
-				   getenvelope() */
+    const char *temp[2];        /* used to avoid extra indirection in
+                                   getenvelope() */
 
-    struct namespace *namespace;
-
-    char *authuser;		/* user who submitted message */
-    struct auth_state *authstate;
+    char *authuser;             /* user who submitted message */
+    const struct namespace *ns;
+    const struct auth_state *authstate;
 } deliver_data_t;
 
 /* forward declarations */
 extern int deliver_local(deliver_data_t *mydata,
-			 const strarray_t *flags,
-			 char *username,
-			 const char *mailboxname);
+                         const strarray_t *flags,
+                         const mbname_t *mbname);
 
 extern int deliver_mailbox(FILE *f,
-			   struct message_content *content,
-			   struct stagemsg *stage,
-			   unsigned size,
-			   const strarray_t *flags,
-			   char *authuser,
-			   struct auth_state *authstate,
-			   char *id,
-			   const char *user,
-			   char *notifyheader,
-			   const char *mailboxname,
-			   char *date,
-			   int quotaoverride,
-			   int acloverride);
+                           struct message_content *content,
+                           struct stagemsg *stage,
+                           unsigned size,
+                           const strarray_t *flags,
+                           const char *authuser,
+                           const struct auth_state *authstate,
+                           char *id,
+                           const char *user,
+                           char *notifyheader,
+                           const char *mailboxname,
+                           char *date,
+                           int quotaoverride,
+                           int acloverride);
 
 #endif /* LMTPD_H */

@@ -1,0 +1,55 @@
+
+Archive Partitions
+******************
+
+Archive partitions are defined by the "archivepartition-name" option
+in imapd.conf(5):
+
+   "archivepartition-name:" <none>
+
+      The pathname of the archive partition *name*, corresponding to
+      spool partition **partition-name**.  For any mailbox residing in
+      a directory on **partition-name**, the archived messages will be
+      stored in a corresponding directory on **archivepartition-
+      name**. Note that not every **partition-name** option is
+      strictly required to have a corresponding **archivepartition-
+      name** option, but that without one there's no benefit to
+      enabling archiving.
+
+As is the case with metadata partitions, however, archive partitions
+do not stand alone.  They are closely bound to Spool Directories as
+defined by the accompanying "partition-name" directive.
+
+Multiple partitions may be used for various reasons, such as to
+distribute load between different storage pools or technologies.
+Please consult Mail Spool Partitions for more details and use cases.
+
+To define additional mail spools, add more "partition-name" entries to
+imapd.conf(5) as needed.  For example, let's imagine we want to
+migrate users to new partitions split by first character of the user's
+last name, and add a partition for shared mailboxes (see Shared
+Namespaces):
+
+* Sample:
+
+     defaultpartition: main
+     partition-main: /var/spool/cyrus
+     partition-am: /var/spool/cyrus-am
+     partition-nz: /var/spool/cyrus-nz
+     partition-shared: /var/spool/cyrus-shared
+
+So, to add archiving to the system described above, we would need
+something like this (again, building on our previous examples):
+
+* Sample:
+
+     defaultpartition: main
+     partition-main: /var/spool/cyrus
+     partition-am: /var/spool/cyrus-am
+     partition-nz: /var/spool/cyrus-nz
+     partition-shared: /var/spool/cyrus-shared
+     archive_enabled: yes
+     archivepartition-main: /var/spool/cyrusarchive/main
+     archivepartition-am: /var/spool/cyrusarchive/am
+     archivepartition-nz: /var/spool/cyrusarchive/nz
+     archivepartition-shared: /var/spool/cyrusarchive/shared

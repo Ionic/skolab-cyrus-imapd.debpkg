@@ -51,27 +51,25 @@
 #include "mboxevent.h"
 #include "mboxname.h"
 
-extern struct db *mbdb;
-
 /*
  * Maximum length of partition name. [config.c has a limit of 70]
  */
 #define MAX_PARTITION_LEN 64
-#define MAILBOX_UNIQUEID_LEN 32
 
 /* flags for types of mailboxes */
 #define MBTYPE_REMOTE (1<<0) /* Not on this server (part is remote host) */
 #define MBTYPE_RESERVE (1<<1) /* Reserved [mupdate/imapd] /
-			       Rename Target [imapd] (part is normal, but
-			       you are not allowed to create this mailbox,
-			       even though it doesn't actually exist */
+                               Rename Target [imapd] (part is normal, but
+                               you are not allowed to create this mailbox,
+                               even though it doesn't actually exist */
 #define MBTYPE_NETNEWS (1<<2) /* Netnews Mailbox - NO LONGER USED */
 #define MBTYPE_MOVING (1<<3) /* Mailbox in mid-transfer (part is remotehost!localpart) */
 #define MBTYPE_DELETED (1<<4) /* Mailbox has been deleted, but not yet cleaned up */
-#define MBTYPE_CALENDAR (1<<5) /* Calendar Mailbox */
-#define MBTYPE_ADDRESSBOOK (1<<6) /* Addressbook Mailbox */
+#define MBTYPE_CALENDAR (1<<5) /* CalDAV Calendar Mailbox */
+#define MBTYPE_ADDRESSBOOK (1<<6) /* CardDAV Addressbook Mailbox */
+#define MBTYPE_COLLECTION (1<<7) /* WebDAV Collection Mailbox */
 
-#define MBTYPES_DAV (MBTYPE_CALENDAR|MBTYPE_ADDRESSBOOK)
+#define MBTYPES_DAV (MBTYPE_CALENDAR|MBTYPE_ADDRESSBOOK|MBTYPE_COLLECTION)
 #define MBTYPES_NONIMAP (MBTYPE_NETNEWS|MBTYPES_DAV)
 
 /* master name of the mailboxes file */
@@ -85,6 +83,7 @@ struct mboxlist_entry {
     char *ext_name;
     time_t mtime;
     uint32_t uidvalidity;
+    modseq_t foldermodseq;
     int mbtype;
     char *partition;
     char *server; /* holds remote machine for REMOTE mailboxes */
@@ -99,30 +98,30 @@ typedef struct mboxlist_entry mbentry_t;
 
 mbentry_t *mboxlist_entry_create();
 
-EXPORTED int mboxlist_parse_entry(mbentry_t **mbentryptr,
-				  const char *name, size_t namelen,
-				  const char *data, size_t datalen);
+char *mbentry_metapath(const struct mboxlist_entry *mbentry, int metatype, int isnew);
+char *mbentry_datapath(const struct mboxlist_entry *mbentry, uint32_t);
+
+int mboxlist_parse_entry(mbentry_t **mbentryptr,
+                         const char *name, size_t namelen,
+                         const char *data, size_t datalen);
+
+mbentry_t *mboxlist_entry_copy(const mbentry_t *src);
 
 void mboxlist_entry_free(mbentry_t **mbentryptr);
-
-/* formats a cstring from a mboxlist_entry.  Caller must free
- * after use */
-char *mboxlist_entry_cstring(mbentry_t *mbentry);
 
 const char *mboxlist_mbtype_to_string(uint32_t mbtype);
 uint32_t mboxlist_string_to_mbtype(const char *string);
 
-int mboxlist_delete(const char *name, int force);
+int mboxlist_delete(const char *name);
 /* Lookup 'name' in the mailbox list. */
 int mboxlist_lookup(const char *name, mbentry_t **mbentryptr,
-		    struct txn **tid);
+                    struct txn **tid);
 int mboxlist_lookup_allow_all(const char *name,
-				   mbentry_t **mbentryptr,
-				   struct txn **tid);
+                                   mbentry_t **mbentryptr,
+                                   struct txn **tid);
 
-int mboxlist_parse_entry(mbentry_t **mbentryptr,
-			 const char *name, size_t namelen,
-			 const char *data, size_t datalen);
+char *mboxlist_find_specialuse(const char *use, const char *userid);
+char *mboxlist_find_uniqueid(const char *uniqueid, const char *userid);
 
 
 /* insert/delete stub entries */
@@ -134,11 +133,11 @@ int mboxlist_update(mbentry_t *mbentry, int localonly);
 
 /* check user's ability to create mailbox */
 int mboxlist_createmailboxcheck(const char *name, int mbtype,
-				const char *partition,
-				int isadmin, const char *userid, 
-				struct auth_state *auth_state, 
-				char **newacl, char **newpartition,
-				int forceuser);
+                                const char *partition,
+                                int isadmin, const char *userid,
+                                const struct auth_state *auth_state,
+                                char **newacl, char **newpartition,
+                                int forceuser);
 
 /* create mailbox */
 /* localonly creates the local mailbox without touching mupdate */
@@ -148,29 +147,30 @@ int mboxlist_createmailboxcheck(const char *name, int mbtype,
 /* if given a mailbox pointer, return the still-locked mailbox
  * for further manipulation */
 int mboxlist_createmailbox(const char *name, int mbtype,
-			   const char *partition,
-			   int isadmin, const char *userid, 
-			   struct auth_state *auth_state,
-			   int localonly, int forceuser, int dbonly,
-			   int notify, struct mailbox **mailboxptr);
+                           const char *partition,
+                           int isadmin, const char *userid,
+                           const struct auth_state *auth_state,
+                           int localonly, int forceuser, int dbonly,
+                           int notify, struct mailbox **mailboxptr);
 
 /* create mailbox from sync */
-int mboxlist_createsync(const char *name, int mbtype,
-			const char *partition, 
-			const char *userid, struct auth_state *auth_state,
-			int options, unsigned uidvalidity, const char *acl,
-			const char *uniqueid, struct mailbox **mboxptr);
+int mboxlist_createsync(const char *name, int mbtype, const char *partition,
+                        const char *userid, const struct auth_state *auth_state,
+                        int options, unsigned uidvalidity,
+                        modseq_t highestmodseq, const char *acl,
+                        const char *uniqueid, int local_only,
+                        struct mailbox **mboxptr);
 
 /* delated delete */
 /* Translate delete into rename */
 /* prepare MailboxDelete notification if mboxevent is not NULL */
 int
-mboxlist_delayed_deletemailbox(const char *name, int isadmin, const char *userid, 
-			       struct auth_state *auth_state,
-			       struct mboxevent *mboxevent,
-			       int checkacl,
-			       int localonly,
-			       int force);
+mboxlist_delayed_deletemailbox(const char *name, int isadmin, const char *userid,
+                               const struct auth_state *auth_state,
+                               struct mboxevent *mboxevent,
+                               int checkacl,
+                               int localonly,
+                               int force);
 /* Delete a mailbox. */
 /* setting local_only disables any communication with the mupdate server
  * and deletes the mailbox from the filesystem regardless of if it is
@@ -178,62 +178,94 @@ mboxlist_delayed_deletemailbox(const char *name, int isadmin, const char *userid
 /* force ignores errors and just tries to wipe the mailbox off the face of
  * the planet */
 /* prepare MailboxDelete notification if mboxevent is not NULL */
-int mboxlist_deletemailbox(const char *name, int isadmin, const char *userid, 
-			   struct auth_state *auth_state,
-			   struct mboxevent *mboxevent,
-			   int checkacl,
-			   int local_only, int force);
+int mboxlist_deletemailbox(const char *name, int isadmin, const char *userid,
+                           const struct auth_state *auth_state,
+                           struct mboxevent *mboxevent,
+                           int checkacl,
+                           int local_only, int force);
 
 /* Rename/move a mailbox (hierarchical) */
 /* prepare MailboxRename notification if mboxevent is not NULL */
 int mboxlist_renamemailbox(const char *oldname, const char *newname,
-			   const char *partition, unsigned uidvalidity,
-			   int isadmin, const char *userid,
-			   struct auth_state *auth_state,
-			   struct mboxevent *mboxevent,
-			   int local_only,
-			   int forceuser, int ignorequota);
+                           const char *partition, unsigned uidvalidity,
+                           int isadmin, const char *userid,
+                           const struct auth_state *auth_state,
+                           struct mboxevent *mboxevent,
+                           int local_only, int forceuser, int ignorequota);
 
 /* change ACL */
-int mboxlist_setacl(struct namespace *namespace, const char *name,
-		    const char *identifier, const char *rights, int isadmin,
-		    const char *userid, struct auth_state *auth_state);
+int mboxlist_setacl(const struct namespace *namespace, const char *name,
+                    const char *identifier, const char *rights, int isadmin,
+                    const char *userid, const struct auth_state *auth_state);
 
 /* Change all ACLs on mailbox */
 int mboxlist_sync_setacls(const char *name, const char *acl);
 
+int mboxlist_set_racls(int enabled);
+
+modseq_t mboxlist_foldermodseq_dirty(struct mailbox *mailbox);
+
+struct findall_data {
+    const char *extname;
+    int mb_category;
+    const mbentry_t *mbentry;
+    const mbname_t *mbname;
+};
+
+typedef int findall_cb(struct findall_data *data, void *rock);
+
 /* Find all mailboxes that match 'pattern'. */
 int mboxlist_findall(struct namespace *namespace,
-		     const char *pattern, int isadmin, const char *userid, 
-		     struct auth_state *auth_state, int (*proc)(), void *rock);
-int mboxlist_findall_alt(struct namespace *namespace,
-			 const char *pattern, int isadmin, const char *userid, 
-			 struct auth_state *auth_state, int (*proc)(),
-			 void *rock);
+                     const char *pattern, int isadmin,
+                     const char *userid, const struct auth_state *auth_state,
+                     findall_cb *proc, void *rock);
+int mboxlist_findallmulti(struct namespace *namespace,
+                          const strarray_t *patterns, int isadmin,
+                          const char *userid, const struct auth_state *auth_state,
+                          findall_cb *proc, void *rock);
+int mboxlist_findone(struct namespace *namespace,
+                     const char *intname, int isadmin,
+                     const char *userid, const struct auth_state *auth_state,
+                     findall_cb *proc, void *rock);
 
 /* Find a mailbox's parent (if any) */
 int mboxlist_findparent(const char *mboxname,
-			mbentry_t **mbentryp);
+                        mbentry_t **mbentryp);
 
 /* direct access to subs DB */
 typedef int user_cb(const char *userid, void *rock);
-int mboxlist_allsubs(const char *userid, foreach_cb *proc, void *rock);
-int mboxlist_allmbox(const char *prefix, foreach_cb *proc, void *rock, int incdel);
 int mboxlist_alluser(user_cb *proc, void *rock);
-int mboxlist_allusermbox(const char *userid, foreach_cb *proc, void *rock,
-			 int include_deleted);
+
+typedef int mboxlist_cb(const mbentry_t *mbentry, void *rock);
+
+int mboxlist_visible(const char *userid, const struct auth_state *auth_state,
+                     mboxlist_cb *proc, void *rock, int incdel);
+int mboxlist_allmbox(const char *prefix, mboxlist_cb *proc, void *rock, int incdel);
+#define MBOXTREE_TOMBSTONES (1<<0)
+#define MBOXTREE_DELETED (1<<1)
+#define MBOXTREE_SKIP_ROOT (1<<2)
+#define MBOXTREE_SKIP_CHILDREN (1<<3)
+#define MBOXTREE_SKIP_PERSONAL (1<<4)
+#define MBOXTREE_PLUS_RACL (1<<5)
+int mboxlist_mboxtree(const char *mboxname, mboxlist_cb *proc, void *rock, int flags);
+int mboxlist_usermboxtree(const char *userid, mboxlist_cb *proc, void *rock, int flags);
+int mboxlist_usersubs(const char *userid, mboxlist_cb *proc, void *rock, int flags);
+
+strarray_t *mboxlist_sublist(const char *userid);
 
 /* Find subscribed mailboxes that match 'pattern'. */
 int mboxlist_findsub(struct namespace *namespace,
-		     const char *pattern, int isadmin, const char *userid, 
-		     struct auth_state *auth_state, int (*proc)(), void *rock,
-		     int force);
-int mboxlist_findsub_alt(struct namespace *namespace,
-			 const char *pattern, int isadmin, char const *userid, 
-			 struct auth_state *auth_state, int (*proc)(),
-			 void *rock, int force);
+                     const char *pattern, int isadmin,
+                     const char *userid, const struct auth_state *auth_state,
+                     findall_cb *proc, void *rock,
+                     int force);
+int mboxlist_findsubmulti(struct namespace *namespace,
+                          const strarray_t *patterns, int isadmin,
+                          const char *userid, const struct auth_state *auth_state,
+                          findall_cb *proc, void *rock,
+                          int force);
 
-/* given a mailbox 'name', where should we stage messages for it? 
+/* given a mailbox 'name', where should we stage messages for it?
    'stagedir' should be MAX_MAILBOX_PATH. */
 int mboxlist_findstage(const char *name, char *stagedir, size_t sd_len);
 
@@ -241,13 +273,13 @@ int mboxlist_findstage(const char *name, char *stagedir, size_t sd_len);
 int mboxlist_checksub(const char *name, const char *userid);
 
 /* Change 'user's subscription status for mailbox 'name'. */
-int mboxlist_changesub(const char *name, const char *userid, 
-		       struct auth_state *auth_state,
-		       int add, int force, int notify);
+int mboxlist_changesub(const char *name, const char *userid,
+                       const struct auth_state *auth_state,
+                       int add, int force, int notify);
 
 /* set or create quota root */
 int mboxlist_setquotas(const char *root,
-		       quota_t newquotas[QUOTA_NUMRESOURCES], int force);
+                       quota_t newquotas[QUOTA_NUMRESOURCES], int force);
 int mboxlist_unsetquota(const char *root);
 
 /* open the mailboxes db */

@@ -75,7 +75,6 @@
 #include "exitcodes.h"
 #include "index.h"
 #include "global.h"
-#include "imap/imap_err.h"
 #include "mailbox.h"
 #include "message.h"
 #include "message_guid.h"
@@ -86,55 +85,72 @@
 #include "util.h"
 #include "xmalloc.h"
 
+/* generated headers are not necessarily in current directory */
+#include "imap/imap_err.h"
+
 extern int optind;
 extern char *optarg;
 
 /* current namespace */
-static struct namespace recon_namespace;
+static struct namespace mbtool_namespace;
 
 /* forward declarations */
-static int do_cmd(char *name, int matchlen, int maycreate, void *rock);
+static int do_cmd(struct findall_data *data, void *rock);
 
 static void usage(void);
 void shut_down(int code);
 
 enum {
     CMD_TIME = 1,
+    CMD_REID = 2,
 };
 
 int main(int argc, char **argv)
 {
     int opt, i, r;
     int cmd = 0;
-    char buf[MAX_MAILBOX_PATH+1];
     char *alt_config = NULL;
 
     if ((geteuid()) == 0 && (become_cyrus(/*is_master*/0) != 0)) {
-	fatal("must run as the Cyrus user", EC_USAGE);
+        fatal("must run as the Cyrus user", EC_USAGE);
     }
 
-    while ((opt = getopt(argc, argv, "C:t")) != EOF) {
-	switch (opt) {
-	case 'C': /* alt config file */
-	    alt_config = optarg;
-	    break;
+    while ((opt = getopt(argc, argv, "C:rt")) != EOF) {
+        switch (opt) {
+        case 'C': /* alt config file */
+            alt_config = optarg;
+            break;
 
-	case 't':
-	    cmd = CMD_TIME;
-	    break;
+        case 'r':
+            if (cmd == 0) cmd = CMD_REID;
+            else usage();
+            break;
+        case 't':
+            if (cmd == 0) cmd = CMD_TIME;
+            else usage();
+            break;
 
-	default:
-	    usage();
-	}
+        default:
+            usage();
+        }
     }
+
+    /* must provide a command */
+    if (!cmd) usage();
+
+    /* must provide some mailboxes */
+    if (optind == argc) usage();
 
     cyrus_init(alt_config, "mbtool", 0, 0);
 
     /* Set namespace -- force standard (internal) */
-    if ((r = mboxname_init_namespace(&recon_namespace, 1)) != 0) {
-	syslog(LOG_ERR, "%s", error_message(r));
-	fatal(error_message(r), EC_CONFIG);
+    if ((r = mboxname_init_namespace(&mbtool_namespace, 1)) != 0) {
+        syslog(LOG_ERR, "%s", error_message(r));
+        fatal(error_message(r), EC_CONFIG);
     }
+
+    annotate_init(NULL, NULL);
+    annotatemore_open();
 
     mboxlist_init(0);
     mboxlist_open(NULL);
@@ -142,92 +158,123 @@ int main(int argc, char **argv)
     signals_set_shutdown(&shut_down);
     signals_add_handlers(0);
 
-    if (optind == argc) {
-	usage();
-    }
-
     for (i = optind; i < argc; i++) {
-	/* Handle virtdomains and separators in mailboxname */
-	(*recon_namespace.mboxname_tointernal)(&recon_namespace, argv[i],
-					       NULL, buf);
-	(*recon_namespace.mboxlist_findall)(&recon_namespace, buf, 1, 0, 0,
-					    do_cmd, &cmd);
+        mboxlist_findall(&mbtool_namespace, argv[i], 1, 0, 0, do_cmd, &cmd);
     }
 
     mboxlist_close();
     mboxlist_done();
+
+    annotatemore_close();
+    annotate_done();
 
     exit(0);
 }
 
 static void usage(void)
 {
-    fprintf(stderr,
-	    "usage: mbtool [-C <alt_config>] mailbox...\n");
+    fprintf(stderr, "Usage:\n");
+    fprintf(stderr, "    mbtool [options] {-r|-t} mailbox...\n");
+    fprintf(stderr, "\nCommands:\n");
+    fprintf(stderr, "    -r    create new unique IDs for specified mailboxes\n");
+    fprintf(stderr, "    -t    normalise internaldates in specified mailboxes\n");
+    fprintf(stderr, "\nOptions:\n");
+    fprintf(stderr, "    -C alt_config  use alternate imapd.conf file\n");
     exit(EC_USAGE);
 }
 
 /*
  * mboxlist_findall() callback function to examine a mailbox
  */
-static int do_timestamp(char *name)
+static int do_timestamp(const mbname_t *mbname)
 {
-    unsigned recno;
     int r = 0;
-    char ext_name_buf[MAX_MAILBOX_PATH+1];
     struct mailbox *mailbox = NULL;
-    struct index_record record;
     char olddate[RFC822_DATETIME_MAX+1];
     char newdate[RFC822_DATETIME_MAX+1];
 
     signals_poll();
 
     /* Convert internal name to external */
-    (*recon_namespace.mboxname_toexternal)(&recon_namespace, name,
-					   "cyrus", ext_name_buf);
-    printf("Working on %s...\n", ext_name_buf);
+    const char *extname = mbname_extname(mbname, &mbtool_namespace, "cyrus");
+    printf("Working on %s...\n", extname);
+
+    const char *name = mbname_intname(mbname);
 
     /* Open/lock header */
     r = mailbox_open_iwl(name, &mailbox);
     if (r) return r;
 
-    for (recno = 1; recno <= mailbox->i.num_records; recno++) {
-	r = mailbox_read_index_record(mailbox, recno, &record);
-	if (r) goto done;
+    struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_EXPUNGED);
+    const message_t *msg;
+    while ((msg = mailbox_iter_step(iter))) {
+        const struct index_record *record = msg_record(msg);
+        /* 1 day is close enough */
+        if (labs(record->internaldate - record->gmtime) < 86400)
+            continue;
 
-	if (record.system_flags & FLAG_EXPUNGED)
-	    continue;
+        struct index_record copyrecord = *record;
 
-	/* 1 day is close enough */
-	if (abs(record.internaldate - record.gmtime) < 86400)
-	    continue;
+        time_to_rfc822(copyrecord.internaldate, olddate, sizeof(olddate));
+        time_to_rfc822(copyrecord.gmtime, newdate, sizeof(newdate));
+        printf("  %u: %s => %s\n", copyrecord.uid, olddate, newdate);
 
-	time_to_rfc822(record.internaldate, olddate, sizeof(olddate));
-	time_to_rfc822(record.gmtime, newdate, sizeof(newdate));
-	printf("  %u: %s => %s\n", record.uid, olddate, newdate);
+        /* switch internaldate */
+        copyrecord.internaldate = copyrecord.gmtime;
 
-	/* switch internaldate */
-	record.internaldate = record.gmtime;
-
-	r = mailbox_rewrite_index_record(mailbox, &record);
-	if (r) goto done;
+        r = mailbox_rewrite_index_record(mailbox, &copyrecord);
+        if (r) goto done;
     }
 
  done:
+    mailbox_iter_done(&iter);
     mailbox_close(&mailbox);
 
     return r;
 }
 
-int do_cmd(char *name,
-	   int matchlen __attribute__((unused)),
-	   int maycreate __attribute__((unused)),
-	   void *rock)
+static int do_reid(const mbname_t *mbname)
 {
+    int r = 0;
+    struct mailbox *mailbox = NULL;
+    mbentry_t *mbentry = NULL;
+
+    /* Convert internal name to external */
+    const char *extname = mbname_extname(mbname, &mbtool_namespace, "cyrus");
+    printf("Working on %s...\n", extname);
+
+    const char *name = mbname_intname(mbname);
+
+    r = mailbox_open_iwl(name, &mailbox);
+    if (r) return r;
+
+    mailbox_make_uniqueid(mailbox);
+
+    r = mboxlist_lookup(name, &mbentry, NULL);
+    if (r) return r;
+
+    free(mbentry->uniqueid);
+    mbentry->uniqueid = xstrdup(mailbox->uniqueid);
+
+    mboxlist_update(mbentry, 0);
+
+    mailbox_close(&mailbox);
+
+    /* printf("did reid %s\n", mboxname); */
+    return r;
+}
+
+
+int do_cmd(struct findall_data *data, void *rock)
+{
+    if (!data) return 0;
     int *valp = (int *)rock;
 
-    if (*valp == CMD_TIME)
-	return do_timestamp(name);
+    if (*valp == CMD_TIME && data->mbname != NULL)
+        return do_timestamp(data->mbname);
+
+    if (*valp == CMD_REID && data->mbname != NULL)
+        return do_reid(data->mbname);
 
     return 0;
 }

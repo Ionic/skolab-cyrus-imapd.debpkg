@@ -55,10 +55,17 @@
 # include <unistd.h>
 #endif
 
+#include "append.h"
 #include "global.h"
 #include "notify.h"
 #include "xstrlcpy.h"
 #include "xstrlcat.h"
+#include "mailbox.h"
+#include "util.h"
+#include "times.h"
+
+/* generated headers are not necessarily in current directory */
+#include "imap/imap_err.h"
 
 #define FNAME_NOTIFY_SOCK "/socket/notify"
 
@@ -77,35 +84,182 @@ static int add_arg(char *buf, int max_size, const char *arg, int *buflen)
     return 0;
 }
 
-EXPORTED void notify(const char *method,
-	    const char *class, const char *priority,
-	    const char *user, const char *mailbox,
-	    int nopt, const char **options,
-	    const char *message)
+static void notify_dlist(const char *sockpath, const char *method,
+                         const char *class, const char *priority,
+                         const char *user, const char *mailbox,
+                         int nopt, const char **options,
+                         const char *message, const char *fname)
 {
-    const char *notify_sock;
+    struct sockaddr_un sun_data;
+    struct protstream *in = NULL, *out = NULL;
+    struct dlist *dl = dlist_newkvlist(NULL, "NOTIFY");
+    struct dlist *res = NULL;
+    struct dlist *il;
+    int c;
+    int soc = -1;
+    int i;
+
+    dlist_setatom(dl, "METHOD", method);
+    dlist_setatom(dl, "CLASS", class);
+    dlist_setatom(dl, "PRIORITY", priority);
+    dlist_setatom(dl, "USER", user);
+    dlist_setatom(dl, "MAILBOX", mailbox);
+    il = dlist_newlist(dl, "OPTIONS");
+    for (i = 0; i < nopt; i++)
+        dlist_setatom(il, NULL, options[i]);
+    dlist_setatom(dl, "MESSAGE", message);
+    dlist_setatom(dl, "FILEPATH", fname);
+
+    memset((char *)&sun_data, 0, sizeof(sun_data));
+    sun_data.sun_family = AF_UNIX;
+    strlcpy(sun_data.sun_path, sockpath, sizeof(sun_data.sun_path));
+
+    soc = socket(PF_UNIX, SOCK_STREAM, 0);
+    if (soc < 0) {
+        syslog(LOG_ERR, "NOTIFY: unable to create notify socket(): %m");
+        goto out;
+    }
+
+    if (connect(soc, (struct sockaddr *)&sun_data, sizeof(sun_data)) < 0) {
+        syslog(LOG_ERR, "NOTIFY: failed to connect to %s: %m", sockpath);
+        goto out;
+    }
+
+    in = prot_new(soc, 0);
+    out = prot_new(soc, 1);
+    /* Force use of LITERAL+ */
+    prot_setisclient(in, 1);
+    prot_setisclient(out, 1);
+
+    dlist_print(dl, 1, out);
+    prot_printf(out, "\r\n");
+    prot_flush(out);
+
+    c = dlist_parse(&res, 1, 0, in);
+    if (c == '\r') c = prot_getc(in);
+    /* XXX - do something with the response?  Like have NOTIFY answer */
+    if (c == '\n' && res && res->name) {
+        syslog(LOG_NOTICE, "NOTIFY: response %s to method %s", res->name, method);
+    }
+    else {
+        syslog(LOG_ERR, "NOTIFY: error sending %s to %s", method, sockpath);
+    }
+
+out:
+    if (in) prot_free(in);
+    if (out) prot_free(out);
+    if (soc >= 0) close(soc);
+    dlist_free(&dl);
+    dlist_free(&res);
+}
+
+EXPORTED int notify_at(time_t when, const char *method,
+            const char *class, const char *priority,
+            const char *user, const char *mboxname,
+            int nopt, const char **options,
+            const char *message)
+{
+    struct mailbox *mailbox = NULL;
+    char datestr[RFC822_DATETIME_MAX+1];
+    int i;
+    int r = mailbox_open_iwl("#events", &mailbox);
+    struct buf buf = BUF_INITIALIZER;
+
+    FILE *f;
+    quota_t qdiffs[QUOTA_NUMRESOURCES] = QUOTA_DIFFS_DONTCARE_INITIALIZER;
+    struct appendstate as;
+    struct stagemsg *stage = NULL;
+
+    if (r == IMAP_MAILBOX_NONEXISTENT) {
+        r = mboxlist_createmailbox("#events", 0, config_defpartition, 1,
+                                   "cyrus", NULL, 0, 0, 0, 0, NULL);
+        if (!r) r = mailbox_open_iwl("#events", &mailbox);
+    }
+    if (r) goto done;
+
+    /* Prepare to stage the message */
+    f = append_newstage(mailbox->name, when, 0, &stage);
+    if (!f) {
+        r = IMAP_IOERROR;
+        goto done;
+    }
+
+    syslog(LOG_NOTICE, "APPENDING TO STAGE: %s (%u)", mailbox->name, (unsigned)when);
+    time_to_rfc822(when, datestr, sizeof(datestr));
+    fprintf(f, "Date: %s\r\n", datestr);
+    fprintf(f, "Method: %s\r\n", charset_encode_mimeheader(method, 0));
+    fprintf(f, "Class: %s\r\n", charset_encode_mimeheader(class, 0));
+    fprintf(f, "Priority: %s\r\n", charset_encode_mimeheader(priority, 0));
+    fprintf(f, "User: %s\r\n", charset_encode_mimeheader(user, 0));
+    fprintf(f, "Mailbox: %s\r\n", charset_encode_mimeheader(mboxname, 0));
+    for (i = 0; i < nopt; i++)
+        fprintf(f, "Option: %s\r\n", charset_encode_mimeheader(options[i], 0));
+    fprintf(f, "Message: %s\r\n", charset_encode_mimeheader(message, 0));
+    fprintf(f, "\r\n");
+
+    fclose(f);
+    f = NULL;
+
+    r = append_setup_mbox(&as, mailbox, "cyrus", NULL,
+                          0, qdiffs, 0, 0, 0);
+    if (r) goto done;
+
+    struct body *body = NULL;
+    r = append_fromstage(&as, &body, stage, when, 0, 0, 0);
+    if (body) {
+        message_free_body(body);
+        free(body);
+    }
+    if (r) goto done;
+
+    r = append_commit(&as);
+    if (r) goto done;
+
+done:
+    append_removestage(stage);
+    append_abort(&as);
+    mailbox_close(&mailbox);
+    buf_free(&buf);
+    if (f) fclose(f);
+
+    return r;
+}
+
+EXPORTED void notify(const char *method,
+            const char *class, const char *priority,
+            const char *user, const char *mailbox,
+            int nopt, const char **options,
+            const char *message, const char *fname)
+{
+    const char *notify_sock = config_getstring(IMAPOPT_NOTIFYSOCKET);
     int soc = -1;
     struct sockaddr_un sun_data;
     char buf[NOTIFY_MAXSIZE] = "", noptstr[20];
     int buflen = 0;
     int i, r = 0;
 
+    if (!strncmp(notify_sock, "dlist:", 6)) {
+        notify_dlist(notify_sock+6, method, class, priority,
+                            user, mailbox, nopt, options,
+                            message, fname);
+        return;
+    }
+
     soc = socket(AF_UNIX, SOCK_DGRAM, 0);
     if (soc == -1) {
-	syslog(LOG_ERR, "unable to create notify socket(): %m");
-	goto out;
+        syslog(LOG_ERR, "unable to create notify socket(): %m");
+        goto out;
     }
 
     memset((char *)&sun_data, 0, sizeof(sun_data));
     sun_data.sun_family = AF_UNIX;
-    notify_sock = config_getstring(IMAPOPT_NOTIFYSOCKET);
-    if (notify_sock) {	
-	strlcpy(sun_data.sun_path, notify_sock, sizeof(sun_data.sun_path));
+    if (notify_sock) {
+        strlcpy(sun_data.sun_path, notify_sock, sizeof(sun_data.sun_path));
     }
     else {
-	strlcpy(sun_data.sun_path, config_dir, sizeof(sun_data.sun_path));
-	strlcat(sun_data.sun_path,
-		FNAME_NOTIFY_SOCK, sizeof(sun_data.sun_path));
+        strlcpy(sun_data.sun_path, config_dir, sizeof(sun_data.sun_path));
+        strlcat(sun_data.sun_path,
+                FNAME_NOTIFY_SOCK, sizeof(sun_data.sun_path));
     }
 
     /*
@@ -125,30 +279,30 @@ EXPORTED void notify(const char *method,
     if (!r) r = add_arg(buf, sizeof(buf), noptstr, &buflen);
 
     for (i = 0; !r && i < nopt; i++) {
-	r = add_arg(buf, sizeof(buf), options[i], &buflen);
+        r = add_arg(buf, sizeof(buf), options[i], &buflen);
     }
 
     if (!r) r = add_arg(buf, sizeof(buf), message, &buflen);
+    if (!r && fname) r = add_arg(buf, sizeof(buf), fname, &buflen);
 
     if (r) {
         syslog(LOG_ERR, "notify datagram too large, %s, %s",
-	       user, mailbox);
-	goto out;
+               user, mailbox);
+        goto out;
     }
 
     r = sendto(soc, buf, buflen, 0,
-	       (struct sockaddr *)&sun_data, sizeof(sun_data));
+               (struct sockaddr *)&sun_data, sizeof(sun_data));
 
     if (r < 0) {
-	syslog(LOG_ERR, "unable to sendto() notify socket: %m");
-	goto out;
+        syslog(LOG_ERR, "unable to sendto() notify socket: %m");
+        goto out;
     }
     if (r < buflen) {
-	syslog(LOG_ERR, "short write to notify socket");
-	goto out;
+        syslog(LOG_ERR, "short write to notify socket");
+        goto out;
     }
 
 out:
     xclose(soc);
-    return;
 }

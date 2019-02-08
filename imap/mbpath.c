@@ -55,10 +55,12 @@
 #include "util.h"
 #include "global.h"
 #include "exitcodes.h"
-#include "imap/imap_err.h"
 #include "mailbox.h"
 #include "xmalloc.h"
 #include "mboxlist.h"
+
+/* generated headers are not necessarily in current directory */
+#include "imap/imap_err.h"
 
 extern int optind;
 extern char *optarg;
@@ -66,7 +68,7 @@ extern char *optarg;
 /* current namespace */
 static struct namespace mbpath_namespace;
 
-static int 
+static int
 usage(void) {
   fprintf(stderr,"usage: mbpath [-C <alt_config>] [-q] [-s] [-m] <mailbox name>...\n");
   fprintf(stderr,"\t-q\tquietly drop any error messages\n");
@@ -80,9 +82,8 @@ main(int argc, char **argv)
 {
   mbentry_t *mbentry = NULL;
   int rc, i, quiet = 0, stop_on_error=0, metadata=0;
-  int opt;		/* getopt() returns an int */
+  int opt;              /* getopt() returns an int */
   char *alt_config = NULL;
-  char buf[MAX_MAILBOX_PATH+1];
 
   if ((geteuid()) == 0 && (become_cyrus(/*is_master*/0) != 0)) {
       fatal("must run as the Cyrus user", EC_USAGE);
@@ -100,8 +101,8 @@ main(int argc, char **argv)
       stop_on_error = 1;
       break;
     case 'm':
-	metadata = 1;
-	break;
+        metadata = 1;
+        break;
 
     default:
       usage();
@@ -119,35 +120,32 @@ main(int argc, char **argv)
 
   for (i = optind; i < argc; i++) {
     /* Translate mailboxname */
-    (*mbpath_namespace.mboxname_tointernal)(&mbpath_namespace,
-					    argv[i], NULL, buf);
-
-    if ((rc = mboxlist_lookup(buf, &mbentry, NULL)) == 0) {
+    char *intname = mboxname_from_external(argv[i], &mbpath_namespace, NULL);
+    if ((rc = mboxlist_lookup(intname, &mbentry, NULL)) == 0) {
       if (mbentry->mbtype & MBTYPE_REMOTE) {
-	printf("%s!%s\n", mbentry->server, mbentry->partition);
+        printf("%s!%s\n", mbentry->server, mbentry->partition);
       } else if (metadata) {
-	const char *path = mboxname_metapath(mbentry->partition, 
-					     mbentry->name, 0, 0);
-	printf("%s\n", path);
+        const char *path = mbentry_metapath(mbentry, 0, 0);
+        printf("%s\n", path);
       }
       else {
-	const char *path = mboxname_datapath(mbentry->partition, 
-					     mbentry->name, 0);
-	printf("%s\n", path);
+        const char *path = mbentry_datapath(mbentry, 0);
+        printf("%s\n", path);
       }
       mboxlist_entry_free(&mbentry);
     } else {
       if (!quiet && (rc == IMAP_MAILBOX_NONEXISTENT)) {
-	fprintf(stderr, "Invalid mailbox name: %s\n", argv[i]);
+        fprintf(stderr, "Invalid mailbox name: %s\n", argv[i]);
       }
       if (stop_on_error) {
-	if (quiet) {
-	  fatal("", -1);
-	} else {
-	  fatal("Error in processing mailbox. Stopping\n", -1);
-	}
+        if (quiet) {
+          fatal("", -1);
+        } else {
+          fatal("Error in processing mailbox. Stopping\n", -1);
+        }
       }
     }
+    free(intname);
   }
 
   mboxlist_close();

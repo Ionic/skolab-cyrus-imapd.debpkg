@@ -1,86 +1,138 @@
-.\" -*- nroff -*-
-.TH CHK_CYRUS 8 "Project Cyrus" CMU
-.\"
-.\" Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
-.\"
-.\" Redistribution and use in source and binary forms, with or without
-.\" modification, are permitted provided that the following conditions
-.\" are met:
-.\"
-.\" 1. Redistributions of source code must retain the above copyright
-.\"    notice, this list of conditions and the following disclaimer.
-.\"
-.\" 2. Redistributions in binary form must reproduce the above copyright
-.\"    notice, this list of conditions and the following disclaimer in
-.\"    the documentation and/or other materials provided with the
-.\"    distribution.
-.\"
-.\" 3. The name "Carnegie Mellon University" must not be used to
-.\"    endorse or promote products derived from this software without
-.\"    prior written permission. For permission or any legal
-.\"    details, please contact
-.\"      Carnegie Mellon University
-.\"      Center for Technology Transfer and Enterprise Creation
-.\"      4615 Forbes Avenue
-.\"      Suite 302
-.\"      Pittsburgh, PA  15213
-.\"      (412) 268-7393, fax: (412) 268-7395
-.\"      innovation@andrew.cmu.edu
-.\"
-.\" 4. Redistributions of any form whatsoever must retain the following
-.\"    acknowledgment:
-.\"    "This product includes software developed by Computing Services
-.\"     at Carnegie Mellon University (http://www.cmu.edu/computing/)."
-.\"
-.\" CARNEGIE MELLON UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO
-.\" THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-.\" AND FITNESS, IN NO EVENT SHALL CARNEGIE MELLON UNIVERSITY BE LIABLE
-.\" FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
-.\" AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
-.\" OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\" Man page generated from reStructuredText.
+.
+.TH "CHK_CYRUS" "8" "August 10, 2018" "3.0.8" "Cyrus IMAP"
 .SH NAME
-chk_cyrus \- perform a consistency check of the cyrus mailstore
+chk_cyrus \- Cyrus IMAP documentation
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.sp
+Perform a consistency check of the Cyrus IMAP mail spool.
 .SH SYNOPSIS
-.B chk_cyrus
-[
-.B \-C
-.I config-file
-]
-[
-.B \-P
-.I partition
-]
-[
-.B \-M
-.I mailbox
-]
+.sp
+.nf
+\fBchk_cyrus\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-P\fP \fIpartition\fP | \fB\-M\fP \fImailbox\fP ]
+.fi
 .SH DESCRIPTION
-.I Chk_cyrus
-is used to perform a consistency check on the cyrus datastore, and output
-a list of files/directories that are expected to exist, but do not.
-Status messagess are output to stderr, the list of files/directories is
-output to stdout.  This list can be passed to a backup program to aid a
-partial restoral, for instance.
-.PP
-.I Chk_cyrus
-reads its configuration options out of the
-.IR imapd.conf (5)
-file unless specified otherwise by \fB-C\fR.
+.sp
+\fBchk_cyrus\fP is used to perform a consistency check on the cyrus
+datastore, and output a list of files/directories that are expected to
+exist, but do not.  Status messages are output to stderr, the list of
+files/directories is output to stdout.  This list can be passed to a
+backup program to aid a partial restoration, for instance.
+.sp
+\fBchk_cyrus\fP reads its configuration options out of the imapd.conf(5) file unless specified otherwise by \fB\-C\fP\&.
 .SH OPTIONS
+.INDENT 0.0
 .TP
-.BI \-C " config-file"
-Read configuration options from \fIconfig-file\fR.
+.B \-C config\-file
+Use the specified configuration file \fIconfig\-file\fP rather than the default imapd.conf(5)\&.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI \-P " partition"
-Run the consistency check for only the given partition.
-May not be specified with -M.
-.BI \-M " mailbox"
-Run the consistency check for only the given mailbox.
-May not be specified with -P.
-.SH FILES
+.B \-P partition
+Limit to partition \fIpartition\fP\&.  May not be specified with \fB\-M\fP\&.
+.UNINDENT
+.INDENT 0.0
 .TP
-.B /etc/imapd.conf
+.B \-M mailbox
+Only check mailbox \fImailbox\fP\&.  May not be specified with \fB\-P\fP\&.
+.sp
+\fBIMPORTANT:\fP
+.INDENT 7.0
+.INDENT 3.5
+The mailbox must be specified in the internal format, so rather
+than specifying \fBuser/john/Trash@example.org\fP, you will want
+to specify \fBexample.org!user.john.Trash\fP\&.
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.SH EXAMPLES
+.sp
+.nf
+\fBchk_cyrus \-P\fP \fIdefault\fP
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Perform consistancy checks on \fIdefault\fP partition.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBchk_cyrus \-C\fP \fI/usr/local/etc/imapd\-slot1.conf\fP \fB\-P\fP \fIdefault\fP
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Perform consistancy checks on \fIdefault\fP partition using specified
+configuration file.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBchk_cyrus \-M\fP \fIuser.marysmith\fP
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Perform consistancy checks on mailbox \fIuser.marysmith\fP\&.
+.UNINDENT
+.UNINDENT
 .SH SEE ALSO
-.PP
-\fBimapd.conf(5)\fR, \fBmaster(8)\fR
+.sp
+imapd.conf(5), master(8)
+.SH AUTHOR
+The Cyrus Team, Nic Bernstein (Onlight), Jeroen van Meeuwen (Kolab Systems)
+.SH COPYRIGHT
+1993-2017, The Cyrus Team
+.\" Generated by docutils manpage writer.
+.

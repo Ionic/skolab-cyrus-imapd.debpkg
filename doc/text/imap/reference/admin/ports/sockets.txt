@@ -1,0 +1,49 @@
+
+Cyrus Socket Locations
+**********************
+
+The Cyrus IMAP server provides service interfaces via either TCP/IP
+ports or Unix domain sockets.  For the later, Cyrus requires the
+parent directory exist prior to initialization.
+
+The following sockets may be required for any host providing local
+Unix domain access for the listed services, where "<rundir>" is the
+base directory for Cyrus sockets. This defaults to
+"{configdirectory}/socket/" where {configdirectory} is as defined in
+imapd.conf(5), but is often redefined as "/var/run/cyrus/socket/" or
+more recently "/run/cyrus/socket/":
+
+   lmtp      <rundir>/lmtp   # Lightweight Mail Transport Protocol service
+   idle      <rundir>/idle   # idled daemon socket
+   notify    <rundir>/notify # Notification daemon socket
+   ptloader  <rundir>/ptsock # PT Loader socket (alternative authorization)
+   sphinx    <rundir>/sphinx # Sphinx full-text search daemon socket
+
+
+Controlling Socket Locations
+============================
+
+Locations of sockets may be tailored to the needs of different sites,
+via the use of several settings in imapd.conf(5):
+
+   "idlesocket:" {configdirectory}/socket/idle
+
+      Unix domain socket that idled listens on.
+
+   "lmtpsocket:" {configdirectory}/socket/lmtp
+
+      Unix domain socket that lmtpd listens on, used by deliver(8).
+      This should match the path specified in cyrus.conf(5).
+
+   "notifysocket:" {configdirectory}/socket/notify
+
+      Unix domain socket that the mail notification daemon listens on.
+
+   "ptloader_sock:" <none>
+
+      Unix domain socket that ptloader listens on. (defaults to
+      configdirectory/ptclient/ptsock)
+
+   "sphinx_socket:" {configdirectory}/socket/sphinx
+
+      Unix domain socket that the Sphinx searchd daemons listens on.

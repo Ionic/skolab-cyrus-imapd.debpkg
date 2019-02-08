@@ -1,0 +1,207 @@
+
+HTTP modules
+************
+
+
+About http module support
+=========================
+
+This assumes you already have the relevant modules enabled in your
+Cyrus installation, either via packages, or through a manual
+installation.
+
+CalDAV, CardDAV and WebDAV all provide their functionality through an
+http server. Cyrus HTTP is NOT a general purpose HTTP server (such as
+Apache httpd). Its feature set is limited to:
+
+* Calendaring (CalDAV)
+
+     * Acts as a calendar and scheduling server by using IMAP
+       mailboxes as calendar collections and **RFC 5322** messages to
+       store iCalendar data.
+
+     * Allows non-CalDAV/remote calendar clients to query freebusy
+       information of Cyrus CalDAV users via freebusy URLs.
+
+     * Allows scheduling transactions between separate calendaring
+       and scheduling systems via the iSchedule protocol (currently
+       only used within a Cyrus Murder).
+
+     * Acts as a Time Zone Distribution Service by serving iCalendar
+       (VTIMEZONE) data to client systems.
+
+* Contacts (CardDAV)
+
+     * Acts as a contacts server by using IMAP mailboxes as
+       addressbook collections and **RFC 5322** messages to store
+       vCard data.
+
+* File Storage (WebDAV)
+
+     * Acts as a remote storage server server by using IMAP
+       mailboxes as collections and **RFC 5322** message to store
+       files.
+
+* Other (RSS, static content)
+
+     * Serves static content (such as the RSS feed list template and
+       the CalDAV/CardDAV web GUIs ).
+
+     * Serves IMAP mailboxes as RSS feeds.
+
+
+HTTPD Configuration
+===================
+
+
+General configuration
+---------------------
+
+The Cyrus httpd service is configured using options in imapd.conf(5).
+
+
+httpmodules
+^^^^^^^^^^^
+
+   "httpmodules:" <empty string>
+
+      Space-separated list of HTTP modules that will be enabled in
+      httpd(8).  This option has no effect on modules that are
+      disabled at compile time due to missing dependencies (e.g.
+      libical).
+
+      Note that "domainkey" depends on "ischedule" being enabled, and
+      that both "freebusy" and "ischedule" depend on "caldav" being
+      enabled. Allowed values: *admin*, *caldav*, *carddav*,
+      *domainkey*, *freebusy*, *ischedule*, *rss*, *tzdist*, *webdav*
+
+The support for RSS, CalDAV, and CardDAV is divided into separate
+modules which run as part of the Cyrus httpd service. Selection of
+which module(s) are enabled is done by setting the "httpmodules"
+option. **By default, no modules are enabled.**
+
+Cyrus httpd also can serve static content, the location of which is
+set by the "httpdocroot" option. Any content contained in the
+specified directory (including sub-directories) will be served as
+static content only. Cyrus httpd does NOT have the ability to execute
+any server-side scripts.
+
+
+Authentication
+--------------
+
+As with other Cyrus services, the Cyrus httpd service uses *Cyrus
+SASL* to perform its authentication. Cyrus supports the following HTTP
+authentication schemes: Basic, Digest, Negotiate (Kerberos only), and
+NTLM. While Basic and NTLM are available in all versions of SASL, the
+remaining schemes are only available in Cyrus SASL 2.1.16 (and
+higher).
+
+
+allowplaintext
+^^^^^^^^^^^^^^
+
+   *This shows the default value: change it in imapd.conf to suit your
+   needs.*
+
+   "allowplaintext:" 0
+
+      If enabled, allows the use of cleartext passwords on the wire.
+
+      By default, the use of cleartext passwords requires a TLS/SSL
+      encryption layer to be negotiated prior to any cleartext
+      authentication mechanisms being advertised or allowed.  To
+      require a TLS/SSL encryption layer to be negotiated prior to ANY
+      authentication, see the *tls_required* option.
+
+Similar to plaintext login commands supported by the other Cyrus
+services (IMAP LOGIN, POP3 USER/PASS), the Cyrus httpd service
+determines whether to advertise the HTTP Basic authentication scheme
+based on the "allowplaintext" option and whether the client has
+connected over a TLS protected connection (HTTPS).
+
+The availability of the other HTTP authentication schemes is
+controlled by the *SASL mech_list option* option. For Cyrus httpd the
+DIGEST-MD5, GSS-SPNEGO, and NTLM SASL plugins support the Digest,
+Negotiate, and NTLM authentication schemes respectively, provided that
+these plugins are installed on the server.
+
+
+Module-specific information
+===========================
+
+* CalDAV
+
+  * Configuration
+
+  * Administration
+
+  * Freebusy URL
+
+  * Time Zone Distribution Service (TZDist)
+
+  * iSchedule
+
+* CardDAV
+
+  * Configuration
+
+  * Administration
+
+* WebDAV
+
+  * Configuration
+
+  * Administration
+
+* RSS Feeds
+
+  * About RSS Feeds
+
+  * Configuration
+
+
+For end users
+=============
+
+Some information must be passed on to your end users so that they know
+how to configure their clients in order to access their data on Cyrus.
+The list below needs to be customized to your specific hostnames.
+
+* CalDAV
+
+     * Many clients find calendars automatically if you provide the
+       correct server, username and password.
+
+     * Otherwise, use the direct URL:
+       "https://<servername>/dav/calendars/user/<userid>/<calendar>/"
+
+* Freebusy
+
+     * "https://<servername>/freebusy/user/<userid>"
+
+     * Query parameters can be added to the URL per Section 4 of
+       Freebusy Read URL.
+
+* CardDAV
+
+     * Many clients find addressbooks automatically if you provide
+       the correct server, username and password.
+
+     * Otherwise, use the direct
+       URL:"https://<servername>/dav/addres
+       sbooks/<userid>/<addressbook>"
+
+     * The address book(s) are automatically filtered based on the
+       username and password supplied.
+
+* WebDAV
+
+     * "https://<servername>/dav/drive/user/<userid>"
+
+* RSS
+
+     * "https://<servername>/rss/"
+
+     * Serves up all mailboxes (read-only) that the authenticated
+       user has access to.

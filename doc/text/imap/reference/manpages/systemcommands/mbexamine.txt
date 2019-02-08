@@ -1,0 +1,91 @@
+
+**mbexamine**
+*************
+
+Examine a cyrus-format mailbox
+
+
+Synopsis
+========
+
+   **mbexamine** [ **-C** *config-file* ] [ **-u** *uid* ] *mailbox*...
+   **mbexamine** [ **-C** *config-file* ] [ **-s** *seqnum*] *mailbox*...
+   **mbexamine** [ **-C** *config-file* ] **-q** *mailbox*...
+   **mbexamine** [ **-C** *config-file* ] **-c** *mailbox*...
+
+
+Description
+===========
+
+**mbexamine** will examine the header, index, and cache files of a
+cyrus format mailbox and dump the information contained therein.  It
+can also limit its output to a specific uid or sequence number,
+through use of the **-s** and **-u** switches.
+
+**mbexamine** reads its configuration options out of the imapd.conf(5)
+file unless specified otherwise by **-C**. It uses
+<configdirectory>/mailboxes.db to locate the mailbox on disk.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+-u  uid
+
+   Dump information for the given uid only.
+
+-s  seqnum
+
+   Dump information for the given sequence number only.
+
+-q
+
+   Compare the quota usage in cyrus.index to the actual message file
+   sizes and report any differences.  If there are differences, the
+   mailbox SHOULD be reconstructed.
+
+-c
+
+   Compare the records in cyrus.index to the actual message files
+   report any differences.  This can help detect issues if messages
+   files were manipulated manually and/or restored incorrectly.
+
+
+Examples
+========
+
+   **mbexamine** *user.jsmith*
+
+   Examine the mailbox hierarchy rooted at *user.jsmith*.
+
+   **mbexamine -u** *00000004 user.jsmith*
+
+   Examine the mailbox hierarchy rooted at *user.jsmith* looking for
+   messages with UID = *00000004*.
+
+   **mbexamine -q** *user.jsmith*
+
+   Examine the mailbox hierarchy rooted at *user.jsmith* checking
+   quotas.
+
+   **mbexamine -c** *user.jsmith*
+
+   Examine the mailbox hierarchy rooted at *user.jsmith* comparing
+   index records to the actual message files in the mailbox directory.
+
+
+Files
+=====
+
+/etc/imapd.conf, <configdirectory>/mailboxes.db
+
+
+See Also
+========
+
+imapd.conf(5)

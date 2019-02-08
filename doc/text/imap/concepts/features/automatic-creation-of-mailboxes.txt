@@ -1,0 +1,223 @@
+
+Automatic Creation of Mailboxes
+*******************************
+
+Cyrus IMAP features the ability to create mailboxes automatically;
+
+* for successful login events,
+
+* for email messages that arrive for a user,
+
+* when a Sieve script uses the "fileinto" action.
+
+When operating an IT infrastructure, Cyrus IMAP may only be one part
+of such larger environment. When adding a user *John Doe
+<john.doe@example.org>*, several pieces may need to fall or put in
+place to ensure the account is fully functional.
+
+Cyrus IMAP allows the automatic creation of John's INBOX, and selected
+sub-folders, either when John first logs in to Cyrus IMAP, or when the
+first message is to be delivered to John's INBOX.
+
+Additional features of this functionality include;
+
+* the automatic creation of a Sieve script for Server Side Filtering
+  (Sieve).
+
+* setting a storage quota and message quota for the user,
+
+* automatic subscription to folders in the Personal Namespace,
+
+* automatic subscription to a selection of or all shared folders.
+
+Important: Third party solutions incorporating Cyrus IMAP, and
+  distributors of Cyrus IMAP (such as your Linux distribution) may
+  have disabled this functionality altogether, during the building of
+  the packages -- most likely because they employ different means to
+  get user's mailboxes created.Cyrus IMAP does not currently strip
+  options from man-pages that are rendered irrelevant by the
+  functionality not being built in, so while the man-page on your
+  system may refer to settings related to this functionality, the
+  actual functionality may not be available.
+
+To enable the automatic creation of mailboxes, set the following
+options in imapd.conf(5).
+
+   "autocreate_quota:" -1
+
+      If set to a value of zero or higher, users have their INBOX
+      folders created upon a successful login event or upon *lmtpd(8)*
+      message delivery if *autocreate_post* is enabled, provided their
+      INBOX did not yet already exist.
+
+      The user's quota is set to the value if it is greater than zero,
+      otherwise the user has unlimited quota.
+
+      Note that quota is specified in kilobytes.
+
+   "autocreate_post:" 0
+
+      If enabled, when *lmtpd(8)* receives an incoming mail for an
+      INBOX that does not exist, then the INBOX is automatically
+      created by *lmtpd(8)* and delivery of the message continues.
+
+Other settings in imapd.conf(5) affecting automatic options.
+
+
+Autocreation of mailboxes
+=========================
+
+   "autocreate_inbox_folders:" <none>
+
+      If a user does not have an INBOX already, and the INBOX is to be
+      created, create the list of folders in this setting as well.
+      *autocreate_inbox_folders* is a list of INBOX's subfolders
+      separated by a "|", that are automatically created by the server
+      under the following two scenarios. Leading and trailing
+      whitespace is stripped, so "Junk | Trash" results in two
+      folders: "Junk" and "Trash".  See also the *xlist-flag* option,
+      for setting special-use flags on autocreated folders.
+
+      INBOX folders are created under both the following conditions:
+
+      1. The user logins via the IMAP or the POP3 protocol.
+         *autocreate_quota* option must have a value of zero or
+         greater.
+
+      2. A message arrives for the user through the *lmtpd(8)*.
+         *autocreate_post* option must be enabled.
+
+
+Automatic quota settings
+========================
+
+   "autocreate_quota_messages:" -1
+
+      If set to a value of zero or higher, users who have their INBOX
+      folders created upon a successful login event (see
+      *autocreate_quota*), or upon *lmtpd(8)* message delivery if
+      *autocreate_post* is enabled, receive the message quota
+      configured in this option.
+
+      The default of -1 disables assigning message quota.
+
+      For consistency with *autocreate_quota*, a value of zero is
+      treated as unlimited message quota, rather than a message quota
+      of zero.
+
+
+Autocreation of Sieve scripts
+=============================
+
+   "autocreate_sieve_folders:" <none>
+
+      A "|" separated list of subfolders of INBOX that will be
+      automatically created, if requested by a sieve filter, through
+      the "fileinto" action. The default is to create no folders
+      automatically.
+
+      Leading and trailing whitespace is stripped from each folder, so
+      a setting of "Junk | Trash" will create two folders: "Junk" and
+      "Trash".
+
+   "autocreate_sieve_script:" <none>
+
+      The full path of a file that contains a sieve script. This
+      script automatically becomes a user's initial default sieve
+      filter script.
+
+      When this option is not defined, no default sieve filter is
+      created. The file must be readable by the Cyrus daemon.
+
+   "autocreate_sieve_script_compile:" 0
+
+      If set to yes and no compiled sieve script file exists, the
+      sieve script which is compiled on the fly will be saved in the
+      file name that autocreate_sieve_compiledscript option points to.
+      In order a compiled script to be generated,
+      autocreate_sieve_script and autocreate_sieve_compiledscript must
+      have valid values
+
+   "autocreate_sieve_script_compiled:" <none>
+
+      The full path of a file that contains a compiled in bytecode
+      sieve script. This script automatically becomes a user's initial
+      default sieve filter script.  If this option is not specified,
+      or the filename doesn't exist then the script defined by
+      autocreate_sieve_script is compiled on the fly and installed as
+      the user's default sieve script
+
+
+Automated folder subscriptions
+==============================
+
+   "autocreate_subscribe_folders:" <none>
+
+      A list of folder names, separated by "|", that the users get
+      automatically subscribed to, when their INBOX is created. These
+      folder names must have been included in the
+      autocreateinboxfolders option of the imapd.conf.
+
+   "autocreate_subscribe_sharedfolders:" <none>
+
+      A list of shared folders (bulletin boards), separated by "|",
+      that the users get automatically subscribed to, after their
+      INBOX is created. The shared folder must have been created and
+      the user must have the required permissions to get subscribed to
+      it. Otherwise, subscribing to the shared folder fails.
+
+   "autocreate_subscribe_sharedfolders_all:" 0
+
+      If set to yes, the user is automatically subscribed to all
+      shared folders, one has permission to subscribe to.
+
+
+Autocreation of users
+=====================
+
+   "autocreate_users:" anyone
+
+      A space separated list of users and/or groups that are allowed
+      their INBOX to be automatically created.
+
+See imapd.conf(5) for the full documentation of all options.
+
+See also:
+
+  * Cyrus IMAP Murder (Server Aggregation)
+
+  * Mailbox Distribution
+
+  * Quota
+
+
+Limitations to the Automatic Creation of Mailboxes
+--------------------------------------------------
+
+1. A user may in fact be able to succesfully login to IMAP with
+   both a full primary recipient email address such as
+   "john.doe@example.org", as well as a secondary recipient email
+   address such as "jdoe@example.org".
+
+   Unless a process known as login username canonification is used,
+   this could result in two different mailbox hierarchies being
+   created;
+
+   * "user/john.doe@example.org"
+
+   * "user/jdoe@example.org"
+
+2. When a user *Jane Gi <jane.gi@example.org>* marries *John Doe*
+   and adopts her new husband's surname, her primary recipient email
+   address may change to become "jane.doe@example.org".
+
+   Note that *John Doe* does not need to be an "example.org" user for
+   such event to occur, and that many countries allow the husband to
+   take the maiden name of their spouse instead -- so even if the
+   employees and/or associates of an organization running Cyrus IMAP
+   are exclusively male, this may still apply to that organization.
+
+   The functionality stated in this document does **not** rename
+   "user/jane.gi@example.org" to become "user/jane.doe@example.org".
+
+Back to Features

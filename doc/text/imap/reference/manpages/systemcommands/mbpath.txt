@@ -1,0 +1,69 @@
+
+**mbpath**
+**********
+
+Translate mailbox names to filesystem paths
+
+
+Synopsis
+========
+
+   **mbpath** [ **-C** *config-file* ] [ **-q** ] [ **-s** ] [ **-m** ] [ *mailbox-names*... ]
+
+
+Description
+===========
+
+Given a mailbox name or a space separated list of mailbox names,
+**mbpath** outputs the filesystem path to the mailbox.
+
+**mbpath** reads its configuration options out of the imapd.conf(5)
+file unless specified otherwise by **-C**. It uses
+<configdirectory>/mailboxes.db to locate the mailbox on disk.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+-q
+
+   Suppress any error output.
+
+-s
+
+   If any error occurs, stop processing the list of mailboxes and
+   exit.
+
+-m
+
+   Output the path to the metadata files (if different from the
+   message files).
+
+
+Examples
+========
+
+   **mbpath** *user.jsmith*
+
+   Display the path for mailbox *user.jsmith*.
+
+   **mbpath -m** *user.jsmith*
+
+   Display the metadata path for mailbox *user.jsmith*.
+
+
+Files
+=====
+
+/etc/imapd.conf, <configdirectory>/mailboxes.db
+
+
+See Also
+========
+
+imapd.conf(5)

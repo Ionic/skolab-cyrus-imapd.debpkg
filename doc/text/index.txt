@@ -1,0 +1,394 @@
+
+What is Cyrus IMAP?
+*******************
+
+Cyrus IMAP is an email, contacts and calendar server. Cyrus is free
+and open source.
+
+* This is the documentation for version 3.0.8 (stable) of Cyrus
+  IMAP: **stable** branch.
+
+* The latest development version 3.1.5 is at
+  https://www.cyrusimap.org/dev/.
+
+
+Features
+========
+
+* Speed
+
+* Security
+
+* Efficiency
+
+* CardDAV and CalDAV support
+
+* Search
+
+* Robust data storage
+
+* Replication
+
+* Scalable for large installations
+
+* Flexible filtering support through Sieve
+
+* Supports antivirus and antispam toolkits
+
+* Handles deliverability: SPF, DKIM, DMARC
+
+* Extensive authentication options, through Cyrus SASL
+
+* Long list of supported standards
+
+Read more in our full list of features.
+
+Cyrus has been under active development since the year 2000. It's used
+in production systems around the world, at universities and in private
+enterprise.
+
+Need help? We have active mailing lists.
+
+======================================================================
+
+Cyrus IMAP
+
+* Download
+
+  * Get Cyrus
+
+    * Distribution Package
+
+    * Build and Install Yourself
+
+    * External Tools
+
+    * Licensing
+
+  * Release Notes
+
+    * Stable Version
+
+    * Development Version
+
+    * Supported Product Series
+
+    * Older Versions
+
+  * Notes for Packagers
+
+    * Sample configuration files
+
+    * Predefined configurations
+
+    * Services in "/etc/services"
+
+* Quickstart Guide
+
+  * Introduction to Cyrus IMAP
+
+    * What is IMAP?
+
+  * Coming Soon
+
+  * Quick install
+
+    * 1. Install Cyrus reference packages
+
+    * 2. Use "apt-get install -f" to complete installation
+
+    * 3. Setup the cyrus:mail user and group
+
+    * 4. Setting up authentication with SASL
+
+    * 5. Setup mail delivery from your MTA
+
+    * 6. Protocol ports
+
+    * 7. Configuring Cyrus
+
+    * 8. Launch Cyrus
+
+    * Feature overview
+
+* Overview
+
+  * Features
+
+    * Security and Authentication
+
+    * Mailbox Management
+
+    * Message Management
+
+    * Calendar and Contact (DAV) Collection Management
+
+    * Storage
+
+    * Load Management
+
+  * Concepts
+
+    * Access Control Lists
+
+    * Login Authentication
+
+    * Quotas
+
+    * New Mail Notification
+
+    * Partitions
+
+    * News
+
+    * POP3 Server
+
+    * The syslog facility
+
+    * Mail Directory Recovery
+
+    * Configuration Directory
+
+    * Message Delivery
+
+    * Sieve, a Mail Filtering Language
+
+    * Cyrus Murder, the IMAP Aggregator
+
+* Setup
+
+  * Compiling
+
+    * Setting up dependencies
+
+    * Compile Cyrus
+
+  * Installing Cyrus
+
+    * Install Cyrus
+
+    * Optional Components
+
+    * Setting up syslog
+
+    * Create Cyrus environment
+
+    * Launch Cyrus
+
+    * Send a test email
+
+    * Checking CardDAV and CardDAV
+
+    * Troubleshooting
+
+  * Upgrading to 3.0
+
+    * 1. Preparation
+
+    * 2. Install new 3.0 Cyrus
+
+    * 3. Shut down existing Cyrus
+
+    * 4. Backup and Copy existing data
+
+    * 5. Copy config files and update
+
+    * 6. Upgrade specific items
+
+    * 7. Start new 3.0 Cyrus and verify
+
+    * 8. Reconstruct databases and cache
+
+    * 9. Do you want any new features?
+
+    * 10. Upgrade complete
+
+    * Special note for Murder configurations
+
+  * Configuration Guide
+
+    * Deployment Scenarios
+
+    * Cyrus Murder: Server aggregation
+
+    * Cyrus Replication
+
+    * Hosted Environments
+
+    * Databases
+
+    * Mailbox Creation Distribution
+
+    * Known Protocol Limitations
+
+    * Authentication and Authorization
+
+    * Performance Recommendations
+
+    * Storage Considerations
+
+    * Supported Platforms and System Requirements
+
+* Operations
+
+  * Man pages
+
+    * (5) Configuration Files
+
+    * (8) System Commands
+
+    * (1) User Commands
+
+  * Tools & Utilities
+
+    * arbitron
+
+    * arbitronsort.pl
+
+    * chk_cyrus
+
+    * ctl_cyrusdb
+
+    * ctl_deliver
+
+    * ctl_mboxlist
+
+    * cvt_cyrusdb
+
+    * cvt_cyrusdb_all
+
+    * cyr_dbtool
+
+    * cyr_df
+
+    * cyrdump
+
+    * cyr_expire
+
+    * cyr_virusscan
+
+    * fetchnews
+
+    * cyr_sequence
+
+    * cyr_synclog
+
+    * cyr_userseen
+
+    * masssievec
+
+    * mbexamine
+
+    * mbpath
+
+    * mkimap
+
+    * mknewsgroups
+
+    * rehash
+
+    * translatesieve
+
+    * undohash
+
+  * Administrator Guide
+
+    * Architecture
+
+    * Management
+
+  * Frequently Asked Questions
+
+    * Features
+
+    * Installation Problems
+
+    * Common Feature Requests
+
+    * Common Operational Questions
+
+    * Common Interoperability Problems
+
+* Developers
+
+  * We need your help
+
+  * Contribute docs
+
+    * Overview
+
+    * Documentation Tools
+
+    * Building the files
+
+    * Submitting updates
+
+    * Special Tags
+
+    * Conventions: Man Pages
+
+  * Contribute code and tests
+
+    * Getting Started
+
+    * System files and Databases
+
+    * Resources
+
+    * Releasing
+
+  * Cyrus.Works
+
+    * About Cyrus Works
+
+    * Testing
+
+    * How it works
+
+    * Adding Rules
+
+* Support/Community
+
+  * Found a bug?
+
+  * Mailing lists
+
+    * Archives
+
+    * Subscribe/Unsubscribe
+
+    * Digest Lists
+
+  * IRC
+
+  * Weekly meetings
+
+  * About
+
+    * What is Cyrus
+
+    * Who Is Cyrus
+
+    * Cyrus Roadmap
+
+    * Cyrus History
+
+    * Cyrus Bylaws
+
+======================================================================
+
+
+What is Cyrus SASL?
+*******************
+
+Simple Authentication and Security Layer (SASL) is a specification
+that describes how authentication mechanisms can be plugged into an
+application protocol on the wire. Cyrus SASL is an implementation of
+SASL that makes it easy for application developers to integrate
+authentication mechanisms into their application in a generic way.
+
+The latest stable version of Cyrus SASL is 2.1.26.
+
+Cyrus SASL
+
+* Cyrus SASL

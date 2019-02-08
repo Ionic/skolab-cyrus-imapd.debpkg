@@ -55,6 +55,7 @@
 #include "interp.h"
 #include "libconfig.h"
 #include "times.h"
+#include "util.h"
 
 #define EXT_LEN 4096
 
@@ -65,8 +66,8 @@ EXPORTED sieve_interp_t *sieve_interp_alloc(void *interp_context)
     static int initonce;
 
     if (!initonce) {
-	initialize_siev_error_table();
-	initonce = 1;
+        initialize_siev_error_table();
+        initonce = 1;
     }
 
     i = (sieve_interp_t *) xmalloc(sizeof(sieve_interp_t));
@@ -95,61 +96,70 @@ EXPORTED sieve_interp_t *sieve_interp_alloc(void *interp_context)
 EXPORTED const char *sieve_listextensions(sieve_interp_t *i)
 {
     if (i->extensions[0] == '\0') {
-	unsigned long config_sieve_extensions =
-	    config_getbitfield(IMAPOPT_SIEVE_EXTENSIONS);
+        unsigned long config_sieve_extensions =
+            config_getbitfield(IMAPOPT_SIEVE_EXTENSIONS);
 
-	/* add comparators */
-	strlcat(i->extensions, "comparator-i;ascii-numeric", EXT_LEN);
+        /* add comparators */
+        strlcat(i->extensions, "comparator-i;ascii-numeric", EXT_LEN);
 
-	/* add actions */
-	if (i->fileinto &&
-	    (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_FILEINTO))
-	    strlcat(i->extensions, " fileinto", EXT_LEN);
-	if (i->reject &&
-	    (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_REJECT))
-	    strlcat(i->extensions, " reject", EXT_LEN);
-	if (i->vacation &&
-	    (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_VACATION_SECONDS))
-	    strlcat(i->extensions, " vacation vacation-seconds", EXT_LEN);
-	else if (i->vacation &&
-	    (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_VACATION))
-	    strlcat(i->extensions, " vacation", EXT_LEN);
-	if (i->markflags &&
-	    (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_IMAPFLAGS))
-	    strlcat(i->extensions, " imapflags", EXT_LEN);
-	if (i->notify &&
-	    (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_NOTIFY))
-	    strlcat(i->extensions, " notify", EXT_LEN);
-	if (i->getinclude &&
-	    (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_INCLUDE))
-	    strlcat(i->extensions, " include", EXT_LEN);
+        /* add actions */
+        if (i->fileinto &&
+            (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_FILEINTO))
+            strlcat(i->extensions, " fileinto", EXT_LEN);
+        if (i->reject &&
+            (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_REJECT))
+            strlcat(i->extensions, " reject", EXT_LEN);
+        if (i->vacation &&
+            (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_VACATION_SECONDS))
+            strlcat(i->extensions, " vacation vacation-seconds", EXT_LEN);
+        else if (i->vacation &&
+            (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_VACATION))
+            strlcat(i->extensions, " vacation", EXT_LEN);
+        if (i->markflags &&
+            (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_IMAPFLAGS))
+            strlcat(i->extensions, " imapflags", EXT_LEN);
+        if (i->notify &&
+            (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_NOTIFY))
+            strlcat(i->extensions, " notify", EXT_LEN);
+        if (i->getinclude &&
+            (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_INCLUDE))
+            strlcat(i->extensions, " include", EXT_LEN);
 
-	/* add tests */
-	if (i->getenvelope &&
-	    (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_ENVELOPE))
-	    strlcat(i->extensions, " envelope", EXT_LEN);
-	if (i->getbody &&
-	    (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_BODY))
-	    strlcat(i->extensions, " body", EXT_LEN);
-	if (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_IMAP4FLAGS)
-	    strlcat(i->extensions, " imap4flags", EXT_LEN);
+        /* add tests */
+        if (i->getenvelope &&
+            (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_ENVELOPE))
+            strlcat(i->extensions, " envelope", EXT_LEN);
+        if (i->getbody &&
+            (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_BODY))
+            strlcat(i->extensions, " body", EXT_LEN);
+        if (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_IMAP4FLAGS)
+            strlcat(i->extensions, " imap4flags", EXT_LEN);
+        if (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_DATE)
+            strlcat(i->extensions, " date", EXT_LEN);
+        if (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_MAILBOX)
+            strlcat(i->extensions, " mailbox", EXT_LEN);
+        if (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_MBOXMETADATA)
+            strlcat(i->extensions, " mboxmetadata", EXT_LEN);
+        if (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_SERVERMETADATA)
+            strlcat(i->extensions, " servermetadata", EXT_LEN);
 
-	/* add match-types */
-	if (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_RELATIONAL)
-	    strlcat(i->extensions, " relational", EXT_LEN);
+        /* add match-types */
+        if (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_RELATIONAL)
+            strlcat(i->extensions, " relational", EXT_LEN);
 #ifdef ENABLE_REGEX
-	if (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_REGEX)
-	    strlcat(i->extensions, " regex", EXT_LEN);
+        if (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_REGEX)
+            strlcat(i->extensions, " regex", EXT_LEN);
 #endif
 
-	/* add misc extensions */
-	if (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_SUBADDRESS)
-	    strlcat(i->extensions, " subaddress", EXT_LEN);
-	if (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_COPY)
-	    strlcat(i->extensions, " copy", EXT_LEN);
-
-	if (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_DATE)
-	    strlcat(i->extensions, " date", EXT_LEN);
+        /* add misc extensions */
+        if (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_SUBADDRESS)
+            strlcat(i->extensions, " subaddress", EXT_LEN);
+        if (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_COPY)
+            strlcat(i->extensions, " copy", EXT_LEN);
+        if (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_INDEX)
+            strlcat(i->extensions, " index", EXT_LEN);
+        if (config_sieve_extensions & IMAP_ENUM_SIEVE_EXTENSIONS_VARIABLES)
+            strlcat(i->extensions, " variables", EXT_LEN);
     }
 
     return i->extensions;
@@ -158,9 +168,9 @@ EXPORTED const char *sieve_listextensions(sieve_interp_t *i)
 EXPORTED int sieve_interp_free(sieve_interp_t **interp)
 {
     if (*interp) {
-	free((*interp)->lastitem);
-	free(*interp);
-	*interp = NULL;
+        free((*interp)->lastitem);
+        free(*interp);
+        *interp = NULL;
     }
 
     return SIEVE_OK;
@@ -197,10 +207,10 @@ EXPORTED void sieve_register_imapflags(sieve_interp_t *interp, const strarray_t 
     static strarray_t default_mark = STRARRAY_INITIALIZER;
 
     if (!default_mark.count)
-	strarray_append(&default_mark, "\\flagged");
+        strarray_append(&default_mark, "\\flagged");
 
     interp->markflags =
-	(mark && mark->data && mark->count) ? mark : &default_mark;
+        (mark && mark->data && mark->count) ? mark : &default_mark;
 }
 
 EXPORTED void sieve_register_notify(sieve_interp_t *interp, sieve_callback *f)
@@ -215,9 +225,24 @@ EXPORTED void sieve_register_size(sieve_interp_t *interp, sieve_get_size *f)
     interp->getsize = f;
 }
 
+EXPORTED void sieve_register_mailboxexists(sieve_interp_t *interp, sieve_get_mailboxexists *f)
+{
+    interp->getmailboxexists = f;
+}
+
+EXPORTED void sieve_register_metadata(sieve_interp_t *interp, sieve_get_metadata *f)
+{
+    interp->getmetadata = f;
+}
+
 EXPORTED void sieve_register_header(sieve_interp_t *interp, sieve_get_header *f)
 {
     interp->getheader = f;
+}
+
+EXPORTED void sieve_register_fname(sieve_interp_t *interp, sieve_get_fname *f)
+{
+    interp->getfname = f;
 }
 
 EXPORTED void sieve_register_envelope(sieve_interp_t *interp, sieve_get_envelope *f)
@@ -238,16 +263,16 @@ EXPORTED void sieve_register_body(sieve_interp_t *interp, sieve_get_body *f)
 EXPORTED int sieve_register_vacation(sieve_interp_t *interp, sieve_vacation_t *v)
 {
     if (!interp->getenvelope) {
-	return SIEVE_NOT_FINALIZED; /* we need envelope for vacation! */
+        return SIEVE_NOT_FINALIZED; /* we need envelope for vacation! */
     }
 
     if (v->min_response == 0)
-	v->min_response = config_getint(IMAPOPT_SIEVE_VACATION_MIN_RESPONSE);
+        v->min_response = config_getint(IMAPOPT_SIEVE_VACATION_MIN_RESPONSE);
     if (v->max_response == 0)
-	v->max_response = config_getint(IMAPOPT_SIEVE_VACATION_MAX_RESPONSE);
+        v->max_response = config_getint(IMAPOPT_SIEVE_VACATION_MAX_RESPONSE);
     if (v->min_response < 0 || v->max_response < 7 * DAY2SEC || !v->autorespond
-	|| !v->send_response) {
-	return SIEVE_FAIL;
+        || !v->send_response) {
+        return SIEVE_FAIL;
     }
 
     interp->vacation = v;
@@ -267,8 +292,8 @@ EXPORTED void sieve_register_execute_error(sieve_interp_t *interp, sieve_execute
 int interp_verify(sieve_interp_t *i)
 {
     if (i->redirect && i->keep && i->getsize && i->getheader) {
-	return SIEVE_OK;
+        return SIEVE_OK;
     } else {
-	return SIEVE_NOT_FINALIZED;
+        return SIEVE_NOT_FINALIZED;
     }
 }

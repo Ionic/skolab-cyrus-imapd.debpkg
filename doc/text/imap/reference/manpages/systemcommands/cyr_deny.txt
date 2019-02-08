@@ -1,0 +1,79 @@
+
+**cyr_deny**
+************
+
+deny users access to Cyrus services
+
+
+Synopsis
+========
+
+   **cyr_deny** [ **-C** *config-file* ] [ **-s** *services* ] [ **-m** *message* ] *user*
+   **cyr_deny** [ **-C** *config-file* ] **-a** *user*
+   **cyr_deny** [ **-C** *config-file* ] **-l**
+
+
+Description
+===========
+
+**cyr_deny** is used to deny individual users access to Cyrus
+services. The first synopsis denies user *user* access to Cyrus
+services, the second synopsis allows access again.  **cyr_deny** works
+by adding an entry to the Cyrus "user_deny.db" database; the third
+synopsis lists the entries in the database.
+
+**cyr_deny** reads its configuration options out of the imapd.conf(5)
+file unless specified otherwise by **-C**.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+-a user
+
+   Allow access to all services for user *user* (remove any entry from
+   the deny database).
+
+-s services
+
+   Deny access only to the given *services*, which is a comma-
+   separated list of wildcard patterns.  The default is "*" which
+   denies access to all services.
+
+-m message
+
+   Provide a message which is sent to the user to explain why access
+   is being denied.  A default message is used if none is specified.
+
+-l
+
+   List the entries in the deny database.
+
+
+Examples
+========
+
+[NB: Examples needed]
+
+
+History
+=======
+
+This command was introduced in version 3.0.
+
+
+Files
+=====
+
+/etc/imapd.conf, <configdirectory>/user_deny.db
+
+
+See Also
+========
+
+imapd.conf(5)

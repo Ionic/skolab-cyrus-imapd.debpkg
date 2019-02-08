@@ -1,0 +1,47 @@
+
+**ptexpire**
+************
+
+Program to expire pts cache DB entries on command.
+
+
+Synopsis
+========
+
+   **ptexpire** [**-C** *filename*] [**-E** *time*]
+
+
+Description
+===========
+
+The **ptexpire** program sweeps the "ptscache_db" database, expiring
+entries older than the time specified on the command line (default 3
+hours).
+
+**ptexpire** reads its configuration options out of the imapd.conf(5)
+file unless specified otherwise by **-C**.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+-E time
+
+   Expire entries older than this time. Default: 3 hours
+
+
+Files
+=====
+
+/etc/imapd.conf
+
+
+See Also
+========
+
+imapd.conf(5)

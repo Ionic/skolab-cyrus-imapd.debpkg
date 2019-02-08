@@ -11,6 +11,7 @@
 #include "sieve/comparator.h"
 #include "sieve/message.h"
 #include "sieve/sieve_interface.h"
+#include "sieve/variables.h"
 #include "imap/message.h"
 #include "prot.h"
 #include "retry.h"
@@ -31,15 +32,15 @@ typedef struct {
     sieve_interp_t *interp;
     sieve_execute_t *exe;
     struct {
-	unsigned int actions;
-	unsigned int errors;
-	unsigned int redirects;
-	unsigned int discards;
-	unsigned int rejects;
-	unsigned int fileintos;
-	unsigned int keeps;
-	unsigned int notifies;
-	unsigned int vaction_responses;
+        unsigned int actions;
+        unsigned int errors;
+        unsigned int redirects;
+        unsigned int discards;
+        unsigned int rejects;
+        unsigned int fileintos;
+        unsigned int keeps;
+        unsigned int notifies;
+        unsigned int vaction_responses;
     } stats;
     char *redirected_to;
     char *reject_message;
@@ -54,6 +55,7 @@ typedef struct {
     char *vacation_from;
     strarray_t *compile_errors;
     strarray_t *run_errors;
+    strarray_t *flags;
 } sieve_test_context_t;
 
 typedef struct {
@@ -69,13 +71,48 @@ int autorespond_reponse = SIEVE_OK;
 
 extern int verbose;
 
-#define TESTCASE(_comp, _mode, _pat, _text, _result)		\
-    comprock = NULL;						\
-    c = lookup_comp(_comp, _mode, -1, &comprock);		\
-    CU_ASSERT_PTR_NOT_NULL(c);					\
-    if (c) {							\
-	res = c(_text, strlen(_text), _pat, comprock);		\
-	CU_ASSERT_EQUAL(res, _result);				\
+static void test_variable_modifiers(void)
+{
+    /*
+   Examples:
+      # The value assigned to the variable is printed after the arrow
+      set "a" "juMBlEd lETteRS";             => "juMBlEd lETteRS"
+      set :length "b" "${a}";                => "15"
+      set :lower "b" "${a}";                 => "jumbled letters"
+      set :upperfirst "b" "${a}";            => "JuMBlEd lETteRS"
+      set :upperfirst :lower "b" "${a}";     => "Jumbled letters"
+      set :quotewildcard "b" "Rock*";        => "Rock\*"
+     */
+    const char *a = "juMBlEd lETteRS";
+    char *b;
+    CU_ASSERT_STRING_EQUAL(a, "juMBlEd lETteRS");
+    b = variables_modify_string(a, BFV_LENGTH);
+    CU_ASSERT_STRING_EQUAL(b, "15");
+    free(b);
+    b = variables_modify_string(a, BFV_LOWER);
+    CU_ASSERT_STRING_EQUAL(b, "jumbled letters");
+    free(b);
+    b = variables_modify_string(a, BFV_UPPERFIRST);
+    CU_ASSERT_STRING_EQUAL(b, "JuMBlEd lETteRS");
+    free(b);
+    b = variables_modify_string(a, BFV_UPPERFIRST | BFV_LOWER);
+    CU_ASSERT_STRING_EQUAL(b, "Jumbled letters");
+    free(b);
+    b = variables_modify_string("Rock*", BFV_QUOTEWILDCARD);
+    CU_ASSERT_STRING_EQUAL(b, "Rock\\*");
+    free(b);
+    b = variables_modify_string("Rock\\*", BFV_QUOTEWILDCARD | BFV_ENCODEURL);
+    CU_ASSERT_STRING_EQUAL(b, "Rock%5C%5C%5C%2A");
+    free(b);
+}
+
+#define TESTCASE(_comp, _mode, _pat, _text, _result)            \
+    comprock = NULL;                                            \
+    c = lookup_comp(_comp, _mode, -1, &comprock);               \
+    CU_ASSERT_PTR_NOT_NULL(c);                                  \
+    if (c) {                                                    \
+        res = c(_text, strlen(_text), _pat, comprock);          \
+        CU_ASSERT_EQUAL(res, _result);                          \
     }
 
 static void test_comparator(void)
@@ -253,7 +290,7 @@ static int getheader(void *mc, const char *name, const char ***body)
 
     *body = spool_getheader(msg->headers, name);
     if (!*body)
-	return SIEVE_FAIL;
+        return SIEVE_FAIL;
     return SIEVE_OK;
 }
 
@@ -271,32 +308,32 @@ static int getbody(void *mc, const char **content_types, sieve_bodypart_t ***par
     int r = 0;
 
     if (!msg->content.body) {
-	/* parse the message body if we haven't already */
-	FILE *fp = fopen(msg->filename, "r");
-	CU_ASSERT_PTR_NOT_NULL(fp);
-	r = message_parse_file(fp,
-			       &msg->content.base,
-			       &msg->content.len,
-			       &msg->content.body);
-	CU_ASSERT_EQUAL(r, 0);
-	fclose(fp);
+        /* parse the message body if we haven't already */
+        FILE *fp = fopen(msg->filename, "r");
+        CU_ASSERT_PTR_NOT_NULL(fp);
+        r = message_parse_file(fp,
+                               &msg->content.base,
+                               &msg->content.len,
+                               &msg->content.body);
+        CU_ASSERT_EQUAL(r, 0);
+        fclose(fp);
     }
 
     /* XXX currently struct bodypart as defined in message.h is the same as
        sieve_bodypart_t as defined in sieve_interface.h, so we can typecast */
     if (!r)
-	message_fetch_part(&msg->content, content_types,
-			   (struct bodypart ***) parts);
+        message_fetch_part(&msg->content, content_types,
+                           (struct bodypart ***) parts);
 
     if (r)
-	return SIEVE_FAIL;
+        return SIEVE_FAIL;
     return SIEVE_OK;
 }
 
 static int getinclude(void *sc __attribute__((unused)),
-		      const char *script,
-		      int isglobal __attribute__((unused)),
-		      char *fpath, size_t size)
+                      const char *script,
+                      int isglobal __attribute__((unused)),
+                      char *fpath, size_t size)
 {
     strlcpy(fpath, script, size);
     strlcat(fpath, ".bc", size);
@@ -304,8 +341,8 @@ static int getinclude(void *sc __attribute__((unused)),
 }
 
 static int redirect(void *ac, void *ic, void *sc __attribute__((unused)),
-		    void *mc __attribute__((unused)),
-		    const char **errmsg __attribute__((unused)))
+                    void *mc __attribute__((unused)),
+                    const char **errmsg __attribute__((unused)))
 {
     sieve_redirect_context_t *rc = (sieve_redirect_context_t *)ac;
     sieve_test_context_t *ctx = (sieve_test_context_t *)ic;
@@ -320,9 +357,9 @@ static int redirect(void *ac, void *ic, void *sc __attribute__((unused)),
 }
 
 static int discard(void *ac __attribute__((unused)),
-		   void *ic, void *sc __attribute__((unused)),
-		   void *mc __attribute__((unused)),
-		   const char **errmsg __attribute__((unused)))
+                   void *ic, void *sc __attribute__((unused)),
+                   void *mc __attribute__((unused)),
+                   const char **errmsg __attribute__((unused)))
 {
     sieve_test_context_t *ctx = (sieve_test_context_t *)ic;
 
@@ -334,8 +371,8 @@ static int discard(void *ac __attribute__((unused)),
 }
 
 static int reject(void *ac, void *ic, void *sc __attribute__((unused)),
-	          void *mc __attribute__((unused)),
-		  const char **errmsg __attribute__((unused)))
+                  void *mc __attribute__((unused)),
+                  const char **errmsg __attribute__((unused)))
 {
     sieve_reject_context_t *rc = (sieve_reject_context_t *)ac;
     sieve_test_context_t *ctx = (sieve_test_context_t *)ic;
@@ -350,8 +387,8 @@ static int reject(void *ac, void *ic, void *sc __attribute__((unused)),
 }
 
 static int fileinto(void *ac, void *ic, void *sc __attribute__((unused)),
-		    void *mc __attribute__((unused)),
-		    const char **errmsg __attribute__((unused)))
+                    void *mc __attribute__((unused)),
+                    const char **errmsg __attribute__((unused)))
 {
     sieve_fileinto_context_t *fc = (sieve_fileinto_context_t *)ac;
     sieve_test_context_t *ctx = (sieve_test_context_t *)ic;
@@ -362,14 +399,16 @@ static int fileinto(void *ac, void *ic, void *sc __attribute__((unused)),
     ctx->filed_mailbox = xstrdup(fc->mailbox);
     free(ctx->filed_flags);
     ctx->filed_flags = strarray_join(fc->imapflags, " ");
+    strarray_free(ctx->flags);
+    ctx->flags = strarray_dup(fc->imapflags);
 
     /* TODO: test returning SIEVE_FAIL */
     return SIEVE_OK;
 }
 
 static int keep(void *ac, void *ic, void *sc __attribute__((unused)),
-	        void *mc __attribute__((unused)),
-		const char **errmsg __attribute__((unused)))
+                void *mc __attribute__((unused)),
+                const char **errmsg __attribute__((unused)))
 {
     sieve_keep_context_t *kc = (sieve_keep_context_t *)ac;
     sieve_test_context_t *ctx = (sieve_test_context_t *)ic;
@@ -378,14 +417,16 @@ static int keep(void *ac, void *ic, void *sc __attribute__((unused)),
     ctx->stats.keeps++;
     free(ctx->filed_flags);
     ctx->filed_flags = strarray_join(kc->imapflags, " ");
+    strarray_free(ctx->flags);
+    ctx->flags = strarray_dup(kc->imapflags);
 
     /* TODO: test returning SIEVE_FAIL */
     return SIEVE_OK;
 }
 
 static int notify(void *ac, void *ic, void *sc __attribute__((unused)),
-	          void *mc __attribute__((unused)),
-	          const char **errmsg __attribute__((unused)))
+                  void *mc __attribute__((unused)),
+                  const char **errmsg __attribute__((unused)))
 {
     sieve_notify_context_t *nc = (sieve_notify_context_t *)ac;
     sieve_test_context_t *ctx = (sieve_test_context_t *)ic;
@@ -393,9 +434,9 @@ static int notify(void *ac, void *ic, void *sc __attribute__((unused)),
     const char **p;
 
     for (p = nc->options ; *p ; p++) {
-	if (opts.len)
-	    buf_putc(&opts, ' ');
-	buf_appendcstr(&opts, *p);
+        if (opts.len)
+            buf_putc(&opts, ' ');
+        buf_appendcstr(&opts, *p);
     }
 
     ctx->stats.actions++;
@@ -412,8 +453,8 @@ static int notify(void *ac, void *ic, void *sc __attribute__((unused)),
 }
 
 static int mysieve_error(int lineno, const char *msg,
-			 void *ic,
-		         void *sc __attribute__((unused)))
+                         void *ic,
+                         void *sc __attribute__((unused)))
 {
     sieve_test_context_t *ctx = (sieve_test_context_t *)ic;
     struct buf buf = BUF_INITIALIZER;
@@ -426,9 +467,9 @@ static int mysieve_error(int lineno, const char *msg,
 }
 
 static int mysieve_execute_error(const char *msg,
-				 void *ic,
-			         void *sc __attribute__((unused)),
-			         void *mc __attribute__((unused)))
+                                 void *ic,
+                                 void *sc __attribute__((unused)),
+                                 void *mc __attribute__((unused)))
 {
     sieve_test_context_t *ctx = (sieve_test_context_t *)ic;
 
@@ -439,17 +480,17 @@ static int mysieve_execute_error(const char *msg,
 }
 
 static int autorespond(void *ac __attribute__((unused)),
-		       void *ic __attribute__((unused)),
-		       void *sc __attribute__((unused)),
-		       void *mc __attribute__((unused)),
-		       const char **errmsg __attribute__((unused)))
+                       void *ic __attribute__((unused)),
+                       void *sc __attribute__((unused)),
+                       void *mc __attribute__((unused)),
+                       const char **errmsg __attribute__((unused)))
 {
     return autorespond_reponse;
 }
 
 static int send_response(void *ac, void *ic, void *sc __attribute__((unused)),
-			 void *mc __attribute__((unused)),
-			 const char **errmsg __attribute__((unused)))
+                         void *mc __attribute__((unused)),
+                         const char **errmsg __attribute__((unused)))
 {
     sieve_send_response_context_t *src = (sieve_send_response_context_t *)ac;
     sieve_test_context_t *ctx = (sieve_test_context_t *)ic;
@@ -476,7 +517,7 @@ static FILE *fmemopen(const void *buf, size_t len, const char *mode)
 
     fp = fopen("/dev/null", mode);
     if (!fp)
-	return NULL;
+        return NULL;
     setbuffer(fp, buf, len);
     return fp;
 }
@@ -498,12 +539,13 @@ static int set_up(void)
 {
     libcyrus_config_setstring(CYRUSOPT_CONFIG_DIR, DBDIR);
     config_read_string(
-	"configdirectory: "DBDIR"/conf\n"
-	"defaultpartition: "PARTITION"\n"
-	"partition-"PARTITION": "DBDIR"/data\n"
-	"sievenotifier: mailto\n"
-	"sieve_extensions: fileinto reject vacation imapflags notify" \
-	    " envelope body relational regex subaddress copy date index\n"
+        "configdirectory: "DBDIR"/conf\n"
+        "defaultpartition: "PARTITION"\n"
+        "partition-"PARTITION": "DBDIR"/data\n"
+        "sievenotifier: mailto\n"
+        "sieve_extensions: fileinto reject vacation imapflags notify" \
+	    " envelope body relational regex subaddress copy date index" \
+	    " imap4flags variables\n"
     );
     libcyrus_init();
     return 0;
@@ -516,15 +558,15 @@ static int tear_down(void)
 }
 
 static void context_setup(sieve_test_context_t *ctx,
-			  const char *script)
+                          const char *script)
 {
     int r;
     static strarray_t mark = STRARRAY_INITIALIZER;
     static sieve_vacation_t vacation = {
-	0,			/* min response */
-	0,			/* max response */
-	&autorespond,		/* autorespond() */
-	&send_response		/* send_response() */
+        0,                      /* min response */
+        0,                      /* max response */
+        &autorespond,           /* autorespond() */
+        &send_response          /* send_response() */
     };
     int len = strlen(script);
     int fd;
@@ -535,7 +577,7 @@ static void context_setup(sieve_test_context_t *ctx,
 
     memset(ctx, 0, sizeof(*ctx));
     if (!mark.count)
-	strarray_append(&mark, "\\flagged");
+        strarray_append(&mark, "\\flagged");
 
     ctx->compile_errors = strarray_new();
     ctx->run_errors = strarray_new();
@@ -585,50 +627,50 @@ static void context_cleanup(sieve_test_context_t *ctx)
     int r;
 
     if (verbose > 1) {
-	int i;
+        int i;
 
-	fprintf(stderr, "sieve test context\n");
-	fprintf(stderr, "    actions: %u\n", ctx->stats.actions);
-	fprintf(stderr, "    errors: %u\n", ctx->stats.errors);
-	fprintf(stderr, "    redirects: %u\n", ctx->stats.redirects);
-	fprintf(stderr, "    discards: %u\n", ctx->stats.discards);
-	fprintf(stderr, "    rejects: %u\n", ctx->stats.rejects);
-	fprintf(stderr, "    fileintos: %u\n", ctx->stats.fileintos);
-	fprintf(stderr, "    keeps: %u\n", ctx->stats.keeps);
-	fprintf(stderr, "    notifies: %u\n", ctx->stats.notifies);
-	fprintf(stderr, "    vaction_responses: %u\n", ctx->stats.vaction_responses);
-	if (ctx->redirected_to)
-	    fprintf(stderr, "    redirected_to: %s\n", ctx->redirected_to);
-	if (ctx->reject_message)
-	    fprintf(stderr, "    reject_message: %s\n", ctx->reject_message);
-	if (ctx->filed_mailbox)
-	    fprintf(stderr, "    filed_mailbox: %s\n", ctx->filed_mailbox);
-	if (ctx->filed_flags)
-	    fprintf(stderr, "    filed_flags: %s\n", ctx->filed_flags);
-	if (ctx->notify_method)
-	    fprintf(stderr, "    notify_method: %s\n", ctx->notify_method);
-	if (ctx->notify_priority)
-	    fprintf(stderr, "    notify_priority: %s\n", ctx->notify_priority);
-	if (ctx->notify_options)
-	    fprintf(stderr, "    notify_options: %s\n", ctx->notify_options);
-	if (ctx->vacation_message)
-	    fprintf(stderr, "    vacation_message: %s\n", ctx->vacation_message);
-	if (ctx->vacation_subject)
-	    fprintf(stderr, "    vacation_subject: %s\n", ctx->vacation_subject);
-	if (ctx->vacation_to)
-	    fprintf(stderr, "    vacation_to: %s\n", ctx->vacation_to);
-	if (ctx->vacation_from)
-	    fprintf(stderr, "    vacation_from: %s\n", ctx->vacation_from);
-	if (ctx->compile_errors->count) {
-	    fprintf(stderr, "    compile_errors:\n");
-	    for (i = 0 ; i < ctx->compile_errors->count ; i++)
-		fprintf(stderr, "\t[%d] %s\n", i, ctx->compile_errors->data[i]);
-	}
-	if (ctx->run_errors->count) {
-	    fprintf(stderr, "    run_errors:\n");
-	    for (i = 0 ; i < ctx->run_errors->count ; i++)
-		fprintf(stderr, "\t[%d] %s\n", i, ctx->run_errors->data[i]);
-	}
+        fprintf(stderr, "sieve test context\n");
+        fprintf(stderr, "    actions: %u\n", ctx->stats.actions);
+        fprintf(stderr, "    errors: %u\n", ctx->stats.errors);
+        fprintf(stderr, "    redirects: %u\n", ctx->stats.redirects);
+        fprintf(stderr, "    discards: %u\n", ctx->stats.discards);
+        fprintf(stderr, "    rejects: %u\n", ctx->stats.rejects);
+        fprintf(stderr, "    fileintos: %u\n", ctx->stats.fileintos);
+        fprintf(stderr, "    keeps: %u\n", ctx->stats.keeps);
+        fprintf(stderr, "    notifies: %u\n", ctx->stats.notifies);
+        fprintf(stderr, "    vaction_responses: %u\n", ctx->stats.vaction_responses);
+        if (ctx->redirected_to)
+            fprintf(stderr, "    redirected_to: %s\n", ctx->redirected_to);
+        if (ctx->reject_message)
+            fprintf(stderr, "    reject_message: %s\n", ctx->reject_message);
+        if (ctx->filed_mailbox)
+            fprintf(stderr, "    filed_mailbox: %s\n", ctx->filed_mailbox);
+        if (ctx->filed_flags)
+            fprintf(stderr, "    filed_flags: %s\n", ctx->filed_flags);
+        if (ctx->notify_method)
+            fprintf(stderr, "    notify_method: %s\n", ctx->notify_method);
+        if (ctx->notify_priority)
+            fprintf(stderr, "    notify_priority: %s\n", ctx->notify_priority);
+        if (ctx->notify_options)
+            fprintf(stderr, "    notify_options: %s\n", ctx->notify_options);
+        if (ctx->vacation_message)
+            fprintf(stderr, "    vacation_message: %s\n", ctx->vacation_message);
+        if (ctx->vacation_subject)
+            fprintf(stderr, "    vacation_subject: %s\n", ctx->vacation_subject);
+        if (ctx->vacation_to)
+            fprintf(stderr, "    vacation_to: %s\n", ctx->vacation_to);
+        if (ctx->vacation_from)
+            fprintf(stderr, "    vacation_from: %s\n", ctx->vacation_from);
+        if (ctx->compile_errors->count) {
+            fprintf(stderr, "    compile_errors:\n");
+            for (i = 0 ; i < ctx->compile_errors->count ; i++)
+                fprintf(stderr, "\t[%d] %s\n", i, ctx->compile_errors->data[i]);
+        }
+        if (ctx->run_errors->count) {
+            fprintf(stderr, "    run_errors:\n");
+            for (i = 0 ; i < ctx->run_errors->count ; i++)
+                fprintf(stderr, "\t[%d] %s\n", i, ctx->run_errors->data[i]);
+        }
     }
 
     /*used to be sieve_script_free*/
@@ -652,10 +694,11 @@ static void context_cleanup(sieve_test_context_t *ctx)
     free(ctx->vacation_from);
     strarray_free(ctx->compile_errors);
     strarray_free(ctx->run_errors);
+    strarray_free(ctx->flags);
 }
 
 
-static sieve_test_message_t *message_new(const char *text, int len)
+static sieve_test_message_t *sieve_test_message_new(const char *text, int len)
 {
     sieve_test_message_t *msg;
     struct protstream *pin;
@@ -696,9 +739,9 @@ static void message_free(sieve_test_message_t *msg)
 {
     spool_free_hdrcache(msg->headers);
     if (msg->content.body)
-	message_free_body(msg->content.body);
+        message_free_body(msg->content.body);
     if (msg->content.base)
-	map_free(&msg->content.base, &msg->content.len);
+        map_free(&msg->content.base, &msg->content.len);
     unlink(msg->filename);
     free(msg->filename);
     free(msg);
@@ -706,12 +749,12 @@ static void message_free(sieve_test_message_t *msg)
 
 
 static void run_message(sieve_test_context_t *ctx,
-		        const char *text)
+                        const char *text)
 {
     sieve_test_message_t *msg;
     int r;
 
-    msg = message_new(text, strlen(text));
+    msg = sieve_test_message_new(text, strlen(text));
     CU_ASSERT_PTR_NOT_NULL(msg);
 
     r = sieve_execute_bytecode(ctx->exe, ctx->interp, ctx, msg);
@@ -1495,6 +1538,40 @@ static void test_currentdate_false(void)
     CU_ASSERT_STRING_EQUAL(ctx.redirected_to, NULL);
 
     context_cleanup(&ctx);
+}
+
+static void test_imap4flags_setflag(void)
+{
+    static const char SCRIPT_INTERNAL[] =
+    "require [\"imap4flags\", \"variables\"];\n"
+    "setflag \"myvar\" [\"myval1\", \"myval2\"];\n"
+    "keep :flags \"${myvar}\";\n"
+    ;
+
+    static const char MSG_TRUE[] =
+    "Date: Mon, 25 Jan 2003 08:51:06 -0500\r\n"
+    "From: zme@true.com\r\n"
+    "To: you\r\n"
+    "Subject: simple flag test\r\n"
+    "\r\n"
+    "blah\n"
+    ;
+    sieve_test_context_t ctx;
+
+    /* Test setflag "variablename" "flags" */
+    context_setup(&ctx, SCRIPT_INTERNAL);
+    CU_ASSERT_EQUAL(ctx.stats.errors, 0);
+
+    run_message(&ctx, MSG_TRUE);
+    CU_ASSERT_EQUAL(ctx.stats.errors, 0);
+    CU_ASSERT_EQUAL(ctx.stats.actions, 1);
+    CU_ASSERT_EQUAL(ctx.stats.keeps, 1);
+    CU_ASSERT_NOT_EQUAL(strarray_find_case(ctx.flags,"myval1",0),-1);
+    CU_ASSERT_NOT_EQUAL(strarray_find_case(ctx.flags,"myval2",0),-1);
+
+    context_cleanup(&ctx);
+
+    /* Test #2 */
 }
 
 // TODO: test

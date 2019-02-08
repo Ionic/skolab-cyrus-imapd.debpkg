@@ -1,0 +1,30 @@
+
+**cyrdump**
+***********
+
+Dumps out a basic copy of mailbox data to stdout. There is no
+corresponding restore command.
+
+
+Synopsis
+========
+
+   **cyrdump** [ **-C** *config-file* ] [ **-v** ] *mailboxlist*
+
+
+Description
+===========
+
+**cyrdump** Dumps mailbox data to stdout.
+
+
+Options
+=======
+
+-C config-file
+
+   Alternate config file.
+
+-v
+
+   Produce verbose output on errors.

@@ -1,0 +1,32 @@
+
+**proxyd**
+**********
+
+In Progress
+
+
+Synopsis
+========
+
+   **proxyd** [ **-C** *config-file* ]
+
+
+Description
+===========
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+/etc/imapd.conf, /etc/cyrus.conf
+
+
+See Also
+========
+
+imapd.conf(5), cyrus.conf(5)

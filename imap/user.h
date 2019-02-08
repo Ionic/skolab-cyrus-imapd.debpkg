@@ -58,20 +58,22 @@ int user_deletedata(const char *userid, int wipe_user);
 /* Rename/copy user meta-data (seen state, subscriptions, sieve scripts)
  * from 'olduser' to 'newuser'.
  */
-int user_renamedata(char *olduser, char *newuser, char *userid,
-		    struct auth_state *authstate);
+int user_renamedata(const char *olduser, const char *newuser);
 
 /* Rename ACL for 'olduser' to 'newuser' on mailbox 'name'. */
-int user_renameacl(struct namespace *namespace, char *name,
-		   char *olduser, char *newuser);
+int user_renameacl(const struct namespace *namespace, const char *name,
+                   const char *olduser, const char *newuser);
 
 /* Copy a quotaroot from mailbox 'oldname' to 'newname' */
-int user_copyquotaroot(char *oldname, char *newname);
+int user_copyquotaroot(const char *oldname, const char *newname);
 
 /* Delete all quotaroots for 'user' */
 int user_deletequotaroots(const char *user);
 
 /* find the subscriptions file for user */
 char *user_hash_subs(const char *user);
+
+/* find any sort of file for the user */
+char *user_hash_meta(const char *userid, const char *suffix);
 
 #endif

@@ -1,0 +1,36 @@
+
+**masssievec**
+**************
+
+Script to compile a mass of sieve scripts in one pass.
+
+
+Synopsis
+========
+
+   **masssievec** <path to sievec> [ *imapd.conf* ]
+
+
+Description
+===========
+
+**masssievec** compiles a set of sieve scripts, using sievec(8) based
+on the files found in the **sievedir**  config from the "imapd.conf"
+file.
+
+It cannot compile scripts stored in user's home directories.
+
+
+Options
+=======
+
+imapd.conf
+
+   Provide an alternate impad.conf. If not specified, uses
+   "/etc/imapd.conf".
+
+
+See Also
+========
+
+sievec(8), imapd.conf(5)

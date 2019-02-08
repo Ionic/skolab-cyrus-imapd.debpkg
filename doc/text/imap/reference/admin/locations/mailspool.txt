@@ -1,0 +1,116 @@
+
+Spool Directories
+*****************
+
+
+Default Spool location
+======================
+
+The main Cyrus IMAP mail data directory structure is the spool, and
+its location is defined by "partition-name" entries in imapd.conf(5).
+
+Additionally, on servers with more than one spool partition, that
+partition in which new user mailboxes are to be created is specified
+by the "defaultpartition" directive.
+
+   "partition-name:" <none>
+
+      The pathname of the partition *name*.  At least one partition
+      pathname MUST be specified.  If the **defaultpartition** option
+      is used, then its pathname MUST be specified.  For example, if
+      the value of the **defaultpartion** option is **part1**, then
+      the **partition-part1** field is required.
+
+   "defaultpartition:" <none>
+
+      The partition name used by default for new mailboxes.  If not
+      specified, the partition with the most free space will be used
+      for new mailboxes.
+
+      Note that the partition specified by this option must also be
+      specified as *partition-name*, where you substitute 'name' for
+      the alphanumeric string you set *defaultpartition* to.
+
+Note: There is nothing magical about the name "default" and in fact
+  any name may be used for the default-partition.  We'll use the name
+  "main" in this documentation.
+
+* Sample:
+
+     defaultpartition: main
+     partition-main: /var/spool/cyrus
+
+
+Additional Spool locations
+==========================
+
+Multiple partitions may be used for various reasons, such as to
+distribute load between different storage pools or technologies.
+Please consult Mail Spool Partitions for more details and use cases.
+
+To define additional mail spools, add more "partition-name" entries to
+imapd.conf(5) as needed.  For example, let's imagine we want to
+migrate users to new partitions split by first character of the user's
+last name, and add a partition for shared mailboxes (see Shared
+Namespaces):
+
+* Sample:
+
+     defaultpartition: main
+     partition-main: /var/spool/cyrus
+     partition-am: /var/spool/cyrus-am
+     partition-nz: /var/spool/cyrus-nz
+     partition-shared: /var/spool/cyrus-shared
+
+
+Metadata Partitions
+*******************
+
+In addition to the mailbox and message data, Cyrus stores various
+metadata in the mail spool, such as indexes, annotations, etc.  It may
+be useful in some circumstances to separate this metadata into its own
+partitions.  For each partition to be split in this way, one must
+define a metadata partition for each data partition, using the same
+name, so Cyrus knows how to relate them to each other.
+
+As well as specifying locations for the metadata, one must also tell
+Cyrus which metadata files to place in these special partitions.  The
+default behaviour is to locate *all* metadata in the data
+partition(s).
+
+The configuration directives to do so are quite similar to those for
+data partitions:
+
+   "metapartition_files:" <empty string>
+
+      Space-separated list of metadata files to be stored on a
+      *metapartition* rather than in the mailbox directory on a spool
+      partition. Allowed values: *header*, *index*, *cache*,
+      *expunge*, *squat*, *annotations*, *lock*, *dav*, *archivecache*
+
+   "metapartition-name:" <none>
+
+      The pathname of the metadata partition *name*, corresponding to
+      spool partition **partition-name**.  For any mailbox residing in
+      a directory on **partition-name**, the metadata files listed in
+      *metapartition_files* will be stored in a corresponding
+      directory on **metapartition-name**.   Note that not every
+      **partition-name** option is required to have a corresponding
+      **metapartition-name** option, so that you can selectively
+      choose which spool partitions will have separate metadata
+      partitions.
+
+Again, building on our examples above:
+
+* Sample:
+
+     defaultpartition: main
+     partition-main: /var/spool/cyrus
+     partition-am: /var/spool/cyrus-am
+     partition-nz: /var/spool/cyrus-nz
+     partition-shared: /var/spool/cyrus-shared
+     metapartition_files: header index cache expunge squat annotations
+     metapartition-main: /var/spool/cyrusmeta/main
+     metapartition-am: /var/spool/cyrusmeta/am
+     metapartition-nz: /var/spool/cyrusmeta/nz
+     metapartition-shared: /var/spool/cyrusmeta/shared

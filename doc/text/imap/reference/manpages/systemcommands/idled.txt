@@ -1,0 +1,56 @@
+
+**idled**
+*********
+
+Provide near real-time updates for IMAP IDLE
+
+
+Synopsis
+========
+
+   **idled** [ **-C** *config-file* ]
+
+
+Description
+===========
+
+**idled** is a long lived datagram daemon which receives notifications
+of mailbox changes and signals the appropriate **imapd** to report the
+changes to the client.
+
+**Idled** is usually started from master(8).
+
+**idled** reads its configuration options out of the imapd.conf(5)
+file unless specified otherwise by **-C**.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+
+Examples
+========
+
+**idled** is commonly included in the DAEMON section of cyrus.conf(5)
+like so:
+
+   DAEMON {
+       idled                   cmd="/usr/lib/cyrus/bin/idled"
+   }
+
+
+Files
+=====
+
+/etc/imapd.conf
+
+
+See Also
+========
+
+imapd.conf(5), cyrus.conf(5), master(8)

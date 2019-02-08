@@ -5,10 +5,11 @@
 #include <stdio.h>
 #include <fcntl.h>
 
+#include "xmalloc.h"
 #include "vparse.h"
 #include "xmalloc.h"
 
-#define LC(s) do { char *p; for (p = s; *p; p++) if (*p >= 'A' && *p <= 'Z') *p += ('a' - 'A'); } while (0)
+#define DEBUG 0
 
 static char *buf_dup_cstring(struct buf *buf)
 {
@@ -19,17 +20,33 @@ static char *buf_dup_cstring(struct buf *buf)
     return ret;
 }
 
-static char *buf_dup_lcstring(struct buf *buf)
-{
-    char *ret = buf_dup_cstring(buf);
-    LC(ret);
-    return ret;
-}
-
 #define NOTESTART() state->itemstart = state->p
-#define MAKE(X, Y) X = malloc(sizeof(struct Y)); memset(X, 0, sizeof(struct Y))
+#define MAKE(X, Y) X = xzmalloc(sizeof(struct Y));
 #define PUTC(C) buf_putc(&state->buf, C)
 #define INC(I) state->p += I
+#define IS_CTRL(ch) \
+    (ch > 0 && ch <= 0x1f && ch != '\r' && ch != '\n' && ch != '\t')
+#define HANDLECTRL(state) \
+{ \
+    if (state->ctrl != VPARSE_CTRL_IGNORE && IS_CTRL(*state->p)) { \
+        if (state->ctrl == VPARSE_CTRL_REJECT) \
+            return PE_ILLEGAL_CHAR; \
+        while (IS_CTRL(*state->p)) \
+            state->p++; \
+    } \
+    if ((*state->p) == 0) \
+        break; \
+}
+
+#define HANDLEBACKR(state) \
+{ \
+    if (state->p[1] != '\n') { \
+        if (state->ctrl == VPARSE_CTRL_REJECT) \
+            return PE_ILLEGAL_CHAR; \
+        if (state->ctrl == VPARSE_CTRL_IGNORE) \
+            PUTC('\r'); \
+    } \
+}
 
 /* just leaves it on the buffer */
 static int _parse_param_quoted(struct vparse_state *state, int multiparam)
@@ -37,6 +54,10 @@ static int _parse_param_quoted(struct vparse_state *state, int multiparam)
     NOTESTART();
 
     while (*state->p) {
+
+        /* Handle control characters and break for NUL char */
+        HANDLECTRL(state);
+
         switch (*state->p) {
         case '"':
             INC(1);
@@ -90,6 +111,7 @@ static int _parse_param_quoted(struct vparse_state *state, int multiparam)
             break;
 
         case '\r':
+            HANDLEBACKR(state);
             INC(1);
             break; /* just skip */
         case '\n':
@@ -102,6 +124,7 @@ static int _parse_param_quoted(struct vparse_state *state, int multiparam)
             if (multiparam)
                 return PE_QSTRING_COMMA;
             /* or fall through, comma isn't special */
+            GCC_FALLTHROUGH
 
         default:
             PUTC(*state->p);
@@ -118,9 +141,13 @@ static int _parse_param_key(struct vparse_state *state, int *haseq)
     *haseq = 0;
 
     while (*state->p) {
+
+        /* Handle control characters and break for NUL char */
+        HANDLECTRL(state);
+
         switch (*state->p) {
         case '=':
-            state->param->name = buf_dup_lcstring(&state->buf);
+            state->param->name = buf_dup_cstring(&state->buf);
             *haseq = 1;
             INC(1);
             return 0;
@@ -128,7 +155,7 @@ static int _parse_param_key(struct vparse_state *state, int *haseq)
         case ';': /* vcard 2.1 parameter with no value */
         case ':':
             if (state->barekeys) {
-                state->param->name = buf_dup_lcstring(&state->buf);
+                state->param->name = buf_dup_cstring(&state->buf);
             }
             else {
                 state->param->name = strdup("type");
@@ -138,6 +165,7 @@ static int _parse_param_key(struct vparse_state *state, int *haseq)
             return 0;
 
         case '\r':
+            HANDLEBACKR(state);
             INC(1);
             break; /* just skip */
         case '\n':
@@ -160,7 +188,6 @@ static int _parse_param_key(struct vparse_state *state, int *haseq)
 static int _parse_entry_params(struct vparse_state *state)
 {
     struct vparse_param **paramp = &state->entry->params;
-    struct vparse_list *item;
     int multiparam = 0;
     int haseq = 0;
     int r;
@@ -175,15 +202,15 @@ repeat:
     r = _parse_param_key(state, &haseq);
     if (r) return r;
 
-    for (item = state->multiparam; item; item = item->next) {
-        if (!strcmp(state->param->name, item->s)) {
-            multiparam = 1;
-            break;
-        }
-    }
+    if (state->multiparam && strarray_find(state->multiparam, state->param->name, 0))
+        multiparam = 1;
 
     /* now get the value */
     while (*state->p) {
+
+        /* Handle control characters and break for NUL char */
+        HANDLECTRL(state);
+
         switch (*state->p) {
         case '\\': /* normal backslash quoting */
             /* seen in the wild - \n split by line wrapping */
@@ -264,6 +291,7 @@ repeat:
             goto repeat;
 
         case '\r':
+            HANDLEBACKR(state);
             INC(1);
             break; /* just skip */
         case '\n':
@@ -285,6 +313,7 @@ repeat:
                 break;
             }
             /* or fall through, comma isn't special */
+            GCC_FALLTHROUGH
 
         default:
             PUTC(*state->p);
@@ -301,25 +330,30 @@ static int _parse_entry_key(struct vparse_state *state)
     NOTESTART();
 
     while (*state->p) {
+
+        /* Handle control characters and break for NUL char */
+        HANDLECTRL(state);
+
         switch (*state->p) {
         case ':':
-            state->entry->name = buf_dup_lcstring(&state->buf);
+            state->entry->name = buf_dup_cstring(&state->buf);
             INC(1);
             return 0;
 
         case ';':
-            state->entry->name = buf_dup_lcstring(&state->buf);
+            state->entry->name = buf_dup_cstring(&state->buf);
             INC(1);
             return _parse_entry_params(state);
 
         case '.':
             if (state->entry->group)
                 return PE_ENTRY_MULTIGROUP;
-            state->entry->group = buf_dup_lcstring(&state->buf);
+            state->entry->group = buf_dup_cstring(&state->buf);
             INC(1);
             break;
 
         case '\r':
+            HANDLEBACKR(state);
             INC(1);
             break; /* just skip */
         case '\n':
@@ -341,18 +375,18 @@ static int _parse_entry_key(struct vparse_state *state)
     return PE_NAME_EOF;
 }
 
-static int _parse_entry_multivalue(struct vparse_state *state)
+static int _parse_entry_multivalue(struct vparse_state *state, char splitchar)
 {
-    struct vparse_list **valp = &state->entry->v.values;
-
-    state->entry->multivalue = 1;
+    state->entry->multivaluesep = splitchar;
+    state->entry->v.values = strarray_new();
 
     NOTESTART();
 
-repeat:
-    MAKE(state->value, vparse_list);
-
     while (*state->p) {
+
+        /* Handle control characters and break for NUL char */
+        HANDLECTRL(state);
+
         switch (*state->p) {
         /* only one type of quoting */
         case '\\':
@@ -372,14 +406,8 @@ repeat:
             INC(2);
             break;
 
-        case ';':
-            state->value->s = buf_dup_cstring(&state->buf);
-            *valp = state->value;
-            valp = &state->value->next;
-            INC(1);
-            goto repeat;
-
         case '\r':
+            HANDLEBACKR(state);
             INC(1);
             break; /* just skip */
         case '\n':
@@ -392,7 +420,12 @@ repeat:
             goto out;
 
         default:
-            PUTC(*state->p);
+            if (*state->p == splitchar) {
+                strarray_appendm(state->entry->v.values, buf_dup_cstring(&state->buf));
+            }
+            else {
+                PUTC(*state->p);
+            }
             INC(1);
             break;
         }
@@ -401,23 +434,24 @@ repeat:
 out:
     /* reaching the end of the file isn't a failure here,
      * it's just another type of end-of-value */
-    state->value->s = buf_dup_cstring(&state->buf);
-    *valp = state->value;
-    state->value = NULL;
+    strarray_appendm(state->entry->v.values, buf_dup_cstring(&state->buf));
     return 0;
 }
 
 static int _parse_entry_value(struct vparse_state *state)
 {
-    struct vparse_list *item;
-
-    for (item = state->multival; item; item = item->next)
-        if (!strcmp(state->entry->name, item->s))
-            return _parse_entry_multivalue(state);
+    if (state->multivalsemi && strarray_find_case(state->multivalsemi, state->entry->name, 0) >= 0)
+        return _parse_entry_multivalue(state, ';');
+    if (state->multivalcomma && strarray_find_case(state->multivalcomma, state->entry->name, 0) >= 0)
+        return _parse_entry_multivalue(state, ',');
 
     NOTESTART();
 
     while (*state->p) {
+
+        /* Handle control characters and break for NUL char */
+        HANDLECTRL(state);
+
         switch (*state->p) {
         /* only one type of quoting */
         case '\\':
@@ -439,6 +473,7 @@ static int _parse_entry_value(struct vparse_state *state)
             break;
 
         case '\r':
+            HANDLEBACKR(state);
             INC(1);
             break; /* just skip */
         case '\n':
@@ -466,17 +501,6 @@ out:
 
 /* FREE MEMORY */
 
-static void _free_list(struct vparse_list *list)
-{
-    struct vparse_list *listnext;
-
-    for (; list; list = listnext) {
-        listnext = list->next;
-        free(list->s);
-        free(list);
-    }
-}
-
 static void _free_param(struct vparse_param *param)
 {
     struct vparse_param *paramnext;
@@ -497,8 +521,8 @@ static void _free_entry(struct vparse_entry *entry)
         entrynext = entry->next;
         free(entry->name);
         free(entry->group);
-        if (entry->multivalue)
-            _free_list(entry->v.values);
+        if (entry->multivaluesep)
+            strarray_free(entry->v.values);
         else
             free(entry->v.value);
         _free_param(entry->params);
@@ -523,9 +547,11 @@ static void _free_state(struct vparse_state *state)
 {
     buf_free(&state->buf);
     _free_card(state->card);
-    _free_list(state->value);
     _free_entry(state->entry);
     _free_param(state->param);
+    if (state->multivalsemi) strarray_free(state->multivalsemi);
+    if (state->multivalcomma) strarray_free(state->multivalcomma);
+    if (state->multiparam) strarray_free(state->multiparam);
 
     memset(state, 0, sizeof(struct vparse_state));
 }
@@ -560,7 +586,7 @@ static int _parse_vcard(struct vparse_state *state, struct vparse_card *card, in
         r = _parse_entry(state);
         if (r) return r;
 
-        if (!strcmp(state->entry->name, "begin")) {
+        if (!strcasecmp(state->entry->name, "begin")) {
             /* shouldn't be any params */
             if (state->entry->params) {
                 state->itemstart = entrystart;
@@ -568,14 +594,13 @@ static int _parse_vcard(struct vparse_state *state, struct vparse_card *card, in
             }
             /* only possible if some idiot passes 'begin' as
              * multivalue field name */
-            if (state->entry->multivalue) {
+            if (state->entry->multivaluesep) {
                 state->itemstart = entrystart;
                 return PE_BEGIN_PARAMS;
             }
 
             MAKE(sub, vparse_card);
             sub->type = strdup(state->entry->v.value);
-            LC(sub->type);
             _free_entry(state->entry);
             state->entry = NULL;
             /* we must stitch it in first, because state won't hold it */
@@ -585,7 +610,7 @@ static int _parse_vcard(struct vparse_state *state, struct vparse_card *card, in
             if (r) return r;
             if (only_one) return 0;
         }
-        else if (!strcmp(state->entry->name, "end")) {
+        else if (!strcasecmp(state->entry->name, "end")) {
             /* shouldn't be any params */
             if (state->entry->params) {
                 state->itemstart = entrystart;
@@ -593,9 +618,15 @@ static int _parse_vcard(struct vparse_state *state, struct vparse_card *card, in
             }
             /* only possible if some idiot passes 'end' as
              * multivalue field name */
-            if (state->entry->multivalue) {
+            if (state->entry->multivaluesep) {
                 state->itemstart = entrystart;
                 return PE_BEGIN_PARAMS;
+            }
+
+            if (!card->type) {
+                /* no type means we're at the top level, haven't seen a BEGIN! */
+                state->itemstart = cardstart;
+                return PE_MISMATCHED_CARD;
             }
 
             if (strcasecmp(state->entry->v.value, card->type)) {
@@ -639,6 +670,16 @@ EXPORTED int vparse_parse(struct vparse_state *state, int only_one)
 EXPORTED void vparse_free(struct vparse_state *state)
 {
     _free_state(state);
+}
+
+EXPORTED void vparse_free_card(struct vparse_card *card)
+{
+    _free_card(card);
+}
+
+EXPORTED void vparse_free_entry(struct vparse_entry *entry)
+{
+    _free_entry(entry);
 }
 
 EXPORTED void vparse_fillpos(struct vparse_state *state, struct vparse_errorpos *pos)
@@ -699,11 +740,348 @@ EXPORTED const char *vparse_errstr(int err)
         return "End of data while parsing quoted value";
     case PE_QSTRING_EOL:
         return "End of line while parsing quoted value";
+    case PE_ILLEGAL_CHAR:
+        return "Illegal character in VCard";
     }
     return "Unknown error";
 }
 
-#ifdef DEBUG
+EXPORTED const char *vparse_stringval(const struct vparse_card *card, const char *name)
+{
+    struct vparse_entry *entry;
+    for (entry = card->properties; entry; entry = entry->next) {
+        if (!strcasecmp(name, entry->name)) {
+            if (entry->multivaluesep)
+                return strarray_nth(entry->v.values, 0);
+            else
+                return entry->v.value;
+        }
+    }
+    return NULL;
+}
+
+EXPORTED const strarray_t *vparse_multival(const struct vparse_card *card, const char *name)
+{
+    struct vparse_entry *entry;
+    for (entry = card->properties; entry; entry = entry->next) {
+        if (!entry->multivaluesep) continue;
+        if (!strcasecmp(name, entry->name))
+            return entry->v.values;
+    }
+    return NULL;
+}
+
+EXPORTED void vparse_set_multival(struct vparse_state *state, const char *name, char split)
+{
+    switch (split) {
+    case ';':
+        if (!state->multivalsemi) state->multivalsemi = strarray_new();
+        strarray_append(state->multivalsemi, name);
+        break;
+    case ',':
+        if (!state->multivalcomma) state->multivalcomma = strarray_new();
+        strarray_append(state->multivalcomma, name);
+        break;
+
+    default:
+        abort();
+    }
+}
+
+EXPORTED void vparse_set_multiparam(struct vparse_state *state, const char *name)
+{
+    if (!state->multiparam) state->multiparam = strarray_new();
+    strarray_append(state->multiparam, name);
+}
+
+struct vparse_target {
+    struct buf *buf;
+    size_t last;
+};
+
+static void _endline(struct vparse_target *tgt)
+{
+    buf_appendcstr(tgt->buf, "\r\n");
+    tgt->last = buf_len(tgt->buf);
+}
+
+static void _checkwrap(unsigned char c, struct vparse_target *tgt)
+{
+    if (buf_len(tgt->buf) - tgt->last < 75)
+        return; /* still short line */
+
+    if (c >= 0x80 && c < 0xC0)
+        return; /* never wrap continuation chars */
+
+    /* wrap */
+    _endline(tgt);
+    buf_putc(tgt->buf, ' ');
+}
+
+static void _value_to_tgt(const char *value, struct vparse_target *tgt, char multivalsep)
+{
+    if (!value) return; /* null fields or array items are empty string */
+    for (; *value; value++) {
+        /* never wrap just a single character by itself.  This is partially
+         * a workaround for an OSX 10.10 bug with parsing this:
+         * PRODID:+//IDN bitfire.at//DAVdroid/1.2.2-gplay vcard4android ez-vcard/0.9.1
+         *  0
+         * UID:[...]
+         * which is totally valid, but it was barfing and saying there was no UID */
+        if (value[1]) _checkwrap(*value, tgt);
+        switch (*value) {
+        case '\r':
+            break;
+        case '\n':
+            buf_putc(tgt->buf, '\\');
+            buf_putc(tgt->buf, 'n');
+            break;
+        case ';':
+            /* this doesn't need to be quoted, but , does. yay. So special case this one */
+            if (multivalsep == ';') {
+                buf_putc(tgt->buf, '\\');
+                buf_putc(tgt->buf, *value);
+            }
+            else {
+                buf_putc(tgt->buf, *value);
+            }
+            break;
+        case ',':
+        case '\\':
+            buf_putc(tgt->buf, '\\');
+            /* fall through */
+        default:
+            buf_putc(tgt->buf, *value);
+            break;
+        }
+    }
+}
+
+static void _paramval_to_tgt(const char *value, struct vparse_target *tgt)
+{
+    int seenchar = 0;
+    for (; *value; value++) {
+        /* XXX - don't wrap on the very first character of a value,
+           because it breaks Mac OS X parser */
+        if (seenchar) _checkwrap(*value, tgt);
+        else seenchar = 1;
+        switch (*value) {
+        case '\r':
+            break;
+        case '\n':
+            buf_putc(tgt->buf, '^');
+            buf_putc(tgt->buf, 'n');
+            break;
+        case '^':
+            buf_putc(tgt->buf, '^');
+            buf_putc(tgt->buf, '^');
+            break;
+        case '"':
+            buf_putc(tgt->buf, '^');
+            buf_putc(tgt->buf, '\'');
+            break;
+        default:
+            buf_putc(tgt->buf, *value);
+        }
+    }
+}
+
+static void _key_to_tgt(const char *key, struct vparse_target *tgt)
+{
+    /* uppercase keys */
+    for (; *key; key++) {
+        _checkwrap(*key, tgt);
+        //buf_putc(tgt->buf, toupper(*key));
+        buf_putc(tgt->buf, *key);
+    }
+}
+
+static int _needsquote(const char *p)
+{
+    while (*p++) {
+        switch (*p) {
+        case '"':
+        case ',':
+        case ':':
+        case ';':
+        case ' ':  // in theory, whitespace is legal
+        case '\t': // in theory, whitespace is legal
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static void _entry_to_tgt(const struct vparse_entry *entry, struct vparse_target *tgt)
+{
+    struct vparse_param *param;
+
+    // rfc6350 3.3 - it is RECOMMENDED that property and parameter names be upper-case on output.
+    if (entry->group) {
+        _key_to_tgt(entry->group, tgt);
+        buf_putc(tgt->buf, '.');
+    }
+    _key_to_tgt(entry->name, tgt);
+
+    for (param = entry->params; param; param = param->next) {
+        buf_putc(tgt->buf, ';');
+        _key_to_tgt(param->name, tgt);
+        buf_putc(tgt->buf, '=');
+        if (_needsquote(param->value)) {
+            /* XXX - smart quoting? */
+            buf_putc(tgt->buf, '"');
+            _paramval_to_tgt(param->value, tgt);
+            buf_putc(tgt->buf, '"');
+        }
+        else {
+            _paramval_to_tgt(param->value, tgt);
+        }
+    }
+
+    buf_putc(tgt->buf, ':');
+
+    if (entry->multivaluesep) {
+        int i;
+        for (i = 0; i < entry->v.values->count; i++) {
+            if (i) buf_putc(tgt->buf, entry->multivaluesep);
+            _value_to_tgt(strarray_nth(entry->v.values, i), tgt, entry->multivaluesep);
+        }
+    }
+    else {
+        _value_to_tgt(entry->v.value, tgt, '\0');
+    }
+
+    _endline(tgt);
+}
+
+static void _card_to_tgt(const struct vparse_card *card, struct vparse_target *tgt)
+{
+    const struct vparse_entry *entry;
+    const struct vparse_card *sub;
+
+    if (card->type) {
+        _key_to_tgt("BEGIN", tgt);
+        buf_putc(tgt->buf, ':');
+        _key_to_tgt(card->type, tgt);
+        _endline(tgt);
+    }
+
+    for (entry = card->properties; entry; entry = entry->next)
+        _entry_to_tgt(entry, tgt);
+
+    for (sub = card->objects; sub; sub = sub->next)
+        _card_to_tgt(sub, tgt);
+
+    if (card->type) {
+        _key_to_tgt("END", tgt);
+        buf_putc(tgt->buf, ':');
+        _key_to_tgt(card->type, tgt);
+        _endline(tgt);
+    }
+}
+
+EXPORTED void vparse_tobuf(const struct vparse_card *card, struct buf *buf)
+{
+    struct vparse_target tgt;
+    tgt.buf = buf;
+    tgt.last = 0;
+    for (; card; card = card->next)
+        _card_to_tgt(card, &tgt);
+}
+
+EXPORTED struct vparse_card *vparse_new_card(const char *type)
+{
+    struct vparse_card *card = xzmalloc(sizeof(struct vparse_card));
+    card->type = xstrdupnull(type);
+    return card;
+}
+
+EXPORTED struct vparse_entry *vparse_add_entry(struct vparse_card *card, const char *group, const char *name, const char *value)
+{
+    struct vparse_entry **entryp = &card->properties;
+    while (*entryp) entryp = &((*entryp)->next);
+    struct vparse_entry *entry = xzmalloc(sizeof(struct vparse_entry));
+    entry->group = xstrdupnull(group);
+    entry->name = xstrdupnull(name);
+    entry->v.value = xstrdupnull(value);
+    *entryp = entry;
+    return entry;
+}
+
+EXPORTED struct vparse_entry *vparse_get_entry(struct vparse_card *card, const char *group, const char *name)
+{
+    struct vparse_entry *entry = NULL;
+
+    for (entry = card->properties; entry; entry = entry->next) {
+        if (!strcasecmpsafe(entry->group, group) && !strcasecmpsafe(entry->name, name))
+            break;
+    }
+
+    return entry;
+}
+
+EXPORTED void vparse_replace_entry(struct vparse_card *card, const char *group, const char *name, const char *value)
+{
+    struct vparse_entry *res = vparse_get_entry(card, group, name);
+    if (!res) res = vparse_add_entry(card, group, name, NULL);
+    free(res->v.value);
+    res->v.value = xstrdupnull(value);
+}
+
+EXPORTED void vparse_delete_entries(struct vparse_card *card, const char *group, const char *name)
+{
+    struct vparse_entry **entryp = &card->properties;
+    while (*entryp) {
+        struct vparse_entry *entry = *entryp;
+        if ((!group || !strcasecmpsafe(entry->group, group)) && !strcasecmpsafe(entry->name, name)) {
+            *entryp = entry->next;
+            entry->next = NULL; /* so free doesn't walk the chain */
+            _free_entry(entry);
+        }
+        else {
+            entryp = &((*entryp)->next);
+        }
+    }
+}
+
+EXPORTED struct vparse_param *vparse_get_param(struct vparse_entry *entry, const char *name)
+{
+    struct vparse_param *param;
+    for (param = entry->params; param; param = param->next) {
+        if (!strcasecmp(param->name, name))
+            return param;
+    }
+    return NULL;
+}
+
+EXPORTED struct vparse_param *vparse_add_param(struct vparse_entry *entry, const char *name, const char *value)
+{
+    struct vparse_param **paramp = &entry->params;
+    while (*paramp) paramp = &((*paramp)->next);
+    struct vparse_param *param = xzmalloc(sizeof(struct vparse_param));
+    param->name = xstrdupnull(name);
+    param->value = xstrdupnull(value);
+    *paramp = param;
+    return param;
+}
+
+EXPORTED void vparse_delete_params(struct vparse_entry *entry, const char *name)
+{
+    struct vparse_param **paramp = &entry->params;
+    while (*paramp) {
+        struct vparse_param *param = *paramp;
+        if (!strcasecmpsafe(param->name, name)) {
+            *paramp = param->next;
+            param->next = NULL;
+            _free_param(param);
+        }
+        else {
+            paramp = &((*paramp)->next);
+        }
+    }
+}
+
+#if DEBUG
 static int _dump_card(struct vparse_card *card)
 {
     struct vparse_entry *entry;
@@ -715,29 +1093,40 @@ static int _dump_card(struct vparse_card *card)
         printf("%s", entry->name);
         for (param = entry->params; param; param = param->next)
             printf(";%s=%s", param->name, param->value);
-        if (entry->multivalue)
-            printf(":multivalue\n");
+        if (entry->multivaluesep)
+            printf(":multivalue (%c)\n", entry->multivaluesep);
         else
             printf(":%s\n", entry->v.value);
     }
     for (sub = card->objects; sub; sub = sub->next)
         _dump_card(sub);
     printf("end:%s\n", card->type);
+    return 0;
 }
 
 static int _dump(struct vparse_card *card)
 {
     _dump_card(card->objects);
+    return 0;
 }
 
-int main(int argv, const char **argc)
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+int main(int argc, const char **argv)
 {
-    const char *fname = argc[1];
+    const char *fname = argv[1];
     struct stat sbuf;
     int fd = open(fname, O_RDONLY);
     struct vparse_state parser;
     char *data;
     int r;
+
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s fname\n", argv[0]);
+        exit(1);
+    }
 
     memset(&parser, 0, sizeof(struct vparse_state));
 
@@ -748,7 +1137,7 @@ int main(int argv, const char **argc)
     data[sbuf.st_size] = '\0';
 
     parser.base = data;
-    r = vparse_parse(&parser);
+    r = vparse_parse(&parser, 0);
     if (r) {
         struct vparse_errorpos pos;
         vparse_fillpos(&parser, &pos);

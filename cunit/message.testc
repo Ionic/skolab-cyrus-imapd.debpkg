@@ -4,6 +4,7 @@
 #include "cunit/cunit.h"
 #include "parseaddr.h"
 #include "util.h"
+#include "imap/mailbox.h"
 #include "imap/message.h"
 
 static void test_parse_trivial(void)
@@ -198,7 +199,7 @@ static void test_parse_rxdate(void)
 #define FIRST_RX    "Fri, 29 Oct 2010 13:05:01 +1100"
 #define SECOND_RX   "Fri, 29 Oct 2010 13:03:03 +1100"
 #define THIRD_RX    "Fri, 29 Oct 2010 13:01:01 +1100"
-#define SENT	    "Thu, 28 Oct 2010 18:37:26 +1100"
+#define SENT        "Thu, 28 Oct 2010 18:37:26 +1100"
 
     /* Message has neither Received: nor X-DeliveredInternalDate headers. */
     static const char msg_neither[] =
@@ -284,7 +285,7 @@ static void test_parse_rxdate(void)
     /* Received only: first seen Received */
     memset(&body, 0x45, sizeof(body));
     r = message_parse_mapped(msg_only_received,
-			     sizeof(msg_only_received)-1, &body);
+                             sizeof(msg_only_received)-1, &body);
     CU_ASSERT_EQUAL(r, 0);
     CU_ASSERT_STRING_EQUAL(body.received_date, FIRST_RX);
     message_free_body(&body);
@@ -292,7 +293,7 @@ static void test_parse_rxdate(void)
     /* X-DeliveredInternalDate only: use that */
     memset(&body, 0x45, sizeof(body));
     r = message_parse_mapped(msg_only_xdid,
-			     sizeof(msg_only_xdid)-1, &body);
+                             sizeof(msg_only_xdid)-1, &body);
     CU_ASSERT_EQUAL(r, 0);
     CU_ASSERT_STRING_EQUAL(body.received_date, DELIVERED);
     message_free_body(&body);
@@ -300,7 +301,7 @@ static void test_parse_rxdate(void)
     /* both, Received first: use X-DeliveredInternalDate */
     memset(&body, 0x45, sizeof(body));
     r = message_parse_mapped(msg_received_then_xdid,
-			     sizeof(msg_received_then_xdid)-1, &body);
+                             sizeof(msg_received_then_xdid)-1, &body);
     CU_ASSERT_EQUAL(r, 0);
     CU_ASSERT_STRING_EQUAL(body.received_date, DELIVERED);
     message_free_body(&body);
@@ -308,7 +309,7 @@ static void test_parse_rxdate(void)
     /* both, X-DeliveredInternalDate first: use X-DeliveredInternalDate */
     memset(&body, 0x45, sizeof(body));
     r = message_parse_mapped(msg_xdid_then_received,
-			     sizeof(msg_xdid_then_received)-1, &body);
+                             sizeof(msg_xdid_then_received)-1, &body);
     CU_ASSERT_EQUAL(r, 0);
     CU_ASSERT_STRING_EQUAL(body.received_date, DELIVERED);
     message_free_body(&body);
@@ -483,12 +484,12 @@ HTML_PART "\r\n"
     message_fetch_part(&mcontent, types, &parts);
     CU_ASSERT_PTR_NOT_NULL(parts);
     if (parts) {
-	CU_ASSERT_PTR_NOT_NULL(parts[0]);
-	CU_ASSERT_PTR_NULL(parts[1]);
-	CU_ASSERT_STRING_EQUAL(parts[0]->decoded_body, TEXT_PART);
-	free(parts[0]);
-	free(parts);
-	parts = NULL;
+        CU_ASSERT_PTR_NOT_NULL(parts[0]);
+        CU_ASSERT_PTR_NULL(parts[1]);
+        CU_ASSERT_STRING_EQUAL(parts[0]->decoded_body, TEXT_PART);
+        free(parts[0]);
+        free(parts);
+        parts = NULL;
     }
 
     types[0] = "TEXT/HTML";
@@ -496,12 +497,12 @@ HTML_PART "\r\n"
     message_fetch_part(&mcontent, types, &parts);
     CU_ASSERT_PTR_NOT_NULL(parts);
     if (parts) {
-	CU_ASSERT_PTR_NOT_NULL(parts[0]);
-	CU_ASSERT_PTR_NULL(parts[1]);
-	CU_ASSERT_STRING_EQUAL(parts[0]->decoded_body, HTML_PART);
-	free(parts[0]);
-	free(parts);
-	parts = NULL;
+        CU_ASSERT_PTR_NOT_NULL(parts[0]);
+        CU_ASSERT_PTR_NULL(parts[1]);
+        CU_ASSERT_STRING_EQUAL(parts[0]->decoded_body, HTML_PART);
+        free(parts[0]);
+        free(parts);
+        parts = NULL;
     }
 
     /* check cacheheaders */
@@ -586,7 +587,7 @@ static void test_rfc2231_extended_continuations(void)
 "Hello, World\n";
     int r;
     static const char TITLE[] =
-		"us-ascii'en'This%20is%20even%20more%20%2A%2A%2Afun%2A%2A%2A%20isn%27t%20it!";
+                "us-ascii'en'This%20is%20even%20more%20%2A%2A%2Afun%2A%2A%2A%20isn%27t%20it!";
     struct body body;
 
     memset(&body, 0x45, sizeof(body));
@@ -647,6 +648,271 @@ static void test_references(void)
     message_free_body(&body);
 }
 
+static void test_x_me_message_id(void)
+{
+    static const char msg[] =
+"From: Fred Bloggs <fbloggs@fastmail.fm>\r\n"
+"To: Sarah Jane Smith <sjsmith@gmail.com>\r\n"
+"Date: Wed, 27 Oct 2010 18:37:26 +1100\r\n"
+"Subject: Trivial testing email\r\n"
+"X-ME-Message-ID: <fake1700@fastmail.fm>\r\n"
+"\r\n"
+"Hello, World\n";
+    int r;
+    struct body body;
+
+    memset(&body, 0x45, sizeof(body));
+    r = message_parse_mapped(msg, sizeof(msg)-1, &body);
+
+    CU_ASSERT_EQUAL(r, 0);
+
+    /* Message-ID: <fake1700@fastmail.fm> */
+    CU_ASSERT_PTR_NULL(body.message_id);
+    CU_ASSERT_STRING_EQUAL(body.x_me_message_id, "<fake1700@fastmail.fm>");
+    CU_ASSERT_PTR_NULL(body.in_reply_to);
+    CU_ASSERT_PTR_NULL(body.references);
+
+    message_free_body(&body);
+}
+
+static void test_zero_length_fieldnames(void)
+{
+#define TEXT_PART \
+    "Hello, World"
+#define HTML_PART \
+    "<html><head><title>Hello, World</title></head>\r\n" \
+    "<body>\r\n" \
+    "<p>Hello, World</p>\r\n" \
+    "<body></html>"
+
+    static const char msg[] =
+"From: Fred Bloggs <fbloggs@fastmail.fm>\r\n"
+"Reply-To: <bounce.me.harder@fastmail.fm>\r\n"
+"To: Sarah Jane Smith <sjsmith@gmail.com>\r\n"
+"Date: Thu, 28 Oct 2010 18:37:26 +1100\r\n"
+"Subject: MIME testing email\r\n"
+"X-Mailer: Norman\r\n"
+"MIME-Version: 1.0\r\n"
+"Content-Type: multipart/mixed; boundary=\"7225e50d962de81173be22223f706458743c3a9a\"\r\n"
+"Content-Language: en\r\n"
+"Message-ID: <fake1003@fastmail.fm>\r\n"
+"\r\n"
+"--7225e50d962de81173be22223f706458743c3a9a\r\n"
+": \r\n"
+"Content-Type: text/plain; charset=\"us-ascii\"\r\n"
+": \r\n"
+"\r\n"
+TEXT_PART "\r\n"
+"--7225e50d962de81173be22223f706458743c3a9a\r\n"
+": \r\n"
+"Content-Type: text/html; charset=\"us-ascii\"\r\n"
+": \r\n"
+"\r\n"
+HTML_PART "\r\n"
+"--7225e50d962de81173be22223f706458743c3a9a\r\n"
+": \r\n"
+"Content-Type: image/png\r\n"
+"Content-Disposition: attachment; filename=cyrus-favicon.png\r\n"
+"Content-Transfer-Encoding: base64\r\n"
+": \r\n"
+"\r\n"
+"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A\r\n"
+"/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9sBEQEMHNieJnIAAAIsSURBVDjL\r\n"
+"tZNPSNNhGMc/r+xSUY4hbHO1LYyRSXRw4iaSRVFCiNBf8BA/mwWVB1sQFGgdgqjfph6i0EEUXaxJ\r\n"
+"3tTmkA6zQxieVlR0GP0xy7n9Ftipng6/NZMM6dBzenmf5/083+d53gf+l42Njkm1zychTZPZ2Vn5\r\n"
+"p8dRPSIuu0NcdodsdDgl4K+TqVRqRYj6dZhKpaQv2kuhYJBOp0GKXgGlzLBAMAjAdV2nakuVWka6\r\n"
+"3N0tyYkJWc2G43GJ6vpyNbGBQXHZHZJMJFYFJBMJqfb55MHQkABYQpomV3p6QKmSVIC+SATD+AqA\r\n"
+"x7OJ9o6OYtGKglEg3HWOkKYJle7N0hgIynA8LtlsdlUF2WxWkomENAYbxGV3iGXR6SHl38ePWwN4\r\n"
+"vV5sNhsA/dEo+byBUgq3e0lBPpej55rOU38L5d/HwVrfJDx8JegjUrHdL726/tfsd2Ix8TTsFvQR\r\n"
+"If5arPW7pAwUKAWebcyfv0144hnHDh0hl8uV+rGwsMDJ9hOcvT9C5tQN8NaAmIMoE5HizBWsK4e2\r\n"
+"Czx+/4U9O5uYTCZ5Pj1N64EWRief8O1o2IwpNlNEsJS+kwhkXlAe78eo2sHM1lraOrsAmOu4CpmX\r\n"
+"VAxeZL75ONTtL6kzAQKM34UPbzHOREpZ5i7dM8FrN4C3hvmmw/DoJryZgdbTvwEyaajdC82aWYoU\r\n"
+"qWvWL//xAhzshMUCfH5neqp9PvlodS4tR7G2P5ZmhfvK/Cd+At3OXF7AwYF1AAAAAElFTkSuQmCC\r\n"
+"\r\n--7225e50d962de81173be22223f706458743c3a9a--\r\n";
+    int r;
+    struct body body;
+    struct body *part;
+    struct message_content mcontent;
+    const char *types[2] = { NULL, NULL };
+    struct bodypart **parts = NULL;
+
+    memset(&body, 0x45, sizeof(body));
+    r = message_parse_mapped(msg, sizeof(msg)-1, &body);
+
+    CU_ASSERT_EQUAL(r, 0);
+
+    /* Content-Type: */
+    CU_ASSERT_STRING_EQUAL(body.type, "MULTIPART");
+    CU_ASSERT_STRING_EQUAL(body.subtype, "MIXED");
+    CU_ASSERT_PTR_NOT_NULL(body.params);
+    CU_ASSERT_STRING_EQUAL(body.params->attribute, "BOUNDARY");
+    CU_ASSERT_STRING_EQUAL(body.params->value, "7225e50d962de81173be22223f706458743c3a9a");
+    CU_ASSERT_PTR_NULL(body.params->next);
+
+    CU_ASSERT_EQUAL(body.numparts, 3);
+    CU_ASSERT_PTR_NOT_NULL(body.subpart);
+
+    part = &body.subpart[0];
+    CU_ASSERT_PTR_NOT_NULL(part);
+    CU_ASSERT_STRING_EQUAL(part->type, "TEXT");
+    CU_ASSERT_STRING_EQUAL(part->subtype, "PLAIN");
+    CU_ASSERT_PTR_NOT_NULL(part->params);
+    CU_ASSERT_STRING_EQUAL(part->params->attribute, "CHARSET");
+    CU_ASSERT_STRING_EQUAL(part->params->value, "us-ascii");
+    CU_ASSERT_PTR_NULL(part->params->next);
+    CU_ASSERT_PTR_NULL(part->disposition);
+    CU_ASSERT_PTR_NULL(part->encoding);
+
+    part = &body.subpart[1];
+    CU_ASSERT_PTR_NOT_NULL(part);
+    CU_ASSERT_STRING_EQUAL(part->type, "TEXT");
+    CU_ASSERT_STRING_EQUAL(part->subtype, "HTML");
+    CU_ASSERT_PTR_NOT_NULL(part->params);
+    CU_ASSERT_STRING_EQUAL(part->params->attribute, "CHARSET");
+    CU_ASSERT_STRING_EQUAL(part->params->value, "us-ascii");
+    CU_ASSERT_PTR_NULL(part->params->next);
+    CU_ASSERT_PTR_NULL(part->disposition);
+    CU_ASSERT_PTR_NULL(part->encoding);
+
+    part = &body.subpart[2];
+    CU_ASSERT_PTR_NOT_NULL(part);
+    CU_ASSERT_STRING_EQUAL(part->type, "IMAGE");
+    CU_ASSERT_STRING_EQUAL(part->subtype, "PNG");
+    CU_ASSERT_PTR_NULL(part->params);
+    CU_ASSERT_STRING_EQUAL(part->disposition, "ATTACHMENT");
+    CU_ASSERT_STRING_EQUAL(part->encoding, "BASE64");
+
+    mcontent.base = msg;
+    mcontent.len = sizeof(msg)-1;
+    mcontent.body = &body;
+
+    types[0] = "TEXT/PLAIN";
+    parts = NULL;
+    message_fetch_part(&mcontent, types, &parts);
+    CU_ASSERT_PTR_NOT_NULL(parts);
+    if (parts) {
+        CU_ASSERT_PTR_NOT_NULL(parts[0]);
+        CU_ASSERT_PTR_NULL(parts[1]);
+        CU_ASSERT_STRING_EQUAL(parts[0]->decoded_body, TEXT_PART);
+        free(parts[0]);
+        free(parts);
+        parts = NULL;
+    }
+
+    types[0] = "TEXT/HTML";
+    parts = NULL;
+    message_fetch_part(&mcontent, types, &parts);
+    CU_ASSERT_PTR_NOT_NULL(parts);
+    if (parts) {
+        CU_ASSERT_PTR_NOT_NULL(parts[0]);
+        CU_ASSERT_PTR_NULL(parts[1]);
+        CU_ASSERT_STRING_EQUAL(parts[0]->decoded_body, HTML_PART);
+        free(parts[0]);
+        free(parts);
+        parts = NULL;
+    }
+
+    /* check cacheheaders */
+    CU_ASSERT_PTR_NOT_NULL_FATAL(body.cacheheaders.s);
+    CU_ASSERT(strstr(body.cacheheaders.s, "Norman") != NULL);
+    CU_ASSERT_PTR_NULL(body.subpart[0].cacheheaders.s);
+    CU_ASSERT_PTR_NULL(body.subpart[1].cacheheaders.s);
+    CU_ASSERT_PTR_NULL(body.subpart[2].cacheheaders.s);
+
+    message_free_body(&body);
+#undef TEXT_PART
+#undef HTML_PART
+}
+
+static void test_parameter_recovery(void)
+{
+#define HTML_PART \
+    "<html><head><title>Hello, World</title></head>\r\n" \
+    "<body>\r\n" \
+    "<p>Hello, World</p>\r\n" \
+    "<body></html>"
+
+    static const char msg[] =
+"From: Fred Bloggs <fbloggs@fastmail.fm>\r\n"
+"Reply-To: <bounce.me.harder@fastmail.fm>\r\n"
+"To: Sarah Jane Smith <sjsmith@gmail.com>\r\n"
+"Date: Thu, 28 Oct 2010 18:37:26 +1100\r\n"
+"Subject: MIME testing email\r\n"
+"X-Mailer: Norman\r\n"
+"MIME-Version: 1.0\r\n"
+/* The value of the "type" parameter contains an / but is
+ * not quoted, which is illegal under RFC2045 rules.  We should
+ * be either accepting it, or ignoring it, but in either case
+ * the "boundary" that follows it should be accepted and used
+ * to pick apart the MIME structure.  This actually happened
+ * in the wild. */
+"Content-Type: multipart/related; type=text/html; boundary=_related\r\n"
+"Content-Language: en\r\n"
+"Message-ID: <fake1003@fastmail.fm>\r\n"
+"\r\n"
+"--_related\r\n"
+"Content-Type: text/html; charset=\"us-ascii\"\r\n"
+"\r\n"
+HTML_PART "\r\n"
+"--_related\r\n"
+"Content-Type: image/png\r\n"
+"Content-Transfer-Encoding: base64\r\n"
+"\r\n"
+"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A\r\n"
+"/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9sBEQEMHNieJnIAAAIsSURBVDjL\r\n"
+"tZNPSNNhGMc/r+xSUY4hbHO1LYyRSXRw4iaSRVFCiNBf8BA/mwWVB1sQFGgdgqjfph6i0EEUXaxJ\r\n"
+"3tTmkA6zQxieVlR0GP0xy7n9Ftipng6/NZMM6dBzenmf5/083+d53gf+l42Njkm1zychTZPZ2Vn5\r\n"
+"p8dRPSIuu0NcdodsdDgl4K+TqVRqRYj6dZhKpaQv2kuhYJBOp0GKXgGlzLBAMAjAdV2nakuVWka6\r\n"
+"3N0tyYkJWc2G43GJ6vpyNbGBQXHZHZJMJFYFJBMJqfb55MHQkABYQpomV3p6QKmSVIC+SATD+AqA\r\n"
+"x7OJ9o6OYtGKglEg3HWOkKYJle7N0hgIynA8LtlsdlUF2WxWkomENAYbxGV3iGXR6SHl38ePWwN4\r\n"
+"vV5sNhsA/dEo+byBUgq3e0lBPpej55rOU38L5d/HwVrfJDx8JegjUrHdL726/tfsd2Ix8TTsFvQR\r\n"
+"If5arPW7pAwUKAWebcyfv0144hnHDh0hl8uV+rGwsMDJ9hOcvT9C5tQN8NaAmIMoE5HizBWsK4e2\r\n"
+"Czx+/4U9O5uYTCZ5Pj1N64EWRief8O1o2IwpNlNEsJS+kwhkXlAe78eo2sHM1lraOrsAmOu4CpmX\r\n"
+"VAxeZL75ONTtL6kzAQKM34UPbzHOREpZ5i7dM8FrN4C3hvmmw/DoJryZgdbTvwEyaajdC82aWYoU\r\n"
+"qWvWL//xAhzshMUCfH5neqp9PvlodS4tR7G2P5ZmhfvK/Cd+At3OXF7AwYF1AAAAAElFTkSuQmCC\r\n"
+"\r\n--_related--\r\n";
+    int r;
+    struct body body;
+    struct body *part;
+
+    memset(&body, 0x45, sizeof(body));
+    r = message_parse_mapped(msg, sizeof(msg)-1, &body);
+
+    CU_ASSERT_EQUAL(r, 0);
+
+    /* Content-Type: */
+    CU_ASSERT_STRING_EQUAL(body.type, "MULTIPART");
+    CU_ASSERT_STRING_EQUAL(body.subtype, "RELATED");
+    CU_ASSERT_PTR_NOT_NULL_FATAL(body.params);
+    CU_ASSERT_STRING_EQUAL(body.params->attribute, "BOUNDARY");
+    CU_ASSERT_STRING_EQUAL(body.params->value, "_related");
+    CU_ASSERT_PTR_NULL(body.params->next);
+
+    CU_ASSERT_EQUAL(body.numparts, 2);
+    CU_ASSERT_PTR_NOT_NULL(body.subpart);
+
+    part = &body.subpart[0];
+    CU_ASSERT_PTR_NOT_NULL(part);
+    CU_ASSERT_STRING_EQUAL(part->type, "TEXT");
+    CU_ASSERT_STRING_EQUAL(part->subtype, "HTML");
+    CU_ASSERT_PTR_NOT_NULL(part->params);
+    CU_ASSERT_STRING_EQUAL(part->params->attribute, "CHARSET");
+    CU_ASSERT_STRING_EQUAL(part->params->value, "us-ascii");
+    CU_ASSERT_PTR_NULL(part->params->next);
+    CU_ASSERT_PTR_NULL(part->disposition);
+    CU_ASSERT_PTR_NULL(part->encoding);
+
+    part = &body.subpart[1];
+    CU_ASSERT_PTR_NOT_NULL(part);
+    CU_ASSERT_STRING_EQUAL(part->type, "IMAGE");
+    CU_ASSERT_STRING_EQUAL(part->subtype, "PNG");
+    CU_ASSERT_PTR_NULL(part->params);
+    CU_ASSERT_STRING_EQUAL(part->encoding, "BASE64");
+
+#undef HTML_PART
+}
+
+
 #undef TESTCASE
 #define TESTCASE(input, explen, expout) \
     buf_reset(&b); \
@@ -688,21 +954,21 @@ static void test_write_nstring(void)
 
     /* Boring but overly long string */
     {
-	struct buf llb = BUF_INITIALIZER;
-	int i;
+        struct buf llb = BUF_INITIALIZER;
+        int i;
 
-	for (i = 0 ; i<500 ; i++)
-	    buf_appendcstr(&llb, "blah ");
-	buf_cstring(&llb);
+        for (i = 0 ; i<500 ; i++)
+            buf_appendcstr(&llb, "blah ");
+        buf_cstring(&llb);
 
-	buf_reset(&b);
-	message_write_nstring(&b, llb.s);
-	buf_cstring(&b);
-	CU_ASSERT_EQUAL(b.len, llb.len+8); \
-	CU_ASSERT_STRING_EQUAL(b.s+8, llb.s);
-	b.s[8] = '\0';
-	CU_ASSERT_STRING_EQUAL(b.s, "{2500}\r\n");
-	buf_free(&llb);
+        buf_reset(&b);
+        message_write_nstring(&b, llb.s);
+        buf_cstring(&b);
+        CU_ASSERT_EQUAL(b.len, llb.len+8); \
+        CU_ASSERT_STRING_EQUAL(b.s+8, llb.s);
+        b.s[8] = '\0';
+        CU_ASSERT_STRING_EQUAL(b.s, "{2500}\r\n");
+        buf_free(&llb);
     }
 
     /* embedded NULs not handled in message_write_nstring */
@@ -805,4 +1071,137 @@ static void test_write_xdrstring(void)
 }
 
 #undef TESTCASE
+
+static void test_cache_simple(void)
+{
+    static const char msg[] =
+"From: Fred Bloggs <fbloggs@fastmail.fm>\r\n"
+"To: Sarah Jane Smith <sjsmith@gmail.com>\r\n"
+"Date: Wed, 27 Oct 2010 18:37:26 +1100\r\n"
+"Subject: Trivial testing email\r\n"
+"Message-ID: <fake800@fastmail.fm>\r\n"
+"Content-Type: text/plain; charset=iso-8859-1\r\n"
+"X-Mailer: Norman\r\n"
+"\r\n"
+"Hello, World\n";
+    int r;
+    struct body *body = xzmalloc(sizeof(struct body));
+
+    memset(body, 0x45, sizeof(struct body));
+    r = message_parse_mapped(msg, sizeof(msg)-1, body);
+
+    CU_ASSERT_EQUAL(r, 0);
+
+    struct index_record record;
+    r = message_write_cache(&record, body);
+    CU_ASSERT_EQUAL(r, 0);
+
+    message_free_body(body);
+
+    message_read_bodystructure(&record, &body);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(body);
+
+    CU_ASSERT_STRING_EQUAL(body->charset_id, "iso-8859-1");
+
+    message_free_body(body);
+    free(body);
+}
+
+static void test_cache_appleheaders(void)
+{
+    static const char msg[] =
+"From: Fred Bloggs <fbloggs@fastmail.fm>\r\n"
+"To: Sarah Jane Smith <sjsmith@gmail.com>\r\n"
+"Date: Wed, 27 Oct 2010 18:37:26 +1100\r\n"
+"Subject: Testing cached Apple headers\r\n"
+"Message-ID: <fake800@fastmail.fm>\r\n"
+"X-Universally-Unique-Identifier: fake-uuid\r\n"
+"X-Uniform-Type-Identifier: fake-uti\r\n"
+"X-Apple-Base-Url: fake-baseurl\r\n"
+"X-Apple-Mail-Remote-Attachments: fake-remoteattach\r\n"
+"X-Dont-Cache-This: dont-cache-this\r\n"
+"\r\n"
+"Hello, World\n";
+    int r;
+    struct body body;
+
+    memset(&body, 0x45, sizeof(body));
+    r = message_parse_mapped(msg, sizeof(msg)-1, &body);
+
+    CU_ASSERT_EQUAL(r, 0);
+
+    /* From: Fred Bloggs <fbloggs@fastmail.fm> */
+    CU_ASSERT_PTR_NOT_NULL_FATAL(body.from);
+    CU_ASSERT_STRING_EQUAL(body.from->name, "Fred Bloggs");
+    CU_ASSERT_STRING_EQUAL(body.from->mailbox, "fbloggs");
+    CU_ASSERT_STRING_EQUAL(body.from->domain, "fastmail.fm");
+    CU_ASSERT_PTR_NULL(body.from->next);
+
+    CU_ASSERT_PTR_NULL(body.reply_to);
+
+    /* To: Sarah Jane Smith <sjsmith@gmail.com> */
+    CU_ASSERT_PTR_NOT_NULL_FATAL(body.to);
+    CU_ASSERT_STRING_EQUAL(body.to->name, "Sarah Jane Smith");
+    CU_ASSERT_STRING_EQUAL(body.to->mailbox, "sjsmith");
+    CU_ASSERT_STRING_EQUAL(body.to->domain, "gmail.com");
+    CU_ASSERT_PTR_NULL(body.to->next);
+
+    CU_ASSERT_PTR_NULL(body.cc);
+
+    CU_ASSERT_PTR_NULL(body.bcc);
+
+    /* Date: Wed, 27 Oct 2010 18:37:26 +1100 */
+    CU_ASSERT_STRING_EQUAL(body.date, "Wed, 27 Oct 2010 18:37:26 +1100");
+
+    /* Subject: Testing cached Apple headers */
+    CU_ASSERT_STRING_EQUAL(body.subject, "Testing cached Apple headers");
+
+    /* Content-Type not specified, this is the default */
+    CU_ASSERT_STRING_EQUAL(body.type, "TEXT");
+    CU_ASSERT_STRING_EQUAL(body.subtype, "PLAIN");
+    CU_ASSERT_PTR_NOT_NULL(body.params);
+    CU_ASSERT_STRING_EQUAL(body.params->attribute, "CHARSET");
+    CU_ASSERT_STRING_EQUAL(body.params->value, "us-ascii");
+    CU_ASSERT_PTR_NULL(body.params->next);
+
+    CU_ASSERT_PTR_NULL(body.language);
+
+    /* Message-ID: <fake800@fastmail.fm> */
+    CU_ASSERT_STRING_EQUAL(body.message_id, "<fake800@fastmail.fm>");
+
+    CU_ASSERT_PTR_NULL(body.in_reply_to);
+
+    CU_ASSERT_PTR_NULL(body.references);
+
+    CU_ASSERT_PTR_NULL(body.received_date);
+
+    /* simple body */
+    CU_ASSERT_EQUAL(body.numparts, 0);
+    CU_ASSERT_PTR_NULL(body.subpart);
+
+    /* check cache header versions */
+    CU_ASSERT_EQUAL(mailbox_cached_header("X-Universally-Unique-Identifier"), 6);
+    CU_ASSERT_EQUAL(mailbox_cached_header("X-Uniform-Type-Identifier"), 6);
+    CU_ASSERT_EQUAL(mailbox_cached_header("X-Apple-Base-Url"), 6);
+    CU_ASSERT_EQUAL(mailbox_cached_header("X-Apple-Mail-Remote-Attachments"), 6);
+
+    /* check cacheheaders */
+    CU_ASSERT_PTR_NOT_NULL_FATAL(body.cacheheaders.s);
+    CU_ASSERT_PTR_NOT_NULL(strstr(body.cacheheaders.s, "X-Universally-Unique-Identifier"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(body.cacheheaders.s, "fake-uuid"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(body.cacheheaders.s, "X-Uniform-Type-Identifier"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(body.cacheheaders.s, "fake-uti"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(body.cacheheaders.s, "X-Apple-Base-Url"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(body.cacheheaders.s, "fake-baseurl"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(body.cacheheaders.s, "X-Apple-Mail-Remote-Attachments"));
+    CU_ASSERT_PTR_NOT_NULL(strstr(body.cacheheaders.s, "fake-remoteattach"));
+
+    /* make sure we're not caching every x- header, just the ones we like */
+    CU_ASSERT_EQUAL(mailbox_cached_header("X-Dont-Cache-This"), BIT32_MAX);
+    CU_ASSERT_PTR_NULL(strstr(body.cacheheaders.s, "X-Dont-Cache-This"));
+    CU_ASSERT_PTR_NULL(strstr(body.cacheheaders.s, "dont-cache-this"));
+
+    message_free_body(&body);
+}
+
 /* vim: set ft=c: */

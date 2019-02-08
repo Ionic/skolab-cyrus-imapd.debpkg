@@ -2,7 +2,7 @@
 
 
 /*
- * Copyright (c) 1994-2012 Carnegie Mellon University.  All rights reserved.
+ * Copyright (c) 1994-2015 Carnegie Mellon University.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -52,23 +52,23 @@
 /* Should the AFS PTS plugin use krb5? */
 #undef AFSPTS_USE_KRB5
 
-/* Where will we be installed? */
-#undef CYRUS_PATH
-
 /* What user will we run as? */
 #undef CYRUS_USER
 
 /* Alternative to /dev/urandom? */
 #undef EGD_SOCKET
 
+/* Build with backup support */
+#undef ENABLE_BACKUP
+
 /* Build with support of mailbox event notification */
 #undef ENABLE_MBOXEVENT
 
+/* Build with Object Store support */
+#undef ENABLE_OBJECTSTORE
+
 /* Do we have a regex library? */
 #undef ENABLE_REGEX
-
-/* Enable Netscape Menu Option Hack? */
-#undef ENABLE_X_NETSCAPE_HACK
 
 /* Extra version information for imap/version.h */
 #undef EXTRA_IDENT
@@ -82,8 +82,8 @@
 /* Does SASL support APOP? */
 #undef HAVE_APOP
 
-/* Build in Berkeley DB support? */
-#undef HAVE_BDB
+/* Build Brotli compression support into httpd? */
+#undef HAVE_BROTLI
 
 /* Do we have ClamAV? */
 #undef HAVE_CLAMAV
@@ -91,8 +91,23 @@
 /* Do we have CU_SetUpFunc? */
 #undef HAVE_CU_SETUPFUNC
 
+/* define if the compiler supports basic C++11 syntax */
+#undef HAVE_CXX11
+
 /* Define to 1 if you have the `daemon' function. */
 #undef HAVE_DAEMON
+
+/* Define to 1 if you have the declaration of `icalproperty_get_parent', and
+   to 0 if you don't. */
+#undef HAVE_DECL_ICALPROPERTY_GET_PARENT
+
+/* Define to 1 if you have the declaration of `icalrecur_freq_to_string', and
+   to 0 if you don't. */
+#undef HAVE_DECL_ICALRECUR_FREQ_TO_STRING
+
+/* Define to 1 if you have the declaration of `icalrecur_weekday_to_string',
+   and to 0 if you don't. */
+#undef HAVE_DECL_ICALRECUR_WEEKDAY_TO_STRING
 
 /* Define to 1 if you have the declaration of `tzname', and to 0 if you don't.
    */
@@ -178,7 +193,7 @@
 /* Do we have support for IANA params? */
 #undef HAVE_IANA_PARAMS
 
-/* Build in ical support? */
+/* Build CalDAV support into httpd? */
 #undef HAVE_ICAL
 
 /* Define to 1 if you have the <inttypes.h> header file. */
@@ -193,6 +208,18 @@
 /* Do we have libcap system capabilities handling (Linux systems only)? */
 #undef HAVE_LIBCAP
 
+/* Define to 1 if you have the `curl' library (-lcurl). */
+#undef HAVE_LIBCURL
+
+/* Define to 1 if you have the `json-c' library (-ljson-c). */
+#undef HAVE_LIBJSON_C
+
+/* Define to 1 if you have the `oiocore' library (-loiocore). */
+#undef HAVE_LIBOIOCORE
+
+/* Define to 1 if you have the `oiosds' library (-loiosds). */
+#undef HAVE_LIBOIOSDS
+
 /* Define to 1 if you have the `resolv' library (-lresolv). */
 #undef HAVE_LIBRESOLV
 
@@ -202,8 +229,14 @@
 /* Do we have TCP wrappers? */
 #undef HAVE_LIBWRAP
 
+/* Build in cyrusdb_lmdb support? */
+#undef HAVE_LMDB
+
 /* Define to 1 if you support file names longer than 14 characters. */
 #undef HAVE_LONG_FILE_NAMES
+
+/* Do we have built-in support for managed attachment params? */
+#undef HAVE_MANAGED_ATTACH_PARAMS
 
 /* Define to 1 if you have the `memmem' function. */
 #undef HAVE_MEMMEM
@@ -227,6 +260,9 @@
    file. */
 #undef HAVE_NET_SNMP_AGENT_AGENT_MODULE_CONFIG_H
 
+/* Build HTTP/2 support into httpd? */
+#undef HAVE_NGHTTP2
+
 /* Do we have usable pcre library? */
 #undef HAVE_PCREPOSIX_H
 
@@ -238,6 +274,9 @@
 
 /* Define to 1 if you have the `pselect' function. */
 #undef HAVE_PSELECT
+
+/* Do we have support for setting start point of recurrences? */
+#undef HAVE_RECUR_ITERATOR_START
 
 /* Do we have an rlim_t? */
 #undef HAVE_RLIM_T
@@ -257,6 +296,9 @@
 /* Define to 1 if you have the `setsid' function. */
 #undef HAVE_SETSID
 
+/* Build geographic support into tzdist? */
+#undef HAVE_SHAPELIB
+
 /* Define to 1 if you have the `shutdown' function. */
 #undef HAVE_SHUTDOWN
 
@@ -269,8 +311,8 @@
 /* Build in SQLite support? */
 #undef HAVE_SQLITE
 
-/* Build in SQLite support? */
-#undef HAVE_SQLITE3
+/* "Compiler has support for SSE4.2 extensions" */
+#undef HAVE_SSE42
 
 /* Build with SSL support? */
 #undef HAVE_SSL
@@ -304,6 +346,9 @@
 
 /* Define to 1 if you have the `strlcpy' function. */
 #undef HAVE_STRLCPY
+
+/* Define to 1 if you have the `strnchr' function. */
+#undef HAVE_STRNCHR
 
 /* Define to 1 if you have the `strsep' function. */
 #undef HAVE_STRSEP
@@ -363,7 +408,7 @@
    `tzname'. */
 #undef HAVE_TZNAME
 
-/* Build TZ by ref support into httpd? */
+/* Build timezones by reference support into httpd? */
 #undef HAVE_TZ_BY_REF
 
 /* Do we have UCD-SNMP support? */
@@ -371,6 +416,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Do we have built-in support for VALARM extensions props? */
+#undef HAVE_VALARM_EXT_PROPS
 
 /* Define to 1 if you have the <valgrind/valgrind.h> header file. */
 #undef HAVE_VALGRIND_VALGRIND_H
@@ -382,20 +430,29 @@
    declarations. */
 #undef HAVE_VISIBILITY
 
+/* Build VPATCH support into httpd? */
+#undef HAVE_VPATCH
+
 /* Build VPOLL support into httpd? */
 #undef HAVE_VPOLL
 
 /* Define to 1 if you have the `vprintf' function. */
 #undef HAVE_VPRINTF
 
-/* Build in libxml support? */
-#undef HAVE_XML2
+/* Do we have support for xmlBufferDetach()? */
+#undef HAVE_XML_BUFFERDETACH
+
+/* Do we have support for xmlFirstElementChild()? */
+#undef HAVE_XML_FIRSTCHILD
 
 /* Build with Zephyr support? */
 #undef HAVE_ZEPHYR
 
 /* Do we have zlib? */
 #undef HAVE_ZLIB
+
+/* Does icaltimetype have is_utc field? */
+#undef ICALTIME_HAS_IS_UTC
 
 /* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
@@ -436,8 +493,8 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Directory to use for service binaries */
-#undef SERVICE_DIR
+/* ShapeLib Version */
+#undef SHAPELIB_VERSION
 
 /* The size of `int', as computed by sizeof. */
 #undef SIZEOF_INT
@@ -454,6 +511,9 @@
 /* The size of `size_t', as computed by sizeof. */
 #undef SIZEOF_SIZE_T
 
+/* The size of `time_t', as computed by sizeof. */
+#undef SIZEOF_TIME_T
+
 /* The size of `unsigned long long int', as computed by sizeof. */
 #undef SIZEOF_UNSIGNED_LONG_LONG_INT
 
@@ -462,9 +522,6 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
-
-/* Config File Location */
-#undef SYSCONFDIR
 
 /* Syslog facility to use. */
 #undef SYSLOG_FACILITY
@@ -478,8 +535,35 @@
 /* Build with autocreate functionality */
 #undef USE_AUTOCREATE
 
+/* Build with calendar alarm functionality */
+#undef USE_CALALARMD
+
+/* Build in cyrusdb_sql support? */
+#undef USE_CYRUSDB_SQL
+
+/* Build with HTTP functionality */
+#undef USE_HTTPD
+
+/* Build with idled functionality */
+#undef USE_IDLED
+
+/* Build with Murder functionality */
+#undef USE_MURDER
+
+/* Build with nntpd functionality */
+#undef USE_NNTPD
+
+/* Build with replication functionality */
+#undef USE_REPLICATION
+
 /* Build in Sieve support? */
 #undef USE_SIEVE
+
+/* Build in Sphinx support? */
+#undef USE_SPHINX
+
+/* Build in Squat support? */
+#undef USE_SQUAT
 
 /* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE
@@ -503,17 +587,20 @@
 #endif
 
 
+/* Build in Xapian support? */
+#undef USE_XAPIAN
+
+/* Use Xapian cyruslibs extensions? */
+#undef USE_XAPIAN_CYRUS_EXTENSIONS
+
 /* Version number of package */
 #undef VERSION
 
-/* Build DAV support into httpd? */
+/* Build *DAV support into httpd? */
 #undef WITH_DAV
 
-/* Build DKIM support into iSchedule? */
-#undef WITH_DKIM
-
-/* Build jCal/jCard/TZdist support into httpd? */
-#undef WITH_JSON
+/* Enable support for OpenIO object storage. */
+#undef WITH_OPENIO
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
@@ -526,6 +613,9 @@
 #  undef WORDS_BIGENDIAN
 # endif
 #endif
+
+/* Which Xapian are we running on? */
+#undef XAPIAN_FLAVOR
 
 /* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
    `char[]'. */
@@ -541,9 +631,6 @@
 /* Define to 1 if you need to in order for `stat' and other things to work. */
 #undef _POSIX_SOURCE
 
-/* Define to empty if `const' does not conform to ANSI C. */
-#undef const
-
 /* Define to `__inline__' or `__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
 #ifndef __cplusplus
@@ -557,6 +644,13 @@
 #define EXPORTED
 #define HIDDEN
 #endif
+
+#if defined __GNUC__ &&  __GNUC__ > 6
+    #define GCC_FALLTHROUGH __attribute__((fallthrough));
+#else
+    #define GCC_FALLTHROUGH /* fall through */
+#endif
+
 
 
 /* time.h */
@@ -604,7 +698,7 @@ typedef unsigned int socklen_t;
 typedef int rlim_t;
 #endif
 
-/* some potentially memory saving tradeoffs, 
+/* some potentially memory saving tradeoffs,
    preconfigured in memory-saving mode */
 
 /* save the cmdlines for the ID command */
@@ -617,12 +711,12 @@ typedef int rlim_t;
 #include <netinet/in.h>
 
 #ifndef HAVE_STRUCT_SOCKADDR_STORAGE
-#define	_SS_MAXSIZE	128	/* Implementation specific max size */
-#define	_SS_PADSIZE	(_SS_MAXSIZE - sizeof (struct sockaddr))
+#define _SS_MAXSIZE     128     /* Implementation specific max size */
+#define _SS_PADSIZE     (_SS_MAXSIZE - sizeof (struct sockaddr))
 
 struct sockaddr_storage {
-	struct	sockaddr ss_sa;
-	char		__ss_pad2[_SS_PADSIZE];
+        struct  sockaddr ss_sa;
+        char            __ss_pad2[_SS_PADSIZE];
 };
 # define ss_family ss_sa.sa_family
 # define HAVE_SS_FAMILY
@@ -630,11 +724,11 @@ struct sockaddr_storage {
 
 #ifndef AF_INET6
 /* Define it to something that should never appear */
-#define	AF_INET6	AF_MAX
+#define AF_INET6        AF_MAX
 #endif
 
 #if !defined(HAVE_GETADDRINFO) || !defined(HAVE_GETNAMEINFO)
-#include "gai.h"
+#include "lib/gai.h"
 #endif
 
 /* End IPv6 things */
@@ -651,8 +745,8 @@ struct sockaddr_storage {
 #define FNAME_DOMAINDIR "/domain/"
 #define FNAME_LOGDIR "/log/"
 #define FNAME_PTSDB "/ptclient/ptscache.db"
-#define CONFIG_FILENAME (SYSCONFDIR "/imapd.conf")
-#define DEFAULT_MASTER_CONFIG_FILENAME (SYSCONFDIR "/cyrus.conf")
+#define CONFIG_FILENAME (SYSCONF_DIR "/imapd.conf")
+#define DEFAULT_MASTER_CONFIG_FILENAME (SYSCONF_DIR "/cyrus.conf")
 
 #ifndef HAVE_SHUTDOWN
 #define shutdown(fd, mode) 0
@@ -695,7 +789,7 @@ extern void *memmem(const void *, size_t, const void *, size_t);
 /* compile time options; think carefully before modifying */
 enum {
     /* should we send an UNAVAILABLE message to master when
-     * a service is exiting (master is already going to be 
+     * a service is exiting (master is already going to be
      * informed of the exit by the SIGCHLD signal anyway) ? */
     MESSAGE_MASTER_ON_EXIT = 0,
 
@@ -705,7 +799,7 @@ enum {
     /* should we call fsync() to maybe help with softupdates? (it should) */
     APPEND_ULTRA_PARANOID = 1,
 
-    /* should we log extra information at the DEBUG level for DB stuff? 
+    /* should we log extra information at the DEBUG level for DB stuff?
      * 0 -> nothing; 1 -> some; higher -> even more */
     CONFIG_DB_VERBOSE = 1,
 
@@ -717,9 +811,6 @@ enum {
 
     /* should we do a fast TLS session shutdown? */
     TLS_FAST_SHUTDOWN = 1,
-
-    /* should we use the SQUAT engine to accelerate SEARCH? */
-    SQUAT_ENGINE = 1,
 
     /* should we have long LMTP error messages? */
     LMTP_LONG_ERROR_MSGS = 1

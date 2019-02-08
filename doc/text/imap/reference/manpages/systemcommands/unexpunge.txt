@@ -1,0 +1,125 @@
+
+**unexpunge**
+*************
+
+Recover messages the user has (accidentally) deleted.
+
+
+Synopsis
+========
+
+   **unexpunge** [ **-C** *config-file* ] **-l** *mailbox*
+   **unexpunge** [ **-C** *config-file* ] **-t** *time-interval* [ **-d** ] [ **-v** ] [ **-f** *flagname* ] **mailbox**
+   **unexpunge** [ **-C** *config-file* ] **-a** [ **-d** ] [ **-v** ] [ **-f** *flagname* ] *mailbox*
+   **unexpunge** [ **-C** *config-file* ] **-u** [ **-d** ] [ **-v** ] [ **-f** *flagname* ] *mailbox* *uid*...
+
+
+Description
+===========
+
+The **unexpunge** program is used to list or restore messages which
+have been deleted from a mailbox, but still reside in the Cyrus IMAP
+mail spool.
+
+This utility is only useful when the server is configured with
+"expunge_mode" set to "delayed" in its configuration file.
+
+**unexpunge** reads its configuration options out of the imapd.conf(5)
+file unless specified otherwise by **-C**.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+-l
+
+   List the expunged messages in the specified mailbox which are
+   available for restoration.
+
+-t time-interval
+
+   Unexpunge messages which where expunged within the last "time-
+   interval" seconds. Use one of the trailing modifiers -- "m"
+   (minutes), "h" (hours), "d" (days) or "w" (weeks) -- to specify a
+   different time unit.
+
+-a
+
+   Restore **all** of the expunged messages in the specified mailbox.
+
+-u
+
+   Restore only messages matching the UIDs, in a space-separated list
+   at the end of the command invocation, in the specified mailbox.
+
+-d
+
+   Unset the *\Deleted* flag on any restored messages.
+
+-f flagname
+
+   Set the user flag *\flagname* on the messages restored, making it
+   easier for the user(s) to find the restored messages and operate on
+   them (in a batch).
+
+-v
+
+   Enable verbose output/logging.
+
+
+Examples
+========
+
+   **unexpunge -l** *user/john@example.org*
+
+   List the messages that are expunged and could be restored for
+   mailbox *user/john@example.org*.
+
+   **unexpunge -u** *user/john@example.org 278787 278788*
+
+   Unexpunge two of these messages.
+
+   **mbexamine** *user/john@example.org*
+
+   Examine the mailbox for the two restored messages.
+
+   **unexpunge -u -d** *user.johnsmith 46908*
+
+   Unexpunge a select message based on its UID, clearing the
+   *\Deleted* flag.
+
+   **unexpunge -a** *user.johnsmit.Trash*
+
+   Unexpunge all messages in a user's Trash, but leave them flagged
+   *\Deleted*.
+
+   **unexpunge -a -f** *Flagged user.johnsmith.Trash*
+
+   The same, but setting user flag *\Flagged* to facilitate later bulk
+   operations.
+
+   **unexpunge -t** *24h* **-d -f** *Flagged user.johnsmith*
+
+   Unexpunge messages matching only a given time period.
+
+   **unexpunge -t** *24h* **-d -f** *Flagged user/johnsmith*
+
+   The same command, supporting the "unixhierarchysep: yes" option in
+   imapd.conf(5).
+
+
+Files
+=====
+
+/etc/imapd.conf
+
+
+See Also
+========
+
+imapd.conf(5)

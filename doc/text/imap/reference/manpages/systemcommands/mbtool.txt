@@ -1,0 +1,74 @@
+
+**mbtool**
+**********
+
+intro
+
+
+Synopsis
+========
+
+   **mbtool** [ **-C** *config-file* ] **-r** *mailbox*...
+   **mbtool** [ **-C** *config-file* ] **-t** *mailbox*...
+
+
+Description
+===========
+
+**mbtool** is a tool for performing various actions on the indexes of
+a list of mailboxes. The only actions currently supported are **-t**,
+which will normalize the "internaldate" time stamp of each record in
+the index to GMT, and **-r** which will create a new unique ID for
+each mailbox.
+
+Only one action may be given and at least mailbox must be listed.
+
+It is intended that **mbtool** will be extended over time to perform
+more such actions.
+
+**mbtool** reads its configuration options out of the imapd.conf(5)
+file unless specified otherwise by **-C**.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+-t
+
+   Normalize "internaldate" on all index records of all listed
+   *mailbox*es to match the *Date:* header if they're off by more than
+   a day, which can be used to fix up a mailbox which has been
+   restored from backup and lost its internaldate information.
+
+-r
+
+   Create a new unique ID for all listed *mailbox*es.
+
+
+Examples
+========
+
+   **mbtool -r** user.jsmith
+
+   Create new UUID for mailbox *user.jsmith*.
+
+   **mbtool -t** user.jsmith
+
+   Normalize "internaldate" on all index records in *user.jsmith*.
+
+
+Files
+=====
+
+/etc/imapd.conf
+
+
+See Also
+========
+
+imapd.conf(5)

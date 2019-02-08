@@ -125,6 +125,13 @@ extern void partlist_initialize(partlist_t *part_list, cb_part_filldata filldata
                          int soft_usage_limit, int reinit);
 
 /**
+ * \brief Frees items list.
+ *
+ * @param inout part_list   items list structure
+ */
+extern void partlist_free(partlist_t *part_list);
+
+/**
  * \brief Selects item value from list.
  *
  * @param inout part_list   items list structure
@@ -132,6 +139,18 @@ extern void partlist_initialize(partlist_t *part_list, cb_part_filldata filldata
  */
 extern const char *partlist_select_value(partlist_t *part_list);
 
+/**
+ * \brief Iterate items in list
+ *
+ * @param inout part_list   items list structure
+ * @param in proc           callback function, called for each item
+ * @param in rock           argument to pass through to callback function
+ * @return return value from callback function
+ */
+typedef int (*partlist_foreach_cb)(partitem_t *part_item, void *rock);
+extern int partlist_foreach(partlist_t *part_list,
+                            partlist_foreach_cb proc,
+                            void *rock);
 /**
  * \brief Selects local partitions.
  *
@@ -149,8 +168,8 @@ const char *partlist_local_select(void);
  * @return partition, or NULL if none found
  */
 const char *partlist_local_find_freespace_most(int percent, uint64_t *available,
-					       uint64_t *total, uint64_t *tavailable,
-					       uint64_t *ttotal);
+                                               uint64_t *total, uint64_t *tavailable,
+                                               uint64_t *ttotal);
 
 /**
  * \brief Frees local partition data.

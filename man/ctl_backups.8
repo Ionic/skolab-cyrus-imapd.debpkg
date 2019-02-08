@@ -1,0 +1,329 @@
+.\" Man page generated from reStructuredText.
+.
+.TH "CTL_BACKUPS" "8" "August 10, 2018" "3.0.8" "Cyrus IMAP"
+.SH NAME
+ctl_backups \- Cyrus IMAP documentation
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.sp
+Perform administrative operations directly on Cyrus backups.
+.SH SYNOPSIS
+.sp
+.nf
+\fBctl_backups\fP [OPTIONS] compact [MODE] \fIbackup\fP\&...
+\fBctl_backups\fP [OPTIONS] list [LIST OPTIONS] [[MODE] \fIbackup\fP\&...]
+\fBctl_backups\fP [OPTIONS] lock [LOCK OPTIONS] [MODE] \fIbackup\fP
+\fBctl_backups\fP [OPTIONS] reindex [MODE] \fIbackup\fP\&...
+\fBctl_backups\fP [OPTIONS] stat [MODE] \fIbackup\fP\&...
+\fBctl_backups\fP [OPTIONS] verify [MODE] \fIbackup\fP\&...
+.fi
+.SH DESCRIPTION
+.sp
+\fBctl_backups\fP is a tool for performing administrative operations on Cyrus
+backups.
+.sp
+\fBctl_backups\fP reads its configuration options out of the imapd.conf(5) file unless specified otherwise by \fB\-C\fP\&.
+.sp
+In all invocations, \fIbackup\fP is interpreted according to the specified MODE.
+See \fI\%Modes\fP below.
+.sp
+\fBctl_backups\fP provides the following sub\-commands:
+.INDENT 0.0
+.TP
+.B compact
+Reduce storage required by the named backups.  Compact behaviour is
+influenced by the \fBbackup_compact_minsize\fP, \fBbackup_compact_maxsize\fP,
+\fBbackup_compact_work_threshold\fP, and \fBbackup_retention_days\fP
+configuration settings.  See imapd.conf(5) for details.
+.sp
+This should generally be invoked regularly, such as by adding an
+entry to the EVENTS section of cyrus.conf(5)\&.  See
+\fI\%Examples\fP for an example.
+.sp
+If the \fBbackup_keep_previous\fP configuration setting is enabled,
+compact will preserve the original data and index files (renaming
+them with a timestamp).  This is useful for debugging.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B list
+List backups.  See \fI\%List Options\fP for options specific
+to the \fBlist\fP sub\-command.  Columns are separated by tabs, and are:
+.INDENT 7.0
+.IP \(bu 2
+end time of latest chunk
+.IP \(bu 2
+size of backup data file on disk
+.IP \(bu 2
+userid to which the backup belongs
+.IP \(bu 2
+path to backup data file
+.UNINDENT
+.sp
+If no \fI\%mode\fP or backups are specified, lists all
+known backups (as if invoked with the \fB\-A\fP mode).
+.UNINDENT
+.INDENT 0.0
+.TP
+.B lock
+Obtain and hold a lock on the named backup.  Useful for operating on
+Cyrus backup files using non\-Cyrus tools (such as UNIX tools or custom
+scripts) in relative safety.  See \fI\%Lock Options\fP for details.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B reindex
+Rebuild the indexes for the named backups, based on the raw backup data.
+This is useful if their index files have been corrupted, or if the index
+format has changed.
+.sp
+If the \fBbackup_keep_previous\fP configuration setting is enabled,
+reindex will preserve the original index file (renaming it with a
+timestamp).  This is useful for debugging.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B stat
+Display stats for the named backups.  Columns are separated by tabs, and
+are:
+.INDENT 7.0
+.IP \(bu 2
+userid or filename
+.IP \(bu 2
+compressed (i.e. on disk) size
+.IP \(bu 2
+uncompressed size
+.IP \(bu 2
+compactable size
+.IP \(bu 2
+compression ratio
+.IP \(bu 2
+utilisation ratio
+.IP \(bu 2
+start time of latest chunk
+.IP \(bu 2
+end time of latest chunk
+.UNINDENT
+.sp
+The compactable size is an approximation of how much uncompressed data would
+remain after \fBcompact\fP is performed.  The utilisation ratio is this figure
+expressed as a percentage of the uncompressed size.  Note that this
+approximation is an underestimate.  That is to say, a backup that has just
+been compacted will probably still report less than 100% utilisation.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B verify
+Verify consistency of the named backups by performing deep checks on both
+the raw backup data and its index.
+.UNINDENT
+.SH OPTIONS
+.INDENT 0.0
+.TP
+.B \-C config\-file
+Use the specified configuration file \fIconfig\-file\fP rather than the default imapd.conf(5)\&.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-F
+Force the operation to occur, even if it is determined to be unnecessary.
+This is mostly useful with the \fBcompact\fP sub\-command.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-S
+Stop\-on\-error.  With this option, if a sub\-command fails for any
+particular backup, \fBctl_backups\fP will immediately exit with an error,
+without processing further backups.
+.sp
+The default is to log the error, and continue with the next backup.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-V
+Don\(aqt verify backup checksums for read\-only operations.
+.sp
+The read\-only operations \fBlist\fP and \fBstat\fP will normally perform a
+"quick" verification of the backup file being read, which checks the
+checksums of the most recent chunk.  This can be slow for backups
+whose most recent backup chunk is very large.
+.sp
+With this option, the verification step will be skipped.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-v
+Increase the verbosity.  Can be specified multiple times.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-w
+Wait for locks.  With this option, if a backup named on the command line is
+locked, execution will block until the lock becomes available.
+.sp
+The default is to skip backups that are currently locked.
+.UNINDENT
+.SH LIST OPTIONS
+.sp
+Options that apply only to the \fBlist\fP sub\-command.
+.INDENT 0.0
+.TP
+.B \-t [hours]
+List stale backups only, that is, backups that have recieved no updates
+in \fIhours\fP\&.  If \fIhours\fP is unspecified, it defaults to 24.
+.UNINDENT
+.SH LOCK OPTIONS
+.sp
+Options that apply only to the \fBlock\fP sub\-command.
+.INDENT 0.0
+.TP
+.B \-c
+Exclusively create the named backup while obtaining the lock.  Exits
+immediately with an error if the named backup already exists.
+.sp
+When the lock is successfully obtained, continue as per the other options.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-p
+Locks the named backup, and then waits for EOF on the standard input
+stream.  Unlocks the backup and exits once EOF is received.  This is the
+default mode of operation.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-s
+Locks the named backup, and with the lock held, opens its index file in
+the \fBsqlite3(1)\fP program.  The lock is automatically released when
+sqlite3 exits.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-x command
+Locks the named backup, and with the lock held, executes \fIcommand\fP using
+\fB/bin/sh\fP (as per \fBsystem(3)\fP).  The lock is automatically
+released when \fIcommand\fP completes.
+.sp
+The filenames of the backup data and index are made available to \fIcommand\fP
+in the environment variables \fB$ctl_backups_lock_data_fname\fP and
+\fB$ctl_backups_lock_index_fname\fP, respectively.
+.UNINDENT
+.SH MODES
+.INDENT 0.0
+.TP
+.B \-A
+Run sub\-command over all known backups.
+.sp
+Known backups are recorded in the database specified by the \fBbackup_db\fP
+and \fBbackup_db_path\fP configuration options.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-D
+Backups specified on the command line are interpreted as domains.  Run
+sub\-command over known backups for users in these domains.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-P
+Backups specified on the command line are interpreted as userid prefixes.
+Run sub\-command over known backups for users matching these prefixes.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-f
+Backups specified on the command line are interpreted as filenames.  Run
+sub\-command over the matching backup files.  The backup files do not need
+to be known about in the backups database.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-m
+Backups specified on the command line are interpreted as mailbox names.
+Run sub\-command over known backups containing these mailboxes.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-u
+Backups specified on the command line are interpreted as userids.  Run
+sub\-command over known backups for matching users.
+.sp
+This is the default if no mode is specified.
+.UNINDENT
+.SH EXAMPLES
+.sp
+Scheduling \fBctl_backups compact\fP to run each morning using the EVENTS
+section of cyrus.conf(5):
+.sp
+.nf
+EVENTS {
+    checkpoint    cmd="ctl_cyrusdb \-c" period=30
+
+    \fBcompact       cmd="ctl_backups compact \-A" at=0400\fP
+}
+.fi
+.SH HISTORY
+.SH FILES
+.SH SEE ALSO
+.sp
+imapd.conf(5),
+\fBsqlite3(1)\fP,
+\fBsystem(3)\fP
+.SH AUTHOR
+The Cyrus Team
+.SH COPYRIGHT
+1993-2017, The Cyrus Team
+.\" Generated by docutils manpage writer.
+.

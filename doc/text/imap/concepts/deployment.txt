@@ -1,0 +1,174 @@
+
+Configuration Guide
+*******************
+
+A number of considerations need to be made prior to deploying Cyrus
+IMAP in an existing infrastructure, especially larger ones. This guide
+addresses these considerations, to aid in planning the successful
+deployment of Cyrus IMAP.
+
+* Deployment Scenarios
+
+  * Single Server Deployments
+
+  * Multi Server Deployments
+
+    * Cyrus IMAP Murder
+
+    * IMAP Proxy
+
+* Cyrus Murder: Server aggregation
+
+  * The Discrete Murder
+
+  * The Unified Murder
+
+  * The Shared Murder
+
+* Cyrus Replication
+
+* Hosted Environments
+
+* Databases
+
+  * Overview
+
+  * File list
+
+    * Mailbox List (mailboxes.db)
+
+    * Annotations (annotations.db)
+
+    * Quotas (quotas.db)
+
+    * Duplicate Delivery (deliver.db)
+
+    * TLS cache (tls_sessions.db)
+
+    * PTS cache (ptscache.db)
+
+    * STATUS cache (statuscache.db)
+
+    * User Access (user_deny.db)
+
+    * Backups (backups.db)
+
+    * Conversations (<userid>.conversations)
+
+    * Counters (<userid>.counters)
+
+    * News database (fetchnews.db)
+
+    * Search Indexes (cyrus.squat, <userid>.xapianactive)
+
+    * Zoneinfo db (zoneinfo.db)
+
+    * Seen State (<userid>.seen)
+
+    * Subscriptions (<userid>.sub)
+
+    * Search Index DB List (<userid>.xapianactive)
+
+    * Mailbox Keys (<userid>.mboxkey)
+
+    * DAV Index (<userid>.dav)
+
+      * CalDAV
+
+      * CardDAV
+
+  * Storage types
+
+    * Flat
+
+    * Twoskip
+
+    * Skiplist
+
+    * lmdb
+
+    * sql
+
+    * quotalegacy
+
+* Mailbox Creation Distribution
+
+  * Selection Mode
+
+    * Available Selection Modes
+
+    * Usage convergence
+
+    * Computed weight
+
+  * Special cases
+
+    * What happens when two partitions are equal as most fitting?
+
+    * What happens when two partitions point to the same device?
+
+  * Partitions Exclusion
+
+  * Partitions Usage Data Reset
+
+  * Mailbox Creation Distribution Through "murder frontend"
+
+    * Selection Mode
+
+    * Available Selection Modes on Frontend
+
+  * Backends Exclusion
+
+  * Backends Usage Data Reset
+
+* Known Protocol Limitations
+
+  * POP3 and Mailbox Locking
+
+  * Cyrus IMAP POP3 Implementation
+
+* Authentication and Authorization
+
+  * Client Authentication
+
+  * Users and Mailboxes
+
+* Performance Recommendations
+
+  * Databases on Temporary Filesystems
+
+* Storage Considerations
+
+  * General Notes on Storage
+
+  * Redundancy
+
+  * Availability
+
+  * Performance
+
+  * Scalability
+
+  * Capacity
+
+  * Cost
+
+* Supported Platforms and System Requirements
+
+  * Building Cyrus IMAP
+
+  * Required Software Components
+
+  * Recommended Software Components
+
+    * Idled Support
+
+    * Murder Support
+
+    * Replication Support
+
+  * Recommended Software Components Enabled by Default
+
+    * Sieve Support
+
+    * Optional Software Components

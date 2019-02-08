@@ -1,0 +1,54 @@
+
+**cyr_df**
+**********
+
+Report Cyrus spool partition disk space usage
+
+
+Synopsis
+========
+
+   **cyr_df** [ **-C** *config-file* ] [ **-m** ]
+
+
+Description
+===========
+
+**cyr_df** examines the Cyrus spool partitions and reports on their
+disk space usage.
+
+**cyr_df** reads its configuration options out of the imapd.conf(5)
+file unless specified otherwise by **-C**.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+-m
+
+   Report on metadata partitions rather than message file partitions.
+
+
+Examples
+========
+
+   **cyr_df**
+
+   Display partition usage.
+
+
+Files
+=====
+
+/etc/imapd.conf
+
+
+See Also
+========
+
+imapd.conf(5)

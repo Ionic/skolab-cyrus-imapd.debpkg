@@ -41,6 +41,9 @@
  *
  */
 
+#ifndef XCAL_H
+#define XCAL_H
+
 #include <config.h>
 
 #include <libical/ical.h>
@@ -52,36 +55,26 @@
 #define ICAL_POLLPROPERTIES_PROPERTY  ICAL_NO_PROPERTY
 #endif
 
-#define XML_NS_ICALENDAR	"urn:ietf:params:xml:ns:icalendar-2.0"
+#define XML_NS_ICALENDAR        "urn:ietf:params:xml:ns:icalendar-2.0"
 
 extern const char *icalproperty_value_kind_as_string(icalproperty *prop);
 extern const char *icaltime_as_iso_string(const struct icaltimetype tt);
 extern const char *icalvalue_utcoffset_as_iso_string(const icalvalue* value);
 extern void icalrecurrencetype_add_as_xxx(struct icalrecurrencetype *recur,
-					  void *obj,
-					  void (*add_int)(void *, const char *,
-							  int),
-					  void (*add_str)(void *, const char *,
-							  const char *));
+                                          void *obj,
+                                          void (*add_int)(void *, const char *,
+                                                          int),
+                                          void (*add_str)(void *, const char *,
+                                                          const char *));
 extern struct icalrecurrencetype *
 icalrecur_add_rule(struct icalrecurrencetype **rt,
-		   const char *rpart, void *data,
-		   int (*get_int)(void *),
-		   const char* (*get_str)(void *));
+                   const char *rpart, void *data,
+                   int (*get_int)(void *),
+                   const char* (*get_str)(void *));
 
-extern char *icalcomponent_as_xcal_string(icalcomponent* comp);
-extern icalcomponent *xcal_string_as_icalcomponent(const char *str);
+extern struct buf *icalcomponent_as_xcal_string(icalcomponent* comp);
+extern icalcomponent *xcal_string_as_icalcomponent(const struct buf *buf);
 extern const char *begin_xcal(struct buf *buf);
 extern void end_xcal(struct buf *buf);
 
-/* libxml2 replacement functions for those missing in older versions */
-#if (LIBXML_VERSION < 20800)
-#include <libxml/tree.h>
-
-extern xmlChar *xmlBufferDetach(xmlBufferPtr buf);
-
-#if (LIBXML_VERSION < 20703)
-extern xmlNodePtr xmlFirstElementChild(xmlNodePtr parent);
-extern xmlNodePtr xmlNextElementSibling(xmlNodePtr node);
-#endif /* < 2.7.3 */
-#endif /* < 2.8.0 */
+#endif /* XCAL_H */

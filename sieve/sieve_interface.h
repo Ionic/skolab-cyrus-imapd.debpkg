@@ -45,7 +45,7 @@
 
 #include <stdio.h>
 
-#define SIEVE_VERSION "CMU Sieve 2.4"
+#define SIEVE_VERSION "CMU Sieve 3.0"
 
 /* error codes */
 #define SIEVE_OK (0)
@@ -53,6 +53,7 @@
 #include "strarray.h"
 #include "sieve/sieve_err.h"
 #include "varlist.h"
+#include "grammar.h"
 
 /* external sieve types */
 typedef struct sieve_interp sieve_interp_t;
@@ -60,18 +61,21 @@ typedef struct sieve_script sieve_script_t;
 typedef struct sieve_execute sieve_execute_t;
 typedef struct bytecode_info bytecode_info_t;
 
-typedef int sieve_callback(void *action_context, void *interp_context, 
-			   void *script_context,
-			   void *message_context, const char **errmsg);
+typedef int sieve_callback(void *action_context, void *interp_context,
+                           void *script_context,
+                           void *message_context, const char **errmsg);
 typedef int sieve_get_size(void *message_context, int *size);
-typedef int sieve_get_header(void *message_context, 
-			     const char *header,
-			     const char ***contents);
-typedef int sieve_get_envelope(void *message_context, 
-			       const char *field,
-			       const char ***contents);
+typedef int sieve_get_mailboxexists(void *interp_context, const char *extname);
+typedef int sieve_get_metadata(void *interp_context, const char *extname, const char *keyname, char **res);
+typedef int sieve_get_header(void *message_context,
+                             const char *header,
+                             const char ***contents);
+typedef int sieve_get_fname(void *message_context, const char **fname);
+typedef int sieve_get_envelope(void *message_context,
+                               const char *field,
+                               const char ***contents);
 typedef int sieve_get_include(void *script_context, const char *script,
-			      int isglobal, char *fpath, size_t size);
+                              int isglobal, char *fpath, size_t size);
 
 /* MUST keep this struct sync'd with bodypart in imap/message.h */
 typedef struct sieve_bodypart {
@@ -80,11 +84,11 @@ typedef struct sieve_bodypart {
 } sieve_bodypart_t;
 
 typedef int sieve_get_body(void *message_context, const char **content_types,
-			   sieve_bodypart_t ***parts);
+                           sieve_bodypart_t ***parts);
 
 typedef struct sieve_vacation {
-    int min_response;		/* 0 -> defaults to 3 days */
-    int max_response;		/* 0 -> defaults to 90 days */
+    int min_response;           /* 0 -> defaults to 3 days */
+    int max_response;           /* 0 -> defaults to 90 days */
 
     /* given a hash, say whether we've already responded to it in the last
        days days.  return SIEVE_OK if we SHOULD autorespond (have not already)
@@ -109,6 +113,7 @@ typedef struct sieve_reject_context {
 typedef struct sieve_fileinto_context {
     const char *mailbox;
     strarray_t *imapflags;
+    int do_create :1;
 } sieve_fileinto_context_t;
 
 typedef struct sieve_keep_context {
@@ -120,6 +125,7 @@ typedef struct sieve_notify_context {
     const char **options;
     const char *priority;
     const char *message;
+    const char *fname;
 } sieve_notify_context_t;
 
 #define SIEVE_HASHLEN 16
@@ -156,23 +162,31 @@ void sieve_register_include(sieve_interp_t *interp, sieve_get_include *f);
 /* add the callbacks for messages. again, undefined if used after
    sieve_script_parse */
 void sieve_register_size(sieve_interp_t *interp, sieve_get_size *f);
+void sieve_register_mailboxexists(sieve_interp_t *interp, sieve_get_mailboxexists *f);
+void sieve_register_metadata(sieve_interp_t *interp, sieve_get_metadata *f);
 void sieve_register_header(sieve_interp_t *interp, sieve_get_header *f);
+void sieve_register_fname(sieve_interp_t *interp, sieve_get_fname *f);
 void sieve_register_envelope(sieve_interp_t *interp, sieve_get_envelope *f);
 void sieve_register_body(sieve_interp_t *interp, sieve_get_body *f);
 
-typedef int sieve_parse_error(int lineno, const char *msg, 
-			      void *interp_context,
-			      void *script_context);
+typedef int sieve_parse_error(int lineno, const char *msg,
+                              void *interp_context,
+                              void *script_context);
 void sieve_register_parse_error(sieve_interp_t *interp, sieve_parse_error *f);
 
 typedef int sieve_execute_error(const char *msg, void *interp_context,
-				void *script_context, void *message_context);
-void sieve_register_execute_error(sieve_interp_t *interp, 
-				 sieve_execute_error *f);
- 
+                                void *script_context, void *message_context);
+void sieve_register_execute_error(sieve_interp_t *interp,
+                                 sieve_execute_error *f);
+
 /* given an interpretor and a script, produce an executable script */
 int sieve_script_parse(sieve_interp_t *interp, FILE *script,
-		       void *script_context, sieve_script_t **ret);
+                       void *script_context, sieve_script_t **ret);
+
+/* Wrapper for sieve_script_parse using a disposable single-use interpreter.
+ * Use when you only want to parse or compile, but not execute, a script. */
+int sieve_script_parse_only(FILE *stream, char **out_errors,
+                            sieve_script_t **ret);
 
 /* given a path to a bytecode file, load it into the sieve_execute_t */
 int sieve_script_load(const char *fpath, sieve_execute_t **ret);
@@ -185,7 +199,7 @@ void sieve_script_free(sieve_script_t **s);
 
 /* execute bytecode on a message */
 int sieve_execute_bytecode(sieve_execute_t *script, sieve_interp_t *interp,
-			   void *script_context, void *message_context);
+                           void *script_context, void *message_context);
 
 /* Get space separated list of extensions supported by the implementation */
 const char *sieve_listextensions(sieve_interp_t *i);
@@ -198,5 +212,24 @@ int sieve_emit_bytecode(int fd, bytecode_info_t *bc);
 
 /* Free a bytecode_info_t */
 void sieve_free_bytecode(bytecode_info_t **p);
+
+/* Convert filenames between .bc and .script extensions.
+ * Caller must free returned values
+ * Returns NULL if unable to perform conversion
+ */
+char *sieve_getbcfname(const char *script_fname);
+char *sieve_getscriptfname(const char *bc_name);
+
+/* Get path of bc file pointed to by defaultbc symlink.
+ * Caller must free return value
+ * Returns NULL if unable to perform conversion
+ */
+char *sieve_getdefaultbcfname(const char *defaultbc);
+
+/* Rebuild bc_fname from script_fname if needed or forced.
+ * At least one of script_fname or bc_fname must be provided.
+ */
+int sieve_rebuild(const char *script_fname, const char *bc_fname,
+                  int force, char **out_parse_errors);
 
 #endif

@@ -1,5 +1,5 @@
 
-/* lmtpstats.c -- automatically generated from .././imap/lmtpstats.snmp by snmpgen */
+/* lmtpstats.c -- automatically generated from /home/ellie/fastmail/cyrus-imapd/imap/lmtpstats.snmp by snmpgen */
 
 
 
@@ -9,11 +9,11 @@
 
 /* We disable this code for now since it doesn't actually work and wastes
 
- * resources.  At some point in time, we'll make it work again as it would 
+ * resources.  At some point in time, we'll make it work again as it would
 
- * be useful to gather aggregate statistics on what commands are being used 
+ * be useful to gather aggregate statistics on what commands are being used
 
- * so we can better tune the server.  This change closes bug #1191. 
+ * so we can better tune the server.  This change closes bug #1191.
 
  * New bug 1267 opened to re-enable the feature.
 
@@ -85,27 +85,27 @@ const char *snmp_getdescription(lmtpstats_t evt)
 
     switch (evt) {
 
-        case AUTHENTICATION_YES: return "Successful authentication of given mechanism";
-        case mtaReceivedVolume: return "Kbytes received";
-        case mtaReceivedRecipients: return "Recipients accepted";
+        case SERVER_NAME_VERSION: return "Name and version string for server";
         case mtaTransmittedVolume: return "Kbytes stored to disk";
+        case SIEVE_NOTIFY: return "sieve notifications sent";
+        case SIEVE_REDIRECT: return "sieve redirects";
+        case mtaSuccessfulConvertedMessages: return "Messages converted because of 8bit foo";
+        case SERVER_UPTIME: return "Amount of time server has been running";
+        case SIEVE_VACATION_TOTAL: return "vacation messages considered";
         case mtaReceivedMessages: return "Messages we've received";
         case SIEVE_REJECT: return "sieve rejects";
-        case mtaSuccessfulConvertedMessages: return "Messages converted because of 8bit foo";
-        case SIEVE_NOTIFY: return "sieve notifications sent";
-        case SERVER_UPTIME: return "Amount of time server has been running";
-        case SIEVE_MESSAGES_PROCESSED: return "Number of messages processed by Sieve scripts";
-        case TOTAL_CONNECTIONS: return "Count of the total number of connections since the beginning of time";
-        case SIEVE_FILEINTO: return "sieve fileintos";
-        case ACTIVE_CONNECTIONS: return "Count of the active number of connections";
-        case SIEVE_KEEP: return "sieve messages kept";
-        case SIEVE_VACATION_TOTAL: return "vacation messages considered";
         case mtaTransmittedMessages: return "Messages stored to disk";
-        case SIEVE_REDIRECT: return "sieve redirects";
-        case SERVER_NAME_VERSION: return "Name and version string for server";
-        case SIEVE_DISCARD: return "sieve discards";
         case AUTHENTICATION_NO: return "Failed authentication of given mechanism";
+        case SIEVE_DISCARD: return "sieve discards";
+        case TOTAL_CONNECTIONS: return "Count of the total number of connections since the beginning of time";
+        case mtaReceivedVolume: return "Kbytes received";
+        case SIEVE_MESSAGES_PROCESSED: return "Number of messages processed by Sieve scripts";
+        case ACTIVE_CONNECTIONS: return "Count of the active number of connections";
         case SIEVE_VACATION_REPLIED: return "vacation messages sent";
+        case SIEVE_KEEP: return "sieve messages kept";
+        case mtaReceivedRecipients: return "Recipients accepted";
+        case SIEVE_FILEINTO: return "sieve fileintos";
+        case AUTHENTICATION_YES: return "Successful authentication of given mechanism";
 
     }
 
@@ -117,33 +117,33 @@ const char *snmp_getdescription(lmtpstats_t evt)
 
 const char *snmp_getoid(const char *name __attribute__((unused)),
 
-			lmtpstats_t evt, char *buf, int buflen)
+                        lmtpstats_t evt, char *buf, int buflen)
 
 {
 
     switch (evt) {
 
-        case AUTHENTICATION_YES: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.2.2.%d.0",varvalue(VARIABLE_AUTH)); return buf;
-        case mtaReceivedVolume: snprintf(buf,buflen,"1.3.6.1.2.1.28.1.%d.4",varvalue(VARIABLE_MTA)); return buf;
-        case mtaReceivedRecipients: snprintf(buf,buflen,"1.3.6.1.2.1.28.1.%d.7",varvalue(VARIABLE_MTA)); return buf;
+        case SERVER_NAME_VERSION: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.2.3.0"); return buf;
         case mtaTransmittedVolume: snprintf(buf,buflen,"1.3.6.1.2.1.28.1.%d.6",varvalue(VARIABLE_MTA)); return buf;
+        case SIEVE_NOTIFY: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.3.4.6"); return buf;
+        case SIEVE_REDIRECT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.3.4.1"); return buf;
+        case mtaSuccessfulConvertedMessages: snprintf(buf,buflen,"1.3.6.1.2.1.28.1.%d.10",varvalue(VARIABLE_MTA)); return buf;
+        case SERVER_UPTIME: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.2.3.1"); return buf;
+        case SIEVE_VACATION_TOTAL: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.3.4.8"); return buf;
         case mtaReceivedMessages: snprintf(buf,buflen,"1.3.6.1.2.1.28.1.%d.1",varvalue(VARIABLE_MTA)); return buf;
         case SIEVE_REJECT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.3.4.3"); return buf;
-        case mtaSuccessfulConvertedMessages: snprintf(buf,buflen,"1.3.6.1.2.1.28.1.%d.10",varvalue(VARIABLE_MTA)); return buf;
-        case SIEVE_NOTIFY: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.3.4.6"); return buf;
-        case SERVER_UPTIME: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.2.3.1"); return buf;
-        case SIEVE_MESSAGES_PROCESSED: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.3.4.0"); return buf;
-        case TOTAL_CONNECTIONS: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.2.1.1"); return buf;
-        case SIEVE_FILEINTO: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.3.4.4"); return buf;
-        case ACTIVE_CONNECTIONS: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.2.1.2"); return buf;
-        case SIEVE_KEEP: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.3.4.5"); return buf;
-        case SIEVE_VACATION_TOTAL: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.3.4.8"); return buf;
         case mtaTransmittedMessages: snprintf(buf,buflen,"1.3.6.1.2.1.28.1.%d.3",varvalue(VARIABLE_MTA)); return buf;
-        case SIEVE_REDIRECT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.3.4.1"); return buf;
-        case SERVER_NAME_VERSION: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.2.3.0"); return buf;
-        case SIEVE_DISCARD: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.3.4.2"); return buf;
         case AUTHENTICATION_NO: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.2.2.%d.1",varvalue(VARIABLE_AUTH)); return buf;
+        case SIEVE_DISCARD: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.3.4.2"); return buf;
+        case TOTAL_CONNECTIONS: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.2.1.1"); return buf;
+        case mtaReceivedVolume: snprintf(buf,buflen,"1.3.6.1.2.1.28.1.%d.4",varvalue(VARIABLE_MTA)); return buf;
+        case SIEVE_MESSAGES_PROCESSED: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.3.4.0"); return buf;
+        case ACTIVE_CONNECTIONS: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.2.1.2"); return buf;
         case SIEVE_VACATION_REPLIED: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.3.4.7"); return buf;
+        case SIEVE_KEEP: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.3.4.5"); return buf;
+        case mtaReceivedRecipients: snprintf(buf,buflen,"1.3.6.1.2.1.28.1.%d.7",varvalue(VARIABLE_MTA)); return buf;
+        case SIEVE_FILEINTO: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.3.4.4"); return buf;
+        case AUTHENTICATION_YES: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.2.2.%d.0",varvalue(VARIABLE_AUTH)); return buf;
 
     }
 
@@ -175,7 +175,7 @@ static void snmp_send(char *str)
 
     if (sendto(mysock, str, strlen(str), 0, (struct sockaddr *) &remote, sockaddr_len) == -1) {
 
-	return;
+        return;
 
     }
 
@@ -201,7 +201,7 @@ int snmp_connect(void)
 
     if ((s = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1) {
 
-	return 1;
+        return 1;
 
     }
 
@@ -251,7 +251,7 @@ int snmp_close(void)
 
     if (mysock > -1)
 
-	close(mysock);
+        close(mysock);
 
 
 
@@ -299,7 +299,7 @@ int snmp_increment_args(lmtpstats_t cmd, int incr, ...)
 
               ival = va_arg(ap, int); /* get the next arg */
 
-              variable_tmpvalue[vval] = ival;              
+              variable_tmpvalue[vval] = ival;
 
           }
 
@@ -319,7 +319,7 @@ int snmp_increment_args(lmtpstats_t cmd, int incr, ...)
 
     if (sendto(mysock, tosend, strlen(tosend), 0, (struct sockaddr *) &remote, sockaddr_len) == -1) {
 
-	return 1;
+        return 1;
 
     }
 
@@ -343,7 +343,7 @@ int snmp_increment_args(lmtpstats_t cmd, int incr, ...)
 
               ival = va_arg(ap, int); /* get the next arg */
 
-              variable_tmpvalue[vval] = -1;              
+              variable_tmpvalue[vval] = -1;
 
           }
 
@@ -383,7 +383,7 @@ int snmp_increment(lmtpstats_t cmd, int incr)
 
     if (sendto(mysock, tosend, strlen(tosend), 0, (struct sockaddr *) &remote, sockaddr_len) == -1) {
 
-	return 1;
+        return 1;
 
     }
 
@@ -415,7 +415,7 @@ int snmp_set(lmtpstats_t cmd, int value)
 
     if (sendto(mysock, tosend, strlen(tosend), 0, (struct sockaddr *) &remote, sockaddr_len) == -1) {
 
-	return 1;
+        return 1;
 
     }
 
@@ -447,7 +447,7 @@ int snmp_set_str(lmtpstats_t cmd, char *value)
 
     if (sendto(mysock, tosend, strlen(tosend), 0, (struct sockaddr *) &remote, sockaddr_len) == -1) {
 
-	return 1;
+        return 1;
 
     }
 
@@ -479,7 +479,7 @@ int snmp_set_time(lmtpstats_t cmd, time_t t)
 
     if (sendto(mysock, tosend, strlen(tosend), 0, (struct sockaddr *) &remote, sockaddr_len) == -1) {
 
-	return 1;
+        return 1;
 
     }
 

@@ -1,0 +1,75 @@
+
+Setup
+*****
+
+* Compiling
+
+  * Setting up dependencies
+
+  * Compile Cyrus
+
+* Installing Cyrus
+
+  * Install Cyrus
+
+  * Optional Components
+
+  * Setting up syslog
+
+  * Create Cyrus environment
+
+  * Launch Cyrus
+
+  * Send a test email
+
+  * Checking CardDAV and CardDAV
+
+  * Troubleshooting
+
+* Upgrading to 3.0
+
+  * 1. Preparation
+
+  * 2. Install new 3.0 Cyrus
+
+  * 3. Shut down existing Cyrus
+
+  * 4. Backup and Copy existing data
+
+  * 5. Copy config files and update
+
+  * 6. Upgrade specific items
+
+  * 7. Start new 3.0 Cyrus and verify
+
+  * 8. Reconstruct databases and cache
+
+  * 9. Do you want any new features?
+
+  * 10. Upgrade complete
+
+  * Special note for Murder configurations
+
+* Configuration Guide
+
+  * Deployment Scenarios
+
+  * Cyrus Murder: Server aggregation
+
+  * Cyrus Replication
+
+  * Hosted Environments
+
+  * Databases
+
+  * Mailbox Creation Distribution
+
+  * Known Protocol Limitations
+
+  * Authentication and Authorization
+
+  * Performance Recommendations
+
+  * Storage Considerations
+
+  * Supported Platforms and System Requirements

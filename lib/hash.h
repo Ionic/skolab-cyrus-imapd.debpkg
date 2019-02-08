@@ -4,6 +4,7 @@
 
 #include <stddef.h>           /* For size_t     */
 #include "mpool.h"
+#include "strarray.h"
 
 #define HASH_TABLE_INITIALIZER {0, NULL, NULL}
 
@@ -41,7 +42,7 @@ typedef struct hash_table {
 */
 
 hash_table *construct_hash_table(hash_table *table, size_t size,
-				 int use_mpool);
+                                 int use_mpool);
 
 /*
 ** Inserts a pointer to 'data' in the table, with a copy of 'key' as its
@@ -75,7 +76,14 @@ void *hash_del(const char *key,hash_table *table);
 */
 
 void hash_enumerate(hash_table *table,void (*func)(const char *,void *,void *),
-		    void *rock);
+                    void *rock);
+
+/* gets all the keys from the hashtable */
+strarray_t *hash_keys(hash_table *table);
+
+/* counts the number of nodes in the hash table */
+
+int hash_numrecords(hash_table *table);
 
 /*
 ** Frees a hash table.  For each node that was inserted in the table,

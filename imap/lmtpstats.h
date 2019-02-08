@@ -1,7 +1,7 @@
 
 /* lmtpstats.h -- statistics push interface
 
- * generated automatically from .././imap/lmtpstats.snmp by snmpgen
+ * generated automatically from /home/ellie/fastmail/cyrus-imapd/imap/lmtpstats.snmp by snmpgen
 
  *
 
@@ -11,22 +11,22 @@
 
  * No warranty, yadda yadda
 
- */                                       
+ */
 
-                                          
 
-#ifndef lmtpstats_H    
+
+#ifndef lmtpstats_H
 
 #define lmtpstats_H
 
 
 
-#define SNMPDEFINE_cmusieve "1.3.6.1.4.1.3.2.2.3.3"
-#define SNMPDEFINE_mgmt "1.3.6.1.2"
 #define SNMPDEFINE_cmutree "1.3.6.1.4.1.3.2.2.3"
-#define SNMPDEFINE_mtamib "1.3.6.1.2.1.28"
-#define SNMPDEFINE_mib2 "1.3.6.1.2.1"
+#define SNMPDEFINE_cmusieve "1.3.6.1.4.1.3.2.2.3.3"
 #define SNMPDEFINE_cmulmtp "1.3.6.1.4.1.3.2.2.3.2"
+#define SNMPDEFINE_mtamib "1.3.6.1.2.1.28"
+#define SNMPDEFINE_mgmt "1.3.6.1.2"
+#define SNMPDEFINE_mib2 "1.3.6.1.2.1"
 
 
 
@@ -68,27 +68,27 @@ typedef void lmtpstats_t;
 
 typedef enum {
 
-    AUTHENTICATION_YES,
-    mtaReceivedVolume,
-    mtaReceivedRecipients,
+    SERVER_NAME_VERSION,
     mtaTransmittedVolume,
+    SIEVE_NOTIFY,
+    SIEVE_REDIRECT,
+    mtaSuccessfulConvertedMessages,
+    SERVER_UPTIME,
+    SIEVE_VACATION_TOTAL,
     mtaReceivedMessages,
     SIEVE_REJECT,
-    mtaSuccessfulConvertedMessages,
-    SIEVE_NOTIFY,
-    SERVER_UPTIME,
-    SIEVE_MESSAGES_PROCESSED,
-    TOTAL_CONNECTIONS,
-    SIEVE_FILEINTO,
-    ACTIVE_CONNECTIONS,
-    SIEVE_KEEP,
-    SIEVE_VACATION_TOTAL,
     mtaTransmittedMessages,
-    SIEVE_REDIRECT,
-    SERVER_NAME_VERSION,
-    SIEVE_DISCARD,
     AUTHENTICATION_NO,
-    SIEVE_VACATION_REPLIED
+    SIEVE_DISCARD,
+    TOTAL_CONNECTIONS,
+    mtaReceivedVolume,
+    SIEVE_MESSAGES_PROCESSED,
+    ACTIVE_CONNECTIONS,
+    SIEVE_VACATION_REPLIED,
+    SIEVE_KEEP,
+    mtaReceivedRecipients,
+    SIEVE_FILEINTO,
+    AUTHENTICATION_YES
 } lmtpstats_t;
 
 
@@ -108,9 +108,9 @@ int snmp_connect(void);
 
 
 
-int snmp_close(void);          
+int snmp_close(void);
 
-                                    
+
 
 /* only valid on counters */
 
@@ -136,13 +136,13 @@ int snmp_set_oid(lmtpstats_t cmd, char *str);
 
 int snmp_set_time(lmtpstats_t cmd, time_t t);
 
-                                    
 
-const char *snmp_getdescription(lmtpstats_t cmd); 
 
- 
+const char *snmp_getdescription(lmtpstats_t cmd);
 
-const char *snmp_getoid(const char *name, lmtpstats_t cmd, char* buf, int buflen); 
+
+
+const char *snmp_getoid(const char *name, lmtpstats_t cmd, char* buf, int buflen);
 
 
 
@@ -152,9 +152,9 @@ void snmp_setvariable(lmtpstats_variable_t, int);
 
 #endif /* USING_SNMPGEN */
 
- 
 
-#endif /* lmtpstats_H */ 
+
+#endif /* lmtpstats_H */
 
 
 
