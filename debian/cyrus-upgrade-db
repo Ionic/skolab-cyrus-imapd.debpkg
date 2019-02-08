@@ -123,9 +123,6 @@ upgradealldb() {
 	    ANNOTATION)
 		DBFILE=annotations.db
 		;;
-	    DUPLICATE)
-		DBFILE=deliver.db
-		;;
 	    MBOX)
 		DBFILE=mailboxes.db
 		;;
@@ -135,7 +132,7 @@ upgradealldb() {
 		    return 1
 		fi
 		;;
-	    PTS|STATUSCACHE|TLS|ZONEINFO|SEEN)
+	    DUPLICATE|PTS|STATUSCACHE|TLS|ZONEINFO|SEEN)
 		;;
 	    USERDENY)
 		DBFILE=user_deny.db
@@ -149,6 +146,9 @@ upgradealldb() {
 	# Just remove PTS, TLS and STATUSCACHE databases
 	if [ -n "${DO_UPGRADE_DB}" ]; then
 	    case "$OLD_DBKEY" in
+		DUPLICATE)
+		    removedb deliver.db
+		    continue
 		PTS)
 		    removedb ptscache.db
 		    continue
