@@ -1,0 +1,80 @@
+
+Search Tiers
+************
+
+The Xapian search engine supports searching from multiple databases at
+once, creating a tiered database structure.  To use Xapian, these
+tiers must be defined in imapd.conf(5) with the *defaultsearchtier*
+and *searchpartition-name* settings.
+
+
+Default Search Tier name
+========================
+
+Specify the name of the default search tier using the
+*defaultsearchtier* setting:
+
+   "defaultsearchtier:" <empty string>
+
+      Name of the default tier that messages will be indexed to.
+      Search indexes can be organized in tiers to allow index storage
+      in different directories and physical media. See the man page of
+      squatter for details. The default search tier also requires the
+      definition of an according *searchtierpartition-name* entry.
+
+      This option MUST be specified for xapian search.
+
+
+Search Tier Partition location
+==============================
+
+Each search tier to be used requires a partition location be specified
+via a *searchpartition-name* setting, wherein "name" is replaced with
+the name of the mail spool for which this search partition is to be
+used, and prepended by the name of the tier with which it is
+associated:
+
+   {tier}searchpartition-{spool}
+
+Again, building on our examples from Spool Directories, here we have
+three spool partitions defined, so we need three search partitions for
+each tier.  In this example, with just a single tier, we will be
+adding three search partitions.
+
+* Sample:
+
+     defaultpartition: main
+     partition-main: /var/spool/cyrus
+     partition-am: /var/spool/cyrus-am
+     partition-nz: /var/spool/cyrus-nz
+     partition-shared: /var/spool/cyrus-shared
+     metapartition_files: header index cache expunge squat annotations
+     metapartition-main: /var/spool/cyrusmeta/main
+     metapartition-am: /var/spool/cyrusmeta/am
+     metapartition-nz: /var/spool/cyrusmeta/nz
+     metapartition-shared: /var/spool/cyrusmeta/shared
+     search_engine: xapian
+     search_index_headers: no
+     search_batchsize: 8192
+     defaultsearchtier: temp
+     tempsearchpartition-main: /var/spool/search/main
+     tempsearchpartition-am: /var/spool/search/am
+     tempsearchpartition-nz: /var/spool/search/nz
+     tempsearchpartition-shared: /var/spool/search/shared
+
+These settings are in imapd.conf(5):
+
+   "searchpartition-name:" <none>
+
+      The pathname where to store the xapian search indexes of
+      *searchtier* for mailboxes of partition *name*. This must be
+      configured for the *defaultsearchtier* and any additional search
+      tier (see squatter for details).
+
+      For example: if *defaultpartition* is defined as part1 and
+      *defaultsearchtier* as tier1 then the configuration must contain
+      an entry *tier1searchpartition-part1* that defines the path
+      where to store this tier1's search index for the part1
+      partition.
+
+      This option MUST be specified for xapian search.

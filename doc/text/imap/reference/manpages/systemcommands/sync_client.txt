@@ -1,0 +1,178 @@
+
+**sync_client**
+***************
+
+Client side of the synchronization (replication) engine
+
+
+Synopsis
+========
+
+   **sync_client** [ **-v** ] [ **-l** ] [ **-L** ] [ **-z** ] [ **-C** *config-file* ] [ **-S** *server-name* ]
+       [ **-f** *input-file* ] [ **-F** *shutdown_file* ] [ **-w** *wait_interval* ]
+       [ **-t** *timeout* ] [ **-d** *delay* ] [ **-r** ] [ **-n** *channel* ] [ **-u** ] [ **-m** ]
+       [ **-p** *partition* ] [ **-A** ] [ **-s** ] [ **-O** ] *objects*...
+
+
+Description
+===========
+
+**sync_client** is the client side of the replication system.  It runs
+on the client (master) system and connects to the target (replica)
+system and generates an appropriate sequence of transactions to
+synchronize the replica system with the master system.
+
+**sync_client** reads its configuration options out of the
+imapd.conf(5) file unless specified otherwise by **-C**.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+-A
+
+   All users mode. Sync every user on the server to the replica
+   (doesn't do non-user mailboxes at all... this could be considered a
+   bug and maybe it should do those mailboxes independently)
+
+-d delay
+
+   Minimum delay between replication runs in rolling replication mode.
+   Larger values provide better efficiency as transactions can be
+   merged. Smaller values mean that the replica system is more up to
+   date and that you don't end up with large blocks of replication
+   transactions as a single group. Default: 3 seconds.
+
+-f input-file
+
+   In mailbox or user replication mode: provides list of users or
+   mailboxes to replicate.  In rolling replication mode, specifies an
+   alternate log file (**sync_client** will exit after processing the
+   log file).
+
+-F shutdown-file
+
+   Rolling replication checks for this file at the end of each
+   replication cycle and shuts down if it is present. Used to request
+   a nice clean shutdown at the first convenient point. The file is
+   removed on shutdown. Overrides "sync_shutdown_file" option in
+   imapd.conf(5).
+
+-l
+
+   Verbose logging mode.
+
+-L
+
+   Perform only local mailbox operations (do not do mupdate
+   operations). This feature was introduced in version 3.0.
+
+-m
+
+   Mailbox mode. Remaining arguments are list of mailboxes which
+   should be replicated.
+
+-n channel
+
+   Use the named channel for rolling replication mode.  If multiple
+   channels are specified in "sync_log_channels" then use one of them.
+   This option is probably best combined with **-S** to connect to a
+   different server with each channel.
+
+-o
+
+   Only attempt to connect to the backend server once rather than
+   waiting up to 1000 seconds before giving up.
+
+-O
+
+   No copyback mode. Replication will stop if the replica reports a
+   CRC error, rather than doing a full mailbox sync. Useful if moving
+   users to a new server, where you don't want any errors to cause the
+   source servers to change the account.
+
+-p partition
+
+   In mailbox or user replication mode: provides the name of the
+   partition on the replica to which the mailboxes/users should be
+   replicated.
+
+-r
+
+   Rolling (repeat) replication mode. Pick up a list of actions
+   recorded by the lmtpd(8), imapd(8), pop3d(8) and nntpd(8) daemons
+   from the file specified in "sync_log_file". Repeat until
+   "sync_shutdown_file" appears.
+
+-s
+
+   Sieve mode. Remaining arguments are list of users whose Sieve files
+   should be replicated. Principally used for debugging purposes: not
+   exposed to sync_client(8).
+
+-S servername
+
+   Tells **sync_client** with which server to communicate.  Overrides
+   the "sync_host" configuration option.
+
+-t timeout
+
+   Timeout for single replication run in rolling replication.
+   **sync_client** will negotiate a restart after this many seconds.
+   Default: 600 seconds
+
+-u
+
+   User mode. Remaining arguments are list of users who should be
+   replicated.
+
+-v
+
+   Verbose mode.  Use twice (**-v -v**) to log all protocol traffic to
+   stderr.
+
+-w interval
+
+   Wait this long before starting. This option is typically used so
+   that we can attach a debugger to one end of the replication system
+   or the other.
+
+-z
+
+   Require compression. The replication protocol will always try to
+   enable deflate compression if both ends support it.  Set this flag
+   when you want to abort if compression is not available.
+
+
+Examples
+========
+
+On a replication master, the following would be added to the START
+section of cyrus.conf(5):
+
+      syncclient              cmd="/usr/lib/cyrus/bin/sync_client -r"
+
+[NB: More examples needed]
+
+
+History
+=======
+
+The **-L** feature, local updates only, was added in version 3.0.
+
+
+Files
+=====
+
+/etc/imapd.conf
+
+
+See Also
+========
+
+sync_server(8), cyrus.conf(5), imapd.conf(5), master(8)

@@ -1,0 +1,66 @@
+
+**cvt_xlist_specialuse**
+************************
+
+Convert legacy xlist-*flag* settings to user special-use annotations.
+
+
+Synopsis
+========
+
+   **cvt_xlist_specialuse** [OPTIONS] mailbox...
+
+
+Description
+===========
+
+**cvt_xlist_specialuse** is a tool for converting xlist-*flag*
+settings from imapd.conf(5) to user special-use annotations.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+-v
+
+   Produce verbose output
+
+
+Examples
+========
+
+   **cvt_xlist_specialuse** user.*
+
+   Set special-use annotations for all users (unixhierarchysep: off)
+
+   **cvt_xlist_specialuse** user/*
+
+   Set special-use annotations for all users (unixhierarchysep: on)
+
+
+History
+=======
+
+The xlist-*flag* settings existed for a while in Cyrus IMAP 2.4, for
+setting special-use style flags for particular folder names (on a
+server-wide basis). This was deprecated at some point with the
+introduction of **RFC 6154**.
+
+The **cvt_xlist_specialuse** tool was introduced in Cyrus IMAP 3.0 to
+aid administrators in upgrading from older deployments where
+xlist-*flag* settings had been in use.
+
+
+Files
+=====
+
+
+See Also
+========
+
+imapd.conf(5)

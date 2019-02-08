@@ -1,0 +1,65 @@
+
+Standard Operating Procedures
+*****************************
+
+* Replication: Installation and Administration
+
+  * Architecture
+
+  * Terminology
+
+  * Operating Modes
+
+  * Transport
+
+  * Installation
+
+  * Channels
+
+  * Other Considerations
+
+  * Administration
+
+* Mailbox Operations
+
+  * Determining the size of a mailbox
+
+* Reloading Cyrus IMAP Services
+
+* Alternative Namespace
+
+  * Switching the Alternative Namespace
+
+* Deleting and Undeleting Messages and Folders
+
+  * Terminology & Definitions
+
+  * Expiring Deleted Messages and Folders
+
+  * Undeleting Folders
+
+  * Undeleting messages in a mailbox
+
+* Running Cyrus IMAP Services on Non-Standard Ports
+
+  * Globally changing the service port
+
+  * Changing the service port just for Cyrus
+
+  * Security Enhanced Linux
+
+* Reconstructing Mailboxes
+
+  * Individual mailboxes or folders
+
+  * Recovering a complete spool directory
+
+* Using Squatter for Faster IMAP SEARCH
+
+  * Squatter Invocation
+
+  * Generating the Search Indexes
+
+* Splitting Metadata from Partitions
+
+* Managing user_deny.db

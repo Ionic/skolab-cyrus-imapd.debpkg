@@ -50,7 +50,6 @@
 #include "mailbox.h"
 #include "mboxname.h"
 
-
 /*
  * event types defined in RFC 5423 - Internet Message Store Events
  */
@@ -81,13 +80,12 @@ enum event_type {
     EVENT_MAILBOX_SUBSCRIBE   = (1<<18),
     EVENT_MAILBOX_UNSUBSCRIBE = (1<<19),
     EVENT_ACL_CHANGE          = (1<<20),
-    EVENT_CALENDAR            = (1<<21)
+    EVENT_CALENDAR            = (1<<21),
+    EVENT_CALENDAR_ALARM      = (1<<22),
+    /* Other */
+    EVENT_APPLEPUSHSERVICE     = (1<<23),
+    EVENT_APPLEPUSHSERVICE_DAV = (1<<24)
 };
-
-/* The number representing the last available position in
- * event_param, which should always be messageContent.
- */
-#define MAX_PARAM 29
 
 /*
  * event parameters defined in RFC 5423 - Internet Message Store Events
@@ -122,14 +120,51 @@ enum event_param {
     /* 21 */ EVENT_USER,
     /* 22 */ EVENT_MESSAGE_SIZE,
     /* 23 */ EVENT_MBTYPE,
+    EVENT_SERVERFQDN,
+    EVENT_MAILBOX_ACL,
     /* 24 */ EVENT_DAV_FILENAME,
     /* 25 */ EVENT_DAV_UID,
     /* 26 */ EVENT_ENVELOPE,
     /* 27 */ EVENT_SESSIONID,
     /* 28 */ EVENT_BODYSTRUCTURE,
-    /* 29 */ EVENT_MESSAGE_CONTENT
+    /* 29 */ EVENT_CLIENT_ID,
+    /* 30 */ EVENT_SESSION_ID,
+    EVENT_CONVEXISTS,
+    EVENT_CONVUNSEEN,
+    EVENT_MESSAGE_CID,
+    EVENT_COUNTERS,
+    EVENT_CALENDAR_ALARM_TIME,
+    EVENT_CALENDAR_ALARM_RECIPIENTS,
+    EVENT_CALENDAR_USER_ID,
+    EVENT_CALENDAR_CALENDAR_NAME,
+    EVENT_CALENDAR_UID,
+    EVENT_CALENDAR_ACTION,
+    EVENT_CALENDAR_SUMMARY,
+    EVENT_CALENDAR_DESCRIPTION,
+    EVENT_CALENDAR_LOCATION,
+    EVENT_CALENDAR_TIMEZONE,
+    EVENT_CALENDAR_START,
+    EVENT_CALENDAR_END,
+    EVENT_CALENDAR_ALLDAY,
+    EVENT_CALENDAR_ATTENDEE_NAMES,
+    EVENT_CALENDAR_ATTENDEE_EMAILS,
+    EVENT_CALENDAR_ATTENDEE_STATUS,
+    EVENT_CALENDAR_ORGANIZER,
+    EVENT_APPLEPUSHSERVICE_VERSION,
+    EVENT_APPLEPUSHSERVICE_ACCOUNT_ID,
+    EVENT_APPLEPUSHSERVICE_DEVICE_TOKEN,
+    EVENT_APPLEPUSHSERVICE_SUBTOPIC,
+    EVENT_APPLEPUSHSERVICE_MAILBOXES,
+    EVENT_APPLEPUSHSERVICE_DAV_TOPIC,
+    EVENT_APPLEPUSHSERVICE_DAV_DEVICE_TOKEN,
+    EVENT_APPLEPUSHSERVICE_DAV_MAILBOX_USER,
+    EVENT_APPLEPUSHSERVICE_DAV_MAILBOX_UNIQUEID,
+    EVENT_APPLEPUSHSERVICE_DAV_EXPIRY,
+    /* 31 */ EVENT_MESSAGE_CONTENT
 };
 
+/* messageContent number that is always the last */
+#define MAX_PARAM EVENT_MESSAGE_CONTENT
 
 enum event_param_type {
     EVENT_PARAM_INT,
@@ -141,12 +176,16 @@ struct event_parameter {
     enum event_param id;
     const char *name;
     enum event_param_type type;
-    uint64_t value;
+    union {
+        char *s;
+        uint64_t u;
+        strarray_t *a;
+    } value;
     int filled;
 };
 
 struct mboxevent {
-    enum event_type type;	/* event type */
+    enum event_type type;       /* event type */
 
     /* array of event parameters */
     struct event_parameter params[MAX_PARAM+1];
@@ -162,10 +201,20 @@ struct mboxevent {
 };
 
 
+#define FILL_STRING_PARAM(e,p,v) e->params[p].value.s = v; \
+                                 e->params[p].type = EVENT_PARAM_STRING; \
+                                 e->params[p].filled = 1
+#define FILL_ARRAY_PARAM(e,p,v) e->params[p].value.a = v; \
+                                 e->params[p].type = EVENT_PARAM_ARRAY; \
+                                 e->params[p].filled = 1
+#define FILL_UNSIGNED_PARAM(e,p,v) e->params[p].value.u = v; \
+                                  e->params[p].type = EVENT_PARAM_INT; \
+                                  e->params[p].filled = 1
+
 /*
  * Call this initializer once only at start
  */
-void mboxevent_init();
+int mboxevent_init();
 
 /*
  * Set the namespace to translate internal mailbox name to external name
@@ -193,7 +242,7 @@ struct mboxevent *mboxevent_enqueue(enum event_type type,
 /*
  * Send the queue of event notifications
  */
-void mboxevent_notify(struct mboxevent *mboxevents);
+void mboxevent_notify(struct mboxevent **mboxevents);
 
 /*
  * Release any allocated resources of this given event
@@ -229,7 +278,7 @@ void mboxevent_set_access(struct mboxevent *event,
  * Shortcut to setting event notification parameters
  */
 void mboxevent_set_acl(struct mboxevent *event, const char *identifier,
-			   const char *rights);
+                           const char *rights);
 
 /*
  * Extract data from the given record to fill these event parameters :
@@ -249,7 +298,7 @@ void mboxevent_extract_record(struct mboxevent *event,
  * Called once per message and always before mboxevent_extract_mailbox
  */
 void mboxevent_extract_copied_record(struct mboxevent *event,
-				     const struct mailbox *mailbox, uint32_t uid);
+                                     const struct mailbox *mailbox, struct index_record *record);
 
 /*
  * Extract message content to include to event notification
@@ -291,4 +340,39 @@ void mboxevent_extract_mailbox(struct mboxevent *event, struct mailbox *mailbox)
  */
 void mboxevent_extract_old_mailbox(struct mboxevent *event,
                                    const struct mailbox *mailbox);
+
+/*
+ * set the client tag used by vnd.fastmail.clientTagj
+ */
+void mboxevent_set_client_id(const char *);
+
+/* Arguments to XAPPLEPUSHSERVICE */
+struct applepushserviceargs {
+    unsigned int aps_version;
+    struct buf   aps_account_id;
+    struct buf   aps_device_token;
+    struct buf   aps_subtopic;
+    strarray_t   mailboxes;
+};
+
+/*
+ * send event with APS channel data in it for the push service to sort out
+ */
+void mboxevent_set_applepushservice(struct mboxevent *event,
+                                    struct applepushserviceargs *applepushserviceargs,
+                                    strarray_t *mailboxes,
+                                    const char *userid);
+
+/*
+ * APS subscription for DAV collection
+ */
+void mboxevent_set_applepushservice_dav(struct mboxevent *event,
+                                        const char *aps_topic,
+                                        const char *device_token,
+                                        const char *userid,
+                                        const char *mailbox_userid,
+                                        const char *mailbox_uniqueid,
+                                        int mbtype,
+                                        unsigned int expiry);
+
 #endif /* _MBOXEVENT_H */

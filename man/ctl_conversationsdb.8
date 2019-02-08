@@ -1,0 +1,173 @@
+.\" Man page generated from reStructuredText.
+.
+.TH "CTL_CONVERSATIONSDB" "8" "August 10, 2018" "3.0.8" "Cyrus IMAP"
+.SH NAME
+ctl_conversationsdb \- Cyrus IMAP documentation
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.sp
+Perform operations on the conversations databases
+.SH SYNOPSIS
+.sp
+.nf
+\fBctl_conversationsdb\fP [ \-C \fIconfig\-file\fP ] \fB\-d\fP \fIuserid\fP > text
+\fBctl_conversationsdb\fP [ \-C \fIconfig\-file\fP ] \fB\-u\fP \fIuserid\fP < text
+\fBctl_conversationsdb\fP [ \-C \fIconfig\-file\fP ] [ \fB\-v\fP ] [ \fB\-z\fP | \fB\-b\fP | \fB\-R\fP ] \fIuserid\fP
+\fBctl_conversationsdb\fP [ \-C \fIconfig\-file\fP ] [ \fB\-v\fP ] [ \fB\-z\fP | \fB\-b\fP | \fB\-R\fP ] \fB\-r\fP
+.fi
+.SH DESCRIPTION
+.sp
+\fBctl_conversationsdb\fP is used to perform various administrative
+operations on a conversations database and associated information in
+\fIcyrus.index\fP files.
+.sp
+\fBctl_conversationsdb\fP reads its configuration options out of the imapd.conf(5) file unless specified otherwise by \fB\-C\fP\&.
+.sp
+The \fIconfigdirectory\fP option in imapd.conf(5) is used to determine the default location of the conversations database.
+.sp
+In the first synopsis, the \fB\-d\fP option dumps the contents of a
+conversations database to standard output in an ASCII format.  In the
+second synopsis, the resulting \fIfile\fP is fed back in, using the
+\fB\-u\fP option to "undump" from standard input.  This pair of commands
+is useful for disaster recovery, or for changing the backend used to
+store the conversations database.
+.sp
+The third synopsis is used to reconstruct conversations information
+in various ways for a specific user, and the fourth to reconstruct
+conversations information for all users.  See \fBOPTIONS\fP below for
+details.
+.sp
+This command was introduced in version 3.0.
+.SH OPTIONS
+.INDENT 0.0
+.TP
+.B \-C config\-file
+Use the specified configuration file \fIconfig\-file\fP rather than the default imapd.conf(5)\&.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-d userid
+Dump the conversations database which corresponds to the user \fIuserid\fP
+to standard output in an ASCII format.  The resulting file can be
+used to recreate a database using the \fB\-u\fP option.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-u userid
+"Undumps" the conversations database corresponding to the user \fIuserid\fP,
+i.e. replaces all the entries with data from ASCII records parsed
+from standard input.  The output from the \fB\-d\fP option can be used
+as input.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-v
+Be more verbose when running.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-r
+Be recursive; apply the main operation to every user.  Warning: do
+not combine with \fB\-u\fP, it will not do what you expect.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-z
+Remove all conversation information from the conversations database
+for user \fIuserid\fP, and from all the user\(aqs mailboxes.  The
+information can all be recalculated (eventually) from message
+headers, using the \fB\-b\fP option.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-b
+Rebuild all conversation information in the conversations database
+for user \fIuserid\fP, and in all the user\(aqs mailboxes, from the header
+information in messages.  Does not affect messages which already
+have conversation information.
+.sp
+This is a bulk mode version of what happens to each message when it
+arrives, and can be used to add missing conversation information
+for past messages, e.g. after using \fB\-z\fP or after upgrading
+Cyrus from older versions.  Note: this operation uses information
+from \fIcyrus.cache\fP files so it does not need to read every single
+message file.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-R
+Recalculate counts of messages stored in existing conversations in
+the conversations database for user \fIuserid\fP\&.  This is a limited
+subset of \fB\-b\fP; in particular it does not create conversations or
+assign messages to conversations.
+.UNINDENT
+.SH EXAMPLES
+.sp
+[NB: Examples needed]
+.SH HISTORY
+.sp
+This command was introduced in version 3.0.
+.SH FILES
+.sp
+/etc/imapd.conf, <configurationdir>/conversations.db
+.SH SEE ALSO
+.sp
+imapd.conf(5), master(8)
+.SH AUTHOR
+The Cyrus Team, Nic Bernstein (Onlight)
+.SH COPYRIGHT
+1993-2017, The Cyrus Team
+.\" Generated by docutils manpage writer.
+.

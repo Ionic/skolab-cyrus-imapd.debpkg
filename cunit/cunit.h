@@ -57,9 +57,9 @@ extern int verbose;
  * replace the macros with improved ones, keeping the same API.
  */
 extern CU_BOOL CU_assertFormatImplementation(CU_BOOL bValue, unsigned int uiLine,
-					     char strFile[], char strFunction[],
-					     CU_BOOL bFatal,
-					     char strConditionFormat[], ...);
+                                             char strFile[], char strFunction[],
+                                             CU_BOOL bFatal,
+                                             char strConditionFormat[], ...);
 extern void __cunit_wrap_test(const char *name, void (*fn)(void));
 extern int __cunit_wrap_fixture(const char *name, int (*fn)(void));
 
@@ -192,9 +192,32 @@ extern int __cunit_wrap_fixture(const char *name, int (*fn)(void));
      __FILE__, "", CU_TRUE, \
     "CU_ASSERT_SYSLOG_FATAL(/%s/=%u, " #expected "=%u)", _s, _a, _e); }
 
+extern jmp_buf fatal_jbuf;
+extern int fatal_expected;
+extern const char *fatal_string;
+extern int fatal_code;
+
+#define CU_EXPECT_CYRFATAL_BEGIN                                \
+do {                                                            \
+    fatal_expected = 1;                                         \
+    fatal_string = NULL;                                        \
+    fatal_code = 0;                                             \
+    if (!setjmp(fatal_jbuf)) {                                  \
+        /* code that we expect to call fatal() */
+
+#define CU_EXPECT_CYRFATAL_END(expected_code, expected_string)  \
+        CU_FAIL_FATAL("fatal codepath didn't call fatal");      \
+    } else {                                                    \
+        int _ec = (expected_code);                              \
+        const char *_es = (expected_string);                    \
+        CU_ASSERT_EQUAL(fatal_code, _ec);                       \
+        if (_es) CU_ASSERT_STRING_EQUAL(fatal_string, _es);     \
+}   } while (0)
+
+
 /* for parametrised tests */
 
-#define CUNIT_PARAM(x)	    (x)
+#define CUNIT_PARAM(x)      (x)
 
 struct cunit_param
 {

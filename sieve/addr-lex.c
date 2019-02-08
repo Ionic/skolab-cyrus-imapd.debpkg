@@ -573,7 +573,7 @@ char *addrtext;
 
 void addrerror(void*, const char *);
 
-static int ncom;	/* number of open comments */
+static int ncom;        /* number of open comments */
 #define YY_DECL int addrlex(YYSTYPE* addrlval __attribute__((unused)), void* parse_script)
 #define YY_NO_INPUT 1
 
@@ -875,9 +875,9 @@ case 4:
 YY_RULE_SETUP
 #line 67 "sieve/addr-lex.l"
 { addrerror(parse_script, "address parse error, "
-					  "unexpected `')'' "
-					  "(unbalanced comment)");
-				  yyterminate(); }
+                                          "unexpected `')'' "
+                                          "(unbalanced comment)");
+                                  yyterminate(); }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
@@ -908,8 +908,8 @@ YY_RULE_SETUP
 case YY_STATE_EOF(QSTRING):
 #line 79 "sieve/addr-lex.l"
 { BEGIN INITIAL;
-				  addrerror(parse_script, "address parse error, expecting `'\"'' (unterminated string)");
-				  yyterminate(); }
+                                  addrerror(parse_script, "address parse error, expecting `'\"'' (unterminated string)");
+                                  yyterminate(); }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
@@ -924,8 +924,8 @@ YY_RULE_SETUP
 case YY_STATE_EOF(DOMAINLIT):
 #line 85 "sieve/addr-lex.l"
 { BEGIN INITIAL;
-				  addrerror(parse_script, "address parse error, expecting `']'' (unterminated domain literal)");
-				  yyterminate(); }
+                                  addrerror(parse_script, "address parse error, expecting `']'' (unterminated domain literal)");
+                                  yyterminate(); }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
@@ -945,10 +945,10 @@ YY_RULE_SETUP
 case YY_STATE_EOF(COMMENT):
 #line 94 "sieve/addr-lex.l"
 { BEGIN INITIAL;
-				  addrerror(parse_script, "address parse error, "
-					  "expecting `')'' "
-					  "(unterminated comment)");
-				  yyterminate(); }
+                                  addrerror(parse_script, "address parse error, "
+                                          "expecting `')'' "
+                                          "(unterminated comment)");
+                                  yyterminate(); }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP

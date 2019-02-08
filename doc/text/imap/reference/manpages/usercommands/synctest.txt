@@ -1,0 +1,6 @@
+
+**synctest**
+************
+
+Interactive IMAP test program: tests the replication protocol. This is
+installed as a hard link to imtest(1).

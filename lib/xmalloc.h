@@ -48,19 +48,19 @@
 /* for free() */
 #include <stdlib.h>
 
-extern void *xmalloc (unsigned size);
-extern void *xzmalloc (unsigned size);
-extern void *xcalloc (unsigned nmemb, unsigned size);
-extern void *xrealloc (void *ptr, unsigned size);
+extern void *xmalloc (size_t size);
+extern void *xzmalloc (size_t size);
+extern void *xcalloc (size_t nmemb, size_t size);
+extern void *xrealloc (void *ptr, size_t size);
 extern char *xstrdup (const char *str);
 extern char *xstrdupnull (const char *str);
 extern char *xstrdupsafe (const char *str);
-extern char *xstrndup (const char *str, unsigned len);
-extern void *xmemdup (const void *ptr, unsigned size);
+extern char *xstrndup (const char *str, size_t len);
+extern void *xmemdup (const void *ptr, size_t size);
 
 /* Functions using xmalloc.h must provide a function called fatal() conforming
    to the following: */
-extern void fatal(const char *fatal_message, int fatal_code);
-/*   __attribute__ ((noreturn));*/
+extern void fatal(const char *fatal_message, int fatal_code)
+   __attribute__ ((noreturn));
 
 #endif /* INCLUDED_XMALLOC_H */

@@ -98,7 +98,7 @@ are listed with ``<none>''.
 /* The prefix for the addressbook mailboxes hierarchies.  The hierarchy
    delimiter will be automatically appended.  The public addressbook
    hierarchy will be at the toplevel of the shared namespace.  A
-   user's personal calendar hierarchy will be a child of their Inbox. */
+   user's personal addressbook hierarchy will be a child of their Inbox. */
 
 { "admins", "", STRING }
 /* The list of userids with administrative rights.  Separate each userid
@@ -165,7 +165,7 @@ are listed with ``<none>''.
   to do so may result in the user's meta-data (seen state,
   subscriptions, etc) being corrupted or out of date. */
 
-{ "altnamespace", 0, SWITCH }
+{ "altnamespace", 1, SWITCH }
 /* Use the alternate IMAP namespace, where personal folders reside at the
    same level in the hierarchy as INBOX.
 .PP
@@ -174,14 +174,18 @@ are listed with ``<none>''.
    and Sieve scripts (lmtpd).  This option does NOT apply to admin tools
    such as cyradm (admins ONLY), reconstruct, quota, etc., NOR does it
    affect LMTP delivery of messages directly to mailboxes via
-   plus-addressing. */
+   plus-addressing.  The default changed in 3.0 from off to on. */
 
-{ "annotation_db", "twoskip", STRINGLIST("berkeley", "berkeley-hash", "skiplist", "twoskip")}
+{ "altprefix", "Alt Folders", STRING }
+/* Alternative INBOX spellings that can't be accessed in altnamespace
+   otherwise go under here */
+
+{ "annotation_db", "twoskip", STRINGLIST("skiplist", "twoskip", "lmdb")}
 /* The cyrusdb backend to use for mailbox annotations. */
 
 { "annotation_db_path", NULL, STRING }
 /* The absolute path to the annotations db file.  If not specified,
-   will be confdir/annotations.db */
+   will be configdirectory/annotations.db */
 
 { "anyoneuseracl", 1, SWITCH }
 /* Should non-admin users be allowed to set ACLs for the 'anyone'
@@ -190,8 +194,8 @@ are listed with ``<none>''.
 
 { "annotation_allow_undefined", 0, SWITCH }
 /* Allow clients to store values for entries which are not
- * defined either by Cyrus or in the annotations_definitions
- * file. */
+   defined either by Cyrus or in the annotations_definitions
+   file. */
 
 { "annotation_definitions", NULL, STRING }
 /* File containing external (third-party) annotation definitions.
@@ -269,6 +273,42 @@ Blank lines and lines beginning with ``#'' are ignored.
    be either an executable (including a script), or a UNIX domain
    socket.  */
 
+{ "aps_topic", NULL, STRING }
+/* Topic for Apple Push Service registration. */
+{ "aps_topic_caldav", NULL, STRING }
+/* Topic for Apple Push Service registration for CalDAV. */
+{ "aps_topic_carddav", NULL, STRING }
+/* Topic for Apple Push Service registration for CardDAV. */
+
+{ "archive_enabled", 0, SWITCH }
+/* Is archiving enabled for this server.  You also need to have an
+   archivepartition for the mailbox.  Archiving allows older email
+   to be stored on slower, cheaper disks - even within the same
+   mailbox, as distinct from partitions. */
+
+{ "archive_days", 7, INT }
+/* The number of days after which to move messages to the archive partition
+   if archiving is enabled */
+
+{ "archive_maxsize", 1024, INT }
+/* The size in kilobytes of the largest message that won't be archived
+   immediately.  Default is 1Mb */
+
+{ "archive_keepflagged", 0, SWITCH }
+/* If set, messages with the \\Flagged system flag won't be archived,
+   provided they are smaller than \fBarchive_maxsize\fR. */
+
+# Commented out - there's no such thing as "archivepartition-name",
+# but we need this for the man page
+# { "archivepartition-name", NULL, STRING }
+/* The pathname of the archive partition \fIname\fR, corresponding to
+   spool partition \fBpartition-name\fR.  For any mailbox residing in
+   a directory on \fBpartition-name\fR, the archived messages will be
+   stored in a corresponding directory on \fBarchivepartition-name\fR.
+   Note that not every \fBpartition-name\fR option is strictly required
+   to have a corresponding \fBarchivepartition-name\fR option, but that
+   without one there's no benefit to enabling archiving. */
+
 { "auditlog", 0, SWITCH }
 /* Should cyrus output log entries for every action taken on a message
    file or mailboxes list entry?  It's noisy so disabled by default, but
@@ -277,36 +317,42 @@ Blank lines and lines beginning with ``#'' are ignored.
 { "auth_mech", "unix", STRINGLIST("unix", "pts", "krb", "krb5")}
 /* The authorization mechanism to use. */
 
-{ "autocreateinboxfolders", NULL, STRING }
+{ "autocreateinboxfolders", NULL, STRING, "2.5.0", "autocreate_inbox_folders" }
 /* Deprecated in favor of \fIautocreate_inbox_folders\fR. */
 
-{ "autocreatequota", 0, INT }
+{ "autocreatequota", 0, INT, "2.5.0", "autocreate_quota" }
 /* Deprecated in favor of \fIautocreate_quota\fR. */
 
-{ "autocreatequotamsg", -1, INT }
+{ "autocreatequotamsg", -1, INT, "2.5.0", "autocreate_quota_messages" }
 /* Deprecated in favor of \fIautocreate_quota_messages\fR. */
 
-{ "autosievefolders", NULL, STRING }
+{ "autosievefolders", NULL, STRING, "2.5.0", "autocreate_sieve_folders" }
 /* Deprecated in favor of \fIautocreate_sieve_folders\fR. */
 
-{ "generate_compiled_sieve_script", NULL, SWITCH }
+{ "generate_compiled_sieve_script", 0, SWITCH, "2.5.0", "autocreate_sieve_script_compile" }
 /* Deprecated in favor of \fIautocreate_sieve_script_compile\fR. */
 
-{ "autocreate_sieve_compiled_script", NULL, STRING }
+{ "autocreate_sieve_compiled_script", NULL, STRING, "2.5.0", "autocreate_sieve_script_compiled" }
 /* Deprecated in favor of \fIautocreate_sieve_script_compiled\fR. */
 
-{ "autosubscribeinboxfolders", NULL, STRING }
+{ "autosubscribeinboxfolders", NULL, STRING, "2.5.0", "autocreate_subscribe_folders" }
 /* Deprecated in favor of \fIautocreate_subscribe_folders\fR. */
 
-{ "autosubscribesharedfolders", NULL, STRING }
+{ "autosubscribesharedfolders", NULL, STRING, "2.5.0", "autocreate_subscribe_sharedfolders" }
 /* Deprecated in favor of \fIautocreate_subscribe_sharedfolders\fR. */
 
-{ "autosubscribe_all_sharedfolders", 0, SWITCH }
+{ "autosubscribe_all_sharedfolders", 0, SWITCH, "2.5.0", "autocreate_subscribe_sharedfolders_all" }
 /* Deprecated in favor of \fIautocreate_subscribe_sharedfolders_all\fR. */
 
 { "autocreate_inbox_folders", NULL, STRING }
 /* If a user does not have an INBOX already, and the INBOX is to be
    created, create the list of folders in this setting as well.
+   \fIautocreate_inbox_folders\fR is a list of INBOX's subfolders
+   separated by a "|", that are automatically created by the server
+   under the following two scenarios. Leading and trailing whitespace is
+   stripped, so "Junk | Trash" results in two folders: "Junk" and
+   "Trash".  See also the \fIxlist-flag\fR option, for setting
+   special-use flags on autocreated folders.
 .PP
    INBOX folders are created under both the following conditions:
 .\"
@@ -318,11 +364,7 @@ Blank lines and lines beginning with ``#'' are ignored.
    A message arrives for the user through the \fIlmtpd(8)\fR.
    \fIautocreate_post\fR option must be enabled.
 .PP
-   \fIautocreate_inbox_folders\fR is a list of INBOX's subfolders
-   separated by a "|", that are automatically created by the server
-   under the previous two scenarios. Leading and trailing whitespace is
-   stripped, so "Junk | Trash" results in two folders: "Junk" and
-   "Trash". */
+ */
 
 { "autocreate_post", 0, SWITCH }
 /* If enabled, when \fIlmtpd(8)\fR receives an incoming mail for an
@@ -401,18 +443,55 @@ Blank lines and lines beginning with ``#'' are ignored.
 /* A space separated list of users and/or groups that are allowed their INBOX to be
    automatically created. */
 
-{ "berkeley_cachesize", 512, INT }
-/* Size (in kilobytes) of the shared memory buffer pool (cache) used
-   by the berkeley environment.  The minimum allowed value is 20.  The
-   maximum allowed value is 4194303 (4GB). */
+# Commented out - there's no such thing as "backuppartition-name",
+# but we need this for the man page
+# { "backuppartition-name", NULL, STRING }
+/* The pathname of the backup partition \fIname\fR.  At least one backup
+   partition pathname MUST be specified if backups are in use.  Note that
+   there is no relationship between spool partitions and backup partitions. */
 
-{ "berkeley_locks_max", 50000, INT }
-/* Maximum number of locks to be held or requested in the berkeley
-   environment. */
+{ "backup_compact_minsize", 0, INT }
+/* The minimum size in kilobytes of chunks in each backup.  The compact tool
+   will try to combine adjacent chunks that are smaller than this.
+.PP
+   Setting this value to zero or negative disables combining of chunks. */
 
-{ "berkeley_txns_max", 100, INT }
-/* Maximum number of transactions to be supported in the berkeley
-   environment. */
+{ "backup_compact_maxsize", 0, INT }
+/* The maximum size in kilobytes of chunks in each backup.  The compact tool
+   will try to split chunks larger than this into smaller chunks.
+.PP
+   Setting this value to zero or negative disables splitting of chunks. */
+
+{ "backup_compact_work_threshold", 1, INT }
+/* The number of chunks that must obviously need compaction before the compact
+   tool will go ahead with the compaction.  If set to less than one, the value
+   is treated as being one. */
+
+{ "backup_staging_path", NULL, STRING }
+/* The absolute path of the backup staging area.  If not specified,
+   will be temp_path/backup */
+
+{ "backup_retention_days", 7, INT }
+/* The number of days to keep content in backup after it has been deleted
+   from the source.  If set to a negative value or zero, deleted content
+   will be kept indefinitely. */
+
+{ "backup_db", "twoskip", STRINGLIST("skiplist", "sql", "twoskip", "lmdb")}
+/* The cyrusdb backend to use for the backup locations database. */
+
+{ "backup_db_path", NULL, STRING }
+/* The absolute path to the backup db file.  If not specified,
+   will be configdirectory/backups.db */
+
+{ "backup_keep_previous", 0, SWITCH }
+/* Whether the \fBctl_backups compact\fR and \fBctl_backups reindex\fR
+   commands should preserve the original file.  The original file will
+   be named with a timestamped suffix.  This is mostly useful for
+   debugging.
+.PP
+   Note that with this enabled, compacting a backup will actually
+   increase the disk used by it (because there will now be an extra
+   copy: the original version, and the compacted version). */
 
 { "boundary_limit", 1000, INT }
 /* messages are parsed recursively and a deep enough MIME structure
@@ -420,10 +499,22 @@ Blank lines and lines beginning with ``#'' are ignored.
    layers of MIME structure.  The default of 1000 is much higher
    than any sane message should have. */
 
+{ "caldav_allowattach", 1, SWITCH }
+/* Enable managed attachments support on the caldav server. */
+
 { "caldav_allowscheduling", "on", ENUM("off", "on", "apple") }
 /* Enable calendar scheduling operations. If set to "apple", the
    server will emulate Apple CalendarServer behavior as closely as
    possible. */
+
+{ "caldav_create_attach", 1, SWITCH }
+/* Create the 'Attachments' calendar if it doesn't already exist */
+
+{ "caldav_create_default", 1, SWITCH }
+/* Create the 'Default' calendar if it doesn't already exist */
+
+{ "caldav_create_sched", 1, SWITCH }
+/* Create the 'Inbox' and 'Outbox' calendars if they don't already exist */
 
 { "caldav_maxdatetime", "20380119T031407Z", STRING }
 /* The latest date and time accepted by the server (ISO format).  This
@@ -458,9 +549,27 @@ Blank lines and lines beginning with ``#'' are ignored.
    If not set (the default), the value of the "servername" option will
    be used.*/
 
+{ "carddav_repair_vcard", 0, SWITCH }
+/* If enabled, VCARDs with invalid content are attempted to be repaired
+   during creation. */
+
 { "chatty", 0, SWITCH }
 /* If yes, syslog tags and commands for every IMAP command, mailboxes
    for every lmtp connection, every POP3 command, etc */
+
+{ "client_bind", 0, SWITCH }
+/* If enabled, a specific IP will be bound when performing a client
+   connection.  \fBclient_bind_name\fR is used if it is set, otherwise
+   \fBservername\fR is used.  This is useful on multi-homed servers where
+   Cyrus should not use other services' interfaces.
+.PP
+   If not enabled (the default), no bind will be performed.  Client
+   connections will use an IP chosen by the operating system. */
+
+{ "client_bind_name", NULL, STRING }
+/* IPv4, IPv6 address or hostname to bind for client connections when
+   \fBclient_bind\fR is enabled.  If not set (the default),
+   \fRservername\fR will be used. */
 
 { "client_timeout", 10, INT }
 /* Number of seconds to wait before returning a timeout failure when
@@ -474,8 +583,52 @@ Blank lines and lines beginning with ``#'' are ignored.
 /* The pathname of the IMAP configuration directory.  This field is
    required. */
 
-{ "createonpost", 0, SWITCH }
+{ "createonpost", 0, SWITCH, "2.5.0", "autocreate_post" }
 /* Deprecated in favor of \fIautocreate_post\fR. */
+
+{ "conversations", 0, SWITCH }
+/* Enable the XCONVERSATIONS extensions.  Extract conversation
+   tracking information from incoming messages and track them
+   in per-user databases. */
+
+{ "conversations_counted_flags", NULL, STRING }
+/* space-separated list of flags for which per-conversation counts
+   will be kept.  Note that you need to reconstruct the conversations
+   database with ctl_conversationsdb if you change this option on a
+   running server, or the counts will be wrong.  */
+
+{ "conversations_db", "skiplist", STRINGLIST("skiplist", "sql", "twoskip", "lmdb")}
+/* The cyrusdb backend to use for the per-user conversations database. */
+
+{ "conversations_expire_days", 90, INT }
+/* How long the conversations database keeps the message tracking
+   information needed for receiving new messages in existing
+   conversations, in days. */
+
+{ "crossdomains", 0, SWITCH }
+/* Enable cross domain sharing.  This works best with alt namespace and
+   unix hierarchy separators on, so you get Other Users/foo@example.com/... */
+
+{ "crossdomains_onlyother", 0, SWITCH }
+/* only show the domain for users in other domains than your own (for
+   backwards compatibility if you're already sharing */
+
+{ "cyrus_user", NULL, STRING }
+/* The username to use as the 'cyrus' user.  If not configured, the compile
+   time default will be used. Can be further overridden by setting the
+   $CYRUS_USER environment variable. */
+
+{ "davdriveprefix", "#drive", STRING }
+/* The prefix for the DAV storage mailboxes hierarchies.  The hierarchy
+   delimiter will be automatically appended.  The public storage
+   hierarchy will be at the toplevel of the shared namespace.  A
+   user's personal storage hierarchy will be a child of their Inbox. */
+
+{ "davnotificationsprefix", "#notifications", STRING }
+/* The prefix for the DAV notifications hierarchy.  The hierarchy
+   delimiter will be automatically appended.  The public notifications
+   hierarchy will be at the toplevel of the shared namespace.  A
+   user's personal notifications hierarchy will be a child of their Inbox. */
 
 { "dav_realm", NULL, STRING }
 /* The realm to present for HTTP authentication of generic DAV
@@ -492,7 +645,7 @@ Blank lines and lines beginning with ``#'' are ignored.
 /* The Access Control List (ACL) placed on a newly-created (non-user)
    mailbox that does not have a parent mailbox. */
 
-{ "defaultdomain", NULL, STRING }
+{ "defaultdomain", "internal", STRING }
 /* The default domain for virtual domain support */
 
 { "defaultpartition", NULL, STRING }
@@ -503,6 +656,15 @@ Blank lines and lines beginning with ``#'' are ignored.
    Note that the partition specified by this option must also be
    specified as \fIpartition-name\fR, where you substitute 'name'
    for the alphanumeric string you set \fIdefaultpartition\fR to. */
+
+{ "defaultsearchtier", "", STRING }
+/* Name of the default tier that messages will be indexed to. Search
+   indexes can be organized in tiers to allow index storage in different
+   directories and physical media. See the man page of squatter for
+   details. The default search tier also requires the definition
+   of an according \fIsearchtierpartition-name\fR entry.
+.PP
+   This option MUST be specified for xapian search. */
 
 { "defaultserver", NULL, STRING }
 /* The backend server name used by default for new mailboxes.  If not
@@ -526,6 +688,12 @@ Blank lines and lines beginning with ``#'' are ignored.
     In \fIimmediate\fR mode, the mailbox is removed from the filesystem
     immediately.
 */
+
+{ "delete_unsubscribe", 0, SWITCH }
+/* Whether to also unsubscribe from mailboxes when they are deleted.
+   Note that this behaviour contravenes RFC 3501 section 6.3.9, but
+   may be useful for avoiding user/client software confusion.
+   The default is 'no'. */
 
 { "deleteright", "c", STRING }
 /* Deprecated - only used for backwards compatibility with existing
@@ -560,13 +728,13 @@ Blank lines and lines beginning with ``#'' are ignored.
    specifies the actual key used for iSchedule DKIM signing within the
    domain. */
 
-{ "duplicate_db", "twoskip", STRINGLIST("berkeley", "berkeley-nosync", "berkeley-hash", "berkeley-hash-nosync", "skiplist", "sql", "twoskip")}
+{ "duplicate_db", "twoskip", STRINGLIST("skiplist", "sql", "twoskip", "lmdb")}
 /* The cyrusdb backend to use for the duplicate delivery suppression
    and sieve. */
 
 { "duplicate_db_path", NULL, STRING }
 /* The absolute path to the duplicate db file.  If not specified,
-   will be confdir/deliver.db */
+   will be configdirectory/deliver.db */
 
 { "duplicatesuppression", 1, SWITCH }
 /* If enabled, lmtpd will suppress delivery of a message to a mailbox if
@@ -594,10 +762,10 @@ Blank lines and lines beginning with ``#'' are ignored.
 /* Don't send event notification for folder with given special-use attributes.
    Set ALL for any folder */
 
-{ "event_extra_params", "timestamp", BITFIELD("bodyStructure", "clientAddress", "diskUsed", "flagNames", "messageContent", "messageSize", "messages", "modseq", "service", "timestamp", "uidnext", "vnd.cmu.midset", "vnd.cmu.unseenMessages", "vnd.cmu.envelope", "vnd.cmu.sessionId", "vnd.cmu.mbtype", "vnd.cmu.davFilename", "vnd.cmu.davUid") }
+{ "event_extra_params", "timestamp", BITFIELD("bodyStructure", "clientAddress", "diskUsed", "flagNames", "messageContent", "messageSize", "messages", "modseq", "service", "timestamp", "uidnext", "vnd.cmu.midset", "vnd.cmu.unseenMessages", "vnd.cmu.envelope", "vnd.cmu.sessionId", "vnd.cmu.mailboxACL", "vnd.cmu.mbtype", "vnd.cmu.davFilename", "vnd.cmu.davUid", "vnd.fastmail.clientId", "vnd.fastmail.sessionId", "vnd.fastmail.convExists", "vnd.fastmail.convUnseen", "vnd.fastmail.cid", "vnd.fastmail.counters") }
 /* Space-separated list of extra parameters to add to any appropriated event. */
 
-{ "event_groups", "message mailbox", BITFIELD("message", "quota", "flags", "access", "mailbox", "subscription") }
+{ "event_groups", "message mailbox", BITFIELD("message", "quota", "flags", "access", "mailbox", "subscription", "calendar", "applepushservice" ) }
 /* Space-separated list of groups of related events to turn on notification */
 
 { "event_notifier", NULL, STRING }
@@ -625,7 +793,7 @@ Blank lines and lines beginning with ``#'' are ignored.
 { "failedloginpause", 3, INT }
 /* Number of seconds to pause after a failed login. */
 
-{ "flushseenstate", 1, SWITCH }
+{ "flushseenstate", 1, SWITCH, "2.5.0" }
 /* Deprecated. No longer used */
 
 { "foolstupidclients", 0, SWITCH }
@@ -723,10 +891,14 @@ Blank lines and lines beginning with ``#'' are ignored.
    provisional responses every \fIhttpkeepalive\fR seconds until the
    final response can be sent */
 
-{ "httpmodules", "", BITFIELD("caldav", "carddav", "domainkey", "ischedule", "rss", "timezone") }
+{ "httpmodules", "", BITFIELD("admin", "caldav", "carddav", "domainkey", "freebusy", "ischedule", "rss", "tzdist", "webdav") }
 /* Space-separated list of HTTP modules that will be enabled in
    httpd(8).  This option has no effect on modules that are disabled
-   at compile time due to missing dependencies (e.g. libical). */
+   at compile time due to missing dependencies (e.g. libical).
+.PP
+   Note that "domainkey" depends on "ischedule" being enabled, and
+   that both "freebusy" and "ischedule" depend on "caldav" being
+   enabled. */
 
 { "httpprettytelemetry", 0, SWITCH }
 /* If enabled, HTTP response payloads including server-generated
@@ -763,6 +935,10 @@ Blank lines and lines beginning with ``#'' are ignored.
    userid+namespace syntax as the authentication/authorization id.
    Using userid+ (with an empty namespace) will list only subscribed
    mailboxes. */
+
+{ "imipnotifier", NULL, STRING }
+/* Notifyd(8) method to use for "IMIP" notifications which are based on
+   the RFC 6047.  If not set, "IMIP" notifications are disabled. */
 
 { "implicit_owner_rights", "lkxa", STRING }
 /* The implicit Access Control List (ACL) for the owner of a mailbox. */
@@ -892,25 +1068,25 @@ Blank lines and lines beginning with ``#'' are ignored.
 { "ldap_sasl", 1, SWITCH }
 /* Use SASL for LDAP binds in the LDAP PTS module. */
 
-{ "ldap_sasl_authc", NULL, STRING }
+{ "ldap_sasl_authc", NULL, STRING, "2.5.0", "ldap_id" }
 /* Deprecated.  Use ldap_id */
 
-{ "ldap_sasl_authz", NULL, STRING }
+{ "ldap_sasl_authz", NULL, STRING, "2.5.0", "ldap_authz" }
 /* Deprecated.  Use ldap_authz */
 
-{ "ldap_sasl_mech", NULL, STRING }
+{ "ldap_sasl_mech", NULL, STRING, "2.5.0", "ldap_mech" }
 /* Deprecated.  Use ldap_mech */
 
-{ "ldap_sasl_password", NULL, STRING }
+{ "ldap_sasl_password", NULL, STRING, "2.5.0", "ldap_password" }
 /* Deprecated.  User ldap_password */
 
-{ "ldap_sasl_realm", NULL, STRING }
+{ "ldap_sasl_realm", NULL, STRING, "2.5.0", "ldap_realm" }
 /* Deprecated.  Use ldap_realm */
 
 { "ldap_scope", "sub", STRINGLIST("sub", "one", "base") }
 /* Specify search scope. */
 
-{ "ldap_servers", "ldap://localhost/", STRING }
+{ "ldap_servers", "ldap://localhost/", STRING, "2.5.0", "ldap_uri" }
 /* Deprecated.  Use ldap_uri */
 
 { "ldap_size_limit", 1, INT }
@@ -932,36 +1108,36 @@ Blank lines and lines beginning with ``#'' are ignored.
 { "ldap_ca_file", NULL, STRING }
 /* Patch to a file containing CA (Certificate Authority) certificate(s). */
 
+{ "ldap_ciphers", NULL, STRING }
+/* List of SSL/TLS ciphers to allow.  The format of the string is
+   described in ciphers(1). */
+
 { "ldap_client_cert", NULL, STRING }
 /* File containing the client certificate. */
+
+{ "ldap_client_key", NULL, STRING }
+/* File containing the private client key. */
 
 { "ldap_verify_peer", 0, SWITCH }
 /* Require and verify server certificate.  If this option is yes,
    you must specify ldap_ca_file or ldap_ca_dir. */
 
-{ "ldap_ciphers", NULL, STRING }
-/* List of SSL/TLS ciphers to allow.  The format of the string is
-   described in ciphers(1). */
-
-{ "ldap_client_key", NULL, STRING }
-/* File containing the private client key. */
-
-{ "ldap_tls_cacert_dir", NULL, STRING }
+{ "ldap_tls_cacert_dir", NULL, STRING, "2.5.0", "ldap_ca_dir" }
 /* Deprecated in favor of \fIldap_ca_dir\fR. */
 
-{ "ldap_tls_cacert_file", NULL, STRING }
+{ "ldap_tls_cacert_file", NULL, STRING, "2.5.0", "ldap_ca_file" }
 /* Deprecated in favor of \fIldap_ca_file\fR. */
 
-{ "ldap_tls_cert", NULL, STRING }
+{ "ldap_tls_cert", NULL, STRING, "2.5.0", "ldap_client_cert" }
 /* Deprecated in favor of \fIldap_client_cert\fR. */
 
-{ "ldap_tls_key", NULL, STRING }
+{ "ldap_tls_key", NULL, STRING, "2.5.0", "ldap_client_key" }
 /* Deprecated in favor of \fIldap_client_key\fR. */
 
-{ "ldap_tls_check_peer", NULL, STRING }
+{ "ldap_tls_check_peer", 0, SWITCH, "2.5.0", "ldap_verify_peer" }
 /* Deprecated in favor of \fIldap_verify_peer\fR. */
 
-{ "ldap_tls_ciphers", NULL, STRING }
+{ "ldap_tls_ciphers", NULL, STRING, "2.5.0", "ldap_ciphers" }
 /* Deprecated in favor of \fIldap_ciphers\fR. */
 
 { "ldap_uri", NULL, STRING }
@@ -972,6 +1148,10 @@ Blank lines and lines beginning with ``#'' are ignored.
 /* Specify the LDAP protocol version.  If ldap_start_tls and/or
    ldap_use_sasl are enabled, ldap_version will be automatically
    set to 3. */
+
+{ "literalminus", 0, SWITCH }
+/* if enabled, CAPABILITIES will reply with LITERAL- rather than
+   LITERAL+ (RFC 7888).  Doesn't actually size-restrict uploads though */
 
 { "lmtp_downcase_rcpt", 1, SWITCH }
 /* If enabled, lmtpd will convert the recipient addresses to lowercase
@@ -1067,20 +1247,20 @@ Blank lines and lines beginning with ``#'' are ignored.
 { "maxword", 131072, INT }
 /* Maximum size of a single word for the parser.  Default 128k */
 
-{ "mboxkey_db", "twoskip", STRINGLIST("berkeley", "skiplist", "twoskip") }
+{ "mboxkey_db", "twoskip", STRINGLIST("skiplist", "twoskip", "lmdb") }
 /* The cyrusdb backend to use for mailbox keys. */
 
-{ "mboxlist_db", "twoskip", STRINGLIST("flat", "berkeley", "berkeley-hash", "skiplist", "sql", "twoskip")}
+{ "mboxlist_db", "twoskip", STRINGLIST("flat", "skiplist", "sql", "twoskip", "lmdb")}
 /* The cyrusdb backend to use for the mailbox list. */
 
 { "mboxlist_db_path", NULL, STRING }
 /* The absolute path to the mailboxes db file.  If not specified
-   will be confdir/mailboxes.db */
+   will be configdirectory/mailboxes.db */
 
 { "mboxname_lockpath", NULL, STRING }
 /* Path to mailbox name lock files (default $conf/lock) */
 
-{ "metapartition_files", "", BITFIELD("header", "index", "cache", "expunge", "squat", "annotations", "lock", "dav") }
+{ "metapartition_files", "", BITFIELD("header", "index", "cache", "expunge", "squat", "annotations", "lock", "dav", "archivecache") }
 /* Space-separated list of metadata files to be stored on a
    \fImetapartition\fR rather than in the mailbox directory on a spool
    partition. */
@@ -1233,11 +1413,15 @@ Blank lines and lines beginning with ``#'' are ignored.
 
 { "newsrc_db_path", NULL, STRING }
 /* The absolute path to the newsrc db file.  If not specified,
-   will be confdir/fetchnews.db */
+   will be configdirectory/fetchnews.db */
 
 { "nntptimeout", 3, INT }
 /* Set the length of the NNTP server's inactivity autologout timer,
    in minutes.  The minimum value is 3, the default. */
+
+{ "notesmailbox", NULL, STRING }
+/* The top level mailbox in each user's account which is used to store
+ * Apple-style Notes.  Default is blank (disabled) */
 
 { "notifysocket", "{configdirectory}/socket/notify", STRING }
 /* Unix domain socket that the mail notification daemon listens on. */
@@ -1270,8 +1454,11 @@ And the notification message will be available on \fIstdin\fR.
 /* The pathname of the partition \fIname\fR.  At least one partition
    pathname MUST be specified.  If the \fBdefaultpartition\fR option is
    used, then its pathname MUST be specified.  For example, if the
-   value of the \fBdefaultpartion\fR option is \fBdefault\fR, then the
-   \fBpartition-default\fR field is required. */
+   value of the \fBdefaultpartion\fR option is \fBpart1\fR, then the
+   \fBpartition-part1\fR field is required. */
+
+{ "outbox_sendlater", 0, SWITCH }
+/* If enabled, any message with a \Draft flag will be sent at the time of its INTERNALDATE */
 
 { "partition_select_mode", "freespace-most", STRINGLIST("random", "freespace-most", "freespace-percent-most", "freespace-percent-weighted", "freespace-percent-weighted-delta") }
 /* Partition selection mode.
@@ -1292,8 +1479,7 @@ the partition has, the more chances it has to be selected
 .IP \fIfreespace-percent-weighted-delta\fR 5
 each partition is weighted according to its difference of free space (%)
 compared to the most used partition; the more the partition is lagging behind
-the most used
-partition, the more chances it has to be selected
+the most used partition, the more chances it has to be selected
 .PP
 Note that actually even the most used partition has a few chances to be
 selected, and those chances increase when other partitions get closer
@@ -1389,7 +1575,7 @@ If all partitions are over that limit, this feature is not used anymore.
 
 { "proc_path", NULL, STRING }
 /* Path to proc directory.  Default is NULL - must be an absolute path
-   if specified.  If not specified, the path $confdir/proc/ will be
+   if specified.  If not specified, the path $configdirectory/proc/ will be
    used. */
 
 { "proxy_authname", "proxy", STRING }
@@ -1436,14 +1622,14 @@ If all partitions are over that limit, this feature is not used anymore.
 
 { "ptloader_sock", NULL, STRING }
 /* Unix domain socket that ptloader listens on.
-   (defaults to configdir/ptclient/ptsock) */
+   (defaults to configdirectory/ptclient/ptsock) */
 
-{ "ptscache_db", "twoskip", STRINGLIST("berkeley", "berkeley-hash", "skiplist", "twoskip")}
+{ "ptscache_db", "twoskip", STRINGLIST("skiplist", "twoskip", "lmdb")}
 /* The cyrusdb backend to use for the pts cache. */
 
 { "ptscache_db_path", NULL, STRING }
 /* The absolute path to the ptscache db file.  If not specified,
-   will be confdir/ptscache.db */
+   will be configdirectory/ptscache.db */
 
 { "ptscache_timeout", 10800, INT }
 /* The timeout (in seconds) for the PTS cache database when using the
@@ -1463,13 +1649,13 @@ If all partitions are over that limit, this feature is not used anymore.
 /* This specifies the Class Selector or Differentiated Services Code Point
    designation on IP headers (in the ToS field). */
 
-{ "quota_db", "quotalegacy", STRINGLIST("flat", "berkeley", "berkeley-hash", "skiplist", "sql", "quotalegacy", "twoskip")}
+{ "quota_db", "quotalegacy", STRINGLIST("flat", "skiplist", "sql", "quotalegacy", "twoskip", "lmdb")}
 /* The cyrusdb backend to use for quotas. */
 
 { "quota_db_path", NULL, STRING }
 /* The absolute path for the quota database (if you choose a single-file
    quota DB type - or the base path if you choose quotalegacy).  If
-   not specified will be confdir/quota.db or confdir/quota/ */
+   not specified will be configdirectory/quotas.db or configdirectory/quota/ */
 
 { "quotawarn", 90, INT }
 /* The percent of quota utilization over which the server generates
@@ -1489,6 +1675,22 @@ If all partitions are over that limit, this feature is not used anymore.
 /* If enabled, lmtpd rejects messages with 8-bit characters in the
    headers. */
 
+{ "restore_authname", NULL, STRING }
+/* The authentication used by the restore tool when authenticating
+   to an IMAP/sync server. */
+
+{ "restore_password", NULL, STRING }
+/* The password used by the restore tool when authenticating to an
+   IMAP/sync server. */
+
+{ "restore_realm", NULL, STRING }
+/* The authentication realm used by the restore tool when
+   authenticating to an IMAP/sync server. */
+
+{ "reverseacls", 0, SWITCH }
+/* At startup time, ctl_cyrusdb -r will check this value and it
+   will either add or remove reverse ACL pointers from mailboxes.db */
+
 { "rfc2046_strict", 0, SWITCH }
 /* If enabled, imapd will be strict (per RFC 2046) when matching MIME
    boundary strings.  This means that boundaries containing other
@@ -1496,6 +1698,14 @@ If all partitions are over that limit, this feature is not used anymore.
    enabling this option will break some messages created by Eudora 5.1
    (and earlier), it is recommended that it be left disabled unless
    there is good reason to do otherwise. */
+
+{ "rfc2047_utf8", 0, SWITCH }
+/* If enabled, imapd will parse any non-encoded character sequence in
+   MIME header values as UTF8. This is useful for installations that
+   either advertise the UTF8SMTP (RFC 5335) extension or receive mails
+   with improperly escaped UTF-8 byte sequences. It is recommended that
+   this option is left disabled unless there is good reason to do
+   otherwise. */
 
 { "rfc3028_strict", 1, SWITCH }
 /* If enabled, Sieve will be strict (per RFC 3028) with regards to
@@ -1568,11 +1778,49 @@ If all partitions are over that limit, this feature is not used anymore.
 /* The mechanism used by the server to verify plaintext passwords.
    Possible values include "auxprop", "saslauthd", and "pwcheck". */
 
+{ "search_batchsize", 20, INT }
+/* The number of messages to be indexed in one batch (default 20).
+   Note that long batches may delay user commands or mail delivery. */
+
+{ "search_normalisation_max", 1000, INT }
+/* A resource bound for the combinatorial explosion of search expression
+   tree complexity caused by normalising expressions with many OR nodes.
+   These can use more CPU time to optimise than they save IO time in scanning
+   folders. */
+
+{ "search_engine", "none", ENUM("none", "squat", "sphinx", "xapian") }
+/* The indexing engine used to speed up searching.  */
+
+{ "search_fuzzy_always", 0, SWITCH }
+/* Whether to enable RFC 6203 FUZZY search for all IMAP SEARCH. If turned
+   on, search attributes will be searched using FUZZY search by default.
+   If turned off, clients have to explicitly use the FUZZY search key to
+   enable fuzzy search for regular SEARCH commands. */
+
+{ "search_index_headers", 1, SWITCH }
+/* Whether to index headers other than From, To, Cc, Bcc, and Subject.
+   Experiment shows that some headers such as Received and DKIM-Signature
+   can contribute up to 2/3rds of the index size but almost nothing to
+   the utility of searching.  Note that is header indexing is disabled,
+   headers can still be searched, the searches will just be slower.
+ */
+
+{ "search_indexed_db", "twoskip", STRINGLIST("flat", "skiplist", "twoskip", "lmdb")}
+/* The cyrusdb backend to use for the search latest indexed uid state. */
+
+{ "search_maxtime", NULL, STRING }
+/* The maximum number of seconds to run a search for before aborting.  Default
+   of no value means search "forever" until other timeouts. */
+
 { "search_skipdiacrit", 1, SWITCH }
 /* When searching, should diacriticals be stripped from the search
    terms.  The default is "true", a search for "hav" will match
    "Håvard".  This is not RFC5051 complient, but it backwards
    compatible, and may be preferred by some sites. */
+
+{ "search_skiphtml", 0, SWITCH }
+/* If enabled, HTML parts of messages are skipped, i.e. not indexed and
+   not searchable.  Otherwise, they're indexed.  */
 
 { "search_whitespace", "merge", ENUM("skip", "merge", "keep") }
 /* When searching, how whitespace should be handled.  Options are:
@@ -1583,7 +1831,33 @@ If all partitions are over that limit, this feature is not used anymore.
    recommended for most cases - it's a good compromise which
    keeps words separate. */
 
-{ "seenstate_db", "twoskip", STRINGLIST("flat", "berkeley", "berkeley-hash", "skiplist", "twoskip")}
+{ "search_snippet_length", 255, INT }
+/* The maximum byte length of a snippet generated by the XSNIPPETS
+   command. Only supported by the Xapian search backend, which
+   attempts to always fill search_snippet_length bytes in the
+   generated snippet. */
+
+{ "search_stopword_path", NULL, STRING }
+/* The absolute base path to the search stopword lists. If not specified,
+   no stopwords will be taken into account during search indexing. Currently,
+   the only supported and default stop word file is english.list. */
+
+# Commented out - there's no such thing as "searchpartition-name",
+# but we need this for the man page
+# { "searchpartition-name", NULL, STRING }
+/* The pathname where to store the xapian search indexes of \fIsearchtier\fR
+   for mailboxes of partition \fIname\fR. This must be configured for the
+   \fIdefaultsearchtier\fR and any additional search tier (see squatter for
+   details).
+.PP
+   For example: if \fIdefaultpartition\fR is defined as part1 and
+   \fIdefaultsearchtier\fR as tier1 then the configuration must contain
+   an entry \fItier1searchpartition-part1\fR that defines the path where to
+   store this tier1's search index for the part1 partition.
+.PP
+   This option MUST be specified for xapian search. */
+
+{ "seenstate_db", "twoskip", STRINGLIST("flat", "skiplist", "twoskip", "lmdb")}
 /* The cyrusdb backend to use for the seen state. */
 
 { "sendmail", "/usr/lib/sendmail", STRING }
@@ -1613,7 +1887,8 @@ partition of each backend
 .\"
 .IP \fIfreespace-percent-weighted-delta\fR 5
 same as for partition selection, comparing the free space (%) of the least used
-partition of each backend
+partition of each backend.
+.PP
  */
 
 { "serverlist_select_usage_reinit", 0, INT }
@@ -1647,18 +1922,21 @@ If all backends are over that limit, this feature is not used anymore.
    "min" = \fIservername\fR in the greeting; no server information in the capabilities
 .br
    "on" = \fIservername\fR and product version in the greeting;
-product version in the capabilities */
+product version in the capabilities
+.PP
+*/
 
 { "sharedprefix", "Shared Folders", STRING }
 /* If using the alternate IMAP namespace, the prefix for the shared
-   namespace.  The hierarchy delimiter will be automatically appended. */
+   namespace.  The hierarchy delimiter will be automatically appended.
+*/
 
 { "sieve_allowreferrals", 1, SWITCH }
 /* If enabled, timsieved will issue referrals to clients when the
    user's scripts reside on a remote server (in a Murder).
    Otherwise, timsieved will proxy traffic to the remote server. */
 
-{ "sieve_extensions", "fileinto reject vacation vacation-seconds imapflags notify envelope relational regex subaddress copy date index imap4flags", BITFIELD("fileinto", "reject", "vacation", "vacation-seconds", "imapflags", "notify", "include", "envelope", "body", "relational", "regex", "subaddress", "copy", "date", "index", "imap4flags") }
+{ "sieve_extensions", "fileinto reject vacation vacation-seconds imapflags notify envelope relational regex subaddress copy date index imap4flags mailbox mboxmetadata servermetadata variables", BITFIELD("fileinto", "reject", "vacation", "vacation-seconds", "imapflags", "notify", "include", "envelope", "body", "relational", "regex", "subaddress", "copy", "date", "index", "imap4flags", "mailbox", "mboxmetadata", "servermetadata", "variables") }
 /* Space-separated list of Sieve extensions allowed to be used in
    sieve scripts, enforced at submission by timsieved(8).  Any
    previously installed script will be unaffected by this option and
@@ -1729,6 +2007,10 @@ product version in the capabilities */
    successfully authenticate.  Otherwise lmtpd returns permanent failures
    (causing the mail to bounce immediately). */
 
+{ "sortcache_db", "twoskip", STRINGLIST("skiplist", "twoskip", "lmdb")}
+/* The cyrusdb backend to use for caching sort results (currently only
+   used for xconvmultisort) */
+
 { "specialuse_extra", NULL, STRING }
 /* Whitespace separated list of extra special-use attributes
    that can be set on a mailbox. RFC 6154 currently lists
@@ -1739,6 +2021,19 @@ product version in the capabilities */
 { "specialusealways", 0, SWITCH }
 /* If enabled, this option causes LIST and LSUB output to always include
    the XLIST "special-use" flags */
+
+{ "sphinx_text_excludes_odd_headers", 0, SWITCH }
+/* If enabled, Sphinx will perform a TEXT search as if it matches
+   FROM, TO, CC, BCC or SUBJECT but not any other headers.  This
+   is contrary to the RFC but a more useful behaviour for most
+   users.  Default: disabled. */
+
+{ "sphinx_socket", "{configdirectory}/socket/sphinx", STRING }
+/* Unix domain socket that the Sphinx searchd
+   daemons listens on. */
+
+{ "sphinx_pidfile", "/var/run/sphinx.pid", STRING }
+/* File where the Sphinx searchd daemon writes its pid. */
 
 { "sql_database", NULL, STRING }
 /* Name of the database which contains the cyrusdb table(s). */
@@ -1769,7 +2064,7 @@ product version in the capabilities */
    allowed to fetch the contents of any valid "urlauth=submit+" IMAP URL:
    use with caution. */
 
-{ "subscription_db", "flat", STRINGLIST("flat", "berkeley", "berkeley-hash", "skiplist", "twoskip")}
+{ "subscription_db", "flat", STRINGLIST("flat", "skiplist", "twoskip", "lmdb")}
 /* The cyrusdb backend to use for the subscriptions list. */
 
 { "suppress_capabilities", NULL, STRING }
@@ -1782,16 +2077,21 @@ product version in the capabilities */
 { "statuscache", 0, SWITCH }
 /* Enable/disable the imap status cache. */
 
-{ "statuscache_db", "twoskip", STRINGLIST("berkeley", "berkeley-nosync", "berkeley-hash", "berkeley-hash-nosync", "skiplist", "sql", "twoskip") }
+{ "statuscache_db", "twoskip", STRINGLIST("skiplist", "sql", "twoskip", "lmdb") }
 /* The cyrusdb backend to use for the imap status cache. */
 
 { "statuscache_db_path", NULL, STRING }
 /* The absolute path to the statuscache db file.  If not specified,
-   will be confdir/statuscache.db */
+   will be configdirectory/statuscache.db */
 
 { "sync_authname", NULL, STRING }
 /* The authentication name to use when authenticating to a sync server.
    Prefix with a channel name to only apply for that channel */
+
+{ "sync_batchsize", 8192, INT }
+/* the number of messages to upload in a single mailbox replication.
+   Default is 8192.  If there are more than this many messages appended
+   to the mailbox, generate a synthetic partial state and send that. */
 
 { "sync_host", NULL, STRING }
 /* Name of the host (replica running sync_server(8)) to which
@@ -1809,11 +2109,12 @@ product version in the capabilities */
 
 { "sync_log_channels", NULL, STRING }
 /* If specified, log all events to multiple log files in directories
-   specified by each "channel".  To run these log files, you need to pass
-   the -n option to sync_client -r with the channel name.  Use this for
-   a mesh style replication layout - every machine replicating to every
-   other machine. You can use "" (the two-character string U+22 U+22)
-   to mean the default sync channel. */
+   specified by each "channel".  Each channel can then be processed
+   separately, such as by multiple sync_client(8)s in a mesh replication
+   scheme, or by squatter(8) for rolling search index updates.
+   .PP
+   You can use "" (the two-character string U+22 U+22) to mean the
+   default sync channel. */
 
 { "sync_log_unsuppressable_channels", "squatter", STRING }
 /* If specified, the named channels are exempt from the effect of setting
@@ -1825,11 +2126,13 @@ product version in the capabilities */
 /* The default password to use when authenticating to a sync server.
    Prefix with a channel name to only apply for that channel */
 
-{ "sync_port", "csync", STRING }
+{ "sync_port", NULL, STRING }
 /* Name of the service (or port number) of the replication service on
-   replica host.  The default is "csync" which is usally port 2005, but
-   any service name or numeric port can be specified.
-   Prefix with a channel name to only apply for that channel */
+   replica host.  Prefix with a channel name to only apply for that
+   channel.  If not specified, and if sync_try_imap is set to "yes"
+   (the default), then the replication client will first try "imap"
+   (port 143) to check if imapd supports replication.  otherwise it
+   will default to "csync" (usually port 2005). */
 
 { "sync_realm", NULL, STRING }
 /* The authentication realm to use when authenticating to a sync server.
@@ -1849,6 +2152,12 @@ product version in the capabilities */
 { "sync_timeout", 1800, INT }
 /* Number of seconds to wait for a response before returning a timeout
    failure when talking to a replication peer (client or server). */
+
+{ "sync_try_imap", 1, SWITCH }
+/* Whether sync_client should try to perform an IMAP connection
+   before falling back to csync.  If this is set to "no",
+   sync_client will only use csync.  Prefix with a channel name to
+   apply only for that channel */
 
 { "syslog_prefix", NULL, STRING }
 /* String to be prepended to the process name in syslog entries. */
@@ -1875,36 +2184,45 @@ product version in the capabilities */
 { "temp_path", "/tmp", STRING }
 /* The pathname to store temporary files in */
 
-{ "timeout", 30, INT }
+{ "telemetry_bysessionid", 0, SWITCH }
+/* If true, log by sessionid instead of PID for telemetry */
+
+{ "timeout", 32, INT }
 /* The length of the IMAP server's inactivity autologout timer,
-   in minutes.  The minimum value is 30, the default. */
+   in minutes.  The minimum value is 30.  The default is 32 to
+   allow a bit of leeway for clients that try to NOOP every 30
+   minutes. */
 
 { "imapidletimeout", 0, INT }
 /* Timeout for idling clients (RFC 2177) in minutes. If set to
    zero (the default) or less, the value of "timeout" will be
    used instead. */
 
-{ "tls_ca_file", "DEFAULT", STRING }
+{ "tls_ca_file", NULL, STRING, "2.5.0", "tls_client_ca_file" }
 /* Deprecated in favor of \fItls_client_ca_file\fR. */
 
-{ "tls_ca_path", "DEFAULT", STRING }
+{ "tls_ca_path", NULL, STRING, "2.5.0", "tls_client_ca_dir" }
 /* Deprecated in favor of \fItls_client_ca_dir\fR. */
 
-{ "tlscache_db", "DEFAULT", STRING }
+{ "tlscache_db", "twoskip", STRINGLIST("skiplist", "sql", "twoskip", "lmdb"), "2.5.0", "tls_sessions_db" }
 /* Deprecated in favor of \fItls_sessions_db\fR. */
 
-{ "tlscache_db_path", "DEFAULT", STRING }
+{ "tlscache_db_path", NULL, STRING, "2.5.0", "tls_sessions_db_path" }
 /* Deprecated in favor of \fItls_sessions_db_path\fR. */
 
-{ "tls_cert_file", "DEFAULT", STRING }
+{ "tls_cert_file", NULL, STRING, "2.5.0", "tls_server_cert" }
 /* Deprecated in favor of \fItls_server_cert\fR. */
 
-{ "tls_cipher_list", "DEFAULT", STRING }
+{ "tls_cipher_list", "DEFAULT", STRING, "2.5.0", "tls_ciphers" }
 /* Deprecated in favor of \fItls_ciphers\fR. */
 
 { "tls_ciphers", "DEFAULT", STRING }
-/* The list of SSL/TLS ciphers to allow.  The format of the string is
-   described in ciphers(1). */
+/* The list of SSL/TLS ciphers to allow.  The format of the string
+   (and definition of "DEFAULT") is described in \fBciphers(1)\fR.
+.PP
+   See also Mozilla's server-side TLS recommendations:
+.PP
+   https://wiki.mozilla.org/Security/Server_Side_TLS */
 
 { "tls_client_ca_dir", NULL, STRING }
 /* Path to a directory containing the CA certificates used to verify
@@ -1932,7 +2250,7 @@ product version in the capabilities */
 /* The elliptic curve used for ECDHE. Default is NIST Suite B prime256.
    See 'openssl ecparam -list_curves' for possible values. */
 
-{ "tls_key_file", "DEFAULT", STRING }
+{ "tls_key_file", NULL, STRING, "2.5.0", "tls_server_key" }
 /* Deprecated in favor of \fItls_server_key\fR. */
 
 { "tls_required", 0, SWITCH }
@@ -1959,12 +2277,12 @@ product version in the capabilities */
 /* File containing the private key belonging to the certificate in
    tls_server_cert. */
 
-{ "tls_sessions_db", "twoskip", STRINGLIST("berkeley", "berkeley-nosync", "berkeley-hash", "berkeley-hash-nosync", "skiplist", "sql", "twoskip")}
+{ "tls_sessions_db", "twoskip", STRINGLIST("skiplist", "sql", "twoskip", "lmdb")}
 /* The cyrusdb backend to use for the TLS cache. */
 
 { "tls_sessions_db_path", NULL, STRING }
 /* The absolute path to the TLS sessions db file. If not specified,
-   will be confdir/tls_sessions.db */
+   will be configdirectory/tls_sessions.db */
 
 { "tls_session_timeout", 1440, INT }
 /* The length of time (in minutes) that a TLS session will be cached
@@ -1977,15 +2295,21 @@ product version in the capabilities */
    versions of SSL/TLS will need to be added here to allow them to get
    disabled. */
 
+{ "uidl_format", "cyrus", ENUM("uidonly", "cyrus", "dovecot", "courier") }
+/* Choose the format for UIDLs in pop3.  Possible values are "uidonly",
+   "cyrus", "dovecot" and "courier".  "uidonly" forces the old default
+   of UID, "cyrus" is UIDVALIDITY.UID.  Dovecot is 8 digits of leading
+   hex (lower case) each UID UIDVALIDITY. Courier is UIDVALIDITY-UID. */
+
 { "umask", "077", STRING }
 /* The umask value used by various Cyrus IMAP programs. */
 
-{ "userdeny_db", "flat", STRINGLIST("flat", "berkeley", "berkeley-hash", "skiplist", "sql", "twoskip")}
+{ "userdeny_db", "flat", STRINGLIST("flat", "skiplist", "sql", "twoskip", "lmdb")}
 /* The cyrusdb backend to use for the user access list. */
 
 { "userdeny_db_path", NULL, STRING }
 /* The absolute path to the userdeny db file.  If not specified,
-   will be confdir/user_deny.db */
+   will be configdirectory/user_deny.db */
 
 { "username_tolower", 1, SWITCH }
 /* Convert usernames to all lowercase before login/authentication.  This
@@ -2003,11 +2327,11 @@ product version in the capabilities */
    with a backend (such as LDAP) that can make getgrent() calls very
    slow) */
 
-{ "unixhierarchysep", 0, SWITCH }
+{ "unixhierarchysep", 1, SWITCH }
 /* Use the UNIX separator character '/' for delimiting levels of
    mailbox hierarchy.  Turn off to use the netnews separator
    character '.'. Note that with the newnews separator, no dots may
-   occur in mailbox names. */
+   occur in mailbox names.  The default switched in 3.0 from off to on. */
 
 { "virtdomains", "off", ENUM("off", "userid", "on") }
 /* Enable virtual domain support.  If enabled, the user's domain will
@@ -2018,17 +2342,88 @@ product version in the capabilities */
    interface, otherwise the user is assumed to be in the default
    domain (if set). */
 
+{ "xbackup_enabled", 0, SWITCH }
+/* Enable support for the XBACKUP command in imapd.  If enabled, admin
+   users can use this command to provoke a replication of specified users
+   to the named backup channel. */
+
+# Commented out - there's no such thing as "xlist-flag", but we need
+# this for the man page
+# { "xlist-flag", NULL, STRING }
+/* Set the special-use flag \fIflag\fR on the specified folder when it
+   is autocreated (see the \fIautocreate_inbox_folders\fR option).  For
+   example, if \fBxlist-junk: Spam\fR is set, and the folder \fBSpam\fR
+   is autocreated, the special-use flag \fB\\Junk\fR will be set on it.
+.PP
+   (This option is so named for backward compatibility with old config
+   files.)
+   */
+
 { "lmtp_catchall_mailbox", NULL, STRING }
 /* Mail sent to mailboxes which do not exist, will be delivered to
    this user.  NOTE: This must be an existing local user name with an
    INBOX, NOT an email address! */
 
-{ "zoneinfo_db", "twoskip", STRINGLIST("flat", "berkeley", "berkeley-hash", "skiplist", "twoskip")}
+{ "zoneinfo_db", "twoskip", STRINGLIST("flat", "skiplist", "twoskip", "lmdb")}
 /* The cyrusdb backend to use for zoneinfo. */
 
 { "zoneinfo_db_path", NULL, STRING }
 /* The absolute path to the zoneinfo db file.  If not specified,
-   will be confdir/zoneinfo.db */
+   will be configdirectory/zoneinfo.db */
+
+{ "object_storage_enabled", 0, SWITCH }
+/* Is Object storage enabled for this server.  You also need to have
+   archiving enabled and archivepartition for the mailbox.
+   Only email files will be stored on object Storage archive partition will be
+   used to store any other files */
+
+{ "object_storage_dummy_spool", NULL, STRING }
+/* Dummy object storage spool; this is for test only.
+   Spool where user directory (container) will be created to store all emails
+   in a flat structure  */
+
+{ "openio_namespace", NULL, STRING }
+/* The OpenIO namespace used to store archived email messages. A namespace
+   identifies the physical platform cyrus must contact. This directive is used
+   by the OpenIO's SDK to locate its platform entry point. */
+
+{ "openio_account", NULL, STRING }
+/* The OpenIO account used to account for stored emails. Accounts are unique
+   in their namespace. They provides virtual partitions, with quotas and QoS
+   features. */
+
+{ "openio_rawx_timeout", 30, INT }
+/* The OpenIO timeout to query to the RAWX services (default 30 sec). */
+
+{ "openio_proxy_timeout", 5, INT }
+/* The OpenIO timeout to query to the PROXY services (default 5 sec). */
+
+{ "openio_autocreate", 0, SWITCH }
+/* Allow the OpenIO SDK to autocreate containers. Mainly destined to be turned
+   on development environments. In production, the container should have been
+   provisioned with the mailboxes. */
+
+{ "openio_verbosity", NULL, STRING }
+/* Sets the logging verbosity of the OpenIO's internal behavior. Admissible
+   values are: "warning", "notice", "info", "debug", "trace", "quiet".
+   The default verbosity is "warning". Set to "notice" for a few lines on a
+   per-client basis. Set to "info" for a few lines on a per-request basis. Set
+   to "debug" Set to "trace" to activate the underlying libcurl debug
+   output. Enabling a verbosity higher to equal than "debug" requires
+   the cyrus to be set in debug mode. The special "quiet" value disables all
+   kinds of logging at the GLib level. */
+
+{ "caringo_hostname", NULL, STRING }
+/* The Caringo hostname used to store archived email messages. A hostname
+   identifies the physical platform cyrus must contact. This directive is used
+   by the Caringo's SDK (CastorSDK: Caringo Simple Content Storage Protocol (SCSP)
+   on HTTP 1.1 using a RESTful architecture  */
+
+{ "caringo_port", 80, INT }
+/* The port of the caringo server (caringo_hostname); default is 80. */
+
+{ "fastmailsharing", 0, SWITCH }
+/* If enabled, use FastMail style sharing (oldschool full server paths) */
 
 /*
 .SH SEE ALSO

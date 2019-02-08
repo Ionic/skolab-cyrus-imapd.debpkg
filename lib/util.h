@@ -51,7 +51,10 @@
 #include <sys/types.h>
 #include <limits.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
+
+#include "xmalloc.h"
 
 #ifdef ENABLE_REGEX
 # ifdef HAVE_PCREPOSIX_H
@@ -66,10 +69,6 @@
 # endif /* HAVE_PCREPOSIX_H */
 #endif /* ENABLE_REGEX */
 
-#ifndef __GNUC__
-typedef int (*__compar_fn_t)(const void *, const void *);
-#endif
-
 #define BIT32_MAX 4294967295U
 
 #if UINT_MAX == BIT32_MAX
@@ -81,8 +80,6 @@ typedef unsigned short bit32;
 #else
 #error dont know what to use for bit32
 #endif
-
-typedef int compar_t(const void *a, const void *b);
 
 typedef unsigned long long int bit64;
 typedef unsigned long long int modseq_t;
@@ -116,9 +113,9 @@ extern const unsigned char convert_to_uppercase[256];
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #endif
 
-/* Some BSDs don't print "NULL" for a NULL pointer string. */ 
+/* Some BSDs don't print "NULL" for a NULL pointer string. */
 #ifndef IS_NULL
-#define IS_NULL(s)	((s) == NULL ? "(NULL)" : (s))
+#define IS_NULL(s)      ((s) == NULL ? "(NULL)" : (s))
 #endif
 
 /* Calculate the number of entries in a vector */
@@ -159,7 +156,7 @@ int strcmpnull(const char *a, const char *b);
  *  returns NULL if not found, or key/value pair if found.
  */
 extern keyvalue *kv_bsearch (const char *key, keyvalue *kv, int nelem,
-			       int (*cmpf)(const char *s1, const char *s2));
+                               int (*cmpf)(const char *s1, const char *s2));
 
 /* Examine the name of a file, and return a single character
  *  (as an int) that can be used as the name of a hash
@@ -174,7 +171,7 @@ extern int dir_hash_c(const char *name, int full);
  */
 extern char *dir_hash_b(const char *name, int full, char buf[2]);
 
-/* 
+/*
  * create an [unlinked] temporary file and return the file descriptor.
  */
 extern int create_tempfile(const char *path);
@@ -208,6 +205,7 @@ enum {
 
 extern int set_caps(int stage, int is_master);
 extern int become_cyrus(int is_master);
+extern const char *cyrus_user(void);
 
 /* Some systems have very inefficient implementations of isdigit,
  * and we use it in a lot of inner loops
@@ -218,6 +216,7 @@ int parseint32(const char *p, const char **ptr, int32_t *res);
 int parseuint32(const char *p, const char **ptr, uint32_t *res);
 int parsenum(const char *p, const char **ptr, int maxlen, bit64 *res);
 int parsehex(const char *p, const char **ptr, int maxlen, bit64 *res);
+uint64_t str2uint64(const char *p);
 
 /* Timing related funcs/vars */
 extern void cmdtime_settimer(int enable);
@@ -225,6 +224,7 @@ extern void cmdtime_starttimer(void);
 extern void cmdtime_endtimer(double * cmdtime, double * nettime);
 extern void cmdtime_netstart(void);
 extern void cmdtime_netend(void);
+extern int cmdtime_checksearch(void);
 extern double timeval_get_double(const struct timeval *tv);
 extern void timeval_set_double(struct timeval *tv, double d);
 extern void timeval_add_double(struct timeval *tv, double delta);
@@ -240,14 +240,16 @@ struct buf {
     size_t alloc;
     unsigned flags;
 };
-#define BUF_INITIALIZER	{ NULL, 0, 0, 0 }
+#define BUF_INITIALIZER { NULL, 0, 0, 0 }
 
+#define buf_new() ((struct buf *) xzmalloc(sizeof(struct buf)))
+#define buf_destroy(b) do { buf_free((b)); free((b)); } while (0)
 #define buf_ensure(b, n) do { if ((b)->alloc < (b)->len + (n)) _buf_ensure((b), (n)); } while (0)
 #define buf_putc(b, c) do { buf_ensure((b), 1); (b)->s[(b)->len++] = (c); } while (0)
 
 void _buf_ensure(struct buf *buf, size_t len);
-const char *buf_cstring(struct buf *buf);
-const char *buf_cstringnull(struct buf *buf);
+const char *buf_cstring(const struct buf *buf);
+const char *buf_cstringnull(const struct buf *buf);
 char *buf_release(struct buf *buf);
 char *buf_newcstring(struct buf *buf);
 char *buf_releasenull(struct buf *buf);
@@ -263,6 +265,7 @@ void buf_copy(struct buf *dst, const struct buf *src);
 void buf_append(struct buf *dst, const struct buf *src);
 void buf_appendcstr(struct buf *buf, const char *str);
 void buf_appendbit32(struct buf *buf, bit32 num);
+void buf_appendbit64(struct buf *buf, bit64 num);
 void buf_appendmap(struct buf *buf, const char *base, size_t len);
 void buf_cowappendmap(struct buf *buf, const char *base, unsigned int len);
 void buf_cowappendfree(struct buf *buf, char *base, unsigned int len);
@@ -271,15 +274,15 @@ void buf_insertcstr(struct buf *buf, unsigned int off, const char *str);
 void buf_insertmap(struct buf *buf, unsigned int off, const char *base, int len);
 void buf_vprintf(struct buf *buf, const char *fmt, va_list args);
 void buf_printf(struct buf *buf, const char *fmt, ...)
-	        __attribute__((format(printf,2,3)));
+                __attribute__((format(printf,2,3)));
 int buf_replace_all(struct buf *buf, const char *match,
-		    const char *replace);
+                    const char *replace);
 int buf_replace_char(struct buf *buf, char match, char replace);
 #ifdef ENABLE_REGEX
 int buf_replace_all_re(struct buf *buf, const regex_t *,
-		       const char *replace);
+                       const char *replace);
 int buf_replace_one_re(struct buf *buf, const regex_t *,
-		       const char *replace);
+                       const char *replace);
 #endif
 void buf_remove(struct buf *buf, unsigned int off, unsigned int len);
 int buf_cmp(const struct buf *, const struct buf *);
@@ -290,9 +293,11 @@ void buf_init_ro(struct buf *buf, const char *base, size_t len);
 void buf_initm(struct buf *buf, char *base, int len);
 void buf_init_ro_cstr(struct buf *buf, const char *str);
 void buf_init_mmap(struct buf *buf, int onceonly, int fd,
-		   const char *fname, size_t size, const char *mboxname);
+                   const char *fname, size_t size, const char *mboxname);
 void buf_free(struct buf *buf);
 void buf_move(struct buf *dst, struct buf *src);
+const char *buf_lcase(struct buf *buf);
+void buf_trim(struct buf *buf);
 
 /*
  * Given a list of strings, terminated by (char *)NULL,
@@ -305,10 +310,10 @@ void buf_move(struct buf *dst, struct buf *src);
  */
 char *strconcat(const char *s1, ...);
 
-#define BH_LOWER	    (0)
-#define BH_UPPER	    (1<<8)
-#define _BH_SEP		    (1<<9)
-#define BH_SEPARATOR(c)	    (_BH_SEP|((c)&0x7f))
+#define BH_LOWER            (0)
+#define BH_UPPER            (1<<8)
+#define _BH_SEP             (1<<9)
+#define BH_SEPARATOR(c)     (_BH_SEP|((c)&0x7f))
 #define _BH_GETSEP(flags)   (flags & _BH_SEP ? (char)(flags & 0x7f) : '\0')
 int bin_to_hex(const void *bin, size_t binlen, char *hex, int flags);
 int hex_to_bin(const char *hex, size_t hexlen, void *bin);
@@ -335,11 +340,11 @@ int buf_deflate(struct buf *buf, int compLevel, int scheme);
  * The argument may have side effects and must be an lvalue */
 #define xclose(fd) \
     do { \
-	int *_fdp = &(fd); \
-	if (*_fdp >= 0) { \
-	    close(*_fdp); \
-	    *_fdp = -1; \
-	} \
+        int *_fdp = &(fd); \
+        if (*_fdp >= 0) { \
+            close(*_fdp); \
+            *_fdp = -1; \
+        } \
     } while(0)
 
 /* A wrapper for strncpy() which ensures that the destination
@@ -350,16 +355,28 @@ int buf_deflate(struct buf *buf, int compLevel, int scheme);
  * add the NUL termination semantic on top of strncpy(). */
 #define xstrncpy(d, s, n) \
     do { \
-	char *_d = (d); \
-	size_t _n = (n); \
-	strncpy(_d, (s), _n); \
-	_d[_n-1] = '\0'; \
+        char *_d = (d); \
+        size_t _n = (n); \
+        strncpy(_d, (s), _n); \
+        _d[_n-1] = '\0'; \
     } while(0)
 
 /* simple function to request a file gets pre-loaded by the OS */
 int warmup_file(const char *filename, off_t offset, off_t length);
 
+const char *makeuuid();
+
 void tcp_enable_keepalive(int fd);
 void tcp_disable_nagle(int fd);
+
+/*
+ * GCC_VERSION macro usage:
+ * #if GCC_VERSION > 60909    //GCC version 7 and above
+ *   do_something();
+ * #endif
+ */
+#define GCC_VERSION (__GNUC__ * 10000           \
+                     + __GNUC_MINOR__ * 100     \
+                     + __GNUC_PATCHLEVEL__)
 
 #endif /* INCLUDED_UTIL_H */

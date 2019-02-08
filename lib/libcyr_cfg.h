@@ -87,15 +87,9 @@ enum cyrus_opt {
     CYRUSOPT_PTLOADER_SOCK,
     /* Virtual Domains (OFF) */
     CYRUSOPT_VIRTDOMAINS,
-    /* BDB cache size (512KB) */
-    CYRUSOPT_BERKELEY_CACHESIZE,
     /* authorization mechanism (unix) */
     CYRUSOPT_AUTH_MECH,
     /* BDB max locks (50000) */
-    CYRUSOPT_BERKELEY_LOCKS_MAX,
-    /* BDB max txns (100) */
-    CYRUSOPT_BERKELEY_TXNS_MAX,
-    /* RFC 2086 right which allows DELETE ("c") */
     CYRUSOPT_DELETERIGHT,
     /* SQL database */
     CYRUSOPT_SQL_DATABASE,
@@ -113,7 +107,7 @@ enum cyrus_opt {
     CYRUSOPT_SKIPLIST_ALWAYS_CHECKPOINT,
 
     CYRUSOPT_LAST
-    
+
 };
 
 union cyrus_config_value {

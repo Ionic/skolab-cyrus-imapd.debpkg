@@ -1,0 +1,30 @@
+
+Directory Hashing
+*****************
+
+Cyrus IMAP uses directory hashing for per-user state information,
+including quotas (with "quota_db: quotalegacy"), sieve, subscriptions
+and seen information.  Sites with lots of users may wish to hash their
+mail spool, too.  Cyrus provides mechanisms for this.  This pair of
+settings for imapd.conf(5) control hashing behavior:
+
+   "hashimapspool:" 0
+
+      If enabled, the partitions will also be hashed, in addition to
+      the hashing done on configuration directories.  This is
+      recommended if one partition has a very bushy mailbox tree.
+
+   "fulldirhash:" 0
+
+      If enabled, uses an improved directory hashing scheme which
+      hashes on the entire username instead of using just the first
+      letter as the hash.  This changes hash algorithm used for quota
+      and user directories and if *hashimapspool* is enabled, the
+      entire mail spool.
+
+      Note that this option CANNOT be changed on a live system.  The
+      server must be quiesced and then the directories moved with the
+      **rehash** utility.
+
+Regardless of those settings, the per-user state information will
+always be hashed.

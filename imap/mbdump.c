@@ -64,8 +64,8 @@
 #endif
 #include "exitcodes.h"
 #include "global.h"
-#include "imap/imap_err.h"
 #include "map.h"
+#include "mappedfile.h"
 #include "mbdump.h"
 #include "mboxkey.h"
 #include "mboxlist.h"
@@ -79,21 +79,24 @@
 #include "util.h"
 #include "index.h"
 
+/* generated headers are not necessarily in current directory */
+#include "imap/imap_err.h"
+
 static int dump_file(int first, int sync,
-		     struct protstream *pin, struct protstream *pout,
-		     const char *filename, const char *ftag,
-		     const char *fbase, unsigned long flen);
+                     struct protstream *pin, struct protstream *pout,
+                     const char *filename, const char *ftag,
+                     const char *fbase, unsigned long flen);
 
 static void downgrade_header(struct index_header *i, char *buf, int version,
-			     int header_size, int record_size)
-			     __attribute__((noinline));
+                             int header_size, int record_size)
+                             __attribute__((noinline));
 static void header_set_num_records(char *buf, unsigned int nrecords)
-			     __attribute__((noinline));
+                             __attribute__((noinline));
 
 /* support for downgrading index files on copying back to an
  * earlier version of Cyrus */
 static void downgrade_header(struct index_header *i, char *buf, int version,
-			     int header_size, int record_size)
+                             int header_size, int record_size)
 {
     unsigned UP_version = version;
     unsigned UP_validopts = 15;
@@ -102,10 +105,10 @@ static void downgrade_header(struct index_header *i, char *buf, int version,
     memset(buf, 0, INDEX_HEADER_SIZE);
 
     if (version < 10)
-	UP_validopts = 3;
+        UP_validopts = 3;
     /* was just called POP3_NEW_UIDL back then, single value */
     if (version < 8)
-	UP_validopts = 1;
+        UP_validopts = 1;
 
     /* has to match cyrus.cache still */
     *((bit32 *)(buf+OFFSET_GENERATION_NO)) = htonl(i->generation_no);
@@ -134,8 +137,8 @@ static void downgrade_header(struct index_header *i, char *buf, int version,
     align_htonll(buf+OFFSET_HIGHESTMODSEQ, i->highestmodseq);
 }
 
-static void downgrade_record(struct index_record *record, char *buf,
-			     int version)
+static void downgrade_record(const struct index_record *record, char *buf,
+                             int version)
 {
     int n;
     unsigned UP_content_offset = record->header_size;
@@ -147,7 +150,7 @@ static void downgrade_record(struct index_record *record, char *buf,
      * because it won't be written out to file anyway due to the
      * record_size value. */
     if (version < 10)
-	UP_modseqbase = OFFSET_MESSAGE_GUID+12;
+        UP_modseqbase = OFFSET_MESSAGE_GUID+12;
 
     *((bit32 *)(buf+OFFSET_UID)) = htonl(record->uid);
     *((bit32 *)(buf+OFFSET_INTERNALDATE)) = htonl(record->internaldate);
@@ -159,14 +162,13 @@ static void downgrade_record(struct index_record *record, char *buf,
     *((bit32 *)(buf+OFFSET_CACHE_OFFSET)) = htonl(record->cache_offset);
     *((bit32 *)(buf+OFFSET_LAST_UPDATED)) = htonl(record->last_updated);
     *((bit32 *)(buf+OFFSET_SYSTEM_FLAGS))
-	= htonl(record->system_flags & UP_validflags);
+        = htonl(record->system_flags & UP_validflags);
     for (n = 0; n < MAX_USER_FLAGS/32; n++) {
-	*((bit32 *)(buf+OFFSET_USER_FLAGS+4*n)) = htonl(record->user_flags[n]);
+        *((bit32 *)(buf+OFFSET_USER_FLAGS+4*n)) = htonl(record->user_flags[n]);
     }
     *((bit32 *)(buf+OFFSET_CONTENT_LINES)) = htonl(record->content_lines);
     *((bit32 *)(buf+OFFSET_CACHE_VERSION)) = htonl(record->cache_version);
-    message_guid_export(&record->guid,
-			(unsigned char *)buf+OFFSET_MESSAGE_GUID);
+    message_guid_export(&record->guid, buf+OFFSET_MESSAGE_GUID);
     *((bit64 *)(buf+UP_modseqbase)) = htonll(record->modseq);
 }
 
@@ -178,8 +180,8 @@ static void header_set_num_records(char *buf, unsigned int nrecords)
 /* create a downgraded index file in cyrus.index.  We don't copy back
  * expunged messages, sorry */
 static int dump_index(struct mailbox *mailbox, int oldversion,
-		      struct seqset *expunged_seq, int first, int sync,
-		      struct protstream *pin, struct protstream *pout)
+                      struct seqset *expunged_seq, int first, int sync,
+                      struct protstream *pin, struct protstream *pout)
 {
     char oldname[MAX_MAILBOX_PATH];
     const char *fname;
@@ -191,64 +193,62 @@ static int dump_index(struct mailbox *mailbox, int oldversion,
     int header_size;
     int record_size;
     int n, r;
-    struct index_record record;
-    unsigned recno;
 
     if (oldversion == 6) {
-	header_size = 76;
-	record_size = 60;
+        header_size = 76;
+        record_size = 60;
     }
     else if (oldversion == 7) {
-	header_size = 76;
-	record_size = 72;
+        header_size = 76;
+        record_size = 72;
     }
     else if (oldversion == 8) {
-	header_size = 92;
-	record_size = 80;
+        header_size = 92;
+        record_size = 80;
     }
     else if (oldversion == 9) {
-	header_size = 96;
-	record_size = 80;
+        header_size = 96;
+        record_size = 80;
     }
     else if (oldversion == 10) {
-	header_size = 96;
-	record_size = 88;
+        header_size = 96;
+        record_size = 88;
     }
     else {
-	return IMAP_MAILBOX_BADFORMAT;
+        return IMAP_MAILBOX_BADFORMAT;
     }
 
     fname = mailbox_meta_fname(mailbox, META_INDEX);
     snprintf(oldname, MAX_MAILBOX_PATH, "%s.OLD", fname);
-    
+
     oldindex_fd = open(oldname, O_RDWR|O_TRUNC|O_CREAT, 0666);
     if (oldindex_fd == -1) goto fail;
 
     downgrade_header(&mailbox->i, hbuf, oldversion,
-		     header_size, record_size);
+                     header_size, record_size);
 
     /* Write header - everything we'll say */
     n = retry_write(oldindex_fd, hbuf, header_size);
     if (n == -1) goto fail;
 
-    for (recno = 1; recno <= mailbox->i.num_records; recno++) {
-	if (mailbox_read_index_record(mailbox, recno, &record))
-	    goto fail;
-	/* we don't care about unlinked records at all */
-	if (record.system_flags & FLAG_UNLINKED)
-	    continue;
-	/* we have to make sure expunged records don't get the
-	 * file copied, or a reconstruct could bring them back
-	 * to life!  It we're not creating an expunged file... */
-	if (record.system_flags & FLAG_EXPUNGED) {
-	    if (oldversion < 9) seqset_add(expunged_seq, record.uid, 1);
-	    continue;
-	}
-	/* not making sure exists matches, we do trust a bit */
-	downgrade_record(&record, rbuf, oldversion);
-	n = retry_write(oldindex_fd, rbuf, record_size);
-	if (n == -1) goto fail;
+    struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_UNLINKED);
+    const message_t *msg;
+    while ((msg = mailbox_iter_step(iter))) {
+        const struct index_record *record = msg_record(msg);
+        /* we have to make sure expunged records don't get the
+         * file copied, or a reconstruct could bring them back
+         * to life!  It we're not creating an expunged file... */
+        if (record->system_flags & FLAG_EXPUNGED) {
+            if (oldversion < 9) seqset_add(expunged_seq, record->uid, 1);
+            continue;
+        }
+        /* not making sure exists matches, we do trust a bit */
+        downgrade_record(record, rbuf, oldversion);
+        n = retry_write(oldindex_fd, rbuf, record_size);
+        if (n == -1) break;
     }
+    mailbox_iter_done(&iter);
+    if (n == -1) goto fail;
 
     close(oldindex_fd);
     r = dump_file(first, sync, pin, pout, oldname, "cyrus.index", NULL, 0);
@@ -257,41 +257,41 @@ static int dump_index(struct mailbox *mailbox, int oldversion,
 
     /* create cyrus.expunge */
     if (oldversion > 8 && mailbox->i.num_records > mailbox->i.exists) {
-	int nexpunge = mailbox->i.num_records - mailbox->i.exists;
-	fname = mailbox_meta_fname(mailbox, META_EXPUNGE);
-	snprintf(oldname, MAX_MAILBOX_PATH, "%s.OLD", fname);
-	
-	oldindex_fd = open(oldname, O_RDWR|O_TRUNC|O_CREAT, 0666);
-	if (oldindex_fd == -1) goto fail;
+        int nexpunge = mailbox->i.num_records - mailbox->i.exists;
+        fname = mailbox_meta_fname(mailbox, META_EXPUNGE);
+        snprintf(oldname, MAX_MAILBOX_PATH, "%s.OLD", fname);
 
-	header_set_num_records(hbuf, nexpunge);
+        oldindex_fd = open(oldname, O_RDWR|O_TRUNC|O_CREAT, 0666);
+        if (oldindex_fd == -1) goto fail;
 
-	/* Write header - everything we'll say */
-	n = retry_write(oldindex_fd, hbuf, header_size);
-	if (n == -1) goto fail;
+        header_set_num_records(hbuf, nexpunge);
 
-	for (recno = 1; recno <= mailbox->i.num_records; recno++) {
-	    if (mailbox_read_index_record(mailbox, recno, &record))
-		goto fail;
-	    /* ignore non-expunged records */
-	    if (!(record.system_flags & FLAG_EXPUNGED))
-		continue;
-	    downgrade_record(&record, rbuf, oldversion);
-	    n = retry_write(oldindex_fd, rbuf, record_size);
-	    if (n == -1) goto fail;
-	}
+        /* Write header - everything we'll say */
+        n = retry_write(oldindex_fd, hbuf, header_size);
+        if (n == -1) goto fail;
 
-	close(oldindex_fd);
-	r = dump_file(first, sync, pin, pout, oldname, "cyrus.expunge", NULL, 0);
-	unlink(oldname);
-	if (r) return r;
+        iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_UNLINKED);
+        while ((msg = mailbox_iter_step(iter))) {
+            const struct index_record *record = msg_record(msg);
+            /* ignore non-expunged records */
+            if (!(record->system_flags & FLAG_EXPUNGED))
+                continue;
+            downgrade_record(record, rbuf, oldversion);
+            n = retry_write(oldindex_fd, rbuf, record_size);
+            if (n == -1) goto fail;
+        }
+
+        close(oldindex_fd);
+        r = dump_file(first, sync, pin, pout, oldname, "cyrus.expunge", NULL, 0);
+        unlink(oldname);
+        if (r) return r;
     }
 
     return 0;
 
 fail:
     if (oldindex_fd != -1)
-	close(oldindex_fd);
+        close(oldindex_fd);
     unlink(oldname);
 
     return IMAP_IOERROR;
@@ -311,12 +311,12 @@ static int sieve_isactive(const char *sievepath, const char *name)
 
     len = readlink(linkname, activelink, sizeof(activelink)-1);
     if(len < 0) {
-	if(errno != ENOENT) syslog(LOG_ERR, "readlink(defaultbc): %m");
-	return 0;
+        if(errno != ENOENT) syslog(LOG_ERR, "readlink(defaultbc): %m");
+        return 0;
     }
 
     activelink[len] = '\0';
-    
+
     /* Only compare the part of the file after the last /,
      * since that is what timsieved does */
     file = strrchr(filename, '/');
@@ -327,9 +327,9 @@ static int sieve_isactive(const char *sievepath, const char *name)
     else link++;
 
     if (!strcmp(file, link)) {
-	return 1;
+        return 1;
     } else {
-	return 0;
+        return 0;
     }
 }
 
@@ -340,10 +340,10 @@ struct dump_annotation_rock
 };
 
 static int dump_annotations(const char *mailbox __attribute__((unused)),
-			    uint32_t uid  __attribute__((unused)),
-			    const char *entry,
-			    const char *userid,
-			    const struct buf *value, void *rock)
+                            uint32_t uid  __attribute__((unused)),
+                            const char *entry,
+                            const char *userid,
+                            const struct buf *value, void *rock)
 {
     struct dump_annotation_rock *ctx = (struct dump_annotation_rock *)rock;
 
@@ -370,76 +370,76 @@ static int dump_annotations(const char *mailbox __attribute__((unused)),
 }
 
 static int dump_file(int first, int sync,
-		     struct protstream *pin, struct protstream *pout,
-		     const char *filename, const char *ftag,
-		     const char *fbase, unsigned long flen)
+                     struct protstream *pin, struct protstream *pout,
+                     const char *filename, const char *ftag,
+                     const char *fbase, unsigned long flen)
 {
     int filefd;
     const char *base;
     size_t len;
     struct stat sbuf;
-    char c;
+    int c;
 
     /* map file */
     syslog(LOG_DEBUG, "wanting to dump %s", filename);
     if (fbase) {
-	/* already mapped */
-	base = fbase;
+        /* already mapped */
+        base = fbase;
 
-	/* we need to check real file size since actual mmap size may be larger */
-	if (stat(filename, &sbuf) == -1) {
-	    syslog(LOG_ERR, "IOERROR: stat on %s: %m", filename);
-	    fatal("can't stat message file", EC_OSFILE);
-	}
-	if ((unsigned long)sbuf.st_size > flen) {
-	   syslog(LOG_ERR, "IOERROR: size mismatch on %s", filename);
-	   return IMAP_SYS_ERROR;
-	}
-	len = sbuf.st_size;
+        /* we need to check real file size since actual mmap size may be larger */
+        if (stat(filename, &sbuf) == -1) {
+            syslog(LOG_ERR, "IOERROR: stat on %s: %m", filename);
+            fatal("can't stat message file", EC_OSFILE);
+        }
+        if ((unsigned long)sbuf.st_size > flen) {
+           syslog(LOG_ERR, "IOERROR: size mismatch on %s", filename);
+           return IMAP_SYS_ERROR;
+        }
+        len = sbuf.st_size;
     }
     else {
-	filefd = open(filename, O_RDONLY, 0666);
-	if (filefd == -1) {
-	    /* If an optional file doesn't exist, skip it */
-	    if (errno == ENOENT) return 0;
-	    syslog(LOG_ERR, "IOERROR: open on %s: %m", filename);
-	    return IMAP_SYS_ERROR;
-	}
-    
-	if (fstat(filefd, &sbuf) == -1) {
-	    syslog(LOG_ERR, "IOERROR: fstat on %s: %m", filename);
-	    fatal("can't fstat message file", EC_OSFILE);
-	}	
+        filefd = open(filename, O_RDONLY, 0666);
+        if (filefd == -1) {
+            /* If an optional file doesn't exist, skip it */
+            if (errno == ENOENT) return 0;
+            syslog(LOG_ERR, "IOERROR: open on %s: %m", filename);
+            return IMAP_SYS_ERROR;
+        }
 
-	base = NULL;
-	len = 0;
+        if (fstat(filefd, &sbuf) == -1) {
+            syslog(LOG_ERR, "IOERROR: fstat on %s: %m", filename);
+            fatal("can't fstat message file", EC_OSFILE);
+        }
 
-	map_refresh(filefd, 1, &base, &len, sbuf.st_size, filename, NULL);
+        base = NULL;
+        len = 0;
 
-	close(filefd);
+        map_refresh(filefd, 1, &base, &len, sbuf.st_size, filename, NULL);
+
+        close(filefd);
     }
 
     /* send: name, size, and contents */
     if (first) {
-	prot_printf(pout, " {" SIZE_T_FMT "}\r\n", strlen(ftag));
+        prot_printf(pout, " {" SIZE_T_FMT "}\r\n", strlen(ftag));
 
-	if (sync) {
-	    /* synchronize */
-	    c = prot_getc(pin);
-	    eatline(pin, c); /* We eat it no matter what */
-	    if (c != '+') {
-		/* Synchronization Failure, Abort! */
-		syslog(LOG_ERR, "Sync Error: expected '+' got '%c'",c);
-		return IMAP_SERVER_UNAVAILABLE;
-	    }
-	}
+        if (sync) {
+            /* synchronize */
+            c = prot_getc(pin);
+            eatline(pin, c); /* We eat it no matter what */
+            if (c != '+') {
+                /* Synchronization Failure, Abort! */
+                syslog(LOG_ERR, "Sync Error: expected '+' got '%c'",c);
+                return IMAP_SERVER_UNAVAILABLE;
+            }
+        }
 
-	prot_printf(pout, "%s {%lu%s}\r\n",
-		    ftag, (long unsigned)len, (sync ? "+" : ""));
+        prot_printf(pout, "%s {%lu%s}\r\n",
+                    ftag, (long unsigned)len, (sync ? "+" : ""));
     } else {
-	prot_printf(pout, " {" SIZE_T_FMT "%s}\r\n%s {%lu%s}\r\n",
-		    strlen(ftag), (sync ? "+" : ""),
-		    ftag, (long unsigned)len, (sync ? "+" : ""));
+        prot_printf(pout, " {" SIZE_T_FMT "%s}\r\n%s {%lu%s}\r\n",
+                    strlen(ftag), (sync ? "+" : ""),
+                    ftag, (long unsigned)len, (sync ? "+" : ""));
     }
     prot_write(pout, base, len);
     if (!fbase) map_free(&base, &len);
@@ -470,9 +470,9 @@ enum { SEEN_DB = 0, SUBS_DB = 1, MBOXKEY_DB = 2, DAV_DB = 3 };
 static int NUM_USER_DATA_FILES = 4;
 
 EXPORTED int dump_mailbox(const char *tag, struct mailbox *mailbox, uint32_t uid_start,
-		 int oldversion,
-		 struct protstream *pin, struct protstream *pout,
-		 struct auth_state *auth_state __attribute((unused)))
+                 int oldversion,
+                 struct protstream *pin, struct protstream *pout,
+                 struct auth_state *auth_state __attribute((unused)))
 {
     DIR *mbdir = NULL;
     int r = 0;
@@ -481,19 +481,23 @@ EXPORTED int dump_mailbox(const char *tag, struct mailbox *mailbox, uint32_t uid
     const char *fname;
     int first = 1;
     int i;
+    char *userid = NULL;
     struct quota q;
     struct data_file *df;
     struct seqset *expunged_seq = NULL;
+    const char *dirpath = mailbox_datapath(mailbox, 0);
 
-    mbdir = opendir(mailbox_datapath(mailbox));
+    /* XXX - archivepath */
+
+    mbdir = opendir(dirpath);
     if (!mbdir && errno == EACCES) {
-	syslog(LOG_ERR,
-	       "could not dump mailbox %s (permission denied)", mailbox->name);
-	return IMAP_PERMISSION_DENIED;
+        syslog(LOG_ERR,
+               "could not dump mailbox %s (permission denied)", mailbox->name);
+        return IMAP_PERMISSION_DENIED;
     } else if (!mbdir) {
-	syslog(LOG_ERR,
-	       "could not dump mailbox %s (unknown error)", mailbox->name);
-	return IMAP_SYS_ERROR;
+        syslog(LOG_ERR,
+               "could not dump mailbox %s (unknown error)", mailbox->name);
+        return IMAP_SYS_ERROR;
     }
 
     /* after this point we have to both close the directory and unlock
@@ -505,88 +509,94 @@ EXPORTED int dump_mailbox(const char *tag, struct mailbox *mailbox, uint32_t uid
     /* The first member is either a number (if it is a quota root), or NIL
      * (if it isn't) */
     {
-	quota_init(&q, mailbox->name);
-	r = quota_read(&q, NULL, 0);
+        quota_init(&q, mailbox->name);
+        r = quota_read(&q, NULL, 0);
 
-	if (!r) {
-	    prot_printf(pout, QUOTA_T_FMT, q.limits[QUOTA_STORAGE]);
-	} else {
-	    prot_printf(pout, "NIL");
-	    if (r == IMAP_QUOTAROOT_NONEXISTENT) r = 0;
-	    /* do not send other quota data later */
-	    quota_free(&q);
-	}
+        if (!r) {
+            prot_printf(pout, QUOTA_T_FMT, q.limits[QUOTA_STORAGE]);
+        } else {
+            prot_printf(pout, "NIL");
+            if (r == IMAP_QUOTAROOT_NONEXISTENT) r = 0;
+            /* do not send other quota data later */
+            quota_free(&q);
+        }
     }
 
     /* Dump cyrus data files */
     for (df = data_files; df->metaname; df++) {
-	const char *fbase = NULL;
-	unsigned long flen = 0;
+        const char *fbase = NULL;
+        unsigned long flen = 0;
 
-	switch (df->metaname) {
-	case META_INDEX:
-	    if (mailbox->index_base) {
-		fbase = mailbox->index_base;
-		flen = mailbox->index_len;
-	    }
-	    break;
+        switch (df->metaname) {
+        case META_INDEX:
+            if (mailbox->index_base) {
+                fbase = mailbox->index_base;
+                flen = mailbox->index_len;
+            }
+            break;
 
-	case META_CACHE:
-	    if (mailbox->cache_buf.s) {
-		fbase = mailbox->cache_buf.s;
-		flen = mailbox->cache_buf.len;
-	    }
-	    break;
+        case META_CACHE:
+            {
+                /* XXX - multi-cache-file support */
+                struct mappedfile *cachefile = ptrarray_nth(&mailbox->caches, 0);
+                if (cachefile) {
+                    fbase = mappedfile_base(cachefile);
+                    flen = mappedfile_size(cachefile);
+                }
+            }
+            break;
 
-	default:
-	    break;
-	}
+        default:
+            break;
+        }
 
-	if (df->metaname == META_INDEX && oldversion < MAILBOX_MINOR_VERSION) {
-	    expunged_seq = seqset_init(mailbox->i.last_uid, SEQ_SPARSE);
-	    syslog(LOG_NOTICE, "%s downgrading index to version %d for XFER",
-		   mailbox->name, oldversion);
+        if (df->metaname == META_INDEX && oldversion < MAILBOX_MINOR_VERSION) {
+            expunged_seq = seqset_init(mailbox->i.last_uid, SEQ_SPARSE);
+            syslog(LOG_NOTICE, "%s downgrading index to version %d for XFER",
+                   mailbox->name, oldversion);
 
-	    r = dump_index(mailbox, oldversion, expunged_seq,
-			   first, !tag, pin, pout);
-	    if (r) goto done;
+            r = dump_index(mailbox, oldversion, expunged_seq,
+                           first, !tag, pin, pout);
+            if (r) goto done;
 
-	} else {
-	    fname = mailbox_meta_fname(mailbox, df->metaname);
-	    r = dump_file(first, !tag, pin, pout, fname, df->fname, fbase, flen);
-	    if (r) goto done;
-	}
+        } else {
+            fname = mailbox_meta_fname(mailbox, df->metaname);
+            r = dump_file(first, !tag, pin, pout, fname, df->fname, fbase, flen);
+            if (r) goto done;
+        }
 
-	first = 0;
+        first = 0;
     }
 
     /* Dump message files */
     while ((next = readdir(mbdir)) != NULL) {
-	char *name = next->d_name;  /* Alias */
-	char *p = name;
-	uint32_t uid;
+        char *name = next->d_name;  /* Alias */
+        char *p = name;
+        char *fullpath;
+        uint32_t uid;
 
-	/* special case for '.' (well, it gets '..' too) */
-	if (name[0] == '.') continue;
+        /* special case for '.' (well, it gets '..' too) */
+        if (name[0] == '.') continue;
 
-	/* skip non-message files */
-	while (*p && Uisdigit(*p)) p++;
-	if (p[0] != '.' || p[1] != '\0') continue;
+        /* skip non-message files */
+        while (*p && Uisdigit(*p)) p++;
+        if (p[0] != '.' || p[1] != '\0') continue;
 
-	/* ensure (number) is >= our target uid */
+        /* ensure (number) is >= our target uid */
         uid = atoi(name);
-	if (uid < uid_start) continue;
+        if (uid < uid_start) continue;
 
-	/* ensure uid is not in the expunged records that got skipped
-	 * in a downgraded index file */
-	if (seqset_ismember(expunged_seq, uid))
-	   continue;
+        /* ensure uid is not in the expunged records that got skipped
+         * in a downgraded index file */
+        if (seqset_ismember(expunged_seq, uid))
+           continue;
 
-	/* construct path/filename */
-	fname = mailbox_message_fname(mailbox, uid);
+        /* construct path/filename */
+        fullpath = strconcat(dirpath, "/", name, (char *)NULL);
+        r = dump_file(0, !tag, pin, pout, fullpath, name, NULL, 0);
+        free(fullpath);
 
-	r = dump_file(0, !tag, pin, pout, fname, name, NULL, 0);
-	if (r) goto done;
+        if (r) goto done;
     }
 
     closedir(mbdir);
@@ -594,140 +604,140 @@ EXPORTED int dump_mailbox(const char *tag, struct mailbox *mailbox, uint32_t uid
 
     /* Dump annotations */
     {
-	struct dump_annotation_rock actx;
-	actx.tag = tag;
-	actx.pout = pout;
-	annotatemore_findall(mailbox->name, 0, "*", dump_annotations,
-			     (void *) &actx);
+        struct dump_annotation_rock actx;
+        actx.tag = tag;
+        actx.pout = pout;
+        annotatemore_findall(mailbox->name, 0, "*", dump_annotations,
+                             (void *) &actx);
     }
 
     /* Dump user files if this is an inbox */
     if (mboxname_isusermailbox(mailbox->name, 1)) {
-	const char *userid = mboxname_to_userid(mailbox->name);
-	int sieve_usehomedir = config_getswitch(IMAPOPT_SIEVEUSEHOMEDIR);
-	char *fname = NULL, *ftag = NULL;
+        userid = mboxname_to_userid(mailbox->name);
+        int sieve_usehomedir = config_getswitch(IMAPOPT_SIEVEUSEHOMEDIR);
+        char *fname = NULL, *ftag = NULL;
 
-	/* Dump seen and subs files */
-	for (i = 0; i< NUM_USER_DATA_FILES; i++) {
+        /* Dump seen and subs files */
+        for (i = 0; i< NUM_USER_DATA_FILES; i++) {
 
-	    /* construct path/filename */
-	    switch (i) {
-	    case SEEN_DB:
-		fname = seen_getpath(userid);
-		ftag = "SEEN";
-		break;
-	    case SUBS_DB:
-		fname = user_hash_subs(userid);
-		ftag = "SUBS";
-		break;
-	    case MBOXKEY_DB:
-		fname = mboxkey_getpath(userid);
-		ftag = "MBOXKEY";
-		break;
-	    case DAV_DB: {
+            /* construct path/filename */
+            switch (i) {
+            case SEEN_DB:
+                fname = seen_getpath(userid);
+                ftag = "SEEN";
+                break;
+            case SUBS_DB:
+                fname = user_hash_subs(userid);
+                ftag = "SUBS";
+                break;
+            case MBOXKEY_DB:
+                fname = mboxkey_getpath(userid);
+                ftag = "MBOXKEY";
+                break;
+            case DAV_DB: {
 #ifdef WITH_DAV
-		struct buf dav_file = BUF_INITIALIZER;
+                struct buf dav_file = BUF_INITIALIZER;
 
-		dav_getpath_byuserid(&dav_file, userid);
-		fname = (char *) buf_cstring(&dav_file);
-		ftag = "DAV";
+                dav_getpath_byuserid(&dav_file, userid);
+                fname = (char *) buf_cstring(&dav_file);
+                ftag = "DAV";
 #else
-		continue;
+                continue;
 #endif
-		break;
-	    }
-	    default:
-		fatal("unknown user data file", EC_OSFILE);
-	    }
+                break;
+            }
+            default:
+                fatal("unknown user data file", EC_OSFILE);
+            }
 
-	    r = dump_file(0, !tag, pin, pout, fname, ftag, NULL, 0);
-	    free(fname);
-	    if (r) goto done;
-	}
+            r = dump_file(0, !tag, pin, pout, fname, ftag, NULL, 0);
+            free(fname);
+            if (r) goto done;
+        }
 
-	/* Dump sieve files
-	 *
-	 * xxx can't use home directories currently
-	 * (it makes almost no sense in the conext of a murder) */
-	if (!sieve_usehomedir) {
-	    const char *sieve_path = user_sieve_path(userid);
-	    mbdir = opendir(sieve_path);
+        /* Dump sieve files
+         *
+         * xxx can't use home directories currently
+         * (it makes almost no sense in the conext of a murder) */
+        if (!sieve_usehomedir) {
+            const char *sieve_path = user_sieve_path(userid);
+            mbdir = opendir(sieve_path);
 
-	    if (!mbdir) {
-		if (errno != ENOENT)
-		    syslog(LOG_ERR,
-			   "could not dump sieve scripts in %s: %m)", sieve_path);
-	    } else {
-		char tag_fname[2048];
-	    
-		while((next = readdir(mbdir)) != NULL) {
-		    int length=strlen(next->d_name);
-		    /* 7 == strlen(".script"); 3 == strlen(".bc") */
-		    if ((length >= 7 &&
-			 !strcmp(next->d_name + (length - 7), ".script")) ||
-			(length >= 3 &&
-			 !strcmp(next->d_name + (length - 3), ".bc")))
-		    {
-			/* create tagged name */
-			if(sieve_isactive(sieve_path, next->d_name)) {
-			    snprintf(tag_fname, sizeof(tag_fname),
-				     "SIEVED-%s", next->d_name);
-			} else {
-			    snprintf(tag_fname, sizeof(tag_fname),
-				     "SIEVE-%s", next->d_name);
-			}
+            if (!mbdir) {
+                if (errno != ENOENT)
+                    syslog(LOG_ERR,
+                           "could not dump sieve scripts in %s: %m)", sieve_path);
+            } else {
+                char tag_fname[2048];
 
-			/* construct path/filename */
-			snprintf(filename, sizeof(filename), "%s/%s",
-				 sieve_path, next->d_name);
+                while((next = readdir(mbdir)) != NULL) {
+                    int length=strlen(next->d_name);
+                    /* 7 == strlen(".script"); 3 == strlen(".bc") */
+                    if ((length >= 7 &&
+                         !strcmp(next->d_name + (length - 7), ".script")) ||
+                        (length >= 3 &&
+                         !strcmp(next->d_name + (length - 3), ".bc")))
+                    {
+                        /* create tagged name */
+                        if(sieve_isactive(sieve_path, next->d_name)) {
+                            snprintf(tag_fname, sizeof(tag_fname),
+                                     "SIEVED-%s", next->d_name);
+                        } else {
+                            snprintf(tag_fname, sizeof(tag_fname),
+                                     "SIEVE-%s", next->d_name);
+                        }
 
-			/* dump file */
-			r = dump_file(0, !tag, pin, pout, filename, tag_fname, NULL, 0);
-			if (r) goto done;
-		    }
-		}
+                        /* construct path/filename */
+                        snprintf(filename, sizeof(filename), "%s/%s",
+                                 sieve_path, next->d_name);
 
-		closedir(mbdir);
-		mbdir = NULL;
-	    }
-	} /* end if !sieve_userhomedir */
-	    
+                        /* dump file */
+                        r = dump_file(0, !tag, pin, pout, filename, tag_fname, NULL, 0);
+                        if (r) goto done;
+                    }
+                }
+
+                closedir(mbdir);
+                mbdir = NULL;
+            }
+        } /* end if !sieve_userhomedir */
+
     } /* end if user INBOX */
 
     /* Dump quota data */
     if (q.root) {
-	const char *ename = "X-QUOTA";
-	int res;
+        const char *ename = "X-QUOTA";
+        int res;
 
-	/* ensure there is data to transmit */
-	for (res = 0; res < QUOTA_NUMRESOURCES; res++) {
-	    /* STORAGE quota was already sent */
-	    if ((res != QUOTA_STORAGE) && (q.limits[res] >= 0)) {
-		break;
-	    }
-	}
+        /* ensure there is data to transmit */
+        for (res = 0; res < QUOTA_NUMRESOURCES; res++) {
+            /* STORAGE quota was already sent */
+            if ((res != QUOTA_STORAGE) && (q.limits[res] >= 0)) {
+                break;
+            }
+        }
 
-	if (res < QUOTA_NUMRESOURCES) {
-	    int sent = 0;
+        if (res < QUOTA_NUMRESOURCES) {
+            int sent = 0;
 
-	    prot_putc(' ', pout);
-	    prot_printliteral(pout, ename, strlen(ename));
-	    prot_printf(pout, " (");
+            prot_putc(' ', pout);
+            prot_printliteral(pout, ename, strlen(ename));
+            prot_printf(pout, " (");
 
-	    for (res = 0; res < QUOTA_NUMRESOURCES; res++) {
-		if (q.limits[res] < 0) {
-		    continue;
-		}
-		if (sent++) {
-		    prot_putc(' ', pout);
-		}
-		prot_printliteral(pout, quota_names[res], strlen(quota_names[res]));
-		prot_putc(' ', pout);
-		prot_printf(pout, QUOTA_T_FMT, q.limits[res]);
-	    }
-	    prot_putc(')', pout);
-	}
-	quota_free(&q);
+            for (res = 0; res < QUOTA_NUMRESOURCES; res++) {
+                if (q.limits[res] < 0) {
+                    continue;
+                }
+                if (sent++) {
+                    prot_putc(' ', pout);
+                }
+                prot_printliteral(pout, quota_names[res], strlen(quota_names[res]));
+                prot_putc(' ', pout);
+                prot_printf(pout, QUOTA_T_FMT, q.limits[res]);
+            }
+            prot_putc(')', pout);
+        }
+        quota_free(&q);
     }
 
  done:
@@ -738,26 +748,21 @@ EXPORTED int dump_mailbox(const char *tag, struct mailbox *mailbox, uint32_t uid
 
     if (mbdir) closedir(mbdir);
     seqset_free(expunged_seq);
+    free(userid);
 
     return r;
 }
 
-static int cleanup_seen_cb(void *rock,
-			   const char *key,
-			   size_t keylen,
-			   const char *val __attribute__((unused)),
-			   size_t vallen __attribute__((unused)))
+static int cleanup_seen_cb(const mbentry_t *mbentry, void *rock)
 {
     struct seen *seendb = (struct seen *)rock;
     int r;
     struct seqset *seq = NULL;
     struct mailbox *mailbox = NULL;
+    const message_t *msg;
     struct seendata sd = SEENDATA_INITIALIZER;
-    unsigned recno;
-    struct index_record record;
-    char *name = xstrndup(key, keylen);
 
-    r = mailbox_open_iwl(name, &mailbox);
+    r = mailbox_open_iwl(mbentry->name, &mailbox);
     if (r) goto done;
 
     /* read in the seen data from the seendb */
@@ -768,27 +773,28 @@ static int cleanup_seen_cb(void *rock,
     seen_freedata(&sd);
 
     /* update all the seen records */
-    for (recno = 1; recno <= mailbox->i.num_records; recno++) {
-	if (mailbox_read_index_record(mailbox, recno, &record))
-	    continue;
-	if (record.system_flags & (FLAG_SEEN|FLAG_EXPUNGED))
-	    continue; /* no need to rewrite */
-	if (seqset_ismember(seq, record.uid)) {
-	    record.system_flags |= FLAG_SEEN;
-	    r = mailbox_rewrite_index_record(mailbox, &record);
-	    if (r) break;
-	}
+    struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_EXPUNGED);
+    while ((msg = mailbox_iter_step(iter))) {
+        const struct index_record *record = msg_record(msg);
+        if (record->system_flags & FLAG_SEEN)
+            continue; /* no need to rewrite */
+        if (!seqset_ismember(seq, record->uid))
+            continue;
+        struct index_record copy = *record;
+        copy.system_flags |= FLAG_SEEN;
+        r = mailbox_rewrite_index_record(mailbox, &copy);
+        if (r) break;
     }
+    mailbox_iter_done(&iter);
 
     /* and the header values */
     mailbox_index_dirty(mailbox);
     if (mailbox->i.recentuid < sd.lastuid)
-	mailbox->i.recentuid = sd.lastuid;
+        mailbox->i.recentuid = sd.lastuid;
     if (mailbox->i.recenttime < sd.lastread)
-	mailbox->i.recenttime = sd.lastread;
+        mailbox->i.recenttime = sd.lastread;
 
  done:
-    free(name);
     seqset_free(seq);
     mailbox_close(&mailbox);
     return r;
@@ -796,7 +802,7 @@ static int cleanup_seen_cb(void *rock,
 
 static int cleanup_seen_subfolders(const char *mbname)
 {
-    const char *userid = mboxname_to_userid(mbname);
+    char *userid = mboxname_to_userid(mbname);
     struct seen *seendb = NULL;
     char buf[MAX_MAILBOX_NAME];
     int r;
@@ -813,21 +819,23 @@ static int cleanup_seen_subfolders(const char *mbname)
     if (!r) mboxlist_allmbox(buf, cleanup_seen_cb, seendb, /*incdel*/0);
     seen_close(&seendb);
 
+    free(userid);
+
     return 0;
 }
 
 EXPORTED int undump_mailbox(const char *mbname,
-		   struct protstream *pin, struct protstream *pout,
-		   struct auth_state *auth_state __attribute((unused)))
+                   struct protstream *pin, struct protstream *pout,
+                   struct auth_state *auth_state __attribute((unused)))
 {
     struct buf file, data;
-    char c;
+    int c;
     int r = 0;
     int curfile = -1;
     struct mailbox *mailbox = NULL;
     const char *sieve_path = NULL;
     int sieve_usehomedir = config_getswitch(IMAPOPT_SIEVEUSEHOMEDIR);
-    const char *userid = NULL;
+    char *userid = NULL;
     int first_annotation = 1;
     char *annotation = NULL;
     struct buf content = BUF_INITIALIZER;
@@ -844,56 +852,59 @@ EXPORTED int undump_mailbox(const char *mbname,
 
     /* Set a Quota (may be -1 for "unlimited") */
     for (res = 0; res < QUOTA_NUMRESOURCES; res++) {
-	newquotas[res] = QUOTA_UNLIMITED;
+       newquotas[res] = QUOTA_UNLIMITED;
     }
 
     if (mboxname_isusermailbox(mbname, 1)) {
-	userid = mboxname_to_userid(mbname);
-	if(!sieve_usehomedir) {
-	    sieve_path = user_sieve_path(userid);
-	}
+        userid = mboxname_to_userid(mbname);
+        if(!sieve_usehomedir) {
+            sieve_path = user_sieve_path(userid);
+        }
     }
 
     c = getword(pin, &data);
 
     /* we better be in a list now */
     if (c != '(' || data.s[0]) {
-	buf_free(&data);
-	eatline(pin, c);
-	return IMAP_PROTOCOL_BAD_PARAMETERS;
+        buf_free(&data);
+        free(userid);
+        eatline(pin, c);
+        return IMAP_PROTOCOL_BAD_PARAMETERS;
     }
-    
+
     /* We should now have a number or a NIL */
     c = getword(pin, &data);
     if (!strcmp(data.s, "NIL")) {
-	/* Remove any existing quotaroot */
-	mboxlist_unsetquota(mbname);
+        /* Remove any existing quotaroot */
+        mboxlist_unsetquota(mbname);
     } else if (sscanf(data.s, QUOTA_T_FMT, &quotalimit) == 1) {
-	/* quota will actually be applied later */
-	newquotas[QUOTA_STORAGE] = quotalimit;
+        /* quota will actually be applied later */
+        newquotas[QUOTA_STORAGE] = quotalimit;
     } else {
-	/* Huh? */
-	buf_free(&data);
-	eatline(pin, c);
-	return IMAP_PROTOCOL_BAD_PARAMETERS;
+        /* Huh? */
+        buf_free(&data);
+        free(userid);
+        eatline(pin, c);
+        return IMAP_PROTOCOL_BAD_PARAMETERS;
     }
 
     if(c != ' ' && c != ')') {
-	buf_free(&data);
-	eatline(pin, c);
-	return IMAP_PROTOCOL_BAD_PARAMETERS;
+        buf_free(&data);
+        free(userid);
+        eatline(pin, c);
+        return IMAP_PROTOCOL_BAD_PARAMETERS;
     } else if(c == ')') {
-	goto done;
+        goto done;
     }
-    
+
     r = mailbox_open_exclusive(mbname, &mailbox);
     if (r == IMAP_MAILBOX_NONEXISTENT) {
-	mbentry_t *mbentry = NULL;
-	r = mboxlist_lookup(mbname, &mbentry, NULL);
-	if (!r) r = mailbox_create(mbname, mbentry->mbtype,
-				   mbentry->partition, mbentry->acl,
-				   NULL, 0, 0, &mailbox);
-	mboxlist_entry_free(&mbentry);
+        mbentry_t *mbentry = NULL;
+        r = mboxlist_lookup(mbname, &mbentry, NULL);
+        if (!r) r = mailbox_create(mbname, mbentry->mbtype,
+                                   mbentry->partition, mbentry->acl,
+                                   mbentry->uniqueid, 0, 0, 0, &mailbox);
+        mboxlist_entry_free(&mbentry);
     }
     if(r) goto done;
 
@@ -903,333 +914,333 @@ EXPORTED int undump_mailbox(const char *mbname,
     astate = annotate_state_new();
 
     while(1) {
-	char fnamebuf[MAX_MAILBOX_PATH + 1024];
-	int isnowait, sawdigit;
-	unsigned long size;
-	unsigned long cutoff = ULONG_MAX / 10;
-	unsigned digit, cutlim = ULONG_MAX % 10;
-	annotation = NULL;
-	buf_reset(&content);
-	seen_file = NULL;
-	mboxkey_file = NULL;
-	
-	c = getastring(pin, pout, &file);
-	if(c != ' ') {
-	    r = IMAP_PROTOCOL_ERROR;
-	    goto done;
-	}
+        char fnamebuf[MAX_MAILBOX_PATH + 1024];
+        int isnowait, sawdigit;
+        unsigned long size;
+        unsigned long cutoff = ULONG_MAX / 10;
+        unsigned digit, cutlim = ULONG_MAX % 10;
+        annotation = NULL;
+        buf_reset(&content);
+        seen_file = NULL;
+        mboxkey_file = NULL;
 
-	if(!strncmp(file.s, "A-", 2)) {
-	    /* Annotation */
-	    int i;
-	    char *tmpuserid;
+        c = getastring(pin, pout, &file);
+        if(c != ' ') {
+            r = IMAP_PROTOCOL_ERROR;
+            goto done;
+        }
 
-	    /* is this the first annotation? re-read cyrus.header/index */
-	    if (first_annotation) {
-		first_annotation = 0;
-		mailbox_close(&mailbox);
-		r = mailbox_open_exclusive(mbname, &mailbox);
-		if (r) goto done;
-		r = annotate_state_set_mailbox(astate, mailbox);
-		if (r) goto done;
-	    }
+        if(!strncmp(file.s, "A-", 2)) {
+            /* Annotation */
+            int i;
+            char *tmpuserid;
 
-	    for(i=2; file.s[i]; i++) {
-		if(file.s[i] == '/') break;
-	    }
-	    if(!file.s[i]) {
-		r = IMAP_PROTOCOL_ERROR;
-		goto done;
-	    }
-	    tmpuserid = xmalloc(i-2+1);
-	    
-	    memcpy(tmpuserid, &(file.s[2]), i-2);
-	    tmpuserid[i-2] = '\0';
-	    
-	    annotation = xstrdup(&(file.s[i]));
+            /* is this the first annotation? re-read cyrus.header/index */
+            if (first_annotation) {
+                first_annotation = 0;
+                mailbox_close(&mailbox);
+                r = mailbox_open_exclusive(mbname, &mailbox);
+                if (r) goto done;
+                r = annotate_state_set_mailbox(astate, mailbox);
+                if (r) goto done;
+            }
 
-	    if(prot_getc(pin) != '(') {
-		r = IMAP_PROTOCOL_ERROR;
-		free(tmpuserid);
-		goto done;
-	    }	    
+            for(i=2; file.s[i]; i++) {
+                if(file.s[i] == '/') break;
+            }
+            if(!file.s[i]) {
+                r = IMAP_PROTOCOL_ERROR;
+                goto done;
+            }
+            tmpuserid = xmalloc(i-2+1);
 
-	    /* Parse the modtime...and ignore it */
-	    c = getword(pin, &data);
-	    if (c != ' ')  {
-		r = IMAP_PROTOCOL_ERROR;
-		free(tmpuserid);
-		goto done;
-	    }
+            memcpy(tmpuserid, &(file.s[2]), i-2);
+            tmpuserid[i-2] = '\0';
 
-	    c = getbastring(pin, pout, &content);
-	    /* xxx binary */
+            annotation = xstrdup(&(file.s[i]));
 
-	    if(c != ' ') {
-		r = IMAP_PROTOCOL_ERROR;
-		free(tmpuserid);
-		goto done;
-	    }
+            if(prot_getc(pin) != '(') {
+                r = IMAP_PROTOCOL_ERROR;
+                free(tmpuserid);
+                goto done;
+            }
 
-	    /* got the contenttype...and ignore it */
-	    c = getastring(pin, pout, &data);
-	    
-	    if(c != ')') {
-		r = IMAP_PROTOCOL_ERROR;
-		free(tmpuserid);
-		goto done;
-	    }
+            /* Parse the modtime...and ignore it */
+            c = getword(pin, &data);
+            if (c != ' ')  {
+                r = IMAP_PROTOCOL_ERROR;
+                free(tmpuserid);
+                goto done;
+            }
 
-	    annotate_state_write(astate, annotation, tmpuserid,
-				     &content);
-    
-	    free(tmpuserid);
-	    free(annotation);
-	    annotation = NULL;
-	    buf_reset(&content);
+            c = getbastring(pin, pout, &content);
+            /* xxx binary */
 
-	    c = prot_getc(pin);
-	    if(c == ')') break; /* that was the last item */
-	    else if(c != ' ') {
-		r = IMAP_PROTOCOL_ERROR;
-		goto done;
-	    }
+            if(c != ' ') {
+                r = IMAP_PROTOCOL_ERROR;
+                free(tmpuserid);
+                goto done;
+            }
 
-	    continue;
-	}
-	else if (!strcmp(file.s, "X-QUOTA")) {
-	    /* Quota */
-	    if (prot_getc(pin) != '(') {
-		r = IMAP_PROTOCOL_ERROR;
-		goto done;
-	    }
+            /* got the contenttype...and ignore it */
+            c = getastring(pin, pout, &data);
 
-	    for (;;) {
-		/* XXX - limit is actually stored in an int value */
-		int32_t limit = 0;
+            if(c != ')') {
+                r = IMAP_PROTOCOL_ERROR;
+                free(tmpuserid);
+                goto done;
+            }
 
-		c = getastring(pin, pout, &content);
-		if (c != ' ') {
-		    r = IMAP_PROTOCOL_ERROR;
-		    goto done;
-		}
-		/* ignore unknown resources */
-		res = quota_name_to_resource(content.s);
+            annotate_state_write(astate, annotation, tmpuserid,
+                                     &content);
 
-		c = getint32(pin, &limit);
-		if (res >= 0) {
-		    newquotas[res] = limit;
-		}
+            free(tmpuserid);
+            free(annotation);
+            annotation = NULL;
+            buf_reset(&content);
 
-		if (c == ')') break;
-		else if (c != ' ') {
-		    r = IMAP_PROTOCOL_ERROR;
-		    goto done;
-		}
-	    }
+            c = prot_getc(pin);
+            if(c == ')') break; /* that was the last item */
+            else if(c != ' ') {
+                r = IMAP_PROTOCOL_ERROR;
+                goto done;
+            }
 
-	    c = prot_getc(pin);
-	    if (c == ')') break; /* that was the last item */
-	    else if (c != ' ') {
-		r = IMAP_PROTOCOL_ERROR;
-		goto done;
-	    }
+            continue;
+        }
+        else if (!strcmp(file.s, "X-QUOTA")) {
+            /* Quota */
+            if (prot_getc(pin) != '(') {
+                r = IMAP_PROTOCOL_ERROR;
+                goto done;
+            }
 
-	    continue;
-	}
+            for (;;) {
+                /* XXX - limit is actually stored in an int value */
+                int32_t limit = 0;
 
-	/* read size of literal */
-	c = prot_getc(pin);
-	if (c != '{') {
-	    r = IMAP_PROTOCOL_ERROR;
-	    goto done;
-	}
+                c = getastring(pin, pout, &content);
+                if (c != ' ') {
+                    r = IMAP_PROTOCOL_ERROR;
+                    goto done;
+                }
+                /* ignore unknown resources */
+                res = quota_name_to_resource(content.s);
 
-	size = isnowait = sawdigit = 0;
-	while ((c = prot_getc(pin)) != EOF && isdigit(c)) {
-	    sawdigit = 1;
-	    digit = c - '0';
-	    /* check for overflow */
-	    if (size > cutoff || (size == cutoff && digit > cutlim)) {
-		fatal("literal too big", EC_IOERR);
-	    }
-	    size = size*10 + digit;
-	}
-	if (c == '+') {
-	    isnowait++;
-	    c = prot_getc(pin);
-	}
-	if (c == '}') {
-	    c = prot_getc(pin);
-	    if (c == '\r') c = prot_getc(pin);
-	}
-	if (!sawdigit || c != '\n') {
-	    r = IMAP_PROTOCOL_ERROR;
-	    goto done;
-	}
+                c = getint32(pin, &limit);
+                if (res >= 0) {
+                    newquotas[res] = limit;
+                }
 
-	if (!isnowait) {
-	    /* Tell client to send the message */
-	    prot_printf(pout, "+ go ahead\r\n");
-	    prot_flush(pout);
-	}
+                if (c == ')') break;
+                else if (c != ' ') {
+                    r = IMAP_PROTOCOL_ERROR;
+                    goto done;
+                }
+            }
 
-	if (userid && !strcmp(file.s, "SUBS")) {
-	    /* overwriting this outright is absolutely what we want to do */
-	    char *s = user_hash_subs(userid);
-	    strlcpy(fnamebuf, s, sizeof(fnamebuf));
-	    free(s);
+            c = prot_getc(pin);
+            if (c == ')') break; /* that was the last item */
+            else if (c != ' ') {
+                r = IMAP_PROTOCOL_ERROR;
+                goto done;
+            }
+
+            continue;
+        }
+
+        /* read size of literal */
+        c = prot_getc(pin);
+        if (c != '{') {
+            r = IMAP_PROTOCOL_ERROR;
+            goto done;
+        }
+
+        size = isnowait = sawdigit = 0;
+        while ((c = prot_getc(pin)) != EOF && isdigit(c)) {
+            sawdigit = 1;
+            digit = c - '0';
+            /* check for overflow */
+            if (size > cutoff || (size == cutoff && digit > cutlim)) {
+                fatal("literal too big", EC_IOERR);
+            }
+            size = size*10 + digit;
+        }
+        if (c == '+') {
+            isnowait++;
+            c = prot_getc(pin);
+        }
+        if (c == '}') {
+            c = prot_getc(pin);
+            if (c == '\r') c = prot_getc(pin);
+        }
+        if (!sawdigit || c != '\n') {
+            r = IMAP_PROTOCOL_ERROR;
+            goto done;
+        }
+
+        if (!isnowait) {
+            /* Tell client to send the message */
+            prot_printf(pout, "+ go ahead\r\n");
+            prot_flush(pout);
+        }
+
+        if (userid && !strcmp(file.s, "SUBS")) {
+            /* overwriting this outright is absolutely what we want to do */
+            char *s = user_hash_subs(userid);
+            strlcpy(fnamebuf, s, sizeof(fnamebuf));
+            free(s);
 #ifdef WITH_DAV
-	} else if (userid && !strcmp(file.s, "DAV")) {
-	    /* overwriting this outright is absolutely what we want to do */
-	    struct buf dav_file = BUF_INITIALIZER;
-	    dav_getpath_byuserid(&dav_file, userid);
-	    strlcpy(fnamebuf, buf_cstring(&dav_file), sizeof(fnamebuf));
-	    buf_free(&dav_file);
+        } else if (userid && !strcmp(file.s, "DAV")) {
+            /* overwriting this outright is absolutely what we want to do */
+            struct buf dav_file = BUF_INITIALIZER;
+            dav_getpath_byuserid(&dav_file, userid);
+            strlcpy(fnamebuf, buf_cstring(&dav_file), sizeof(fnamebuf));
+            buf_free(&dav_file);
 #endif
-	} else if (userid && !strcmp(file.s, "SEEN")) {
-	    seen_file = seen_getpath(userid);
+        } else if (userid && !strcmp(file.s, "SEEN")) {
+            seen_file = seen_getpath(userid);
 
-	    snprintf(fnamebuf,sizeof(fnamebuf),"%s.%d",seen_file,getpid());
-	} else if (userid && !strcmp(file.s, "MBOXKEY")) {
-	    mboxkey_file = mboxkey_getpath(userid);
+            snprintf(fnamebuf,sizeof(fnamebuf),"%s.%d",seen_file,getpid());
+        } else if (userid && !strcmp(file.s, "MBOXKEY")) {
+            mboxkey_file = mboxkey_getpath(userid);
 
-	    snprintf(fnamebuf,sizeof(fnamebuf),"%s.%d",mboxkey_file,getpid());
-	} else if (userid && !strncmp(file.s, "SIEVE", 5)) {
-	    int isdefault = !strncmp(file.s, "SIEVED", 6);
-	    char *realname;
-	    int ret;
-	    
-	    /* skip prefixes */
-	    if(isdefault) realname = file.s + 7;
-	    else realname = file.s + 6;
+            snprintf(fnamebuf,sizeof(fnamebuf),"%s.%d",mboxkey_file,getpid());
+        } else if (userid && !strncmp(file.s, "SIEVE", 5)) {
+            int isdefault = !strncmp(file.s, "SIEVED", 6);
+            char *realname;
+            int ret;
 
-	    if(sieve_usehomedir) {
-		/* xxx! */
-		syslog(LOG_ERR,
-		       "dropping sieve file %s since this host is " \
-		       "configured for sieve_usehomedir",
-		       realname);
-		continue;
-	    } else {
-		if(snprintf(fnamebuf, sizeof(fnamebuf),
-			    "%s/%s", sieve_path, realname) == -1) {
-		    r = IMAP_PROTOCOL_ERROR;
-		    goto done;
-		} else if(isdefault) {
-		    char linkbuf[2048];
-		    		    
-		    snprintf(linkbuf, sizeof(linkbuf), "%s/defaultbc",
-			     sieve_path);
-		    ret = symlink(realname, linkbuf);
-		    if(ret && errno == ENOENT) {
-			if(cyrus_mkdir(linkbuf, 0750) == 0) {
-			    ret = symlink(realname, linkbuf);
-			}
-		    }
-		    if(ret) {
-			syslog(LOG_ERR, "symlink(%s, %s): %m", realname,
-			       linkbuf);
-			/* Non-fatal,
-			   let's get the file transferred if we can */
-		    }
-		    
-		}
-	    }
-	} else {
-	    struct data_file *df;
-	    const char *path = NULL;
+            /* skip prefixes */
+            if(isdefault) realname = file.s + 7;
+            else realname = file.s + 6;
 
-	    /* see if its one of our datafiles */
-	    for (df = data_files; df->fname && strcmp(df->fname, file.s); df++);
-	    if (df->metaname) {
-		path = mailbox_meta_fname(mailbox, df->metaname);
-	    } else {
-		uint32_t uid;
-		const char *ptr = NULL;
-		if (!parseuint32(file.s, &ptr, &uid)) {
-		    /* is it really a data file? */
-		    if (ptr && ptr[0] == '.' && ptr[1] == '\0')
-			path = mailbox_message_fname(mailbox, uid);
-		}
-	    }
-	    if (!path) {
-		r = IMAP_PROTOCOL_ERROR;
-		goto done;
-	    }
-	    strncpy(fnamebuf, path, MAX_MAILBOX_PATH);
-	}
+            if(sieve_usehomedir) {
+                /* xxx! */
+                syslog(LOG_ERR,
+                       "dropping sieve file %s since this host is " \
+                       "configured for sieve_usehomedir",
+                       realname);
+                continue;
+            } else {
+                if(snprintf(fnamebuf, sizeof(fnamebuf),
+                            "%s/%s", sieve_path, realname) == -1) {
+                    r = IMAP_PROTOCOL_ERROR;
+                    goto done;
+                } else if(isdefault) {
+                    char linkbuf[2048];
 
-	/* if we haven't opened it, do so */
-	curfile = open(fnamebuf, O_WRONLY|O_TRUNC|O_CREAT, 0640);
-	if(curfile == -1 && errno == ENOENT) {
-	    if(cyrus_mkdir(fnamebuf, 0750) == 0) {
-		curfile = open(fnamebuf, O_WRONLY|O_TRUNC|O_CREAT, 0640);
-	    }
-	}
+                    snprintf(linkbuf, sizeof(linkbuf), "%s/defaultbc",
+                             sieve_path);
+                    ret = symlink(realname, linkbuf);
+                    if(ret && errno == ENOENT) {
+                        if(cyrus_mkdir(linkbuf, 0750) == 0) {
+                            ret = symlink(realname, linkbuf);
+                        }
+                    }
+                    if(ret) {
+                        syslog(LOG_ERR, "symlink(%s, %s): %m", realname,
+                               linkbuf);
+                        /* Non-fatal,
+                           let's get the file transferred if we can */
+                    }
 
-	if(curfile == -1) {
-	    syslog(LOG_ERR, "IOERROR: creating %s: %m", fnamebuf);
-	    r = IMAP_IOERROR;
-	    goto done;
-	}
+                }
+            }
+        } else {
+            struct data_file *df;
+            const char *path = NULL;
 
-	/* write data to file */
-	while (size) {
-	    char buf[4096+1];
-	    int n = prot_read(pin, buf, size > 4096 ? 4096 : size);
-	    if (!n) {
-		syslog(LOG_ERR,
-		       "IOERROR: reading message: unexpected end of file");
-		r = IMAP_IOERROR;
-		goto done;
-	    }
+            /* see if its one of our datafiles */
+            for (df = data_files; df->fname && strcmp(df->fname, file.s); df++);
+            if (df->metaname) {
+                path = mailbox_meta_fname(mailbox, df->metaname);
+            } else {
+                uint32_t uid;
+                const char *ptr = NULL;
+                if (!parseuint32(file.s, &ptr, &uid)) {
+                    /* is it really a data file? */
+                    if (ptr && ptr[0] == '.' && ptr[1] == '\0')
+                        path = mboxname_datapath(mailbox->part, mailbox->name, mailbox->uniqueid, uid);
+                }
+            }
+            if (!path) {
+                r = IMAP_PROTOCOL_ERROR;
+                goto done;
+            }
+            strncpy(fnamebuf, path, MAX_MAILBOX_PATH);
+        }
 
-	    size -= n;
+        /* if we haven't opened it, do so */
+        curfile = open(fnamebuf, O_WRONLY|O_TRUNC|O_CREAT, 0640);
+        if(curfile == -1 && errno == ENOENT) {
+            if(cyrus_mkdir(fnamebuf, 0750) == 0) {
+                curfile = open(fnamebuf, O_WRONLY|O_TRUNC|O_CREAT, 0640);
+            }
+        }
 
-	    if (write(curfile, buf, n) != n) {
-		syslog(LOG_ERR, "IOERROR: writing %s: %m", fnamebuf);
-		r = IMAP_IOERROR;
-		goto done;
-	    }
-	}
+        if(curfile == -1) {
+            syslog(LOG_ERR, "IOERROR: creating %s: %m", fnamebuf);
+            r = IMAP_IOERROR;
+            goto done;
+        }
 
-	close(curfile);
+        /* write data to file */
+        while (size) {
+            char buf[4096+1];
+            int n = prot_read(pin, buf, size > 4096 ? 4096 : size);
+            if (!n) {
+                syslog(LOG_ERR,
+                       "IOERROR: reading message: unexpected end of file");
+                r = IMAP_IOERROR;
+                goto done;
+            }
 
-	/* we were operating on the seen state, so merge it and cleanup */
-	if (seen_file) {
-	    struct seen *seendb = NULL;
-	    r = seen_open(userid, SEEN_CREATE, &seendb);
-	    if (!r) r = seen_merge(seendb, fnamebuf);
-	    seen_close(&seendb);
+            size -= n;
 
-	    free(seen_file);
-	    seen_file = NULL;
-	    unlink(fnamebuf);
+            if (write(curfile, buf, n) != n) {
+                syslog(LOG_ERR, "IOERROR: writing %s: %m", fnamebuf);
+                r = IMAP_IOERROR;
+                goto done;
+            }
+        }
 
-	    if (r) goto done;
-	}
-	/* we were operating on the seen state, so merge it and cleanup */
-	else if (mboxkey_file) {
-	    mboxkey_merge(fnamebuf, mboxkey_file);
-	    free(mboxkey_file);
-	    mboxkey_file = NULL;
+        close(curfile);
 
-	    unlink(fnamebuf);
-	}
-	
-	c = prot_getc(pin);
-	if (c == ')') break;
-	if (c != ' ') {
-	    r = IMAP_PROTOCOL_ERROR;
-	    goto done;
-	}
+        /* we were operating on the seen state, so merge it and cleanup */
+        if (seen_file) {
+            struct seen *seendb = NULL;
+            r = seen_open(userid, SEEN_CREATE, &seendb);
+            if (!r) r = seen_merge(seendb, fnamebuf);
+            seen_close(&seendb);
+
+            free(seen_file);
+            seen_file = NULL;
+            unlink(fnamebuf);
+
+            if (r) goto done;
+        }
+        /* we were operating on the seen state, so merge it and cleanup */
+        else if (mboxkey_file) {
+            mboxkey_merge(fnamebuf, mboxkey_file);
+            free(mboxkey_file);
+            mboxkey_file = NULL;
+
+            unlink(fnamebuf);
+        }
+
+        c = prot_getc(pin);
+        if (c == ')') break;
+        if (c != ' ') {
+            r = IMAP_PROTOCOL_ERROR;
+            goto done;
+        }
     }
 
     /* patch up seen data for subfolders */
     if (userid) {
-	r = cleanup_seen_subfolders(mbname);
-	/* XXX - patch up seen data here */
+        r = cleanup_seen_subfolders(mbname);
+        /* XXX - patch up seen data here */
     }
 
  done:
@@ -1239,7 +1250,7 @@ EXPORTED int undump_mailbox(const char *mbname,
     buf_free(&data);
 
     if (r)
-	annotate_state_abort(&mailbox->annot_state);
+        annotate_state_abort(&mailbox->annot_state);
 
     if (curfile >= 0) close(curfile);
     /* we fiddled the files under the hood, so we can't do anything
@@ -1248,75 +1259,74 @@ EXPORTED int undump_mailbox(const char *mbname,
 
     /* time to apply quota (mailbox must be unlocked) */
     if (!r) {
-	for (res = 0; res < QUOTA_NUMRESOURCES; res++) {
-	    if (newquotas[res] != QUOTA_UNLIMITED) {
-		break;
-	    }
-	}
-	if (res < QUOTA_NUMRESOURCES) {
-	    mboxlist_setquotas(mbname, newquotas, 0);
-	}
+        for (res = 0; res < QUOTA_NUMRESOURCES; res++) {
+            if (newquotas[res] != QUOTA_UNLIMITED) {
+                break;
+            }
+        }
+        if (res < QUOTA_NUMRESOURCES) {
+            mboxlist_setquotas(mbname, newquotas, 0);
+        }
     }
 
     /* let's make sure the modification times are right */
     if (!r) {
-	struct index_record record;
-	struct utimbuf settime;
-	const char *fname;
-	unsigned recno;
+        struct utimbuf settime;
+        const char *fname;
 
-	/* cheeky - we're not actually changing anything real */
-	r = mailbox_open_irl(mbname, &mailbox);
-	if (r) {
-	    r = 0; /* no point throwing errors */
-	    goto done2;
-	}
+        /* cheeky - we're not actually changing anything real */
+        r = mailbox_open_irl(mbname, &mailbox);
+        if (r) {
+            r = 0; /* no point throwing errors */
+            goto done2;
+        }
 
-	/* update the quota if necessary */
-	if (mailbox->quotaroot) {
-	    quota_t quota_usage[QUOTA_NUMRESOURCES];
-	    int res;
-	    int changed = 0;
+        /* update the quota if necessary */
+        if (mailbox->quotaroot) {
+            quota_t quota_usage[QUOTA_NUMRESOURCES];
+            int res;
+            int changed = 0;
 
-	    mailbox_get_usage(mailbox, quota_usage);
-	    for (res = 0; res < QUOTA_NUMRESOURCES; res++) {
-		quota_usage[res] -= old_quota_usage[res];
-		if (quota_usage[res] != 0) {
-		    changed++;
-		}
-	    }
+            mailbox_get_usage(mailbox, quota_usage);
+            for (res = 0; res < QUOTA_NUMRESOURCES; res++) {
+                quota_usage[res] -= old_quota_usage[res];
+                if (quota_usage[res] != 0) {
+                    changed++;
+                }
+            }
 
-	    if (changed) {
-		r = quota_update_useds(mailbox->quotaroot, quota_usage, 0);
-	    }
-	}
+            if (changed) {
+                r = quota_update_useds(mailbox->quotaroot, quota_usage, 0);
+                if (r) goto done2;
+            }
+        }
 
-	for (recno = 1; recno <= mailbox->i.num_records; recno++) {
-	    r = mailbox_read_index_record(mailbox, recno, &record);
-	    if (r) continue;
-	    if (record.system_flags & FLAG_UNLINKED)
-		continue; /* no file! */
-	    fname = mailbox_message_fname(mailbox, record.uid);
-	    settime.actime = settime.modtime = record.internaldate;
-	    if (utime(fname, &settime) == -1) {
-		r = IMAP_IOERROR;
-		goto done2;
-	    }
-	}
-	r = 0; /* just in case one leaked */
+        struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_UNLINKED);
+        const message_t *msg;
+        while ((msg = mailbox_iter_step(iter))) {
+            const struct index_record *record = msg_record(msg);
+            fname = mailbox_record_fname(mailbox, record);
+            settime.actime = settime.modtime = record->internaldate;
+            if (utime(fname, &settime) == -1) {
+                r = IMAP_IOERROR;
+                goto done2;
+            }
+        }
+        mailbox_iter_done(&iter);
     }
 
  done2:
     /* just in case we failed during the modifications, close again */
     mailbox_close(&mailbox);
     if (!r)
-	r = annotate_state_commit(&astate);
+        r = annotate_state_commit(&astate);
     else
-	annotate_state_abort(&astate);
+        annotate_state_abort(&astate);
     free(annotation);
     buf_free(&content);
     free(seen_file);
     free(mboxkey_file);
+    free(userid);
 
     return r;
 }

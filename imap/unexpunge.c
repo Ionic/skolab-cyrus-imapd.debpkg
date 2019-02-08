@@ -56,7 +56,6 @@
 #include "annotate.h"
 #include "exitcodes.h"
 #include "global.h"
-#include "imap/imap_err.h"
 #include "index.h"
 #include "libcyr_cfg.h"
 #include "map.h"
@@ -65,6 +64,9 @@
 #include "util.h"
 #include "xmalloc.h"
 #include "sync_log.h"
+
+/* generated headers are not necessarily in current directory */
+#include "imap/imap_err.h"
 
 /* current namespace */
 static struct namespace unex_namespace;
@@ -76,10 +78,10 @@ static const char *addflag = NULL;
 static void usage(void)
 {
     fprintf(stderr,
-	    "unexpunge [-C <altconfig>] -l <mailbox>\n"
+            "unexpunge [-C <altconfig>] -l <mailbox>\n"
             "unexpunge [-C <altconfig>] -t time-interval [-d] [-v] [-f flag] mailbox\n"
-	    "unexpunge [-C <altconfig>] -a [-d] [-v] [-f flag] <mailbox>\n"
-	    "unexpunge [-C <altconfig>] -u [-d] [-v] [-f flag] <mailbox> <uid>...\n");
+            "unexpunge [-C <altconfig>] -a [-d] [-v] [-f flag] <mailbox>\n"
+            "unexpunge [-C <altconfig>] -u [-d] [-v] [-f flag] <mailbox> <uid>...\n");
     exit(-1);
 }
 
@@ -100,8 +102,6 @@ static void list_expunged(const char *mboxname)
 {
     struct mailbox *mailbox = NULL;
     struct index_record *records = NULL;
-    struct index_record *record;
-    uint32_t recno;
     int alloc = 0;
     int num = 0;
     int i;
@@ -109,60 +109,58 @@ static void list_expunged(const char *mboxname)
 
     r = mailbox_open_irl(mboxname, &mailbox);
     if (r) {
-	printf("Failed to open mailbox %s: %s",
-	       mboxname, error_message(r));
-	return;
+        printf("Failed to open mailbox %s: %s",
+               mboxname, error_message(r));
+        return;
     }
 
     /* first pass - read the records.  Don't print until we release the
      * lock */
-    for (recno = 1; recno <= mailbox->i.num_records; recno++) {
-	/* pre-allocate more space */
-	if (alloc <= num) {
-	    alloc += 64;
-	    records = xrealloc(records, sizeof(struct index_record) * alloc);
-	}
-	record = &records[num];
+    struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_UNLINKED);
+    const message_t *msg;
+    while ((msg = mailbox_iter_step(iter))) {
+        const struct index_record *record = msg_record(msg);
+        /* still active */
+        if (!(record->system_flags & FLAG_EXPUNGED))
+            continue;
 
-	if (mailbox_read_index_record(mailbox, recno, record))
-	    continue;
+        /* pre-allocate more space */
+        if (alloc <= num) {
+            alloc += 64;
+            records = xrealloc(records, sizeof(struct index_record) * alloc);
+        }
 
-	/* still active */
-	if (!(record->system_flags & FLAG_EXPUNGED))
-	    continue;
-	/* no file, unrescuable */
-	if (record->system_flags & FLAG_UNLINKED)
-	    continue;
-
-	num++;
+        records[num] = *record;
+        num++;
     }
+    mailbox_iter_done(&iter);
 
     mailbox_unlock_index(mailbox, NULL);
 
     for (i = 0; i < num; i++) {
-	record = &records[i];
-	printf("UID: %u\n", record->uid);
-	printf("\tSize: %u\n", record->size);
-	printf("\tSent: %s", ctime(&record->sentdate));
-	printf("\tRecv: %s", ctime(&record->internaldate));
-	printf("\tExpg: %s", ctime(&record->last_updated));
+        const struct index_record *record = &records[i];
+        printf("UID: %u\n", record->uid);
+        printf("\tSize: %u\n", record->size);
+        printf("\tSent: %s", ctime(&record->sentdate));
+        printf("\tRecv: %s", ctime(&record->internaldate));
+        printf("\tExpg: %s", ctime(&record->last_updated));
 
-	if (mailbox_cacherecord(mailbox, record)) {
-	    printf("\tERROR: cache record missing or corrupt, "
-		   "not printing cache details\n\n");
-	    continue;
-	}
+        if (mailbox_cacherecord(mailbox, record)) {
+            printf("\tERROR: cache record missing or corrupt, "
+                   "not printing cache details\n\n");
+            continue;
+        }
 
-	printf("\tFrom: %.*s\n", cacheitem_size(record, CACHE_FROM),
-		cacheitem_base(record, CACHE_FROM));
-	printf("\tTo  : %.*s\n", cacheitem_size(record, CACHE_TO),
-		cacheitem_base(record, CACHE_TO));
-	printf("\tCc  : %.*s\n", cacheitem_size(record, CACHE_CC),
-		cacheitem_base(record, CACHE_CC));
-	printf("\tBcc : %.*s\n", cacheitem_size(record, CACHE_BCC),
-		cacheitem_base(record, CACHE_BCC));
-	printf("\tSubj: %.*s\n\n", cacheitem_size(record, CACHE_SUBJECT),
-		cacheitem_base(record, CACHE_SUBJECT));
+        printf("\tFrom: %.*s\n", cacheitem_size(record, CACHE_FROM),
+                cacheitem_base(record, CACHE_FROM));
+        printf("\tTo  : %.*s\n", cacheitem_size(record, CACHE_TO),
+                cacheitem_base(record, CACHE_TO));
+        printf("\tCc  : %.*s\n", cacheitem_size(record, CACHE_CC),
+                cacheitem_base(record, CACHE_CC));
+        printf("\tBcc : %.*s\n", cacheitem_size(record, CACHE_BCC),
+                cacheitem_base(record, CACHE_BCC));
+        printf("\tSubj: %.*s\n\n", cacheitem_size(record, CACHE_SUBJECT),
+                cacheitem_base(record, CACHE_SUBJECT));
     }
 
     free(records);
@@ -170,102 +168,103 @@ static void list_expunged(const char *mboxname)
 }
 
 static int restore_expunged(struct mailbox *mailbox, int mode, unsigned long *uids,
-		     unsigned nuids, time_t time_since, unsigned *numrestored,
-		     const char *mboxname)
+                     unsigned nuids, time_t time_since, unsigned *numrestored,
+                     const char *extname)
 {
-    uint32_t recno;
-    struct index_record record;
     struct index_record newrecord;
     annotate_state_t *astate = NULL;
     unsigned uidnum = 0;
     char oldfname[MAX_MAILBOX_PATH];
     const char *fname;
-    const char *userid = mboxname_to_userid(mailbox->name);
+    char *userid = mboxname_to_userid(mailbox->name);
     int r = 0;
 
     *numrestored = 0;
 
-    for (recno = 1; recno <= mailbox->i.num_records; recno++) {
-	r = mailbox_read_index_record(mailbox, recno, &record);
-	if (r) goto done;
+    struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_UNLINKED);
+    const message_t *msg;
+    while ((msg = mailbox_iter_step(iter))) {
+        const struct index_record *record = msg_record(msg);
+        /* still active */
+        if (!(record->system_flags & FLAG_EXPUNGED))
+            continue;
 
-	/* still active */
-	if (!(record.system_flags & FLAG_EXPUNGED))
-	    continue;
-	/* no file, unrescuable */
-	if (record.system_flags & FLAG_UNLINKED)
-	    continue;
+        if (mode == MODE_UID) {
+            while (uidnum < nuids && record->uid > uids[uidnum])
+                uidnum++;
+            if (uidnum >= nuids)
+                continue;
+            if (record->uid != uids[uidnum])
+                continue;
+            /* otherwise we want this one */
+        }
+        else if (mode == MODE_TIME) {
+            if (record->last_updated < time_since)
+                continue;
+            /* otherwise we want this one */
+        }
 
-	if (mode == MODE_UID) {
-	    while (uidnum < nuids && record.uid > uids[uidnum])
-		uidnum++;
-	    if (uidnum >= nuids)
-		continue;
-	    if (record.uid != uids[uidnum])
-		continue;
-	    /* otherwise we want this one */
-	}
-	else if (mode == MODE_TIME) {
-	    if (record.last_updated < time_since)
-		continue;
-	    /* otherwise we want this one */
-	}
+        /* work on a copy */
+        newrecord = *record;
 
-	/* work on a copy */
-	newrecord = record;
+        /* duplicate the old filename */
+        fname = mailbox_record_fname(mailbox, record);
+        xstrncpy(oldfname, fname, MAX_MAILBOX_PATH);
 
-	/* duplicate the old filename */
-	fname = mailbox_message_fname(mailbox, record.uid);
-	xstrncpy(oldfname, fname, MAX_MAILBOX_PATH);
+        /* bump the UID, strip the flags */
+        newrecord.uid = mailbox->i.last_uid + 1;
+        newrecord.system_flags &= ~FLAG_EXPUNGED;
+        if (unsetdeleted)
+            newrecord.system_flags &= ~FLAG_DELETED;
 
-	/* bump the UID, strip the flags */
-	newrecord.uid = mailbox->i.last_uid + 1;
-	newrecord.system_flags &= ~FLAG_EXPUNGED;
-	if (unsetdeleted)
-	    newrecord.system_flags &= ~FLAG_DELETED;
+        /* copy the message file */
+        fname = mailbox_record_fname(mailbox, &newrecord);
+        r = mailbox_copyfile(oldfname, fname, 0);
+        if (r) break;
 
-	/* copy the message file */
-	fname = mailbox_message_fname(mailbox, newrecord.uid);
-	r = mailbox_copyfile(oldfname, fname, 0);
-	if (r) goto done;
+        /* add the flag if requested */
+        if (addflag) {
+            int userflag = 0;
+            r = mailbox_user_flag(mailbox, addflag, &userflag, 1);
+            if (r) break;
+            newrecord.user_flags[userflag/32] |= 1<<(userflag&31);
+        }
 
-	/* add the flag if requested */
-	if (addflag) {
-	    int userflag = 0;
-	    r = mailbox_user_flag(mailbox, addflag, &userflag, 1);
-	    if (r) goto done;
-	    newrecord.user_flags[userflag/32] |= 1<<(userflag&31);
-	}
+        /* and append the new record */
+        r = mailbox_append_index_record(mailbox, &newrecord);
+        if (r) break;
 
-	/* and append the new record */
-	r = mailbox_append_index_record(mailbox, &newrecord);
-	if (r) goto done;
+        /* ensure we have an astate connected to the destination
+         * mailbox, so that the annotation txn will be committed
+         * when we close the mailbox */
+        r = mailbox_get_annotate_state(mailbox, newrecord.uid, &astate);
+        if (r) break;
 
-	/* ensure we have an astate connected to the destination
-	 * mailbox, so that the annotation txn will be committed
-	 * when we close the mailbox */
-	r = mailbox_get_annotate_state(mailbox, newrecord.uid, &astate);
-	if (r) goto done;
+        /* and copy over any annotations */
+        r = annotate_msg_copy(mailbox, record->uid,
+                              mailbox, newrecord.uid,
+                              userid);
+        if (r) break;
 
-	/* and copy over any annotations */
-	r = annotate_msg_copy(mailbox, record.uid,
-			      mailbox, newrecord.uid,
-			      userid);
-	if (r) goto done;
+        if (verbose)
+            printf("Unexpunged %s: %u => %u\n",
+                   extname, record->uid, newrecord.uid);
 
-	if (verbose)
-	    printf("Unexpunged %s: %u => %u\n",
-		   mboxname, record.uid, newrecord.uid);
+        /* mark the old one unlinked so we don't see it again */
+        struct index_record oldrecord = *record;
+        oldrecord.system_flags |= FLAG_UNLINKED | FLAG_NEEDS_CLEANUP;
+        r = mailbox_rewrite_index_record(mailbox, &oldrecord);
+        if (r) break;
 
-	/* mark the old one unlinked so we don't see it again */
-	record.system_flags |= FLAG_UNLINKED;
-	r = mailbox_rewrite_index_record(mailbox, &record);
-	if (r) goto done;
-
-	(*numrestored)++;
+        (*numrestored)++;
     }
 
-done:
+    /* better get that seen to */
+    if (*numrestored)
+        mailbox->i.options |= OPT_MAILBOX_NEEDS_UNLINK;
+
+    mailbox_iter_done(&iter);
+    free(userid);
     return r;
 }
 
@@ -273,8 +272,7 @@ int main(int argc, char *argv[])
 {
     extern char *optarg;
     int opt, r = 0;
-    char *alt_config = NULL;
-    char buf[MAX_MAILBOX_PATH+1];
+    char *alt_config = NULL, *intname = NULL, *extname = NULL;
     struct mailbox *mailbox = NULL;
     int mode = MODE_UNKNOWN;
     unsigned numrestored = 0;
@@ -282,32 +280,31 @@ int main(int argc, char *argv[])
     int len, secs = 0;
     unsigned long *uids = NULL;
     unsigned nuids = 0;
-    char *mboxname = NULL;
 
     if ((geteuid()) == 0 && (become_cyrus(/*is_master*/0) != 0)) {
-	fatal("must run as the Cyrus user", EC_USAGE);
+        fatal("must run as the Cyrus user", EC_USAGE);
     }
 
     while ((opt = getopt(argc, argv, "C:laudt:f:v")) != EOF) {
-	switch (opt) {
-	case 'C': /* alt config file */
-	    alt_config = optarg;
-	    break;
+        switch (opt) {
+        case 'C': /* alt config file */
+            alt_config = optarg;
+            break;
 
-	case 'l':
-	    if (mode != MODE_UNKNOWN) usage();
-	    mode = MODE_LIST;
-	    break;
+        case 'l':
+            if (mode != MODE_UNKNOWN) usage();
+            mode = MODE_LIST;
+            break;
 
-	case 'a':
-	    if (mode != MODE_UNKNOWN) usage();
-	    mode = MODE_ALL;
-	    break;
+        case 'a':
+            if (mode != MODE_UNKNOWN) usage();
+            mode = MODE_ALL;
+            break;
 
-	case 't':
-	    if (mode != MODE_UNKNOWN) usage();
+        case 't':
+            if (mode != MODE_UNKNOWN) usage();
 
-	    mode = MODE_TIME;
+            mode = MODE_TIME;
             secs = atoi(optarg);
             len  = strlen(optarg);
 
@@ -328,34 +325,34 @@ int main(int argc, char *argv[])
                 }
             }
             time_since = time(NULL) - secs;
-	    break;
+            break;
 
-	case 'u':
-	    if (mode != MODE_UNKNOWN) usage();
-	    mode = MODE_UID;
-	    break;
+        case 'u':
+            if (mode != MODE_UNKNOWN) usage();
+            mode = MODE_UID;
+            break;
 
-	case 'd':
-	    unsetdeleted = 1;
-	    break;
+        case 'd':
+            unsetdeleted = 1;
+            break;
 
-	case 'f':
-	    addflag = optarg;
-	    break;
+        case 'f':
+            addflag = optarg;
+            break;
 
-	case 'v':
-	    verbose = 1;
-	    break;
+        case 'v':
+            verbose = 1;
+            break;
 
-	default:
-	    usage();
-	    break;
-	}
+        default:
+            usage();
+            break;
+        }
     }
 
     /* sanity check */
     if (mode == MODE_UNKNOWN ||
-	(optind + (mode == MODE_UID ? 1 : 0)) >= argc) usage();
+        (optind + (mode == MODE_UID ? 1 : 0)) >= argc) usage();
 
 
     cyrus_init(alt_config, "unexpunge", 0, 0);
@@ -369,64 +366,64 @@ int main(int argc, char *argv[])
     sync_log_init();
 
     if (addflag && addflag[0] == '\\') {
-	syslog(LOG_ERR, "can't set a system flag");
-	fatal("can't set a system flag", EC_SOFTWARE);
+        syslog(LOG_ERR, "can't set a system flag");
+        fatal("can't set a system flag", EC_SOFTWARE);
     }
 
     /* Set namespace -- force standard (internal) */
     if ((r = mboxname_init_namespace(&unex_namespace, 1)) != 0) {
-	syslog(LOG_ERR, "%s", error_message(r));
-	fatal(error_message(r), EC_CONFIG);
+        syslog(LOG_ERR, "%s", error_message(r));
+        fatal(error_message(r), EC_CONFIG);
     }
 
     /* Translate mailboxname */
-    (*unex_namespace.mboxname_tointernal)(&unex_namespace, argv[optind],
-					  NULL, buf);
+    intname = mboxname_from_external(argv[optind], &unex_namespace, NULL);
 
     if (mode == MODE_LIST) {
-	list_expunged(buf);
-	goto done;
+        list_expunged(intname);
+        goto done;
     }
 
     /* Open/lock header */
-    r = mailbox_open_iwl(buf, &mailbox);
+    r = mailbox_open_iwl(intname, &mailbox);
     if (r) {
-	printf("Failed to open mailbox '%s'\n", buf);
-	goto done;
+        printf("Failed to open mailbox '%s'\n", intname);
+        goto done;
     }
 
     if (mode == MODE_UID) {
-	unsigned i;
+        unsigned i;
 
-	nuids = argc - ++optind;
-	uids = (unsigned long *) xmalloc(nuids * sizeof(unsigned long));
+        nuids = argc - ++optind;
+        uids = (unsigned long *) xmalloc(nuids * sizeof(unsigned long));
 
-	for (i = 0; i < nuids; i++)
-	    uids[i] = strtoul(argv[optind+i], NULL, 10);
+        for (i = 0; i < nuids; i++)
+            uids[i] = strtoul(argv[optind+i], NULL, 10);
 
-	/* Sort the UIDs so we can binary search */
-	qsort(uids, nuids, sizeof(unsigned long), compare_uid);
+        /* Sort the UIDs so we can binary search */
+        qsort(uids, nuids, sizeof(unsigned long), compare_uid);
     }
 
-    mboxname = xstrdup(mailbox->name);
-    mboxname_hiersep_toexternal(&unex_namespace, mboxname, 0);
+    extname = mboxname_to_external(intname, &unex_namespace, NULL);
 
     printf("restoring %sexpunged messages in mailbox '%s'\n",
-	    mode == MODE_ALL ? "all " : "", mboxname);
+            mode == MODE_ALL ? "all " : "", extname);
 
-    r = restore_expunged(mailbox, mode, uids, nuids, time_since, &numrestored, mboxname);
+    r = restore_expunged(mailbox, mode, uids, nuids, time_since, &numrestored, extname);
 
     if (!r) {
-	printf("restored %u expunged messages\n",
-		numrestored);
-	syslog(LOG_NOTICE,
-	       "restored %u expunged messages in mailbox '%s'",
-	       numrestored, mboxname);
+        printf("restored %u expunged messages\n",
+                numrestored);
+        syslog(LOG_NOTICE,
+               "restored %u expunged messages in mailbox '%s'",
+               numrestored, extname);
     }
 
     mailbox_close(&mailbox);
 
 done:
+    free(intname);
+    free(extname);
     sync_log_done();
 
     quotadb_close();

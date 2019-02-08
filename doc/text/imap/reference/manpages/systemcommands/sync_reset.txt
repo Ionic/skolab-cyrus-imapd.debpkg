@@ -1,0 +1,53 @@
+
+**sync_reset**
+**************
+
+Account reset utility. DANGER.
+
+
+Synopsis
+========
+
+   **sync_reset** [ **-C** *config-file* ] [ **-v** ] [ **-f** ]
+
+
+Description
+===========
+
+**sync_reset** is a small utility program to destroy user accounts on
+a system.  The only safeguard which is in place is the obligary force
+option.
+
+**sync_reset** reads its configuration options out of the
+imapd.conf(5) file unless specified otherwise by **-C**.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+-v
+
+   Verbose mode.
+
+-f
+
+   Force operation. Without this flag **sync_reset** just bails out
+   with an error.  Principally here to try and prevent accidents with
+   command autorepeat.
+
+
+Files
+=====
+
+/etc/imapd.conf
+
+
+See Also
+========
+
+imapd.conf(5)

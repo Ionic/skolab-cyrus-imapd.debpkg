@@ -1,152 +1,217 @@
-.\" -*- nroff -*-
-.TH UNEXPUNGE 8 "Project Cyrus" CMU
-.\"
-.\" Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
-.\"
-.\" Redistribution and use in source and binary forms, with or without
-.\" modification, are permitted provided that the following conditions
-.\" are met:
-.\"
-.\" 1. Redistributions of source code must retain the above copyright
-.\"    notice, this list of conditions and the following disclaimer.
-.\"
-.\" 2. Redistributions in binary form must reproduce the above copyright
-.\"    notice, this list of conditions and the following disclaimer in
-.\"    the documentation and/or other materials provided with the
-.\"    distribution.
-.\"
-.\" 3. The name "Carnegie Mellon University" must not be used to
-.\"    endorse or promote products derived from this software without
-.\"    prior written permission. For permission or any legal
-.\"    details, please contact
-.\"      Carnegie Mellon University
-.\"      Center for Technology Transfer and Enterprise Creation
-.\"      4615 Forbes Avenue
-.\"      Suite 302
-.\"      Pittsburgh, PA  15213
-.\"      (412) 268-7393, fax: (412) 268-7395
-.\"      innovation@andrew.cmu.edu
-.\"
-.\" 4. Redistributions of any form whatsoever must retain the following
-.\"    acknowledgment:
-.\"    "This product includes software developed by Computing Services
-.\"     at Carnegie Mellon University (http://www.cmu.edu/computing/)."
-.\"
-.\" CARNEGIE MELLON UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO
-.\" THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-.\" AND FITNESS, IN NO EVENT SHALL CARNEGIE MELLON UNIVERSITY BE LIABLE
-.\" FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
-.\" AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
-.\" OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\" Man page generated from reStructuredText.
+.
+.TH "UNEXPUNGE" "8" "August 10, 2018" "3.0.8" "Cyrus IMAP"
 .SH NAME
-unexpunge \- restore expunged (but yet unremoved) messages
+unexpunge \- Cyrus IMAP documentation
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.sp
+Recover messages the user has (accidentally) deleted.
 .SH SYNOPSIS
-.B unexpunge
-[
-.B \-C
-.I config-file
-]
-.B \-l
-.I mailbox
-.br
-.B unexpunge
-[
-.B \-C
-.I config-file
-]
-.B \-t time-interval
-[
-.B \-d
-]
-[
-.B \-v
-]
-[
-.B \-f 
-.I flagname
-]
-.I mailbox
-.br
-.B unexpunge
-[
-.B \-C
-.I config-file
-]
-.B \-a
-[
-.B \-d
-]
-[
-.B \-v
-]
-[
-.B \-f
-.I flagname
-]
-.I mailbox
-.br
-.B unexpunge
-[
-.B \-C
-.I config-file
-]
-.B \-u
-[
-.B \-d
-]
-[
-.B \-v
-]
-[
-.B \-f
-.I flagname
-]
-.IR "mailbox uid" ...
+.sp
+.nf
+\fBunexpunge\fP [ \fB\-C\fP \fIconfig\-file\fP ] \fB\-l\fP \fImailbox\fP
+\fBunexpunge\fP [ \fB\-C\fP \fIconfig\-file\fP ] \fB\-t\fP \fItime\-interval\fP [ \fB\-d\fP ] [ \fB\-v\fP ] [ \fB\-f\fP \fIflagname\fP ] \fBmailbox\fP
+\fBunexpunge\fP [ \fB\-C\fP \fIconfig\-file\fP ] \fB\-a\fP [ \fB\-d\fP ] [ \fB\-v\fP ] [ \fB\-f\fP \fIflagname\fP ] \fImailbox\fP
+\fBunexpunge\fP [ \fB\-C\fP \fIconfig\-file\fP ] \fB\-u\fP [ \fB\-d\fP ] [ \fB\-v\fP ] [ \fB\-f\fP \fIflagname\fP ] \fImailbox\fP \fIuid\fP\&...
+.fi
 .SH DESCRIPTION
-.I Unexpunge
-is used to restore expunged messages which have yet to be removed from
-the Cyrus mailspool.  This utility is only useful when the server is
-configured to use \fBdelayed\fR expunge.
-.PP
-.I Unexpunge
-reads its configuration options out of the
-.IR imapd.conf (5)
-file unless specified otherwise by \fB-C\fR.
+.sp
+The \fBunexpunge\fP program is used to list or restore messages which have
+been deleted from a mailbox, but still reside in the Cyrus IMAP mail
+spool.
+.sp
+This utility is only useful when the server is configured with
+\fBexpunge_mode\fP set to \fBdelayed\fP in its configuration file.
+.sp
+\fBunexpunge\fP reads its configuration options out of the imapd.conf(5) file unless specified otherwise by \fB\-C\fP\&.
 .SH OPTIONS
+.INDENT 0.0
 .TP
-.BI \-C " config-file"
-Read configuration options from \fIconfig-file\fR.
+.B \-C config\-file
+Use the specified configuration file \fIconfig\-file\fP rather than the default imapd.conf(5)\&.
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-l
-List the expunged messages in the specified mailbox which are available
-for restoration.
+List the expunged messages in the specified mailbox which are
+available for restoration.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI \-t " time-interval"
-Unexpunge messages which were expunged in the last time-interval seconds.
-(modifiers: m: minutes, h: hours, d: days, w: weeks).
+.B \-t time\-interval
+Unexpunge messages which where expunged within the last
+\fBtime\-interval\fP seconds.
+Use one of the trailing modifiers \-\- \fBm\fP (minutes), \fBh\fP (hours),
+\fBd\fP (days) or \fBw\fP (weeks) \-\- to specify a different time unit.
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-a
-Restore \fBall\fR of the expunged messages in the specified mailbox. 
+Restore \fBall\fP of the expunged messages in the specified mailbox.
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-u
-Restore only those messages having the specified UIDs in the specified
-mailbox.
+Restore only messages matching the UIDs, in a space\-separated list
+at the end of the command invocation, in the specified mailbox.
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-d
-Unset the \fI\\Deleted\fR flag on any restored messages.
+Unset the \fI\eDeleted\fP flag on any restored messages.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI \-f " flagname"
-Set the user flag 
-.I flagname
-on any restored messages.  This can make it easy to batch operate on
-just the restored messages afterwards.
+.B \-f flagname
+Set the user flag \fI\eflagname\fP on the messages restored, making it
+easier for the user(s) to find the restored messages and operate on
+them (in a batch).
+.UNINDENT
+.INDENT 0.0
 .TP
 .B \-v
 Enable verbose output/logging.
+.UNINDENT
+.SH EXAMPLES
+.sp
+.nf
+\fBunexpunge \-l\fP \fIuser/john@example.org\fP
+.fi
+.INDENT 0.0
+.INDENT 3.5
+List the messages that are expunged and could be restored for mailbox
+\fIuser/john@example.org\fP\&.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBunexpunge \-u\fP \fIuser/john@example.org 278787 278788\fP
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Unexpunge two of these messages.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBmbexamine\fP \fIuser/john@example.org\fP
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Examine the mailbox for the two restored messages.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBunexpunge \-u \-d\fP \fIuser.johnsmith 46908\fP
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Unexpunge a select message based on its UID, clearing the
+\fI\eDeleted\fP flag.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBunexpunge \-a\fP \fIuser.johnsmit.Trash\fP
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Unexpunge all messages in a user\(aqs Trash, but leave them
+flagged \fI\eDeleted\fP\&.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBunexpunge \-a \-f\fP \fIFlagged user.johnsmith.Trash\fP
+.fi
+.INDENT 0.0
+.INDENT 3.5
+The same, but setting user flag \fI\eFlagged\fP to facilitate later
+bulk operations.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBunexpunge \-t\fP \fI24h\fP \fB\-d \-f\fP \fIFlagged user.johnsmith\fP
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Unexpunge messages matching only a given time period.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBunexpunge \-t\fP \fI24h\fP \fB\-d \-f\fP \fIFlagged user/johnsmith\fP
+.fi
+.INDENT 0.0
+.INDENT 3.5
+The same command, supporting the \fBunixhierarchysep: yes\fP
+option in imapd.conf(5)\&.
+.UNINDENT
+.UNINDENT
 .SH FILES
-.TP
-.B /etc/imapd.conf
+.sp
+/etc/imapd.conf
 .SH SEE ALSO
-.PP
-\fBimapd.conf(5)\fR
+.sp
+imapd.conf(5)
+.SH AUTHOR
+The Cyrus Team, Nic Bernstein (Onlight), Jeroen van Meeuwen (Kolab Systems)
+.SH COPYRIGHT
+1993-2017, The Cyrus Team
+.\" Generated by docutils manpage writer.
+.

@@ -1,0 +1,11 @@
+
+Cyrus IMAP 2.3.20 Release Notes
+*******************************
+
+* Fixed: urlfetch range checks protected against integer overflow
+
+* Added support for OpenSSL 1.1.0
+
+* Fixed: imapd search crash on some platforms
+
+Cyrus IMAP 2.3 Releases

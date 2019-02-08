@@ -70,6 +70,7 @@ struct protstream;
 struct prot_waitevent;
 
 typedef void prot_readcallback_t(struct protstream *s, void *rock);
+typedef ssize_t prot_fillcallback_t(unsigned char *buf, size_t len, void *rock);
 
 struct protstream {
     /* The Buffer */
@@ -109,6 +110,10 @@ struct protstream {
     size_t bigbuf_len; /* Length of mapped file */
     size_t bigbuf_pos; /* Current Position */
 
+    /* Callback-fill information */
+    prot_fillcallback_t *fillcallback_proc;
+    void *fillcallback_rock;
+
     /* Status Flags */
     int eof;
     int boundary; /* Type of data is about to change */
@@ -140,8 +145,8 @@ struct protstream {
 };
 
 typedef struct prot_waitevent *prot_waiteventcallback_t(struct protstream *s,
-							struct prot_waitevent *ev,
-							void *rock);
+                                                        struct prot_waitevent *ev,
+                                                        void *rock);
 
 struct prot_waitevent {
     time_t mark;
@@ -181,11 +186,14 @@ extern int prot_putc(int c, struct protstream *s);
 #define prot_BLOCK(s) ((s)->dontblock = 0)
 #define prot_NONBLOCK(s) ((s)->dontblock = 1)
 #define prot_IS_BLOCKING(s) ((s)->dontblock == 0)
+#define prot_IS_EOF(s) ((s)->eof != 0)
+#define prot_IS_ERROR(s) ((s)->error != NULL)
 
 /* Allocate/free the protstream structure */
 extern struct protstream *prot_new(int fd, int write);
 extern struct protstream *prot_writebuf(struct buf *buf);
 extern struct protstream *prot_readmap(const char *base, uint32_t len);
+extern struct protstream *prot_readcb(prot_fillcallback_t *proc, void *rock);
 extern int prot_free(struct protstream *s);
 
 /* Set the telemetry logfile for a given protstream */
@@ -229,17 +237,17 @@ extern int prot_resettimeout(struct protstream *s);
 /* Connect two streams so that when you block on reading s, the layer
  * will automaticly flush flushs */
 extern int prot_setflushonread(struct protstream *s,
-			       struct protstream *flushs);
+                               struct protstream *flushs);
 
 
 int prot_setreadcallback(struct protstream *s,
-				prot_readcallback_t *proc, void *rock);
+                                prot_readcallback_t *proc, void *rock);
 extern struct prot_waitevent *prot_addwaitevent(struct protstream *s,
-						time_t mark,
-						prot_waiteventcallback_t *proc,
-						void *rock);
+                                                time_t mark,
+                                                prot_waiteventcallback_t *proc,
+                                                void *rock);
 extern void prot_removewaitevent(struct protstream *s,
-				 struct prot_waitevent *event);
+                                 struct prot_waitevent *event);
 
 extern const char *prot_error(struct protstream *s);
 extern int prot_rewind(struct protstream *s);
@@ -262,7 +270,7 @@ extern int prot_printf(struct protstream *, const char *, ...)
     ;
 #endif
 extern int prot_printliteral(struct protstream *out, const char *s,
-			     size_t size);
+                             size_t size);
 extern int prot_printstring(struct protstream *out, const char *s);
 extern int prot_printmap(struct protstream *out, const char *s, size_t n);
 extern int prot_printamap(struct protstream *out, const char *s, size_t n);
@@ -273,8 +281,8 @@ extern char *prot_fgets(char *buf, unsigned size, struct protstream *s);
 
 /* select() for protstreams */
 extern int prot_select(struct protgroup *readstreams, int extra_read_fd,
-		       struct protgroup **out, int *extra_read_flag,
-		       struct timeval *timeout);
+                       struct protgroup **out, int *extra_read_flag,
+                       struct timeval *timeout);
 
 /* Protgroup manipulations */
 /* Create a new protgroup of a certain size or as a copy of another
@@ -298,6 +306,6 @@ void protgroup_delete(struct protgroup *group, struct protstream *item);
 /* Returns the protstream at that position in the protgroup, or NULL if
  * an invalid element is requested */
 struct protstream *protgroup_getelement(struct protgroup *group,
-					size_t element);
+                                        size_t element);
 
 #endif /* INCLUDED_PROT_H */

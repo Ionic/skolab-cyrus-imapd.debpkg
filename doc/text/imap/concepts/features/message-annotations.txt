@@ -1,0 +1,9 @@
+
+Message Annotations (METADATA)
+******************************
+
+See also:
+
+  * Mailbox Annotations (METADATA)
+
+Back to Features

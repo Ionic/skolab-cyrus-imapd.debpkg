@@ -1,25 +1,12 @@
 #if HAVE_CONFIG_H
 #include <config.h>
 #endif
+#include <assert.h>
 #include "cunit/cunit.h"
 #include "libconfig.h"
 #include "imap/mboxname.h"
 #include "imap/mailbox.h"
 #include "imap/global.h"
-
-/* This structure encapsulates all the variables which affect
- * namespace translation in one place */
-static struct
-{
-    const char *userid;
-    int isadmin;
-    int altnamespace;
-    int virtdomains;
-    const char *defdomain;
-    const char *userprefix;
-    const char *sharedprefix;
-    int unixhierarchysep;
-} conf;
 
 static void test_dir_hash_c(void)
 {
@@ -69,96 +56,84 @@ static void test_to_parts(void)
     static const char JANEAT_SENT[] = "bloggs.com!user.jane.Sent";
     static const char SHARED[] = "shared.Gossip";
     static const char SHAREDAT[] = "foonly.com!shared.Tattle";
-    struct mboxname_parts parts;
-    int r;
+    static const char A_DEEP_FOLDER[] = "user.fred.a.deep.folder";
+    mbname_t *mbname = NULL;
+    const strarray_t *boxes;
 
-    r = mboxname_to_parts(FRED_DRAFTS, &parts);
-    CU_ASSERT_EQUAL(r, 0);
-    CU_ASSERT_PTR_NULL(parts.domain);
-    CU_ASSERT_STRING_EQUAL(parts.userid, "fred");
-    CU_ASSERT_STRING_EQUAL(parts.box, "Drafts");
-    mboxname_free_parts(&parts);
+    mbname = mbname_from_intname(FRED_DRAFTS);
+    CU_ASSERT_PTR_NULL(mbname_domain(mbname));
+    CU_ASSERT_STRING_EQUAL(mbname_localpart(mbname), "fred");
+    CU_ASSERT_STRING_EQUAL(mbname_userid(mbname), "fred");
+    boxes = mbname_boxes(mbname);
+    CU_ASSERT_EQUAL(boxes->count, 1);
+    CU_ASSERT_STRING_EQUAL(boxes->data[0], "Drafts");
+    mbname_free(&mbname);
 
-    r = mboxname_to_parts(JANEAT_SENT, &parts);
-    CU_ASSERT_EQUAL(r, 0);
-    CU_ASSERT_STRING_EQUAL(parts.domain, "bloggs.com");
-    CU_ASSERT_STRING_EQUAL(parts.userid, "jane");
-    CU_ASSERT_STRING_EQUAL(parts.box, "Sent");
-    mboxname_free_parts(&parts);
+    mbname = mbname_from_intname(JANEAT_SENT);
+    CU_ASSERT_STRING_EQUAL(mbname_domain(mbname), "bloggs.com");
+    CU_ASSERT_STRING_EQUAL(mbname_localpart(mbname), "jane");
+    CU_ASSERT_STRING_EQUAL(mbname_userid(mbname), "jane@bloggs.com");
+    boxes = mbname_boxes(mbname);
+    CU_ASSERT_EQUAL(boxes->count, 1);
+    CU_ASSERT_STRING_EQUAL(boxes->data[0], "Sent");
+    mbname_free(&mbname);
 
-    r = mboxname_to_parts(SHARED, &parts);
-    CU_ASSERT_EQUAL(r, 0);
-    CU_ASSERT_PTR_NULL(parts.domain);
-    CU_ASSERT_PTR_NULL(parts.userid);
-    CU_ASSERT_STRING_EQUAL(parts.box, "shared.Gossip");
-    mboxname_free_parts(&parts);
+    mbname = mbname_from_intname(SHARED);
+    CU_ASSERT_PTR_NULL(mbname_domain(mbname));
+    CU_ASSERT_PTR_NULL(mbname_localpart(mbname));
+    CU_ASSERT_PTR_NULL(mbname_userid(mbname));
+    boxes = mbname_boxes(mbname);
+    CU_ASSERT_EQUAL(boxes->count, 2);
+    CU_ASSERT_STRING_EQUAL(boxes->data[0], "shared");
+    CU_ASSERT_STRING_EQUAL(boxes->data[1], "Gossip");
+    mbname_free(&mbname);
 
-    r = mboxname_to_parts(SHAREDAT, &parts);
-    CU_ASSERT_EQUAL(r, 0);
-    CU_ASSERT_STRING_EQUAL(parts.domain, "foonly.com");
-    CU_ASSERT_PTR_NULL(parts.userid);
-    CU_ASSERT_STRING_EQUAL(parts.box, "shared.Tattle");
-    mboxname_free_parts(&parts);
+    mbname = mbname_from_intname(SHAREDAT);
+    CU_ASSERT_STRING_EQUAL(mbname_domain(mbname), "foonly.com");
+    CU_ASSERT_PTR_NULL(mbname_localpart(mbname));
+    CU_ASSERT_PTR_NULL(mbname_userid(mbname));
+    boxes = mbname_boxes(mbname);
+    CU_ASSERT_EQUAL(boxes->count, 2);
+    CU_ASSERT_STRING_EQUAL(boxes->data[0], "shared");
+    CU_ASSERT_STRING_EQUAL(boxes->data[1], "Tattle");
+    mbname_free(&mbname);
+
+    mbname = mbname_from_intname(A_DEEP_FOLDER);
+    CU_ASSERT_PTR_NULL(mbname_domain(mbname));
+    CU_ASSERT_STRING_EQUAL(mbname_localpart(mbname), "fred");
+    CU_ASSERT_STRING_EQUAL(mbname_userid(mbname), "fred");
+    boxes = mbname_boxes(mbname);
+    CU_ASSERT_EQUAL(boxes->count, 3);
+    CU_ASSERT_STRING_EQUAL(boxes->data[0], "a");
+    CU_ASSERT_STRING_EQUAL(boxes->data[1], "deep");
+    CU_ASSERT_STRING_EQUAL(boxes->data[2], "folder");
+    mbname_free(&mbname);
 }
 
 static void test_to_userid(void)
 {
     static const char SAM_DRAFTS[] = "user.sam.Drafts";
     static const char BETTYAT_SENT[] = "boop.com!user.betty.Sent";
-    static const char JOHNDOE_SENT[] = "example.org!user.john^doe.Sent";
     static const char SHARED[] = "shared.Gossip";
     static const char SHAREDAT[] = "foonly.com!shared.Tattle";
-    const char *r;
+    char *r;
 
     r = mboxname_to_userid(SAM_DRAFTS);
     CU_ASSERT_STRING_EQUAL(r, "sam");
+    free(r);
 
     r = mboxname_to_userid(BETTYAT_SENT);
     CU_ASSERT_STRING_EQUAL(r, "betty@boop.com");
-
-    imapopts[IMAPOPT_UNIXHIERARCHYSEP].val.b = 1;
-    r = mboxname_to_userid(JOHNDOE_SENT);
-    CU_ASSERT_STRING_EQUAL(r, "john.doe@example.org");
-
-    imapopts[IMAPOPT_UNIXHIERARCHYSEP].val.b = 0;
-    r = mboxname_to_userid(SHARED);
-    CU_ASSERT_PTR_NULL(r);
-
-    r = mboxname_to_userid(SHAREDAT);
-    CU_ASSERT_PTR_NULL(r);
-}
-
-static void test_to_userid_unixhiersep(void)
-{
-    int orig;
-    orig = imapopts[IMAPOPT_UNIXHIERARCHYSEP].val.b;
-
-    imapopts[IMAPOPT_UNIXHIERARCHYSEP].val.b = 1;
-
-    static const char SAM_DRAFTS[] = "user.sam.Drafts";
-    static const char BETTYAT_SENT[] = "boop.com!user.betty.Sent";
-    static const char JOHNDOE_SENT[] = "example.org!user.john^doe.Sent";
-    static const char SHARED[] = "shared.Gossip";
-    static const char SHAREDAT[] = "foonly.com!shared.Tattle";
-    const char *r;
-
-    r = mboxname_to_userid(SAM_DRAFTS);
-    CU_ASSERT_STRING_EQUAL(r, "sam");
-
-    r = mboxname_to_userid(BETTYAT_SENT);
-    CU_ASSERT_STRING_EQUAL(r, "betty@boop.com");
-
-    r = mboxname_to_userid(JOHNDOE_SENT);
-    CU_ASSERT_STRING_EQUAL(r, "john.doe@example.org");
+    free(r);
 
     r = mboxname_to_userid(SHARED);
     CU_ASSERT_PTR_NULL(r);
+    free(r);
 
     r = mboxname_to_userid(SHAREDAT);
     CU_ASSERT_PTR_NULL(r);
-    imapopts[IMAPOPT_UNIXHIERARCHYSEP].val.b = orig;
+    free(r);
 }
-
 
 static void test_to_usermbox(void)
 {
@@ -195,42 +170,6 @@ static void test_to_usermbox(void)
     free(r);
 }
 
-static void test_to_usermbox_novirtdomains(void)
-{
-    char *r;
-    enum enum_value orig = config_virtdomains;
-
-    config_virtdomains = IMAP_ENUM_VIRTDOMAINS_OFF;
-
-    r = mboxname_user_mbox(NULL, NULL);
-    CU_ASSERT_PTR_NULL(r);
-
-    r = mboxname_user_mbox(NULL, "extra.stuff");
-    CU_ASSERT_PTR_NULL(r);
-
-    r = mboxname_user_mbox("sam", NULL);
-    CU_ASSERT_STRING_EQUAL(r, "user.sam");
-    free(r);
-
-    r = mboxname_user_mbox("betty@boop.com", NULL);
-    CU_ASSERT_PTR_NULL(r);
-
-    r = mboxname_user_mbox("sam", "sub");
-    CU_ASSERT_STRING_EQUAL(r, "user.sam.sub");
-    free(r);
-
-    r = mboxname_user_mbox("sam", "sub.deep.stuff");
-    CU_ASSERT_STRING_EQUAL(r, "user.sam.sub.deep.stuff");
-    free(r);
-
-    r = mboxname_user_mbox("betty@boop.com", "sub");
-    CU_ASSERT_PTR_NULL(r);
-
-    r = mboxname_user_mbox("betty@boop.com", "sub.deep.stuff");
-    CU_ASSERT_PTR_NULL(r);
-
-    config_virtdomains = orig;
-}
 
 static void test_same_userid(void)
 {
@@ -279,24 +218,23 @@ static void test_parts_same_userid(void)
     static const char FRED_DRAFTS[] = "user.fred.Drafts";
     static const char FRED_SENT[] = "user.fred.Sent";
     static const char JANE_SENT[] = "user.jane.Sent";
-    struct mboxname_parts parts1, parts2;
-    int r;
+    mbname_t *n1 = NULL, *n2 = NULL;
 
-    r = mboxname_to_parts(FRED_DRAFTS, &parts1);
-    CU_ASSERT_EQUAL(r, 0);
-    r = mboxname_to_parts(FRED_SENT, &parts2);
-    CU_ASSERT_EQUAL(r, 0);
-    CU_ASSERT_EQUAL(mboxname_parts_same_userid(&parts1, &parts2), 1);
-    mboxname_free_parts(&parts1);
-    mboxname_free_parts(&parts2);
+    n1 = mbname_from_intname(FRED_DRAFTS);
+    CU_ASSERT_PTR_NOT_NULL(n1);
+    n2 = mbname_from_intname(FRED_SENT);
+    CU_ASSERT_PTR_NOT_NULL(n2);
+    CU_ASSERT_EQUAL(mbname_same_userid(n1, n2), 1);
+    mbname_free(&n1);
+    mbname_free(&n2);
 
-    r = mboxname_to_parts(JANE_SENT, &parts1);
-    CU_ASSERT_EQUAL(r, 0);
-    r = mboxname_to_parts(FRED_SENT, &parts2);
-    CU_ASSERT_EQUAL(r, 0);
-    CU_ASSERT_EQUAL(mboxname_parts_same_userid(&parts1, &parts2), 0);
-    mboxname_free_parts(&parts1);
-    mboxname_free_parts(&parts2);
+    n1 = mbname_from_intname(JANE_SENT);
+    CU_ASSERT_PTR_NOT_NULL(n1);
+    n2 = mbname_from_intname(FRED_SENT);
+    CU_ASSERT_PTR_NOT_NULL(n2);
+    CU_ASSERT_EQUAL(mbname_same_userid(n1, n2), 0);
+    mbname_free(&n1);
+    mbname_free(&n2);
 }
 
 static void test_parts_same_userid_domain(void)
@@ -305,52 +243,68 @@ static void test_parts_same_userid_domain(void)
     static const char FREDAT_SENT[] = "bloggs.com!user.fred.Sent";
     static const char JANEAT_SENT[] = "bloggs.com!user.jane.Sent";
     static const char JANE_SENT[] = "user.jane.Sent";
-    struct mboxname_parts parts1, parts2;
-    int r;
+    mbname_t *n1 = NULL, *n2 = NULL;
 
-    r = mboxname_to_parts(FREDAT_DRAFTS, &parts1);
-    CU_ASSERT_EQUAL(r, 0);
-    r = mboxname_to_parts(FREDAT_SENT, &parts2);
-    CU_ASSERT_EQUAL(r, 0);
-    CU_ASSERT_EQUAL(mboxname_parts_same_userid(&parts1, &parts2), 1);
-    mboxname_free_parts(&parts1);
-    mboxname_free_parts(&parts2);
+    n1 = mbname_from_intname(FREDAT_DRAFTS);
+    CU_ASSERT_PTR_NOT_NULL(n1);
+    n2 = mbname_from_intname(FREDAT_SENT);
+    CU_ASSERT_PTR_NOT_NULL(n2);
+    CU_ASSERT_EQUAL(mbname_same_userid(n1, n2), 1);
+    mbname_free(&n1);
+    mbname_free(&n2);
 
-    r = mboxname_to_parts(JANEAT_SENT, &parts1);
-    CU_ASSERT_EQUAL(r, 0);
-    r = mboxname_to_parts(FREDAT_SENT, &parts2);
-    CU_ASSERT_EQUAL(r, 0);
-    CU_ASSERT_EQUAL(mboxname_parts_same_userid(&parts1, &parts2), 0);
-    mboxname_free_parts(&parts1);
-    mboxname_free_parts(&parts2);
+    n1 = mbname_from_intname(JANEAT_SENT);
+    CU_ASSERT_PTR_NOT_NULL(n1);
+    n2 = mbname_from_intname(FREDAT_SENT);
+    CU_ASSERT_PTR_NOT_NULL(n2);
+    CU_ASSERT_EQUAL(mbname_same_userid(n1, n2), 0);
+    mbname_free(&n1);
+    mbname_free(&n2);
 
-    r = mboxname_to_parts(JANE_SENT, &parts1);
-    CU_ASSERT_EQUAL(r, 0);
-    r = mboxname_to_parts(FREDAT_SENT, &parts2);
-    CU_ASSERT_EQUAL(r, 0);
-    CU_ASSERT_EQUAL(mboxname_parts_same_userid(&parts1, &parts2), 0);
-    mboxname_free_parts(&parts1);
-    mboxname_free_parts(&parts2);
+    n1 = mbname_from_intname(JANE_SENT);
+    CU_ASSERT_PTR_NOT_NULL(n1);
+    n2 = mbname_from_intname(FREDAT_SENT);
+    CU_ASSERT_PTR_NOT_NULL(n2);
+    CU_ASSERT_EQUAL(mbname_same_userid(n1, n2), 0);
+    mbname_free(&n1);
+    mbname_free(&n2);
 
-    r = mboxname_to_parts(JANE_SENT, &parts1);
-    CU_ASSERT_EQUAL(r, 0);
-    r = mboxname_to_parts(JANEAT_SENT, &parts2);
-    CU_ASSERT_EQUAL(r, 0);
-    CU_ASSERT_EQUAL(mboxname_parts_same_userid(&parts1, &parts2), 0);
-    mboxname_free_parts(&parts1);
-    mboxname_free_parts(&parts2);
+    n1 = mbname_from_intname(JANE_SENT);
+    CU_ASSERT_PTR_NOT_NULL(n1);
+    n2 = mbname_from_intname(JANEAT_SENT);
+    CU_ASSERT_PTR_NOT_NULL(n2);
+    CU_ASSERT_EQUAL(mbname_same_userid(n1, n2), 0);
+    mbname_free(&n1);
+    mbname_free(&n2);
 }
 
+/* This structure encapsulates all the variables which affect
+ * namespace translation in one place */
+static struct
+{
+    const char *userid;
+    int isadmin;
+    int altnamespace;
+    int virtdomains;
+    int crossdomains;
+    int cdother;
+    const char *defdomain;
+    const char *userprefix;
+    const char *sharedprefix;
+    int unixhierarchysep;
+} conf;
+
 static void toexternal_helper(const char *intname,
-			      const char *extname_expected)
+                              const char *extname_expected)
 {
     struct namespace ns;
-    char extname[MAX_MAILBOX_NAME];
     int r;
 
     config_virtdomains = conf.virtdomains;
     config_defdomain = conf.defdomain;
     imapopts[IMAPOPT_UNIXHIERARCHYSEP].val.b = conf.unixhierarchysep;
+    imapopts[IMAPOPT_CROSSDOMAINS].val.b = conf.crossdomains;
+    imapopts[IMAPOPT_CROSSDOMAINS_ONLYOTHER].val.b = conf.cdother;
     imapopts[IMAPOPT_ALTNAMESPACE].val.b = conf.altnamespace;
     imapopts[IMAPOPT_USERPREFIX].val.s = conf.userprefix;
     imapopts[IMAPOPT_SHAREDPREFIX].val.s = conf.sharedprefix;
@@ -358,10 +312,184 @@ static void toexternal_helper(const char *intname,
     r = mboxname_init_namespace(&ns, conf.isadmin);
     CU_ASSERT_EQUAL_FATAL(r, 0);
 
-    memset(extname, 0x45, sizeof(extname));
-    r = ns.mboxname_toexternal(&ns, intname, conf.userid, extname);
-    CU_ASSERT_EQUAL_FATAL(r, 0);
-    CU_ASSERT_STRING_EQUAL(extname, extname_expected);
+    if (intname) {
+        char *extname = mboxname_to_external(intname, &ns, conf.userid);
+        CU_ASSERT_STRING_EQUAL(extname, extname_expected);
+        free(extname);
+    }
+
+    if (extname_expected) {
+        char *intname_reversed = mboxname_from_external(extname_expected, &ns, conf.userid);
+        CU_ASSERT_STRING_EQUAL(intname, intname_reversed);
+        free(intname_reversed);
+    }
+}
+
+static void test_toexternal_admin(void)
+{
+    memset(&conf, 0, sizeof(conf));
+    conf.virtdomains = 0;
+    conf.userid = "admin";
+    conf.isadmin = 1;
+
+    toexternal_helper("user.fred", "user.fred");
+    toexternal_helper("user.fred.foo", "user.fred.foo");
+    toexternal_helper("user.fred.foo.barracuda", "user.fred.foo.barracuda");
+    toexternal_helper("shared.quux", "shared.quux");
+    toexternal_helper("DELETED.user.foo.55E39AD4", "DELETED.user.foo.55E39AD4");
+    toexternal_helper("DELETED.user.foo.sub.55E39AD4", "DELETED.user.foo.sub.55E39AD4");
+    toexternal_helper("DELETED.shared.quux.55E39AD4", "DELETED.shared.quux.55E39AD4");
+
+    conf.virtdomains = 1;
+
+    /* should still work the same */
+    toexternal_helper("user.fred", "user.fred");
+    toexternal_helper("user.fred.foo", "user.fred.foo");
+    toexternal_helper("user.fred.foo.barracuda", "user.fred.foo.barracuda");
+    toexternal_helper("shared.quux", "shared.quux");
+    toexternal_helper("DELETED.user.foo.55E39AD4", "DELETED.user.foo.55E39AD4");
+    toexternal_helper("DELETED.user.foo.sub.55E39AD4", "DELETED.user.foo.sub.55E39AD4");
+    toexternal_helper("DELETED.shared.quux.55E39AD4", "DELETED.shared.quux.55E39AD4");
+
+    /* domains always at the end */
+    toexternal_helper("domain.com!user.fred", "user.fred@domain.com");
+    toexternal_helper("domain.com!user.fred.foo", "user.fred.foo@domain.com");
+    toexternal_helper("domain.com!user.fred.foo.barracuda", "user.fred.foo.barracuda@domain.com");
+    toexternal_helper("domain.com!shared.quux", "shared.quux@domain.com");
+    toexternal_helper("domain.com!DELETED.user.foo.55E39AD4", "DELETED.user.foo.55E39AD4@domain.com");
+    toexternal_helper("domain.com!DELETED.user.foo.sub.55E39AD4", "DELETED.user.foo.sub.55E39AD4@domain.com");
+    toexternal_helper("domain.com!DELETED.shared.quux.55E39AD4", "DELETED.shared.quux.55E39AD4@domain.com");
+
+    conf.unixhierarchysep = 1;
+
+    /* should still work the same */
+    toexternal_helper("user.fred", "user/fred");
+    toexternal_helper("user.fred.foo", "user/fred/foo");
+    toexternal_helper("user.fred.foo.barracuda", "user/fred/foo/barracuda");
+    toexternal_helper("shared.quux", "shared/quux");
+    toexternal_helper("DELETED.user.foo.55E39AD4", "DELETED/user/foo/55E39AD4");
+    toexternal_helper("DELETED.user.foo.sub.55E39AD4", "DELETED/user/foo/sub/55E39AD4");
+    toexternal_helper("DELETED.shared.quux.55E39AD4", "DELETED/shared/quux/55E39AD4");
+
+    /* domains always at the end */
+    toexternal_helper("domain.com!user.fred", "user/fred@domain.com");
+    toexternal_helper("domain.com!user.fred.foo", "user/fred/foo@domain.com");
+    toexternal_helper("domain.com!user.fred.foo.barracuda", "user/fred/foo/barracuda@domain.com");
+    toexternal_helper("domain.com!shared.quux", "shared/quux@domain.com");
+    toexternal_helper("domain.com!DELETED.user.foo.55E39AD4", "DELETED/user/foo/55E39AD4@domain.com");
+    toexternal_helper("domain.com!DELETED.user.foo.sub.55E39AD4", "DELETED/user/foo/sub/55E39AD4@domain.com");
+    toexternal_helper("domain.com!DELETED.shared.quux.55E39AD4", "DELETED/shared/quux/55E39AD4@domain.com");
+
+    /* users with dots in them, and folders with dots */
+    toexternal_helper("user.fred^bloggs", "user/fred.bloggs");
+    toexternal_helper("user.fred^bloggs.sub", "user/fred.bloggs/sub");
+    toexternal_helper("user.fred^bloggs.sub^folder.parts", "user/fred.bloggs/sub.folder/parts");
+
+    toexternal_helper("domain.com!user.fred^bloggs", "user/fred.bloggs@domain.com");
+    toexternal_helper("domain.com!user.fred^bloggs.sub", "user/fred.bloggs/sub@domain.com");
+
+    conf.virtdomains = 0;
+
+    /* should still work the same */
+    toexternal_helper("user.fred", "user/fred");
+    toexternal_helper("user.fred.foo", "user/fred/foo");
+    toexternal_helper("user.fred.foo.barracuda", "user/fred/foo/barracuda");
+    toexternal_helper("shared.quux", "shared/quux");
+    toexternal_helper("DELETED.user.foo.55E39AD4", "DELETED/user/foo/55E39AD4");
+    toexternal_helper("DELETED.user.foo.sub.55E39AD4", "DELETED/user/foo/sub/55E39AD4");
+    toexternal_helper("DELETED.shared.quux.55E39AD4", "DELETED/shared/quux/55E39AD4");
+
+    /* users with dots in them, and folders with dots */
+    toexternal_helper("user.fred^bloggs", "user/fred.bloggs");
+    toexternal_helper("user.fred^bloggs.sub", "user/fred.bloggs/sub");
+    toexternal_helper("user.fred^bloggs.sub^folder.parts", "user/fred.bloggs/sub.folder/parts");
+
+    /* mailboxes with @ in them should be OK too */
+    toexternal_helper("user.fred^bloggs.with@at", "user/fred.bloggs/with@at");
+
+    /* and users with @ in them */
+    toexternal_helper("user.fred@bloggs^com.Trash", "user/fred@bloggs.com/Trash");
+}
+
+static void test_toexternal_admin_altns(void)
+{
+    memset(&conf, 0, sizeof(conf));
+    conf.virtdomains = 0;
+    conf.userid = "admin";
+    conf.isadmin = 1;
+    conf.altnamespace = 1; /* NOTE: admin is never in alt namespace! */
+
+    toexternal_helper("user.fred", "user.fred");
+    toexternal_helper("user.fred.foo", "user.fred.foo");
+    toexternal_helper("user.fred.foo.barracuda", "user.fred.foo.barracuda");
+    toexternal_helper("shared.quux", "shared.quux");
+    toexternal_helper("DELETED.user.foo.55E39AD4", "DELETED.user.foo.55E39AD4");
+    toexternal_helper("DELETED.user.foo.sub.55E39AD4", "DELETED.user.foo.sub.55E39AD4");
+    toexternal_helper("DELETED.shared.quux.55E39AD4", "DELETED.shared.quux.55E39AD4");
+
+    conf.virtdomains = 1;
+
+    /* should still work the same */
+    toexternal_helper("user.fred", "user.fred");
+    toexternal_helper("user.fred.foo", "user.fred.foo");
+    toexternal_helper("user.fred.foo.barracuda", "user.fred.foo.barracuda");
+    toexternal_helper("shared.quux", "shared.quux");
+    toexternal_helper("DELETED.user.foo.55E39AD4", "DELETED.user.foo.55E39AD4");
+    toexternal_helper("DELETED.user.foo.sub.55E39AD4", "DELETED.user.foo.sub.55E39AD4");
+    toexternal_helper("DELETED.shared.quux.55E39AD4", "DELETED.shared.quux.55E39AD4");
+
+    /* domains always at the end */
+    toexternal_helper("domain.com!user.fred", "user.fred@domain.com");
+    toexternal_helper("domain.com!user.fred.foo", "user.fred.foo@domain.com");
+    toexternal_helper("domain.com!user.fred.foo.barracuda", "user.fred.foo.barracuda@domain.com");
+    toexternal_helper("domain.com!shared.quux", "shared.quux@domain.com");
+    toexternal_helper("domain.com!DELETED.user.foo.55E39AD4", "DELETED.user.foo.55E39AD4@domain.com");
+    toexternal_helper("domain.com!DELETED.user.foo.sub.55E39AD4", "DELETED.user.foo.sub.55E39AD4@domain.com");
+    toexternal_helper("domain.com!DELETED.shared.quux.55E39AD4", "DELETED.shared.quux.55E39AD4@domain.com");
+
+    conf.unixhierarchysep = 1;
+
+    /* should still work the same */
+    toexternal_helper("user.fred", "user/fred");
+    toexternal_helper("user.fred.foo", "user/fred/foo");
+    toexternal_helper("user.fred.foo.barracuda", "user/fred/foo/barracuda");
+    toexternal_helper("shared.quux", "shared/quux");
+    toexternal_helper("DELETED.user.foo.55E39AD4", "DELETED/user/foo/55E39AD4");
+    toexternal_helper("DELETED.user.foo.sub.55E39AD4", "DELETED/user/foo/sub/55E39AD4");
+    toexternal_helper("DELETED.shared.quux.55E39AD4", "DELETED/shared/quux/55E39AD4");
+
+    /* domains always at the end */
+    toexternal_helper("domain.com!user.fred", "user/fred@domain.com");
+    toexternal_helper("domain.com!user.fred.foo", "user/fred/foo@domain.com");
+    toexternal_helper("domain.com!user.fred.foo.barracuda", "user/fred/foo/barracuda@domain.com");
+    toexternal_helper("domain.com!shared.quux", "shared/quux@domain.com");
+    toexternal_helper("domain.com!DELETED.user.foo.55E39AD4", "DELETED/user/foo/55E39AD4@domain.com");
+    toexternal_helper("domain.com!DELETED.user.foo.sub.55E39AD4", "DELETED/user/foo/sub/55E39AD4@domain.com");
+    toexternal_helper("domain.com!DELETED.shared.quux.55E39AD4", "DELETED/shared/quux/55E39AD4@domain.com");
+
+    /* users with dots in them, and folders with dots */
+    toexternal_helper("user.fred^bloggs", "user/fred.bloggs");
+    toexternal_helper("user.fred^bloggs.sub", "user/fred.bloggs/sub");
+    toexternal_helper("user.fred^bloggs.sub^folder.parts", "user/fred.bloggs/sub.folder/parts");
+
+    toexternal_helper("domain.com!user.fred^bloggs", "user/fred.bloggs@domain.com");
+    toexternal_helper("domain.com!user.fred^bloggs.sub", "user/fred.bloggs/sub@domain.com");
+
+    conf.virtdomains = 0;
+
+    /* should still work the same */
+    toexternal_helper("user.fred", "user/fred");
+    toexternal_helper("user.fred.foo", "user/fred/foo");
+    toexternal_helper("user.fred.foo.barracuda", "user/fred/foo/barracuda");
+    toexternal_helper("shared.quux", "shared/quux");
+    toexternal_helper("DELETED.user.foo.55E39AD4", "DELETED/user/foo/55E39AD4");
+    toexternal_helper("DELETED.user.foo.sub.55E39AD4", "DELETED/user/foo/sub/55E39AD4");
+    toexternal_helper("DELETED.shared.quux.55E39AD4", "DELETED/shared/quux/55E39AD4");
+
+    /* users with dots in them, and folders with dots */
+    toexternal_helper("user.fred^bloggs", "user/fred.bloggs");
+    toexternal_helper("user.fred^bloggs.sub", "user/fred.bloggs/sub");
+    toexternal_helper("user.fred^bloggs.sub^folder.parts", "user/fred.bloggs/sub.folder/parts");
 }
 
 static void test_toexternal_simple(void)
@@ -375,7 +503,12 @@ static void test_toexternal_simple(void)
     toexternal_helper("user.fred.foo.barracuda", "INBOX.foo.barracuda");
     toexternal_helper("user.jane", "user.jane");
     toexternal_helper("user.jane.baz", "user.jane.baz");
+    toexternal_helper("user.jane.with^a^hat", "user.jane.with^a^hat");
+    toexternal_helper("user.hatty^smith", "user.hatty^smith");
     toexternal_helper("shared.quux", "shared.quux");
+
+    /* check that @ doesn't get polluted */
+    toexternal_helper("user.fred.folder@place", "INBOX.folder@place");
 }
 
 static void test_toexternal_domains(void)
@@ -389,9 +522,149 @@ static void test_toexternal_domains(void)
     toexternal_helper("bloggs.com!user.fred.foo.barracuda", "INBOX.foo.barracuda");
     toexternal_helper("bloggs.com!user.jane", "user.jane");
     toexternal_helper("bloggs.com!user.jane.baz", "user.jane.baz");
-    toexternal_helper("boop.com!user.betty", "user.betty@boop.com");
+    toexternal_helper("bloggs.com!user.jane.with^a^hat", "user.jane.with^a^hat");
+    toexternal_helper("bloggs.com!user.hatty^smith", "user.hatty^smith");
     toexternal_helper("bloggs.com!shared.quux", "shared.quux");
-    toexternal_helper("boop.com!shared.quux", "shared.quux@boop.com");
+    /* cross domain sharing is not allowed */
+    toexternal_helper("boop.com!user.betty", NULL);
+    toexternal_helper("boop.com!shared.quux", NULL);
+}
+
+static void test_toexternal_crossdomains_other(void)
+{
+    memset(&conf, 0, sizeof(conf));
+    conf.virtdomains = 1;
+    conf.crossdomains = 1;
+    conf.cdother = 1;
+    conf.userid = "fred@bloggs.com";
+
+    toexternal_helper("bloggs.com!user.fred", "INBOX");
+    toexternal_helper("bloggs.com!user.jane", "user.jane");
+    toexternal_helper("boop.com!user.betty", "user.betty@boop^com");
+}
+
+static void test_toexternal_crossdomains(void)
+{
+    memset(&conf, 0, sizeof(conf));
+    conf.virtdomains = 1;
+    conf.crossdomains = 1;
+    conf.unixhierarchysep = 1;
+    conf.userid = "fred@bloggs.com";
+
+    toexternal_helper("bloggs.com!user.fred", "INBOX");
+    toexternal_helper("bloggs.com!user.fred.foo", "INBOX/foo");
+    toexternal_helper("bloggs.com!user.fred.foo.barracuda", "INBOX/foo/barracuda");
+    toexternal_helper("bloggs.com!user.jane", "user/jane@bloggs.com");
+    toexternal_helper("bloggs.com!user.jane.baz", "user/jane@bloggs.com/baz");
+    toexternal_helper("bloggs.com!user.jane.with^a^hat", "user/jane@bloggs.com/with.a.hat");
+    toexternal_helper("bloggs.com!user.hatty^smith", "user/hatty.smith@bloggs.com");
+    // no domains in shared folders in crossdomain
+    toexternal_helper("bloggs.com!shared.quux", "shared/quux");
+
+    toexternal_helper("boop.com!user.betty", "user/betty@boop.com");
+    toexternal_helper("boop.com!user.betty.foo.bar", "user/betty@boop.com/foo/bar");
+    toexternal_helper("boop.com!user.betty.foo^bar", "user/betty@boop.com/foo.bar");
+    // shared folders in other domains can't be seen
+    toexternal_helper("boop.com!shared.quux", NULL);
+}
+
+static void test_toexternal_crossdomains_nouhs(void)
+{
+    memset(&conf, 0, sizeof(conf));
+    conf.virtdomains = 1;
+    conf.crossdomains = 1;
+    conf.unixhierarchysep = 0;
+    conf.userid = "fred@bloggs.com";
+
+    toexternal_helper("bloggs.com!user.fred", "INBOX");
+    toexternal_helper("bloggs.com!user.fred.foo", "INBOX.foo");
+    toexternal_helper("bloggs.com!user.fred.foo.barracuda", "INBOX.foo.barracuda");
+    toexternal_helper("bloggs.com!user.jane", "user.jane@bloggs^com");
+    toexternal_helper("bloggs.com!user.jane.baz", "user.jane@bloggs^com.baz");
+    toexternal_helper("bloggs.com!user.jane.with^a^hat", "user.jane@bloggs^com.with^a^hat");
+    toexternal_helper("bloggs.com!user.hatty^smith", "user.hatty^smith@bloggs^com");
+    // no domains in shared folders in crossdomain
+    toexternal_helper("bloggs.com!shared.quux", "shared.quux");
+
+    toexternal_helper("boop.com!user.betty", "user.betty@boop^com");
+    toexternal_helper("boop.com!user.betty.foo.bar", "user.betty@boop^com.foo.bar");
+    toexternal_helper("boop.com!user.betty.foo^bar", "user.betty@boop^com.foo^bar");
+    // shared folders in other domains can't be seen
+    toexternal_helper("boop.com!shared.quux", NULL);
+}
+
+static void test_toexternal_crossdomains_alt(void)
+{
+    memset(&conf, 0, sizeof(conf));
+    conf.altnamespace = 1;
+    conf.virtdomains = 1;
+    conf.crossdomains = 1;
+    conf.unixhierarchysep = 1;
+    conf.userprefix = "User Magic";
+    conf.sharedprefix = "Shared Magic";
+    conf.userid = "fred@bloggs.com";
+
+    toexternal_helper("bloggs.com!user.fred", "INBOX");
+    toexternal_helper("bloggs.com!user.fred.foo", "foo");
+    toexternal_helper("bloggs.com!user.fred.foo.barracuda", "foo/barracuda");
+    toexternal_helper("bloggs.com!user.jane", "User Magic/jane@bloggs.com");
+    toexternal_helper("bloggs.com!user.jane.baz", "User Magic/jane@bloggs.com/baz");
+    toexternal_helper("bloggs.com!user.jane.with^a^hat", "User Magic/jane@bloggs.com/with.a.hat");
+    toexternal_helper("bloggs.com!user.hatty^smith", "User Magic/hatty.smith@bloggs.com");
+    // domain on top-level folder in cross-domain
+    toexternal_helper("bloggs.com!shared.quux", "Shared Magic/shared@bloggs.com/quux");
+
+    toexternal_helper("boop.com!user.betty", "User Magic/betty@boop.com");
+    toexternal_helper("boop.com!user.betty.foo.bar", "User Magic/betty@boop.com/foo/bar");
+    toexternal_helper("boop.com!user.betty.foo^bar", "User Magic/betty@boop.com/foo.bar");
+}
+
+static void test_toexternal_crossdomains_alt_nouhs(void)
+{
+    memset(&conf, 0, sizeof(conf));
+    conf.altnamespace = 1;
+    conf.virtdomains = 1;
+    conf.crossdomains = 1;
+    conf.unixhierarchysep = 0;
+    conf.userprefix = "User Magic";
+    conf.sharedprefix = "Shared Magic";
+    conf.userid = "fred@bloggs.com";
+
+    toexternal_helper("bloggs.com!user.fred", "INBOX");
+    toexternal_helper("bloggs.com!user.fred.foo", "foo");
+    toexternal_helper("bloggs.com!user.fred.foo.barracuda", "foo.barracuda");
+    toexternal_helper("bloggs.com!user.jane", "User Magic.jane@bloggs^com");
+    toexternal_helper("bloggs.com!user.jane.baz", "User Magic.jane@bloggs^com.baz");
+    toexternal_helper("bloggs.com!user.jane.with^a^hat", "User Magic.jane@bloggs^com.with^a^hat");
+    toexternal_helper("bloggs.com!user.hatty^smith", "User Magic.hatty^smith@bloggs^com");
+    // domains on top level shared folders in crossdomain
+    toexternal_helper("bloggs.com!shared.quux", "Shared Magic.shared@bloggs^com.quux");
+
+    toexternal_helper("boop.com!user.betty", "User Magic.betty@boop^com");
+    toexternal_helper("boop.com!user.betty.foo.bar", "User Magic.betty@boop^com.foo.bar");
+    toexternal_helper("boop.com!user.betty.foo^bar", "User Magic.betty@boop^com.foo^bar");
+}
+
+static void test_toexternal_specials(void)
+{
+    memset(&conf, 0, sizeof(conf));
+    conf.userid = "fred";
+
+    toexternal_helper("user.fred.*^", "INBOX.*^");
+
+    conf.unixhierarchysep = 1;
+
+    toexternal_helper("user.fred.*^", "INBOX/*.");
+
+    conf.userid = "fred@bloggs.com";
+    conf.virtdomains = 1;
+    conf.unixhierarchysep = 0;
+
+    toexternal_helper("bloggs.com!user.fred.*!^", "INBOX.*!^");
+
+    conf.unixhierarchysep = 1;
+
+    toexternal_helper("bloggs.com!user.fred.*!^", "INBOX/*!.");
 }
 
 static void test_toexternal_unixhier(void)
@@ -405,7 +678,15 @@ static void test_toexternal_unixhier(void)
     toexternal_helper("user.fred.foo.barracuda", "INBOX/foo/barracuda");
     toexternal_helper("user.jane", "user/jane");
     toexternal_helper("user.jane.baz", "user/jane/baz");
+    toexternal_helper("user.joe^bloggs.mega", "user/joe.bloggs/mega");
     toexternal_helper("shared.quux", "shared/quux");
+
+    /* check that @ doesn't get polluted */
+    toexternal_helper("user.fred.folder@place", "INBOX/folder@place");
+    toexternal_helper("user.fred^smith@example^com.folder@place", "user/fred.smith@example.com/folder@place");
+
+    /* can't have a hat on the outside */
+    toexternal_helper(NULL, "user/fred^smith");
 }
 
 static void test_toexternal_alt(void)
@@ -424,51 +705,45 @@ static void test_toexternal_alt(void)
     toexternal_helper("shared.quux", "Chaired.shared.quux");
 }
 
-static void test_to_usermbox_althiersep(void)
+static void test_nextmodseq(void)
 {
-    memset(&conf, 0, sizeof(conf));
-    conf.altnamespace = 1;
-    conf.unixhierarchysep = 1;
-    conf.virtdomains = 1;
-    conf.isadmin = 1;
+    static const char FREDNAME[] = "bloggs.com!user.fred";
+    mbname_t *mbname = NULL;
+    char *fname;
 
-    config_virtdomains = conf.virtdomains;
-    config_defdomain = conf.defdomain;
-    imapopts[IMAPOPT_UNIXHIERARCHYSEP].val.b = conf.unixhierarchysep;
-    imapopts[IMAPOPT_ALTNAMESPACE].val.b = conf.altnamespace;
-    imapopts[IMAPOPT_USERPREFIX].val.s = conf.userprefix;
-    imapopts[IMAPOPT_SHAREDPREFIX].val.s = conf.sharedprefix;
+    imapopts[IMAPOPT_CONVERSATIONS].val.b = 1;
 
-    char *r;
-    int i;
-    struct namespace ns;
+    /* ensure there is no file */
+    mbname = mbname_from_intname(FREDNAME);
+    fname = mboxname_conf_getpath(mbname, "modseq");
+    unlink(fname);
+    free(fname);
+    mbname_free(&mbname);
 
-    i = mboxname_init_namespace(&ns, conf.isadmin);
-    CU_ASSERT_EQUAL_FATAL(i, 0);
-
-    r = mboxname_user_mbox("john.doe@example.org", NULL);
-    CU_ASSERT_STRING_EQUAL(r, "example.org!user.john^doe");
-    free(r);
-
-    r = mboxname_user_mbox("john.doe@example.org", "Sent");
-    CU_ASSERT_STRING_EQUAL(r, "example.org!user.john^doe.Sent");
-    free(r);
-
-    r = mboxname_user_mbox("john.doe@example.org", "Sent/Sub");
-    CU_ASSERT_STRING_EQUAL(r, "example.org!user.john^doe.Sent.Sub");
-    free(r);
-
-    r = mboxname_user_mbox("betty@boop.com", NULL);
-    CU_ASSERT_STRING_EQUAL(r, "boop.com!user.betty");
-    free(r);
-
+    /* initial value should be 1 without file */
+    CU_ASSERT_EQUAL(mboxname_nextmodseq(FREDNAME, 0, 0, 0), 1);
+    /* next value should always increment */
+    CU_ASSERT_EQUAL(mboxname_nextmodseq(FREDNAME, 0, 0, 0), 2);
+    /* higher value should force a jump */
+    CU_ASSERT_EQUAL(mboxname_nextmodseq(FREDNAME, 100, 0, 0), 101);
+    /* lower value should not decrease */
+    CU_ASSERT_EQUAL(mboxname_nextmodseq(FREDNAME, 5, 0, 0), 102);
 }
 
-
 static enum enum_value old_config_virtdomains;
+static union config_value old_config_unixhierarchysep;
+static union config_value old_config_altnamespace;
+static union config_value old_config_userprefix;
+static union config_value old_config_sharedprefix;
+static union config_value old_config_conversations;
+static const char *old_config_defdomain;
+static char *old_config_dir;
 
 static int set_up(void)
 {
+    char cwd[PATH_MAX];
+    char *s;
+
     /*
      * TODO: this is pretty hacky.  There should be some
      * cleaner way of pushing aside the config for a moment
@@ -477,12 +752,43 @@ static int set_up(void)
      */
     old_config_virtdomains = config_virtdomains;
     config_virtdomains = IMAP_ENUM_VIRTDOMAINS_ON;
+
+    old_config_dir = (char *)config_dir;
+    s = getcwd(cwd, sizeof(cwd));
+    assert(s);
+    config_dir = strconcat(cwd, "/conf.d", (char *)NULL);
+
+    old_config_defdomain = config_defdomain;
+
+    old_config_unixhierarchysep = imapopts[IMAPOPT_UNIXHIERARCHYSEP].val;
+    old_config_altnamespace = imapopts[IMAPOPT_ALTNAMESPACE].val;
+    old_config_userprefix = imapopts[IMAPOPT_USERPREFIX].val;
+    old_config_sharedprefix = imapopts[IMAPOPT_SHAREDPREFIX].val;
+    old_config_conversations = imapopts[IMAPOPT_CONVERSATIONS].val;
+
     return 0;
 }
 
 static int tear_down(void)
 {
+    char *cmd;
+    int r;
+
+    cmd = strconcat("rm -rf \"", config_dir, "\"", (char *)NULL);
+    r = system(cmd);
+    assert(!r);
+    free(cmd);
+    free((char *)config_dir);
+    config_dir = old_config_dir;
+
     config_virtdomains = old_config_virtdomains;
+    config_defdomain = old_config_defdomain;
+    imapopts[IMAPOPT_UNIXHIERARCHYSEP].val = old_config_unixhierarchysep;
+    imapopts[IMAPOPT_ALTNAMESPACE].val = old_config_altnamespace;
+    imapopts[IMAPOPT_USERPREFIX].val = old_config_userprefix;
+    imapopts[IMAPOPT_SHAREDPREFIX].val = old_config_sharedprefix;
+    imapopts[IMAPOPT_CONVERSATIONS].val = old_config_conversations;
+
     return 0;
 }
 

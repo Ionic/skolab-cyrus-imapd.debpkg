@@ -1,0 +1,42 @@
+
+**ptdump**
+**********
+
+Program to to dump the current PTS (protection database authorization)
+cache.
+
+
+Synopsis
+========
+
+   **ptdump** [**-C** *filename*]
+
+
+Description
+===========
+
+The **ptdump** program outputs a list of entries from the PTS DB.
+
+**ptdump** reads its configuration options out of the imapd.conf(5)
+file unless specified otherwise by **-C**.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+
+Files
+=====
+
+/etc/imapd.conf
+
+
+See Also
+========
+
+imapd.conf(5)

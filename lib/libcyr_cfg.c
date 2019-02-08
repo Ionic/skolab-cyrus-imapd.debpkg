@@ -49,12 +49,13 @@
 #include "assert.h"
 #include "libcyr_cfg.h"
 #include "cyrusdb.h"
+#include "crc32c.h"
 
 #if defined(__GNUC__) && __GNUC__ > 1
 /* We can use the GCC union constructor extension */
-#define CFGVAL(t,v)	(union cyrus_config_value)((t)(v))
+#define CFGVAL(t,v)     (union cyrus_config_value)((t)(v))
 #else
-#define CFGVAL(t,v)	{(void *)(v)}
+#define CFGVAL(t,v)     {(void *)(v)}
 #endif
 
 static struct cyrusopt_s cyrus_options[] = {
@@ -87,7 +88,7 @@ static struct cyrusopt_s cyrus_options[] = {
     { CYRUSOPT_DB_INIT_FLAGS,
       CFGVAL(long, 0),
       CYRUS_OPT_INT },
-   
+
     { CYRUSOPT_FULLDIRHASH,
       CFGVAL(long, 0),
       CYRUS_OPT_SWITCH },
@@ -108,21 +109,9 @@ static struct cyrusopt_s cyrus_options[] = {
       CFGVAL(long, 0),
       CYRUS_OPT_SWITCH },
 
-    { CYRUSOPT_BERKELEY_CACHESIZE,
-      CFGVAL(long, 512 * 1024), /* 512KB */
-      CYRUS_OPT_INT },
-
     { CYRUSOPT_AUTH_MECH,
       CFGVAL(const char *, "unix"),
       CYRUS_OPT_STRING },
-
-    { CYRUSOPT_BERKELEY_LOCKS_MAX,
-      CFGVAL(long, 50000),
-      CYRUS_OPT_INT },
-
-    { CYRUSOPT_BERKELEY_TXNS_MAX,
-      CFGVAL(long, 100),
-      CYRUS_OPT_INT },
 
     { CYRUSOPT_DELETERIGHT,
       CFGVAL(const char *, "c"),
@@ -164,7 +153,7 @@ HIDDEN const char *libcyrus_config_getstring(enum cyrus_opt opt)
     assert(opt > CYRUSOPT_ZERO && opt < CYRUSOPT_LAST);
     assert(cyrus_options[opt].opt == opt);
     assert(cyrus_options[opt].t == CYRUS_OPT_STRING);
-    
+
     return cyrus_options[opt].val.s;
 }
 
@@ -175,7 +164,7 @@ HIDDEN int libcyrus_config_getint(enum cyrus_opt opt)
     assert(cyrus_options[opt].t == CYRUS_OPT_INT);
 #if (SIZEOF_LONG != 4)
     if ((cyrus_options[opt].val.i > 0x7fffffff)||(cyrus_options[opt].val.i < -0x7fffffff)) {
-	syslog(LOG_ERR, "libcyrus_config_getint: option %d: %ld too large for type", cyrus_options[opt].opt, cyrus_options[opt].val.i);
+        syslog(LOG_ERR, "libcyrus_config_getint: option %d: %ld too large for type", cyrus_options[opt].opt, cyrus_options[opt].val.i);
     }
 #endif
     return cyrus_options[opt].val.i;
@@ -188,7 +177,7 @@ EXPORTED int libcyrus_config_getswitch(enum cyrus_opt opt)
     assert(cyrus_options[opt].t == CYRUS_OPT_SWITCH);
 #if (SIZEOF_LONG != 4)
     if ((cyrus_options[opt].val.b > 0x7fffffff)||(cyrus_options[opt].val.b < -0x7fffffff)) {
-	syslog(LOG_ERR, "libcyrus_config_getswitch: option %d: %ld too large for type", cyrus_options[opt].opt, cyrus_options[opt].val.b);
+        syslog(LOG_ERR, "libcyrus_config_getswitch: option %d: %ld too large for type", cyrus_options[opt].opt, cyrus_options[opt].val.b);
     }
 #endif
     return cyrus_options[opt].val.b;
@@ -223,6 +212,7 @@ EXPORTED void libcyrus_config_setswitch(enum cyrus_opt opt, int val)
 
 EXPORTED void libcyrus_init(void)
 {
+    crc32c_init();
     cyrusdb_init();
 }
 

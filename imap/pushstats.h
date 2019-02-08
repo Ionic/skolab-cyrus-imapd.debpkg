@@ -1,7 +1,7 @@
 
 /* pushstats.h -- statistics push interface
 
- * generated automatically from .././imap/pushstats.snmp by snmpgen
+ * generated automatically from /home/ellie/fastmail/cyrus-imapd/imap/pushstats.snmp by snmpgen
 
  *
 
@@ -11,18 +11,18 @@
 
  * No warranty, yadda yadda
 
- */                                       
+ */
 
-                                          
 
-#ifndef pushstats_H    
+
+#ifndef pushstats_H
 
 #define pushstats_H
 
 
 
-#define SNMPDEFINE_cmutree "1.3.6.1.4.1.3.2.2.3"
 #define SNMPDEFINE_cmuimap "1.3.6.1.4.1.3.2.2.3.1"
+#define SNMPDEFINE_cmutree "1.3.6.1.4.1.3.2.2.3"
 
 
 
@@ -64,58 +64,58 @@ typedef void pushstats_t;
 
 typedef enum {
 
-    FETCH_COUNT,
-    LIST_COUNT,
-    DELETE_COUNT,
-    ID_COUNT,
-    EXAMINE_COUNT,
-    IDLE_COUNT,
-    CREATE_COUNT,
-    STORE_COUNT,
-    TOTAL_CONNECTIONS,
-    SERVER_UPTIME,
-    SERVER_NAME_VERSION,
-    SETQUOTA_COUNT,
-    THREAD_COUNT,
-    SCAN_COUNT,
-    SETANNOTATION_COUNT,
-    DELETEACL_COUNT,
-    SELECT_COUNT,
-    AUTHENTICATE_COUNT,
-    CLOSE_COUNT,
-    CHECK_COUNT,
-    STARTTLS_COUNT,
-    SORT_COUNT,
-    NAMESPACE_COUNT,
-    COPY_COUNT,
-    GETQUOTAROOT_COUNT,
-    STATUS_COUNT,
-    GETACL_COUNT,
-    AUTHENTICATION_YES,
-    ACTIVE_CONNECTIONS,
-    SETACL_COUNT,
-    LOGOUT_COUNT,
-    UNSUBSCRIBE_COUNT,
-    SEARCH_COUNT,
-    NOOP_COUNT,
-    GETANNOTATION_COUNT,
     LOGIN_COUNT,
-    AUTHENTICATION_NO,
-    BBOARD_COUNT,
-    GETQUOTA_COUNT,
-    APPEND_COUNT,
-    MYRIGHTS_COUNT,
-    COMPRESS_COUNT,
-    CAPABILITY_COUNT,
     SUBSCRIBE_COUNT,
-    EXPUNGE_COUNT,
-    GETUIDS_COUNT,
+    CLOSE_COUNT,
+    AUTHENTICATION_NO,
+    NAMESPACE_COUNT,
+    STARTTLS_COUNT,
+    BBOARD_COUNT,
+    CAPABILITY_COUNT,
+    COPY_COUNT,
+    SERVER_UPTIME,
+    STATUS_COUNT,
+    LIST_COUNT,
     PARTIAL_COUNT,
-    RENAME_COUNT,
-    LISTRIGHTS_COUNT,
-    LSUB_COUNT,
+    SEARCH_COUNT,
+    AUTHENTICATE_COUNT,
+    CREATE_COUNT,
+    SETACL_COUNT,
+    EXAMINE_COUNT,
+    DELETEACL_COUNT,
+    STORE_COUNT,
+    CHECK_COUNT,
+    SETANNOTATION_COUNT,
+    NOOP_COUNT,
+    FETCH_COUNT,
+    MYRIGHTS_COUNT,
+    GETQUOTAROOT_COUNT,
     UNSELECT_COUNT,
-    FIND_COUNT
+    LOGOUT_COUNT,
+    DELETE_COUNT,
+    GETUIDS_COUNT,
+    SERVER_NAME_VERSION,
+    EXPUNGE_COUNT,
+    FIND_COUNT,
+    GETACL_COUNT,
+    UNSUBSCRIBE_COUNT,
+    APPEND_COUNT,
+    THREAD_COUNT,
+    AUTHENTICATION_YES,
+    SETQUOTA_COUNT,
+    GETANNOTATION_COUNT,
+    RENAME_COUNT,
+    SELECT_COUNT,
+    LISTRIGHTS_COUNT,
+    TOTAL_CONNECTIONS,
+    ID_COUNT,
+    COMPRESS_COUNT,
+    SORT_COUNT,
+    SCAN_COUNT,
+    GETQUOTA_COUNT,
+    IDLE_COUNT,
+    ACTIVE_CONNECTIONS,
+    LSUB_COUNT
 } pushstats_t;
 
 
@@ -134,9 +134,9 @@ int snmp_connect(void);
 
 
 
-int snmp_close(void);          
+int snmp_close(void);
 
-                                    
+
 
 /* only valid on counters */
 
@@ -162,13 +162,13 @@ int snmp_set_oid(pushstats_t cmd, char *str);
 
 int snmp_set_time(pushstats_t cmd, time_t t);
 
-                                    
 
-const char *snmp_getdescription(pushstats_t cmd); 
 
- 
+const char *snmp_getdescription(pushstats_t cmd);
 
-const char *snmp_getoid(const char *name, pushstats_t cmd, char* buf, int buflen); 
+
+
+const char *snmp_getoid(const char *name, pushstats_t cmd, char* buf, int buflen);
 
 
 
@@ -178,9 +178,9 @@ void snmp_setvariable(pushstats_variable_t, int);
 
 #endif /* USING_SNMPGEN */
 
- 
 
-#endif /* pushstats_H */ 
+
+#endif /* pushstats_H */
 
 
 

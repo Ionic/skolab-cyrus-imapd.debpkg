@@ -84,6 +84,10 @@
 #include "xmalloc.h"
 #include "xstrlcpy.h"
 
+#ifdef ENABLE_BACKUP
+#include "backup/backup.h"
+#endif
+
 #define N(a) (sizeof(a) / sizeof(a[0]))
 
 static struct cyrusdb {
@@ -92,14 +96,17 @@ static struct cyrusdb {
     cyrusdb_archiver *archiver;
     int doarchive;
 } dblist[] = {
-    { FNAME_MBOXLIST,		&config_mboxlist_db,	NULL,	1 },
-    { FNAME_QUOTADB,		&config_quota_db,	NULL,	1 },
-    { FNAME_GLOBALANNOTATIONS,	&config_annotation_db,	NULL,	1 },
-    { FNAME_DELIVERDB,		&config_duplicate_db,	NULL,	0 },
-    { FNAME_TLSSESSIONS,	&config_tls_sessions_db,NULL,	0 },
-    { FNAME_PTSDB,		&config_ptscache_db,	NULL,	0 },
-    { FNAME_STATUSCACHEDB,	&config_statuscache_db,	NULL,	0 },
-    { NULL,			NULL,			NULL,	0 }
+    { FNAME_MBOXLIST,           &config_mboxlist_db,    NULL,   1 },
+    { FNAME_QUOTADB,            &config_quota_db,       NULL,   1 },
+    { FNAME_GLOBALANNOTATIONS,  &config_annotation_db,  NULL,   1 },
+#ifdef ENABLE_BACKUP
+    { FNAME_BACKUPDB,           &config_backup_db,      NULL,   1 },
+#endif
+    { FNAME_DELIVERDB,          &config_duplicate_db,   NULL,   0 },
+    { FNAME_TLSSESSIONS,        &config_tls_sessions_db,NULL,   0 },
+    { FNAME_PTSDB,              &config_ptscache_db,    NULL,   0 },
+    { FNAME_STATUSCACHEDB,      &config_statuscache_db, NULL,   0 },
+    { NULL,                     NULL,                   NULL,   0 }
 };
 
 static int compdb(const void *v1, const void *v2)
@@ -118,55 +125,49 @@ static void usage(void)
     exit(-1);
 }
 
-/* Callback for use by recover_reserved */
-static int fixmbox(char *name,
-		   int matchlen __attribute__((unused)),
-		   int maycreate __attribute__((unused)),
-		   void *rock __attribute__((unused)))
+/* Callback for use by process_mboxlist */
+static int fixmbox(const mbentry_t *mbentry,
+                   void *rock __attribute__((unused)))
 {
-    mbentry_t *mbentry = NULL;
     int r;
 
-    r = mboxlist_lookup_allow_all(name, &mbentry, NULL);
-    if (r) return 0;
-
     if (mbentry->legacy_specialuse) {
-	const char *userid = mboxname_to_userid(name);
-	if (userid) {
-	    struct buf buf = BUF_INITIALIZER;
-	    buf_setcstr(&buf, mbentry->legacy_specialuse);
-	    annotatemore_rawwrite(name, "/specialuse", userid, &buf);
-	    buf_free(&buf);
-	}
-	free(mbentry->legacy_specialuse);
-	mbentry->legacy_specialuse = NULL;
-	mboxlist_update(mbentry, /*localonly*/1);
+        char *userid = mboxname_to_userid(mbentry->name);
+        if (userid) {
+            struct buf buf = BUF_INITIALIZER;
+            buf_setcstr(&buf, mbentry->legacy_specialuse);
+            annotatemore_rawwrite(mbentry->name, "/specialuse", userid, &buf);
+            buf_free(&buf);
+            free(userid);
+        }
+        mbentry_t *copy = mboxlist_entry_copy(mbentry);
+        /* XXX - const correctness */
+        free(copy->legacy_specialuse);
+        copy->legacy_specialuse = NULL;
+        mboxlist_update(copy, /*localonly*/1);
+        mboxlist_entry_free(&copy);
     }
 
     /* if MBTYPE_RESERVED, unset it & call mboxlist_delete */
     if (mbentry->mbtype & MBTYPE_RESERVE) {
-	r = mboxlist_deletemailbox(name, 1, NULL, NULL, NULL, 0, 0, 1);
-	if (r) {
-	    /* log the error */
-	    syslog(LOG_ERR,
-		   "could not remove reserved mailbox '%s': %s",
-		   name, error_message(r));
-	} else {
-	    syslog(LOG_ERR,
-		   "removed reserved mailbox '%s'",
-		   name);
-	}
+        r = mboxlist_deletemailbox(mbentry->name, 1, NULL, NULL, NULL, 0, 0, 1);
+        if (r) {
+            /* log the error */
+            syslog(LOG_ERR,
+                   "could not remove reserved mailbox '%s': %s",
+                   mbentry->name, error_message(r));
+        } else {
+            syslog(LOG_NOTICE,
+                   "removed reserved mailbox '%s'",
+                   mbentry->name);
+        }
     }
-
-    mboxlist_entry_free(&mbentry);
 
     return 0;
 }
 
-static void recover_reserved(void)
+static void process_mboxlist(void)
 {
-    char pattern[2] = { '*', '\0' };
-
     mboxlist_init(0);
     mboxlist_open(NULL);
 
@@ -180,8 +181,10 @@ static void recover_reserved(void)
     quotadb_open(NULL);
 
     /* build a list of mailboxes - we're using internal names here */
-    mboxlist_findall(NULL, pattern, 1, NULL,
-		     NULL, fixmbox, NULL);
+    mboxlist_allmbox(NULL, fixmbox, NULL, 0);
+
+    /* enable or disable RACLs per config */
+    mboxlist_set_racls(config_getswitch(IMAPOPT_REVERSEACLS));
 
     quotadb_close();
     quotadb_done();
@@ -205,6 +208,10 @@ static const char *dbfname(struct cyrusdb *db)
         fname = config_getstring(IMAPOPT_QUOTA_DB_PATH);
     else if (!strcmp(db->name, FNAME_GLOBALANNOTATIONS))
         fname = config_getstring(IMAPOPT_ANNOTATION_DB_PATH);
+#ifdef ENABLE_BACKUP
+    else if (!strcmp(db->name, FNAME_BACKUPDB))
+        fname = config_getstring(IMAPOPT_BACKUP_DB_PATH);
+#endif
     else if (!strcmp(db->name, FNAME_DELIVERDB))
         fname = config_getstring(IMAPOPT_DUPLICATE_DB_PATH);
     else if (!strcmp(db->name, FNAME_TLSSESSIONS))
@@ -243,11 +250,11 @@ static void check_convert(struct cyrusdb *db, const char *fname)
 
     /* otherwise we need to upgrade! */
     syslog(LOG_NOTICE, "converting %s from %s to %s",
-	   fname, detectname, *db->configptr);
+           fname, detectname, *db->configptr);
 
     r = cyrusdb_convert(fname, fname, detectname, *db->configptr);
     if (r)
-	syslog(LOG_NOTICE, "conversion failed %s", fname);
+        syslog(LOG_NOTICE, "conversion failed %s", fname);
 }
 
 int main(int argc, char *argv[])
@@ -263,42 +270,42 @@ int main(int argc, char *argv[])
     int i, rotated = 0;
 
     if ((geteuid()) == 0 && (become_cyrus(/*is_master*/0) != 0)) {
-	fatal("must run as the Cyrus user", EC_USAGE);
+        fatal("must run as the Cyrus user", EC_USAGE);
     }
     r = r2 = 0;
 
     while ((opt = getopt(argc, argv, "C:rxc")) != EOF) {
-	switch (opt) {
-	case 'C': /* alt config file */
-	    alt_config = optarg;
-	    break;
+        switch (opt) {
+        case 'C': /* alt config file */
+            alt_config = optarg;
+            break;
 
-	case 'r':
-	    libcyrus_config_setint(CYRUSOPT_DB_INIT_FLAGS, CYRUSDB_RECOVER);
-	    msg = "recovering cyrus databases";
-	    if (op == NONE) op = RECOVER;
-	    else usage();
-	    break;
+        case 'r':
+            libcyrus_config_setint(CYRUSOPT_DB_INIT_FLAGS, CYRUSDB_RECOVER);
+            msg = "recovering cyrus databases";
+            if (op == NONE) op = RECOVER;
+            else usage();
+            break;
 
-	case 'c':
-	    msg = "checkpointing cyrus databases";
-	    if (op == NONE) op = CHECKPOINT;
-	    else usage();
-	    break;
+        case 'c':
+            msg = "checkpointing cyrus databases";
+            if (op == NONE) op = CHECKPOINT;
+            else usage();
+            break;
 
-	case 'x':
-	    reserve_flag = 0;
-	    break;
+        case 'x':
+            reserve_flag = 0;
+            break;
 
-	default:
-	    usage();
-	    break;
-	}
+        default:
+            usage();
+            break;
+        }
     }
 
     if (op == NONE || (op != RECOVER && !reserve_flag)) {
-	usage();
-	/* NOTREACHED */
+        usage();
+        /* NOTREACHED */
     }
 
     cyrus_init(alt_config, "ctl_cyrusdb", 0, 0);
@@ -315,119 +322,99 @@ int main(int argc, char *argv[])
 
     /* detect backends */
     for (i = 0; dblist[i].name != NULL; i++)
-	dblist[i].archiver = cyrusdb_getarchiver(*dblist[i].configptr);
+        dblist[i].archiver = cyrusdb_getarchiver(*dblist[i].configptr);
 
     /* sort dbenvs */
     qsort(dblist, N(dblist)-1, sizeof(struct cyrusdb), &compdb);
 
     for (i = 0; dblist[i].name; i++) {
-	const char *fname = dbfname(&dblist[i]);
+        const char *fname = dbfname(&dblist[i]);
 
-	if (op == RECOVER)
-	    check_convert(&dblist[i], fname);
+        if (op == RECOVER)
+            check_convert(&dblist[i], fname);
 
-	/* if we need to archive this db, add it to the list */
-	if (dblist[i].doarchive)
-	    strarray_add(&files, fname);
+        /* if we need to archive this db, add it to the list */
+        if (dblist[i].doarchive)
+            strarray_add(&files, fname);
 
-	/* deal with each dbenv once */
-	if (dblist[i+1].archiver == dblist[i].archiver)
-	    continue;
+        /* deal with each dbenv once */
+        if (dblist[i+1].archiver == dblist[i].archiver)
+            continue;
 
-	r = r2 = 0;
-	switch (op) {
-	case RECOVER:
-	    break;
-	    
-	case CHECKPOINT:
-	    r2 = cyrusdb_sync(*dblist[i].configptr);
-	    if (r2) {
-		syslog(LOG_ERR, "DBERROR: sync %s: %s", dirname,
-		       cyrusdb_strerror(r2));
-		fprintf(stderr, 
-			"ctl_cyrusdb: unable to sync environment\n");
-	    }
+        r = r2 = 0;
+        switch (op) {
+        case RECOVER:
+            break;
 
-	    /* ARCHIVE */
-	    r2 = 0;
+        case CHECKPOINT:
+            r2 = cyrusdb_sync(*dblist[i].configptr);
+            if (r2) {
+                syslog(LOG_ERR, "DBERROR: sync %s: %s", dirname,
+                       cyrusdb_strerror(r2));
+                fprintf(stderr,
+                        "ctl_cyrusdb: unable to sync environment\n");
+            }
 
-	    if (!rotated) {
-		/* rotate the backup directories -- ONE time only */
-		char *tail;
-		DIR *dirp;
-		struct dirent *dirent;
+            /* ARCHIVE */
+            r2 = 0;
 
-		char *path;
-		size_t length;
-		long path_max;
+            if (!rotated) {
+                /* rotate the backup directories -- ONE time only */
+                char *file;
+                DIR *dirp;
+                struct dirent *dirent;
 
-		if ((path_max = pathconf("/", _PC_PATH_MAX)) == -1) {
-			syslog(LOG_WARNING, "Unable to determine system PATH_MAX. Using POSIX default.");
-			path_max = _POSIX_PATH_MAX;
-		}
-		if ((path = malloc(path_max)) == NULL) {
-			syslog(LOG_ERR, "%s:%d %s", __FILE__, __LINE__, strerror(errno));
-			exit(EXIT_FAILURE);
-		}
+                /* remove db.backup2 */
+                dirp = opendir(backup2);
 
-		/* Add path prefix to buffer. */
-		length = strlcpy(path, backup2, path_max);
-		tail = path + length;
-		*tail++ = '/';
-		length++;
+                if (dirp) {
+                    while ((dirent = readdir(dirp)) != NULL) {
+                        if (dirent->d_name[0] == '.') continue;
+                        file = strconcat(backup2, "/", dirent->d_name, (char *)NULL);
+                        unlink(file);
+                        free(file);
+                    }
 
-		/* remove db.backup2 */
-		dirp = opendir(backup2);
+                    closedir(dirp);
+                }
+                r2 = rmdir(backup2);
 
-		if (dirp) {
-		    while ((dirent = readdir(dirp)) != NULL) {
-			if (dirent->d_name[0] == '.') 
-				continue;
-			(void) strlcpy(tail, dirent->d_name, path_max - length);
-			(void) unlink(path);
-		    }
+                /* move db.backup1 to db.backup2 */
+                if (r2 == 0 || errno == ENOENT)
+                    r2 = rename(backup1, backup2);
 
-		    closedir(dirp);
-		}
-		r2 = rmdir(backup2);
-		free(path);
+                /* make a new db.backup1 */
+                if (r2 == 0 || errno == ENOENT)
+                    r2 = mkdir(backup1, 0755);
 
-		/* move db.backup1 to db.backup2 */
-		if (r2 == 0 || errno == ENOENT)
-		    r2 = rename(backup1, backup2);
+                rotated = 1;
+            }
 
-		/* make a new db.backup1 */
-		if (r2 == 0 || errno == ENOENT)
-		    r2 = mkdir(backup1, 0755);
+            /* do the archive */
+            if (r2 == 0)
+                r2 = dblist[i].archiver(&files, backup1);
 
-		rotated = 1;
-	    }
-
-	    /* do the archive */
-	    if (r2 == 0)
-		r2 = dblist[i].archiver(&files, backup1);
-
-	    if (r2) {
-		syslog(LOG_ERR, "DBERROR: archive %s: %s", dirname,
-		       cyrusdb_strerror(r2));
-		fprintf(stderr, 
-			"ctl_cyrusdb: unable to archive environment\n");
-	    }
+            if (r2) {
+                syslog(LOG_ERR, "DBERROR: archive %s: %s", dirname,
+                       cyrusdb_strerror(r2));
+                fprintf(stderr,
+                        "ctl_cyrusdb: unable to archive environment\n");
+            }
 
 
-	    break;
+            break;
 
-	default:
-	    break;
-	}
+        default:
+            break;
+        }
 
-	strarray_truncate(&files, 0);
+        strarray_truncate(&files, 0);
     }
 
     strarray_fini(&files);
 
     if(op == RECOVER && reserve_flag)
-	recover_reserved();
+        process_mboxlist();
 
     free(dirname);
     free(backup1);

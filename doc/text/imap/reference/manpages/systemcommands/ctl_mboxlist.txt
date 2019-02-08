@@ -1,0 +1,151 @@
+
+**ctl_mboxlist**
+****************
+
+Perform operations on the mailbox list database
+
+
+Synopsis
+========
+
+   **ctl_mboxlist** [ **-C** *config-file* ] **-d** [ **-x** ] [ **-p** *partition* ] [ **-f** *filename* ]
+   **ctl_mboxlist** [ **-C** *config-file* ] **-u** [ **-f** *filename* ]
+   **ctl_mboxlist** [ **-C** *config-file* ] **-m** [ **-a** ] [ **-w** ] [ **-i** ] [ **-f** *filename* ]
+   **ctl_mboxlist** [ **-C** *config-file* ] **-v** [ **-f** *filename* ]
+
+
+Description
+===========
+
+**ctl_mboxlist** is used to perform various administrative operations
+on the mailbox list database.
+
+**ctl_mboxlist** reads its configuration options out of the
+imapd.conf(5) file unless specified otherwise by **-C**. The
+*configdirectory* option in imapd.conf(5) is used to determine the
+default location of the mailboxes database.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+-d
+
+   Dump the contents of the database to standard output in a portable
+   flat-text format.  NOTE: In Cyrus versions 2.2.13 and earlier, the
+   dump format did not include the mailbox type flags, breaking remote
+   mailboxes (frontends, mupdate master, unified backends) when
+   undumped.
+
+-x
+
+   When performing a dump, remove the mailboxes dumped from the
+   mailbox list (mostly useful when specified with **-p**).
+
+-p partition
+
+   When performing a dump, dump only thise mailboxes that live on
+   *partition*.
+
+-f filename
+
+   Use the database specified by *filename* instead of the default
+   (*configdirectory/mailboxes.db**).
+
+-u
+
+   Load the contents of the database from standard input.  The input
+   MUST be in the format output by the **-d** option.
+
+Note: Both the old and new formats can be loaded, but the old format
+  will break remote mailboxes.
+
+-m
+
+   For backend servers in the Cyrus Murder, synchronize the local
+   mailbox list file with the MUPDATE server.
+
+-a
+
+   When used with **-m**, assume the local mailboxes file is
+   authoritiative, that is, only change the mupdate server, do not
+   delete any local mailboxes.
+
+Important: USE THIS OPTION WITH CARE, as it allows namespace
+  collisions into the murder.
+
+-w
+
+   When used with **-m**, print out what would be done but do not
+   perform the operations.
+
+-i
+
+   When used with **-m**, asks for verification before deleting local
+   mailboxes.
+
+-v
+
+   Verify the consistency of the mailbox list database and the spool
+   partition(s). Mailboxes present in the database and not located on
+   a spool partition, and those located on a spool partition
+   (directory containing a valid cyrus.header file) and not present in
+   the database will be reported.  Note that this function is very I/O
+   intensive.
+
+
+Examples
+========
+
+   **ctl_mboxlist -d**
+
+   Dump the mailboxes list in portable text format.
+
+   **ctl_mboxlist -u** < *newmboxlist.dump*
+
+   Undump (restore) the mailboxes database from *newmboxlist.dump*, a
+   portable text formatted file.
+
+   **ctl_mboxlist -m**
+
+   Synchronize our mailboxes database with the MUPDATE server.  (One
+   may commonly put a command like this into the **START** section of
+   cyrus.conf(5) on backend nodes of a Murder cluster to cause the
+   backend to syncronize its mailbox list with the mupdate master upon
+   startup).
+
+   **ctl_mboxlist -m -w**
+
+   The same as above, but only show us what would be done, don't
+   actually do it.
+
+   **ctl_mboxlist -m -a**
+
+   Populate the Mupdate server from our copy of the mailboxes
+   database.
+
+   Note: Be very careful with this option, as it can create
+     conflicts in the Murder.
+
+   **ctl_mboxlist -m -i**
+
+   Synchronize our mailboxes database with the MUPDATE server
+   interactively, asking for verification before deleting any local
+   mailboxes.
+
+
+Files
+=====
+
+/etc/imapd.conf, <configdirectory>/mailboxes.db
+
+
+See Also
+========
+
+imapd.conf(5), master(8)

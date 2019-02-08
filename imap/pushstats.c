@@ -1,5 +1,5 @@
 
-/* pushstats.c -- automatically generated from .././imap/pushstats.snmp by snmpgen */
+/* pushstats.c -- automatically generated from /home/ellie/fastmail/cyrus-imapd/imap/pushstats.snmp by snmpgen */
 
 
 
@@ -9,11 +9,11 @@
 
 /* We disable this code for now since it doesn't actually work and wastes
 
- * resources.  At some point in time, we'll make it work again as it would 
+ * resources.  At some point in time, we'll make it work again as it would
 
- * be useful to gather aggregate statistics on what commands are being used 
+ * be useful to gather aggregate statistics on what commands are being used
 
- * so we can better tune the server.  This change closes bug #1191. 
+ * so we can better tune the server.  This change closes bug #1191.
 
  * New bug 1267 opened to re-enable the feature.
 
@@ -85,58 +85,58 @@ const char *snmp_getdescription(pushstats_t evt)
 
     switch (evt) {
 
-        case FETCH_COUNT: return "Number of fetch";
-        case LIST_COUNT: return "Number of list";
-        case DELETE_COUNT: return "Number of delete";
-        case ID_COUNT: return "Number of id";
-        case EXAMINE_COUNT: return "Number of examine";
-        case IDLE_COUNT: return "Number of idle";
-        case CREATE_COUNT: return "Number of create";
-        case STORE_COUNT: return "Number of store";
-        case TOTAL_CONNECTIONS: return "Count of the total number of connections since the beginning of time";
-        case SERVER_UPTIME: return "Amount of time server has been running";
-        case SERVER_NAME_VERSION: return "Name and version string for server";
-        case SETQUOTA_COUNT: return "Number of setquota";
-        case THREAD_COUNT: return "Number of thread";
-        case SCAN_COUNT: return "Number of list";
-        case SETANNOTATION_COUNT: return "Number of setannotation";
-        case DELETEACL_COUNT: return "Number of deleteacl";
-        case SELECT_COUNT: return "Number of select";
-        case AUTHENTICATE_COUNT: return "Number of authenticate";
-        case CLOSE_COUNT: return "Number of close";
-        case CHECK_COUNT: return "Number of check";
-        case STARTTLS_COUNT: return "Number of starttls";
-        case SORT_COUNT: return "Number of sort";
-        case NAMESPACE_COUNT: return "Number of namespace";
-        case COPY_COUNT: return "Number of copy";
-        case GETQUOTAROOT_COUNT: return "Number of getquotaroot";
-        case STATUS_COUNT: return "Number of status";
-        case GETACL_COUNT: return "Number of getacl";
-        case AUTHENTICATION_YES: return "Successful authentication of given mechanism";
-        case ACTIVE_CONNECTIONS: return "Count of the active number of connections";
-        case SETACL_COUNT: return "Number of setacl";
-        case LOGOUT_COUNT: return "Number of logout";
-        case UNSUBSCRIBE_COUNT: return "Number of unsubscribe";
-        case SEARCH_COUNT: return "Number of search";
-        case NOOP_COUNT: return "Number of noop";
-        case GETANNOTATION_COUNT: return "Number of getannotation";
         case LOGIN_COUNT: return "Number of login";
-        case AUTHENTICATION_NO: return "Failed authentication of given mechanism";
-        case BBOARD_COUNT: return "Number of bboard";
-        case GETQUOTA_COUNT: return "Number of getquota";
-        case APPEND_COUNT: return "Number of append";
-        case MYRIGHTS_COUNT: return "Number of myrights";
-        case COMPRESS_COUNT: return "Number of compress";
-        case CAPABILITY_COUNT: return "Number of capability";
         case SUBSCRIBE_COUNT: return "Number of subscribe";
-        case EXPUNGE_COUNT: return "Number of expunge";
-        case GETUIDS_COUNT: return "Number of getuids";
+        case CLOSE_COUNT: return "Number of close";
+        case AUTHENTICATION_NO: return "Failed authentication of given mechanism";
+        case NAMESPACE_COUNT: return "Number of namespace";
+        case STARTTLS_COUNT: return "Number of starttls";
+        case BBOARD_COUNT: return "Number of bboard";
+        case CAPABILITY_COUNT: return "Number of capability";
+        case COPY_COUNT: return "Number of copy";
+        case SERVER_UPTIME: return "Amount of time server has been running";
+        case STATUS_COUNT: return "Number of status";
+        case LIST_COUNT: return "Number of list";
         case PARTIAL_COUNT: return "Number of partial";
-        case RENAME_COUNT: return "Number of rename";
-        case LISTRIGHTS_COUNT: return "Number of listrights";
-        case LSUB_COUNT: return "Number of lsub";
+        case SEARCH_COUNT: return "Number of search";
+        case AUTHENTICATE_COUNT: return "Number of authenticate";
+        case CREATE_COUNT: return "Number of create";
+        case SETACL_COUNT: return "Number of setacl";
+        case EXAMINE_COUNT: return "Number of examine";
+        case DELETEACL_COUNT: return "Number of deleteacl";
+        case STORE_COUNT: return "Number of store";
+        case CHECK_COUNT: return "Number of check";
+        case SETANNOTATION_COUNT: return "Number of setannotation";
+        case NOOP_COUNT: return "Number of noop";
+        case FETCH_COUNT: return "Number of fetch";
+        case MYRIGHTS_COUNT: return "Number of myrights";
+        case GETQUOTAROOT_COUNT: return "Number of getquotaroot";
         case UNSELECT_COUNT: return "Number of unselect";
+        case LOGOUT_COUNT: return "Number of logout";
+        case DELETE_COUNT: return "Number of delete";
+        case GETUIDS_COUNT: return "Number of getuids";
+        case SERVER_NAME_VERSION: return "Name and version string for server";
+        case EXPUNGE_COUNT: return "Number of expunge";
         case FIND_COUNT: return "Number of find";
+        case GETACL_COUNT: return "Number of getacl";
+        case UNSUBSCRIBE_COUNT: return "Number of unsubscribe";
+        case APPEND_COUNT: return "Number of append";
+        case THREAD_COUNT: return "Number of thread";
+        case AUTHENTICATION_YES: return "Successful authentication of given mechanism";
+        case SETQUOTA_COUNT: return "Number of setquota";
+        case GETANNOTATION_COUNT: return "Number of getannotation";
+        case RENAME_COUNT: return "Number of rename";
+        case SELECT_COUNT: return "Number of select";
+        case LISTRIGHTS_COUNT: return "Number of listrights";
+        case TOTAL_CONNECTIONS: return "Count of the total number of connections since the beginning of time";
+        case ID_COUNT: return "Number of id";
+        case COMPRESS_COUNT: return "Number of compress";
+        case SORT_COUNT: return "Number of sort";
+        case SCAN_COUNT: return "Number of list";
+        case GETQUOTA_COUNT: return "Number of getquota";
+        case IDLE_COUNT: return "Number of idle";
+        case ACTIVE_CONNECTIONS: return "Count of the active number of connections";
+        case LSUB_COUNT: return "Number of lsub";
 
     }
 
@@ -148,64 +148,64 @@ const char *snmp_getdescription(pushstats_t evt)
 
 const char *snmp_getoid(const char *name __attribute__((unused)),
 
-			pushstats_t evt, char *buf, int buflen)
+                        pushstats_t evt, char *buf, int buflen)
 
 {
 
     switch (evt) {
 
-        case FETCH_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.13"); return buf;
-        case LIST_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.24"); return buf;
-        case DELETE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.9"); return buf;
-        case ID_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.20"); return buf;
-        case EXAMINE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.12"); return buf;
-        case IDLE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.21"); return buf;
-        case CREATE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.6"); return buf;
-        case STORE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.34"); return buf;
-        case TOTAL_CONNECTIONS: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.1.1"); return buf;
-        case SERVER_UPTIME: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.3.1"); return buf;
-        case SERVER_NAME_VERSION: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.3.0"); return buf;
-        case SETQUOTA_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.40"); return buf;
-        case THREAD_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.43"); return buf;
-        case SCAN_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.32"); return buf;
-        case SETANNOTATION_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.39"); return buf;
-        case DELETEACL_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.10"); return buf;
-        case SELECT_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.35"); return buf;
-        case AUTHENTICATE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.0"); return buf;
-        case CLOSE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.7"); return buf;
-        case CHECK_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.4"); return buf;
-        case STARTTLS_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.33"); return buf;
-        case SORT_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.42"); return buf;
-        case NAMESPACE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.29"); return buf;
-        case COPY_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.5"); return buf;
-        case GETQUOTAROOT_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.18"); return buf;
-        case STATUS_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.41"); return buf;
-        case GETACL_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.15"); return buf;
-        case AUTHENTICATION_YES: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.2.%d.0",varvalue(VARIABLE_AUTH)); return buf;
-        case ACTIVE_CONNECTIONS: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.1.2"); return buf;
-        case SETACL_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.38"); return buf;
-        case LOGOUT_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.23"); return buf;
-        case UNSUBSCRIBE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.44"); return buf;
-        case SEARCH_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.36"); return buf;
-        case NOOP_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.28"); return buf;
-        case GETANNOTATION_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.16"); return buf;
         case LOGIN_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.22"); return buf;
-        case AUTHENTICATION_NO: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.2.%d.1",varvalue(VARIABLE_AUTH)); return buf;
-        case BBOARD_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.2"); return buf;
-        case GETQUOTA_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.17"); return buf;
-        case APPEND_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.1"); return buf;
-        case MYRIGHTS_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.27"); return buf;
-        case COMPRESS_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.8"); return buf;
-        case CAPABILITY_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.3"); return buf;
         case SUBSCRIBE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.37"); return buf;
-        case EXPUNGE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.11"); return buf;
-        case GETUIDS_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.19"); return buf;
+        case CLOSE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.7"); return buf;
+        case AUTHENTICATION_NO: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.2.%d.1",varvalue(VARIABLE_AUTH)); return buf;
+        case NAMESPACE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.29"); return buf;
+        case STARTTLS_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.33"); return buf;
+        case BBOARD_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.2"); return buf;
+        case CAPABILITY_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.3"); return buf;
+        case COPY_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.5"); return buf;
+        case SERVER_UPTIME: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.3.1"); return buf;
+        case STATUS_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.41"); return buf;
+        case LIST_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.24"); return buf;
         case PARTIAL_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.30"); return buf;
-        case RENAME_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.31"); return buf;
-        case LISTRIGHTS_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.26"); return buf;
-        case LSUB_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.25"); return buf;
+        case SEARCH_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.36"); return buf;
+        case AUTHENTICATE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.0"); return buf;
+        case CREATE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.6"); return buf;
+        case SETACL_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.38"); return buf;
+        case EXAMINE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.12"); return buf;
+        case DELETEACL_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.10"); return buf;
+        case STORE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.34"); return buf;
+        case CHECK_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.4"); return buf;
+        case SETANNOTATION_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.39"); return buf;
+        case NOOP_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.28"); return buf;
+        case FETCH_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.13"); return buf;
+        case MYRIGHTS_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.27"); return buf;
+        case GETQUOTAROOT_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.18"); return buf;
         case UNSELECT_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.45"); return buf;
+        case LOGOUT_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.23"); return buf;
+        case DELETE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.9"); return buf;
+        case GETUIDS_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.19"); return buf;
+        case SERVER_NAME_VERSION: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.3.0"); return buf;
+        case EXPUNGE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.11"); return buf;
         case FIND_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.14"); return buf;
+        case GETACL_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.15"); return buf;
+        case UNSUBSCRIBE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.44"); return buf;
+        case APPEND_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.1"); return buf;
+        case THREAD_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.43"); return buf;
+        case AUTHENTICATION_YES: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.2.%d.0",varvalue(VARIABLE_AUTH)); return buf;
+        case SETQUOTA_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.40"); return buf;
+        case GETANNOTATION_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.16"); return buf;
+        case RENAME_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.31"); return buf;
+        case SELECT_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.35"); return buf;
+        case LISTRIGHTS_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.26"); return buf;
+        case TOTAL_CONNECTIONS: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.1.1"); return buf;
+        case ID_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.20"); return buf;
+        case COMPRESS_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.8"); return buf;
+        case SORT_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.42"); return buf;
+        case SCAN_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.32"); return buf;
+        case GETQUOTA_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.17"); return buf;
+        case IDLE_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.21"); return buf;
+        case ACTIVE_CONNECTIONS: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.1.2"); return buf;
+        case LSUB_COUNT: snprintf(buf,buflen,"1.3.6.1.4.1.3.2.2.3.1.4.25"); return buf;
 
     }
 
@@ -237,7 +237,7 @@ static void snmp_send(char *str)
 
     if (sendto(mysock, str, strlen(str), 0, (struct sockaddr *) &remote, sockaddr_len) == -1) {
 
-	return;
+        return;
 
     }
 
@@ -263,7 +263,7 @@ int snmp_connect(void)
 
     if ((s = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1) {
 
-	return 1;
+        return 1;
 
     }
 
@@ -312,7 +312,7 @@ int snmp_close(void)
 
     if (mysock > -1)
 
-	close(mysock);
+        close(mysock);
 
 
 
@@ -360,7 +360,7 @@ int snmp_increment_args(pushstats_t cmd, int incr, ...)
 
               ival = va_arg(ap, int); /* get the next arg */
 
-              variable_tmpvalue[vval] = ival;              
+              variable_tmpvalue[vval] = ival;
 
           }
 
@@ -380,7 +380,7 @@ int snmp_increment_args(pushstats_t cmd, int incr, ...)
 
     if (sendto(mysock, tosend, strlen(tosend), 0, (struct sockaddr *) &remote, sockaddr_len) == -1) {
 
-	return 1;
+        return 1;
 
     }
 
@@ -404,7 +404,7 @@ int snmp_increment_args(pushstats_t cmd, int incr, ...)
 
               ival = va_arg(ap, int); /* get the next arg */
 
-              variable_tmpvalue[vval] = -1;              
+              variable_tmpvalue[vval] = -1;
 
           }
 
@@ -444,7 +444,7 @@ int snmp_increment(pushstats_t cmd, int incr)
 
     if (sendto(mysock, tosend, strlen(tosend), 0, (struct sockaddr *) &remote, sockaddr_len) == -1) {
 
-	return 1;
+        return 1;
 
     }
 
@@ -476,7 +476,7 @@ int snmp_set(pushstats_t cmd, int value)
 
     if (sendto(mysock, tosend, strlen(tosend), 0, (struct sockaddr *) &remote, sockaddr_len) == -1) {
 
-	return 1;
+        return 1;
 
     }
 
@@ -508,7 +508,7 @@ int snmp_set_str(pushstats_t cmd, char *value)
 
     if (sendto(mysock, tosend, strlen(tosend), 0, (struct sockaddr *) &remote, sockaddr_len) == -1) {
 
-	return 1;
+        return 1;
 
     }
 
@@ -540,7 +540,7 @@ int snmp_set_time(pushstats_t cmd, time_t t)
 
     if (sendto(mysock, tosend, strlen(tosend), 0, (struct sockaddr *) &remote, sockaddr_len) == -1) {
 
-	return 1;
+        return 1;
 
     }
 

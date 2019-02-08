@@ -1,0 +1,11 @@
+
+Mailbox Annotations (METADATA)
+******************************
+
+Needs to be written. Would you like to help out?
+
+See also:
+
+  * Message Annotations (METADATA)
+
+Back to Features

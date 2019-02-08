@@ -77,6 +77,9 @@ ec IMAP_MAILBOX_BADFORMAT,
 ec IMAP_SYNC_CHECKSUM,
    "Replication inconsistency detected"
 
+ec IMAP_SYNC_BADSIEVE,
+   "Sieve script compilation failure"
+
 ec IMAP_MAILBOX_CHECKSUM,
    "Mailbox format corruption detected"
 
@@ -106,6 +109,9 @@ ec IMAP_MAILBOX_LOCKED,
 
 ec IMAP_MAILBOX_DISABLED,
    "Delivery to mailbox is disabled"
+
+ec IMAP_MAILBOX_SPECIALUSE,
+   "SPECIAL-USE flag conflict"
 
 ec IMAP_PARTITION_UNKNOWN,
    "Unknown/invalid partition"
@@ -227,6 +233,25 @@ ec IMAP_NO_NOSUCHANNOTATION,
 
 ec IMAP_NO_UNKNOWN_CTE,
    "[UNKNOWN-CTE] Can not process the binary data"
+
+# For conversations
+
+ec IMAP_CONVERSATIONS_ALREADY_OPEN,
+   "Conversation DB is already opened"
+
+ec IMAP_CONVERSATIONS_NOT_OPEN,
+   "Conversation DB is not opened"
+
+ec IMAP_ANCHOR_NOT_FOUND,
+   "Anchor not found"
+
+ec IMAP_CANCELLED,
+   "Command cancelled by user"
+
+# Used for search engine integration
+
+ec IMAP_SEARCH_SLOW,
+    "Search taking too long - try reducing the set of messages searched"
 
 # Following used for internationalization of untagged BYE response
 

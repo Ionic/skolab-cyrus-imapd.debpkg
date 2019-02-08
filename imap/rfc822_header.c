@@ -35,7 +35,7 @@
 struct rfc822_header_desc { const char *name; enum rfc822_header value; };
 #include <string.h>
 
-#define TOTAL_KEYWORDS 21
+#define TOTAL_KEYWORDS 22
 #define MIN_WORD_LENGTH 2
 #define MAX_WORD_LENGTH 25
 #define MIN_HASH_VALUE 2
@@ -181,7 +181,7 @@ __rfc822_header_lookup (register const char *str, register unsigned int len)
       {"", 0},
       {"Reply-To", RFC822_REPLY_TO},
       {"Content-Description", RFC822_CONTENT_DESCRIPTION},
-      {"", 0},
+      {"X-ME-Message-ID", RFC822_X_ME_MESSAGE_ID},
       {"Content-Location", RFC822_CONTENT_LOCATION},
       {"", 0}, {"", 0}, {"", 0},
       {"Content-Transfer-Encoding", RFC822_CONTENT_TRANSFER_ENCODING},
@@ -220,27 +220,28 @@ enum rfc822_header rfc822_header_from_string_len(const char *s, size_t len)
 const char *rfc822_header_to_string(enum rfc822_header v)
 {
     static const char * const strs[] = {
-	"Bcc", /* RFC822_BCC */
-	"Cc", /* RFC822_CC */
-	"Content-Description", /* RFC822_CONTENT_DESCRIPTION */
-	"Content-Disposition", /* RFC822_CONTENT_DISPOSITION */
-	"Content-Id", /* RFC822_CONTENT_ID */
-	"Content-Language", /* RFC822_CONTENT_LANGUAGE */
-	"Content-Location", /* RFC822_CONTENT_LOCATION */
-	"Content-MD5", /* RFC822_CONTENT_MD5 */
-	"Content-Transfer-Encoding", /* RFC822_CONTENT_TRANSFER_ENCODING */
-	"Content-Type", /* RFC822_CONTENT_TYPE */
-	"Date", /* RFC822_DATE */
-	"From", /* RFC822_FROM */
-	"In-Reply-To", /* RFC822_IN_REPLY_TO */
-	"Message-ID", /* RFC822_MESSAGE_ID */
-	"Reply-To", /* RFC822_REPLY_TO */
-	"Received", /* RFC822_RECEIVED */
-	"References", /* RFC822_REFERENCES */
-	"Subject", /* RFC822_SUBJECT */
-	"Sender", /* RFC822_SENDER */
-	"To", /* RFC822_TO */
-	"X-Deliveredinternaldate", /* RFC822_X_DELIVEREDINTERNALDATE */
+        "Bcc", /* RFC822_BCC */
+        "Cc", /* RFC822_CC */
+        "Content-Description", /* RFC822_CONTENT_DESCRIPTION */
+        "Content-Disposition", /* RFC822_CONTENT_DISPOSITION */
+        "Content-Id", /* RFC822_CONTENT_ID */
+        "Content-Language", /* RFC822_CONTENT_LANGUAGE */
+        "Content-Location", /* RFC822_CONTENT_LOCATION */
+        "Content-MD5", /* RFC822_CONTENT_MD5 */
+        "Content-Transfer-Encoding", /* RFC822_CONTENT_TRANSFER_ENCODING */
+        "Content-Type", /* RFC822_CONTENT_TYPE */
+        "Date", /* RFC822_DATE */
+        "From", /* RFC822_FROM */
+        "In-Reply-To", /* RFC822_IN_REPLY_TO */
+        "Message-ID", /* RFC822_MESSAGE_ID */
+        "Reply-To", /* RFC822_REPLY_TO */
+        "Received", /* RFC822_RECEIVED */
+        "References", /* RFC822_REFERENCES */
+        "Subject", /* RFC822_SUBJECT */
+        "Sender", /* RFC822_SENDER */
+        "To", /* RFC822_TO */
+        "X-Deliveredinternaldate", /* RFC822_X_DELIVEREDINTERNALDATE */
+        "X-ME-Message-ID", /* RFC822_X_ME_MESSAGE_ID */
     };
     return (v >= 0 && v < (int)(sizeof(strs)/sizeof(strs[0])) ? strs[v] : NULL);
 }

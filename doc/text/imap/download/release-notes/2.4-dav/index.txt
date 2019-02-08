@@ -1,0 +1,25 @@
+
+Cyrus IMAP 2.4-caldav Releases
+******************************
+
+* Cyrus IMAP 2.4.17-caldav-beta1 Release Notes
+
+* Cyrus IMAP 2.4.17-caldav-beta2 Release Notes
+
+* Cyrus IMAP 2.4.17-caldav-beta3 Release Notes
+
+* Cyrus IMAP 2.4.17-caldav-beta4 Release Notes
+
+* Cyrus IMAP 2.4.17-caldav-beta5 Release Notes
+
+* Cyrus IMAP 2.4.17-caldav-beta6 Release Notes
+
+* Cyrus IMAP 2.4.17-caldav-beta7 Release Notes
+
+* Cyrus IMAP 2.4.17-caldav-beta8 Release Notes
+
+* Cyrus IMAP 2.4.17-caldav-beta9 Release Notes
+
+* Cyrus IMAP 2.4.17-caldav-beta10 Release Notes
+
+* Cyrus IMAP 2.4.17-caldav-beta11 Release Notes

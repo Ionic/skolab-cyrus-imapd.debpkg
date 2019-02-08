@@ -1,0 +1,1278 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Quickstart Guide &mdash; Cyrus IMAP 3.0.8 (stable) documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/cyrus.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Cyrus IMAP 3.0.8 (stable) documentation" href="index.html"/>
+        <link rel="next" title="Introduction to Cyrus IMAP" href="imap/quickstart/introduction.html"/>
+        <link rel="prev" title="Notes for Packagers" href="imap/download/packagers.html"/> 
+
+  
+  
+  
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+
+  
+
+<div class="pageheader">
+  <ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="download.html">Download</a></li>
+    <li><a href="contribute.html">Contribute</a></li>
+    <li><a href="support.html">Support</a></li>
+    <li><a href="http://www.cyrusimap.org/sasl">Cyrus SASL</a></li>
+  </ul>
+  <div>
+    <a href="index.html">
+      <img src="_static/logo.gif" alt="CYRUS" />
+    </a>
+  </div>
+</div>
+<div style="clear: both;"></div>
+
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+ 
+          <a href="index.html">
+ 
+
+  
+          
+          <img src="_static/logo.gif"  />
+     
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Cyrus IMAP</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="download.html">Download</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imap/download/getcyrus.html">Get Cyrus</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/getcyrus.html#distribution-package">Distribution Package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/installation/distributions/centos.html">CentOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/installation/distributions/debian.html">Debian</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/installation/distributions/fedora.html">Fedora</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/installation/distributions/opensuse.html">openSUSE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/installation/distributions/rhel.html">Red Hat Enterprise Linux</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/installation/distributions/ubuntu.html">Ubuntu</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/getcyrus.html#build-and-install-yourself">Build and Install Yourself</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/getcyrus.html#use-a-release-packaged-tarball">Use a release packaged tarball</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/getcyrus.html#use-the-source-from-git">Use the source from Git</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/getcyrus.html#external-tools">External Tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/getcyrus.html#licensing">Licensing</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imap/download/release-notes/index.html">Release Notes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/release-notes/index.html#stable-version">Stable Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/release-notes/index.html#development-version">Development Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/release-notes/index.html#supported-product-series">Supported Product Series</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/release-notes/index.html#series-3-0">Series 3.0</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/release-notes/index.html#series-2-5">Series 2.5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/release-notes/index.html#series-2-4">Series 2.4</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/release-notes/index.html#older-versions">Older Versions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/release-notes/index.html#series-1">Series 1</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/release-notes/index.html#series-2-2-0-2-3">Series 2: 2.0 - 2.3</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imap/download/packagers.html">Notes for Packagers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/packagers.html#sample-configuration-files">Sample configuration files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/packagers.html#predefined-configurations">Predefined configurations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/packagers.html#the-configuration-file-for-master-cyrus-conf">The configuration file for master: cyrus.conf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imap/quickstart/introduction.html">Introduction to Cyrus IMAP</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imap/quickstart/introduction.html#what-is-imap">What is IMAP?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#coming-soon">Coming Soon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quick-install">Quick install</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#install-cyrus-reference-packages">1. Install Cyrus reference packages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-apt-get-install-f-to-complete-installation">2. Use &#8220;apt-get install -f&#8221; to complete installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setup-the-cyrus-mail-user-and-group">3. Setup the cyrus:mail user and group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setting-up-authentication-with-sasl">4. Setting up authentication with SASL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setup-mail-delivery-from-your-mta">5. Setup mail delivery from your MTA</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#install-sendmail">Install Sendmail</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#sendmail-communication">Sendmail communication</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#install-postfix">Install Postfix</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#protocol-ports">6. Protocol ports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-cyrus">7. Configuring Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#launch-cyrus">8. Launch Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#feature-overview">Feature overview</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imap/concepts/features.html">Features</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/features.html#security-and-authentication">Security and Authentication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/authentication-kerberos.html">Kerberos Authentication</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/authentication-ldap.html">LDAP Authentication</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/authentication-sql.html">SQL Authentication</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/access-control.html">Access Control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/sealed-system.html">Sealed System Design</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/features.html#mailbox-management">Mailbox Management</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/automatic-creation-of-mailboxes.html">Automatic Creation of Mailboxes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/namespaces.html">Mailbox Namespaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/virtual-domains.html">Virtual Domains</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/mailbox-annotations.html">Mailbox Annotations (METADATA)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/mailbox-distribution.html">Mailbox Distribution</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/features.html#message-management">Message Management</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/delayed-delete.html">Delayed Delete</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/delayed-expunge.html">Delayed Expunge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/message-annotations.html">Message Annotations (METADATA)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/duplicate-message-delivery-suppression.html">Duplicate Message Delivery Suppression</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/shared-seen-state.html">Shared Seen State</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/server-side-filtering.html">Server Side Filtering (Sieve)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/event-notifications.html">Event Notifications</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/features.html#calendar-and-contact-dav-collection-management">Calendar and Contact (DAV) Collection Management</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/caldav-collections.html">CalDAV Collections</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/dav-components.html">DAV Components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/dav-collection-mgmt.html">DAV Collection Management</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/carddav.html">CardDAV Support</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/features.html#storage">Storage</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/mail-spool-partitions.html">Mail Spool Partitions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/mailbox-metadata-partitions.html">Mailbox Metadata Partitions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/archiving.html">Archiving</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/quota.html">Quota</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/single-instance-store.html">Single-Instance Store</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/features.html#load-management">Load Management</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/features/server-aggregation.html">Cyrus IMAP Murder (Server Aggregation)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imap/concepts/overview_and_concepts.html">Concepts</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#access-control-lists">Access Control Lists</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#working-with-acls">Working with ACLs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#sample-acl">Sample ACL</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#access-rights">Access Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#anonymous-login">Anonymous Login</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#plaintext-authentication">Plaintext Authentication</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#kerberos-logins">Kerberos Logins</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#shared-secrets-logins">Shared Secrets Logins</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quotas">Quotas</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#working-with-quotas">Working with Quotas</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#monitor-and-repair">Monitor and Repair</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#supported-quota-types">Supported Quota Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#news">News</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#pop3-server">POP3 Server</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#the-syslog-facility">The syslog facility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#mail-directory-recovery">Mail Directory Recovery</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#reconstructing-mailbox-directories">Reconstructing Mailbox Directories</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#reconstructing-the-mailboxes-file">Reconstructing the Mailboxes File</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#reconstructing-quota-roots">Reconstructing Quota Roots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#removing-quota-roots">Removing Quota Roots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#subscriptions">Subscriptions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#configuration-directory">Configuration Directory</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#log-directory">Log Directory</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#proc-directory">Proc Directory</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#message-delivery">Message Delivery</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#local-mail-transfer-protocol-lmtp">Local Mail Transfer Protocol (lmtp)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#single-instance-store">Single Instance Store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#duplicate-delivery-suppression">Duplicate Delivery Suppression</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#sieve-a-mail-filtering-language">Sieve, a Mail Filtering Language</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#cyrus-murder-the-imap-aggregator">Cyrus Murder, the IMAP Aggregator</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imap/developer/compiling.html">Compiling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imap/developer/compiling.html#setting-up-dependencies">Setting up dependencies</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/compiling.html#required-build-dependencies">Required Build Dependencies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/compiling.html#optional-build-dependencies">Optional Build Dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/developer/compiling.html#compile-cyrus">Compile Cyrus</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/compiling.html#default-build-mail-only">Default build: mail only</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/compiling.html#optional-dependencies">Optional dependencies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/compiling.html#compile">Compile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/compiling.html#check">Check</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imap/installing.html">Installing Cyrus</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imap/installing.html#install-cyrus">Install Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/installing.html#optional-components">Optional Components</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/installation/manage-dav.html">HTTP modules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/installation/virus.html">Virus Scanner</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/installing.html#setting-up-syslog">Setting up syslog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/installing.html#create-cyrus-environment">Create Cyrus environment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/installing.html#set-up-the-cyrus-mail-user-and-group">Set up the cyrus:mail user and group</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/installing.html#authentication-with-sasl">Authentication with SASL</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/installing.html#mail-delivery-from-your-mta">Mail delivery from your MTA</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/installing.html#protocol-ports">Protocol ports</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/installing.html#cyrus-config-files">Cyrus config files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/installing.html#optional-setting-up-ssl-certificates">Optional: Setting up SSL certificates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/installing.html#prepare-ephemeral-run-time-storage-directories">Prepare ephemeral (run-time) storage directories</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/installing.html#launch-cyrus">Launch Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/installing.html#send-a-test-email">Send a test email</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/installing.html#checking-carddav-and-carddav">Checking CardDAV and CardDAV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/installing.html#troubleshooting">Troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imap/download/upgrade.html">Upgrading to 3.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/upgrade.html#preparation">1. Preparation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/upgrade.html#installation-from-tarball">Installation from tarball</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/upgrade.html#how-are-you-planning-on-upgrading">How are you planning on upgrading?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/upgrade.html#do-what-as-who">Do What As Who?</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/upgrade.html#install-new-3-0-cyrus">2. Install new 3.0 Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/upgrade.html#shut-down-existing-cyrus">3. Shut down existing Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/upgrade.html#backup-and-copy-existing-data">4. Backup and Copy existing data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/upgrade.html#copy-config-files-and-update">5. Copy config files and update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/upgrade.html#upgrade-specific-items">6. Upgrade specific items</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/upgrade.html#start-new-3-0-cyrus-and-verify">7. Start new 3.0 Cyrus and verify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/upgrade.html#reconstruct-databases-and-cache">8. Reconstruct databases and cache</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/upgrade.html#do-you-want-any-new-features">9. Do you want any new features?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/upgrade.html#upgrade-complete">10. Upgrade complete</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/upgrade.html#special-note-for-murder-configurations">Special note for Murder configurations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imap/concepts/deployment.html">Configuration Guide</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/deployment/deployment_scenarios.html">Deployment Scenarios</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/deployment_scenarios.html#single-server-deployments">Single Server Deployments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/deployment_scenarios.html#multi-server-deployments">Multi Server Deployments</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/deployment/deployment_scenarios.html#cyrus-murder-server-aggregation">Cyrus Murder: Server aggregation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/deployment_scenarios.html#the-discrete-murder">The Discrete Murder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/deployment_scenarios.html#the-unified-murder">The Unified Murder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/deployment_scenarios.html#the-shared-murder">The Shared Murder</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/deployment/deployment_scenarios.html#cyrus-replication">Cyrus Replication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/deployment/deployment_scenarios.html#hosted-environments">Hosted Environments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/deployment/databases.html">Databases</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/databases.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/databases.html#file-list">File list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/databases.html#storage-types">Storage types</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html">Mailbox Creation Distribution</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#selection-mode">Selection Mode</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/deployment/known_protocol_limitations.html">Known Protocol Limitations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/known_protocol_limitations.html#pop3-and-mailbox-locking">POP3 and Mailbox Locking</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/known_protocol_limitations.html#cyrus-imap-pop3-implementation">Cyrus IMAP POP3 Implementation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/deployment/authentication_and_authorization.html">Authentication and Authorization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/authentication_and_authorization.html#client-authentication">Client Authentication</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/authentication_and_authorization.html#users-and-mailboxes">Users and Mailboxes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/deployment/performance_recommendations.html">Performance Recommendations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/performance_recommendations.html#databases-on-temporary-filesystems">Databases on Temporary Filesystems</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/deployment/storage.html">Storage Considerations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/storage.html#general-notes-on-storage">General Notes on Storage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/storage.html#redundancy">Redundancy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/storage.html#availability">Availability</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/storage.html#performance">Performance</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/storage.html#scalability">Scalability</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/storage.html#capacity">Capacity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/storage.html#cost">Cost</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/concepts/deployment/supported-platforms.html">Supported Platforms and System Requirements</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/supported-platforms.html#building-cyrus-imap">Building Cyrus IMAP</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/supported-platforms.html#required-software-components">Required Software Components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/supported-platforms.html#recommended-software-components">Recommended Software Components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/supported-platforms.html#recommended-software-components-enabled-by-default">Recommended Software Components Enabled by Default</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="operations.html">Operations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imap/reference/manpages/commands.html">Man pages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/manpages/commands.html#configuration-files">(5) Configuration Files</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/configs/cyrus.conf.html"><strong>cyrus.conf</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/configs/imapd.conf.html">imapd.conf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/configs/krb.equiv.html"><strong>krb.equiv</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/manpages/commands.html#system-commands">(8) System Commands</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/arbitron.html"><strong>arbitron</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/backupd.html"><strong>backupd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/chk_cyrus.html"><strong>chk_cyrus</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/ctl_backups.html"><strong>ctl_backups</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/ctl_conversationsdb.html"><strong>ctl_conversationsdb</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/ctl_cyrusdb.html"><strong>ctl_cyrusdb</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/ctl_deliver.html"><strong>ctl_deliver</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/ctl_mboxlist.html"><strong>ctl_mboxlist</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/ctl_zoneinfo.html"><strong>ctl_zoneinfo</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/cvt_cyrusdb.html"><strong>cvt_cyrusdb</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/cvt_xlist_specialuse.html"><strong>cvt_xlist_specialuse</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/cyr_backup.html"><strong>cyr_backup</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/cyr_buildinfo.html"><strong>cyr_buildinfo</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/cyr_dbtool.html"><strong>cyr_dbtool</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/cyr_deny.html"><strong>cyr_deny</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/cyr_df.html"><strong>cyr_df</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/cyr_expire.html"><strong>cyr_expire</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/cyr_info.html"><strong>cyr_info</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/cyr_sequence.html"><strong>cyr_sequence</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/cyr_synclog.html"><strong>cyr_synclog</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/cyr_userseen.html"><strong>cyr_userseen</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/cyr_virusscan.html"><strong>cyr_virusscan</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/cyradm.html"><strong>cyradm</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/cyrdump.html"><strong>cyrdump</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/deliver.html"><strong>deliver</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/fetchnews.html"><strong>fetchnews</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/fud.html"><strong>fud</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/httpd.html"><strong>httpd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/idled.html"><strong>idled</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/imapd.html"><strong>imapd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/ipurge.html"><strong>ipurge</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/lmtpd.html"><strong>lmtpd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/lmtpproxyd.html"><strong>lmtpproxyd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/masssievec.html"><strong>masssievec</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/master.html"><strong>master</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/mbexamine.html"><strong>mbexamine</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/mbpath.html"><strong>mbpath</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/mbtool.html"><strong>mbtool</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/mkimap.html"><strong>mkimap</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/mknewsgroups.html"><strong>mknewsgroups</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/mupdate.html"><strong>mupdate</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/nntpd.html"><strong>nntpd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/notifyd.html"><strong>notifyd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/pop3d.html"><strong>pop3d</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/pop3proxyd.html"><strong>pop3proxyd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/proxyd.html"><strong>proxyd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/ptdump.html"><strong>ptdump</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/ptexpire.html"><strong>ptexpire</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/ptloader.html"><strong>ptloader</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/quota.html"><strong>quota</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/reconstruct.html"><strong>reconstruct</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/rehash.html"><strong>rehash</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/restore.html"><strong>restore</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/rmnews.html"><strong>rmnews</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/sievec.html"><strong>sievec</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/sieved.html"><strong>sieved</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/smmapd.html"><strong>smmapd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/squatter.html"><strong>squatter</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/sync_client.html"><strong>sync_client</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/sync_reset.html"><strong>sync_reset</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/sync_server.html"><strong>sync_server</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/timsieved.html"><strong>timsieved</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/tls_prune.html"><strong>tls_prune</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/translatesieve.html"><strong>translatesieve</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/systemcommands/unexpunge.html"><strong>unexpunge</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/manpages/commands.html#user-commands">(1) User Commands</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/usercommands/arbitronsort.pl.html"><strong>arbitronsort.pl</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/usercommands/dav_reconstruct.html"><strong>dav_reconstruct</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/usercommands/httptest.html"><strong>httptest</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/usercommands/imtest.html"><strong>imtest</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/usercommands/installsieve.html"><strong>installsieve</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/usercommands/lmtptest.html"><strong>lmtptest</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/usercommands/mupdatetest.html"><strong>mupdatetest</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/usercommands/nntptest.html"><strong>nntptest</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/usercommands/pop3test.html"><strong>pop3test</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/usercommands/sieveshell.html"><strong>sieveshell</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/usercommands/sivtest.html"><strong>sivtest</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/usercommands/smtptest.html"><strong>smtptest</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/manpages/usercommands/synctest.html"><strong>synctest</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imap/reference/administration-tools.html">Tools &amp; Utilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#arbitron">arbitron</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#arbitronsort-pl">arbitronsort.pl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#chk-cyrus">chk_cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#ctl-cyrusdb">ctl_cyrusdb</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#ctl-deliver">ctl_deliver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#ctl-mboxlist">ctl_mboxlist</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#cvt-cyrusdb">cvt_cyrusdb</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#cvt-cyrusdb-all">cvt_cyrusdb_all</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#cyr-dbtool">cyr_dbtool</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#cyr-df">cyr_df</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#cyrdump">cyrdump</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#cyr-expire">cyr_expire</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#cyr-virusscan">cyr_virusscan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#fetchnews">fetchnews</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#cyr-sequence">cyr_sequence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#cyr-synclog">cyr_synclog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#cyr-userseen">cyr_userseen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#masssievec">masssievec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#mbexamine">mbexamine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#mbpath">mbpath</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#mkimap">mkimap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#mknewsgroups">mknewsgroups</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#rehash">rehash</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#translatesieve">translatesieve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/administration-tools.html#undohash">undohash</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imap/reference/admin.html">Administrator Guide</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/admin.html#architecture">Architecture</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/architecture.html">System Architecture</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/admin.html#management">Management</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/admin/locations.html">File &amp; Directory Locations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/admin/ports-sockets.html">Ports and Sockets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/admin/access-control.html">Access Control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/admin/quotas.html">Quotas</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/admin/sieve.html">Cyrus Sieve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/admin/backups.html">Cyrus Backups</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/admin/nntp.html">Cyrus NNTP</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/admin/protlayer.html">Cyrus Prot Layer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/admin/sop.html">Standard Operating Procedures</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/admin/eventsource.html">Cyrus Event Source</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/admin/config-mailboxdistribution.html">Mailbox Distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/admin/murder/murder.html">Cyrus Murder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/admin/nginx-proxy.html">HOWTO: Using an NGINX IMAP Proxy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/admin/tweaking.html">Tweaking Cyrus IMAP</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imap/reference/faq.html">Frequently Asked Questions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/faq.html#features">Features</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/feature-database-backend.html">Which database backend should I use for which databases?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/feature-duplicate-delivery.html">Duplicate Delivery Suppression</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/faq.html#installation-problems">Installation Problems</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/install-detecting-berkeley.html">Problems detecting Berkley DB on Red Hat Linux</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/install-linkerwarnings.html#libical-v1-0-1-or-v2-0">Libical v1.0.1 or v2.0</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/faq.html#common-feature-requests">Common Feature Requests</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/r-murder-ha.html">Does the Cyrus Murder support High Availability configurations?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/r-pop3-logging.html">Can I configure pop3d to log amount and size of messages fetched by user?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/r-publicssharedfolders.html">How can I make CyrusSieve work with public shared folders?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/r-subfolders.html">Can I have subfolders not appear under INBOX?</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/faq.html#common-operational-questions">Common Operational Questions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-acls.html">How do I view ACLs on a mailbox?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-annotations.html">What annotations are available?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-berkeleydb.html">Why does ctl_cyrusdb -r take so long with Berkeley DB?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-coredump.html">How to enable core dumps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-db3-lockers.html">Is the &#8220;db3: x Lockers&#8221; log message harmful?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-mailbox-doesnotexist.html">Cyrus delivers claims that the mailbox does not exist</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-mixedcase.html">Why is mail being rejected with No Mailbox found due to MiXed CaSe incoming e-mail?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-otherdatabases.html">Can I use MySQL (or another SQL database) as the primary mail store?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-pop3slow.html">Why do POP3 connections take so long, but once the connection is established all is well?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-reconstruct.html">Why does reconstruct -m not work?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="developers.html">Developers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contribute.html">We need your help</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imap/developer/documentation.html">Contribute docs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imap/developer/documentation.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/developer/documentation.html#documentation-tools">Documentation Tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/developer/documentation.html#building-the-files">Building the files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/developer/documentation.html#submitting-updates">Submitting updates</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/documentation.html#using-github-pull-requests">Using GitHub pull requests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/documentation.html#patches-through-the-mailing-list">Patches through the mailing list</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/developer/documentation.html#special-tags">Special Tags</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/documentation.html#rfc">rfc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/documentation.html#cyrusman">cyrusman</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/documentation.html#imap-current-stable-version">imap_current_stable_version</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/developer/documentation.html#conventions-man-pages">Conventions: Man Pages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/documentation.html#synopsis">Synopsis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/documentation.html#examples">Examples</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imap/developer.html">Contribute code and tests</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imap/developer.html#getting-started">Getting Started</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/process.html">Development Process</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/overview.html">Overview of Cyrus development environment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/github-guide.html">GitHub guide</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/compiling.html">Compiling</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/installing.html">Installing Cyrus</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/developer-testing.html">Developer Test Environment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/developer.html#system-files-and-databases">System files and Databases</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/namespaces.html">Namespaces: a developer view</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/developer.html#resources">Resources</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/libraries.html">Developer Libraries</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/developer.html#releasing">Releasing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/releasing.html">Releasing Cyrus IMAP</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/developer/ancient-releasing.html">Releasing new builds of ancient Cyrus IMAP versions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imap/developer/cyrusworks.html">Cyrus.Works</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imap/developer/cyrusworks.html#about-cyrus-works">About Cyrus Works</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/developer/cyrusworks.html#testing">Testing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/developer/cyrusworks.html#how-it-works">How it works</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/developer/cyrusworks.html#adding-rules">Adding Rules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="support.html">Support/Community</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imap/support/feedback-bugs.html">Found a bug?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imap/support/feedback-mailing-lists.html">Mailing lists</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="imap/support/feedback-mailing-lists.html#archives">Archives</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="imap/support/feedback-irc.html">IRC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="imap/support/feedback-meetings.html">Weekly meetings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview/about_cyrus.html">About</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="overview/what_is_cyrus.html">What is Cyrus</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="overview/what_is_cyrus.html#what-is-cyrus">What is Cyrus</a></li>
+<li class="toctree-l4"><a class="reference internal" href="overview/what_is_cyrus.html#what-is-imap">What is IMAP?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="overview/what_is_cyrus.html#imap-version-4-imap4">IMAP Version 4 (IMAP4)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="overview/what_is_cyrus.html#mime">Mime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="overview/what_is_cyrus.html#smtp">SMTP</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="overview/who_is_cyrus.html">Who Is Cyrus</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="overview/who_is_cyrus.html#core-contributors">Core Contributors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="overview/who_is_cyrus.html#individual-contributors-and-past-contributors">Individual contributors and past contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="overview/cyrus_roadmap.html">Cyrus Roadmap</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="overview/cyrus_roadmap.html#high-level-roadmap">High Level Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="overview/cyrus_history.html">Cyrus History</a></li>
+<li class="toctree-l3"><a class="reference internal" href="overview/cyrus_bylaws.html">Cyrus Bylaws</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="overview/cyrus_bylaws.html#i-the-cyrus-governance-board">I. The Cyrus Governance Board</a></li>
+<li class="toctree-l4"><a class="reference internal" href="overview/cyrus_bylaws.html#ii-the-cyrus-core-developers-group">II. The Cyrus Core Developers Group</a></li>
+<li class="toctree-l4"><a class="reference internal" href="overview/cyrus_bylaws.html#iii-the-release-engineer">III. The Release Engineer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="overview/cyrus_bylaws.html#iv-the-cyrus-roadmap">IV. The Cyrus Roadmap</a></li>
+<li class="toctree-l4"><a class="reference internal" href="overview/cyrus_bylaws.html#v-development-process">V. Development Process</a></li>
+<li class="toctree-l4"><a class="reference internal" href="overview/cyrus_bylaws.html#vi-changes-to-the-bylaws">VI. Changes to the Bylaws</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Cyrus SASL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="http://www.cyrusimap.org/sasl">Cyrus SASL</a></li>
+</ul>
+
+          
+        
+      </div>
+        
+<div class="buildstatus">
+    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd/branches" target="_blank">cyrus-imapd-3.0: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.0"></a>
+</div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Cyrus IMAP</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html">Docs v3.0.8 (stable)</a> &raquo;</li>
+      
+    <li>Quickstart Guide</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.0/docsrc/quickstart.rst" class="fa fa-github"> Edit on GitHub</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="quickstart-guide">
+<h1>Quickstart Guide<a class="headerlink" href="#quickstart-guide" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="imap/quickstart/introduction.html">Introduction to Cyrus IMAP</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="imap/quickstart/introduction.html#what-is-imap">What is IMAP?</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="coming-soon">
+<h2>Coming Soon<a class="headerlink" href="#coming-soon" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The deb packages referenced below are not yet available.  Sorry!</p>
+</div>
+</div>
+<div class="section" id="quick-install">
+<h2>Quick install<a class="headerlink" href="#quick-install" title="Permalink to this headline">¶</a></h2>
+<p>A quick guide to getting a basic installation of Cyrus up and running in 5 minutes.</p>
+<p>The first place to start with a new installation of Cyrus IMAP is with
+your OS distribution of choice and their packaging, where available.  If
+there is no Cyrus IMAP 3.0 package available yet from your distro,
+download the <a class="reference external" href="ftp://ftp.cyrusimap.org/cyrus-imapd/debs/">latest stable package</a> : version 3.0.8.</p>
+<p>We only provide limited options for reference packages, so use a
+supported distribution whenever possible.  At this time the only
+official Cyrus packages are for Debian Jessie (with backports enabled).</p>
+<p>Please download both the packages (*.deb) and the signature files.
+Installation is a two step process:</p>
+<div class="section" id="install-cyrus-reference-packages">
+<h3>1. Install Cyrus reference packages<a class="headerlink" href="#install-cyrus-reference-packages" title="Permalink to this headline">¶</a></h3>
+<p>First, invoke the <code class="docutils literal"><span class="pre">dpkg</span> <span class="pre">-i</span></code> command with the list of all packages:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ sudo dpkg -i \
+    cyrus-common_3.0.1-jessie_amd64.deb  \
+    cyrus-doc_3.0.1-jessie_all.deb  \
+    cyrus-imapd_3.0.1-jessie_amd64.deb  \
+    cyrus-pop3d_3.0.1-jessie_amd64.deb  \
+    cyrus-admin_3.0.1-jessie_all.deb  \
+    cyrus-murder_3.0.1-jessie_amd64.deb  \
+    cyrus-replication_3.0.1-jessie_amd64.deb  \
+    cyrus-nntpd_3.0.1-jessie_amd64.deb  \
+    cyrus-caldav_3.0.1-jessie_amd64.deb  \
+    cyrus-clients_3.0.1-jessie_amd64.deb  \
+    cyrus-dev_3.0.1-jessie_amd64.deb  \
+    libcyrus-imap-perl_3.0.1-jessie_amd64.deb
+</pre></div>
+</div>
+<p>That step will produce an error, as there will doubtless be unmet
+dependencies.  Not to worry, there&#8217;s a fix for that...</p>
+</div>
+<div class="section" id="use-apt-get-install-f-to-complete-installation">
+<h3>2. Use &#8220;apt-get install -f&#8221; to complete installation<a class="headerlink" href="#use-apt-get-install-f-to-complete-installation" title="Permalink to this headline">¶</a></h3>
+<p>Now invoke <code class="docutils literal"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">-f</span></code> to pull in the dependencies and
+complete the installation:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ sudo apt-get install -f
+</pre></div>
+</div>
+<p>The packaging should pull along all necessary support libraries, etc..</p>
+</div>
+<div class="section" id="setup-the-cyrus-mail-user-and-group">
+<h3>3. Setup the cyrus:mail user and group<a class="headerlink" href="#setup-the-cyrus-mail-user-and-group" title="Permalink to this headline">¶</a></h3>
+<p>Now let&#8217;s create a <strong>special user account just for the Cyrus server</strong>
+to sandbox Cyrus: called <code class="docutils literal"><span class="pre">cyrus</span></code>. We&#8217;ll also create a <code class="docutils literal"><span class="pre">mail</span></code> group
+as well. This allows Cyrus to give other programs some permissions if
+they are run under the <code class="docutils literal"><span class="pre">mail</span></code> group, again, without causing a Cyrus
+bug to delete all of your cat pictures. Disaster!</p>
+<p>If you have installed from packages, your package vendor may have
+already done this for you.  To check, use these commands:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ getent group mail
+mail:x:8:
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ getent passwd cyrus
+cyrus:x:999:8:Cyrus IMAP Server:/var/lib/imap:/bin/bash
+</pre></div>
+</div>
+<p>Example group and user creation commands for GNU/Linux:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">groupadd</span> <span class="o">-</span><span class="n">fr</span> <span class="n">mail</span>
+<span class="n">useradd</span> <span class="o">-</span><span class="n">c</span> <span class="s2">&quot;Cyrus IMAP Server&quot;</span> <span class="o">-</span><span class="n">d</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">imap</span> <span class="o">-</span><span class="n">g</span> <span class="n">mail</span> <span class="o">-</span><span class="n">s</span> <span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">bash</span> <span class="o">-</span><span class="n">r</span> <span class="n">cyrus</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">var/lib/imap</span></code> directory above is an example. Use the same directory
+specified in the <code class="docutils literal"><span class="pre">configdirectory</span></code> option in <a class="reference internal" href="imap/reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.</p>
+<div class="sidebar">
+<p class="first sidebar-title">configdirectory</p>
+<p><em>This shows the default value: change it in imapd.conf to suit your needs.</em></p>
+<blockquote class="last">
+<div><p><code class="docutils literal"><span class="pre">configdirectory:</span></code> &lt;none&gt;</p>
+<blockquote>
+<div>The pathname of the IMAP configuration directory.  This field is
+required.</div></blockquote>
+</div></blockquote>
+</div>
+<p>If your installation uses system locations for things like SSL
+certificates (i.e. <code class="docutils literal"><span class="pre">/etc/ssl/certs</span> <span class="pre">/etc/ssl/private</span></code>), then you should
+also add the <code class="docutils literal"><span class="pre">cyrus</span></code> user to the appropriate group to gain access to
+the PKI files.  On Debian/Ubuntu systems, for example, this group is
+<code class="docutils literal"><span class="pre">ssl-cert</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">usermod</span> <span class="o">-</span><span class="n">aG</span> <span class="n">ssl</span><span class="o">-</span><span class="n">cert</span> <span class="n">cyrus</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="setting-up-authentication-with-sasl">
+<h3>4. Setting up authentication with SASL<a class="headerlink" href="#setting-up-authentication-with-sasl" title="Permalink to this headline">¶</a></h3>
+<p>Now, let&#8217;s set up <strong>SASL</strong>. This will allow you to connect to your
+local IMAP server and login, just like any IMAP user would before
+checking for new emails.</p>
+<p>Create a <code class="docutils literal"><span class="pre">saslauth</span></code> group and add the <code class="docutils literal"><span class="pre">cyrus</span></code> user to the group, so
+Cyrus can access SASL. (on Debian, this group is called &#8216;sasl&#8217;: adjust
+the following commands to suit.)</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">groupadd</span> <span class="o">-</span><span class="n">fr</span> <span class="n">saslauth</span>
+<span class="n">usermod</span> <span class="o">-</span><span class="n">aG</span> <span class="n">saslauth</span> <span class="n">cyrus</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Change the default SASL configuration in <code class="docutils literal"><span class="pre">/etc/default/saslauthd</span></code>.</dt>
+<dd><ol class="first last arabic simple">
+<li>Make sure that the <code class="docutils literal"><span class="pre">START</span></code> option is set to <em>yes</em>
+<code class="docutils literal"><span class="pre">(START=yes)</span></code> and</li>
+<li>Set the``MECHANISMS`` option to <strong>sasldb</strong>
+<code class="docutils literal"><span class="pre">(MECHANISMS=&quot;sasldb&quot;)</span></code>.</li>
+</ol>
+</dd>
+</dl>
+<p>Start the SASL auth daemon:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">init</span><span class="o">.</span><span class="n">d</span><span class="o">/</span><span class="n">saslauthd</span> <span class="n">start</span>
+</pre></div>
+</div>
+<p>Now, we&#8217;ll create the IMAP user inside SASL. This is the user you&#8217;ll
+use to login to the IMAP server later on.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">echo</span> <span class="s1">&#39;secret&#39;</span> <span class="o">|</span> <span class="n">saslpasswd2</span> <span class="o">-</span><span class="n">p</span> <span class="o">-</span><span class="n">c</span> <span class="n">imapuser</span>
+</pre></div>
+</div>
+<p>You can replace <code class="docutils literal"><span class="pre">secret</span></code> with a more suitable password you want and
+<code class="docutils literal"><span class="pre">imapuser</span></code> with the username you want. Once this is done, check that
+the user exists and is set up correctly:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">testsaslauthd</span> <span class="o">-</span><span class="n">u</span> <span class="n">imapuser</span> <span class="o">-</span><span class="n">p</span> <span class="n">secret</span>
+</pre></div>
+</div>
+<p>You should get an <code class="docutils literal"><span class="pre">0:</span> <span class="pre">OK</span> <span class="pre">&quot;Success.&quot;</span></code> message.</p>
+</div>
+<div class="section" id="setup-mail-delivery-from-your-mta">
+<h3>5. Setup mail delivery from your MTA<a class="headerlink" href="#setup-mail-delivery-from-your-mta" title="Permalink to this headline">¶</a></h3>
+<p>Your Cyrus IMAP server will want to receive the emails accepted by your
+SMTP server (ie Sendmail, Postfix, etc). In Cyrus, this happens via a
+protocol called LMTP, which is usually supported by your SMTP server.</p>
+<div class="section" id="install-sendmail">
+<h4>Install Sendmail<a class="headerlink" href="#install-sendmail" title="Permalink to this headline">¶</a></h4>
+<p>We&#8217;ll set up LMTP with the Sendmail SMTP server.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">sendmail</span>
+</pre></div>
+</div>
+<p>We need to make Sendmail aware of the fact we are using the Cyrus IMAP server: modify the <code class="docutils literal"><span class="pre">/etc/mail/sendmail.mc</span></code> file. Add this line before the <code class="docutils literal"><span class="pre">MAILER_DEFINITIONS</span></code> section:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>define(`confLOCAL_MAILER&#39;, `cyrusv2&#39;)dnl
+</pre></div>
+</div>
+<p>And right below <code class="docutils literal"><span class="pre">MAILER_DEFINITIONS</span></code>, add this:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>MAILER(`cyrusv2&#39;)dnl
+</pre></div>
+</div>
+<p>This enables the <strong>cyrusv2</strong> mailer for local mail delivery. This is a sendmail property that tells sendmail it&#8217;s talking to Cyrus. (Cyrus 3.x works with this property, despite the naming confusion.)</p>
+<p>Next, we run a script that takes the <code class="docutils literal"><span class="pre">/etc/mail/sendmail.mc</span></code> file and and prepares it for use by Sendmail. This may take some time.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">sendmailconfig</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sendmail-communication">
+<h4>Sendmail communication<a class="headerlink" href="#sendmail-communication" title="Permalink to this headline">¶</a></h4>
+<p>One last thing we need to do for LMTP to work with Sendmail is to create a folder that will contain the UNIX socket used by Sendmail and Cyrus to deliver/receive emails:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">mkdir</span> <span class="o">-</span><span class="n">p</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">run</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/</span><span class="n">socket</span>
+<span class="n">sudo</span> <span class="n">chown</span> <span class="n">cyrus</span><span class="p">:</span><span class="n">mail</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">run</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/</span><span class="n">socket</span>
+<span class="n">sudo</span> <span class="n">chmod</span> <span class="mi">750</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">run</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/</span><span class="n">socket</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="install-postfix">
+<h4>Install Postfix<a class="headerlink" href="#install-postfix" title="Permalink to this headline">¶</a></h4>
+<p>We&#8217;ll set up LMTP with the Postfix SMTP server (consider which other
+Postfix related packages you may also desire):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">postfix</span> <span class="n">postfix</span><span class="o">-</span><span class="n">doc</span> <span class="n">postfix</span><span class="o">-</span><span class="n">pcre</span> <span class="n">postfix</span><span class="o">-</span><span class="n">ldap</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>We need to make Postfix aware of the fact we are using the Cyrus IMAP
+server and engineer delivery via LMTP.  The following examples show the
+<code class="docutils literal"><span class="pre">postconf</span></code> commands to run to add the necessary configuration to
+<code class="docutils literal"><span class="pre">/etc/postfix/main.cf</span></code>, these are not complete configurations.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Postfix supports a great many configurations for mail delivery
+transport, so these settings will depend on whether you&#8217;re planning
+to use the <code class="docutils literal"><span class="pre">local</span></code>, <code class="docutils literal"><span class="pre">virtual</span></code> or <code class="docutils literal"><span class="pre">lmtp</span></code> destination
+definitions.  For our examples we&#8217;ll be using <code class="docutils literal"><span class="pre">virtual</span></code>.  Adjust
+as needed for your purposes, and please consult the Postfix
+documentation at <a class="reference external" href="http://www.postfix.org/postconf.5.html">http://www.postfix.org/postconf.5.html</a></p>
+</div>
+<ol class="arabic">
+<li><p class="first">Setup your recipient maps, thus defining for which recipients the
+<code class="docutils literal"><span class="pre">virtual</span></code> destination will be used:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_recipient_maps=hash:/etc/postfix/virtual_recipient_domains,hash:/etc/postfix/virtual_recipients&quot;</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Optional: Set the concurrency and recipient limits for LMTP delivery to the
+<code class="docutils literal"><span class="pre">virtual</span></code> destination:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_destination_concurrency_limit=300&quot;</span>
+<span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_destination_recipient_limit=300&quot;</span>
+</pre></div>
+</div>
+<p>The purpose of those two settings is to allow for a large number of
+simultaneous delivery threads between the MTA (Postfix) and the MDA
+(Cyrus), and to allow for a large number of recipients to be listed
+for any given message, thus avoiding splitting up delivery of messages
+with lots of recipients into many separate deliveries.</p>
+</li>
+<li><p class="first">Send mail for those recipients to Cyrus via LMTP.  This first
+example is for delivery via TCP to a different host:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_transport=lmtp:inet:lmtp.example.org:2003&quot;</span>
+</pre></div>
+</div>
+<p>If your Postfix and Cyrus are on the same host, then use some
+version of this, where the socket patch matches what&#8217;s set in the
+<code class="docutils literal"><span class="pre">lmtpsocket</span></code> option in <a class="reference internal" href="imap/reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_transport=lmtp:unix:/run/cyrus/socket/lmtp&quot;</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="section" id="protocol-ports">
+<h3>6. Protocol ports<a class="headerlink" href="#protocol-ports" title="Permalink to this headline">¶</a></h3>
+<p>The Cyrus IMAP server provides service interfaces via either TCP/IP
+ports or Unix domain sockets.  For the former, Cyrus requires that there
+are proper entries in the host&#8217;s <code class="docutils literal"><span class="pre">/etc/services</span></code> file.  The following
+are required for any host using the listed services:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pop3</span>      <span class="mi">110</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># Post Office Protocol v3</span>
+<span class="n">nntp</span>      <span class="mi">119</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># Network News Transport Protocol</span>
+<span class="n">imap</span>      <span class="mi">143</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># Internet Mail Access Protocol rev4</span>
+<span class="n">imsp</span>      <span class="mi">406</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># Internet Message Support Protocol (deprecated)</span>
+<span class="n">nntps</span>     <span class="mi">563</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># NNTP over TLS</span>
+<span class="n">imaps</span>     <span class="mi">993</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># IMAP over TLS</span>
+<span class="n">pop3s</span>     <span class="mi">995</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># POP3 over TLS</span>
+<span class="n">kpop</span>      <span class="mi">1109</span><span class="o">/</span><span class="n">tcp</span> <span class="c1"># Kerberized Post Office Protocol</span>
+<span class="n">lmtp</span>      <span class="mi">2003</span><span class="o">/</span><span class="n">tcp</span> <span class="c1"># Lightweight Mail Transport Protocol service</span>
+<span class="n">smmap</span>     <span class="mi">2004</span><span class="o">/</span><span class="n">tcp</span> <span class="c1"># Cyrus smmapd (quota check) service</span>
+<span class="n">csync</span>     <span class="mi">2005</span><span class="o">/</span><span class="n">tcp</span> <span class="c1"># Cyrus replication service</span>
+<span class="n">mupdate</span>   <span class="mi">3905</span><span class="o">/</span><span class="n">tcp</span> <span class="c1"># Cyrus mupdate service</span>
+<span class="n">sieve</span>     <span class="mi">4190</span><span class="o">/</span><span class="n">tcp</span> <span class="c1"># timsieved Sieve Mail Filtering Language service</span>
+</pre></div>
+</div>
+<p>Make sure that these lines are present or add them if they are missing.</p>
+</div>
+<div class="section" id="configuring-cyrus">
+<h3>7. Configuring Cyrus<a class="headerlink" href="#configuring-cyrus" title="Permalink to this headline">¶</a></h3>
+<p>(Nearly there)</p>
+<p>Set up a simple directory structure for Cyrus to store emails, owned by
+the <code class="docutils literal"><span class="pre">cyrus</span></code> user and group <code class="docutils literal"><span class="pre">mail</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">mkdir</span> <span class="o">-</span><span class="n">p</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">cyrus</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">spool</span><span class="o">/</span><span class="n">cyrus</span>
+<span class="n">sudo</span> <span class="n">chown</span> <span class="o">-</span><span class="n">R</span> <span class="n">cyrus</span><span class="p">:</span><span class="n">mail</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">cyrus</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">spool</span><span class="o">/</span><span class="n">cyrus</span>
+<span class="n">sudo</span> <span class="n">chmod</span> <span class="mi">750</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">cyrus</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">spool</span><span class="o">/</span><span class="n">cyrus</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">/var/spool/cyrus</span></code> directory is the
+<a class="reference internal" href="imap/concepts/features/mail-spool-partitions.html#imap-features-mail-spool-partitions"><span class="std std-ref">partition</span></a> where Cyrus will store
+mail and must be allocated sufficient storage. The exact location can be
+configured in <a class="reference internal" href="imap/reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> in the partitions options.</p>
+<p>Following installation, a fairly comprehensive set of sample
+configuration files may be found in
+<code class="docutils literal"><span class="pre">/usr/share/doc/cyrus-doc/examples/</span></code>.  Select one from each of the
+<code class="docutils literal"><span class="pre">cyrus_conf</span></code> and <code class="docutils literal"><span class="pre">imapd_conf</span></code> directories, and install as
+<code class="docutils literal"><span class="pre">/etc/cyrus.conf</span></code> and <code class="docutils literal"><span class="pre">/etc/imapd.conf</span></code> respectively.</p>
+<p>A basic description of these files:</p>
+<ul>
+<li><p class="first">Stand-alone server configurations (pick one):</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>small.conf</dt>
+<dd>A simple small server</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>normal.conf</dt>
+<dd>A more typical server</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>prefork.conf</dt>
+<dd>As above, but with several server processes pre-forked for
+faster connection initialization.</dd>
+</dl>
+</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <code class="docutils literal"><span class="pre">normal.conf</span></code> file in the <code class="docutils literal"><span class="pre">imapd_conf</span></code> directory
+is intended to work with any of the above files from the
+<code class="docutils literal"><span class="pre">cyrus_conf</span></code> directory.</p>
+</div>
+</li>
+<li><p class="first">Cyrus Aggregation - Murder &#8211; configurations (these constitute a
+set, with at least one of each required):</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>murder-mupdate.conf</dt>
+<dd>The Mupdate Master server; holds the canonical copy of the
+<code class="docutils literal"><span class="pre">mailboxes.db</span></code> database.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>murder-backend.conf</dt>
+<dd>A backend server which holds the actual mailboxes and
+interacts with frontend proxies and/or clients.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>murder-frontend.conf</dt>
+<dd>A frontend server which holds no mailboxes, but either
+refers clients to the proper backend server for each
+requests, or proxies those requests directly.</dd>
+</dl>
+</li>
+</ul>
+</li>
+<li><p class="first">Replication configurations (these constitute a set, with one master
+and at least one replica required):</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>normal-master.conf</dt>
+<dd>The master server which uses the <code class="docutils literal"><span class="pre">sync_client</span></code> program to
+send mailbox updates to each replica on a rolling or
+periodic basis.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>normal-replica.conf</dt>
+<dd>A typical replica server, which accepts updates from the
+master.</dd>
+</dl>
+</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">When working with replication or aggregation (Murder), the
+example files in <code class="docutils literal"><span class="pre">cyrus_conf</span></code> and <code class="docutils literal"><span class="pre">imapd_conf</span></code> of the same
+name are intended to be used together.</p>
+</div>
+</li>
+</ul>
+<p>You should review each of these and then install as desired to
+<code class="docutils literal"><span class="pre">/etc/</span></code>, making changes as needed.  In particular, you&#8217;ll need to set
+passwords for the various users used to authenticate between instances
+in a Murder or Replication environment.</p>
+<p>For example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">install</span> <span class="o">-</span><span class="n">m</span> <span class="mi">600</span> <span class="n">doc</span><span class="o">/</span><span class="n">examples</span><span class="o">/</span><span class="n">cyrus_conf</span><span class="o">/</span><span class="n">normal</span><span class="o">.</span><span class="n">conf</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">cyrus</span><span class="o">.</span><span class="n">conf</span>
+<span class="n">install</span> <span class="o">-</span><span class="n">m</span> <span class="mi">600</span> <span class="n">doc</span><span class="o">/</span><span class="n">examples</span><span class="o">/</span><span class="n">imapd_conf</span><span class="o">/</span><span class="n">normal</span><span class="o">.</span><span class="n">conf</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">imapd</span><span class="o">.</span><span class="n">conf</span>
+<span class="n">vi</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">imapd</span><span class="o">.</span><span class="n">conf</span>
+<span class="o">...</span>
+<span class="n">vi</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">cyrus</span><span class="o">.</span><span class="n">conf</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="launch-cyrus">
+<h3>8. Launch Cyrus<a class="headerlink" href="#launch-cyrus" title="Permalink to this headline">¶</a></h3>
+<p>If using our packages on Debian Jessie, you will have a SystemV
+compatible init script installed, with systemd support.  Start Cyrus
+with the following command:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">systemctl</span> <span class="n">start</span> <span class="n">cyrus</span><span class="o">-</span><span class="n">imapd</span>
+</pre></div>
+</div>
+<p>Tada!  You should now have a working Cyrus IMAP server.</p>
+</div>
+<div class="section" id="feature-overview">
+<h3>Feature overview<a class="headerlink" href="#feature-overview" title="Permalink to this headline">¶</a></h3>
+<p>The features (compile-time configuration options) supported in our
+reference packages are:</p>
+<dl class="docutils">
+<dt>Cyrus Server configured components</dt>
+<dd><ul class="first last simple">
+<li>event notification : yes</li>
+<li>gssapi             : /usr</li>
+<li>autocreate         : yes</li>
+<li>idled              : yes</li>
+<li>httpd              : yes</li>
+<li>kerberos V4        : no</li>
+<li>murder             : yes</li>
+<li>nntpd              : yes</li>
+<li>replication        : yes</li>
+<li>sieve              : yes</li>
+<li>calalarmd          : no</li>
+<li>objectstore        : no</li>
+<li>backup             : no</li>
+</ul>
+</dd>
+<dt>External dependencies</dt>
+<dd><ul class="first last simple">
+<li>ldap              : yes</li>
+<li>openssl           : yes</li>
+<li>zlib              : yes</li>
+<li>pcre              : yes</li>
+<li>clamav            : yes</li>
+<li>snmp              : yes</li>
+<li>caringo           : no</li>
+<li>openio            : no</li>
+<li>nghttp2           : no</li>
+<li>brotli            : no</li>
+<li>xml2              : yes</li>
+<li>ical              : yes</li>
+<li>icu4c             : no</li>
+<li>shapelib          : no</li>
+</ul>
+</dd>
+<dt>Database support</dt>
+<dd><ul class="first last simple">
+<li>mysql             : no</li>
+<li>postgresql        : no</li>
+<li>sqlite            : yes</li>
+<li>lmdb              : no</li>
+</ul>
+</dd>
+<dt>Search engine</dt>
+<dd><ul class="first last simple">
+<li>squat             : yes</li>
+<li>sphinx            : no</li>
+<li>xapian            : yes</li>
+<li>xapian_flavor     : vanilla</li>
+</ul>
+</dd>
+<dt>Hardware support</dt>
+<dd><ul class="first last simple">
+<li>SSE4.2            : yes</li>
+</ul>
+</dd>
+<dt>Installation directories</dt>
+<dd><ul class="first last simple">
+<li>prefix            : /usr</li>
+<li>sysconfdir        : /etc</li>
+</ul>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="imap/quickstart/introduction.html" class="btn btn-neutral float-right" title="Introduction to Cyrus IMAP" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="imap/download/packagers.html" class="btn btn-neutral" title="Notes for Packagers" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on Jan 24 2018
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'3.0.8 (stable)',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+<!--      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      }); -->
+  </script>
+  
+ 
+
+
+
+</body>
+</html>

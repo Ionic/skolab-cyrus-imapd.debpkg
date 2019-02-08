@@ -84,48 +84,48 @@ int main(int argc, char *argv[])
     int opt;
 
     if ((geteuid()) == 0 && (become_cyrus(/*is_master*/0) != 0)) {
-	fatal("must run as the Cyrus user", EC_USAGE);
+        fatal("must run as the Cyrus user", EC_USAGE);
     }
 
     while ((opt = getopt(argc, argv, "C:uUvmMacqnsb")) != EOF) {
-	switch (opt) {
-	case 'C': /* alt config file */
-	    alt_config = optarg;
-	    break;
-	case 'u': /* User */
-	    cmd = 'u';
-	    break;
-	case 'U': /* UnUser */
-	    cmd = 'U';
-	    break;
-	case 'v': /* sieVe */
-	    cmd = 'v';
-	    break;
-	case 'm': /* Mailbox */
-	    cmd = 'm';
-	    break;
-	case 'M': /* UnMailbox */
-	    cmd = 'M';
-	    break;
-	case 'a': /* Append */
-	    cmd = 'a';
-	    break;
-	case 'c': /* aCl */
-	    cmd = 'c';
-	    break;
-	case 'q': /* Quota */
-	    cmd = 'q';
-	    break;
-	case 'n': /* aNnotation */
-	    cmd = 'n';
-	    break;
-	case 's': /* Seen */
-	    cmd = 's';
-	    break;
-	case 'b': /* suBscription */
-	    cmd = 'b';
-	    break;
-	}
+        switch (opt) {
+        case 'C': /* alt config file */
+            alt_config = optarg;
+            break;
+        case 'u': /* User */
+            cmd = 'u';
+            break;
+        case 'U': /* UnUser */
+            cmd = 'U';
+            break;
+        case 'v': /* sieVe */
+            cmd = 'v';
+            break;
+        case 'm': /* Mailbox */
+            cmd = 'm';
+            break;
+        case 'M': /* UnMailbox */
+            cmd = 'M';
+            break;
+        case 'a': /* Append */
+            cmd = 'a';
+            break;
+        case 'c': /* aCl */
+            cmd = 'c';
+            break;
+        case 'q': /* Quota */
+            cmd = 'q';
+            break;
+        case 'n': /* aNnotation */
+            cmd = 'n';
+            break;
+        case 's': /* Seen */
+            cmd = 's';
+            break;
+        case 'b': /* suBscription */
+            cmd = 'b';
+            break;
+        }
     }
 
     /* need at least one value */
@@ -144,33 +144,33 @@ int main(int argc, char *argv[])
     sync_log_init();
 
     switch(cmd) {
-	case 'u': /* User */
-	    sync_log_user(argv[optind]);
-	    break;
-	case 'U': /* UnUser */
-	    sync_log_unuser(argv[optind]);
-	    break;
-	case 'v': /* sieVe */
-	    sync_log_sieve(argv[optind]);
-	    break;
-	case 'm': /* Mailbox */
-	    sync_log_mailbox(argv[optind]);
-	    break;
-	case 'M': /* UnMailbox */
-	    sync_log_unmailbox(argv[optind]);
-	    break;
-	case 'q': /* Quota */
-	    sync_log_quota(argv[optind]);
-	    break;
-	case 'n': /* aNnotation */
+        case 'u': /* User */
+            sync_log_user(argv[optind]);
+            break;
+        case 'U': /* UnUser */
+            sync_log_unuser(argv[optind]);
+            break;
+        case 'v': /* sieVe */
+            sync_log_sieve(argv[optind]);
+            break;
+        case 'm': /* Mailbox */
+            sync_log_mailbox(argv[optind]);
+            break;
+        case 'M': /* UnMailbox */
+            sync_log_unmailbox(argv[optind]);
+            break;
+        case 'q': /* Quota */
+            sync_log_quota(argv[optind]);
+            break;
+        case 'n': /* aNnotation */
             sync_log_annotation(argv[optind]);
-	    break;
-	case 's': /* Seen */
-	    sync_log_seen(argv[optind], argv[optind+1]);
-	    break;
-	case 'b': /* suBscription */
-	    sync_log_subscribe(argv[optind], argv[optind+1]);
-	    break;
+            break;
+        case 's': /* Seen */
+            sync_log_seen(argv[optind], argv[optind+1]);
+            break;
+        case 'b': /* suBscription */
+            sync_log_subscribe(argv[optind], argv[optind+1]);
+            break;
         default:
             /* just as is! */
             sync_log(argv[optind]);

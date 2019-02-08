@@ -61,7 +61,6 @@
 #include "global.h"
 #include "mboxlist.h"
 #include "exitcodes.h"
-#include "imap/imap_err.h"
 #include "mailbox.h"
 #include "seen.h"
 #include "mboxname.h"
@@ -75,6 +74,9 @@
 #include "sync_support.h"
 /*#include "cdb.h"*/
 
+/* generated headers are not necessarily in current directory */
+#include "imap/imap_err.h"
+
 /* Static global variables and support routines for sync_reset */
 
 extern char *optarg;
@@ -86,6 +88,7 @@ static struct auth_state *sync_authstate = NULL;
 static char *sync_userid = NULL;
 
 static int verbose = 0;
+static int local_only = 0;
 
 static void shut_down(int code) __attribute__((noreturn));
 static void shut_down(int code)
@@ -112,7 +115,7 @@ static int usage(const char *name)
 {
     fprintf(stderr,
             "usage: %s [-C <alt_config>] [-v] [-f] user...\n", name);
- 
+
     exit(EC_USAGE);
 }
 
@@ -126,10 +129,8 @@ EXPORTED void fatal(const char* s, int code)
 
 static int reset_single(const char *userid)
 {
-    struct sync_name_list *sublist = sync_name_list_create();
-    struct sync_name_list *mblist = sync_name_list_create();
-    struct sync_name *item;
     int r = 0;
+    int i;
 
     /* XXX: adding an entry to userdeny_db here would avoid the need to
      * protect against new logins with external proxy rules - Cyrus could
@@ -138,34 +139,37 @@ static int reset_single(const char *userid)
     /* first, disconnect all current connections for this user */
     proc_killuser(userid);
 
-    r = mboxlist_allsubs(userid, addmbox_sub, sublist);
-    if (r) goto fail;
+    strarray_t *sublist = mboxlist_sublist(userid);
+    strarray_t *mblist = strarray_new();
 
     /* ignore failures here - the subs file gets deleted soon anyway */
-    for (item = sublist->head; item; item = item->next) {
-	(void)mboxlist_changesub(item->name, userid, sync_authstate, 0, 0, 0);
+    for (i = sublist->count; i; i--) {
+        const char *name = strarray_nth(sublist, i-1);
+        (void)mboxlist_changesub(name, userid, sync_authstate, 0, 0, 0);
     }
 
-    r = mboxlist_allusermbox(userid, addmbox_sub, mblist, /*incdel*/1);
+    r = mboxlist_usermboxtree(userid, addmbox_cb, mblist, MBOXTREE_DELETED);
     if (r) goto fail;
 
-    for (item = mblist->head; item; item = item->next) {
-	r = mboxlist_deletemailbox(item->name, 1, sync_userid,
-				   sync_authstate, NULL, 0, 1, 0);
-	if (r == IMAP_MAILBOX_NONEXISTENT) {
-	    printf("skipping already removed mailbox %s\n", item->name);
-	}
-	else if (r) goto fail;
-	/* XXX - cheap and nasty hack around actually cleaning up the entry */
-	r = mboxlist_deleteremote(item->name, NULL);
-	if (r) goto fail;
+    for (i = mblist->count; i; i--) {
+        const char *name = strarray_nth(mblist, i-1);
+        r = mboxlist_deletemailbox(name, 1, sync_userid,
+                                   sync_authstate, NULL, 0, 1, 1);
+        if (r == IMAP_MAILBOX_NONEXISTENT) {
+            printf("skipping already removed mailbox %s\n", name);
+        }
+        else if (r) goto fail;
+        /* XXX - cheap and nasty hack around actually cleaning up the entry */
+        r = mboxlist_deleteremote(name, NULL);
+        if (r == IMAP_MAILBOX_NONEXISTENT) r = 0;
+        if (r) goto fail;
     }
 
     r = user_deletedata(userid, 1);
 
  fail:
-    sync_name_list_free(&sublist);
-    sync_name_list_free(&mblist);
+    strarray_free(mblist);
+    strarray_free(sublist);
 
     return r;
 }
@@ -182,12 +186,12 @@ main(int argc, char **argv)
     int i;
 
     if ((geteuid()) == 0 && (become_cyrus(/*is_master*/0) != 0)) {
-	fatal("must run as the Cyrus user", EC_USAGE);
+        fatal("must run as the Cyrus user", EC_USAGE);
     }
 
     setbuf(stdout, NULL);
 
-    while ((opt = getopt(argc, argv, "C:vf")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:vfL")) != EOF) {
         switch (opt) {
         case 'C': /* alt config file */
             alt_config = optarg;
@@ -199,6 +203,10 @@ main(int argc, char **argv)
 
         case 'f': /* force: confirm option */
             force++;
+            break;
+
+        case 'L': /* local mailbox operations only */
+            local_only++;
             break;
 
         default:

@@ -1,0 +1,13 @@
+
+Ports and Sockets
+*****************
+
+Cyrus IMAP uses TCP/IP and Unix domain sockets to achieve much of the
+requisite communications both with other applications, such as your
+MTA, and with other components.
+
+* Cyrus Service Definitions
+
+* Cyrus Socket Locations
+
+Back to Administrator Guide

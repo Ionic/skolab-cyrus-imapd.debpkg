@@ -1,126 +1,205 @@
-.\" -*- nroff -*-
-.TH CYR_DBTOOL 8 "Project Cyrus" CMU
-.\"
-.\" Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
-.\"
-.\" Redistribution and use in source and binary forms, with or without
-.\" modification, are permitted provided that the following conditions
-.\" are met:
-.\"
-.\" 1. Redistributions of source code must retain the above copyright
-.\"    notice, this list of conditions and the following disclaimer.
-.\"
-.\" 2. Redistributions in binary form must reproduce the above copyright
-.\"    notice, this list of conditions and the following disclaimer in
-.\"    the documentation and/or other materials provided with the
-.\"    distribution.
-.\"
-.\" 3. The name "Carnegie Mellon University" must not be used to
-.\"    endorse or promote products derived from this software without
-.\"    prior written permission. For permission or any legal
-.\"    details, please contact
-.\"      Carnegie Mellon University
-.\"      Center for Technology Transfer and Enterprise Creation
-.\"      4615 Forbes Avenue
-.\"      Suite 302
-.\"      Pittsburgh, PA  15213
-.\"      (412) 268-7393, fax: (412) 268-7395
-.\"      innovation@andrew.cmu.edu
-.\"
-.\" 4. Redistributions of any form whatsoever must retain the following
-.\"    acknowledgment:
-.\"    "This product includes software developed by Computing Services
-.\"     at Carnegie Mellon University (http://www.cmu.edu/computing/)."
-.\"
-.\" CARNEGIE MELLON UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO
-.\" THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-.\" AND FITNESS, IN NO EVENT SHALL CARNEGIE MELLON UNIVERSITY BE LIABLE
-.\" FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
-.\" AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
-.\" OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\" Man page generated from reStructuredText.
+.
+.TH "CYR_DBTOOL" "8" "August 10, 2018" "3.0.8" "Cyrus IMAP"
 .SH NAME
-cyr_dbtool \- manage Cyrus databases
+cyr_dbtool \- Cyrus IMAP documentation
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.sp
+Manage Cyrus databases
 .SH SYNOPSIS
-.B cyr_dbtool
-[
-.B \-C
-.I config-file
-]
-[
-.B \-M
-]
-[
-.B \-n
-]
-[
-.B \-o
-]
-[
-.B \-T
-]
-<db file> <db backend> <action>
-[
-<key>
-]
-[
-<value>
-]
+.sp
+.nf
+\fBcyr_dbtool\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-M\fP ] [ \fB\-n\fP ] [ \fB\-o\fP ] [ \fB\-T\fP ]
+        \fIdb\-file\fP \fIdb\-backend\fP \fIaction\fP [ \fIkey\fP ] [ \fIvalue\fP ]
+.fi
 .SH DESCRIPTION
-.I cyr_dbtool
-is used to manage a cyrusdb file. The usable actions are:
-.PP
-.BI show " [<prefix>]"
-.PP
-.BI get " <key>"
-.PP
-.BI set " <key> <value>"
-.PP
-.BI delete " <key>"
-.PP
-.BI consistency
-.PP
-.BI repack
-.PP
-You may omit key or key/value and specify one per line on stdin. Keys are
-terminated by tab or newline, values are terminated by newline.
-.PP
+.sp
+\fBcyr_dbtool\fP is used to manage a cyrusdb file. The usable actions are:
+.INDENT 0.0
+.INDENT 3.5
+\fBshow\fP \fI[<prefix>]\fP
+.sp
+\fBget\fP \fI<key>\fP
+.sp
+\fBset\fP \fI<key> <value>\fP
+.sp
+\fBdelete\fP \fI<key>\fP
+.sp
+\fBconsistency\fP
+.sp
+\fBrepack\fP
+.UNINDENT
+.UNINDENT
+.sp
+You may omit \fIkey\fP or \fIkey/value\fP and specify one per line on stdin.
+Keys are terminated by tab or newline, values are terminated by newline.
+.sp
 Running without any options will list the available database backends and
 usable actions.
-.PP
-The 'consistency' command runs a consistency check on the DB by calling
-'myconsistent' on it.
-.PP
-The 'repack' command will compress the database by removing stale data
-on backends which support it.  It's a NOOP otherwise.
-.PP
-.I cyr_dbtool
-reads any applicable configuration options out of the
-.IR imapd.conf (5)
-file unless specified otherwise by \fB-C\fR.
-note that the file locations are NOT read out of the configuration file,
-and must be supplied on the command line.
+.sp
+The \fIconsistency\fP action runs a consistency check on the DB by calling
+\(aqmyconsistent\(aq on it.
+.sp
+The \fIrepack\fP action will compress the database by removing stale data
+on backends which support it.  It\(aqs a NOOP otherwise.
+.sp
+\fBcyr_dbtool\fP reads its configuration options out of the imapd.conf(5) file unless specified otherwise by \fB\-C\fP\&.
+.sp
+\fBNOTE:\fP
+.INDENT 0.0
+.INDENT 3.5
+Note that the file locations are NOT read out of the configuration
+file, and must be supplied on the command line.
+.UNINDENT
+.UNINDENT
+.sp
+\fBTIP:\fP
+.INDENT 0.0
+.INDENT 3.5
+The format of all Cyrus databases is detailed in the distribution in
+file doc/internal/database\-formats.html.  Please consult that for
+details.
+.UNINDENT
+.UNINDENT
 .SH OPTIONS
+.INDENT 0.0
 .TP
-.BI \-C " config-file"
-Read configuration options from \fIconfig-file\fR.
+.B \-C config\-file
+Use the specified configuration file \fIconfig\-file\fP rather than the default imapd.conf(5)\&.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI \-M
-Uses improved MBOX list sort.
+.B \-M
+Uses improved MBOX list sort
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI \-n
-Create the database file if it doesn't already exist.
+.B \-n
+Create the database file if it doesn\(aqt already exist.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI \-o
+.B \-o
 Store all the output in memory and only print it once the transaction
 is completed.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI \-T
-Use a transaction to do the action (most especially for 'show') - the
+.B \-T
+Use a transaction to do the action (most especially for \(aqshow\(aq) \- the
 default used to be transactions.
+.UNINDENT
+.SH EXAMPLES
+.sp
+This series of examples address manipulating the \fIuser_deny.db\fP
+database, which is used to deny users access to specific services.  This
+is typically a Cyrus "flat" format database.
+.sp
+\fIuser_deny.db\fP is indexed by userid and each record contains the
+database version number (currently 2), a list of "wildmat" patterns
+specifying Cyrus services to be denied, and a text message to be
+displayed to the user upon denial. The service names to be matched are
+those as used in cyrus.conf(5)\&.
+.sp
+\fBNOTE:\fP
+.INDENT 0.0
+.INDENT 3.5
+Given that \fIkeys\fP are tab\-delimited, these examples use the notation
+<tab> to indicate the tab character.  When entering this via the
+command line, remember to escape tabs.  In a normal shell, one can
+do so with <ctrl\-v> (^v).  The sequence "<ctrl\-v><ctrl\-i>" (^v^i)
+works well to enter tab characters.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBcyr_dbtool\fP /var/lib/imap/user_deny.db flat baduser "2<tab>pop3,imap<tab>Denied"
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Deny the user \(aqbaduser\(aq access to imap and pop3.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBcyr_dbtool\fP /var/lib/imap/user_deny.db flat show
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Show all current database records.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBcyr_dbtool\fP /var/lib/imap/user_deny.db flat get baduser
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Get the current database record(s) for user \(aqbaduser\(aq.
+.UNINDENT
+.UNINDENT
 .SH FILES
-.TP
-.B /etc/imapd.conf
+.sp
+/etc/imapd.conf
 .SH SEE ALSO
-.PP
-\fBimapd.conf(5)\fR
+.sp
+imapd.conf(5)
+.SH AUTHOR
+The Cyrus Team, Nic Bernstein (Onlight), Jeroen van Meeuwen (Kolab Systems)
+.SH COPYRIGHT
+1993-2017, The Cyrus Team
+.\" Generated by docutils manpage writer.
+.

@@ -54,7 +54,7 @@
 
 tag_t *new_tag(int type, char *s)
 {
-    tag_t *p = (tag_t *) xmalloc(sizeof(tag_t));
+    tag_t *p = (tag_t *) xzmalloc(sizeof(tag_t));
     p->type = type;
     p->arg = s;
     return p;
@@ -62,15 +62,15 @@ tag_t *new_tag(int type, char *s)
 
 taglist_t *new_taglist(tag_t *t, taglist_t *n)
 {
-    taglist_t *p = (taglist_t *) xmalloc(sizeof(taglist_t));
+    taglist_t *p = (taglist_t *) xzmalloc(sizeof(taglist_t));
     p->t = t;
     p->next = n;
     return p;
 }
 
-test_t *new_test(int type) 
+test_t *new_test(int type)
 {
-    test_t *p = (test_t *) xmalloc(sizeof(test_t));
+    test_t *p = (test_t *) xzmalloc(sizeof(test_t));
     p->type = type;
     return p;
 }
@@ -85,7 +85,7 @@ testlist_t *new_testlist(test_t *t, testlist_t *n)
 
 commandlist_t *new_command(int type)
 {
-    commandlist_t *p = (commandlist_t *) xmalloc(sizeof(commandlist_t));
+    commandlist_t *p = (commandlist_t *) xzmalloc(sizeof(commandlist_t));
     p->type = type;
     p->next = NULL;
     return p;
@@ -93,7 +93,7 @@ commandlist_t *new_command(int type)
 
 commandlist_t *new_if(test_t *t, commandlist_t *y, commandlist_t *n)
 {
-    commandlist_t *p = (commandlist_t *) xmalloc(sizeof(commandlist_t));
+    commandlist_t *p = (commandlist_t *) xzmalloc(sizeof(commandlist_t));
     p->type = IF;
     p->u.i.t = t;
     p->u.i.do_then = y;
@@ -109,12 +109,12 @@ static void free_tl(testlist_t *tl)
     testlist_t *tl2;
 
     while (tl) {
-	tl2 = tl->next;
+        tl2 = tl->next;
 
-	if (tl->t) free_test(tl->t);
+        if (tl->t) free_test(tl->t);
 
-	free(tl);
-	tl = tl2;
+        free(tl);
+        tl = tl2;
     }
 }
 
@@ -125,50 +125,61 @@ void free_test(test_t *t)
     switch (t->type) {
     case ANYOF:
     case ALLOF:
-	free_tl(t->u.tl);
-	break;
+        free_tl(t->u.tl);
+        break;
 
     case EXISTS:
-	strarray_free(t->u.sl);
-	break;
+        strarray_free(t->u.sl);
+        break;
 
     case SIZE:
     case SFALSE:
     case STRUE:
-	break;
+        break;
 
     case HASFLAG:
     case HEADER:
-	free(t->u.h.comparator);
-	strarray_free(t->u.h.sl);
-	strarray_free(t->u.h.pl);
-	break;
+        free(t->u.h.comparator);
+        strarray_free(t->u.h.sl);
+        strarray_free(t->u.h.pl);
+        break;
 
     case ADDRESS:
     case ENVELOPE:
-	free(t->u.ae.comparator);
-	strarray_free(t->u.ae.sl);
-	strarray_free(t->u.ae.pl);
-	break;
+        free(t->u.ae.comparator);
+        strarray_free(t->u.ae.sl);
+        strarray_free(t->u.ae.pl);
+        break;
 
     case BODY:
-	free(t->u.b.comparator);
-	strarray_free(t->u.b.content_types);
-	strarray_free(t->u.b.pl);
-	break;
+        free(t->u.b.comparator);
+        strarray_free(t->u.b.content_types);
+        strarray_free(t->u.b.pl);
+        break;
 
     case NOT:
-	free_test(t->u.t);
-	break;
+        free_test(t->u.t);
+        break;
 
     case DATE:
-	free(t->u.dt.header_name);
-	/* fall-through */
+        free(t->u.dt.header_name);
+        /* fall-through */
     case CURRENTDATE:
-	free(t->u.dt.comparator);
-	free(t->u.dt.zone);
-	strarray_free(t->u.dt.kl);
-	break;
+        free(t->u.dt.comparator);
+        free(t->u.dt.zone);
+        strarray_free(t->u.dt.kl);
+        break;
+
+    case MAILBOXEXISTS:
+    case METADATA:
+    case METADATAEXISTS:
+    case SERVERMETADATA:
+    case SERVERMETADATAEXISTS:
+        free(t->u.mbx.extname);
+        free(t->u.mbx.keyname);
+        strarray_free(t->u.mbx.keylist);
+        free(t->u.mbx.comparator);
+        break;
     }
 
     free(t);
@@ -179,74 +190,73 @@ void free_tree(commandlist_t *cl)
     commandlist_t *cl2;
 
     while (cl != NULL) {
-	cl2 = cl->next;
-	switch (cl->type) {
-	case IF:
-	    free_test(cl->u.i.t);
-	    free_tree(cl->u.i.do_then);
-	    free_tree(cl->u.i.do_else);
-	    break;
+        cl2 = cl->next;
+        switch (cl->type) {
+        case IF:
+            free_test(cl->u.i.t);
+            free_tree(cl->u.i.do_then);
+            free_tree(cl->u.i.do_else);
+            break;
 
-	case INCLUDE:
-	    if (cl->u.inc.script) free(cl->u.inc.script);
-	    break;
+        case INCLUDE:
+            free(cl->u.inc.script);
+            break;
 
-	case FILEINTO:
-	    if (cl->u.f.folder) free(cl->u.f.folder);
-	    if (cl->u.f.flags) strarray_free(cl->u.f.flags);
-	    break;
+        case SETFLAG:
+        case ADDFLAG:
+        case REMOVEFLAG:
+            free(cl->u.fl.variable);
+            strarray_free(cl->u.fl.flags);
+            break;
 
-	case REDIRECT:
-	    if (cl->u.r.address) free(cl->u.r.address);
-	    break;
+        case FILEINTO:
+            free(cl->u.f.folder);
+            strarray_free(cl->u.f.flags);
+            break;
 
-	case REJCT:
-	    if (cl->u.str) free(cl->u.str);
-	    break;
+        case REDIRECT:
+            free(cl->u.r.address);
+            break;
 
-	case VACATION:
-	    if (cl->u.v.subject) free(cl->u.v.subject);
-	    if (cl->u.v.addresses) strarray_free(cl->u.v.addresses);
-	    if (cl->u.v.message) free(cl->u.v.message);
-	    free(cl->u.v.handle);
-	    free(cl->u.v.from);
-	    break;
-	    
-	case SETFLAG:
-	case ADDFLAG:
-	case REMOVEFLAG:
-	    strarray_free(cl->u.sl);
-	    break;
+        case REJCT:
+            free(cl->u.reject);
+            break;
 
-	case KEEP:
-	    if (cl->u.k.flags) strarray_free(cl->u.k.flags);
-	    break;
+        case VACATION:
+            free(cl->u.v.subject);
+            strarray_free(cl->u.v.addresses);
+            free(cl->u.v.message);
+            break;
 
-	case STOP:
-	case DISCARD:
-	case RETURN:
-	    break;
+        case KEEP:
+            strarray_free(cl->u.k.flags);
+            break;
 
-	case NOTIFY:
-	    if (cl->u.n.method) free(cl->u.n.method);
-	    if (cl->u.n.id) free(cl->u.n.id);
-	    if (cl->u.n.options) strarray_free(cl->u.n.options);
-	    if (cl->u.n.message) free(cl->u.n.message);
-	    break;
+        case STOP:
+        case DISCARD:
+        case RETURN:
+            break;
 
-	case DENOTIFY:
-	    if (cl->u.d.pattern) {
+        case NOTIFY:
+            if (cl->u.n.method) free(cl->u.n.method);
+            if (cl->u.n.id) free(cl->u.n.id);
+            if (cl->u.n.options) strarray_free(cl->u.n.options);
+            if (cl->u.n.message) free(cl->u.n.message);
+            break;
+
+        case DENOTIFY:
+            if (cl->u.d.pattern) {
 #ifdef ENABLE_REGEX
-		if (cl->u.d.comptag == REGEX) {
-		    regfree((regex_t *) cl->u.d.pattern);
-		}
+                if (cl->u.d.comptag == REGEX) {
+                    regfree((regex_t *) cl->u.d.pattern);
+                }
 #endif
-		free(cl->u.d.pattern);
-	    }
-	    break;
-	}
+                free(cl->u.d.pattern);
+            }
+            break;
+        }
 
-	free(cl);
-	cl = cl2;
+        free(cl);
+        cl = cl2;
     }
 }

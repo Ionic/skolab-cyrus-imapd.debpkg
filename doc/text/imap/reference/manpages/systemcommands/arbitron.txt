@@ -1,0 +1,120 @@
+
+**arbitron**
+************
+
+Report readership statistics for mailboxes on the server.
+
+
+Synopsis
+========
+
+   **arbitron** [ **-C** *config-file* ] [ **-o** ] [ **-u** ] [ **-l** ] [ **-p** *months* ]
+            [ **-d** *days* | **-D** *mmddyyyy*[**:***mmddyyyy*] ] *mailbox*...
+
+
+Description
+===========
+
+**arbitron** collects and reports readership statistics for mailboxes
+on the server. It also optionally prunes the mailboxes of "\Seen"
+state for dormant users.
+
+**arbitron** produces one line of output per mailbox, reporting the
+mailbox name followed by a space, followed by the number of readers
+(and if **-u** is specified, followed by a colon and a comma-separated
+list of the reader's user IDs), and if **-o** is not specified,
+another space and the number of subscribers (and if **-u** is
+specified, followed by a colon and a comma-separated list of the
+subscribers userids).
+
+Important: This format is subject to change in future versions.
+
+Each "reader" is a distinct authorization identity which has the s
+right to the mailbox and which has **SELECT**ed the mailbox within
+either the past **-d** *days* or the specified **-D**
+*date*[**:***range*].
+
+Users are not counted as reading their own personal mail‐boxes.
+Personal mailboxes are not reported unless there is at least one
+reader other than the mailboxes owner.
+
+**arbitron** reads its configuration options out of the imapd.conf(5)
+file unless specified otherwise by **-C**.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+-o
+
+   Report "the old way" -- not including subscribers.
+
+-l
+
+   Enable long reporting (comma delimited table consisting of mbox,
+   userid, r/s, start time, end time).
+
+-d days
+
+   Count as a reader an authorization identity which has used the
+   mailbox within the past *days* days.
+
+-D mmddyyyy[:mmddyyyy]
+
+   Count as a reader an authorization identity which has used the
+   mailbox within the given date range.
+
+   The start date and optionally the end date are specified as 2-digit
+   month of the year, 2-digit day of the month, and 4-digit year.
+
+   If the end date is not specified, the current system time will be
+   used as the end time.
+
+   Note: Please note that the date notation is American [*mmddyyyy*]
+     not [*ddmmyyyy*].
+
+-p months
+
+   Prune "\Seen" state for users who have not used the mailbox within
+   the past *months* months. The default is infinity.
+
+
+Examples
+========
+
+   **arbitron -l**
+
+   Long-format list.
+
+   **arbitron -o**
+
+   Old format (no subscribers) short list.
+
+   **arbitron**
+
+   Normal short list.
+
+   **arbitron -d** *14*
+
+   Normal short list format for the past *14* days.
+
+   **arbitron -D** *04012015*:*04152015*
+
+   Normal short list Within date range of 12 - 15 April, 2015.
+
+
+Files
+=====
+
+/etc/imapd.conf
+
+
+See Also
+========
+
+imapd.conf(5)

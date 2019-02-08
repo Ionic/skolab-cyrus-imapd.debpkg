@@ -48,7 +48,6 @@
 #include <grp.h>
 #include <limits.h>
 #include <pwd.h>
-#include <math.h>
 #include <string.h>
 #include <stdlib.h>
 #include <syslog.h>
@@ -69,6 +68,7 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
+#include "byteorder64.h"
 #include "exitcodes.h"
 #include "libconfig.h"
 #include "map.h"
@@ -79,25 +79,29 @@
 #ifdef HAVE_ZLIB
 #include "zlib.h"
 #endif
+#ifdef HAVE_LIBUUID
+#include <uuid/uuid.h>
+#endif
+
 
 #define BEAUTYBUFSIZE 4096
 
 static const unsigned char unxdigit[128] = {
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 
-    0x08, 0x09, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-    0xff, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0xff, 
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-    0xff, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0xff, 
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
-    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+    0x08, 0x09, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 };
 
@@ -176,10 +180,10 @@ const unsigned char convert_to_uppercase[256] = {
 EXPORTED char *lcase(char* str)
 {
     char *scan = str;
-    
+
     while (*scan) {
-	*scan = TOLOWER(*scan);
-	scan++;
+        *scan = TOLOWER(*scan);
+        scan++;
     }
 
     return (str);
@@ -190,10 +194,10 @@ EXPORTED char *lcase(char* str)
 EXPORTED char *ucase(char* str)
 {
     char *scan = str;
-    
+
     while (*scan) {
-	*scan = convert_to_uppercase[(unsigned char)(*scan)];
-	scan++;
+        *scan = convert_to_uppercase[(unsigned char)(*scan)];
+        scan++;
     }
 
     return (str);
@@ -208,16 +212,16 @@ static char *beautify_copy(char* dst, const char* src)
     unsigned char c;
 
     while (*src) {
-	c = *src++ & 0x7F;
-	if (!isprint(c)) {
-	    *dst++ = '^';
-	    if (c > ' ') {
-		c = '?';
-	    } else {
-		c += '@';
-	    }
-	}
-	*dst++ = c;
+        c = *src++ & 0x7F;
+        if (!isprint(c)) {
+            *dst++ = '^';
+            if (c > ' ') {
+                c = '?';
+            } else {
+                c += '@';
+            }
+        }
+        *dst++ = c;
     }
     *dst = '\0';
 
@@ -236,14 +240,14 @@ EXPORTED char *beautify_string(const char* src)
 
     len = strlen(src) * 2 + 1;
     if (beautysize < len) {
-	if (!beautysize) {
-	    beautysize = len > BEAUTYBUFSIZE ? len : BEAUTYBUFSIZE;
-	    beautybuf = xmalloc(beautysize);
-	} else {
-	    beautysize *= 2;
-	    if (len > beautysize) beautysize = len;
-	    beautybuf = xrealloc(beautybuf, beautysize);
-	}
+        if (!beautysize) {
+            beautysize = len > BEAUTYBUFSIZE ? len : BEAUTYBUFSIZE;
+            beautybuf = xmalloc(beautysize);
+        } else {
+            beautysize *= 2;
+            if (len > beautysize) beautysize = len;
+            beautybuf = xrealloc(beautybuf, beautysize);
+        }
     }
     (void) beautify_copy(beautybuf, src);
 
@@ -253,28 +257,28 @@ EXPORTED char *beautify_string(const char* src)
 EXPORTED int strcmpsafe(const char *a, const char *b)
 {
     return strcmp((a == NULL ? "" : a),
-	          (b == NULL ? "" : b));
+                  (b == NULL ? "" : b));
 }
 
 EXPORTED int strncmpsafe(const char *a, const char *b, size_t n)
 {
     return strncmp((a == NULL ? "" : a),
-		   (b == NULL ? "" : b),
-		   n);
+                   (b == NULL ? "" : b),
+                   n);
 }
 
 EXPORTED int strcasecmpsafe(const char *a, const char *b)
 {
     return strcasecmp((a == NULL ? "" : a),
-	              (b == NULL ? "" : b));
+                      (b == NULL ? "" : b));
 }
 
 /* in which NULL is NOT equal to "" */
 EXPORTED int strcmpnull(const char *a, const char *b)
 {
     if (a) {
-	if (b) return strcmp(a, b);
-	return 1;
+        if (b) return strcmp(a, b);
+        return 1;
     }
     if (b) return -1;
     return 0;
@@ -287,7 +291,7 @@ EXPORTED int strcmpnull(const char *a, const char *b)
  *  returns NULL if not found, or key/value pair if found.
  */
 keyvalue *kv_bsearch(const char* key, keyvalue* kv, int nelem,
-		     int (*cmpf) (const char *s1, const char *s2))
+                     int (*cmpf) (const char *s1, const char *s2))
 {
     int top, mid = 0, bot, cmp = 0;
 
@@ -295,11 +299,11 @@ keyvalue *kv_bsearch(const char* key, keyvalue* kv, int nelem,
     bot = 0;
     top = nelem - 1;
     while (top >= bot && (cmp = (*cmpf)(key, kv[mid = (bot + top) >> 1].key)))
-	if (cmp < 0) {
-	    top = mid - 1;
-	} else {
-	    bot = mid + 1;
-	}
+        if (cmp < 0) {
+            top = mid - 1;
+        } else {
+            bot = mid + 1;
+        }
 
     return (cmp ? NULL : kv + mid);
 }
@@ -314,27 +318,27 @@ EXPORTED int dir_hash_c(const char *name, int full)
     int c;
 
     if (full) {
-	unsigned char *pt;
-	uint32_t n;
-	enum {
-	    DIR_X = 3,
-	    DIR_Y = 5,
-	    DIR_P = 23,
-	    DIR_A = 'A'
-	};
+        unsigned char *pt;
+        uint32_t n;
+        enum {
+            DIR_X = 3,
+            DIR_Y = 5,
+            DIR_P = 23,
+            DIR_A = 'A'
+        };
 
-	n = 0;
-	pt = (unsigned char *)name;
-	while (*pt && *pt != '.') {
-	    n = ((n << DIR_X) ^ (n >> DIR_Y)) ^ *pt;
-	    n &= UINT32_MAX;
-	    ++pt;
-	}
-	c = DIR_A + (n % DIR_P);
+        n = 0;
+        pt = (unsigned char *)name;
+        while (*pt && *pt != '.') {
+            n = ((n << DIR_X) ^ (n >> DIR_Y)) ^ *pt;
+            n &= UINT32_MAX;
+            ++pt;
+        }
+        c = DIR_A + (n % DIR_P);
     }
     else {
-	c = tolower(*name);
-	if (!Uisascii(c) || !Uislower(c)) c = 'q';
+        c = tolower(*name);
+        if (!Uisascii(c) || !Uislower(c)) c = 'q';
     }
 
     return c;
@@ -356,19 +360,19 @@ EXPORTED int cyrus_close_sock(int fd)
 EXPORTED void cyrus_reset_stdio(void)
 {
     int devnull = open("/dev/null", O_RDWR, 0);
-    
+
     if (devnull == -1) {
         fatal("open() on /dev/null failed", EC_TEMPFAIL);
     }
-    
+
     /* stdin */
     shutdown(0, SHUT_RD);
     dup2(devnull, 0);
-    
+
     /* stdout */
     shutdown(1, SHUT_RD);
     dup2(devnull, 1);
-    
+
     /* stderr */
     shutdown(2, SHUT_RD);
     dup2(devnull, 2);
@@ -392,8 +396,8 @@ EXPORTED int create_tempfile(const char *path)
 
     fd = mkstemp(pattern);
     if (fd >= 0 && unlink(pattern) == -1) {
-	close(fd);
-	fd = -1;
+        close(fd);
+        fd = -1;
     }
 
     free(pattern);
@@ -411,17 +415,17 @@ EXPORTED int cyrus_mkdir(const char *pathname, mode_t mode __attribute__((unused
     struct stat sbuf;
 
     while ((p = strchr(p+1, '/'))) {
-	*p = '\0';
-	if (mkdir(path, 0755) == -1 && errno != EEXIST) {
-	    save_errno = errno;
-	    if (stat(path, &sbuf) == -1) {
-		errno = save_errno;
-		syslog(LOG_ERR, "IOERROR: creating directory %s: %m", path);
-		free(path);
-		return -1;
-	    }
-	}
-	*p = '/';
+        *p = '\0';
+        if (mkdir(path, 0755) == -1 && errno != EEXIST) {
+            save_errno = errno;
+            if (stat(path, &sbuf) == -1) {
+                errno = save_errno;
+                syslog(LOG_ERR, "IOERROR: creating directory %s: %m", path);
+                free(path);
+                return -1;
+            }
+        }
+        *p = '/';
     }
 
     free(path);
@@ -441,41 +445,41 @@ static int _copyfile_helper(const char *from, const char *to, int flags)
 
     /* try to hard link, but don't fail - fall back to regular copy */
     if (!nolink) {
-	if (link(from, to) == 0) return 0;
-	if (errno == EEXIST) {
-	    if (unlink(to) == -1) {
-		syslog(LOG_ERR, "IOERROR: unlinking to recreate %s: %m", to);
-		return -1;
-	    }
-	    if (link(from, to) == 0) return 0;
-	}
+        if (link(from, to) == 0) return 0;
+        if (errno == EEXIST) {
+            if (unlink(to) == -1) {
+                syslog(LOG_ERR, "IOERROR: unlinking to recreate %s: %m", to);
+                return -1;
+            }
+            if (link(from, to) == 0) return 0;
+        }
     }
 
     srcfd = open(from, O_RDONLY, 0666);
     if (srcfd == -1) {
-	syslog(LOG_ERR, "IOERROR: opening %s: %m", from);
-	r = -1;
-	goto done;
+        syslog(LOG_ERR, "IOERROR: opening %s: %m", from);
+        r = -1;
+        goto done;
     }
 
     if (fstat(srcfd, &sbuf) == -1) {
-	syslog(LOG_ERR, "IOERROR: fstat on %s: %m", from);
-	r = -1;
-	goto done;
+        syslog(LOG_ERR, "IOERROR: fstat on %s: %m", from);
+        r = -1;
+        goto done;
     }
 
     if (!sbuf.st_size) {
-	syslog(LOG_ERR, "IOERROR: zero byte file %s: %m", from);
-	r = -1;
-	goto done;
+        syslog(LOG_ERR, "IOERROR: zero byte file %s: %m", from);
+        r = -1;
+        goto done;
     }
 
     destfd = open(to, O_RDWR|O_TRUNC|O_CREAT, 0666);
     if (destfd == -1) {
-	if (!(flags & COPYFILE_MKDIR))
-	    syslog(LOG_ERR, "IOERROR: creating %s: %m", to);
-	r = -1;
-	goto done;
+        if (!(flags & COPYFILE_MKDIR))
+            syslog(LOG_ERR, "IOERROR: creating %s: %m", to);
+        r = -1;
+        goto done;
     }
 
     map_refresh(srcfd, 1, &src_base, &src_size, sbuf.st_size, from, 0);
@@ -483,10 +487,10 @@ static int _copyfile_helper(const char *from, const char *to, int flags)
     n = retry_write(destfd, src_base, src_size);
 
     if (n == -1 || fsync(destfd)) {
-	syslog(LOG_ERR, "IOERROR: writing %s: %m", to);
-	r = -1;
-	unlink(to);  /* remove any rubbish we created */
-	goto done;
+        syslog(LOG_ERR, "IOERROR: writing %s: %m", to);
+        r = -1;
+        unlink(to);  /* remove any rubbish we created */
+        goto done;
     }
 
 done:
@@ -504,19 +508,19 @@ EXPORTED int cyrus_copyfile(const char *from, const char *to, int flags)
 
     /* copy over self is an error */
     if (!strcmp(from, to))
-	return -1;
+        return -1;
 
     r = _copyfile_helper(from, to, flags);
 
     /* try creating the target directory if requested */
     if (r && (flags & COPYFILE_MKDIR)) {
-	r = cyrus_mkdir(to, 0755);
-	if (!r) r = _copyfile_helper(from, to, flags & ~COPYFILE_MKDIR);
+        r = cyrus_mkdir(to, 0755);
+        if (!r) r = _copyfile_helper(from, to, flags & ~COPYFILE_MKDIR);
     }
 
     if (!r && (flags & COPYFILE_RENAME)) {
-	/* remove the original file if the copy succeeded */
-	unlink(from);
+        /* remove the original file if the copy succeeded */
+        unlink(from);
     }
 
     return r;
@@ -529,19 +533,19 @@ EXPORTED int set_caps(int stage, int is_master)
     int r = 0;
     int e = errno;
     static const char * const capsets[2][5] = {
-	{ /* !master */
-	    "cap_setuid=ep",	/* BEFORE_SETUID */
-	    "=",		/* AFTER_SETUID */
-	    "=",		/* doesn't happen */
-	    "=",		/* doesn't happen */
-	    "="			/* doesn't happen */
-	}, { /* master */
-	    "cap_net_bind_service=p cap_setuid=ep",	/* BEFORE_SETUID */
-	    "cap_net_bind_service=p",			/* AFTER_SETUID */
-	    "cap_net_bind_service=ep",			/* BEFORE_BIND */
-	    "cap_net_bind_service=p",			/* AFTER_BIND */
-	    "="						/* AFTER_FORK */
-	}
+        { /* !master */
+            "cap_setuid=ep",    /* BEFORE_SETUID */
+            "=",                /* AFTER_SETUID */
+            "=",                /* doesn't happen */
+            "=",                /* doesn't happen */
+            "="                 /* doesn't happen */
+        }, { /* master */
+            "cap_net_bind_service=p cap_setuid=ep",     /* BEFORE_SETUID */
+            "cap_net_bind_service=p",                   /* AFTER_SETUID */
+            "cap_net_bind_service=ep",                  /* BEFORE_BIND */
+            "cap_net_bind_service=p",                   /* AFTER_BIND */
+            "="                                         /* AFTER_FORK */
+        }
     };
 
     cap = cap_from_text(capsets[!!is_master][stage]);
@@ -549,16 +553,16 @@ EXPORTED int set_caps(int stage, int is_master)
 
     r = cap_set_proc(cap);
     if (r < 0) {
-	syslog(LOG_ERR, "cannot set caps: %m");
-	goto out;
+        syslog(LOG_ERR, "cannot set caps: %m");
+        goto out;
     }
 
     if ((stage == BEFORE_SETUID) || (stage == AFTER_SETUID)) {
-	r = prctl(PR_SET_KEEPCAPS, (stage == BEFORE_SETUID));
-	if (r < 0) {
-	    syslog(LOG_ERR, "cannot set keepcaps flag: %m");
-	    goto out;
-	}
+        r = prctl(PR_SET_KEEPCAPS, (stage == BEFORE_SETUID));
+        if (r < 0) {
+            syslog(LOG_ERR, "cannot set keepcaps flag: %m");
+            goto out;
+        }
     }
 
   out:
@@ -569,7 +573,7 @@ EXPORTED int set_caps(int stage, int is_master)
 }
 #else
 EXPORTED int set_caps(int stage __attribute__((unused)),
-		      int is_master __attribute__((unused)))
+                      int is_master __attribute__((unused)))
 {
     return 0;
 }
@@ -596,10 +600,12 @@ EXPORTED int become_cyrus(int is_master)
 
     if (uid) return cap_setuid(uid, is_master);
 
-    p = getpwnam(CYRUS_USER);
+    const char *cyrus = cyrus_user();
+
+    p = getpwnam(cyrus);
     if (p == NULL) {
-	syslog(LOG_ERR, "no entry in /etc/passwd for user %s", CYRUS_USER);
-	return -1;
+        syslog(LOG_ERR, "no entry in /etc/passwd for user %s", cyrus);
+        return -1;
     }
 
     /* Save these in case initgroups does a getpw*() */
@@ -610,21 +616,21 @@ EXPORTED int become_cyrus(int is_master)
         newuid == getuid() &&
         newgid == getegid() &&
         newgid == getgid()) {
-	/* already the Cyrus user, stop trying */
-	uid = newuid;
-	set_caps(AFTER_SETUID, is_master);
-	return 0;
+        /* already the Cyrus user, stop trying */
+        uid = newuid;
+        set_caps(AFTER_SETUID, is_master);
+        return 0;
     }
 
-    if (initgroups(CYRUS_USER, newgid)) {
+    if (initgroups(cyrus, newgid)) {
         syslog(LOG_ERR, "unable to initialize groups for user %s: %s",
-	       CYRUS_USER, strerror(errno));
+               cyrus, strerror(errno));
         return -1;
     }
 
     if (setgid(newgid)) {
         syslog(LOG_ERR, "unable to set group id to %d for user %s: %s",
-              newgid, CYRUS_USER, strerror(errno));
+              newgid, cyrus, strerror(errno));
         return -1;
     }
 
@@ -636,9 +642,18 @@ EXPORTED int become_cyrus(int is_master)
     return result;
 }
 
+EXPORTED const char *cyrus_user(void)
+{
+    const char *cyrus = getenv("CYRUS_USER");
+    if (!cyrus) cyrus = config_getstring(IMAPOPT_CYRUS_USER);
+    if (!cyrus) cyrus = CYRUS_USER;
+    assert(cyrus != NULL);
+    return cyrus;
+}
+
 static int cmdtime_enabled = 0;
 static struct timeval cmdtime_start, cmdtime_end, nettime_start, nettime_end;
-static double totaltime, cmdtime, nettime;
+static double totaltime, cmdtime, nettime, search_maxtime;
 
 double timeval_get_double(const struct timeval *tv)
 {
@@ -647,11 +662,8 @@ double timeval_get_double(const struct timeval *tv)
 
 EXPORTED void timeval_set_double(struct timeval *tv, double d)
 {
-    double sec;
-    double subsec = modf(d, &sec);
-
-    tv->tv_sec = sec;
-    tv->tv_usec = 1000000.0*subsec;
+    tv->tv_sec = (long) d;
+    tv->tv_usec = (long) (1000000 * (d - tv->tv_sec));
 }
 
 EXPORTED void timeval_add_double(struct timeval *tv, double delta)
@@ -662,18 +674,25 @@ EXPORTED void timeval_add_double(struct timeval *tv, double delta)
 EXPORTED double timesub(const struct timeval *start, const struct timeval *end)
 {
     return (double)(end->tv_sec - start->tv_sec) +
-	   (double)(end->tv_usec - start->tv_usec)/1000000.0;
+           (double)(end->tv_usec - start->tv_usec)/1000000.0;
 }
 
 EXPORTED void cmdtime_settimer(int enable)
 {
     cmdtime_enabled = enable;
+
+    /* always enable cmdtimer if MAXTIME set */
+    const char *maxtime = config_getstring(IMAPOPT_SEARCH_MAXTIME);
+    if (maxtime) {
+        cmdtime_enabled = 1;
+        search_maxtime = atof(maxtime);
+    }
 }
 
 EXPORTED void cmdtime_starttimer(void)
 {
     if (!cmdtime_enabled)
-	return;
+        return;
     gettimeofday(&cmdtime_start, 0);
     totaltime = cmdtime = nettime = 0.0;
 }
@@ -681,7 +700,7 @@ EXPORTED void cmdtime_starttimer(void)
 EXPORTED void cmdtime_endtimer(double *pcmdtime, double *pnettime)
 {
     if (!cmdtime_enabled)
-	return;
+        return;
     gettimeofday(&cmdtime_end, 0);
     totaltime = timesub(&cmdtime_start, &cmdtime_end);
     cmdtime = totaltime - nettime;
@@ -689,17 +708,30 @@ EXPORTED void cmdtime_endtimer(double *pcmdtime, double *pnettime)
     *pnettime = nettime;
 }
 
+EXPORTED int cmdtime_checksearch(void)
+{
+    struct timeval nowtime;
+    if (!search_maxtime)
+        return 0;
+    gettimeofday(&nowtime, 0);
+    totaltime = timesub(&cmdtime_start, &nowtime);
+    cmdtime = totaltime - nettime;
+    if (cmdtime > search_maxtime)
+        return -1;
+    return 0;
+}
+
 EXPORTED void cmdtime_netstart(void)
 {
     if (!cmdtime_enabled)
-	return;
+        return;
     gettimeofday(&nettime_start, 0);
 }
 
 EXPORTED void cmdtime_netend(void)
 {
     if (!cmdtime_enabled)
-	return;
+        return;
     gettimeofday(&nettime_end, 0);
     nettime += timesub(&nettime_start, &nettime_end);
 }
@@ -728,10 +760,10 @@ EXPORTED int parseint32(const char *p, const char **ptr, int32_t *res)
 
     /* INT_MAX == 2147483647 */
     while (cyrus_isdigit(*p)) {
-	if (result > 214748364 || (result == 214748364 && (*p > '7')))
-	    fatal("num too big", EC_IOERR);
-	result = result * 10 + *p++ - '0';
-	gotchar = 1;
+        if (result > 214748364 || (result == 214748364 && (*p > '7')))
+            fatal("num too big", EC_IOERR);
+        result = result * 10 + *p++ - '0';
+        gotchar = 1;
     }
 
     if (!gotchar) return -1;
@@ -751,10 +783,10 @@ EXPORTED int parseuint32(const char *p, const char **ptr, uint32_t *res)
 
     /* UINT_MAX == 4294967295U */
     while (cyrus_isdigit(*p)) {
-	if (result > 429496729 || (result == 429496729 && (*p > '5')))
-	    fatal("num too big", EC_IOERR);
-	result = result * 10 + *p++ - '0';
-	gotchar = 1;
+        if (result > 429496729 || (result == 429496729 && (*p > '5')))
+            fatal("num too big", EC_IOERR);
+        result = result * 10 + *p++ - '0';
+        gotchar = 1;
     }
 
     if (!gotchar) return -1;
@@ -771,16 +803,16 @@ EXPORTED int parsenum(const char *p, const char **ptr, int maxlen, bit64 *res)
     int n;
     int cval;
 
-    /* ULLONG_MAX == 18446744073709551615ULL 
+    /* ULLONG_MAX == 18446744073709551615ULL
      * - and I don't care about those last 5
      */
     for (n = 0; !maxlen || n < maxlen; n++) {
-	if (!cyrus_isdigit(p[n]))
-	    break;
-	if (result > 1844674407370955161ULL)
-	    fatal("num too big", EC_IOERR);
-	cval = p[n] - '0';
-	result = result * 10 + cval;
+        if (!cyrus_isdigit(p[n]))
+            break;
+        if (result > 1844674407370955161ULL)
+            fatal("num too big", EC_IOERR);
+        cval = p[n] - '0';
+        result = result * 10 + cval;
     }
 
     /* no characters found... */
@@ -792,21 +824,31 @@ EXPORTED int parsenum(const char *p, const char **ptr, int maxlen, bit64 *res)
     return 0;
 }
 
+EXPORTED uint64_t str2uint64(const char *p)
+{
+    const char *rest = p;
+    bit64 res = 0;
+    if (parsenum(p, &rest, 0, &res))
+        return 0;
+    if (*rest) return 0;
+    return res;
+}
+
 EXPORTED int parsehex(const char *p, const char **ptr, int maxlen, bit64 *res)
 {
     bit64 result = 0;
     int n;
     int cval;
 
-    /* ULLONG_MAX == 18446744073709551615ULL 
+    /* ULLONG_MAX == 18446744073709551615ULL
      * - and I don't care about those last 5
      */
     for (n = 0; !maxlen || n < maxlen; n++) {
-	if (result > 1844674407370955161ULL)
-	    fatal("num too big", EC_IOERR);
-	cval = unxdigit[(int)p[n]];
-	if (cval == 0xff) break;
-	result = result * 16 + cval;
+        if (result > 1844674407370955161ULL)
+            fatal("num too big", EC_IOERR);
+        cval = unxdigit[(int)p[n]];
+        if (cval == 0xff) break;
+        result = result * 16 + cval;
     }
 
     /* no characters found... */
@@ -820,18 +862,20 @@ EXPORTED int parsehex(const char *p, const char **ptr, int maxlen, bit64 *res)
 
 /* buffer handling functions */
 
-static size_t roundup(size_t size)
+static inline size_t roundup(size_t size)
+    __attribute__((pure, always_inline, optimize("-O3")));
+static inline size_t roundup(size_t size)
 {
     if (size < 32)
-	return 32;
+        return 32;
     if (size < 64)
-	return 64;
+        return 64;
     if (size < 128)
-	return 128;
+        return 128;
     if (size < 256)
-	return 256;
+        return 256;
     if (size < 512)
-	return 512;
+        return 512;
     return ((size + 1024) & ~1023);
 }
 
@@ -844,38 +888,39 @@ EXPORTED void _buf_ensure(struct buf *buf, size_t n)
     assert(newlen); /* we never alloc zero bytes */
 
     if (buf->alloc >= newlen)
-	return;
+        return;
 
     if (buf->alloc) {
-	buf->alloc = roundup(newlen);
-	buf->s = xrealloc(buf->s, buf->alloc);
+        buf->alloc = roundup(newlen);
+        buf->s = xrealloc(buf->s, buf->alloc);
     }
     else {
-	buf->alloc = roundup(newlen);
-	s = xmalloc(buf->alloc);
+        buf->alloc = roundup(newlen);
+        s = xmalloc(buf->alloc);
 
-	/* if no allocation, but data exists, it means copy on write.
-	 * grab a copy of what's there now */
-	if (buf->len) {
-	    assert(buf->s);
-	    memcpy(s, buf->s, buf->len);
-	}
+        /* if no allocation, but data exists, it means copy on write.
+         * grab a copy of what's there now */
+        if (buf->len) {
+            assert(buf->s);
+            memcpy(s, buf->s, buf->len);
+        }
 
-	/* can release MMAP now, we've copied the data out */
-	if (buf->flags & BUF_MMAP) {
-	    size_t len = buf->len; /* don't wipe the length, we still need it */
-	    map_free((const char **)&buf->s, &len);
-	    buf->flags &= ~BUF_MMAP;
-	}
+        /* can release MMAP now, we've copied the data out */
+        if (buf->flags & BUF_MMAP) {
+            size_t len = buf->len; /* don't wipe the length, we still need it */
+            map_free((const char **)&buf->s, &len);
+            buf->flags &= ~BUF_MMAP;
+        }
 
-	buf->s = s;
+        buf->s = s;
     }
 }
 
-EXPORTED const char *buf_cstring(struct buf *buf)
+EXPORTED const char *buf_cstring(const struct buf *buf)
 {
-    buf_ensure(buf, 1);
-    buf->s[buf->len] = '\0';
+    struct buf *backdoor = (struct buf*)buf;
+    buf_ensure(backdoor, 1);
+    backdoor->s[backdoor->len] = '\0';
     return buf->s;
 }
 
@@ -893,7 +938,7 @@ EXPORTED char *buf_release(struct buf *buf)
     return ret;
 }
 
-EXPORTED const char *buf_cstringnull(struct buf *buf)
+EXPORTED const char *buf_cstringnull(const struct buf *buf)
 {
     if (!buf->s) return NULL;
     return buf_cstring(buf);
@@ -925,9 +970,9 @@ EXPORTED int buf_getline(struct buf *buf, FILE *fp)
 
     buf_reset(buf);
     while ((c = fgetc(fp)) != EOF) {
-	if (c == '\n')
-	    break;
-	buf_putc(buf, c);
+        if (c == '\n')
+            break;
+        buf_putc(buf, c);
     }
     /* ensure trailing NULL */
     buf_cstring(buf);
@@ -936,12 +981,16 @@ EXPORTED int buf_getline(struct buf *buf, FILE *fp)
     return (!(buf->len == 0 && c == EOF));
 }
 
-EXPORTED size_t buf_len(const struct buf *buf)
+EXPORTED inline size_t buf_len(const struct buf *buf)
+    __attribute__((always_inline, optimize("-O3")));
+EXPORTED inline size_t buf_len(const struct buf *buf)
 {
     return buf->len;
 }
 
-EXPORTED const char *buf_base(const struct buf *buf)
+EXPORTED inline const char *buf_base(const struct buf *buf)
+    __attribute__((always_inline, optimize("-O3")));
+EXPORTED inline const char *buf_base(const struct buf *buf)
 {
     return buf->s;
 }
@@ -949,7 +998,7 @@ EXPORTED const char *buf_base(const struct buf *buf)
 EXPORTED void buf_reset(struct buf *buf)
 {
     if (buf->flags & BUF_MMAP)
-	map_free((const char **)&buf->s, &buf->len);
+        map_free((const char **)&buf->s, &buf->len);
     buf->len = 0;
     buf->flags = 0;
 }
@@ -957,14 +1006,14 @@ EXPORTED void buf_reset(struct buf *buf)
 EXPORTED void buf_truncate(struct buf *buf, ssize_t len)
 {
     if (len < 0) {
-	len = buf->len + len;
-	if (len < 0) len = 0;
+        len = buf->len + len;
+        if (len < 0) len = 0;
     }
     if ((size_t)len > buf->alloc) {
-	/* grow the buffer and zero-fill the new bytes */
-	size_t more = len - buf->len;
-	buf_ensure(buf, more);
-	memset(buf->s + buf->len, 0, more);
+        /* grow the buffer and zero-fill the new bytes */
+        size_t more = len - buf->len;
+        buf_ensure(buf, more);
+        memset(buf->s + buf->len, 0, more);
     }
     buf->len = len;
 }
@@ -978,9 +1027,9 @@ EXPORTED void buf_setmap(struct buf *buf, const char *base, size_t len)
 {
     buf_reset(buf);
     if (len) {
-	buf_ensure(buf, len);
-	memcpy(buf->s, base, len);
-	buf->len = len;
+        buf_ensure(buf, len);
+        memcpy(buf->s, base, len);
+        buf->len = len;
     }
 }
 
@@ -1005,12 +1054,18 @@ EXPORTED void buf_appendbit32(struct buf *buf, bit32 num)
     buf_appendmap(buf, (char *)&item, 4);
 }
 
+EXPORTED void buf_appendbit64(struct buf *buf, bit64 num)
+{
+    bit64 item = htonll(num);
+    buf_appendmap(buf, (char *)&item, 8);
+}
+
 EXPORTED void buf_appendmap(struct buf *buf, const char *base, size_t len)
 {
     if (len) {
-	buf_ensure(buf, len);
-	memcpy(buf->s + buf->len, base, len);
-	buf->len += len;
+        buf_ensure(buf, len);
+        memcpy(buf->s + buf->len, base, len);
+        buf->len += len;
     }
 }
 
@@ -1020,9 +1075,9 @@ EXPORTED void buf_appendmap(struct buf *buf, const char *base, size_t len)
 EXPORTED void buf_cowappendmap(struct buf *buf, const char *base, unsigned int len)
 {
     if (!buf->s)
-	buf_init_ro(buf, base, len);
+        buf_init_ro(buf, base, len);
     else
-	buf_appendmap(buf, base, len);
+        buf_appendmap(buf, base, len);
 }
 
 /* This is like buf_cowappendmap() but takes over the given map 'base',
@@ -1030,10 +1085,10 @@ EXPORTED void buf_cowappendmap(struct buf *buf, const char *base, unsigned int l
 EXPORTED void buf_cowappendfree(struct buf *buf, char *base, unsigned int len)
 {
     if (!buf->s)
-	buf_initm(buf, base, len);
+        buf_initm(buf, base, len);
     else {
-	buf_appendmap(buf, base, len);
-	free(base);
+        buf_appendmap(buf, base, len);
+        free(base);
     }
 }
 
@@ -1055,9 +1110,9 @@ EXPORTED void buf_vprintf(struct buf *buf, const char *fmt, va_list args)
     n = vsnprintf(buf->s + buf->len, room, fmt, args);
 
     if (n >= room) {
-	/* woops, we guessed wrong...retry with enough space */
-	buf_ensure(buf, n+1);
-	n = vsnprintf(buf->s + buf->len, n+1, fmt, ap);
+        /* woops, we guessed wrong...retry with enough space */
+        buf_ensure(buf, n+1);
+        n = vsnprintf(buf->s + buf->len, n+1, fmt, ap);
     }
     va_end(ap);
 
@@ -1074,30 +1129,30 @@ EXPORTED void buf_printf(struct buf *buf, const char *fmt, ...)
 }
 
 static void buf_replace_buf(struct buf *buf,
-			    size_t offset,
-			    size_t length,
-			    const struct buf *replace)
+                            size_t offset,
+                            size_t length,
+                            const struct buf *replace)
 {
     if (offset > buf->len) return;
     if (offset + length > buf->len)
-	length = buf->len - offset;
+        length = buf->len - offset;
 
     /* we need buf to be a writable C string now please */
     buf_cstring(buf);
 
     if (replace->len > length) {
-	/* string will need to expand */
-	buf_ensure(buf, replace->len - length + 1);
+        /* string will need to expand */
+        buf_ensure(buf, replace->len - length + 1);
     }
     if (length != replace->len) {
-	/* +1 to copy the NULL to keep cstring semantics */
-	memmove(buf->s + offset + replace->len,
-		buf->s + offset + length,
-		buf->len - offset - length + 1);
-	buf->len += (replace->len - length);
+        /* +1 to copy the NULL to keep cstring semantics */
+        memmove(buf->s + offset + replace->len,
+                buf->s + offset + length,
+                buf->len - offset - length + 1);
+        buf->len += (replace->len - length);
     }
     if (replace->len)
-	memcpy(buf->s + offset, replace->s, replace->len);
+        memcpy(buf->s + offset, replace->s, replace->len);
 }
 
 /**
@@ -1107,7 +1162,7 @@ static void buf_replace_buf(struct buf *buf,
  * Returns: the number of substitutions made.
  */
 EXPORTED int buf_replace_all(struct buf *buf, const char *match,
-			     const char *replace)
+                             const char *replace)
 {
     int n = 0;
     int matchlen = strlen(match);
@@ -1122,10 +1177,10 @@ EXPORTED int buf_replace_all(struct buf *buf, const char *match,
 
     off = 0;
     while ((p = strstr(buf->s + off, match))) {
-	off = (p - buf->s);
-	buf_replace_buf(buf, off, matchlen, &replace_buf);
-	n++;
-	off += replace_buf.len;
+        off = (p - buf->s);
+        buf_replace_buf(buf, off, matchlen, &replace_buf);
+        n++;
+        off += replace_buf.len;
     }
 
     return n;
@@ -1140,10 +1195,10 @@ EXPORTED int buf_replace_char(struct buf *buf, char match, char replace)
     buf_cstring(buf);
 
     for (i = 0; i < buf->len; i++) {
-	if (buf->s[i] == match) {
-	    buf->s[i] = replace;
-	    n++;
-	}
+        if (buf->s[i] == match) {
+            buf->s[i] = replace;
+            n++;
+        }
     }
 
     return n;
@@ -1158,7 +1213,7 @@ EXPORTED int buf_replace_char(struct buf *buf, char match, char replace)
  * Returns: the number of substitutions made (0 or 1)
  */
 EXPORTED int buf_replace_one_re(struct buf *buf, const regex_t *preg,
-				const char *replace)
+                                const char *replace)
 {
     struct buf replace_buf = BUF_INITIALIZER;
     regmatch_t rm;
@@ -1169,8 +1224,8 @@ EXPORTED int buf_replace_one_re(struct buf *buf, const regex_t *preg,
     buf_cstring(buf);
 
     if (!regexec(preg, buf->s, 1, &rm, 0)) {
-	buf_replace_buf(buf, rm.rm_so, rm.rm_eo - rm.rm_so, &replace_buf);
-	return 1;
+        buf_replace_buf(buf, rm.rm_so, rm.rm_eo - rm.rm_so, &replace_buf);
+        return 1;
     }
 
     return 0;
@@ -1184,7 +1239,7 @@ EXPORTED int buf_replace_one_re(struct buf *buf, const regex_t *preg,
  * Returns: the number of substitutions made.
  */
 EXPORTED int buf_replace_all_re(struct buf *buf, const regex_t *preg,
-				const char *replace)
+                                const char *replace)
 {
     int n = 0;
     struct buf replace_buf = BUF_INITIALIZER;
@@ -1198,9 +1253,9 @@ EXPORTED int buf_replace_all_re(struct buf *buf, const regex_t *preg,
 
     off = 0;
     while (!regexec(preg, buf->s + off, 1, &rm, (off ? REG_NOTBOL : 0))) {
-	buf_replace_buf(buf, off + rm.rm_so, rm.rm_eo - rm.rm_so, &replace_buf);
-	off += rm.rm_so + replace_buf.len;
-	n++;
+        buf_replace_buf(buf, off + rm.rm_so, rm.rm_eo - rm.rm_so, &replace_buf);
+        off += rm.rm_so + replace_buf.len;
+        n++;
     }
 
     return n;
@@ -1220,7 +1275,7 @@ EXPORTED void buf_insertcstr(struct buf *dst, unsigned int off, const char *str)
 }
 
 EXPORTED void buf_insertmap(struct buf *dst, unsigned int off,
-			    const char *base, int len)
+                            const char *base, int len)
 {
     struct buf map_buf = BUF_INITIALIZER;
     buf_init_ro(&map_buf, base, len);
@@ -1243,13 +1298,13 @@ EXPORTED int buf_cmp(const struct buf *a, const struct buf *b)
     int r = 0;
 
     if (len)
-	r = memcmp(a->s, b->s, len);
+        r = memcmp(a->s, b->s, len);
 
     if (!r) {
-	if (a->len < b->len)
-	    r = -1;
-	else if (a->len > b->len)
-	    r = 1;
+        if (a->len < b->len)
+            r = -1;
+        else if (a->len > b->len)
+            r = 1;
     }
 
     return r;
@@ -1305,19 +1360,19 @@ EXPORTED void buf_init_ro_cstr(struct buf *buf, const char *str)
  * using map_free().
  */
 EXPORTED void buf_init_mmap(struct buf *buf, int onceonly, int fd,
-			    const char *fname, size_t size, const char *mboxname)
+                            const char *fname, size_t size, const char *mboxname)
 {
     buf->flags = BUF_MMAP;
     map_refresh(fd, onceonly, (const char **)&buf->s, &buf->len,
-		size, fname, mboxname);
+                size, fname, mboxname);
 }
 
 static void _buf_free_data(struct buf *buf)
 {
     if (buf->alloc)
-	free(buf->s);
+        free(buf->s);
     else if (buf->flags & BUF_MMAP)
-	map_free((const char **)&buf->s, &buf->len);
+        map_free((const char **)&buf->s, &buf->len);
 }
 
 EXPORTED void buf_free(struct buf *buf)
@@ -1341,7 +1396,7 @@ EXPORTED int buf_findchar(const struct buf *buf, unsigned int off, int c)
     const char *p;
 
     if (off < buf->len && (p = memchr(buf->s + off, c, buf->len - off)))
-	return (p - buf->s);
+        return (p - buf->s);
     return -1;
 }
 
@@ -1365,16 +1420,16 @@ EXPORTED int buf_findline(const struct buf *buf, const char *line)
     if (linelen == 0) return -1;
 
     for (p = buf->s ;
-	 (p = (const char *)memmem(p, end-p, line, linelen)) != NULL ;
-	 p++) {
+         (p = (const char *)memmem(p, end-p, line, linelen)) != NULL ;
+         p++) {
 
-	/* check the found string is at line boundaries */
-	if (p > buf->s && p[-1] != '\n')
-	    continue;
-	if ((p+linelen) < end && p[linelen] != '\n')
-	    continue;
+        /* check the found string is at line boundaries */
+        if (p > buf->s && p[-1] != '\n')
+            continue;
+        if ((p+linelen) < end && p[linelen] != '\n')
+            continue;
 
-	return (p - buf->s);
+        return (p - buf->s);
     }
 
     return -1;
@@ -1382,20 +1437,20 @@ EXPORTED int buf_findline(const struct buf *buf, const char *line)
 
 EXPORTED char *strconcat(const char *s1, ...)
 {
-    int sz = 1;	/* 1 byte for the trailing NUL */
+    int sz = 1; /* 1 byte for the trailing NUL */
     const char *s;
     char *buf;
     char *p;
     va_list args;
 
     if (s1 == NULL)
-	return NULL;
+        return NULL;
 
     /* first pass: calculate length */
     sz += strlen(s1);
     va_start(args, s1);
     while ((s = va_arg(args, const char *)) != NULL)
-	sz += strlen(s);
+        sz += strlen(s);
     va_end(args);
 
     /* allocate exactly the right amount of space */
@@ -1406,12 +1461,43 @@ EXPORTED char *strconcat(const char *s1, ...)
     p += strlen(p);
     va_start(args, s1);
     while ((s = va_arg(args, const char *)) != NULL) {
-	strcpy(p, s);
-	p += strlen(p);
+        strcpy(p, s);
+        p += strlen(p);
     }
     va_end(args);
 
     return buf;
+}
+
+EXPORTED const char *buf_lcase(struct buf *buf)
+{
+    buf_cstring(buf);
+    lcase(buf->s);
+    return buf->s;
+}
+
+EXPORTED void buf_trim(struct buf *buf)
+{
+    size_t i;
+    for (i = 0; i < buf->len; i++) {
+        if (buf->s[i] == ' ') continue;
+        if (buf->s[i] == '\t') continue;
+        if (buf->s[i] == '\r') continue;
+        if (buf->s[i] == '\n') continue;
+        break;
+    }
+    if (i) buf_remove(buf, 0, i);
+
+    for (i = buf->len; i > 1; i--) {
+        if (buf->s[i-1] == ' ') continue;
+        if (buf->s[i-1] == '\t') continue;
+        if (buf->s[i-1] == '\r') continue;
+        if (buf->s[i-1] == '\n') continue;
+        break;
+    }
+    if (i != buf->len) {
+        buf_truncate(buf, i);
+    }
 }
 
 EXPORTED int bin_to_hex(const void *bin, size_t binlen, char *hex, int flags)
@@ -1423,8 +1509,8 @@ EXPORTED int bin_to_hex(const void *bin, size_t binlen, char *hex, int flags)
     char sep = _BH_GETSEP(flags);
 
     for (i = 0; i < binlen; i++, v++) {
-	if (i && sep)
-	    *p++ = sep;
+        if (i && sep)
+            *p++ = sep;
         *p++ = xd[(*v >> 4) & 0xf];
         *p++ = xd[*v & 0xf];
     }
@@ -1440,21 +1526,21 @@ EXPORTED int hex_to_bin(const char *hex, size_t hexlen, void *bin)
     size_t i;
 
     if (hex == NULL)
-	return -1;
+        return -1;
     if (hexlen == 0)
-	hexlen = strlen(hex);
+        hexlen = strlen(hex);
     if (hexlen % 2)
-	return -1;
+        return -1;
     hexlen /= 2;
 
     for (i = 0 ; i < hexlen ; i++) {
-	msn = unxdigit[(*p++) & 0x7f];
-	if (msn == 0xff)
-	    return -1;
-	lsn = unxdigit[(*p++) & 0x7f];
-	if (lsn == 0xff)
-	    return -1;
-	*v++ = (msn << 4) | lsn;
+        msn = unxdigit[(*p++) & 0x7f];
+        if (msn == 0xff)
+            return -1;
+        lsn = unxdigit[(*p++) & 0x7f];
+        if (lsn == 0xff)
+            return -1;
+        *v++ = (msn << 4) | lsn;
     }
 
     return (unsigned char *)v - (unsigned char *)bin;
@@ -1464,13 +1550,13 @@ EXPORTED int hex_to_bin(const char *hex, size_t hexlen, void *bin)
 
 /* Wrappers for our memory management functions */
 static voidpf zalloc(voidpf opaque __attribute__((unused)),
-		     uInt items, uInt size)
+                     uInt items, uInt size)
 {
     return (voidpf) xmalloc(items * size);
 }
 
 static void zfree(voidpf opaque __attribute__((unused)),
-		  voidpf address)
+                  voidpf address)
 {
     free(address);
 }
@@ -1484,17 +1570,17 @@ EXPORTED int buf_inflate(struct buf *src, int scheme)
 
     switch (scheme) {
     case DEFLATE_RAW:
-	windowBits = -MAX_WBITS;	/* raw deflate */
-	break;
+        windowBits = -MAX_WBITS;        /* raw deflate */
+        break;
 
     case DEFLATE_GZIP:
-	windowBits = 16+MAX_WBITS;	/* gzip header */
-	break;
+        windowBits = 16+MAX_WBITS;      /* gzip header */
+        break;
 
     case DEFLATE_ZLIB:
     default:
-	windowBits = MAX_WBITS;		/* zlib header */
-	break;
+        windowBits = MAX_WBITS;         /* zlib header */
+        break;
     }
 
     zstrm->zalloc = zalloc;
@@ -1512,14 +1598,14 @@ EXPORTED int buf_inflate(struct buf *src, int scheme)
 
     /* prepare the destination */
     do {
-	buf_ensure(&localbuf, 4096);
-	/* find the buffer */
-	zstrm->next_out = (unsigned char *)localbuf.s + localbuf.len;
-	zstrm->avail_out = localbuf.alloc - localbuf.len;
-	zr = inflate(zstrm, Z_SYNC_FLUSH);
-	if (!(zr == Z_OK || zr == Z_STREAM_END || zr == Z_BUF_ERROR))
-	   goto err;
-	localbuf.len = localbuf.alloc - zstrm->avail_out;
+        buf_ensure(&localbuf, 4096);
+        /* find the buffer */
+        zstrm->next_out = (unsigned char *)localbuf.s + localbuf.len;
+        zstrm->avail_out = localbuf.alloc - localbuf.len;
+        zr = inflate(zstrm, Z_SYNC_FLUSH);
+        if (!(zr == Z_OK || zr == Z_STREAM_END || zr == Z_BUF_ERROR))
+           goto err;
+        localbuf.len = localbuf.alloc - zstrm->avail_out;
     } while (zstrm->avail_out == 0);
 
     inflateEnd(zstrm);
@@ -1544,17 +1630,17 @@ EXPORTED int buf_deflate(struct buf *src, int compLevel, int scheme)
 
     switch (scheme) {
     case DEFLATE_RAW:
-	windowBits = -MAX_WBITS;	/* raw deflate */
-	break;
+        windowBits = -MAX_WBITS;        /* raw deflate */
+        break;
 
     case DEFLATE_GZIP:
-	windowBits = 16+MAX_WBITS;	/* gzip header */
-	break;
+        windowBits = 16+MAX_WBITS;      /* gzip header */
+        break;
 
     case DEFLATE_ZLIB:
     default:
-	windowBits = MAX_WBITS;		/* zlib header */
-	break;
+        windowBits = MAX_WBITS;         /* zlib header */
+        break;
     }
 
     zstrm->zalloc = zalloc;
@@ -1562,7 +1648,7 @@ EXPORTED int buf_deflate(struct buf *src, int compLevel, int scheme)
     zstrm->opaque = Z_NULL;
 
     zr = deflateInit2(zstrm, compLevel, Z_DEFLATED, windowBits,
-		      MAX_MEM_LEVEL, Z_DEFAULT_STRATEGY);
+                      MAX_MEM_LEVEL, Z_DEFAULT_STRATEGY);
     if (zr != Z_OK) goto err;
 
     /* set up the source */
@@ -1571,14 +1657,14 @@ EXPORTED int buf_deflate(struct buf *src, int compLevel, int scheme)
 
     /* prepare the destination */
     do {
-	buf_ensure(&localbuf, 4096);
-	/* find the buffer */
-	zstrm->next_out = (unsigned char *)localbuf.s + localbuf.len;
-	zstrm->avail_out = localbuf.alloc - localbuf.len;
-	zr = deflate(zstrm, Z_SYNC_FLUSH);
-	if (!(zr == Z_OK || zr == Z_STREAM_END || zr == Z_BUF_ERROR))
-	   goto err;
-	localbuf.len = localbuf.alloc - zstrm->avail_out;
+        buf_ensure(&localbuf, 4096);
+        /* find the buffer */
+        zstrm->next_out = (unsigned char *)localbuf.s + localbuf.len;
+        zstrm->avail_out = localbuf.alloc - localbuf.len;
+        zr = deflate(zstrm, Z_SYNC_FLUSH);
+        if (!(zr == Z_OK || zr == Z_STREAM_END || zr == Z_BUF_ERROR))
+           goto err;
+        localbuf.len = localbuf.alloc - zstrm->avail_out;
     } while (zstrm->avail_out == 0);
 
     deflateEnd(zstrm);
@@ -1606,7 +1692,7 @@ EXPORTED int buf_deflate(struct buf *src, int compLevel, int scheme)
  * Returns zero on success or an error code (system error code).
  */
 EXPORTED int warmup_file(const char *filename,
-		         off_t offset, off_t length)
+                         off_t offset, off_t length)
 {
     int fd;
     int r;
@@ -1629,6 +1715,30 @@ EXPORTED int warmup_file(const char *filename,
     return r;
 }
 
+EXPORTED const char *makeuuid()
+{
+    /* 36 bytes of uuid plus \0 */
+    static char res[37];
+    memset(res, 0, 37);
+#ifdef HAVE_LIBUUID
+    uuid_t uu;
+    uuid_clear(uu); /* Just In Case */
+    uuid_generate(uu);
+    /* Solaris has an older libuuid which has uuid_unparse() but not
+     * uuid_unparse_lower(), so we post-process the result ourself. */
+    uuid_unparse(uu, res);
+    lcase(res);
+#else
+    /* some random nonsense for 24 chars - probably less secure */
+    int i;
+    for (i = 0; i < 24; i++) {
+        int item = rand() % 36;
+        res[i] = (item < 10 ? '0' + item : 'a' + item - 10);
+    }
+#endif
+    return res;
+}
+
 static int is_tcp_socket(int fd)
 {
     int so_type;
@@ -1639,17 +1749,17 @@ static int is_tcp_socket(int fd)
     if (fd < 0) return 0;
 
     if (getsockopt(fd, SOL_SOCKET, SO_TYPE, &so_type, &so_type_len) == -1) {
-	if (errno != ENOTSOCK)
-	    syslog(LOG_ERR, "%s: getsockopt(%d): %m", __func__, fd);
-	return 0;
+        if (errno != ENOTSOCK)
+            syslog(LOG_ERR, "%s: getsockopt(%d): %m", __func__, fd);
+        return 0;
     }
 
     if (so_type != SOCK_STREAM) return 0;
 
     if (getsockname(fd, &sock_addr, &sock_addr_len) == -1) {
-	if (errno != ENOTSOCK)
-	    syslog(LOG_ERR, "%s: getsockname(%d): %m", __func__, fd);
-	return 0;
+        if (errno != ENOTSOCK)
+            syslog(LOG_ERR, "%s: getsockname(%d): %m", __func__, fd);
+        return 0;
     }
 
     /* XXX be a bit more pedantic? */
@@ -1664,41 +1774,41 @@ EXPORTED void tcp_enable_keepalive(int fd)
 
     /* turn on TCP keepalive if set */
     if (config_getswitch(IMAPOPT_TCP_KEEPALIVE)) {
-	int r;
-	int optval = 1;
-	socklen_t optlen = sizeof(optval);
-	struct protoent *proto = getprotobyname("TCP");
+        int r;
+        int optval = 1;
+        socklen_t optlen = sizeof(optval);
+        struct protoent *proto = getprotobyname("TCP");
 
-	r = setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen);
-	if (r < 0) {
-	    syslog(LOG_ERR, "unable to setsocketopt(SO_KEEPALIVE): %m");
-	}
+        r = setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen);
+        if (r < 0) {
+            syslog(LOG_ERR, "unable to setsocketopt(SO_KEEPALIVE): %m");
+        }
 #ifdef TCP_KEEPCNT
-	optval = config_getint(IMAPOPT_TCP_KEEPALIVE_CNT);
-	if (optval) {
-	    r = setsockopt(fd, proto->p_proto, TCP_KEEPCNT, &optval, optlen);
-	    if (r < 0) {
-		syslog(LOG_ERR, "unable to setsocketopt(TCP_KEEPCNT): %m");
-	    }
-	}
+        optval = config_getint(IMAPOPT_TCP_KEEPALIVE_CNT);
+        if (optval) {
+            r = setsockopt(fd, proto->p_proto, TCP_KEEPCNT, &optval, optlen);
+            if (r < 0) {
+                syslog(LOG_ERR, "unable to setsocketopt(TCP_KEEPCNT): %m");
+            }
+        }
 #endif
 #ifdef TCP_KEEPIDLE
-	optval = config_getint(IMAPOPT_TCP_KEEPALIVE_IDLE);
-	if (optval) {
-	    r = setsockopt(fd, proto->p_proto, TCP_KEEPIDLE, &optval, optlen);
-	    if (r < 0) {
-		syslog(LOG_ERR, "unable to setsocketopt(TCP_KEEPIDLE): %m");
-	    }
-	}
+        optval = config_getint(IMAPOPT_TCP_KEEPALIVE_IDLE);
+        if (optval) {
+            r = setsockopt(fd, proto->p_proto, TCP_KEEPIDLE, &optval, optlen);
+            if (r < 0) {
+                syslog(LOG_ERR, "unable to setsocketopt(TCP_KEEPIDLE): %m");
+            }
+        }
 #endif
 #ifdef TCP_KEEPINTVL
-	optval = config_getint(IMAPOPT_TCP_KEEPALIVE_INTVL);
-	if (optval) {
-	    r = setsockopt(fd, proto->p_proto, TCP_KEEPINTVL, &optval, optlen);
-	    if (r < 0) {
-		syslog(LOG_ERR, "unable to setsocketopt(TCP_KEEPINTVL): %m");
-	    }
-	}
+        optval = config_getint(IMAPOPT_TCP_KEEPALIVE_INTVL);
+        if (optval) {
+            r = setsockopt(fd, proto->p_proto, TCP_KEEPINTVL, &optval, optlen);
+            if (r < 0) {
+                syslog(LOG_ERR, "unable to setsocketopt(TCP_KEEPINTVL): %m");
+            }
+        }
 #endif
     }
 }

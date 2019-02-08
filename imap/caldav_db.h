@@ -61,38 +61,40 @@ extern time_t caldav_eternity;
 
 #ifndef HAVE_VPOLL
 /* Allow us to compile without #ifdef HAVE_VPOLL everywhere */
-#define ICAL_VPOLL_COMPONENT   	      ICAL_NO_COMPONENT
-#define ICAL_METHOD_POLLSTATUS	      ICAL_METHOD_NONE
-#define ICAL_VOTER_PROPERTY	      ICAL_NO_PROPERTY
-#define icalproperty_get_voter	      icalproperty_get_attendee
+#define ICAL_VPOLL_COMPONENT          ICAL_NO_COMPONENT
+#define ICAL_VVOTER_COMPONENT         ICAL_X_COMPONENT
+#define ICAL_METHOD_POLLSTATUS        ICAL_METHOD_NONE
+#define ICAL_VOTER_PROPERTY           ICAL_NO_PROPERTY
+#define icalproperty_get_voter        icalproperty_get_attendee
 #endif
 
 /* Bitmask of calendar components */
 enum {
     /* "Real" components - MUST remain in this order (values used in DAV DB) */
-    CAL_COMP_VEVENT =		(1<<0),
-    CAL_COMP_VTODO =		(1<<1),
-    CAL_COMP_VJOURNAL =		(1<<2),
-    CAL_COMP_VFREEBUSY =	(1<<3),
-    CAL_COMP_VAVAILABILITY =	(1<<4),
-    CAL_COMP_VPOLL =	   	(1<<5),
+    CAL_COMP_VEVENT =           (1<<0),
+    CAL_COMP_VTODO =            (1<<1),
+    CAL_COMP_VJOURNAL =         (1<<2),
+    CAL_COMP_VFREEBUSY =        (1<<3),
+    CAL_COMP_VAVAILABILITY =    (1<<4),
+    CAL_COMP_VPOLL =            (1<<5),
     /* Append additional "real" components here */
 
     /* Other components - values don't matter - prepend here */
-    CAL_COMP_VALARM =		(1<<13),
-    CAL_COMP_VTIMEZONE =	(1<<14),
-    CAL_COMP_VCALENDAR =	(1<<15)
+    CAL_COMP_VALARM =           (1<<13),
+    CAL_COMP_VTIMEZONE =        (1<<14),
+    CAL_COMP_VCALENDAR =        (1<<15)
 };
+
+#define CAL_COMP_REAL            0xff   /* All "real" components */
 
 struct caldav_db;
 
-#define CALDAV_CREATE 0x01
-#define CALDAV_TRUNC  0x02
-
 struct comp_flags {
-    unsigned recurring	  : 1;
-    unsigned transp	  : 1;
-    unsigned status	  : 2;
+    unsigned recurring    : 1;          /* Has RRULE property */
+    unsigned transp       : 1;          /* Is TRANSParent */
+    unsigned status       : 2;          /* STATUS property value (see below) */
+    unsigned tzbyref      : 1;          /* VTIMEZONEs by reference */
+    unsigned mattach      : 1;          /* Has managed ATTACHment(s) */
 };
 
 /* Status values */
@@ -114,6 +116,8 @@ struct caldav_data {
     const char *sched_tag;
 };
 
+typedef int caldav_cb_t(void *rock, struct caldav_data *cdata);
+
 /* prepare for caldav operations in this process */
 int caldav_init(void);
 
@@ -121,8 +125,8 @@ int caldav_init(void);
 int caldav_done(void);
 
 /* get a database handle corresponding to mailbox */
-struct caldav_db *caldav_open_mailbox(struct mailbox *mailbox, int flags);
-struct caldav_db *caldav_open_userid(const char *userid, int flags);
+struct caldav_db *caldav_open_mailbox(struct mailbox *mailbox);
+struct caldav_db *caldav_open_userid(const char *userid);
 
 /* close this handle */
 int caldav_close(struct caldav_db *caldavdb);
@@ -130,28 +134,44 @@ int caldav_close(struct caldav_db *caldavdb);
 /* lookup an entry from 'caldavdb' by resource
    (optionally inside a transaction for updates) */
 int caldav_lookup_resource(struct caldav_db *caldavdb,
-			   const char *mailbox, const char *resource,
-			   int lock, struct caldav_data **result);
+                           const char *mailbox, const char *resource,
+                           struct caldav_data **result,
+                           int tombstones);
+
+/* lookup an entry from 'caldavdb' by mailbox and IMAP uid
+   (optionally inside a transaction for updates) */
+int caldav_lookup_imapuid(struct caldav_db *caldavdb,
+                          const char *mailbox, int uid,
+                          struct caldav_data **result,
+                          int tombstones);
 
 /* lookup an entry from 'caldavdb' by iCal UID
    (optionally inside a transaction for updates) */
 int caldav_lookup_uid(struct caldav_db *caldavdb, const char *ical_uid,
-		      int lock, struct caldav_data **result);
+                      struct caldav_data **result);
 
 /* process each entry for 'mailbox' in 'caldavdb' with cb() */
 int caldav_foreach(struct caldav_db *caldavdb, const char *mailbox,
-		   int (*cb)(void *rock, void *data),
-		   void *rock);
+                   caldav_cb_t *cb, void *rock);
+
+/* process each entry for 'mailbox' in 'caldavdb' with cb()
+ * which last recurrence ends after 'after' and first
+ * recurrence starts before 'before'. The largest possible
+ * timerange spans from caldav_epoch to caldav_eternity. */
+int caldav_foreach_timerange(struct caldav_db *caldavdb, const char *mailbox,
+                             time_t after, time_t before,
+                             caldav_cb_t *cb, void *rock);
 
 /* write an entry to 'caldavdb' */
-int caldav_write(struct caldav_db *caldavdb, struct caldav_data *cdata,
-		 int commit);
+int caldav_write(struct caldav_db *caldavdb, struct caldav_data *cdata);
+int caldav_writeentry(struct caldav_db *caldavdb, struct caldav_data *cdata,
+                      icalcomponent *ical);
 
 /* delete an entry from 'caldavdb' */
-int caldav_delete(struct caldav_db *caldavdb, unsigned rowid, int commit);
+int caldav_delete(struct caldav_db *caldavdb, unsigned rowid);
 
 /* delete all entries for 'mailbox' from 'caldavdb' */
-int caldav_delmbox(struct caldav_db *caldavdb, const char *mailbox, int commit);
+int caldav_delmbox(struct caldav_db *caldavdb, const char *mailbox);
 
 /* begin transaction */
 int caldav_begin(struct caldav_db *caldavdb);
@@ -162,12 +182,18 @@ int caldav_commit(struct caldav_db *caldavdb);
 /* abort transaction */
 int caldav_abort(struct caldav_db *caldavdb);
 
-/* create caldav_data from icalcomponent */
-void caldav_make_entry(icalcomponent *ical, struct caldav_data *cdata);
-
 char *caldav_mboxname(const char *userid, const char *name);
 
-/* release memory used by struct caldav_data */
-void caldav_data_fini(struct caldav_data *cdata);
+int caldav_get_events(struct caldav_db *caldavdb,
+                      const char *mailbox, const char *ical_uid,
+                      caldav_cb_t *cb, void *rock);
+
+/* Process each entry for 'caldavdb' with a modseq higher than oldmodseq,
+ * in ascending order of modseq.
+ * If mailbox is not NULL, only process entries of this mailbox.
+ * If max_records is positive, only call cb for at most this entries. */
+int caldav_get_updates(struct caldav_db *caldavdb,
+                       modseq_t oldmodseq, const char *mailbox, int kind,
+                       int max_records, caldav_cb_t *cb, void *rock);
 
 #endif /* CALDAV_DB_H */

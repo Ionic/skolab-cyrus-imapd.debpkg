@@ -126,7 +126,7 @@
 #include "xstrlcpy.h"
 
 #define ADDRERR_SIZE 500
-    
+
 void yyerror(sieve_script_t*, const char *);
 extern int addrlex(YYSTYPE*, sieve_script_t*);
 
@@ -134,7 +134,7 @@ extern int addrlex(YYSTYPE*, sieve_script_t*);
 
 /* byacc default is 500, bison default is 10000 - go with the
    larger to support big sieve scripts (see Bug #3461) */
-#define YYSTACKSIZE 10000 
+#define YYSTACKSIZE 10000
 
 #line 140 "sieve/addr.c" /* yacc.c:339  */
 

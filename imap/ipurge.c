@@ -57,12 +57,14 @@
 /* cyrus includes */
 #include "global.h"
 #include "exitcodes.h"
-#include "imap/imap_err.h"
 #include "mailbox.h"
 #include "xmalloc.h"
 #include "mboxlist.h"
 #include "util.h"
 #include "sync_log.h"
+
+/* generated headers are not necessarily in current directory */
+#include "imap/imap_err.h"
 
 /* globals for getopt routines */
 extern char *optarg;
@@ -82,70 +84,68 @@ static int invertmatch = 0;
 /* for statistical purposes */
 typedef struct mbox_stats_s {
 
-    int total;         /* total including those deleted */
-    int total_bytes;
-    int deleted;       
-    int deleted_bytes;
+    uint64_t total;         /* total including those deleted */
+    uint64_t total_bytes;
+    uint64_t deleted;
+    uint64_t deleted_bytes;
 
 } mbox_stats_t;
 
-/* current namespace */
-static struct namespace purge_namespace;
-
 static int dryrun = 0;
-static int verbose = 1;
+static int verbose = 0;
 static int forceall = 0;
 
-static int purge_me(char *, int, int, void *);
+static int purge_me(struct findall_data *, void *);
 static unsigned purge_check(struct mailbox *mailbox,
-		     struct index_record *record,
-		     void *rock);
+                            const struct index_record *record,
+                            void *rock);
 static int usage(const char *name);
 static void print_record(struct mailbox *mailbox,
-                         struct index_record *record);
+                         const struct index_record *record);
 static void print_stats(mbox_stats_t *stats);
 
 int main (int argc, char *argv[]) {
-  int option;		/* getopt() returns an int */
-  char buf[MAX_MAILBOX_PATH+1];
+  int option;           /* getopt() returns an int */
   char *alt_config = NULL;
-  int r;
 
   if ((geteuid()) == 0 && (become_cyrus(/*is_master*/0) != 0)) {
       fatal("must run as the Cyrus user", EC_USAGE);
   }
 
-  while ((option = getopt(argc, argv, "C:hxd:b:k:m:fsXion")) != EOF) {
+  while ((option = getopt(argc, argv, "C:hxd:b:k:m:fsXionv")) != EOF) {
     switch (option) {
     case 'C': /* alt config file */
       alt_config = optarg;
       break;
     case 'd': {
       if (optarg == 0) {
-	usage(argv[0]);
+        usage(argv[0]);
       }
       days = atoi(optarg) * 86400 /* nominal # of seconds in a 'day' */;
     } break;
     case 'b': {
       if (optarg == 0) {
-	usage(argv[0]);
+        usage(argv[0]);
       }
       size = atoi(optarg);
     } break;
     case 'k': {
       if (optarg == 0) {
-	usage(argv[0]);
+        usage(argv[0]);
       }
       size = atoi(optarg) * 1024; /* make it bytes */
     } break;
     case 'm': {
       if (optarg == 0) {
-	usage(argv[0]);
+        usage(argv[0]);
       }
       size = atoi(optarg) * 1048576; /* 1024 * 1024 */
     } break;
     case 'n' : {
       dryrun = 1;
+    } break;
+    case 'v' : {
+      verbose++;
     } break;
     case 'x' : {
       exact = 1;
@@ -179,14 +179,6 @@ int main (int argc, char *argv[]) {
   /* setup for mailbox event notifications */
   mboxevent_init();
 
-  /* Set namespace -- force standard (internal) */
-  if ((r = mboxname_init_namespace(&purge_namespace, 1)) != 0) {
-      syslog(LOG_ERR, "%s", error_message(r));
-      fatal(error_message(r), EC_CONFIG);
-  }
-
-  mboxevent_setnamespace(&purge_namespace);
-
   mboxlist_init(0);
   mboxlist_open(NULL);
 
@@ -197,19 +189,16 @@ int main (int argc, char *argv[]) {
   sync_log_init();
 
   if (optind == argc) { /* do the whole partition */
-    strcpy(buf, "*");
-    (*purge_namespace.mboxlist_findall)(&purge_namespace, buf, 1, 0, 0,
-					purge_me, NULL);
+    mboxlist_findall(NULL, "*", 1, 0, 0, purge_me, NULL);
   } else {
+    /* do all matching mailboxes in one pass */
+    strarray_t *array = strarray_new();
     for (; optind < argc; optind++) {
-      strncpy(buf, argv[optind], MAX_MAILBOX_BUFFER);
-      /* Translate any separators in mailboxname */
-      mboxname_hiersep_tointernal(&purge_namespace, buf,
-				  config_virtdomains ?
-				  strcspn(buf, "@") : 0);
-      (*purge_namespace.mboxlist_findall)(&purge_namespace, buf, 1, 0, 0,
-					  purge_me, NULL);
+      strarray_append(array, argv[optind]);
     }
+    if (array->count)
+      mboxlist_findallmulti(NULL, array, 1, 0, 0, purge_me, NULL);
+    strarray_free(array);
   }
 
   sync_log_done();
@@ -237,33 +226,29 @@ static int usage(const char *name)
   printf("\t -i invert match logic: -x means not equal, date is for newer, size is for smaller.\n");
   printf("\t -o only purge messages that are deleted.\n");
   printf("\t -n only print messages that would be deleted (dry run).\n");
+  printf("\t -v enable verbose output/logging.\n");
   exit(0);
 }
 
-/* we don't check what comes in on matchlen and maycreate, should we? */
-static int purge_me(char *name, int matchlen __attribute__((unused)),
-		    int maycreate __attribute__((unused)),
-		    void *rock __attribute__((unused)))
+/* we don't check what comes in on matchlen and category, should we? */
+static int purge_me(struct findall_data *data, void *rock __attribute__((unused)))
 {
-  struct mailbox *mailbox = NULL;
-  int r;
-  mbox_stats_t stats;
+    if (!data) return 0;
+    struct mailbox *mailbox = NULL;
+    int r;
+    mbox_stats_t stats;
+    const char *name = mbname_intname(data->mbname);
 
-  if (!forceall) {
-      /* DON'T purge INBOX* and user.* */
-      if (!strncasecmp(name,"INBOX",5) || mboxname_isusermailbox(name, 0))
-	  return 0;
-  }
+    if (!forceall) {
+        /* DON'T purge INBOX* and user.* */
+        if (mbname_userid(data->mbname))
+            return 0;
+    }
 
   memset(&stats, '\0', sizeof(mbox_stats_t));
 
   if (verbose) {
-      char mboxname[MAX_MAILBOX_BUFFER];
-
-      /* Convert internal name to external */
-      (*purge_namespace.mboxname_toexternal)(&purge_namespace, name,
-					     "cyrus", mboxname);
-      printf("Working on %s...\n", mboxname);
+      printf("Working on %s...\n", name);
   }
 
   r = mailbox_open_iwl(name, &mailbox);
@@ -290,8 +275,8 @@ static void deleteit(bit32 msgsize, mbox_stats_t *stats)
 /* thumbs up routine, checks date & size and returns yes or no for deletion */
 /* 0 = no, 1 = yes */
 static unsigned purge_check(struct mailbox *mailbox,
-			    struct index_record *record,
-			    void *deciderock)
+                     const struct index_record *record,
+                     void *deciderock)
 {
   time_t my_time;
   time_t senttime;
@@ -313,24 +298,24 @@ static unsigned purge_check(struct mailbox *mailbox,
     if (days >= 0) {
       /*    printf("comparing %ld :: %ld\n", my_time, the_record->sentdate); */
       if (((my_time - (time_t) senttime)/86400) == (days/86400)) {
-	  if (invertmatch) return 0;
-	  deleteit(record->size, stats);
+          if (invertmatch) return 0;
+          deleteit(record->size, stats);
           return dryrun ? print_record(mailbox, record), 0 : 1;
       } else {
-	  if (!invertmatch) return 0;
-	  deleteit(record->size, stats);
+          if (!invertmatch) return 0;
+          deleteit(record->size, stats);
           return dryrun ? print_record(mailbox, record), 0 : 1;
       }
     }
     if (size >= 0) {
       /* check size */
-	if (record->size == (unsigned)size) {
-	  if (invertmatch) return 0;
-	  deleteit(record->size, stats);
+        if (record->size == (unsigned)size) {
+          if (invertmatch) return 0;
+          deleteit(record->size, stats);
           return dryrun ? print_record(mailbox, record), 0 : 1;
       } else {
-	  if (!invertmatch) return 0;
-	  deleteit(record->size, stats);
+          if (!invertmatch) return 0;
+          deleteit(record->size, stats);
           return dryrun ? print_record(mailbox, record), 0 : 1;
       }
     }
@@ -339,22 +324,22 @@ static unsigned purge_check(struct mailbox *mailbox,
     if (days >= 0) {
       /*    printf("comparing %ld :: %ld\n", my_time, the_record->sentdate); */
       if (!invertmatch && ((my_time - (time_t) senttime) > days)) {
-	  deleteit(record->size, stats);
+          deleteit(record->size, stats);
           return dryrun ? print_record(mailbox, record), 0 : 1;
       }
       if (invertmatch && ((my_time - (time_t) senttime) < days)) {
-	  deleteit(record->size, stats);
+          deleteit(record->size, stats);
           return dryrun ? print_record(mailbox, record), 0 : 1;
       }
     }
     if (size >= 0) {
       /* check size */
-	if (!invertmatch && ((int) record->size > size)) {
-	  deleteit(record->size, stats);
+        if (!invertmatch && ((int) record->size > size)) {
+          deleteit(record->size, stats);
           return dryrun ? print_record(mailbox, record), 0 : 1;
       }
-	if (invertmatch && ((int) record->size < size)) {
-	  deleteit(record->size, stats);
+        if (invertmatch && ((int) record->size < size)) {
+          deleteit(record->size, stats);
           return dryrun ? print_record(mailbox, record), 0 : 1;
       }
     }
@@ -363,7 +348,7 @@ static unsigned purge_check(struct mailbox *mailbox,
 }
 
 static void print_record(struct mailbox *mailbox,
-                         struct index_record *record)
+                         const struct index_record *record)
 {
     printf("UID: %u\n", record->uid);
     printf("\tSize: %u\n", record->size);
@@ -390,11 +375,11 @@ static void print_record(struct mailbox *mailbox,
 
 static void print_stats(mbox_stats_t *stats)
 {
-    printf("Total messages    \t\t %d\n",stats->total);
-    printf("Total bytes       \t\t %d\n",stats->total_bytes);
-    printf("Deleted messages  \t\t %d\n",stats->deleted);
-    printf("Deleted bytes     \t\t %d\n",stats->deleted_bytes);
-    printf("Remaining messages\t\t %d\n",stats->total - stats->deleted);
-    printf("Remaining bytes   \t\t %d\n",
-	   stats->total_bytes - stats->deleted_bytes);
+    printf("Total messages    \t\t %llu\n", (long long unsigned)stats->total);
+    printf("Total bytes       \t\t %llu\n", (long long unsigned)stats->total_bytes);
+    printf("Deleted messages  \t\t %llu\n", (long long unsigned)stats->deleted);
+    printf("Deleted bytes     \t\t %llu\n", (long long unsigned)stats->deleted_bytes);
+    printf("Remaining messages\t\t %llu\n", (long long unsigned)stats->total - stats->deleted);
+    printf("Remaining bytes   \t\t %llu\n",
+            (long long unsigned)stats->total_bytes - stats->deleted_bytes);
 }

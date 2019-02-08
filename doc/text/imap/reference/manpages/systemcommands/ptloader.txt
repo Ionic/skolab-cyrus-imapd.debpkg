@@ -1,0 +1,44 @@
+
+**ptloader**
+************
+
+The AFS & LDAP pts server loader service
+
+
+Synopsis
+========
+
+   ptloader [**-d**]
+
+
+Description
+===========
+
+**ptloader** interacts with the authorization service, either AFS or
+LDAP, providing group membership information to Cyrus.  When
+"auth_mech: pts" is set in imapd.conf(5), **ptsloader** will then
+consult the backend specified in the "pts_module" setting (currently
+either "afs" or "ldap").
+
+**ptloader** reads its configuration options out of the imapd.conf(5)
+file and *does not* accept the **-C** option.
+
+
+Options
+=======
+
+-d
+
+   Run **ptloader** in debugging mode.
+
+
+Files
+=====
+
+/etc/imapd.conf
+
+
+See Also
+========
+
+imapd.conf(5)

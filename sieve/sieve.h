@@ -58,88 +58,102 @@ extern int sievedebug;
     DISCARD = 268,
     VACATION = 269,
     REQUIRE = 270,
-    SETFLAG = 271,
-    ADDFLAG = 272,
-    REMOVEFLAG = 273,
-    MARK = 274,
-    UNMARK = 275,
-    HASFLAG = 276,
-    FLAGS = 277,
-    NOTIFY = 278,
-    DENOTIFY = 279,
-    ANYOF = 280,
-    ALLOF = 281,
-    EXISTS = 282,
-    SFALSE = 283,
-    STRUE = 284,
-    HEADER = 285,
-    NOT = 286,
-    SIZE = 287,
-    ADDRESS = 288,
-    ENVELOPE = 289,
-    BODY = 290,
-    COMPARATOR = 291,
-    IS = 292,
-    CONTAINS = 293,
-    MATCHES = 294,
-    REGEX = 295,
-    COUNT = 296,
-    VALUE = 297,
-    OVER = 298,
-    UNDER = 299,
-    GT = 300,
-    GE = 301,
-    LT = 302,
-    LE = 303,
-    EQ = 304,
-    NE = 305,
-    ALL = 306,
-    LOCALPART = 307,
-    DOMAIN = 308,
-    USER = 309,
-    DETAIL = 310,
-    RAW = 311,
-    TEXT = 312,
-    CONTENT = 313,
-    DAYS = 314,
-    ADDRESSES = 315,
-    SUBJECT = 316,
-    FROM = 317,
-    HANDLE = 318,
-    MIME = 319,
-    SECONDS = 320,
-    METHOD = 321,
-    ID = 322,
-    OPTIONS = 323,
-    LOW = 324,
-    NORMAL = 325,
-    HIGH = 326,
-    ANY = 327,
-    MESSAGE = 328,
-    INCLUDE = 329,
-    PERSONAL = 330,
-    GLOBAL = 331,
-    RETURN = 332,
-    OPTIONAL = 333,
-    ONCE = 334,
-    COPY = 335,
-    DATE = 336,
-    CURRENTDATE = 337,
-    INDEX = 338,
-    LAST = 339,
-    ZONE = 340,
-    ORIGINALZONE = 341,
-    YEAR = 342,
-    MONTH = 343,
-    DAY = 344,
-    JULIAN = 345,
-    HOUR = 346,
-    MINUTE = 347,
-    SECOND = 348,
-    TIME = 349,
-    ISO8601 = 350,
-    STD11 = 351,
-    WEEKDAY = 352
+    MARK = 271,
+    UNMARK = 272,
+    FLAGS = 273,
+    NOTIFY = 274,
+    DENOTIFY = 275,
+    ANYOF = 276,
+    ALLOF = 277,
+    EXISTS = 278,
+    SFALSE = 279,
+    STRUE = 280,
+    HEADER = 281,
+    NOT = 282,
+    SIZE = 283,
+    ADDRESS = 284,
+    ENVELOPE = 285,
+    BODY = 286,
+    COMPARATOR = 287,
+    IS = 288,
+    CONTAINS = 289,
+    MATCHES = 290,
+    REGEX = 291,
+    COUNT = 292,
+    VALUE = 293,
+    OVER = 294,
+    UNDER = 295,
+    GT = 296,
+    GE = 297,
+    LT = 298,
+    LE = 299,
+    EQ = 300,
+    NE = 301,
+    ALL = 302,
+    LOCALPART = 303,
+    DOMAIN = 304,
+    USER = 305,
+    DETAIL = 306,
+    RAW = 307,
+    TEXT = 308,
+    CONTENT = 309,
+    DAYS = 310,
+    ADDRESSES = 311,
+    SUBJECT = 312,
+    FROM = 313,
+    HANDLE = 314,
+    MIME = 315,
+    SECONDS = 316,
+    METHOD = 317,
+    ID = 318,
+    OPTIONS = 319,
+    LOW = 320,
+    NORMAL = 321,
+    HIGH = 322,
+    ANY = 323,
+    MESSAGE = 324,
+    INCLUDE = 325,
+    PERSONAL = 326,
+    GLOBAL = 327,
+    RETURN = 328,
+    OPTIONAL = 329,
+    ONCE = 330,
+    COPY = 331,
+    DATE = 332,
+    CURRENTDATE = 333,
+    INDEX = 334,
+    LAST = 335,
+    ZONE = 336,
+    ORIGINALZONE = 337,
+    MAILBOXEXISTS = 338,
+    CREATE = 339,
+    METADATA = 340,
+    METADATAEXISTS = 341,
+    SERVERMETADATA = 342,
+    SERVERMETADATAEXISTS = 343,
+    YEAR = 344,
+    MONTH = 345,
+    DAY = 346,
+    JULIAN = 347,
+    HOUR = 348,
+    MINUTE = 349,
+    SECOND = 350,
+    TIME = 351,
+    ISO8601 = 352,
+    STD11 = 353,
+    WEEKDAY = 354,
+    STRINGT = 355,
+    SET = 356,
+    LOWER = 357,
+    UPPER = 358,
+    LOWERFIRST = 359,
+    UPPERFIRST = 360,
+    QUOTEWILDCARD = 361,
+    LENGTH = 362,
+    SETFLAG = 363,
+    ADDFLAG = 364,
+    REMOVEFLAG = 365,
+    HASFLAG = 366
   };
 #endif
 /* Tokens.  */
@@ -156,95 +170,109 @@ extern int sievedebug;
 #define DISCARD 268
 #define VACATION 269
 #define REQUIRE 270
-#define SETFLAG 271
-#define ADDFLAG 272
-#define REMOVEFLAG 273
-#define MARK 274
-#define UNMARK 275
-#define HASFLAG 276
-#define FLAGS 277
-#define NOTIFY 278
-#define DENOTIFY 279
-#define ANYOF 280
-#define ALLOF 281
-#define EXISTS 282
-#define SFALSE 283
-#define STRUE 284
-#define HEADER 285
-#define NOT 286
-#define SIZE 287
-#define ADDRESS 288
-#define ENVELOPE 289
-#define BODY 290
-#define COMPARATOR 291
-#define IS 292
-#define CONTAINS 293
-#define MATCHES 294
-#define REGEX 295
-#define COUNT 296
-#define VALUE 297
-#define OVER 298
-#define UNDER 299
-#define GT 300
-#define GE 301
-#define LT 302
-#define LE 303
-#define EQ 304
-#define NE 305
-#define ALL 306
-#define LOCALPART 307
-#define DOMAIN 308
-#define USER 309
-#define DETAIL 310
-#define RAW 311
-#define TEXT 312
-#define CONTENT 313
-#define DAYS 314
-#define ADDRESSES 315
-#define SUBJECT 316
-#define FROM 317
-#define HANDLE 318
-#define MIME 319
-#define SECONDS 320
-#define METHOD 321
-#define ID 322
-#define OPTIONS 323
-#define LOW 324
-#define NORMAL 325
-#define HIGH 326
-#define ANY 327
-#define MESSAGE 328
-#define INCLUDE 329
-#define PERSONAL 330
-#define GLOBAL 331
-#define RETURN 332
-#define OPTIONAL 333
-#define ONCE 334
-#define COPY 335
-#define DATE 336
-#define CURRENTDATE 337
-#define INDEX 338
-#define LAST 339
-#define ZONE 340
-#define ORIGINALZONE 341
-#define YEAR 342
-#define MONTH 343
-#define DAY 344
-#define JULIAN 345
-#define HOUR 346
-#define MINUTE 347
-#define SECOND 348
-#define TIME 349
-#define ISO8601 350
-#define STD11 351
-#define WEEKDAY 352
+#define MARK 271
+#define UNMARK 272
+#define FLAGS 273
+#define NOTIFY 274
+#define DENOTIFY 275
+#define ANYOF 276
+#define ALLOF 277
+#define EXISTS 278
+#define SFALSE 279
+#define STRUE 280
+#define HEADER 281
+#define NOT 282
+#define SIZE 283
+#define ADDRESS 284
+#define ENVELOPE 285
+#define BODY 286
+#define COMPARATOR 287
+#define IS 288
+#define CONTAINS 289
+#define MATCHES 290
+#define REGEX 291
+#define COUNT 292
+#define VALUE 293
+#define OVER 294
+#define UNDER 295
+#define GT 296
+#define GE 297
+#define LT 298
+#define LE 299
+#define EQ 300
+#define NE 301
+#define ALL 302
+#define LOCALPART 303
+#define DOMAIN 304
+#define USER 305
+#define DETAIL 306
+#define RAW 307
+#define TEXT 308
+#define CONTENT 309
+#define DAYS 310
+#define ADDRESSES 311
+#define SUBJECT 312
+#define FROM 313
+#define HANDLE 314
+#define MIME 315
+#define SECONDS 316
+#define METHOD 317
+#define ID 318
+#define OPTIONS 319
+#define LOW 320
+#define NORMAL 321
+#define HIGH 322
+#define ANY 323
+#define MESSAGE 324
+#define INCLUDE 325
+#define PERSONAL 326
+#define GLOBAL 327
+#define RETURN 328
+#define OPTIONAL 329
+#define ONCE 330
+#define COPY 331
+#define DATE 332
+#define CURRENTDATE 333
+#define INDEX 334
+#define LAST 335
+#define ZONE 336
+#define ORIGINALZONE 337
+#define MAILBOXEXISTS 338
+#define CREATE 339
+#define METADATA 340
+#define METADATAEXISTS 341
+#define SERVERMETADATA 342
+#define SERVERMETADATAEXISTS 343
+#define YEAR 344
+#define MONTH 345
+#define DAY 346
+#define JULIAN 347
+#define HOUR 348
+#define MINUTE 349
+#define SECOND 350
+#define TIME 351
+#define ISO8601 352
+#define STD11 353
+#define WEEKDAY 354
+#define STRINGT 355
+#define SET 356
+#define LOWER 357
+#define UPPER 358
+#define LOWERFIRST 359
+#define UPPERFIRST 360
+#define QUOTEWILDCARD 361
+#define LENGTH 362
+#define SETFLAG 363
+#define ADDFLAG 364
+#define REMOVEFLAG 365
+#define HASFLAG 366
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 
 union YYSTYPE
 {
-#line 213 "sieve/sieve.y" /* yacc.c:1909  */
+#line 238 "sieve/sieve.y" /* yacc.c:1909  */
 
     int nval;
     char *sval;
@@ -254,15 +282,16 @@ union YYSTYPE
     commandlist_t *cl;
     struct vtags *vtag;
     struct aetags *aetag;
-    struct htags *htag;
+    struct comptags *ctag;
     struct btags *btag;
     struct ntags *ntag;
     struct dtags *dtag;
     struct itags *itag;
     struct dttags *dttag;
     struct ftags *ftag;
+    struct stags *stag;
 
-#line 266 "sieve/sieve.h" /* yacc.c:1909  */
+#line 295 "sieve/sieve.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

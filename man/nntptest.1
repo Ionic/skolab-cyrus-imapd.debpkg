@@ -1,185 +1,202 @@
-.\" -*- nroff -*-
-.TH NNTPTEST 1 "Project Cyrus" CMU
-.\"
-.\" Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
-.\"
-.\" Redistribution and use in source and binary forms, with or without
-.\" modification, are permitted provided that the following conditions
-.\" are met:
-.\"
-.\" 1. Redistributions of source code must retain the above copyright
-.\"    notice, this list of conditions and the following disclaimer.
-.\"
-.\" 2. Redistributions in binary form must reproduce the above copyright
-.\"    notice, this list of conditions and the following disclaimer in
-.\"    the documentation and/or other materials provided with the
-.\"    distribution.
-.\"
-.\" 3. The name "Carnegie Mellon University" must not be used to
-.\"    endorse or promote products derived from this software without
-.\"    prior written permission. For permission or any legal
-.\"    details, please contact
-.\"      Carnegie Mellon University
-.\"      Center for Technology Transfer and Enterprise Creation
-.\"      4615 Forbes Avenue
-.\"      Suite 302
-.\"      Pittsburgh, PA  15213
-.\"      (412) 268-7393, fax: (412) 268-7395
-.\"      innovation@andrew.cmu.edu
-.\"
-.\" 4. Redistributions of any form whatsoever must retain the following
-.\"    acknowledgment:
-.\"    "This product includes software developed by Computing Services
-.\"     at Carnegie Mellon University (http://www.cmu.edu/computing/)."
-.\"
-.\" CARNEGIE MELLON UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO
-.\" THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-.\" AND FITNESS, IN NO EVENT SHALL CARNEGIE MELLON UNIVERSITY BE LIABLE
-.\" FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
-.\" AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
-.\" OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\" Man page generated from reStructuredText.
+.
+.TH "NNTPTEST" "1" "August 10, 2018" "3.0.8" "Cyrus IMAP"
 .SH NAME
-nntptest \- interactive NNTP test program
+nntptest \- Cyrus IMAP documentation
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.sp
+Interactive NNTP test program
 .SH SYNOPSIS
-.B nntptest
-[
-.B \-t
-.I keyfile
-]
-[
-.B \-p
-.I port
-]
-[
-.B \-m
-.I mechanism
-]
-.br
-         [
-.B \-a
-.I userid
-]
-[
-.B \-u
-.I userid
-]
-[
-.B \-k
-.I num
-]
-[
-.B \-l
-.I num
-]
-.br
-         [
-.B \-r
-.I realm
-]
-[
-.B \-f
-.I file
-]
-[
-.B \-n
-.I num
-]
-[
-.B \-s
-]
-[
-.B \-c
-]
-.br
-         [
-.B \-i
-]
-[
-.B \-o
-\fIoption\fB=\fIvalue\fR
-]
-[
-.B \-v
-]
-\fIhostname\fR
+.sp
+.nf
+\fBnntptest\fP [ \fB\-t\fP \fIkeyfile\fP ] [ \fB\-p\fP \fIport\fP ] [ \fB\-m\fP \fImechanism\fP ] [ \fB\-a\fP \fIuserid\fP ]
+    [ \fB\-u\fP \fIuserid\fP ] [ \fB\-k\fP \fInum\fP ] [ \fB\-l\fP \fInum\fP ] [ \fB\-r\fP \fIrealm\fP ] [ \fB\-f\fP \fIfile\fP ]
+    [ \fB\-n\fP \fInum\fP ] [ \fB\-s\fP ] [ \fB\-c\fP ] [ \fB\-i\fP ] [ \fB\-v\fP ] [ \fB\-w\fP \fIpasswd\fP ] [ \fB\-q\fP ]
+    [ \fB\-o\fP \fIoption\fP=\fIvalue\fP ] \fIhostname\fP
+.fi
 .SH DESCRIPTION
-.I nntptest
-is a utility that allows you to authenticate to a NNTP server
-and interactively issue commands to it. Once authenticated you may
-issue any NNTP command by simply typing it in. It is capable
-of multiple SASL authentication mechanisms and handles encryption
-layers transparently. This utility is often used for testing the
-operation of a nntp server. Also those developing NNTP clients
+.sp
+\fBnntptest\fP is a utility that allows you to authenticate to a
+NNTP server and interactively issue commands to it. Once
+authenticated you may issue any NNTP command by simply typing it in.
+It is capable of multiple SASL authentication mechanisms and handles
+encryption layers transparently. This utility is often used for testing
+the operation of an nntp server. Also those developing NNTP clients
 find it useful.
-.PP
 .SH OPTIONS
+.INDENT 0.0
 .TP
-.BI \-t " keyfile"
-Enable TLS.  \fIkeyfile\fR contains the TLS public and private keys.
-Specify \fB""\fR to negotiate a TLS encryption layer but not use TLS
+.B \-t  keyfile
+Enable TLS.  \fIkeyfile\fP contains the TLS public and private keys.
+Specify \fB""\fP to negotiate a TLS encryption layer but not use TLS
 authentication.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI \-p " port"
-Port to connect to. If left off this defaults to \fBnntp\fR as defined in
-/etc/services. 
+.B \-p  port
+Port to connect to. If left off this defaults to \fBnntp\fP as
+defined in \fB/etc/services\fP\&.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI -m " mechanism"
-Force nntptest to use \fImechanism\fR for authentication. If not specified
-the strongest authentication mechanism supported by the server is
-chosen.  Specify \fBuser\fR to use the AUTHINFO USER/PASS commands
-instead of AUTHINFO SASL. 
+.B \-m  mechanism
+Force \fBnntptest\fP to use \fImechanism\fP for authentication. If not
+specified, the strongest authentication mechanism supported by the
+server is chosen.  Specify \fIuser\fP to use the AUTHINFO USER/PASS
+commands instead of AUTHINFO SASL.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI -a " userid"
+.B \-a  userid
 Userid to use for authentication; defaults to the current user.
-This is the userid whose password or credentials will be presented to
-the server for verification.
+This is the userid whose password or credentials will be presented
+to the server for verification.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI -u " userid"
+.B \-u  userid
 Userid to use for authorization; defaults to the current user.
-This is the userid whose identity will be assumed after authentication.
-\fBNOTE:\fR This is only used with SASL mechanisms that allow proxying
-(e.g. PLAIN, DIGEST-MD5).
+This is the userid whose identity will be assumed after
+authentication.
+.sp
+\fBNOTE:\fP
+.INDENT 7.0
+.INDENT 3.5
+This is only used with SASL mechanisms that allow proxying
+(e.g. PLAIN, DIGEST\-MD5).
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI -k " num"
+.B \-k  num
 Minimum protection layer required.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI -l " num"
-Maximum protection layer to use (\fB0\fR=none; \fB1=\fRintegrity;
+.B \-l  num
+Maximum protection layer to use (\fB0\fP=none; \fB1\fP=integrity;
 etc).  For example if you are using the KERBEROS_V4 authentication
-mechanism specifying \fB0\fR will force nntptest to not use any layer
-and specifying \fB1\fR will force it to use the integrity layer.  By
+mechanism specifying \fB0\fP will force imtest to not use any layer
+and specifying \fB1\fP will force it to use the integrity layer.  By
 default the maximum supported protection layer will be used.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI -r " realm"
-Specify the \fIrealm\fR to use. Certain authentication mechanisms
-(e.g. DIGEST-MD5) may require one to specify the realm.
+.B \-r  realm
+Specify the \fIrealm\fP to use. Certain authentication mechanisms
+(e.g. DIGEST\-MD5) may require one to specify the realm.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI -f " file"
-Pipe \fIfile\fR into connection after authentication.
+.B \-f  file
+Pipe \fIfile\fP into connection after authentication.
+.UNINDENT
+.INDENT 0.0
 .TP
-.BI -n " num"
+.B \-n  num
 Number of authentication attempts; default = 1.  The client will
 attempt to do SSL/TLS session reuse and/or fast reauth
-(e.g. DIGEST-MD5), if possible.
+(e.g. DIGEST\-MD5), if possible.
+.UNINDENT
+.INDENT 0.0
 .TP
-.B -s
+.B \-s
 Enable NNTP over SSL (nntps).
+.UNINDENT
+.INDENT 0.0
 .TP
-.B -c
-Enable challenge prompt callbacks.  This will cause the OTP mechanism
-to ask for the the one-time password instead of the secret pass-phrase
-(library generates the correct response).
+.B \-q
+Enable NNTP COMPRESSion (after authentication)
+.UNINDENT
+.INDENT 0.0
 .TP
-.B -i
-Don't send an initial client response for SASL mechanisms, even if the
-protocol supports it.
+.B \-c
+Enable challenge prompt callbacks.  This will cause the OTP
+mechanism to ask for the the one\-time password instead of the
+secret pass\-phrase (library generates the correct response).
+.UNINDENT
+.INDENT 0.0
 .TP
-\fB-o \fIoption\fB=\fIvalue\fR
-Set the SASL \fIoption\fR to \fIvalue\fR.
+.B \-i
+Don\(aqt send an initial client response for SASL mechanisms, even if
+the protocol supports it.
+.UNINDENT
+.INDENT 0.0
 .TP
-.B -v
+.B \-v
 Verbose. Print out more information than usual.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-w passwd
+Password to use (if not supplied, we will prompt).
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-o  option=value
+Set the SASL \fIoption\fP to \fIvalue\fP\&.
+.UNINDENT
+.SH EXAMPLES
 .SH SEE ALSO
-.PP
-\fBnntpd(8)\fR
+.sp
+nntpd(8)
+.SH AUTHOR
+The Cyrus Team, Nic Bernstein (Onlight)
+.SH COPYRIGHT
+1993-2017, The Cyrus Team
+.\" Generated by docutils manpage writer.
+.

@@ -45,19 +45,36 @@ my $LIB_SASL = "@LIB_SASL@" || "-lsasl2";
 
 $libs = "-lcyrus";
 
+# override default xs.c rule with a VPATH-aware version
+sub MY::xs_c
+{
+    return <<'EOT';
+
+.xs.c: .xs
+	$(XSUBPPRUN) $(XSPROTOARG) $(XSUBPPARGS) $(XSUBPP_EXTRA_ARGS) $< > $*.xsc && $(MV) $*.xsc $@
+
+EOT
+}
+
+# xs_c above is adequate, override this to get it out of the way
+sub MY::xs_o
+{
+    ;
+}
+
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 WriteMakefile(
     'NAME'	=> 'Cyrus::SIEVE::managesieve',
     'ABSTRACT'  => 'Cyrus Sieve management interface',
     'VERSION_FROM' => "@top_srcdir@/perl/sieve/managesieve/managesieve.pm", # finds $VERSION
-    'MYEXTLIB'  => '../lib/libisieve.a @top_builddir@/perl/.libs/libcyrus.a @top_builddir@/perl/.libs/libcyrus_min.a',
-    'LIBS'	=> ["@BDB_LIB@ $LIB_SASL @SSL_LIBS@ @LIB_RT@ @LIB_UUID@ @ZLIB@"],
-    'CCFLAGS'	=> '@COV_CFLAGS@',
+    'MYEXTLIB'  => '../lib/.libs/libisieve.a @top_builddir@/perl/.libs/libcyrus.a @top_builddir@/perl/.libs/libcyrus_min.a',
+    'LIBS'	=> ["$LIB_SASL @SSL_LIBS@ @LIB_UUID@ @ZLIB@ @SQLITE_LIBADD@ @MYSQL_LIBADD@ @PGSQL_LIBADD@"],
+    'CCFLAGS'	=> '@GCOV_CFLAGS@',
     'DEFINE'	=> '-DPERL_POLLUTE',     # e.g., '-DHAVE_SOMETHING' 
-    'INC'	=> "@BDB_INC@ -I@top_srcdir@/lib -I@top_srcdir@/perl/sieve/lib @SASLFLAGS@ @SSL_CPPFLAGS@",
+    'INC'	=> "-I@top_srcdir@/lib -I@top_srcdir@/perl/sieve -I@top_srcdir@/perl/sieve/lib @SASLFLAGS@ @SSL_CPPFLAGS@",
     'OBJECT'    => 'managesieve.o',
-    'LD'	=> $Config{ld} . ' @COV_LDFLAGS@',
+    'LD'	=> $Config{ld} . ' @GCOV_LDFLAGS@',
     # This is a disgusting hack to effectively disable the stupid
     # behaviour of the generated Makefile which moves itself aside
     # on a 'make clean' instead of on 'make distclean'.
@@ -70,6 +87,10 @@ sub MY::postamble {
 VPATH=@top_srcdir@/perl/sieve/managesieve
 
 check:
+
+dvi:
+
+installcheck:
 
 EOT
 }
