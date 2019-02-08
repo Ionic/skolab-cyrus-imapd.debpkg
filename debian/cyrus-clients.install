@@ -1,3 +1,4 @@
+usr/lib/cyrus/bin/httptest
 usr/lib/cyrus/bin/imtest
 usr/lib/cyrus/bin/lmtptest
 usr/lib/cyrus/bin/nntptest
@@ -5,6 +6,7 @@ usr/lib/cyrus/bin/pop3test
 usr/lib/cyrus/bin/sivtest
 usr/lib/cyrus/bin/smtptest
 usr/lib/cyrus/bin/synctest
+usr/share/man/man1/cyrus-httptest.1
 usr/share/man/man1/cyrus-imtest.1
 usr/share/man/man1/cyrus-lmtptest.1
 usr/share/man/man1/cyrus-nntptest.1

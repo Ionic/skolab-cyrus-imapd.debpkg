@@ -43,7 +43,7 @@ else
 endif
 
 MAN1 := imtest installsieve lmtptest mupdatetest nntptest \
-	pop3test sieveshell sivtest smtptest
+	pop3test sieveshell sivtest smtptest httptest
 
 MAN8 := master reconstruct quota deliver \
 	mbpath ctl_mboxlist ctl_deliver ctl_cyrusdb squatter \
@@ -229,4 +229,4 @@ override_dh_installcron:
 	dh_installcron --name=cyrus-imapd
 
 override_dh_missing:
-	dh_missing --fail-missing
+	dh_missing --fail-missing -X.la
