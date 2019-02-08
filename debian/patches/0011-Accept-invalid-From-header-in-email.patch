@@ -14,11 +14,9 @@ Cyrus should not raise problems.
  imap/message.c | 17 ++++++++++++++---
  1 file changed, 14 insertions(+), 3 deletions(-)
 
-diff --git a/imap/message.c b/imap/message.c
-index 777844f..d225609 100644
---- a/imap/message.c
-+++ b/imap/message.c
-@@ -166,6 +166,8 @@ EXPORTED int message_copy_strict(struct protstream *from, FILE *to,
+--- cyrus-imapd.orig/imap/message.c
++++ cyrus-imapd/imap/message.c
+@@ -187,6 +187,8 @@ EXPORTED int message_copy_strict(struct
      int reject8bit = config_getswitch(IMAPOPT_REJECT8BIT);
      int munge8bit = config_getswitch(IMAPOPT_MUNGE8BIT);
      int inheader = 1, blankline = 1;
@@ -26,14 +24,14 @@ index 777844f..d225609 100644
 +    static const char * from_header = "From ";
  
      while (size) {
- 	n = prot_read(from, buf, size > 4096 ? 4096 : size);
-@@ -242,9 +244,18 @@ EXPORTED int message_copy_strict(struct protstream *from, FILE *to,
- 	/* Check for valid header name */
- 	if (sawnl && buf[0] != ' ' && buf[0] != '\t') {
- 	    if (buf[0] == ':') return IMAP_MESSAGE_BADHEADER;
+         n = prot_read(from, buf, size > 4096 ? 4096 : size);
+@@ -263,9 +265,18 @@ EXPORTED int message_copy_strict(struct
+         /* Check for valid header name */
+         if (sawnl && buf[0] != ' ' && buf[0] != '\t') {
+             if (buf[0] == ':') return IMAP_MESSAGE_BADHEADER;
 -      if (strstr(buf, "From ") != buf)
--	    for (p = (unsigned char *)buf; *p != ':'; p++) {
--		if (*p <= ' ') return IMAP_MESSAGE_BADHEADER;
+-            for (p = (unsigned char *)buf; *p != ':'; p++) {
+-                if (*p <= ' ') return IMAP_MESSAGE_BADHEADER;
 +	    p = (unsigned char *) buf;
 +	    if (*p == '>') p++;
 +	    is_from = (*p == from_header[0])?0:1;
@@ -46,6 +44,6 @@ index 777844f..d225609 100644
 +                } else {
 +                    if (*p <= ' ') return IMAP_MESSAGE_BADHEADER;
 +		}
- 	    }
- 	}
+             }
+         }
  

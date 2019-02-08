@@ -15,23 +15,19 @@ By normalize, it is intended that;
  lib/libcyr_cfg.h |  2 ++
  5 files changed, 31 insertions(+)
 
-diff --git a/imap/global.c b/imap/global.c
-index 1910d84..37d07da 100644
---- a/imap/global.c
-+++ b/imap/global.c
-@@ -278,6 +278,8 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
- 				  config_getswitch(IMAPOPT_UNIX_GROUP_ENABLE));
- 	libcyrus_config_setswitch(CYRUSOPT_USERNAME_TOLOWER,
- 				  config_getswitch(IMAPOPT_USERNAME_TOLOWER));
+--- cyrus-imapd.orig/imap/global.c
++++ cyrus-imapd/imap/global.c
+@@ -298,6 +298,8 @@ EXPORTED int cyrus_init(const char *alt_
+                                   config_getswitch(IMAPOPT_UNIX_GROUP_ENABLE));
+         libcyrus_config_setswitch(CYRUSOPT_USERNAME_TOLOWER,
+                                   config_getswitch(IMAPOPT_USERNAME_TOLOWER));
 +	libcyrus_config_setswitch(CYRUSOPT_NORMALIZEUID,
 +				  config_getswitch(IMAPOPT_NORMALIZEUID));
- 	libcyrus_config_setswitch(CYRUSOPT_SKIPLIST_UNSAFE,
- 				  config_getswitch(IMAPOPT_SKIPLIST_UNSAFE));
- 	libcyrus_config_setstring(CYRUSOPT_TEMP_PATH,
-diff --git a/lib/auth_unix.c b/lib/auth_unix.c
-index 1f034da..914ea0b 100644
---- a/lib/auth_unix.c
-+++ b/lib/auth_unix.c
+         libcyrus_config_setswitch(CYRUSOPT_SKIPLIST_UNSAFE,
+                                   config_getswitch(IMAPOPT_SKIPLIST_UNSAFE));
+         libcyrus_config_setstring(CYRUSOPT_TEMP_PATH,
+--- cyrus-imapd.orig/lib/auth_unix.c
++++ cyrus-imapd/lib/auth_unix.c
 @@ -150,9 +150,11 @@ static char allowedchars[256] = {
  static const char *mycanonifyid(const char *identifier, size_t len)
  {
@@ -44,8 +40,8 @@ index 1f034da..914ea0b 100644
  
      if (!len) len = strlen(identifier);
      if (len >= sizeof(retbuf)) return NULL;
-@@ -194,6 +196,22 @@ static const char *mycanonifyid(const char *identifier, size_t len)
- 	}
+@@ -194,6 +196,22 @@ static const char *mycanonifyid(const ch
+         }
      }
  
 +    if( (libcyrus_config_getswitch(CYRUSOPT_NORMALIZEUID) == 1) ) {
@@ -67,13 +63,11 @@ index 1f034da..914ea0b 100644
      return retbuf;
  }
  
-diff --git a/lib/imapoptions b/lib/imapoptions
-index c2bf8dc..314defe 100644
---- a/lib/imapoptions
-+++ b/lib/imapoptions
-@@ -2037,6 +2037,11 @@ product version in the capabilities */
- /* The absolute path to the zoneinfo db file.  If not specified,
-    will be confdir/zoneinfo.db */
+--- cyrus-imapd.orig/lib/imapoptions
++++ cyrus-imapd/lib/imapoptions
+@@ -2425,6 +2425,11 @@ product version in the capabilities
+ { "fastmailsharing", 0, SWITCH }
+ /* If enabled, use FastMail style sharing (oldschool full server paths) */
  
 +{ "normalizeuid", 0, SWITCH }
 +/* Lowercase uid and strip leading and trailing blanks. It is recommended
@@ -83,11 +77,9 @@ index c2bf8dc..314defe 100644
  /*
  .SH SEE ALSO
  .PP
-diff --git a/lib/libcyr_cfg.c b/lib/libcyr_cfg.c
-index 57b7b24..58ac088 100644
---- a/lib/libcyr_cfg.c
-+++ b/lib/libcyr_cfg.c
-@@ -156,6 +156,10 @@ static struct cyrusopt_s cyrus_options[] = {
+--- cyrus-imapd.orig/lib/libcyr_cfg.c
++++ cyrus-imapd/lib/libcyr_cfg.c
+@@ -145,6 +145,10 @@ static struct cyrusopt_s cyrus_options[]
        CFGVAL(long, 1),
        CYRUS_OPT_SWITCH },
  
@@ -98,11 +90,9 @@ index 57b7b24..58ac088 100644
      { CYRUSOPT_LAST, { NULL }, CYRUS_OPT_NOTOPT }
  };
  
-diff --git a/lib/libcyr_cfg.h b/lib/libcyr_cfg.h
-index 3983ccd..8f48422 100644
---- a/lib/libcyr_cfg.h
-+++ b/lib/libcyr_cfg.h
-@@ -111,6 +111,8 @@ enum cyrus_opt {
+--- cyrus-imapd.orig/lib/libcyr_cfg.h
++++ cyrus-imapd/lib/libcyr_cfg.h
+@@ -105,6 +105,8 @@ enum cyrus_opt {
      CYRUSOPT_SQL_USESSL,
      /* Checkpoint after every recovery (OFF) */
      CYRUSOPT_SKIPLIST_ALWAYS_CHECKPOINT,
@@ -110,4 +100,4 @@ index 3983ccd..8f48422 100644
 +    CYRUSOPT_NORMALIZEUID,
  
      CYRUSOPT_LAST
-     
+ 
