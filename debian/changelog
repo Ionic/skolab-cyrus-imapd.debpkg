@@ -1,6 +1,4 @@
-cyrus-imapd (3.0.8-1~2.gbp2d8d0f) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @2d8d0f2355b9f3196c6385d343be493bc0fb500c **
+cyrus-imapd (3.0.8-1) unstable; urgency=medium
 
   [ Anthony Prades ]
   * add cyr_buildinfo bin and its man and doc page
@@ -27,10 +25,22 @@ cyrus-imapd (3.0.8-1~2.gbp2d8d0f) UNRELEASED; urgency=medium
 
   [ Ondřej Surý ]
   * Update gbp.conf
-  * Update changelog for 2.5.12-1~1.gbp1787b2 release
-  * snapshot build
+  * Re-add perl2rst tool from cyrus-imapd-3.0 upstream branch
+  * Use dh_missing
+  * Update installed files for cyrus-imapd 3.0.x
+  * Don't bother keeping deliver.db
+  * Remove BerkeleyDB support from the database upgrade script
+  * Make cyrus-upgrade-db script shellcheck clean
+  * Bump debhelper compatibility to 12
+  * Switch priority from extra to optional
+  * Add lsb-base to cyrus-common dependencies
+  * Don't install same manpage to two packages
+  * Override gpl linked with openssl lintian error (it's not true)
+  * Bump policy version to 4.3.0.1
+  * Add Anthony to Uploaders
+  * Update perl shebang in tools/rehash
 
- -- Ondřej Surý <ondrej@debian.org>  Fri, 08 Feb 2019 12:39:20 +0000
+ -- Ondřej Surý <ondrej@debian.org>  Fri, 08 Feb 2019 14:43:38 +0000
 
 cyrus-imapd (2.5.11-1) unstable; urgency=medium
 
