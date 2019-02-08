@@ -19,8 +19,9 @@ This should be the default actually.
  tools/masssievec                   | 24 +++---------------------
  tools/mkimap                       | 20 +-------------------
  tools/mknewsgroups                 | 25 +++----------------------
+ tools/rehash                       |  2 +-
  tools/translatesieve               |  4 +---
- 12 files changed, 16 insertions(+), 131 deletions(-)
+ 13 files changed, 17 insertions(+), 132 deletions(-)
 
 diff --git a/perl/imap/examples/auditmbox.pl b/perl/imap/examples/auditmbox.pl
 index fcc6844..c65af0a 100644
@@ -295,6 +296,16 @@ index 91e2cc6..0d3ac92 100755
  require 5;
  
  use Getopt::Long;
+diff --git a/tools/rehash b/tools/rehash
+index 7bdad86..7b44550 100755
+--- a/tools/rehash
++++ b/tools/rehash
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env perl
++#!/usr/bin/perl -w
+ #
+ # Copyright (c) 1994-2012 Carnegie Mellon University.  All rights reserved.
+ #
 diff --git a/tools/translatesieve b/tools/translatesieve
 index c4bd949..8e645bd 100755
 --- a/tools/translatesieve
