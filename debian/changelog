@@ -1,10 +1,8 @@
-cyrus-imapd (2.5.12-1~1.gbp1787b2) UNRELEASED; urgency=medium
+cyrus-imapd (3.0.8-1~1.gbp1787b2) UNRELEASED; urgency=medium
 
   ** SNAPSHOT build @1787b2a06f674e61bc0a0e6fd1945b39e1180626 **
 
   [ Anthony Prades ]
-  * New upstream version 2.5.12
-  * Rebase patches on top of Cyrus IMAP 2.5.12
   * add cyr_buildinfo bin and its man and doc page
 
   [ Ondřej Surý ]
@@ -24,7 +22,6 @@ cyrus-imapd (2.5.12-1~1.gbp1787b2) UNRELEASED; urgency=medium
   * Fix: don't package backup/restore man pages
   * Fix: package cyr_virusscan and its man page
   * Fix: changes.html path
-  * TOREMOVE
   * Fix: cyrus-init-helper 3.0 support
   * Fix: package dependencies
 
