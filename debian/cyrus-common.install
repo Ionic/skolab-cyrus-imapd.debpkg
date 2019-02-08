@@ -18,6 +18,7 @@ usr/lib/cyrus/bin/cyr_info
 usr/lib/cyrus/bin/cyr_sequence
 usr/lib/cyrus/bin/cyr_userseen
 usr/lib/cyrus/bin/cyrdump
+usr/lib/cyrus/bin/cyr_virusscan
 usr/lib/cyrus/bin/deliver
 usr/lib/cyrus/bin/fud
 usr/lib/cyrus/bin/ipurge
@@ -47,6 +48,9 @@ usr/sbin/cyrus
 usr/share/man/man5/cyrus.conf.5
 usr/share/man/man5/imapd.conf.5
 usr/share/man/man5/krb.equiv.5
+usr/share/man/man8/ctl_conversationsdb.8
+usr/share/man/man8/cyr_deny.8
+usr/share/man/man8/cyr_info.8
 usr/share/man/man8/cyrus-arbitron.8
 usr/share/man/man8/cyrus-arbitronsort.8
 usr/share/man/man8/cyrus-chk_*.8
@@ -57,7 +61,7 @@ usr/share/man/man8/cyrus-cyr_dbtool.8
 usr/share/man/man8/cyrus-cyr_deny.8
 usr/share/man/man8/cyrus-cyr_df.8
 usr/share/man/man8/cyrus-cyr_expire.8
-usr/share/man/man8/cyrus-cyr_info.8
+usr/share/man/man8/cyr_virusscan.8
 usr/share/man/man8/cyrus-deliver.8
 usr/share/man/man8/cyrus-dump.8
 usr/share/man/man8/cyrus-fud.8
@@ -65,9 +69,8 @@ usr/share/man/man8/cyrus-ipurge.8
 usr/share/man/man8/cyrus-lmtpd.8
 usr/share/man/man8/cyrus-makedirs.8
 usr/share/man/man8/cyrus-master.8
-usr/share/man/man8/cyrus-mbexamine.8
 usr/share/man/man8/cyrus-mbpath.8
-usr/share/man/man8/cyrus-notifyd.8
+usr/share/man/man8/cyrus-mbtool.8
 usr/share/man/man8/cyrus-quota.8
 usr/share/man/man8/cyrus-reconstruct.8
 usr/share/man/man8/cyrus-smmapd.8

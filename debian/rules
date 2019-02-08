@@ -125,7 +125,7 @@ override_dh_auto_build:
 # former build-indep
 	cd doc &&\
 	pod2man ../perl/sieve/scripts/sieveshell.pl > ../man/sieveshell.1 &&\
-	fig2dev -L png murder.fig murder.png &&\
+	fig2dev -L png legacy/murder.fig murder.png &&\
 	rm -f groff-html-*.png pod2htm*
 	cd doc &&\
 	mkdir -p man &&\
@@ -199,10 +199,10 @@ override_dh_auto_install:
 
 	# Install the html docs and examples
 	install -d -m 755 $(DOCDIR)/html
-	install -m 644 doc/*.html doc/murder.png $(DOCDIR)/html
+	install -m 644 doc/legacy/*.html doc/murder.png $(DOCDIR)/html
 	cp -a doc/man $(DOCDIR)/html
 	cp -a debian/examples $(DOCDIR)
-	install -m 644 doc/cyrusv2.mc $(DOCDIR)/examples
+	install -m 644 contrib/cyrusv2.mc $(DOCDIR)/examples
 	#
 	# Install contrib/ files
 	install -d -m 755 $(DOCDIR)/contrib
@@ -217,11 +217,14 @@ override_dh_installchangelogs:
 	  -p cyrus-admin -p libcyrus-imap-perl -p cyrus-imapd \
 	  -p cyrus-pop3d -p cyrus-murder -p cyrus-replication \
 	  -p cyrus-nntpd -p cyrus-caldav -p cyrus-dev \
-	  doc/changes.html
+	  doc/legacy/changes.html
 	dh_installchangelogs --remaining-packages
 
 override_dh_installcron:
 	dh_installcron --name=cyrus-imapd
 
 override_dh_install:
+	rm $(TMPPKG)/usr/lib/cyrus/bin/*proxyd
+	rm $(TMPPKG)/usr/share/man/man8/*backup*.8
+	rm $(TMPPKG)/usr/share/man/man8/restore.8
 	dh_install --fail-missing -X.la

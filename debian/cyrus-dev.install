@@ -1,4 +1,6 @@
 usr/include/cyrus/*
 usr/lib/*/*.so
 usr/lib/*/pkgconfig/*.pc
-usr/share/man/man3/imclient.3
+usr/lib/cyrus/bin/cyr_buildinfo
+usr/share/man/man3/imclient*
+usr/share/man/man8/cyr_buildinfo.8
