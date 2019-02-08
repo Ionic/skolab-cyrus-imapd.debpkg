@@ -1,6 +1,6 @@
-cyrus-imapd (3.0.8-1~1.gbp1787b2) UNRELEASED; urgency=medium
+cyrus-imapd (3.0.8-1~2.gbp2d8d0f) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @1787b2a06f674e61bc0a0e6fd1945b39e1180626 **
+  ** SNAPSHOT build @2d8d0f2355b9f3196c6385d343be493bc0fb500c **
 
   [ Anthony Prades ]
   * add cyr_buildinfo bin and its man and doc page
@@ -27,8 +27,10 @@ cyrus-imapd (3.0.8-1~1.gbp1787b2) UNRELEASED; urgency=medium
 
   [ Ondřej Surý ]
   * Update gbp.conf
+  * Update changelog for 2.5.12-1~1.gbp1787b2 release
+  * snapshot build
 
- -- Ondřej Surý <ondrej@debian.org>  Fri, 08 Feb 2019 12:15:41 +0000
+ -- Ondřej Surý <ondrej@debian.org>  Fri, 08 Feb 2019 12:39:20 +0000
 
 cyrus-imapd (2.5.11-1) unstable; urgency=medium
 
