@@ -8,8 +8,10 @@ Subject: Disable runpath checking
  configure.ac | 3 ---
  1 file changed, 3 deletions(-)
 
---- cyrus-imapd.orig/configure.ac
-+++ cyrus-imapd/configure.ac
+diff --git a/configure.ac b/configure.ac
+index 965b259..456939a 100644
+--- a/configure.ac
++++ b/configure.ac
 @@ -178,9 +178,6 @@ else
    AC_MSG_ERROR(The Cyrus IMAPD requires support for long long int)
  fi

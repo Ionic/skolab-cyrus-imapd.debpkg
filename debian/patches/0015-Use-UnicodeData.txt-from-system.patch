@@ -6,9 +6,11 @@ Subject: Use UnicodeData.txt from system
  Makefile.am | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
---- cyrus-imapd.orig/Makefile.am
-+++ cyrus-imapd/Makefile.am
-@@ -1437,9 +1437,9 @@ lib_libcyrus_min_la_CFLAGS = $(AM_CFLAGS
+diff --git a/Makefile.am b/Makefile.am
+index df77bbf..8ea3321 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1437,9 +1437,9 @@ lib_libcyrus_min_la_CFLAGS = $(AM_CFLAGS) $(CFLAG_VISIBILITY)
  
  lib/chartable.c: lib/mkchartable.pl lib/charset/unifix.txt \
  	$(top_srcdir)/lib/charset/*.t \

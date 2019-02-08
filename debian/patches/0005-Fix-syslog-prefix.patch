@@ -13,9 +13,11 @@ log prefix.
  ptclient/test2.c    | 2 +-
  4 files changed, 9 insertions(+), 4 deletions(-)
 
---- cyrus-imapd.orig/imap/global.c
-+++ cyrus-imapd/imap/global.c
-@@ -153,6 +153,9 @@ static int get_facility(const char *name
+diff --git a/imap/global.c b/imap/global.c
+index cb8c206..f0d5c3a 100644
+--- a/imap/global.c
++++ b/imap/global.c
+@@ -153,6 +153,9 @@ static int get_facility(const char *name)
      return SYSLOG_FACILITY;
  }
  
@@ -25,7 +27,7 @@ log prefix.
  /* Called before a cyrus application starts (but after command line parameters
   * are read) */
  EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flags, int config_need_data)
-@@ -186,7 +189,9 @@ EXPORTED int cyrus_init(const char *alt_
+@@ -186,7 +189,9 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
  
      /* xxx we lose here since we can't have the prefix until we load the
       * config file */
@@ -36,8 +38,10 @@ log prefix.
  
      /* Load configuration file.  This will set config_dir when it finds it */
      config_read(alt_config, config_need_data);
---- cyrus-imapd.orig/ptclient/ptexpire.c
-+++ cyrus-imapd/ptclient/ptexpire.c
+diff --git a/ptclient/ptexpire.c b/ptclient/ptexpire.c
+index e8eeaa7..76b3687 100644
+--- a/ptclient/ptexpire.c
++++ b/ptclient/ptexpire.c
 @@ -112,7 +112,7 @@ int main(int argc, char *argv[])
          fatal("must run as the Cyrus user", EC_USAGE);
      }
@@ -47,8 +51,10 @@ log prefix.
  
      while ((opt = getopt(argc, argv, "C:E:")) != EOF) {
          switch (opt) {
---- cyrus-imapd.orig/ptclient/test.c
-+++ cyrus-imapd/ptclient/test.c
+diff --git a/ptclient/test.c b/ptclient/test.c
+index 614d602..634cf82 100644
+--- a/ptclient/test.c
++++ b/ptclient/test.c
 @@ -58,7 +58,7 @@ int main(int argc, char **argv) {
      cacheid=cache;
    } else
@@ -58,8 +64,10 @@ log prefix.
  
    if (!auth_setid(argv[1],cacheid))
      printf ("Auth_memberof(%s,%s) is %d\n", argv[1], argv[2],
---- cyrus-imapd.orig/ptclient/test2.c
-+++ cyrus-imapd/ptclient/test2.c
+diff --git a/ptclient/test2.c b/ptclient/test2.c
+index dc38023..18a66ea 100644
+--- a/ptclient/test2.c
++++ b/ptclient/test2.c
 @@ -45,7 +45,7 @@
  
  int main(void) {

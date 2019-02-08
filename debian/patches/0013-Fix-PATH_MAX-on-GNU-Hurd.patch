@@ -8,8 +8,10 @@ Subject: Fix PATH_MAX on GNU/Hurd
  master/service.c | 4 ++++
  3 files changed, 12 insertions(+)
 
---- cyrus-imapd.orig/imap/pop3d.c
-+++ cyrus-imapd/imap/pop3d.c
+diff --git a/imap/pop3d.c b/imap/pop3d.c
+index 0b49922..caebb38 100644
+--- a/imap/pop3d.c
++++ b/imap/pop3d.c
 @@ -100,6 +100,10 @@
  #define MAXHOSTNAMELEN 256
  #endif
@@ -21,8 +23,10 @@ Subject: Fix PATH_MAX on GNU/Hurd
  #ifdef HAVE_KRB
  /* kerberos des is purported to conflict with OpenSSL DES */
  #define DES_DEFS
---- cyrus-imapd.orig/master/master.c
-+++ cyrus-imapd/master/master.c
+diff --git a/master/master.c b/master/master.c
+index 62e4a9a..0940b58 100644
+--- a/master/master.c
++++ b/master/master.c
 @@ -75,6 +75,10 @@
  #define PATH_MAX 4096
  #endif
@@ -34,8 +38,10 @@ Subject: Fix PATH_MAX on GNU/Hurd
  #ifndef INADDR_NONE
  #define INADDR_NONE 0xffffffff
  #endif
---- cyrus-imapd.orig/master/service.c
-+++ cyrus-imapd/master/service.c
+diff --git a/master/service.c b/master/service.c
+index 52d7bb9..07376fe 100644
+--- a/master/service.c
++++ b/master/service.c
 @@ -77,6 +77,10 @@
  #define PATH_MAX 4096
  #endif

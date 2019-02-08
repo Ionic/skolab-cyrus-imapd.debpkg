@@ -6,9 +6,11 @@ Subject: Fix paths on Debian in tools/rehash
  tools/rehash | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
---- cyrus-imapd.orig/tools/rehash
-+++ cyrus-imapd/tools/rehash
-@@ -66,10 +66,10 @@ my %ishash = map { $_ => 1 } (@bdirs, @f
+diff --git a/tools/rehash b/tools/rehash
+index 7bdad86..ba58e44 100755
+--- a/tools/rehash
++++ b/tools/rehash
+@@ -66,10 +66,10 @@ my %ishash = map { $_ => 1 } (@bdirs, @fdirs);
  
  # evil globals
  my @configs = ($imapdconf);
