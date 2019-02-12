@@ -9,7 +9,6 @@ Standards-Version: 4.3.0.1
 Build-Depends: bison,
                comerr-dev,
                debhelper-compat (= 12),
-               dh-systemd (>= 1.3),
                flex,
                ghostscript,
                groff,
