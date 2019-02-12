@@ -76,6 +76,10 @@ override_dh_auto_configure:
 	 --enable-murder \
 	 --enable-http \
 	 --enable-replication \
+	 --enable-xapian \
+	 --enable-backup \
+	 --enable-calalarmd \
+	 --enable-unit-tests \
 	 --enable-gssapi="/usr" \
 	 --with-cyrus-user=cyrus --with-cyrus-group=mail \
 	 --with-lock=fcntl \
