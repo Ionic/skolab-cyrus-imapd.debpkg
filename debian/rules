@@ -25,12 +25,6 @@ export DEB_CFLAGS_MAINT_APPEND  = -Wall -Wextra -g -fno-strict-aliasing -pipe $(
 export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 export PERL_MM_OPT              = INSTALLDIRS="vendor" CCFLAGS="$(dpkg-buildflags --get CFLAGS)" LDDLFLAGS="$(dpkg-buildflags --get LDFLAGS)"
 
-ifeq (linux,$(DEB_HOST_ARCH_OS))
-  DH_SYSTEMD        := --with systemd
-else
-  DH_SYSTEMD        :=
-endif
-
 DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
