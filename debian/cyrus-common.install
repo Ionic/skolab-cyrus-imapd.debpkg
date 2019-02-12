@@ -6,9 +6,12 @@ etc/pam.d/sieve
 usr/lib/*/*.so.*
 usr/lib/cyrus/bin/arbitron
 usr/lib/cyrus/bin/arbitronsort
+usr/lib/cyrus/bin/backupd
+usr/lib/cyrus/bin/calalarmd
 usr/lib/cyrus/bin/chk_*
 usr/lib/cyrus/bin/ctl_*
 usr/lib/cyrus/bin/cvt_*
+usr/lib/cyrus/bin/cyr_backup
 usr/lib/cyrus/bin/cyr_buildinfo
 usr/lib/cyrus/bin/cyr_dbtool
 usr/lib/cyrus/bin/cyr_deny
@@ -29,6 +32,7 @@ usr/lib/cyrus/bin/mbexamine
 usr/lib/cyrus/bin/mbpath
 usr/lib/cyrus/bin/mbtool
 usr/lib/cyrus/bin/notifyd
+usr/lib/cyrus/bin/restore
 usr/lib/cyrus/bin/ptdump
 usr/lib/cyrus/bin/ptexpire
 usr/lib/cyrus/bin/ptloader
@@ -48,7 +52,10 @@ usr/sbin/cyrus
 usr/share/man/man5/cyrus.conf.5
 usr/share/man/man5/imapd.conf.5
 usr/share/man/man5/krb.equiv.5
+usr/share/man/man8/backupd.8
+usr/share/man/man8/ctl_backups.8
 usr/share/man/man8/ctl_conversationsdb.8
+usr/share/man/man8/cyr_backup.8
 usr/share/man/man8/cyr_virusscan.8
 usr/share/man/man8/cyrus-arbitron.8
 usr/share/man/man8/cyrus-arbitronsort.8
@@ -78,4 +85,5 @@ usr/share/man/man8/cyrus-timsieved.8
 usr/share/man/man8/cyrus-tls_prune.8
 usr/share/man/man8/cyrus-unexpunge.8
 usr/share/man/man8/mbtool.8
+usr/share/man/man8/restore.8
 usr/share/snmp
