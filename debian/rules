@@ -214,8 +214,8 @@ override_dh_auto_install:
 
 	# Remove some stuff we don't install
 	rm $(TMPPKG)/usr/lib/cyrus/bin/*proxyd
-	rm $(TMPPKG)/usr/share/man/man8/*backup*.8
-	rm $(TMPPKG)/usr/share/man/man8/restore.8
+	#rm $(TMPPKG)/usr/share/man/man8/*backup*.8
+	#rm $(TMPPKG)/usr/share/man/man8/restore.8
 
 override_dh_installinit:
 	dh_installinit -p cyrus-common --name=cyrus-imapd
