@@ -1,0 +1,22 @@
+From 1cd8e90305093970d5d5953138a2ef8a723ea96f Mon Sep 17 00:00:00 2001
+From: ellie timoney <ellie@fastmail.com>
+Date: Mon, 17 Sep 2018 14:02:39 +1000
+Subject: [PATCH] backend.testc: reset server authenticated state between
+ connections
+
+---
+ cunit/backend.testc | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/cunit/backend.testc b/cunit/backend.testc
+index 453ee8ad7..5f684a4dd 100644
+--- a/cunit/backend.testc
++++ b/cunit/backend.testc
+@@ -608,6 +608,7 @@ static void server_unaccept(struct server_state *state)
+     state->out = NULL;
+     sasl_dispose(&state->saslconn);
+     state->is_connected = 0;
++    state->is_authenticated = 0;
+     state->is_tls = 0;
+ #ifdef HAVE_SSL
+     if (state->tls_conn) {
