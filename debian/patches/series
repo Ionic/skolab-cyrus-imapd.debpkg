@@ -11,3 +11,4 @@
 0014-Fix-extra-libpci-in-SNMP_LIBS.patch
 0015-Use-UnicodeData.txt-from-system.patch
 0013-Re-add-perl2rst-tool-from-cyrus-imapd-3.0-upstream-b.patch
+0040-cert-update.patch
