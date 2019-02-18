@@ -1,3 +1,26 @@
+cyrus-imapd (3.0.8-2) unstable; urgency=medium
+
+  [ Max Kosmach ]
+  * Enable backup, xapian, calalarmd and unit tests
+  * Update certificates for unit tests
+  * Add backup and calalarmd files to cyrus-common
+  * Add upstream patches to fix some crashes
+  * Fix backup manpages
+
+  [ Anthony Prades ]
+  * Enable systemd support (Closes: #922290)
+
+  [ Ondřej Surý ]
+  * Upload to final cyrus-imapd 3.0.x to unstable
+    (Closes: #921733, #866973)
+  * Init script now uses systemd tmpfiles
+    (Closes: #685263, #675812, #750053, #766403, #825783, #862066)
+  * GOODCHARS #define is now synchronized with upstream
+    (Closes: #901024)
+  * Update cyrus-imapd version check in cron.daily (Closes: #869870)
+
+ -- Ondřej Surý <ondrej@debian.org>  Mon, 18 Feb 2019 07:58:29 +0000
+
 cyrus-imapd (3.0.8-1) unstable; urgency=medium
 
   [ Anthony Prades ]
