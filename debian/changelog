@@ -4,8 +4,11 @@ cyrus-imapd (3.0.8-3) unstable; urgency=medium
     (Closes: #922928)
   * Fix the stdout/stderr dpkg-statoverride redirection
     (Closes: #908190)
+  * On top of disabled password, also disable login for cyrus user
+    (Closes: #854286)
+  * Depend on e2fsprogs explicitly (Closes: #887201)
 
- -- Ondřej Surý <ondrej@debian.org>  Mon, 25 Feb 2019 05:37:09 +0000
+ -- Ondřej Surý <ondrej@debian.org>  Mon, 25 Feb 2019 05:45:09 +0000
 
 cyrus-imapd (3.0.8-2) unstable; urgency=medium
 
