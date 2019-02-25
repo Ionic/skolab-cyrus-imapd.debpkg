@@ -62,18 +62,18 @@ case "$1" in
 	}
 
 	# Force correct owner and modes
-	dpkg-statoverride --list /var/lib/cyrus 2>&1 >/dev/null ||
+	dpkg-statoverride --list /var/lib/cyrus >/dev/null 2>&1 ||
 		dpkg-statoverride --update --add cyrus mail 750 /var/lib/cyrus
-	dpkg-statoverride --list /var/spool/cyrus 2>&1 >/dev/null ||
+	dpkg-statoverride --list /var/spool/cyrus >/dev/null 2>&1 ||
 		dpkg-statoverride --update --add cyrus mail 755 /var/spool/cyrus
-	dpkg-statoverride --list /var/spool/sieve 2>&1 >/dev/null ||
+	dpkg-statoverride --list /var/spool/sieve >/dev/null 2>&1 ||
 	    dpkg-statoverride --update --add cyrus mail 755 /var/spool/sieve
 
 	# Remove old statoverrides
-	if dpkg-statoverride --list /var/run/cyrus 2>&1 >/dev/null; then
+	if dpkg-statoverride --list /var/run/cyrus >/dev/null 2>&1; then
 	    dpkg-statoverride --update --remove /var/run/cyrus;
 	fi
-	if dpkg-statoverride --list /var/run/cyrus/socket 2>&1 >/dev/null; then
+	if dpkg-statoverride --list /var/run/cyrus/socket >/dev/null 2>&1; then
 	    dpkg-statoverride --remove /var/run/cyrus/socket;
 	fi
 
