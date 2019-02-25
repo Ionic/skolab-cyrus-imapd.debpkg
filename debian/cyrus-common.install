@@ -52,7 +52,7 @@ usr/sbin/cyrus
 usr/share/man/man5/cyrus.conf.5
 usr/share/man/man5/imapd.conf.5
 usr/share/man/man5/krb.equiv.5
-usr/share/man/man8/backupd.8
+usr/share/man/man8/cyrus-backupd.8
 usr/share/man/man8/ctl_backups.8
 usr/share/man/man8/ctl_conversationsdb.8
 usr/share/man/man8/cyr_backup.8
@@ -84,6 +84,6 @@ usr/share/man/man8/cyrus-smmapd.8
 usr/share/man/man8/cyrus-timsieved.8
 usr/share/man/man8/cyrus-tls_prune.8
 usr/share/man/man8/cyrus-unexpunge.8
-usr/share/man/man8/mbtool.8
-usr/share/man/man8/restore.8
+usr/share/man/man8/cyrus-mbtool.8
+usr/share/man/man8/cyrus-restore.8
 usr/share/snmp
