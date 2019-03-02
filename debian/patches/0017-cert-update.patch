@@ -1,3 +1,13 @@
+From: Debian Cyrus Team <team+cyrus@tracker.debian.org>
+Date: Sat, 2 Mar 2019 14:04:58 +0000
+Subject: cert-update
+
+---
+ cunit/cacert.pem |  82 ++++++++----------------------------
+ cunit/cert.pem   | 124 +++++++++++++++++++++++++++++++++----------------------
+ cunit/key.pem    |  43 ++++++++++++-------
+ 3 files changed, 120 insertions(+), 129 deletions(-)
+
 diff --git a/cunit/cacert.pem b/cunit/cacert.pem
 index ea5c565..fa0d8a4 100644
 --- a/cunit/cacert.pem

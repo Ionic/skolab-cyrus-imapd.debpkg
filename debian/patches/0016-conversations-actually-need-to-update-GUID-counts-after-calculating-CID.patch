@@ -1,15 +1,14 @@
-From 949e71e463ffa19e389f731879f72b6eee24ad98 Mon Sep 17 00:00:00 2001
 From: Bron Gondwana <brong@fastmail.fm>
 Date: Mon, 11 Feb 2019 21:46:05 +1100
-Subject: [PATCH] conversations: actually, need to update GUID counts after
- calculating CID
+Subject: [PATCH] conversations: actually,
+ need to update GUID counts after calculating CID
 
 ---
  imap/conversations.c | 44 ++++++++++++++++++++------------------------
  1 file changed, 20 insertions(+), 24 deletions(-)
 
 diff --git a/imap/conversations.c b/imap/conversations.c
-index 0780e5e7b..46042e3cb 100644
+index 0780e5e..46042e3 100644
 --- a/imap/conversations.c
 +++ b/imap/conversations.c
 @@ -1842,7 +1842,6 @@ EXPORTED int conversations_update_record(struct conversations_state *cstate,

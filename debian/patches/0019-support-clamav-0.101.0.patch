@@ -1,8 +1,17 @@
-Support for clamav-0.101.0 
+From: Debian Cyrus Team <team+cyrus@tracker.debian.org>
+Date: Sat, 2 Mar 2019 14:04:58 +0000
+Subject: support-clamav-0.101.0
 
+Support for clamav-0.101.0
+---
+ imap/cyr_virusscan.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/imap/cyr_virusscan.c b/imap/cyr_virusscan.c
+index 863a858..cfbf869 100644
 --- a/imap/cyr_virusscan.c
 +++ b/imap/cyr_virusscan.c
-@@ -193,8 +193,12 @@
+@@ -193,8 +193,12 @@ int clamav_scanfile(void *state, const char *fname,
      int r;
  
      /* scan file */

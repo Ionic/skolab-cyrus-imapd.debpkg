@@ -1,4 +1,3 @@
-From 15e56257e02d0b7e13bf9dc44224d55e8f3e3015 Mon Sep 17 00:00:00 2001
 From: Bron Gondwana <brong@fastmail.fm>
 Date: Mon, 11 Feb 2019 21:27:43 +1100
 Subject: [PATCH] conversations: update the G keys even if the message has no
@@ -9,7 +8,7 @@ Subject: [PATCH] conversations: update the G keys even if the message has no
  1 file changed, 15 insertions(+), 8 deletions(-)
 
 diff --git a/imap/conversations.c b/imap/conversations.c
-index 56eccff63..0780e5e7b 100644
+index 56eccff..0780e5e 100644
 --- a/imap/conversations.c
 +++ b/imap/conversations.c
 @@ -1864,6 +1864,21 @@ EXPORTED int conversations_update_record(struct conversations_state *cstate,

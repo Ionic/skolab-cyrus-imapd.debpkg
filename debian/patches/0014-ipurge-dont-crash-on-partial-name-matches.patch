@@ -1,4 +1,3 @@
-From 4c8c9923c6589f0ea0fd4267f84524e43b2ea9a8 Mon Sep 17 00:00:00 2001
 From: ellie timoney <ellie@fastmail.com>
 Date: Mon, 17 Sep 2018 13:38:11 +1000
 Subject: [PATCH] ipurge: don't crash on partial name matches
@@ -9,7 +8,7 @@ Fixes #2524
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/imap/ipurge.c b/imap/ipurge.c
-index 4b1a49b69..80c51716b 100644
+index 4b1a49b..80c5171 100644
 --- a/imap/ipurge.c
 +++ b/imap/ipurge.c
 @@ -233,7 +233,7 @@ static int usage(const char *name)
