@@ -1,3 +1,14 @@
+cyrus-imapd (3.0.8-4) unstable; urgency=medium
+
+  [ Anthony Prades ]
+  * Add cyrus upstream patch to support clamav-0.101.0
+    (Closes: #923498)
+
+  [ Ondřej Surý ]
+  * Renumber patches using gbp pq --renumber
+
+ -- Ondřej Surý <ondrej@debian.org>  Sat, 02 Mar 2019 14:07:12 +0000
+
 cyrus-imapd (3.0.8-3) unstable; urgency=medium
 
   * Move the backup/restore man pages to cyrus- namespace
