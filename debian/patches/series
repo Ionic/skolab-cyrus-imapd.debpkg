@@ -17,3 +17,4 @@
 0017-cert-update.patch
 0018-backend.testc-reset-server-authenticated-state-between-connections.patch
 0019-support-clamav-0.101.0.patch
+0020-lmtp-sieve-segfault.patch
