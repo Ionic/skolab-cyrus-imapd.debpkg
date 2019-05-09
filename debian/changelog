@@ -1,3 +1,21 @@
+cyrus-imapd (3.0.8-5) UNRELEASED; urgency=medium
+
+  [ Xavier Guimard ]
+  * Add upstream/metadata
+
+  [ Anthony Prades ]
+  * sieve segfault (Closes: #927142)
+
+  [ Xavier Guimard ]
+  * Fix Standards-Version to 4.3.0
+  * Add patch headers
+  * Trailing whitespaces
+  * Add myself to uploaders
+  * Add upgradesieve() function to cyrus-common.postinst (related to #927142).
+    Thanks to Anthony Prades
+
+ -- Xavier Guimard <yadd@debian.org>  Thu, 09 May 2019 18:13:12 +0200
+
 cyrus-imapd (3.0.8-4) unstable; urgency=medium
 
   [ Anthony Prades ]
@@ -1554,4 +1572,3 @@ cyrus22-imapd (2.2.12-0.1) unstable; urgency=low
   * Add syncldap2cyrus.pl script from #260833 (a cyrus21 bug)
 
  -- Sven Mueller <debian@incase.de>  Fri, 18 Mar 2005 13:34:09 +0100
-
