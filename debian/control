@@ -5,7 +5,7 @@ Maintainer: Debian Cyrus Team <team+cyrus@tracker.debian.org>
 Uploaders: Henrique de Moraes Holschuh <hmh@debian.org>,
            Ondřej Surý <ondrej@debian.org>,
 	   Anthony Prades <toony.debian@chezouam.net>
-Standards-Version: 4.3.0.1
+Standards-Version: 4.3.0
 Build-Depends: bison,
                comerr-dev,
                debhelper-compat (= 12),
