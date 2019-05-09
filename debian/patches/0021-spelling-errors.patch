@@ -1,0 +1,1806 @@
+Description: <short summary of the patch>
+Author: Xavier Guimard <yadd@debian.org>
+Forwarded: https://github.com/cyrusimap/cyrus-imapd/issues/2753
+Last-Update: 2019-05-09
+
+--- a/backup/lcb_compact.c
++++ b/backup/lcb_compact.c
+@@ -334,7 +334,7 @@
+         int keep = 0;
+ 
+         /* keep MAILBOX lines that contain the last RECORD for any message, */
+-        /* pruning out stale RECORDs */
++        /* prunning out stale RECORDs */
+         for (ki = record->head; ki; ki = next) {
+             const char *guid = NULL;
+             struct backup_mailbox_message *mailbox_message = NULL;
+@@ -362,7 +362,7 @@
+             }
+ 
+             /* don't need this record */
+-            syslog(LOG_DEBUG, "%s: pruning stale MAILBOX RECORD for guid %s",
++            syslog(LOG_DEBUG, "%s: prunning stale MAILBOX RECORD for guid %s",
+                               __func__, guid);
+             dlist_unstitch(record, ki);
+             dlist_unlink_files(ki);
+--- a/cunit/charset.testc
++++ b/cunit/charset.testc
+@@ -603,7 +603,7 @@
+     char *s;
+     static const char STR_RFC5051[] = {0xc7, 0x84, 0};
+     static const char RES_RFC5051[] = {'D', 'z', 0xcc, 0x8c, 0};
+-    int flags = 0; /* super complient */
++    int flags = 0; /* super compliant */
+     charset_t cs;
+ 
+     cs = charset_lookupname("utf-8");
+--- a/doc/examples/cyrus_conf/murder-backend.conf
++++ b/doc/examples/cyrus_conf/murder-backend.conf
+@@ -5,7 +5,7 @@
+   recover       cmd="ctl_cyrusdb -r"
+ 
+   # this is useful on backend nodes of a Murder cluster it causes the
+-  # backend to syncronize its mailbox list with the mupdate master upon
++  # backend to synchronize its mailbox list with the mupdate master upon
+   # startup
+   mupdatepush   cmd="ctl_mboxlist -m"
+ }
+--- a/doc/html/_sources/imap/download/release-notes/2.2/2.2.x.txt
++++ b/doc/html/_sources/imap/download/release-notes/2.2/2.2.x.txt
+@@ -70,12 +70,12 @@
+ Changes to the Cyrus IMAP Server since 2.2.5
+ 
+ *   Fix a bug in the proxy code where a backend connection might get closed twice
+-*   Improved consistancy checking in chk_cyrus
++*   Improved consistency checking in chk_cyrus
+ *   Fix segfault in APPEND code
+ *   Fix a bug with an interaction between sieve and unixhierarchysep
+ *   Fix a file descriptor leak in the quotadb code
+ *   Fix a triggered assertation in service-thread services
+-*   Add a number of internal consistancy checks to the skiplist code
++*   Add a number of internal consistency checks to the skiplist code
+ *   Allow mbpath to handle virtual domains
+ *   Fix various MANAGESIEVE client authentication issues
+ *   Other minor fixes
+@@ -143,7 +143,7 @@
+ 
+ Changes to the Cyrus IMAP Server since 2.1.x
+ 
+-*   There have been extensive performance and consistancy changes to the configuration subsystem. This will both ensure greater consistancy between the documentation and the code, as well as a more standard format for specifing service-specific configuration options in imapd.conf. Important changes are detailed here:
++*   There have been extensive performance and consistency changes to the configuration subsystem. This will both ensure greater consistency between the documentation and the code, as well as a more standard format for specifing service-specific configuration options in imapd.conf. Important changes are detailed here:
+ *       The tls_[service]_* configuration options have been removed. Now use [servicename]_tls_*, where servicename is the service identifier from cyrus.conf for that particular process.
+ *       Administrative groups (e.g. admins and lmtp_admins) no longer union, service groups completely override the generic group.
+ *       lmtp_allowplaintext is no longer a defined parameter and must be specified using the service name of your lmtp process if you require a specific value
+--- a/doc/html/_sources/imap/reference/admin/murder/murder-installation.txt
++++ b/doc/html/_sources/imap/reference/admin/murder/murder-installation.txt
+@@ -170,7 +170,7 @@
+     If somehow a mailbox exists on two (or more) backend servers, each
+     time one of them synchronizes its database that backend server will
+     become authoritative. Though this should not happen during normal
+-    operation of the murder (because of the consistancy guarantees of
++    operation of the murder (because of the consistency guarantees of
+     the MUPDATE protocol, and the fact that mailbox operations are
+     denied if the mupdate master is down), it is possible when first
+     creating the mupdate database or when bringing a new backend server
+--- a/doc/html/_sources/imap/reference/faqs/o-berkeleydb.txt
++++ b/doc/html/_sources/imap/reference/faqs/o-berkeleydb.txt
+@@ -14,13 +14,13 @@
+ hour, and more often on busy sites. 
+ 
+ The other reason is that your :ref:`deliver.db may be very large <faq-o-deliberdb-size>`. This is 
+-solvable by increasing the pruning interval (the -E parameter to 
++solvable by increasing the prunning interval (the -E parameter to 
+ ctl_deliver, which you should run on a regular basis), or (in a pinch) 
+ by just removing the database (since the effects of losing it do not 
+ prevent operation, they just cause vacation messages to be resent, and 
+ duplicate delivery suppression to possibly deliver duplicates). 
+ 
+-* "by increasing the pruning interval": My understanding is that the 
++* "by increasing the prunning interval": My understanding is that the 
+    number after "-E" is the number of days after which entries are 
+    discarded. Is there a way to reduce it to a number of hours? Since most 
+    of our mail is internal mail should rarely be delayed by more then an 
+--- a/doc/html/_sources/imap/reference/manpages/configs/imapd.conf.txt
++++ b/doc/html/_sources/imap/reference/manpages/configs/imapd.conf.txt
+@@ -2318,7 +2318,7 @@
+ 
+         Default "options" field for the mailbox on create.  You'll want to know
+         what you're doing before setting this, but it can apply some default
+-        annotations like duplicate supression 
++        annotations like duplicate suppression 
+ 
+     .. endblob mailbox_default_options
+ 
+@@ -2703,7 +2703,7 @@
+         When set, the Cyrus NNTP server will add the header(s) specified in
+         the **newsaddheaders** option to each incoming usenet article.
+         The added header(s) will contain email delivery addresses
+-        corresponding to each relevent newsgroup.  If not set, no headers
++        corresponding to each relevant newsgroup.  If not set, no headers
+         are added to usenet articles. 
+ 
+     .. endblob newspostuser
+@@ -3481,7 +3481,7 @@
+ 
+         When searching, should diacriticals be stripped from the search
+         terms.  The default is "true", a search for "hav" will match
+-        "Håvard".  This is not :rfc:`5051` complient, but it backwards
++        "Håvard".  This is not :rfc:`5051` compliant, but it backwards
+         compatible, and may be preferred by some sites. 
+ 
+     .. endblob search_skipdiacrit
+@@ -4487,7 +4487,7 @@
+     ``tls_versions:`` tls1_0 tls1_1 tls1_2
+ 
+         A list of SSL/TLS versions to not disable. Cyrus IMAP SSL/TLS starts
+-        with all protocols, and substracts protocols not in this list. Newer
++        with all protocols, and subtracts protocols not in this list. Newer
+         versions of SSL/TLS will need to be added here to allow them to get
+         disabled. 
+ 
+--- a/doc/html/_sources/imap/reference/manpages/systemcommands/chk_cyrus.txt
++++ b/doc/html/_sources/imap/reference/manpages/systemcommands/chk_cyrus.txt
+@@ -61,7 +61,7 @@
+ 
+ ..
+ 
+-        Perform consistancy checks on *default* partition.
++        Perform consistency checks on *default* partition.
+ 
+ .. parsed-literal::
+ 
+@@ -69,7 +69,7 @@
+ 
+ ..
+ 
+-        Perform consistancy checks on *default* partition using specified
++        Perform consistency checks on *default* partition using specified
+         configuration file.
+ 
+ .. parsed-literal::
+@@ -78,7 +78,7 @@
+ 
+ ..
+ 
+-        Perform consistancy checks on mailbox *user.marysmith*.
++        Perform consistency checks on mailbox *user.marysmith*.
+ 
+ See Also
+ ========
+--- a/doc/html/_sources/imap/reference/manpages/systemcommands/ctl_backups.txt
++++ b/doc/html/_sources/imap/reference/manpages/systemcommands/ctl_backups.txt
+@@ -156,7 +156,7 @@
+ 
+ .. option:: -t [hours]
+ 
+-    List stale backups only, that is, backups that have recieved no updates
++    List stale backups only, that is, backups that have received no updates
+     in *hours*.  If *hours* is unspecified, it defaults to 24.
+ 
+ .. _ctl-backups-lock-options:
+--- a/doc/html/_sources/imap/reference/manpages/systemcommands/ctl_mboxlist.txt
++++ b/doc/html/_sources/imap/reference/manpages/systemcommands/ctl_mboxlist.txt
+@@ -151,7 +151,7 @@
+         Synchronize our mailboxes database with the MUPDATE server.  (One may
+         commonly put a command like this into the **START** section of
+         :cyrusman:`cyrus.conf(5)` on backend nodes of a Murder cluster to cause
+-        the backend to syncronize its mailbox list with the mupdate master upon
++        the backend to synchronize its mailbox list with the mupdate master upon
+         startup).
+ 
+ .. only:: html
+--- a/doc/html/_sources/imap/reference/manpages/systemcommands/deliver.txt
++++ b/doc/html/_sources/imap/reference/manpages/systemcommands/deliver.txt
+@@ -41,7 +41,7 @@
+ 
+ .. option:: -d
+ 
+-    Ignored for compatability with **/bin/mail**.
++    Ignored for compatibility with **/bin/mail**.
+ 
+ .. option:: -r  address
+ 
+--- a/doc/html/_sources/imap/reference/manpages/systemcommands/fud.txt
++++ b/doc/html/_sources/imap/reference/manpages/systemcommands/fud.txt
+@@ -28,7 +28,7 @@
+ **fud** |default-conf-text|
+ 
+ **fud** will automatically proxy any and all FUD requests to the
+-appropriate backend server if it is runing on a Cyrus Murder frontend
++appropriate backend server if it is running on a Cyrus Murder frontend
+ machine.
+ 
+ To set up the FUD daemon, add this to your cyrus.conf:
+@@ -118,7 +118,7 @@
+ 0 is not a standard IMAP ACL bit.
+ 
+ **fud** is an experimental interface meant to provide information to
+-build a finger-like service around.  Eventually it should be superceded
++build a finger-like service around.  Eventually it should be superseded
+ by a more standards-based protocol.
+ 
+ 
+--- a/doc/html/_sources/imap/reference/manpages/systemcommands/imapd.txt
++++ b/doc/html/_sources/imap/reference/manpages/systemcommands/imapd.txt
+@@ -39,7 +39,7 @@
+ message which IMAP-compliant clients are required to display.
+ 
+ This option serves to annoy users mostly.  Unfortunately clients tend to
+-connect far more frequently than is apparent, generating a seperate
++connect far more frequently than is apparent, generating a separate
+ server ALERT for each connection.  Many clients do not display these
+ properly, if they do anything with them at all.
+ 
+--- a/doc/html/_sources/imap/reference/manpages/systemcommands/master.txt
++++ b/doc/html/_sources/imap/reference/manpages/systemcommands/master.txt
+@@ -56,7 +56,7 @@
+ 
+ .. option:: -j  janitor full-sweeps per second
+ 
+-    Sets the amount of times per second the janitor should sweep the
++    Sets the number of times per second the janitor should sweep the
+     entire child table.  Leave it at the default of 1 unless you have a
+     really high fork rate (and you have not increased the child hash
+     table size when you compiled Cyrus from its default of 10000
+--- a/doc/html/_sources/imap/reference/manpages/systemcommands/reconstruct.txt
++++ b/doc/html/_sources/imap/reference/manpages/systemcommands/reconstruct.txt
+@@ -201,7 +201,7 @@
+ ..
+ 
+         Recursively reconstruct all mailboxes within the
+-        *tech.support.Archive* hierarchy with names begining with '2',
++        *tech.support.Archive* hierarchy with names beginning with '2',
+         restoring any directories containing ``cyrus.header``
+         files.
+ 
+--- a/doc/html/_sources/imap/reference/manpages/systemcommands/restore.txt
++++ b/doc/html/_sources/imap/reference/manpages/systemcommands/restore.txt
+@@ -55,7 +55,7 @@
+ Selected mailboxes will have their messages restored to a mailbox of the same
+ name, which will be created if necessary.  Individually-selected messages will
+ be restored to the mailboxes in which they previously existed.  In both cases
+-the **-M** option can be used to overrride the destination mailbox (see below),
++the **-M** option can be used to override the destination mailbox (see below),
+ but note the consequences of doing this when multiple mailbox objects have
+ been specified, or when the **-r** option is in use.
+ 
+--- a/doc/html/_sources/imap/reference/manpages/usercommands/installsieve.txt
++++ b/doc/html/_sources/imap/reference/manpages/usercommands/installsieve.txt
+@@ -34,7 +34,7 @@
+ 
+ .. option:: -v  name
+ 
+-    View script with the given name. The script if retrieved sucessfully
++    View script with the given name. The script if retrieved successfully
+     is output to standard output.
+ 
+ .. option:: -l
+@@ -51,7 +51,7 @@
+ .. option:: -i  file
+ 
+     Install a file onto the server. If a script with the same name
+-    already exists on the server it is overwritten. Upon sucessfully
++    already exists on the server it is overwritten. Upon successfully
+     putting the script on the server the script is set active. If
+     *file* has the extension .script it is chopped when put on the
+     server since sieve names may not contain a '.'.
+--- a/doc/html/imap/download/release-notes/2.2/2.2.x.html
++++ b/doc/html/imap/download/release-notes/2.2/2.2.x.html
+@@ -837,12 +837,12 @@
+ <p>Changes to the Cyrus IMAP Server since 2.2.5</p>
+ <ul class="simple">
+ <li>Fix a bug in the proxy code where a backend connection might get closed twice</li>
+-<li>Improved consistancy checking in chk_cyrus</li>
++<li>Improved consistency checking in chk_cyrus</li>
+ <li>Fix segfault in APPEND code</li>
+ <li>Fix a bug with an interaction between sieve and unixhierarchysep</li>
+ <li>Fix a file descriptor leak in the quotadb code</li>
+ <li>Fix a triggered assertation in service-thread services</li>
+-<li>Add a number of internal consistancy checks to the skiplist code</li>
++<li>Add a number of internal consistency checks to the skiplist code</li>
+ <li>Allow mbpath to handle virtual domains</li>
+ <li>Fix various MANAGESIEVE client authentication issues</li>
+ <li>Other minor fixes</li>
+@@ -910,7 +910,7 @@
+ </ul>
+ <p>Changes to the Cyrus IMAP Server since 2.1.x</p>
+ <ul class="simple">
+-<li>There have been extensive performance and consistancy changes to the configuration subsystem. This will both ensure greater consistancy between the documentation and the code, as well as a more standard format for specifing service-specific configuration options in imapd.conf. Important changes are detailed here:</li>
++<li>There have been extensive performance and consistency changes to the configuration subsystem. This will both ensure greater consistency between the documentation and the code, as well as a more standard format for specifing service-specific configuration options in imapd.conf. Important changes are detailed here:</li>
+ <li>The tls_[service]_* configuration options have been removed. Now use [servicename]_tls_*, where servicename is the service identifier from cyrus.conf for that particular process.</li>
+ <li>Administrative groups (e.g. admins and lmtp_admins) no longer union, service groups completely override the generic group.</li>
+ <li>lmtp_allowplaintext is no longer a defined parameter and must be specified using the service name of your lmtp process if you require a specific value</li>
+--- a/doc/html/imap/reference/admin/murder/murder-installation.html
++++ b/doc/html/imap/reference/admin/murder/murder-installation.html
+@@ -927,7 +927,7 @@
+ <p class="last">If somehow a mailbox exists on two (or more) backend servers, each
+ time one of them synchronizes its database that backend server will
+ become authoritative. Though this should not happen during normal
+-operation of the murder (because of the consistancy guarantees of
++operation of the murder (because of the consistency guarantees of
+ the MUPDATE protocol, and the fact that mailbox operations are
+ denied if the mupdate master is down), it is possible when first
+ creating the mupdate database or when bringing a new backend server
+--- a/doc/html/imap/reference/faqs/o-berkeleydb.html
++++ b/doc/html/imap/reference/faqs/o-berkeleydb.html
+@@ -780,14 +780,14 @@
+ significantly shorter. We recommend doing this at least once every half
+ hour, and more often on busy sites.</p>
+ <p>The other reason is that your <a class="reference internal" href="o-deliverdb-size.html#faq-o-deliberdb-size"><span class="std std-ref">deliver.db may be very large</span></a>. This is
+-solvable by increasing the pruning interval (the -E parameter to
++solvable by increasing the prunning interval (the -E parameter to
+ ctl_deliver, which you should run on a regular basis), or (in a pinch)
+ by just removing the database (since the effects of losing it do not
+ prevent operation, they just cause vacation messages to be resent, and
+ duplicate delivery suppression to possibly deliver duplicates).</p>
+ <ul class="simple">
+ <li><dl class="first docutils">
+-<dt>&#8220;by increasing the pruning interval&#8221;: My understanding is that the</dt>
++<dt>&#8220;by increasing the prunning interval&#8221;: My understanding is that the</dt>
+ <dd>number after &#8220;-E&#8221; is the number of days after which entries are
+ discarded. Is there a way to reduce it to a number of hours? Since most
+ of our mail is internal mail should rarely be delayed by more then an
+--- a/doc/html/imap/reference/manpages/configs/imapd.conf.html
++++ b/doc/html/imap/reference/manpages/configs/imapd.conf.html
+@@ -1931,7 +1931,7 @@
+ <blockquote>
+ <div>Default &#8220;options&#8221; field for the mailbox on create.  You&#8217;ll want to know
+ what you&#8217;re doing before setting this, but it can apply some default
+-annotations like duplicate supression</div></blockquote>
++annotations like duplicate suppression</div></blockquote>
+ <p><code class="docutils literal"><span class="pre">mailbox_initial_flags:</span></code> &lt;none&gt;</p>
+ <blockquote>
+ <div>space-separated list of permanent flags which will be pre-set in every
+@@ -2127,7 +2127,7 @@
+ <p>When set, the Cyrus NNTP server will add the header(s) specified in
+ the <strong>newsaddheaders</strong> option to each incoming usenet article.
+ The added header(s) will contain email delivery addresses
+-corresponding to each relevent newsgroup.  If not set, no headers
++corresponding to each relevant newsgroup.  If not set, no headers
+ are added to usenet articles.</p>
+ </div></blockquote>
+ <p><code class="docutils literal"><span class="pre">newsprefix:</span></code> &lt;none&gt;</p>
+@@ -2546,7 +2546,7 @@
+ <blockquote>
+ <div>When searching, should diacriticals be stripped from the search
+ terms.  The default is &#8220;true&#8221;, a search for &#8220;hav&#8221; will match
+-&#8220;Håvard&#8221;.  This is not <span class="target" id="index-15"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5051.html"><strong>RFC 5051</strong></a> complient, but it backwards
++&#8220;Håvard&#8221;.  This is not <span class="target" id="index-15"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5051.html"><strong>RFC 5051</strong></a> compliant, but it backwards
+ compatible, and may be preferred by some sites.</div></blockquote>
+ <p><code class="docutils literal"><span class="pre">search_skiphtml:</span></code> 0</p>
+ <blockquote>
+@@ -3026,7 +3026,7 @@
+ <p><code class="docutils literal"><span class="pre">tls_versions:</span></code> tls1_0 tls1_1 tls1_2</p>
+ <blockquote>
+ <div>A list of SSL/TLS versions to not disable. Cyrus IMAP SSL/TLS starts
+-with all protocols, and substracts protocols not in this list. Newer
++with all protocols, and subtracts protocols not in this list. Newer
+ versions of SSL/TLS will need to be added here to allow them to get
+ disabled.</div></blockquote>
+ <p><code class="docutils literal"><span class="pre">uidl_format:</span></code> cyrus</p>
+--- a/doc/html/imap/reference/manpages/systemcommands/chk_cyrus.html
++++ b/doc/html/imap/reference/manpages/systemcommands/chk_cyrus.html
+@@ -818,18 +818,18 @@
+ <strong>chk_cyrus -P</strong> <em>default</em>
+ </pre>
+ <blockquote>
+-<div>Perform consistancy checks on <em>default</em> partition.</div></blockquote>
++<div>Perform consistency checks on <em>default</em> partition.</div></blockquote>
+ <pre class="literal-block">
+ <strong>chk_cyrus -C</strong> <em>/usr/local/etc/imapd-slot1.conf</em> <strong>-P</strong> <em>default</em>
+ </pre>
+ <blockquote>
+-<div>Perform consistancy checks on <em>default</em> partition using specified
++<div>Perform consistency checks on <em>default</em> partition using specified
+ configuration file.</div></blockquote>
+ <pre class="literal-block">
+ <strong>chk_cyrus -M</strong> <em>user.marysmith</em>
+ </pre>
+ <blockquote>
+-<div>Perform consistancy checks on mailbox <em>user.marysmith</em>.</div></blockquote>
++<div>Perform consistency checks on mailbox <em>user.marysmith</em>.</div></blockquote>
+ </div>
+ <div class="section" id="see-also">
+ <h2>See Also<a class="headerlink" href="#see-also" title="Permalink to this headline">¶</a></h2>
+--- a/doc/html/imap/reference/manpages/systemcommands/ctl_backups.html
++++ b/doc/html/imap/reference/manpages/systemcommands/ctl_backups.html
+@@ -924,7 +924,7 @@
+ <dl class="option">
+ <dt id="cmdoption-ctl_backups-t">
+ <code class="descname">-t</code><code class="descclassname"> [hours]</code><a class="headerlink" href="#cmdoption-ctl_backups-t" title="Permalink to this definition">¶</a></dt>
+-<dd><p>List stale backups only, that is, backups that have recieved no updates
++<dd><p>List stale backups only, that is, backups that have received no updates
+ in <em>hours</em>.  If <em>hours</em> is unspecified, it defaults to 24.</p>
+ </dd></dl>
+ 
+--- a/doc/html/imap/reference/manpages/systemcommands/ctl_mboxlist.html
++++ b/doc/html/imap/reference/manpages/systemcommands/ctl_mboxlist.html
+@@ -915,7 +915,7 @@
+ <div>Synchronize our mailboxes database with the MUPDATE server.  (One may
+ commonly put a command like this into the <strong>START</strong> section of
+ <a class="reference internal" href="../configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a> on backend nodes of a Murder cluster to cause
+-the backend to syncronize its mailbox list with the mupdate master upon
++the backend to synchronize its mailbox list with the mupdate master upon
+ startup).</div></blockquote>
+ <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">START</span> <span class="p">{</span>
+     <span class="c1">##</span>
+--- a/doc/html/imap/reference/manpages/systemcommands/deliver.html
++++ b/doc/html/imap/reference/manpages/systemcommands/deliver.html
+@@ -796,7 +796,7 @@
+ <dl class="option">
+ <dt id="cmdoption-deliver-d">
+ <code class="descname">-d</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-deliver-d" title="Permalink to this definition">¶</a></dt>
+-<dd><p>Ignored for compatability with <strong>/bin/mail</strong>.</p>
++<dd><p>Ignored for compatibility with <strong>/bin/mail</strong>.</p>
+ </dd></dl>
+ 
+ <dl class="option">
+--- a/doc/html/imap/reference/manpages/systemcommands/fud.html
++++ b/doc/html/imap/reference/manpages/systemcommands/fud.html
+@@ -784,7 +784,7 @@
+ that user.</p>
+ <p><strong>fud</strong> reads its configuration options out of the <a class="reference internal" href="../configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> file unless specified otherwise by <strong>-C</strong>.</p>
+ <p><strong>fud</strong> will automatically proxy any and all FUD requests to the
+-appropriate backend server if it is runing on a Cyrus Murder frontend
++appropriate backend server if it is running on a Cyrus Murder frontend
+ machine.</p>
+ <p>To set up the FUD daemon, add this to your cyrus.conf:</p>
+ <p><code class="docutils literal"><span class="pre">fud</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">cmd=&quot;fud&quot;</span> <span class="pre">listen=&quot;fud&quot;</span> <span class="pre">prefork=1</span> <span class="pre">proto=&quot;udp&quot;</span></code></p>
+@@ -869,7 +869,7 @@
+ 0 (zero) right on the mailbox in question.  This is only a &#8220;bug&#8221; because
+ 0 is not a standard IMAP ACL bit.</p>
+ <p><strong>fud</strong> is an experimental interface meant to provide information to
+-build a finger-like service around.  Eventually it should be superceded
++build a finger-like service around.  Eventually it should be superseded
+ by a more standards-based protocol.</p>
+ </div>
+ <div class="section" id="see-also">
+--- a/doc/html/imap/reference/manpages/systemcommands/imapd.html
++++ b/doc/html/imap/reference/manpages/systemcommands/imapd.html
+@@ -793,7 +793,7 @@
+ first line contained in the file to clients upon connect as an ALERT
+ message which IMAP-compliant clients are required to display.</p>
+ <p>This option serves to annoy users mostly.  Unfortunately clients tend to
+-connect far more frequently than is apparent, generating a seperate
++connect far more frequently than is apparent, generating a separate
+ server ALERT for each connection.  Many clients do not display these
+ properly, if they do anything with them at all.</p>
+ <p>If the directory <code class="docutils literal"><span class="pre">log</span></code>/<em>user</em> exists under the directory specified in
+--- a/doc/html/imap/reference/manpages/systemcommands/master.html
++++ b/doc/html/imap/reference/manpages/systemcommands/master.html
+@@ -815,7 +815,7 @@
+ <dl class="option">
+ <dt id="cmdoption-master-j">
+ <code class="descname">-j</code><code class="descclassname">  janitor full-sweeps per second</code><a class="headerlink" href="#cmdoption-master-j" title="Permalink to this definition">¶</a></dt>
+-<dd><p>Sets the amount of times per second the janitor should sweep the
++<dd><p>Sets the number of times per second the janitor should sweep the
+ entire child table.  Leave it at the default of 1 unless you have a
+ really high fork rate (and you have not increased the child hash
+ table size when you compiled Cyrus from its default of 10000
+--- a/doc/html/imap/reference/manpages/systemcommands/reconstruct.html
++++ b/doc/html/imap/reference/manpages/systemcommands/reconstruct.html
+@@ -977,7 +977,7 @@
+ </pre>
+ <blockquote>
+ <div>Recursively reconstruct all mailboxes within the
+-<em>tech.support.Archive</em> hierarchy with names begining with &#8216;2&#8217;,
++<em>tech.support.Archive</em> hierarchy with names beginning with &#8216;2&#8217;,
+ restoring any directories containing <code class="docutils literal"><span class="pre">cyrus.header</span></code>
+ files.</div></blockquote>
+ <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">tech</span><span class="o">.</span><span class="n">support</span><span class="o">.</span><span class="n">Archive</span><span class="o">.</span><span class="mi">2001</span>
+--- a/doc/html/imap/reference/manpages/systemcommands/restore.html
++++ b/doc/html/imap/reference/manpages/systemcommands/restore.html
+@@ -806,7 +806,7 @@
+ <p>Selected mailboxes will have their messages restored to a mailbox of the same
+ name, which will be created if necessary.  Individually-selected messages will
+ be restored to the mailboxes in which they previously existed.  In both cases
+-the <strong>-M</strong> option can be used to overrride the destination mailbox (see below),
++the <strong>-M</strong> option can be used to override the destination mailbox (see below),
+ but note the consequences of doing this when multiple mailbox objects have
+ been specified, or when the <strong>-r</strong> option is in use.</p>
+ <p>Mailboxes that are created during the restoration process will have their ACL
+--- a/doc/html/imap/reference/manpages/usercommands/installsieve.html
++++ b/doc/html/imap/reference/manpages/usercommands/installsieve.html
+@@ -792,7 +792,7 @@
+ <dl class="option">
+ <dt id="cmdoption-installsieve-v">
+ <code class="descname">-v</code><code class="descclassname">  name</code><a class="headerlink" href="#cmdoption-installsieve-v" title="Permalink to this definition">¶</a></dt>
+-<dd><p>View script with the given name. The script if retrieved sucessfully
++<dd><p>View script with the given name. The script if retrieved successfully
+ is output to standard output.</p>
+ </dd></dl>
+ 
+@@ -815,7 +815,7 @@
+ <dt id="cmdoption-installsieve-i">
+ <code class="descname">-i</code><code class="descclassname">  file</code><a class="headerlink" href="#cmdoption-installsieve-i" title="Permalink to this definition">¶</a></dt>
+ <dd><p>Install a file onto the server. If a script with the same name
+-already exists on the server it is overwritten. Upon sucessfully
++already exists on the server it is overwritten. Upon successfully
+ putting the script on the server the script is set active. If
+ <em>file</em> has the extension .script it is chopped when put on the
+ server since sieve names may not contain a &#8216;.&#8217;.</p>
+--- a/doc/internal/internationalization.html
++++ b/doc/internal/internationalization.html
+@@ -382,7 +382,7 @@
+ standard. More recent versions should be available <a
+ href="http://www.unicode.org/xxx">from their website</a>. Each entry
+ in the file describers a Unicode character by the following
+-properties, seperated by semicolons:</p>
++properties, separated by semicolons:</p>
+ 
+ <ul>
+ <li>code point (16-bit character value) in hex</li>
+--- a/doc/legacy/anoncvs.html
++++ b/doc/legacy/anoncvs.html
+@@ -60,7 +60,7 @@
+ 
+     <p>
+       Please note that the version in the repository is not the version we are
+-      running.  We have a seperate system that resembles version control for
++      running.  We have a separate system that resembles version control for
+       releases of software on the Andrew system, and sometimes changes don't
+       get propigated back to CVS.
+ 
+--- a/doc/legacy/changes.html
++++ b/doc/legacy/changes.html
+@@ -1289,12 +1289,12 @@
+ <ul>
+ <li>Fix a bug in the proxy code where a backend connection might get closed
+ twice</li>
+-<li>Improved consistancy checking in <tt>chk_cyrus</tt></li>
++<li>Improved consistency checking in <tt>chk_cyrus</tt></li>
+ <li>Fix segfault in APPEND code</li>
+ <li>Fix a bug with an interaction between sieve and unixhierarchysep</li>
+ <li>Fix a file descriptor leak in the quotadb code</li>
+ <li>Fix a triggered assertation in service-thread services</li>
+-<li>Add a number of internal consistancy checks to the skiplist code</li>
++<li>Add a number of internal consistency checks to the skiplist code</li>
+ <li>Allow <tt>mbpath</tt> to handle virtual domains</li>
+ <li>Fix various MANAGESIEVE client authentication issues</li>
+ <li>Other minor fixes</li>
+@@ -1409,8 +1409,8 @@
+ <h1>Changes to the Cyrus IMAP Server since 2.1.x</h1>
+ 
+ <ul>
+-<li>There have been extensive performance and consistancy changes to
+-the configuration subsystem.  This will both ensure greater consistancy
++<li>There have been extensive performance and consistency changes to
++the configuration subsystem.  This will both ensure greater consistency
+ between the documentation and the code, as well as a more standard format
+ for specifing service-specific configuration options in imapd.conf.  Important
+ changes are detailed here:
+--- a/doc/legacy/faq.html
++++ b/doc/legacy/faq.html
+@@ -299,7 +299,7 @@
+ <ul>
+ <li>Contact your client vendor to have
+ the broken client fixed (one possibility is to have the client ask the user
+-if they wish to permanantly delete the message if the COPY operation fails).</li>
++if they wish to permanently delete the message if the COPY operation fails).</li>
+ <li>Stop using the 'trash mailbox' feature of your client (if possible).</li>
+ <li>Set a separate quota root on the 'trash folders'
+ of users.  This last option is significantly harder to do correctly, since
+--- a/doc/legacy/install-configure.html
++++ b/doc/legacy/install-configure.html
+@@ -454,7 +454,7 @@
+ OpenSSL.</p>
+ 
+ <p>The alternative, a SSL wrapped connection, involves the client
+-connected to a seperate port ("<tt>imaps</tt>") and negotiating a SSL
++connected to a separate port ("<tt>imaps</tt>") and negotiating a SSL
+ session before starting the IMAP protocol.  Again, this is supported
+ natively by the Cyrus IMAP server when it is compiled with
+ OpenSSL.</p>
+--- a/doc/legacy/install-murder.html
++++ b/doc/legacy/install-murder.html
+@@ -146,7 +146,7 @@
+ <b>Warning</b>: If somehow a mailbox exists on two (or more) backend servers,
+ each time one of them synchronizes its database that backend server will
+ become authoritative.  Though this should not happen during normal operation
+-of the murder (because of the consistancy guarantees of the MUPDATE protocol,
++of the murder (because of the consistency guarantees of the MUPDATE protocol,
+ and the fact that mailbox operations are denied if the mupdate master is down),
+ it <b>is</b> possible when first creating the mupdate database or
+ when bringing a new backend server into the murder.
+@@ -243,7 +243,7 @@
+ (with no mailboxes existing on the same server), it is not a big deal
+ to resync the mupdate master using <tt>ctl_mboxlist -m</tt>.  If two servers
+ do have the same mailbox, this will need to be resolved before database
+-consistancy can be guranteed.</p>
++consistency can be guranteed.</p>
+ <h3>Moving Mailboxes between backends</h3>
+ <p>There is currently no 100% foolproof way to do this, however, if you issue
+ a rename command to a frontend (as you would to move a mailbox between partitions),
+--- a/doc/legacy/install-upgrade.html
++++ b/doc/legacy/install-upgrade.html
+@@ -408,7 +408,7 @@
+ 
+ <li><tt>ctl_deliver -E</tt> has been deprecated in favor of
+ <tt>cyr_expire -E</tt>.  This new tool does both duplicate delivery
+-database pruning as well as message expunging. You should replace the
++database prunning as well as message expunging. You should replace the
+ appropriate <tt>EVENTS</tt> entry in <tt>cyrus.conf</tt> with one of
+ those in the sample configurations in the <tt>master/conf</tt>
+ directory.</li>
+@@ -569,7 +569,7 @@
+ <h2>Upgrading from 2.1.3 or earlier</h2>
+ <ul>
+ <li>If you use notifications (previously <tt>notify_zephyr</tt> or
+-<tt>notify_unix</tt>) this functionality has been seperated out to
++<tt>notify_unix</tt>) this functionality has been separated out to
+ <tt>notifyd</tt>.  See the <tt>notifyd</tt> manpage and example
+ entries in <tt>master/conf</tt>.</li>
+ 
+@@ -706,7 +706,7 @@
+ 
+ <li>cyrus.seen conversion. The cyrus.seen file will be automatically
+ upgraded as users read mail.  After some time, you might want to
+-delete the cyrus.seen file in each mailbox; it is superceded by the
++delete the cyrus.seen file in each mailbox; it is superseded by the
+ user/joe.seen file.
+ 
+ <li>cyrus.index conversion.  The cyrus.index file will be
+--- a/doc/text/imap/download/release-notes/2.2/2.2.x.txt
++++ b/doc/text/imap/download/release-notes/2.2/2.2.x.txt
+@@ -123,7 +123,7 @@
+ * Fix a bug in the proxy code where a backend connection might get
+   closed twice
+ 
+-* Improved consistancy checking in chk_cyrus
++* Improved consistency checking in chk_cyrus
+ 
+ * Fix segfault in APPEND code
+ 
+@@ -133,7 +133,7 @@
+ 
+ * Fix a triggered assertation in service-thread services
+ 
+-* Add a number of internal consistancy checks to the skiplist code
++* Add a number of internal consistency checks to the skiplist code
+ 
+ * Allow mbpath to handle virtual domains
+ 
+@@ -284,9 +284,9 @@
+ 
+ Changes to the Cyrus IMAP Server since 2.1.x
+ 
+-* There have been extensive performance and consistancy changes to
++* There have been extensive performance and consistency changes to
+   the configuration subsystem. This will both ensure greater
+-  consistancy between the documentation and the code, as well as a
++  consistency between the documentation and the code, as well as a
+   more standard format for specifing service-specific configuration
+   options in imapd.conf. Important changes are detailed here:
+ 
+--- a/doc/text/imap/reference/admin/murder/murder-installation.txt
++++ b/doc/text/imap/reference/admin/murder/murder-installation.txt
+@@ -174,7 +174,7 @@
+   servers, each time one of them synchronizes its database that
+   backend server will become authoritative. Though this should not
+   happen during normal operation of the murder (because of the
+-  consistancy guarantees of the MUPDATE protocol, and the fact that
++  consistency guarantees of the MUPDATE protocol, and the fact that
+   mailbox operations are denied if the mupdate master is down), it is
+   possible when first creating the mupdate database or when bringing a
+   new backend server into the murder.
+--- a/doc/text/imap/reference/faqs/o-berkeleydb.txt
++++ b/doc/text/imap/reference/faqs/o-berkeleydb.txt
+@@ -15,13 +15,13 @@
+ half hour, and more often on busy sites.
+ 
+ The other reason is that your deliver.db may be very large. This is
+-solvable by increasing the pruning interval (the -E parameter to
++solvable by increasing the prunning interval (the -E parameter to
+ ctl_deliver, which you should run on a regular basis), or (in a pinch)
+ by just removing the database (since the effects of losing it do not
+ prevent operation, they just cause vacation messages to be resent, and
+ duplicate delivery suppression to possibly deliver duplicates).
+ 
+-* "by increasing the pruning interval": My understanding is that the
++* "by increasing the prunning interval": My understanding is that the
+ 
+      number after "-E" is the number of days after which entries are
+      discarded. Is there a way to reduce it to a number of hours?
+--- a/doc/text/imap/reference/manpages/configs/imapd.conf.txt
++++ b/doc/text/imap/reference/manpages/configs/imapd.conf.txt
+@@ -1445,7 +1445,7 @@
+ 
+       Default "options" field for the mailbox on create.  You'll want
+       to know what you're doing before setting this, but it can apply
+-      some default annotations like duplicate supression
++      some default annotations like duplicate suppression
+ 
+    "mailbox_initial_flags:" <none>
+ 
+@@ -1681,7 +1681,7 @@
+       When set, the Cyrus NNTP server will add the header(s) specified
+       in the **newsaddheaders** option to each incoming usenet
+       article. The added header(s) will contain email delivery
+-      addresses corresponding to each relevent newsgroup.  If not set,
++      addresses corresponding to each relevant newsgroup.  If not set,
+       no headers are added to usenet articles.
+ 
+    "newsprefix:" <none>
+@@ -2179,7 +2179,7 @@
+ 
+       When searching, should diacriticals be stripped from the search
+       terms.  The default is "true", a search for "hav" will match
+-      "Håvard".  This is not **RFC 5051** complient, but it backwards
++      "Håvard".  This is not **RFC 5051** compliant, but it backwards
+       compatible, and may be preferred by some sites.
+ 
+    "search_skiphtml:" 0
+@@ -2786,7 +2786,7 @@
+    "tls_versions:" tls1_0 tls1_1 tls1_2
+ 
+       A list of SSL/TLS versions to not disable. Cyrus IMAP SSL/TLS
+-      starts with all protocols, and substracts protocols not in this
++      starts with all protocols, and subtracts protocols not in this
+       list. Newer versions of SSL/TLS will need to be added here to
+       allow them to get disabled.
+ 
+--- a/doc/text/imap/reference/manpages/systemcommands/chk_cyrus.txt
++++ b/doc/text/imap/reference/manpages/systemcommands/chk_cyrus.txt
+@@ -50,16 +50,16 @@
+ 
+    **chk_cyrus -P** *default*
+ 
+-   Perform consistancy checks on *default* partition.
++   Perform consistency checks on *default* partition.
+ 
+    **chk_cyrus -C** */usr/local/etc/imapd-slot1.conf* **-P** *default*
+ 
+-   Perform consistancy checks on *default* partition using specified
++   Perform consistency checks on *default* partition using specified
+    configuration file.
+ 
+    **chk_cyrus -M** *user.marysmith*
+ 
+-   Perform consistancy checks on mailbox *user.marysmith*.
++   Perform consistency checks on mailbox *user.marysmith*.
+ 
+ 
+ See Also
+--- a/doc/text/imap/reference/manpages/systemcommands/ctl_backups.txt
++++ b/doc/text/imap/reference/manpages/systemcommands/ctl_backups.txt
+@@ -165,7 +165,7 @@
+ 
+ -t [hours]
+ 
+-   List stale backups only, that is, backups that have recieved no
++   List stale backups only, that is, backups that have received no
+    updates in *hours*.  If *hours* is unspecified, it defaults to 24.
+ 
+ 
+--- a/doc/text/imap/reference/manpages/systemcommands/ctl_mboxlist.txt
++++ b/doc/text/imap/reference/manpages/systemcommands/ctl_mboxlist.txt
+@@ -116,7 +116,7 @@
+    Synchronize our mailboxes database with the MUPDATE server.  (One
+    may commonly put a command like this into the **START** section of
+    cyrus.conf(5) on backend nodes of a Murder cluster to cause the
+-   backend to syncronize its mailbox list with the mupdate master upon
++   backend to synchronize its mailbox list with the mupdate master upon
+    startup).
+ 
+    **ctl_mboxlist -m -w**
+--- a/doc/text/imap/reference/manpages/systemcommands/deliver.txt
++++ b/doc/text/imap/reference/manpages/systemcommands/deliver.txt
+@@ -34,7 +34,7 @@
+ 
+ -d
+ 
+-   Ignored for compatability with **/bin/mail**.
++   Ignored for compatibility with **/bin/mail**.
+ 
+ -r  address
+ 
+--- a/doc/text/imap/reference/manpages/systemcommands/fud.txt
++++ b/doc/text/imap/reference/manpages/systemcommands/fud.txt
+@@ -23,7 +23,7 @@
+ unless specified otherwise by **-C**.
+ 
+ **fud** will automatically proxy any and all FUD requests to the
+-appropriate backend server if it is runing on a Cyrus Murder frontend
++appropriate backend server if it is running on a Cyrus Murder frontend
+ machine.
+ 
+ To set up the FUD daemon, add this to your cyrus.conf:
+@@ -114,7 +114,7 @@
+ 
+ **fud** is an experimental interface meant to provide information to
+ build a finger-like service around.  Eventually it should be
+-superceded by a more standards-based protocol.
++superseded by a more standards-based protocol.
+ 
+ 
+ See Also
+--- a/doc/text/imap/reference/manpages/systemcommands/imapd.txt
++++ b/doc/text/imap/reference/manpages/systemcommands/imapd.txt
+@@ -34,7 +34,7 @@
+ message which IMAP-compliant clients are required to display.
+ 
+ This option serves to annoy users mostly.  Unfortunately clients tend
+-to connect far more frequently than is apparent, generating a seperate
++to connect far more frequently than is apparent, generating a separate
+ server ALERT for each connection.  Many clients do not display these
+ properly, if they do anything with them at all.
+ 
+--- a/doc/text/imap/reference/manpages/systemcommands/master.txt
++++ b/doc/text/imap/reference/manpages/systemcommands/master.txt
+@@ -50,7 +50,7 @@
+ 
+ -j  janitor full-sweeps per second
+ 
+-   Sets the amount of times per second the janitor should sweep the
++   Sets the number of times per second the janitor should sweep the
+    entire child table.  Leave it at the default of 1 unless you have a
+    really high fork rate (and you have not increased the child hash
+    table size when you compiled Cyrus from its default of 10000
+--- a/doc/text/imap/reference/manpages/systemcommands/reconstruct.txt
++++ b/doc/text/imap/reference/manpages/systemcommands/reconstruct.txt
+@@ -176,7 +176,7 @@
+    **reconstruct -r -f** *tech.support.Archive.2%*
+ 
+    Recursively reconstruct all mailboxes within the
+-   *tech.support.Archive* hierarchy with names begining with '2',
++   *tech.support.Archive* hierarchy with names beginning with '2',
+    restoring any directories containing "cyrus.header" files.
+ 
+    **reconstruct -r -f -u** *jsmith*
+--- a/doc/text/imap/reference/manpages/systemcommands/restore.txt
++++ b/doc/text/imap/reference/manpages/systemcommands/restore.txt
+@@ -52,7 +52,7 @@
+ the same name, which will be created if necessary.  Individually-
+ selected messages will be restored to the mailboxes in which they
+ previously existed.  In both cases the **-M** option can be used to
+-overrride the destination mailbox (see below), but note the
++override the destination mailbox (see below), but note the
+ consequences of doing this when multiple mailbox objects have been
+ specified, or when the **-r** option is in use.
+ 
+--- a/doc/text/imap/reference/manpages/usercommands/installsieve.txt
++++ b/doc/text/imap/reference/manpages/usercommands/installsieve.txt
+@@ -28,7 +28,7 @@
+ -v  name
+ 
+    View script with the given name. The script if retrieved
+-   sucessfully is output to standard output.
++   successfully is output to standard output.
+ 
+ -l
+ 
+@@ -44,7 +44,7 @@
+ -i  file
+ 
+    Install a file onto the server. If a script with the same name
+-   already exists on the server it is overwritten. Upon sucessfully
++   already exists on the server it is overwritten. Upon successfully
+    putting the script on the server the script is set active. If
+    *file* has the extension .script it is chopped when put on the
+    server since sieve names may not contain a '.'.
+--- a/docsrc/imap/download/release-notes/2.2/2.2.x.rst
++++ b/docsrc/imap/download/release-notes/2.2/2.2.x.rst
+@@ -70,12 +70,12 @@
+ Changes to the Cyrus IMAP Server since 2.2.5
+ 
+ *   Fix a bug in the proxy code where a backend connection might get closed twice
+-*   Improved consistancy checking in chk_cyrus
++*   Improved consistency checking in chk_cyrus
+ *   Fix segfault in APPEND code
+ *   Fix a bug with an interaction between sieve and unixhierarchysep
+ *   Fix a file descriptor leak in the quotadb code
+ *   Fix a triggered assertation in service-thread services
+-*   Add a number of internal consistancy checks to the skiplist code
++*   Add a number of internal consistency checks to the skiplist code
+ *   Allow mbpath to handle virtual domains
+ *   Fix various MANAGESIEVE client authentication issues
+ *   Other minor fixes
+@@ -143,7 +143,7 @@
+ 
+ Changes to the Cyrus IMAP Server since 2.1.x
+ 
+-*   There have been extensive performance and consistancy changes to the configuration subsystem. This will both ensure greater consistancy between the documentation and the code, as well as a more standard format for specifing service-specific configuration options in imapd.conf. Important changes are detailed here:
++*   There have been extensive performance and consistency changes to the configuration subsystem. This will both ensure greater consistency between the documentation and the code, as well as a more standard format for specifing service-specific configuration options in imapd.conf. Important changes are detailed here:
+ *       The tls_[service]_* configuration options have been removed. Now use [servicename]_tls_*, where servicename is the service identifier from cyrus.conf for that particular process.
+ *       Administrative groups (e.g. admins and lmtp_admins) no longer union, service groups completely override the generic group.
+ *       lmtp_allowplaintext is no longer a defined parameter and must be specified using the service name of your lmtp process if you require a specific value
+--- a/docsrc/imap/reference/admin/murder/murder-installation.rst
++++ b/docsrc/imap/reference/admin/murder/murder-installation.rst
+@@ -170,7 +170,7 @@
+     If somehow a mailbox exists on two (or more) backend servers, each
+     time one of them synchronizes its database that backend server will
+     become authoritative. Though this should not happen during normal
+-    operation of the murder (because of the consistancy guarantees of
++    operation of the murder (because of the consistency guarantees of
+     the MUPDATE protocol, and the fact that mailbox operations are
+     denied if the mupdate master is down), it is possible when first
+     creating the mupdate database or when bringing a new backend server
+--- a/docsrc/imap/reference/faqs/o-berkeleydb.rst
++++ b/docsrc/imap/reference/faqs/o-berkeleydb.rst
+@@ -14,13 +14,13 @@
+ hour, and more often on busy sites. 
+ 
+ The other reason is that your :ref:`deliver.db may be very large <faq-o-deliberdb-size>`. This is 
+-solvable by increasing the pruning interval (the -E parameter to 
++solvable by increasing the prunning interval (the -E parameter to 
+ ctl_deliver, which you should run on a regular basis), or (in a pinch) 
+ by just removing the database (since the effects of losing it do not 
+ prevent operation, they just cause vacation messages to be resent, and 
+ duplicate delivery suppression to possibly deliver duplicates). 
+ 
+-* "by increasing the pruning interval": My understanding is that the 
++* "by increasing the prunning interval": My understanding is that the 
+    number after "-E" is the number of days after which entries are 
+    discarded. Is there a way to reduce it to a number of hours? Since most 
+    of our mail is internal mail should rarely be delayed by more then an 
+--- a/docsrc/imap/reference/manpages/configs/imapd.conf.rst
++++ b/docsrc/imap/reference/manpages/configs/imapd.conf.rst
+@@ -2318,7 +2318,7 @@
+ 
+         Default "options" field for the mailbox on create.  You'll want to know
+         what you're doing before setting this, but it can apply some default
+-        annotations like duplicate supression 
++        annotations like duplicate suppression 
+ 
+     .. endblob mailbox_default_options
+ 
+@@ -2703,7 +2703,7 @@
+         When set, the Cyrus NNTP server will add the header(s) specified in
+         the **newsaddheaders** option to each incoming usenet article.
+         The added header(s) will contain email delivery addresses
+-        corresponding to each relevent newsgroup.  If not set, no headers
++        corresponding to each relevant newsgroup.  If not set, no headers
+         are added to usenet articles. 
+ 
+     .. endblob newspostuser
+@@ -3481,7 +3481,7 @@
+ 
+         When searching, should diacriticals be stripped from the search
+         terms.  The default is "true", a search for "hav" will match
+-        "Håvard".  This is not :rfc:`5051` complient, but it backwards
++        "Håvard".  This is not :rfc:`5051` compliant, but it backwards
+         compatible, and may be preferred by some sites. 
+ 
+     .. endblob search_skipdiacrit
+@@ -4487,7 +4487,7 @@
+     ``tls_versions:`` tls1_0 tls1_1 tls1_2
+ 
+         A list of SSL/TLS versions to not disable. Cyrus IMAP SSL/TLS starts
+-        with all protocols, and substracts protocols not in this list. Newer
++        with all protocols, and subtracts protocols not in this list. Newer
+         versions of SSL/TLS will need to be added here to allow them to get
+         disabled. 
+ 
+--- a/docsrc/imap/reference/manpages/systemcommands/chk_cyrus.rst
++++ b/docsrc/imap/reference/manpages/systemcommands/chk_cyrus.rst
+@@ -61,7 +61,7 @@
+ 
+ ..
+ 
+-        Perform consistancy checks on *default* partition.
++        Perform consistency checks on *default* partition.
+ 
+ .. parsed-literal::
+ 
+@@ -69,7 +69,7 @@
+ 
+ ..
+ 
+-        Perform consistancy checks on *default* partition using specified
++        Perform consistency checks on *default* partition using specified
+         configuration file.
+ 
+ .. parsed-literal::
+@@ -78,7 +78,7 @@
+ 
+ ..
+ 
+-        Perform consistancy checks on mailbox *user.marysmith*.
++        Perform consistency checks on mailbox *user.marysmith*.
+ 
+ See Also
+ ========
+--- a/docsrc/imap/reference/manpages/systemcommands/ctl_backups.rst
++++ b/docsrc/imap/reference/manpages/systemcommands/ctl_backups.rst
+@@ -156,7 +156,7 @@
+ 
+ .. option:: -t [hours]
+ 
+-    List stale backups only, that is, backups that have recieved no updates
++    List stale backups only, that is, backups that have received no updates
+     in *hours*.  If *hours* is unspecified, it defaults to 24.
+ 
+ .. _ctl-backups-lock-options:
+--- a/docsrc/imap/reference/manpages/systemcommands/ctl_mboxlist.rst
++++ b/docsrc/imap/reference/manpages/systemcommands/ctl_mboxlist.rst
+@@ -151,7 +151,7 @@
+         Synchronize our mailboxes database with the MUPDATE server.  (One may
+         commonly put a command like this into the **START** section of
+         :cyrusman:`cyrus.conf(5)` on backend nodes of a Murder cluster to cause
+-        the backend to syncronize its mailbox list with the mupdate master upon
++        the backend to synchronize its mailbox list with the mupdate master upon
+         startup).
+ 
+ .. only:: html
+--- a/docsrc/imap/reference/manpages/systemcommands/deliver.rst
++++ b/docsrc/imap/reference/manpages/systemcommands/deliver.rst
+@@ -41,7 +41,7 @@
+ 
+ .. option:: -d
+ 
+-    Ignored for compatability with **/bin/mail**.
++    Ignored for compatibility with **/bin/mail**.
+ 
+ .. option:: -r  address
+ 
+--- a/docsrc/imap/reference/manpages/systemcommands/fud.rst
++++ b/docsrc/imap/reference/manpages/systemcommands/fud.rst
+@@ -28,7 +28,7 @@
+ **fud** |default-conf-text|
+ 
+ **fud** will automatically proxy any and all FUD requests to the
+-appropriate backend server if it is runing on a Cyrus Murder frontend
++appropriate backend server if it is running on a Cyrus Murder frontend
+ machine.
+ 
+ To set up the FUD daemon, add this to your cyrus.conf:
+@@ -118,7 +118,7 @@
+ 0 is not a standard IMAP ACL bit.
+ 
+ **fud** is an experimental interface meant to provide information to
+-build a finger-like service around.  Eventually it should be superceded
++build a finger-like service around.  Eventually it should be superseded
+ by a more standards-based protocol.
+ 
+ 
+--- a/docsrc/imap/reference/manpages/systemcommands/imapd.rst
++++ b/docsrc/imap/reference/manpages/systemcommands/imapd.rst
+@@ -39,7 +39,7 @@
+ message which IMAP-compliant clients are required to display.
+ 
+ This option serves to annoy users mostly.  Unfortunately clients tend to
+-connect far more frequently than is apparent, generating a seperate
++connect far more frequently than is apparent, generating a separate
+ server ALERT for each connection.  Many clients do not display these
+ properly, if they do anything with them at all.
+ 
+--- a/docsrc/imap/reference/manpages/systemcommands/master.rst
++++ b/docsrc/imap/reference/manpages/systemcommands/master.rst
+@@ -56,7 +56,7 @@
+ 
+ .. option:: -j  janitor full-sweeps per second
+ 
+-    Sets the amount of times per second the janitor should sweep the
++    Sets the number of times per second the janitor should sweep the
+     entire child table.  Leave it at the default of 1 unless you have a
+     really high fork rate (and you have not increased the child hash
+     table size when you compiled Cyrus from its default of 10000
+--- a/docsrc/imap/reference/manpages/systemcommands/reconstruct.rst
++++ b/docsrc/imap/reference/manpages/systemcommands/reconstruct.rst
+@@ -201,7 +201,7 @@
+ ..
+ 
+         Recursively reconstruct all mailboxes within the
+-        *tech.support.Archive* hierarchy with names begining with '2',
++        *tech.support.Archive* hierarchy with names beginning with '2',
+         restoring any directories containing ``cyrus.header``
+         files.
+ 
+--- a/docsrc/imap/reference/manpages/systemcommands/restore.rst
++++ b/docsrc/imap/reference/manpages/systemcommands/restore.rst
+@@ -55,7 +55,7 @@
+ Selected mailboxes will have their messages restored to a mailbox of the same
+ name, which will be created if necessary.  Individually-selected messages will
+ be restored to the mailboxes in which they previously existed.  In both cases
+-the **-M** option can be used to overrride the destination mailbox (see below),
++the **-M** option can be used to override the destination mailbox (see below),
+ but note the consequences of doing this when multiple mailbox objects have
+ been specified, or when the **-r** option is in use.
+ 
+--- a/docsrc/imap/reference/manpages/usercommands/installsieve.rst
++++ b/docsrc/imap/reference/manpages/usercommands/installsieve.rst
+@@ -34,7 +34,7 @@
+ 
+ .. option:: -v  name
+ 
+-    View script with the given name. The script if retrieved sucessfully
++    View script with the given name. The script if retrieved successfully
+     is output to standard output.
+ 
+ .. option:: -l
+@@ -51,7 +51,7 @@
+ .. option:: -i  file
+ 
+     Install a file onto the server. If a script with the same name
+-    already exists on the server it is overwritten. Upon sucessfully
++    already exists on the server it is overwritten. Upon successfully
+     putting the script on the server the script is set active. If
+     *file* has the extension .script it is chopped when put on the
+     server since sieve names may not contain a '.'.
+--- a/imap/append.c
++++ b/imap/append.c
+@@ -279,7 +279,7 @@
+      * duplicate DB consistency */
+     r = mailbox_commit(as->mailbox);
+     if (r) {
+-        syslog(LOG_ERR, "IOERROR: commiting mailbox append %s: %s",
++        syslog(LOG_ERR, "IOERROR: committing mailbox append %s: %s",
+                as->mailbox->name, error_message(r));
+         append_abort(as);
+         return r;
+--- a/imap/arbitron.c
++++ b/imap/arbitron.c
+@@ -348,7 +348,7 @@
+                            size_t tmpdatalen __attribute__((unused)))
+ {
+     /* Only called to do deletes */
+-/*    printf("pruning entry\n"); */
++/*    printf("prunning entry\n"); */
+ 
+     cyrusdb_delete((struct db *)rockp, key, keylen, NULL, 0);
+ 
+@@ -394,7 +394,7 @@
+         }
+     }
+ 
+-    /* Check for pruning even if mailbox isn't valid */
++    /* Check for prunning even if mailbox isn't valid */
+     if(lastread < prune_time) {
+         ret = 1;
+     }
+--- a/imap/autocreate.c
++++ b/imap/autocreate.c
+@@ -197,7 +197,7 @@
+     out_fd = open(sieve_bctmpname, O_CREAT|O_TRUNC|O_WRONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+     if(out_fd < 0) {
+         if(errno == EEXIST) {
+-            syslog(LOG_WARNING,"autocreate_sieve: File %s already exists. Probaly left over. Ignoring",sieve_bctmpname);
++            syslog(LOG_WARNING,"autocreate_sieve: File %s already exists. Probably left over. Ignoring",sieve_bctmpname);
+         } else if (errno == EACCES) {
+             syslog(LOG_WARNING,"autocreate_sieve: No access to create file %s. Check permissions",sieve_bctmpname);
+             fclose(in_stream);
+@@ -270,7 +270,7 @@
+         }
+ 
+         if(sieve_emit_bytecode(out_fd, bc) == TIMSIEVE_FAIL) {
+-            syslog(LOG_WARNING,"autocreate_sieve: problem emiting sieve script");
++            syslog(LOG_WARNING,"autocreate_sieve: problem emitting sieve script");
+             /* removing the copied script and cleaning up memory */
+             unlink(sieve_bctmpname);
+             sieve_free_bytecode(&bc);
+--- a/imap/chk_cyrus.c
++++ b/imap/chk_cyrus.c
+@@ -1,4 +1,4 @@
+-/* chk_cyrus.c: cyrus mailstore consistancy checker
++/* chk_cyrus.c: cyrus mailstore consistency checker
+  *
+  * Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
+  *
+--- a/imap/conversations.c
++++ b/imap/conversations.c
+@@ -1921,7 +1921,7 @@
+ 
+     /* calculate the changes */
+     if (old) {
+-        /* decrease any relevent counts */
++        /* decrease any relevant counts */
+         if (!(old->system_flags & FLAG_EXPUNGED)) {
+             delta_exists--;
+             delta_size -= old->size;
+--- a/imap/ctl_mboxlist.c
++++ b/imap/ctl_mboxlist.c
+@@ -343,7 +343,7 @@
+         r = mupdate_activate(d->h, mbentry->name, realpart, mbentry->acl);
+ 
+         if (r == MUPDATE_NOCONN) {
+-            fprintf(stderr, "permanant failure storing '%s'\n", mbentry->name);
++            fprintf(stderr, "permanent failure storing '%s'\n", mbentry->name);
+             r = IMAP_IOERROR;
+         } else if (r == MUPDATE_FAIL) {
+             fprintf(stderr,
+--- a/imap/cyr_expire.c
++++ b/imap/cyr_expire.c
+@@ -431,7 +431,7 @@
+         goto done;
+ 
+     if (verbose)
+-        fprintf(stderr, "Pruning conversations from db %s\n", filename);
++        fprintf(stderr, "Prunning conversations from db %s\n", filename);
+ 
+     if (!conversations_open_path(filename, &state)) {
+         conversations_prune(state, crock->expire_mark, &nseen, &ndeleted);
+--- a/imap/duplicate.c
++++ b/imap/duplicate.c
+@@ -345,7 +345,7 @@
+     prock.count = prock.deletions = 0;
+     prock.expmark = time(NULL) - seconds;
+     prock.expire_table = expire_table;
+-    syslog(LOG_NOTICE, "duplicate_prune: pruning back %0.2f days",
++    syslog(LOG_NOTICE, "duplicate_prune: prunning back %0.2f days",
+            ((double)seconds/86400));
+ 
+     /* check each entry in our database */
+--- a/imap/imapd.c
++++ b/imap/imapd.c
+@@ -143,7 +143,7 @@
+ static const int ultraparanoid = 1; /* should we kick after every operation? */
+ unsigned int proxy_cmdcnt;
+ 
+-static int referral_kick = 0; /* kick after next command recieved, for
++static int referral_kick = 0; /* kick after next command received, for
+                                  referrals that are likely to change the
+                                  mailbox list */
+ 
+@@ -3991,7 +3991,7 @@
+                     ? "[TRYCREATE] " : r == IMAP_MESSAGE_TOO_LARGE
+                     ? "[TOOBIG]" : "", error_message(r));
+     } else if (doappenduid) {
+-        /* is this a space seperated list or sequence list? */
++        /* is this a space separated list or sequence list? */
+         prot_printf(imapd_out, "%s OK [APPENDUID %lu ", tag, uidvalidity);
+         if (appendstate.nummsg == 1) {
+             prot_printf(imapd_out, "%u", appendstate.baseuid);
+--- a/imap/mailbox.c
++++ b/imap/mailbox.c
+@@ -3943,7 +3943,7 @@
+ 
+     xclose(repack->newindex_fd);
+ 
+-    /* NOTE: cache files need commiting before index is renamed */
++    /* NOTE: cache files need committing before index is renamed */
+     for (i = 0; i < repack->caches.count; i++) {
+         struct mappedfile *cachefile = ptrarray_nth(&repack->caches, i);
+         r = mappedfile_commit(cachefile);
+--- a/imap/mboxlist.c
++++ b/imap/mboxlist.c
+@@ -789,7 +789,7 @@
+ 
+     if (r2) {
+         syslog(LOG_ERR, "DBERROR: error %s txn in mboxlist_update: %s",
+-               r ? "aborting" : "commiting", cyrusdb_strerror(r2));
++               r ? "aborting" : "committing", cyrusdb_strerror(r2));
+     }
+ 
+     return r;
+--- a/imap/mupdate-client.c
++++ b/imap/mupdate-client.c
+@@ -534,7 +534,7 @@
+ 
+ #define CHECKNEWLINE(c, ch) do { if ((ch) == '\r') (ch)=prot_getc((c)->conn->in); \
+                                  if ((ch) != '\n') { syslog(LOG_ERR, \
+-                             "extra arguments recieved, aborting connection");\
++                             "extra arguments received, aborting connection");\
+                                  r = MUPDATE_PROTOCOL_ERROR;\
+                                  goto done; }} while(0)
+ 
+--- a/lib/charset.c
++++ b/lib/charset.c
+@@ -2379,7 +2379,7 @@
+ {
+     struct comp_pat_s *pat = xzmalloc(sizeof(struct comp_pat_s));
+     const char *p = s;
+-    /* count occurances */
++    /* count occurrences */
+     while (*p) {
+         if (*p == *s) pat->max_start++;
+         pat->patlen++;
+--- a/lib/imapoptions
++++ b/lib/imapoptions
+@@ -1208,7 +1208,7 @@
+ { "mailbox_default_options", 0, INT }
+ /* Default "options" field for the mailbox on create.  You'll want to know
+    what you're doing before setting this, but it can apply some default
+-   annotations like duplicate supression */
++   annotations like duplicate suppression */
+ 
+ { "mailbox_initial_flags", NULL, STRING }
+ /* space-separated list of permanent flags which will be pre-set in every
+@@ -1404,7 +1404,7 @@
+    When set, the Cyrus NNTP server will add the header(s) specified in
+    the \fBnewsaddheaders\fR option to each incoming usenet article.
+    The added header(s) will contain email delivery addresses
+-   corresponding to each relevent newsgroup.  If not set, no headers
++   corresponding to each relevant newsgroup.  If not set, no headers
+    are added to usenet articles. */
+ 
+ { "newsprefix", NULL, STRING }
+@@ -1815,7 +1815,7 @@
+ { "search_skipdiacrit", 1, SWITCH }
+ /* When searching, should diacriticals be stripped from the search
+    terms.  The default is "true", a search for "hav" will match
+-   "Håvard".  This is not RFC5051 complient, but it backwards
++   "Håvard".  This is not RFC5051 compliant, but it backwards
+    compatible, and may be preferred by some sites. */
+ 
+ { "search_skiphtml", 0, SWITCH }
+@@ -2291,7 +2291,7 @@
+ 
+ { "tls_versions", "tls1_0 tls1_1 tls1_2", STRING }
+ /* A list of SSL/TLS versions to not disable. Cyrus IMAP SSL/TLS starts
+-   with all protocols, and substracts protocols not in this list. Newer
++   with all protocols, and subtracts protocols not in this list. Newer
+    versions of SSL/TLS will need to be added here to allow them to get
+    disabled. */
+ 
+--- a/lib/imclient.c
++++ b/lib/imclient.c
+@@ -1146,7 +1146,7 @@
+ 
+ /*
+  * Params:
+- *  mechlist: list of mechanisms seperated by spaces
++ *  mechlist: list of mechanisms separated by spaces
+  *
+  * Returns:
+  *  0 - sucess
+--- a/lib/libconfig.c
++++ b/lib/libconfig.c
+@@ -687,7 +687,7 @@
+                 ) {
+ 
+                 sprintf(errbuf,
+-                        "option '%s' was specified twice in config file (second occurance on line %d)",
++                        "option '%s' was specified twice in config file (second occurrence on line %d)",
+                         fullkey, lineno);
+                 fatal(errbuf, EC_CONFIG);
+ 
+@@ -831,7 +831,7 @@
+             val = hash_insert(key, newval, &confighash);
+             if (val != newval) {
+                 snprintf(errbuf, sizeof(errbuf),
+-                        "option '%s' was specified twice in config file (second occurance on line %d)",
++                        "option '%s' was specified twice in config file (second occurrence on line %d)",
+                         fullkey, lineno);
+                 fatal(errbuf, EC_CONFIG);
+             }
+--- a/lib/vparse.c
++++ b/lib/vparse.c
+@@ -63,7 +63,7 @@
+             INC(1);
+             return 0;
+ 
+-        /* normal backslash quoting - NOTE, not strictly RFC complient,
++        /* normal backslash quoting - NOTE, not strictly RFC compliant,
+          * but I figure anyone who generates one PROBABLY meant to escape
+          * the next character because it's so common, and LABEL definitely
+          * allows \n, so we have to handle that anyway */
+--- a/man/chk_cyrus.8
++++ b/man/chk_cyrus.8
+@@ -105,7 +105,7 @@
+ .fi
+ .INDENT 0.0
+ .INDENT 3.5
+-Perform consistancy checks on \fIdefault\fP partition.
++Perform consistency checks on \fIdefault\fP partition.
+ .UNINDENT
+ .UNINDENT
+ .sp
+@@ -114,7 +114,7 @@
+ .fi
+ .INDENT 0.0
+ .INDENT 3.5
+-Perform consistancy checks on \fIdefault\fP partition using specified
++Perform consistency checks on \fIdefault\fP partition using specified
+ configuration file.
+ .UNINDENT
+ .UNINDENT
+@@ -124,7 +124,7 @@
+ .fi
+ .INDENT 0.0
+ .INDENT 3.5
+-Perform consistancy checks on mailbox \fIuser.marysmith\fP\&.
++Perform consistency checks on mailbox \fIuser.marysmith\fP\&.
+ .UNINDENT
+ .UNINDENT
+ .SH SEE ALSO
+--- a/man/ctl_backups.8
++++ b/man/ctl_backups.8
+@@ -221,7 +221,7 @@
+ .INDENT 0.0
+ .TP
+ .B \-t [hours]
+-List stale backups only, that is, backups that have recieved no updates
++List stale backups only, that is, backups that have received no updates
+ in \fIhours\fP\&.  If \fIhours\fP is unspecified, it defaults to 24.
+ .UNINDENT
+ .SH LOCK OPTIONS
+--- a/man/ctl_mboxlist.8
++++ b/man/ctl_mboxlist.8
+@@ -192,7 +192,7 @@
+ Synchronize our mailboxes database with the MUPDATE server.  (One may
+ commonly put a command like this into the \fBSTART\fP section of
+ cyrus.conf(5) on backend nodes of a Murder cluster to cause
+-the backend to syncronize its mailbox list with the mupdate master upon
++the backend to synchronize its mailbox list with the mupdate master upon
+ startup).
+ .UNINDENT
+ .UNINDENT
+--- a/man/deliver.8
++++ b/man/deliver.8
+@@ -82,7 +82,7 @@
+ .INDENT 0.0
+ .TP
+ .B \-d
+-Ignored for compatability with \fB/bin/mail\fP\&.
++Ignored for compatibility with \fB/bin/mail\fP\&.
+ .UNINDENT
+ .INDENT 0.0
+ .TP
+--- a/man/fud.8
++++ b/man/fud.8
+@@ -74,7 +74,7 @@
+ \fBfud\fP reads its configuration options out of the imapd.conf(5) file unless specified otherwise by \fB\-C\fP\&.
+ .sp
+ \fBfud\fP will automatically proxy any and all FUD requests to the
+-appropriate backend server if it is runing on a Cyrus Murder frontend
++appropriate backend server if it is running on a Cyrus Murder frontend
+ machine.
+ .sp
+ To set up the FUD daemon, add this to your cyrus.conf:
+@@ -157,7 +157,7 @@
+ 0 is not a standard IMAP ACL bit.
+ .sp
+ \fBfud\fP is an experimental interface meant to provide information to
+-build a finger\-like service around.  Eventually it should be superceded
++build a finger\-like service around.  Eventually it should be superseded
+ by a more standards\-based protocol.
+ .SH SEE ALSO
+ .sp
+--- a/man/imapd.8
++++ b/man/imapd.8
+@@ -85,7 +85,7 @@
+ message which IMAP\-compliant clients are required to display.
+ .sp
+ This option serves to annoy users mostly.  Unfortunately clients tend to
+-connect far more frequently than is apparent, generating a seperate
++connect far more frequently than is apparent, generating a separate
+ server ALERT for each connection.  Many clients do not display these
+ properly, if they do anything with them at all.
+ .sp
+--- a/man/imapd.conf.5
++++ b/man/imapd.conf.5
+@@ -2083,7 +2083,7 @@
+ .INDENT 3.5
+ Default "options" field for the mailbox on create.  You\(aqll want to know
+ what you\(aqre doing before setting this, but it can apply some default
+-annotations like duplicate supression
++annotations like duplicate suppression
+ .UNINDENT
+ .UNINDENT
+ .sp
+@@ -2416,7 +2416,7 @@
+ When set, the Cyrus NNTP server will add the header(s) specified in
+ the \fBnewsaddheaders\fP option to each incoming usenet article.
+ The added header(s) will contain email delivery addresses
+-corresponding to each relevent newsgroup.  If not set, no headers
++corresponding to each relevant newsgroup.  If not set, no headers
+ are added to usenet articles.
+ .UNINDENT
+ .UNINDENT
+@@ -3122,7 +3122,7 @@
+ .INDENT 3.5
+ When searching, should diacriticals be stripped from the search
+ terms.  The default is "true", a search for "hav" will match
+-"Håvard".  This is not \fI\%RFC 5051\fP complient, but it backwards
++"Håvard".  This is not \fI\%RFC 5051\fP compliant, but it backwards
+ compatible, and may be preferred by some sites.
+ .UNINDENT
+ .UNINDENT
+@@ -4000,7 +4000,7 @@
+ .INDENT 0.0
+ .INDENT 3.5
+ A list of SSL/TLS versions to not disable. Cyrus IMAP SSL/TLS starts
+-with all protocols, and substracts protocols not in this list. Newer
++with all protocols, and subtracts protocols not in this list. Newer
+ versions of SSL/TLS will need to be added here to allow them to get
+ disabled.
+ .UNINDENT
+--- a/man/installsieve.1
++++ b/man/installsieve.1
+@@ -81,7 +81,7 @@
+ .INDENT 0.0
+ .TP
+ .B \-v  name
+-View script with the given name. The script if retrieved sucessfully
++View script with the given name. The script if retrieved successfully
+ is output to standard output.
+ .UNINDENT
+ .INDENT 0.0
+@@ -101,7 +101,7 @@
+ .TP
+ .B \-i  file
+ Install a file onto the server. If a script with the same name
+-already exists on the server it is overwritten. Upon sucessfully
++already exists on the server it is overwritten. Upon successfully
+ putting the script on the server the script is set active. If
+ \fIfile\fP has the extension .script it is chopped when put on the
+ server since sieve names may not contain a \(aq.\(aq.
+--- a/man/master.8
++++ b/man/master.8
+@@ -101,7 +101,7 @@
+ .INDENT 0.0
+ .TP
+ .B \-j  janitor full\-sweeps per second
+-Sets the amount of times per second the janitor should sweep the
++Sets the number of times per second the janitor should sweep the
+ entire child table.  Leave it at the default of 1 unless you have a
+ really high fork rate (and you have not increased the child hash
+ table size when you compiled Cyrus from its default of 10000
+--- a/man/reconstruct.8
++++ b/man/reconstruct.8
+@@ -248,7 +248,7 @@
+ .INDENT 0.0
+ .INDENT 3.5
+ Recursively reconstruct all mailboxes within the
+-\fItech.support.Archive\fP hierarchy with names begining with \(aq2\(aq,
++\fItech.support.Archive\fP hierarchy with names beginning with \(aq2\(aq,
+ restoring any directories containing \fBcyrus.header\fP
+ files.
+ .UNINDENT
+--- a/man/restore.8
++++ b/man/restore.8
+@@ -101,7 +101,7 @@
+ Selected mailboxes will have their messages restored to a mailbox of the same
+ name, which will be created if necessary.  Individually\-selected messages will
+ be restored to the mailboxes in which they previously existed.  In both cases
+-the \fB\-M\fP option can be used to overrride the destination mailbox (see below),
++the \fB\-M\fP option can be used to override the destination mailbox (see below),
+ but note the consequences of doing this when multiple mailbox objects have
+ been specified, or when the \fB\-r\fP option is in use.
+ .sp
+--- a/netnews/remotepurge.c
++++ b/netnews/remotepurge.c
+@@ -152,7 +152,7 @@
+ /***********************
+  * Parse a mech list of the form: ... AUTH=foo AUTH=bar ...
+  *
+- * Return: string with mechs seperated by spaces
++ * Return: string with mechs separated by spaces
+  *
+  ***********************/
+ 
+--- a/perl/imap/IMAP.pm
++++ b/perl/imap/IMAP.pm
+@@ -219,7 +219,7 @@
+   $opts{-authz} = "" if (!defined($opts{-authz}));
+   $rc = 0;
+ 
+-  # Fetch all relevent capabilities
++  # Fetch all relevant capabilities
+   $self->addcallback({-trigger => 'CAPABILITY',
+                       -callback => sub {my %a = @_;
+                                         map {
+@@ -263,7 +263,7 @@
+ 
+       $self->_starttls($opts{-tlskey}, $opts{-tlskey}, $opts{-cafile}, $opts{-capath});
+ 
+-      # Refetch all relevent capabilities
++      # Refetch all relevant capabilities
+       ($starttls, $logindisabled, $availmechs) = (0, 0, "");
+       $self->send(undef, undef, 'CAPABILITY');
+       $opts{-mechanism} = $availmechs if ($opts{-mechanism} eq '');
+@@ -285,7 +285,7 @@
+   if (!$rc && $logindisabled) {
+     $self->_starttls('', '', $opts{-cafile}, $opts{-capath}) || return undef;
+ 
+-    # Refetch all relevent capabilities
++    # Refetch all relevant capabilities
+     ($starttls, $logindisabled, $availmechs) = (0, 0, "");
+     $self->send(undef, undef, 'CAPABILITY');
+ 
+--- a/perl/sieve/managesieve/managesieve.xs
++++ b/perl/sieve/managesieve/managesieve.xs
+@@ -296,7 +296,7 @@
+            check if SASL mech list changed */
+         if (detect_mitm(obj, mechlist)) {
+             globalerr = "possible MITM attack: "
+-                "list of available SASL mechamisms changed";
++                "list of available SASL mechanisms changed";
+             free(ret);
+             free(mechlist);
+             XSRETURN_UNDEF;
+--- a/sieve/bc_generate.c
++++ b/sieve/bc_generate.c
+@@ -999,7 +999,7 @@
+                 jumploc = codep+4;
+                 retval->data[codep++].op = B_IF;
+ 
+-                /* begining of then  code */
++                /* beginning of then  code */
+                 jumpVal = bc_test_generate(jumploc,retval,c->u.i.t);
+                 if (jumpVal == -1)
+                     return -1;
+--- a/sieve/interp.c
++++ b/sieve/interp.c
+@@ -1,4 +1,4 @@
+-/* interp.c -- sieve script interpretor builder
++/* interp.c -- sieve script interpreter builder
+  * Larry Greenfield
+  *
+  * Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
+@@ -59,7 +59,7 @@
+ 
+ #define EXT_LEN 4096
+ 
+-/* build a sieve interpretor */
++/* build a sieve interpreter */
+ EXPORTED sieve_interp_t *sieve_interp_alloc(void *interp_context)
+ {
+     sieve_interp_t *i;
+--- a/sieve/interp.h
++++ b/sieve/interp.h
+@@ -1,4 +1,4 @@
+-/* interp.h -- interpretor definition
++/* interp.h -- interpreter definition
+  * Larry Greenfield
+  *
+  * Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
+--- a/sieve/script.c
++++ b/sieve/script.c
+@@ -74,7 +74,7 @@
+ 
+ #define ERR_BUF_SIZE 1024
+ 
+-/* does this interpretor support this requirement? */
++/* does this interpreter support this requirement? */
+ int script_require(sieve_script_t *s, char *req)
+ {
+     unsigned long config_sieve_extensions =
+@@ -214,7 +214,7 @@
+     return 0;
+ }
+ 
+-/* given an interpretor and a script, produce an executable script */
++/* given an interpreter and a script, produce an executable script */
+ EXPORTED int sieve_script_parse(sieve_interp_t *interp, FILE *script,
+                        void *script_context, sieve_script_t **ret)
+ {
+--- a/sieve/sieve_err.et
++++ b/sieve/sieve_err.et
+@@ -45,7 +45,7 @@
+    "Generic Sieve error"
+ 
+ ec SIEVE_NOT_FINALIZED,
+-   "Sieve interpretor not finalized"
++   "Sieve interpreter not finalized"
+ 
+ ec SIEVE_PARSE_ERROR,
+    "Parse error in Sieve script"
+--- a/sieve/sieve_interface.h
++++ b/sieve/sieve_interface.h
+@@ -143,7 +143,7 @@
+     int mime;
+ } sieve_send_response_context_t;
+ 
+-/* build a sieve interpretor */
++/* build a sieve interpreter */
+ sieve_interp_t *sieve_interp_alloc(void *interp_context);
+ int sieve_interp_free(sieve_interp_t **interp);
+ 
+@@ -179,7 +179,7 @@
+ void sieve_register_execute_error(sieve_interp_t *interp,
+                                  sieve_execute_error *f);
+ 
+-/* given an interpretor and a script, produce an executable script */
++/* given an interpreter and a script, produce an executable script */
+ int sieve_script_parse(sieve_interp_t *interp, FILE *script,
+                        void *script_context, sieve_script_t **ret);
+ 
+--- a/tools/vzic/README
++++ b/tools/vzic/README
+@@ -52,7 +52,7 @@
+ VTIMEZONEs, such as RRULEs using BYMONTHDAY, so it has to adjust the RRULEs
+ slightly to get Outlook to parse them. Unfortunately this means they are
+ slightly wrong. If given the --pure option, vzic outputs the exact data,
+-without worrying about compatability.
++without worrying about compatibility.
+ 
+ NOTE: We don't convert all the Olson files. We skip 'backward', 'etcetera',
+ 'leapseconds', 'pacificnew', 'solar87', 'solar88' and 'solar89', 'factory'
+--- a/tools/vzic/vzic-dump.pl
++++ b/tools/vzic/vzic-dump.pl
+@@ -67,7 +67,7 @@
+ &ReadOlsonFile ("northamerica");
+ &ReadOlsonFile ("southamerica");
+ 
+-# These are backwards-compatability and weird stuff.
++# These are backwards-compatibility and weird stuff.
+ #&ReadOlsonFile ("backward");
+ #&ReadOlsonFile ("etcetera");
+ #&ReadOlsonFile ("leapseconds");
+--- a/tools/vzic/vzic-output.c
++++ b/tools/vzic/vzic-output.c
+@@ -1327,7 +1327,7 @@
+     if (VzicPureOutput) {
+       output_component_start (start_buffer, vzictime, TRUE, only_one_change);
+     } else {
+-    /* For Outlook compatability we don't output the RDATE and use the same
++    /* For Outlook compatibility we don't output the RDATE and use the same
+        TZOFFSET for TZOFFSETFROM and TZOFFSETTO. */
+       vzictime->year         = RDATE_YEAR;
+       vzictime->month        = 0;
+@@ -1546,7 +1546,7 @@
+           is_daylight_start ? "DAYLIGHT" : "");
+ #endif
+ 
+-  /* We want to go backwards through the array now, for Outlook compatability.
++  /* We want to go backwards through the array now, for Outlook compatibility.
+      (It only looks at the first DTSTART/RDATE.) */
+   for (i = idx + 1; i < changes->len; i++) {
+     vzictime = &g_array_index (changes, VzicTime, i);
+@@ -2078,15 +2078,15 @@
+        at the moment anyway, so that isn't a big loss). */
+     if (!VzicPureOutput) {
+       if (day_number < 8) {
+-        printf ("WARNING: %s: Outputting BYDAY=1SU instead of BYMONTHDAY=1-7 for Outlook compatability\n", CurrentZoneName);
++        printf ("WARNING: %s: Outputting BYDAY=1SU instead of BYMONTHDAY=1-7 for Outlook compatibility\n", CurrentZoneName);
+         sprintf (buffer, "RRULE:FREQ=YEARLY;BYMONTH=%i;BYDAY=1SU",
+                  month + 1);
+       } else if (day_number < 15) {
+-        printf ("WARNING: %s: Outputting BYDAY=2SU instead of BYMONTHDAY=8-14 for Outlook compatability\n", CurrentZoneName);
++        printf ("WARNING: %s: Outputting BYDAY=2SU instead of BYMONTHDAY=8-14 for Outlook compatibility\n", CurrentZoneName);
+         sprintf (buffer, "RRULE:FREQ=YEARLY;BYMONTH=%i;BYDAY=2SU",
+                  month + 1);
+       } else if (day_number < 22) {
+-        printf ("WARNING: %s: Outputting BYDAY=3SU instead of BYMONTHDAY=15-21 for Outlook compatability\n", CurrentZoneName);
++        printf ("WARNING: %s: Outputting BYDAY=3SU instead of BYMONTHDAY=15-21 for Outlook compatibility\n", CurrentZoneName);
+         sprintf (buffer, "RRULE:FREQ=YEARLY;BYMONTH=%i;BYDAY=3SU",
+                  month + 1);
+       } else {
+@@ -2111,7 +2111,7 @@
+         exit (1);
+       } else {
+         /* We do 6 days at the end of this month, and 1 at the start of the
+-           next. We can't do this if we want Outlook compatability, as it
++           next. We can't do this if we want Outlook compatibility, as it
+            needs BYMONTHDAY, which Outlook doesn't support. */
+ /*
+         sprintf (buffer,
+@@ -2174,14 +2174,14 @@
+ #endif
+ 
+       if (!VzicPureOutput) {
+-        printf ("WARNING: %s: Modifying RRULE (last weekday) for Outlook compatability\n", CurrentZoneName);
++        printf ("WARNING: %s: Modifying RRULE (last weekday) for Outlook compatibility\n", CurrentZoneName);
+         sprintf (buffer,
+                  "RRULE:FREQ=YEARLY;BYMONTH=%i;BYDAY=-1%s",
+                  month + 1, WeekDays[day_weekday]);
+         printf ("  Outputting: %s\n", buffer);
+       } else {
+         /* We do 6 days at the end of this month, and 1 at the start of the
+-           next. We can't do this if we want Outlook compatability, as it needs
++           next. We can't do this if we want Outlook compatibility, as it needs
+            BYMONTHDAY, which Outlook doesn't support. */
+ /*
+         day_number = DaysInMonth[month];
+@@ -2276,7 +2276,7 @@
+              month + 1, WeekDays[day_weekday]);
+ 
+   } else {
+-    /* Can't convert to a correct RRULE. If we want Outlook compatability we
++    /* Can't convert to a correct RRULE. If we want Outlook compatibility we
+        have to use a slightly incorrect RRULE, so the time change will be 1
+        week out every 7 or so years. Alternatively we could possibly move the
+        change by an hour or so so we would always be 1 or 2 hours out, but
+--- a/tools/vzic/vzic-test.pl
++++ b/tools/vzic/vzic-test.pl
+@@ -26,7 +26,7 @@
+ 
+ #
+ # This outputs an iCalendar file containing one event in each timezone,
+-# as well as all the VTIMEZONEs. We use it for testing compatability with
++# as well as all the VTIMEZONEs. We use it for testing compatibility with
+ # other iCalendar apps like Outlook, by trying to import it there.
+ #
+ # Currently we have 377 timezones (with tzdata2001d).
+--- a/tools/vzic/vzic.c
++++ b/tools/vzic/vzic.c
+@@ -169,7 +169,7 @@
+   convert_olson_file ("northamerica", zones_hash);
+   convert_olson_file ("southamerica", zones_hash);
+ 
+-  /* These are backwards-compatability and weird stuff. */
++  /* These are backwards-compatibility and weird stuff. */
+   convert_olson_file ("backward", zones_hash);
+   convert_olson_file ("etcetera", zones_hash);
+ #if 0
