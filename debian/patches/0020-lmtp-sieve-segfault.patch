@@ -1,3 +1,12 @@
+Description: Fix segfault on mailshare sive redirect
+Author: Anthony Prades <https://github.com/toony>
+Origin: upstream, https://github.com/cyrusimap/cyrus-imapd/commit/7a11575cadca55630a37f8c07298aae4b4cf2a4a
+Bug: https://github.com/cyrusimap/cyrus-imapd/pull/2597
+Bug-Debian: https://bugs.debian.org/927142
+Forwarded: not-needed
+Reviewed-By: Xavier Guimard <yadd@debian.org>
+Last-Update: 2019-05-09
+
 --- a/imap/lmtp_sieve.c
 +++ b/imap/lmtp_sieve.c
 @@ -414,7 +414,7 @@
