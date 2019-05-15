@@ -46,7 +46,7 @@ getconf () {
 }
 
 upgradesieve () {
-    if [ -z "$1" ] || $(dpkg --compare-versions $1 lt 3~); then
+    if [ -z "$1" ] || $(dpkg --compare-versions $1 gt 3~); then
         return
     fi
 
