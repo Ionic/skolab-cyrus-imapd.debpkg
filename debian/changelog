@@ -13,8 +13,12 @@ cyrus-imapd (3.0.8-5) UNRELEASED; urgency=medium
   * Add myself to uploaders
   * Add upgradesieve() function to cyrus-common.postinst (related to #927142).
     Thanks to Anthony Prades
+  * Fix postinst error
+  * Replace tabs
+  * Add patch to support spaces in mailboxes
+  * Add patches to fix some memory leaks found by code analyser (upstream)
 
- -- Xavier Guimard <yadd@debian.org>  Thu, 09 May 2019 18:13:12 +0200
+ -- Xavier Guimard <yadd@debian.org>  Thu, 16 May 2019 10:45:56 +0200
 
 cyrus-imapd (3.0.8-4) unstable; urgency=medium
 
