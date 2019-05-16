@@ -1,0 +1,31 @@
+Description: cyradm: support mailboxes with spaces in getquotaroot
+Author: Ellie Timoney <ellie@fastmail.com>
+Bug: https://github.com/cyrusimap/cyrus-imapd/issues/2521
+Forwarded: not-needed
+Reviewed-By: Xavier Guimard <yadd@debian.org>
+Last-Update: 2019-05-16
+
+--- a/perl/imap/IMAP/Admin.pm
++++ b/perl/imap/IMAP/Admin.pm
+@@ -575,7 +575,11 @@
+   $self->addcallback({-trigger => 'QUOTAROOT',
+                       -callback => sub {
+                         my %d = @_;
+-                        return unless $d{-text} =~ /^\S+ (\S+)/;
++                        return unless ( $d{-text} =~ /^\"[^\"]+\" \"([^\"]+)\"/ or
++                                       $d{-text} =~ /^\"[^\"]+\" (\S+)/ or
++                                       $d{-text} =~ /[^\"]\S+ \"([^\"]+)\"/ or
++                                       $d{-text} =~ /^[^\"]\S+ (\S+)/
++                                       );
+                         ${$d{-rock}} = $1;
+                       },
+                       -rock => \$qr},
+@@ -583,7 +586,7 @@
+                       -callback => sub {
+                         my %d = @_;
+                         return unless
+-                          $d{-text} =~ s/^\S+ \((\S+) (\S+) (\S+)\)//;
++                          $d{-text} =~ s/\((\S+) (\S+) (\S+)\)$//;
+                         push @{$d{-rock}}, $1, [$2, $3];
+                       },
+                       -rock => \@info});
