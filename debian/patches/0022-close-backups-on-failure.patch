@@ -1,0 +1,33 @@
+Description: close backups on failure
+ Static analizers report this as memory leak issue.
+Author: Pavel Zhukov <https://github.com/landgraf>
+Forwarded: https://github.com/cyrusimap/cyrus-imapd/commit/3c9060f9
+Reviewed-By: Xavier Guimard <yadd@debian.org>
+Last-Update: 2019-05-16
+
+--- a/backup/ctl_backups.c
++++ b/backup/ctl_backups.c
+@@ -898,6 +898,7 @@
+ 
+     if (r) {
+         printf("NO failed (%s)\n", error_message(r));
++        r = backup_close(&backup);
+         return EC_SOFTWARE; // FIXME would something else be more appropriate?
+     }
+ 
+@@ -934,6 +935,7 @@
+         fprintf(stderr, "unable to lock %s: %s\n",
+                 userid ? userid : fname,
+                 error_message(r));
++        r = backup_close(&backup);
+         return EC_SOFTWARE;
+     }
+ 
+@@ -994,6 +996,7 @@
+         fprintf(stderr, "unable to lock %s: %s\n",
+                 userid ? userid : fname,
+                 error_message(r));
++        r = backup_close(&backup);
+         return EC_SOFTWARE;
+     }
+ 
