@@ -4,8 +4,8 @@ Priority: optional
 Maintainer: Debian Cyrus Team <team+cyrus@tracker.debian.org>
 Uploaders: Henrique de Moraes Holschuh <hmh@debian.org>,
            Ondřej Surý <ondrej@debian.org>,
-	   Anthony Prades <toony.debian@chezouam.net>,
-	   Xavier Guimard <yadd@debian.org>
+           Anthony Prades <toony.debian@chezouam.net>,
+           Xavier Guimard <yadd@debian.org>
 Standards-Version: 4.3.0
 Build-Depends: bison,
                comerr-dev,
@@ -54,11 +54,11 @@ Pre-Depends: dpkg (>= 1.17.14~),
 Depends: adduser,
          db-upgrade-util,
          db-util,
-	 e2fsprogs,
+         e2fsprogs,
          default-mta | mail-transport-agent,
          gawk,
          libsasl2-modules,
-	 lsb-base,
+         lsb-base,
          netbase (>= 4.07),
          ${misc:Depends},
          ${perl:Depends},
