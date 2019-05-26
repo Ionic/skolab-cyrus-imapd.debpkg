@@ -208,6 +208,7 @@ Pre-Depends: dpkg (>= 1.17.14~),
 Depends: cyrus-common (= ${binary:Version}),
          cyrus-imapd (= ${binary:Version}),
          cyrus-pop3d (= ${binary:Version}),
+         cyrus-clients (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
 Description: Cyrus mail system - proxies and aggregator
