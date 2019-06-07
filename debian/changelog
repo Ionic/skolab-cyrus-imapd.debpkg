@@ -1,9 +1,13 @@
-cyrus-imapd (3.0.8-6) UNRELEASED; urgency=medium
+cyrus-imapd (3.0.8-6) unstable; urgency=medium
 
   [ Anthony Prades ]
   * Add cyrus-clients dependency on cyrus-murder (Closes: #872238)
 
- -- Anthony Prades <toony.debian@chezouam.net>  Sun, 26 May 2019 14:26:58 +0200
+  [ Xavier Guimard ]
+  * Add patch to fix arbitrary code execution via CalDAV
+    (Closes: CVE-2019-11356)
+
+ -- Xavier Guimard <yadd@debian.org>  Fri, 07 Jun 2019 06:41:23 +0200
 
 cyrus-imapd (3.0.8-5) unstable; urgency=medium
 
