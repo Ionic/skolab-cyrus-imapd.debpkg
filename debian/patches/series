@@ -21,3 +21,4 @@
 0021-support-mailboxes-with-spaces.patch
 0022-close-backups-on-failure.patch
 0023-fix-memory-leak-on-ldap-failure.patch
+CVE-2019-11356.patch
