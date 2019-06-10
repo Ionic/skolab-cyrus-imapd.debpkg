@@ -4,61 +4,14 @@ Subject: [PATCH] conversations: actually,
  need to update GUID counts after calculating CID
 
 ---
- imap/conversations.c | 44 ++++++++++++++++++++------------------------
- 1 file changed, 20 insertions(+), 24 deletions(-)
+ imap/conversations.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
 diff --git a/imap/conversations.c b/imap/conversations.c
-index 0780e5e..46042e3 100644
+index 0d2db30..f90023b 100644
 --- a/imap/conversations.c
 +++ b/imap/conversations.c
-@@ -1842,7 +1842,6 @@ EXPORTED int conversations_update_record(struct conversations_state *cstate,
-     int *delta_counts = NULL;
-     int i;
-     modseq_t modseq = 0;
--    const struct index_record *record = NULL;
-     int r = 0;
- 
-     if (old && new) {
-@@ -1864,36 +1863,15 @@ EXPORTED int conversations_update_record(struct conversations_state *cstate,
-         }
-     }
- 
--    // always update the GUID information first, as it's used for search
--    // even if conversations have not been set on this email
--    if (new) {
--        if (!old) {
--            r = conversations_set_guid(cstate, mailbox, new, /*add*/1);
--            if (r) return r;
--        }
--    }
--    else {
--        if (old) {
--            r = conversations_set_guid(cstate, mailbox, old, /*add*/0);
--            if (r) return r;
--        }
--    }
--
-+    const struct index_record *record = new ? new : old;
-     if (new && !old) {
-         /* add the conversation */
-         r = mailbox_cacherecord(mailbox, new); /* make sure it's loaded */
-         if (r) return r;
-         r = message_update_conversations(cstate, new, &conv);
-         if (r) return r;
--        record = new;
--        /* possible if silent (i.e. replica) */
--        if (!record->cid) return 0;
-     }
--    else {
--        record = new ? new : old;
--        /* skip out on non-CIDed records */
--        if (!record->cid) return 0;
--
-+    else if (record->cid) {
-         r = conversation_load(cstate, record->cid, &conv);
-         if (r) return r;
-         if (!conv) {
-@@ -1908,6 +1886,24 @@ EXPORTED int conversations_update_record(struct conversations_state *cstate,
+@@ -1885,6 +1885,21 @@ EXPORTED int conversations_update_record(struct conversations_state *cstate,
          }
      }
  
@@ -77,9 +30,6 @@ index 0780e5e..46042e3 100644
 +        }
 +    }
 +
-+    // the rest is bookkeeping for CIDs only
-+    if (!record->cid) return 0;
-+
-     if (cstate->counted_flags)
-         delta_counts = xzmalloc(sizeof(int) * cstate->counted_flags->count);
- 
+     if (new && !old) {
+         /* add the conversation */
+         r = mailbox_cacherecord(mailbox, new); /* make sure it's loaded */

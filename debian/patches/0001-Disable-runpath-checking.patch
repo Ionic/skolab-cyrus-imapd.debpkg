@@ -9,10 +9,10 @@ Subject: Disable runpath checking
  1 file changed, 3 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
-index 965b259..456939a 100644
+index 18049ec..9f3209a 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -178,9 +178,6 @@ else
+@@ -174,9 +174,6 @@ else
    AC_MSG_ERROR(The Cyrus IMAPD requires support for long long int)
  fi
  

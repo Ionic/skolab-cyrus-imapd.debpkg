@@ -39,7 +39,7 @@ index cb8c206..f0d5c3a 100644
      /* Load configuration file.  This will set config_dir when it finds it */
      config_read(alt_config, config_need_data);
 diff --git a/ptclient/ptexpire.c b/ptclient/ptexpire.c
-index e8eeaa7..76b3687 100644
+index 96abfca..8f5ae3b 100644
 --- a/ptclient/ptexpire.c
 +++ b/ptclient/ptexpire.c
 @@ -112,7 +112,7 @@ int main(int argc, char *argv[])

@@ -7,10 +7,10 @@ Subject: Use UnicodeData.txt from system
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/Makefile.am b/Makefile.am
-index df77bbf..8ea3321 100644
+index eb021ff..041e14b 100644
 --- a/Makefile.am
 +++ b/Makefile.am
-@@ -1437,9 +1437,9 @@ lib_libcyrus_min_la_CFLAGS = $(AM_CFLAGS) $(CFLAG_VISIBILITY)
+@@ -1438,9 +1438,9 @@ lib_libcyrus_min_la_CFLAGS = $(AM_CFLAGS) $(CFLAG_VISIBILITY)
  
  lib/chartable.c: lib/mkchartable.pl lib/charset/unifix.txt \
  	$(top_srcdir)/lib/charset/*.t \

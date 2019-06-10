@@ -68,10 +68,10 @@ index 6caddaa..910453d 100644
  }
  
 diff --git a/lib/imapoptions b/lib/imapoptions
-index 294b073..1b598ed 100644
+index e321a35..3fde339 100644
 --- a/lib/imapoptions
 +++ b/lib/imapoptions
-@@ -2425,6 +2425,11 @@ product version in the capabilities
+@@ -2430,6 +2430,11 @@ product version in the capabilities
  { "fastmailsharing", 0, SWITCH }
  /* If enabled, use FastMail style sharing (oldschool full server paths) */
  
