@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "IMAPD.CONF" "5" "August 10, 2018" "3.0.8" "Cyrus IMAP"
+.TH "IMAPD.CONF" "5" "May 27, 2019" "3.0.10" "Cyrus IMAP"
 .SH NAME
 imapd.conf \- Cyrus IMAP documentation
 .
@@ -978,6 +978,15 @@ unix hierarchy separators on, so you get Other \fI\%Users/foo@example.com/\fP\&.
 .INDENT 3.5
 only show the domain for users in other domains than your own (for
 backwards compatibility if you\(aqre already sharing
+.UNINDENT
+.UNINDENT
+.sp
+\fBcyrus_group:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+The name of the group Cyrus services will run as.  If not configured, the
+primary group of cyrus_user will be used. Can be further overridden by
+setting the $CYRUS_GROUP environment variable.
 .UNINDENT
 .UNINDENT
 .sp

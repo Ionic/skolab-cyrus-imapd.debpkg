@@ -149,7 +149,7 @@ sbin_PROGRAMS = $(am__EXEEXT_18) $(am__EXEEXT_19) $(am__EXEEXT_20) \
 	$(am__EXEEXT_24) $(am__EXEEXT_25) $(am__EXEEXT_26) \
 	$(am__EXEEXT_27) $(am__EXEEXT_28) $(am__EXEEXT_29)
 noinst_PROGRAMS = $(am__EXEEXT_16) $(am__EXEEXT_17)
-@COM_ERR_TRUE@am__append_2 = com_err/et/compile_et
+@COM_ERR_TRUE@am__append_2 = com_err/et/compile_et com_err/et/libcyrus_com_err.la
 @COM_ERR_TRUE@am__append_3 = com_err/et/libcyrus_com_err.la
 bin_PROGRAMS = imtest/imtest$(EXEEXT)
 @SERVER_TRUE@am__append_4 = \
@@ -1092,11 +1092,17 @@ am_imap_cyr_userseen_OBJECTS = imap/cli_fatal.$(OBJEXT) \
 	imap/cyr_userseen.$(OBJEXT) imap/mutex_fake.$(OBJEXT)
 imap_cyr_userseen_OBJECTS = $(am_imap_cyr_userseen_OBJECTS)
 imap_cyr_userseen_DEPENDENCIES = $(am__DEPENDENCIES_7)
-am_imap_cyr_virusscan_OBJECTS = imap/cli_fatal.$(OBJEXT) \
-	imap/cyr_virusscan.$(OBJEXT) imap/mutex_fake.$(OBJEXT)
+am_imap_cyr_virusscan_OBJECTS =  \
+	imap/imap_cyr_virusscan-cli_fatal.$(OBJEXT) \
+	imap/imap_cyr_virusscan-cyr_virusscan.$(OBJEXT) \
+	imap/imap_cyr_virusscan-mutex_fake.$(OBJEXT)
 imap_cyr_virusscan_OBJECTS = $(am_imap_cyr_virusscan_OBJECTS)
 imap_cyr_virusscan_DEPENDENCIES = $(am__DEPENDENCIES_7) \
 	$(am__DEPENDENCIES_1)
+imap_cyr_virusscan_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(imap_cyr_virusscan_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_imap_cyrdump_OBJECTS = imap/cli_fatal.$(OBJEXT) \
 	imap/cyrdump.$(OBJEXT) imap/mutex_fake.$(OBJEXT)
 imap_cyrdump_OBJECTS = $(am_imap_cyrdump_OBJECTS)
@@ -1807,7 +1813,6 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 builddir = @builddir@
 cyrus_cv_sigveclib = @cyrus_cv_sigveclib@
-cyrus_group = @cyrus_group@
 cyrus_user = @cyrus_user@
 datadir = @datadir@
 datarootdir = @datarootdir@
@@ -2067,7 +2072,7 @@ noinst_MAN = \
 
 noinst_TEXINFOS = com_err/et/com_err.texinfo
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libcyrus_min.pc libcyrus.pc libcyrus_sieve.pc
+pkgconfig_DATA = libcyrus_min.pc libcyrus.pc libcyrus_sieve.pc libcyrus_imap.pc
 com_err_et_libcyrus_com_err_la_SOURCES = \
 	com_err/et/com_err.c \
 	com_err/et/com_err.h \
@@ -2292,6 +2297,7 @@ imap_cyr_userseen_LDADD = $(LD_UTILITY_ADD)
 imap_cyr_sphinxmgr_SOURCES = imap/cli_fatal.c imap/cyr_sphinxmgr.c imap/mutex_fake.c
 imap_cyr_sphinxmgr_LDADD = $(LD_UTILITY_ADD)
 imap_cyr_virusscan_SOURCES = imap/cli_fatal.c imap/cyr_virusscan.c imap/mutex_fake.c
+imap_cyr_virusscan_CFLAGS = $(AM_CFLAGS) $(CLAMAV_CFLAGS) $(CFLAG_VISIBILITY)
 imap_cyr_virusscan_LDADD = $(LD_UTILITY_ADD) $(CLAMAV_LIBS)
 imap_ctl_zoneinfo_SOURCES = imap/cli_fatal.c imap/ctl_zoneinfo.c imap/mutex_fake.c imap/zoneinfo_db.c
 imap_ctl_zoneinfo_LDADD = $(LD_UTILITY_ADD)
@@ -2541,9 +2547,9 @@ dist_man8_MANS = man/arbitron.8 man/backupd.8 man/chk_cyrus.8 \
 	man/idled.8 man/imapd.8 man/ipurge.8 man/lmtpd.8 man/master.8 \
 	man/mbexamine.8 man/mbpath.8 man/mbtool.8 man/notifyd.8 \
 	man/pop3d.8 man/quota.8 man/reconstruct.8 man/restore.8 \
-	man/rmnews.8 man/smmapd.8 man/timsieved.8 man/tls_prune.8 \
-	man/unexpunge.8 $(am__append_84) $(am__append_86) \
-	$(am__append_88) $(am__append_90)
+	man/smmapd.8 man/timsieved.8 man/tls_prune.8 man/unexpunge.8 \
+	$(am__append_84) $(am__append_86) $(am__append_88) \
+	$(am__append_90)
 master_master_SOURCES = \
 	master/cyrusMasterMIB.c \
 	master/cyrusMasterMIB.h \
@@ -3725,12 +3731,16 @@ imap/cyr_userseen.$(OBJEXT): imap/$(am__dirstamp) \
 imap/cyr_userseen$(EXEEXT): $(imap_cyr_userseen_OBJECTS) $(imap_cyr_userseen_DEPENDENCIES) $(EXTRA_imap_cyr_userseen_DEPENDENCIES) imap/$(am__dirstamp)
 	@rm -f imap/cyr_userseen$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(imap_cyr_userseen_OBJECTS) $(imap_cyr_userseen_LDADD) $(LIBS)
-imap/cyr_virusscan.$(OBJEXT): imap/$(am__dirstamp) \
+imap/imap_cyr_virusscan-cli_fatal.$(OBJEXT): imap/$(am__dirstamp) \
+	imap/$(DEPDIR)/$(am__dirstamp)
+imap/imap_cyr_virusscan-cyr_virusscan.$(OBJEXT): imap/$(am__dirstamp) \
+	imap/$(DEPDIR)/$(am__dirstamp)
+imap/imap_cyr_virusscan-mutex_fake.$(OBJEXT): imap/$(am__dirstamp) \
 	imap/$(DEPDIR)/$(am__dirstamp)
 
 imap/cyr_virusscan$(EXEEXT): $(imap_cyr_virusscan_OBJECTS) $(imap_cyr_virusscan_DEPENDENCIES) $(EXTRA_imap_cyr_virusscan_DEPENDENCIES) imap/$(am__dirstamp)
 	@rm -f imap/cyr_virusscan$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(imap_cyr_virusscan_OBJECTS) $(imap_cyr_virusscan_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(imap_cyr_virusscan_LINK) $(imap_cyr_virusscan_OBJECTS) $(imap_cyr_virusscan_LDADD) $(LIBS)
 imap/cyrdump.$(OBJEXT): imap/$(am__dirstamp) \
 	imap/$(DEPDIR)/$(am__dirstamp)
 
@@ -4168,7 +4178,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@imap/$(DEPDIR)/cyr_sphinxmgr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@imap/$(DEPDIR)/cyr_synclog.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@imap/$(DEPDIR)/cyr_userseen.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@imap/$(DEPDIR)/cyr_virusscan.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@imap/$(DEPDIR)/cyrdump.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@imap/$(DEPDIR)/dav_reconstruct.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@imap/$(DEPDIR)/deliver.Po@am__quote@
@@ -4191,6 +4200,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@imap/$(DEPDIR)/httpd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@imap/$(DEPDIR)/ical_support.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@imap/$(DEPDIR)/idled.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@imap/$(DEPDIR)/imap_cyr_virusscan-cli_fatal.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@imap/$(DEPDIR)/imap_cyr_virusscan-cyr_virusscan.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@imap/$(DEPDIR)/imap_cyr_virusscan-mutex_fake.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@imap/$(DEPDIR)/imap_libcyrus_imap_la-annotate.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@imap/$(DEPDIR)/imap_libcyrus_imap_la-append.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@imap/$(DEPDIR)/imap_libcyrus_imap_la-backend.Plo@am__quote@
@@ -5645,6 +5657,48 @@ sieve/sieve_libcyrus_sieve_lex_la-sieve-lex.lo: sieve/sieve-lex.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='sieve/sieve-lex.c' object='sieve/sieve_libcyrus_sieve_lex_la-sieve-lex.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sieve_libcyrus_sieve_lex_la_CFLAGS) $(CFLAGS) -c -o sieve/sieve_libcyrus_sieve_lex_la-sieve-lex.lo `test -f 'sieve/sieve-lex.c' || echo '$(srcdir)/'`sieve/sieve-lex.c
+
+imap/imap_cyr_virusscan-cli_fatal.o: imap/cli_fatal.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(imap_cyr_virusscan_CFLAGS) $(CFLAGS) -MT imap/imap_cyr_virusscan-cli_fatal.o -MD -MP -MF imap/$(DEPDIR)/imap_cyr_virusscan-cli_fatal.Tpo -c -o imap/imap_cyr_virusscan-cli_fatal.o `test -f 'imap/cli_fatal.c' || echo '$(srcdir)/'`imap/cli_fatal.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) imap/$(DEPDIR)/imap_cyr_virusscan-cli_fatal.Tpo imap/$(DEPDIR)/imap_cyr_virusscan-cli_fatal.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='imap/cli_fatal.c' object='imap/imap_cyr_virusscan-cli_fatal.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(imap_cyr_virusscan_CFLAGS) $(CFLAGS) -c -o imap/imap_cyr_virusscan-cli_fatal.o `test -f 'imap/cli_fatal.c' || echo '$(srcdir)/'`imap/cli_fatal.c
+
+imap/imap_cyr_virusscan-cli_fatal.obj: imap/cli_fatal.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(imap_cyr_virusscan_CFLAGS) $(CFLAGS) -MT imap/imap_cyr_virusscan-cli_fatal.obj -MD -MP -MF imap/$(DEPDIR)/imap_cyr_virusscan-cli_fatal.Tpo -c -o imap/imap_cyr_virusscan-cli_fatal.obj `if test -f 'imap/cli_fatal.c'; then $(CYGPATH_W) 'imap/cli_fatal.c'; else $(CYGPATH_W) '$(srcdir)/imap/cli_fatal.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) imap/$(DEPDIR)/imap_cyr_virusscan-cli_fatal.Tpo imap/$(DEPDIR)/imap_cyr_virusscan-cli_fatal.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='imap/cli_fatal.c' object='imap/imap_cyr_virusscan-cli_fatal.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(imap_cyr_virusscan_CFLAGS) $(CFLAGS) -c -o imap/imap_cyr_virusscan-cli_fatal.obj `if test -f 'imap/cli_fatal.c'; then $(CYGPATH_W) 'imap/cli_fatal.c'; else $(CYGPATH_W) '$(srcdir)/imap/cli_fatal.c'; fi`
+
+imap/imap_cyr_virusscan-cyr_virusscan.o: imap/cyr_virusscan.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(imap_cyr_virusscan_CFLAGS) $(CFLAGS) -MT imap/imap_cyr_virusscan-cyr_virusscan.o -MD -MP -MF imap/$(DEPDIR)/imap_cyr_virusscan-cyr_virusscan.Tpo -c -o imap/imap_cyr_virusscan-cyr_virusscan.o `test -f 'imap/cyr_virusscan.c' || echo '$(srcdir)/'`imap/cyr_virusscan.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) imap/$(DEPDIR)/imap_cyr_virusscan-cyr_virusscan.Tpo imap/$(DEPDIR)/imap_cyr_virusscan-cyr_virusscan.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='imap/cyr_virusscan.c' object='imap/imap_cyr_virusscan-cyr_virusscan.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(imap_cyr_virusscan_CFLAGS) $(CFLAGS) -c -o imap/imap_cyr_virusscan-cyr_virusscan.o `test -f 'imap/cyr_virusscan.c' || echo '$(srcdir)/'`imap/cyr_virusscan.c
+
+imap/imap_cyr_virusscan-cyr_virusscan.obj: imap/cyr_virusscan.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(imap_cyr_virusscan_CFLAGS) $(CFLAGS) -MT imap/imap_cyr_virusscan-cyr_virusscan.obj -MD -MP -MF imap/$(DEPDIR)/imap_cyr_virusscan-cyr_virusscan.Tpo -c -o imap/imap_cyr_virusscan-cyr_virusscan.obj `if test -f 'imap/cyr_virusscan.c'; then $(CYGPATH_W) 'imap/cyr_virusscan.c'; else $(CYGPATH_W) '$(srcdir)/imap/cyr_virusscan.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) imap/$(DEPDIR)/imap_cyr_virusscan-cyr_virusscan.Tpo imap/$(DEPDIR)/imap_cyr_virusscan-cyr_virusscan.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='imap/cyr_virusscan.c' object='imap/imap_cyr_virusscan-cyr_virusscan.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(imap_cyr_virusscan_CFLAGS) $(CFLAGS) -c -o imap/imap_cyr_virusscan-cyr_virusscan.obj `if test -f 'imap/cyr_virusscan.c'; then $(CYGPATH_W) 'imap/cyr_virusscan.c'; else $(CYGPATH_W) '$(srcdir)/imap/cyr_virusscan.c'; fi`
+
+imap/imap_cyr_virusscan-mutex_fake.o: imap/mutex_fake.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(imap_cyr_virusscan_CFLAGS) $(CFLAGS) -MT imap/imap_cyr_virusscan-mutex_fake.o -MD -MP -MF imap/$(DEPDIR)/imap_cyr_virusscan-mutex_fake.Tpo -c -o imap/imap_cyr_virusscan-mutex_fake.o `test -f 'imap/mutex_fake.c' || echo '$(srcdir)/'`imap/mutex_fake.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) imap/$(DEPDIR)/imap_cyr_virusscan-mutex_fake.Tpo imap/$(DEPDIR)/imap_cyr_virusscan-mutex_fake.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='imap/mutex_fake.c' object='imap/imap_cyr_virusscan-mutex_fake.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(imap_cyr_virusscan_CFLAGS) $(CFLAGS) -c -o imap/imap_cyr_virusscan-mutex_fake.o `test -f 'imap/mutex_fake.c' || echo '$(srcdir)/'`imap/mutex_fake.c
+
+imap/imap_cyr_virusscan-mutex_fake.obj: imap/mutex_fake.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(imap_cyr_virusscan_CFLAGS) $(CFLAGS) -MT imap/imap_cyr_virusscan-mutex_fake.obj -MD -MP -MF imap/$(DEPDIR)/imap_cyr_virusscan-mutex_fake.Tpo -c -o imap/imap_cyr_virusscan-mutex_fake.obj `if test -f 'imap/mutex_fake.c'; then $(CYGPATH_W) 'imap/mutex_fake.c'; else $(CYGPATH_W) '$(srcdir)/imap/mutex_fake.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) imap/$(DEPDIR)/imap_cyr_virusscan-mutex_fake.Tpo imap/$(DEPDIR)/imap_cyr_virusscan-mutex_fake.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='imap/mutex_fake.c' object='imap/imap_cyr_virusscan-mutex_fake.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(imap_cyr_virusscan_CFLAGS) $(CFLAGS) -c -o imap/imap_cyr_virusscan-mutex_fake.obj `if test -f 'imap/mutex_fake.c'; then $(CYGPATH_W) 'imap/mutex_fake.c'; else $(CYGPATH_W) '$(srcdir)/imap/mutex_fake.c'; fi`
 
 imap/imap_mupdate-mupdate.o: imap/mupdate.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(imap_mupdate_CFLAGS) $(CFLAGS) -MT imap/imap_mupdate-mupdate.o -MD -MP -MF imap/$(DEPDIR)/imap_mupdate-mupdate.Tpo -c -o imap/imap_mupdate-mupdate.o `test -f 'imap/mupdate.c' || echo '$(srcdir)/'`imap/mupdate.c

@@ -1419,18 +1419,6 @@ Sitemap
 
             * See Also
 
-          * **rmnews**
-
-            * Synopsis
-
-            * Description
-
-            * Options
-
-            * Files
-
-            * See Also
-
           * **sievec**
 
             * Synopsis
