@@ -112,10 +112,6 @@ AC_ARG_WITH(cyrus-user,
         cyrus_user="$withval",cyrus_user="cyrus")
 AC_SUBST(cyrus_user)
 AC_DEFINE_UNQUOTED(CYRUS_USER, "$cyrus_user",[What user will we run as?])
-AC_ARG_WITH(cyrus-group,
-        [AS_HELP_STRING([--with-cyrus-group=GROUPID], [use GROUPID cyrus group])],
-        cyrus_group="$withval",cyrus_group="mail")
-AC_SUBST(cyrus_group)
 
 dnl allow users to override $sysconfdir, but retain old default (/etc)
 dnl if not specified
@@ -2254,6 +2250,7 @@ Cyrus Server configured components
    calalarmd:          $enable_calalarmd
    objectstore:        $enable_objectstore
    backup:             $enable_backup
+   com_err:            $with_com_err
 
 External dependencies:
    ldap:               $have_ldap

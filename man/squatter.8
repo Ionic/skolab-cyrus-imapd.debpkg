@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "SQUATTER" "8" "August 10, 2018" "3.0.8" "Cyrus IMAP"
+.TH "SQUATTER" "8" "May 27, 2019" "3.0.10" "Cyrus IMAP"
 .SH NAME
 squatter \- Cyrus IMAP documentation
 .
@@ -67,8 +67,8 @@ general:
 
 i.e.:
 \fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [\fB\-v\fP]
-\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-a\fP ] [ \fB\-i\fP ] [\fB\-N\fP \fIname\fP] [\fB\-S *seconds*] [ **\-r\fP ]  \fImailbox\fP\&...
-\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-a\fP ] [ \fB\-i\fP ] [\fB\-N\fP \fIname\fP] [\fB\-S *seconds*] [ **\-r\fP ]  \fB\-u\fP \fIuser\fP\&...
+\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-a\fP ] [ \fB\-i\fP ] [\fB\-N\fP \fIname\fP] [\fB\-S\fP \fIseconds\fP] [ \fB\-r\fP ]  \fImailbox\fP\&...
+\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-a\fP ] [ \fB\-i\fP ] [\fB\-N\fP \fIname\fP] [\fB\-S\fP \fIseconds\fP] [ \fB\-r\fP ]  \fB\-u\fP \fIuser\fP\&...
 \fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] \fB\-R\fP [ \fB\-n\fP \fIchannel\fP ] [ \fB\-d\fP ]
 \fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] \fB\-f\fP \fIsynclogfile\fP
 \fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] \fB\-I\fP \fIfile\fP
@@ -95,7 +95,7 @@ The index is a unified index of all of the header and body text
 of each message in a given mailbox.  This index is used to significantly
 reduce IMAP SEARCH times on a mailbox.
 .sp
-By default, \fBsquatter\fP creates  an index of ALL messages in the
+By default, \fBsquatter\fP creates an index of ALL messages in the
 mailbox, not just those since the last time that it was run.  The
 \fB\-i\fP option is used to select incremental updates.  Any messages
 appended to the mailbox after \fBsquatter\fP is run, will NOT be included

@@ -575,7 +575,11 @@ sub listquotaroot {
   $self->addcallback({-trigger => 'QUOTAROOT',
                       -callback => sub {
                         my %d = @_;
-                        return unless $d{-text} =~ /^\S+ (\S+)/;
+                        return unless ( $d{-text} =~ /^\"[^\"]+\" \"([^\"]+)\"/ or
+                                       $d{-text} =~ /^\"[^\"]+\" (\S+)/ or
+                                       $d{-text} =~ /[^\"]\S+ \"([^\"]+)\"/ or
+                                       $d{-text} =~ /^[^\"]\S+ (\S+)/
+                                       );
                         ${$d{-rock}} = $1;
                       },
                       -rock => \$qr},
@@ -583,7 +587,7 @@ sub listquotaroot {
                       -callback => sub {
                         my %d = @_;
                         return unless
-                          $d{-text} =~ s/^\S+ \((\S+) (\S+) (\S+)\)//;
+                          $d{-text} =~ s/\((\S+) (\S+) (\S+)\)$//;
                         push @{$d{-rock}}, $1, [$2, $3];
                       },
                       -rock => \@info});
@@ -630,8 +634,13 @@ sub renamemailbox {
                         print $_ . "\n";
                       }});
 
-  my ($rc, $msg) = $self->send('', '', 'RENAME %s %s%a%a', $src, $dest,
-                               $ptn ? ' ' : $ptn, $ptn);
+  my ($rc, $msg);
+  if ($ptn) {
+    ($rc, $msg) = $self->send('', '', 'RENAME %s %s %a', $src, $dest, $ptn);
+  }
+  else {
+    ($rc, $msg) = $self->send('', '', 'RENAME %s %s', $src, $dest);
+  }
 
   $self->addcallback({-trigger => 'NO'});
 

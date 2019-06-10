@@ -426,26 +426,23 @@ for reads and writes, and is easily corrupted.
 Twoskip
 -------
 
-**Recommended**. A robust implementation of
-https://en.wikipedia.org/wiki/Skip_list. Developers interested in the
-details can find more information at
-http://opera.brong.fastmail.fm.user.fm/talks/twoskip/twoskip-
-yapc12.pdf.
+**Recommended**. A robust implementation of Skip List. Developers
+interested in the details can find more information at these talk
+slides.
 
 
 Skiplist
 --------
 
-An implementation of the https://en.wikipedia.org/wiki/Skip_list data
-structure. Deprecated in favour of Twoskip as it is not robust in the
-face of disk failure.
+An implementation of the Skip List data structure. Deprecated in
+favour of Twoskip as it is not robust in the face of disk failure.
 
 
 lmdb
 ----
 
-http://symas.com/mdb is a high-performance transactional key-value
-store.
+Lightning Memory-Mapped Database (lmdb) is a high-performance
+transactional key-value store.
 
 Fast while in memory, but slow when the database is loaded. Best for
 databases that are held open for a long time: Mailbox List

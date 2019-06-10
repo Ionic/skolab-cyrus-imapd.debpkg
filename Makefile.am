@@ -121,7 +121,7 @@ EXTRA_DIST = \
 
 if COM_ERR
 COMPILE_ET_DEP = com_err/et/compile_et
-BUILT_SOURCES += com_err/et/compile_et
+BUILT_SOURCES += com_err/et/compile_et com_err/et/libcyrus_com_err.la
 lib_LTLIBRARIES += com_err/et/libcyrus_com_err.la
 endif # COM_ERR
 
@@ -536,7 +536,7 @@ noinst_MAN = \
 noinst_TEXINFOS = com_err/et/com_err.texinfo
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libcyrus_min.pc libcyrus.pc libcyrus_sieve.pc
+pkgconfig_DATA = libcyrus_min.pc libcyrus.pc libcyrus_sieve.pc libcyrus_imap.pc
 
 com_err_et_libcyrus_com_err_la_SOURCES = \
 	com_err/et/com_err.c \
@@ -879,6 +879,7 @@ imap_cyr_sphinxmgr_SOURCES = imap/cli_fatal.c imap/cyr_sphinxmgr.c imap/mutex_fa
 imap_cyr_sphinxmgr_LDADD = $(LD_UTILITY_ADD)
 
 imap_cyr_virusscan_SOURCES = imap/cli_fatal.c imap/cyr_virusscan.c imap/mutex_fake.c
+imap_cyr_virusscan_CFLAGS = $(AM_CFLAGS) $(CLAMAV_CFLAGS) $(CFLAG_VISIBILITY)
 imap_cyr_virusscan_LDADD = $(LD_UTILITY_ADD) $(CLAMAV_LIBS)
 
 imap_ctl_zoneinfo_SOURCES = imap/cli_fatal.c imap/ctl_zoneinfo.c imap/mutex_fake.c imap/zoneinfo_db.c
@@ -1506,7 +1507,6 @@ dist_man8_MANS = \
 	man/quota.8 \
 	man/reconstruct.8 \
 	man/restore.8 \
-	man/rmnews.8 \
 	man/smmapd.8 \
 	man/timsieved.8 \
 	man/tls_prune.8 \
