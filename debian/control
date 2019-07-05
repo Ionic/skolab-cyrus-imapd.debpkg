@@ -48,7 +48,6 @@ Homepage: https://www.cyrusimap.org/
 
 Package: cyrus-common
 Architecture: any
-Section: mail
 Pre-Depends: dpkg (>= 1.17.14~),
              ${misc:Pre-Depends}
 Depends: adduser,
@@ -125,7 +124,6 @@ Description: Cyrus mail system - documentation files
 
 Package: cyrus-imapd
 Architecture: any
-Section: mail
 Pre-Depends: dpkg (>= 1.17.14~),
              ${misc:Pre-Depends}
 Depends: cyrus-common (= ${binary:Version}),
@@ -154,7 +152,6 @@ Description: Cyrus mail system - IMAP support
 
 Package: cyrus-pop3d
 Architecture: any
-Section: mail
 Pre-Depends: dpkg (>= 1.17.14~),
              ${misc:Pre-Depends}
 Depends: cyrus-common (= ${binary:Version}),
@@ -183,7 +180,6 @@ Description: Cyrus mail system - POP3 support
 
 Package: cyrus-admin
 Architecture: all
-Section: mail
 Pre-Depends: dpkg (>= 1.17.14~),
              ${misc:Pre-Depends}
 Depends: cyrus-common,
@@ -201,7 +197,6 @@ Description: Cyrus mail system - administration tools
  For more information, please see the cyrus-common package.
 
 Package: cyrus-murder
-Section: mail
 Architecture: any
 Pre-Depends: dpkg (>= 1.17.14~),
              ${misc:Pre-Depends}
@@ -220,7 +215,6 @@ Description: Cyrus mail system - proxies and aggregator
  For more information, please see the cyrus-common package.
 
 Package: cyrus-replication
-Section: mail
 Architecture: any
 Pre-Depends: dpkg (>= 1.17.14~),
              ${misc:Pre-Depends}
@@ -236,7 +230,6 @@ Description: Cyrus mail system - replication
 
 Package: cyrus-nntpd
 Architecture: any
-Section: mail
 Pre-Depends: dpkg (>= 1.17.14~),
              ${misc:Pre-Depends}
 Depends: cyrus-common (= ${binary:Version}),
@@ -252,7 +245,6 @@ Description: Cyrus mail system - NNTP support
 
 Package: cyrus-caldav
 Architecture: any
-Section: mail
 Pre-Depends: dpkg (>= 1.17.14~),
              ${misc:Pre-Depends}
 Depends: cyrus-common (= ${binary:Version}),
@@ -268,7 +260,6 @@ Description: Cyrus mail system - CalDAV and CardDAV support
 
 Package: cyrus-clients
 Architecture: any
-Section: mail
 Pre-Depends: dpkg (>= 1.17.14~),
              ${misc:Pre-Depends}
 Depends: ${misc:Depends},
