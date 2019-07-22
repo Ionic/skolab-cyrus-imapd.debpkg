@@ -283,7 +283,6 @@ Depends: cyrus-common (= ${binary:Version}),
          libcyrus-imap-perl (>= ${binary:Version}),
          libsasl2-dev (>= 2.1.9),
          ${misc:Depends}
-Multi-Arch: same
 Description: Cyrus mail system - developer files
  This package contains header files and the static library needed
  to develop IMAP applications that interface with the Cyrus IMAPd suite.
