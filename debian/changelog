@@ -1,7 +1,4 @@
-cyrus-imapd (3.0.10-1) unstable; urgency=medium
-
-  [ Xavier Guimard ]
-  * Restore d/ch broken by Anthony Prades
+cyrus-imapd (3.0.10-1) experimental; urgency=medium
 
   [ Sébastien Delafond ]
   * New upstream version 3.0.10
@@ -11,7 +8,14 @@ cyrus-imapd (3.0.10-1) unstable; urgency=medium
   * lintian: remove duplicate section fields
   * lintian: remove empty usr/sbin from cyrus-imapd
 
- -- Sebastien Delafond <seb@debian.org>  Fri, 05 Jul 2019 10:49:04 +0200
+  [ Xavier Guimard ]
+  * Update lintian-overrides
+  * Update links
+  * Remove unneeded dependency versions
+  * Add Multi-Arch fields
+  * Declare compliance with policy 4.4.0
+
+ -- Xavier Guimard <yadd@debian.org>  Mon, 22 Jul 2019 09:06:59 +0200
 
 cyrus-imapd (3.0.8-6) unstable; urgency=medium
 
