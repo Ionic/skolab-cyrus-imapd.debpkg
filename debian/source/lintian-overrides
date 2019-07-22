@@ -1,0 +1,16 @@
+# Uninstalled files
+source-contains-prebuilt-python-object docsrc/exts/sphinxlocal/__init__.pyc
+source-contains-prebuilt-python-object docsrc/exts/sphinxlocal/sitemap.pyc
+source-contains-prebuilt-javascript-object doc/html/_static/js/modernizr.min.js
+source-is-missing doc/html/_static/js/modernizr.min.js
+source-contains-prebuilt-python-object docsrc/exts/sphinxlocal/builders/__init__.pyc
+source-contains-prebuilt-python-object docsrc/exts/sphinxlocal/builders/gitstamp.pyc
+source-contains-prebuilt-python-object docsrc/exts/sphinxlocal/builders/manpage.pyc
+source-contains-prebuilt-python-object docsrc/exts/sphinxlocal/roles/__init__.pyc
+source-contains-prebuilt-python-object docsrc/exts/sphinxlocal/roles/cyrusman.pyc
+source-contains-prebuilt-python-object docsrc/exts/sphinxlocal/writers/__init__.pyc
+source-contains-prebuilt-python-object docsrc/exts/sphinxlocal/writers/manpage.pyc
+source-contains-prebuilt-javascript-object docsrc/exts/themes/cyrus/static/js/modernizr.min.js
+source-is-missing docsrc/exts/themes/cyrus/static/js/modernizr.min.js
+source-contains-prebuilt-javascript-object docsrc/exts/themes/sphinx_rtd_theme/static/js/modernizr.min.js
+source-is-missing docsrc/exts/themes/sphinx_rtd_theme/static/js/modernizr.min.js
