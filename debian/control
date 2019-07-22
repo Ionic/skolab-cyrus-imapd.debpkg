@@ -104,6 +104,7 @@ Section: doc
 Pre-Depends: dpkg (>= 1.17.14~),
              ${misc:Pre-Depends}
 Depends: ${misc:Depends}
+Multi-Arch: foreign
 Description: Cyrus mail system - documentation files
  Cyrus is an IMAP server designed to handle massive quantities of mail,
  with a number of features not found in other IMAP implementations,
@@ -282,6 +283,7 @@ Depends: cyrus-common (= ${binary:Version}),
          libcyrus-imap-perl (>= ${binary:Version}),
          libsasl2-dev (>= 2.1.9),
          ${misc:Depends}
+Multi-Arch: same
 Description: Cyrus mail system - developer files
  This package contains header files and the static library needed
  to develop IMAP applications that interface with the Cyrus IMAPd suite.
@@ -296,6 +298,7 @@ Depends: ${misc:Depends},
          ${perl:Depends},
          ${shlibs:Depends}
 Section: perl
+Multi-Arch: same
 Description: Interface to Cyrus imap client imclient library
  The Cyrus::IMAP module provides an interface to the Cyrus imclient
  library.  These are primarily useful for implementing cyradm operations
