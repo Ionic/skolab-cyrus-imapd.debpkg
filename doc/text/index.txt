@@ -5,10 +5,10 @@ What is Cyrus IMAP?
 Cyrus IMAP is an email, contacts and calendar server. Cyrus is free
 and open source.
 
-* This is the documentation for version 3.0.8 (stable) of Cyrus
+* This is the documentation for version 3.0.10 (stable) of Cyrus
   IMAP: **stable** branch.
 
-* The latest development version 3.1.5 is at
+* The latest development version 3.1.6 is at
   https://www.cyrusimap.org/dev/.
 
 
@@ -387,7 +387,7 @@ application protocol on the wire. Cyrus SASL is an implementation of
 SASL that makes it easy for application developers to integrate
 authentication mechanisms into their application in a generic way.
 
-The latest stable version of Cyrus SASL is 2.1.26.
+The latest stable version of Cyrus SASL is 2.1.27.
 
 Cyrus SASL
 

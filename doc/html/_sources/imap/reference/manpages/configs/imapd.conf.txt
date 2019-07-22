@@ -1033,6 +1033,16 @@ FIELD DESCRIPTIONS
 
     .. endblob crossdomains_onlyother
 
+    .. startblob cyrus_group
+
+    ``cyrus_group:`` <none>
+
+        The name of the group Cyrus services will run as.  If not configured, the
+        primary group of cyrus_user will be used. Can be further overridden by
+        setting the $CYRUS_GROUP environment variable. 
+
+    .. endblob cyrus_group
+
     .. startblob cyrus_user
 
     ``cyrus_user:`` <none>

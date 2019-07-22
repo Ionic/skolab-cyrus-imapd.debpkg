@@ -582,6 +582,11 @@ EXPORTED int conversations_get_msgid(struct conversations_state *state,
  *    we have observed combinations of buggy client software both
  *    add and remove whitespace around folding points.
  *
+ *  - We include the Unicode U+00A0 (non-breaking space) codepoint in our
+ *    determination of whitespace (as the UTF-8 sequence \xC2\xA0) because
+ *    we have seen it in the wild, but do not currently generalise this to
+ *    other Unicode "whitespace" codepoints. (XXX)
+ *
  *  - Because we eliminate whitespace entirely, and whitespace helps
  *    delimit some of our other replacements, we do that whitespace
  *    step last instead of first.
@@ -611,7 +616,7 @@ EXPORTED void conversation_normalise_subject(struct buf *s)
     int r;
 
     if (!initialised_res) {
-        r = regcomp(&whitespace_re, "[ \t\r\n]+", REG_EXTENDED);
+        r = regcomp(&whitespace_re, "([ \t\r\n]+|\xC2\xA0)", REG_EXTENDED);
         assert(r == 0);
         r = regcomp(&relike_token_re, "^[ \t]*[A-Za-z0-9]+(\\[[0-9]+\\])?:", REG_EXTENDED);
         assert(r == 0);
@@ -1842,7 +1847,6 @@ EXPORTED int conversations_update_record(struct conversations_state *cstate,
     int *delta_counts = NULL;
     int i;
     modseq_t modseq = 0;
-    const struct index_record *record = NULL;
     int r = 0;
 
     if (old && new) {
@@ -1864,21 +1868,15 @@ EXPORTED int conversations_update_record(struct conversations_state *cstate,
         }
     }
 
+    const struct index_record *record = new ? new : old;
     if (new && !old) {
         /* add the conversation */
         r = mailbox_cacherecord(mailbox, new); /* make sure it's loaded */
         if (r) return r;
         r = message_update_conversations(cstate, new, &conv);
         if (r) return r;
-        record = new;
-        /* possible if silent (i.e. replica) */
-        if (!record->cid) return 0;
     }
-    else {
-        record = new ? new : old;
-        /* skip out on non-CIDed records */
-        if (!record->cid) return 0;
-
+    else if (record->cid) {
         r = conversation_load(cstate, record->cid, &conv);
         if (r) return r;
         if (!conv) {
@@ -1892,6 +1890,24 @@ EXPORTED int conversations_update_record(struct conversations_state *cstate,
             conv = conversation_new(cstate);
         }
     }
+
+    // always update the GUID information first, as it's used for search
+    // even if conversations have not been set on this email
+    if (new) {
+        if (!old) {
+            r = conversations_set_guid(cstate, mailbox, new, /*add*/1);
+            if (r) return r;
+        }
+    }
+    else {
+        if (old) {
+            r = conversations_set_guid(cstate, mailbox, old, /*add*/0);
+            if (r) return r;
+        }
+    }
+
+    // the rest is bookkeeping for CIDs only
+    if (!record->cid) return 0;
 
     if (cstate->counted_flags)
         delta_counts = xzmalloc(sizeof(int) * cstate->counted_flags->count);
@@ -1928,10 +1944,6 @@ EXPORTED int conversations_update_record(struct conversations_state *cstate,
         }
         delta_num_records--;
         modseq = MAX(modseq, old->modseq);
-        if (!new) {
-            r = conversations_set_guid(cstate, mailbox, old, /*add*/0);
-            if (r) return r;
-        }
     }
 
     if (new) {
@@ -1953,10 +1965,6 @@ EXPORTED int conversations_update_record(struct conversations_state *cstate,
         }
         delta_num_records++;
         modseq = MAX(modseq, new->modseq);
-        if (!old) {
-            r = conversations_set_guid(cstate, mailbox, new, /*add*/1);
-            if (r) return r;
-        }
     }
 
     /* XXX - combine this with the earlier cache parsing */

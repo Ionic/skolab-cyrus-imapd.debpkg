@@ -122,8 +122,6 @@ Man pages
 
 * **restore**
 
-* **rmnews**
-
 * **sievec**
 
 * **sieved**

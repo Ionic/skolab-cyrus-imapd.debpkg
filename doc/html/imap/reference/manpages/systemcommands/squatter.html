@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>squatter &mdash; Cyrus IMAP 3.0.8 (stable) documentation</title>
+  <title>squatter &mdash; Cyrus IMAP 3.0.10 (stable) documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.0.8 (stable) documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.0.10 (stable) documentation" href="../../../../index.html"/>
         <link rel="up" title="Man pages" href="../commands.html"/>
         <link rel="next" title="sync_client" href="sync_client.html"/>
         <link rel="prev" title="smmapd" href="smmapd.html"/> 
@@ -477,7 +477,6 @@
 <li class="toctree-l4"><a class="reference internal" href="reconstruct.html"><strong>reconstruct</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="rehash.html"><strong>rehash</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="restore.html"><strong>restore</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="rmnews.html"><strong>rmnews</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="sievec.html"><strong>sievec</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="sieved.html"><strong>sieved</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="smmapd.html"><strong>smmapd</strong></a></li>
@@ -748,7 +747,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.0.8 (stable)</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.0.10 (stable)</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -778,8 +777,8 @@ general:
 
 i.e.:
 <strong>squatter</strong> [ <strong>-C</strong> <em>config-file</em> ] [<strong>-v</strong>]
-<strong>squatter</strong> [ <strong>-C</strong> <em>config-file</em> ] [ <strong>-a</strong> ] [ <strong>-i</strong> ] [<strong>-N</strong> <em>name</em>] [<strong>-S *seconds*] [ **-r</strong> ]  <em>mailbox</em>...
-<strong>squatter</strong> [ <strong>-C</strong> <em>config-file</em> ] [ <strong>-a</strong> ] [ <strong>-i</strong> ] [<strong>-N</strong> <em>name</em>] [<strong>-S *seconds*] [ **-r</strong> ]  <strong>-u</strong> <em>user</em>...
+<strong>squatter</strong> [ <strong>-C</strong> <em>config-file</em> ] [ <strong>-a</strong> ] [ <strong>-i</strong> ] [<strong>-N</strong> <em>name</em>] [<strong>-S</strong> <em>seconds</em>] [ <strong>-r</strong> ]  <em>mailbox</em>...
+<strong>squatter</strong> [ <strong>-C</strong> <em>config-file</em> ] [ <strong>-a</strong> ] [ <strong>-i</strong> ] [<strong>-N</strong> <em>name</em>] [<strong>-S</strong> <em>seconds</em>] [ <strong>-r</strong> ]  <strong>-u</strong> <em>user</em>...
 <strong>squatter</strong> [ <strong>-C</strong> <em>config-file</em> ] <strong>-R</strong> [ <strong>-n</strong> <em>channel</em> ] [ <strong>-d</strong> ]
 <strong>squatter</strong> [ <strong>-C</strong> <em>config-file</em> ] <strong>-f</strong> <em>synclogfile</em>
 <strong>squatter</strong> [ <strong>-C</strong> <em>config-file</em> ] <strong>-I</strong> <em>file</em>
@@ -803,7 +802,7 @@ which search engine is used.</p>
 The index is a unified index of all of the header and body text
 of each message in a given mailbox.  This index is used to significantly
 reduce IMAP SEARCH times on a mailbox.</p>
-<p>By default, <strong>squatter</strong> creates  an index of ALL messages in the
+<p>By default, <strong>squatter</strong> creates an index of ALL messages in the
 mailbox, not just those since the last time that it was run.  The
 <strong>-i</strong> option is used to select incremental updates.  Any messages
 appended to the mailbox after <strong>squatter</strong> is run, will NOT be included
@@ -1125,7 +1124,7 @@ Xapian documentation in this release before using Xapian.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on Feb 14 2018
+        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on Oct 22 2017
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1145,7 +1144,7 @@ Xapian documentation in this release before using Xapian.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.0.8 (stable)',
+            VERSION:'3.0.10 (stable)',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

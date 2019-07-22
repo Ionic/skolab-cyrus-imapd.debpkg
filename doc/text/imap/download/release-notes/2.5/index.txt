@@ -25,3 +25,5 @@ Cyrus IMAP 2.5 Releases
 * Cyrus IMAP 2.5.10 Release Notes
 
 * Cyrus IMAP 2.5.11 Release Notes
+
+* Cyrus IMAP 2.5.12 Release Notes

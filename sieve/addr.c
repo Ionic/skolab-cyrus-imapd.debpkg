@@ -494,8 +494,8 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    76,    76,    77,    80,    83,    84,    87,    88,    91,
-      92,    95,    98,   101,   102,   105,   106,   109
+       0,    75,    75,    76,    79,    82,    83,    86,    87,    90,
+      91,    94,    97,   100,   101,   104,   105,   108
 };
 #endif
 
@@ -1515,7 +1515,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 112 "sieve/addr.y" /* yacc.c:1906  */
+#line 111 "sieve/addr.y" /* yacc.c:1906  */
 
 
 /* copy address error message into buffer provided by sieve parser */
