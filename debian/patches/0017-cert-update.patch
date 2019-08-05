@@ -8,8 +8,6 @@ Subject: cert-update
  cunit/key.pem    |  43 ++++++++++++-------
  3 files changed, 120 insertions(+), 129 deletions(-)
 
-diff --git a/cunit/cacert.pem b/cunit/cacert.pem
-index ea5c565..fa0d8a4 100644
 --- a/cunit/cacert.pem
 +++ b/cunit/cacert.pem
 @@ -1,66 +1,20 @@
@@ -97,11 +95,9 @@ index ea5c565..fa0d8a4 100644
 +oGyrmqv15zL8kFrYTokEiH+KHPapAxDO+UD61vVMG+brrJ4xHwvCcHJfFtG/6RHp
 +qNkSzR0A3sG5Mej+kfvkfeP60+q9ONW02+F/JPTx6A==
  -----END CERTIFICATE-----
-diff --git a/cunit/cert.pem b/cunit/cert.pem
-index cb7959d..42cf094 100644
 --- a/cunit/cert.pem
 +++ b/cunit/cert.pem
-@@ -2,62 +2,86 @@ Certificate:
+@@ -2,62 +2,86 @@
      Data:
          Version: 3 (0x2)
          Serial Number:
@@ -238,8 +234,6 @@ index cb7959d..42cf094 100644
 +wiBkM/n2aPVV6bHIwOMl12Wp8iJ02GzmdbrT1tvknCgfH+y0awBvwU7pvTPXOeSh
 +L78yKKT0XeIZ
  -----END CERTIFICATE-----
-diff --git a/cunit/key.pem b/cunit/key.pem
-index c465545..cdfc1d9 100644
 --- a/cunit/key.pem
 +++ b/cunit/key.pem
 @@ -1,15 +1,28 @@

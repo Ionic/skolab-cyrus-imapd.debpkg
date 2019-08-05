@@ -7,9 +7,6 @@ Subject: Re-add perl2rst tool from cyrus-imapd-3.0 upstream branch
  1 file changed, 37 insertions(+)
  create mode 100755 tools/perl2rst
 
-diff --git a/tools/perl2rst b/tools/perl2rst
-new file mode 100755
-index 0000000..ec3f103
 --- /dev/null
 +++ b/tools/perl2rst
 @@ -0,0 +1,37 @@

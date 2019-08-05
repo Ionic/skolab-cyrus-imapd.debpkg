@@ -7,11 +7,9 @@ Subject: [PATCH] conversations: actually,
  imap/conversations.c | 15 +++++++++++++++
  1 file changed, 15 insertions(+)
 
-diff --git a/imap/conversations.c b/imap/conversations.c
-index 0d2db30..f90023b 100644
 --- a/imap/conversations.c
 +++ b/imap/conversations.c
-@@ -1885,6 +1885,21 @@ EXPORTED int conversations_update_record(struct conversations_state *cstate,
+@@ -1885,6 +1885,21 @@
          }
      }
  
