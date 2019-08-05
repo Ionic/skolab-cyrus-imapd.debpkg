@@ -3943,7 +3943,7 @@ HIDDEN int mailbox_repack_commit(struct mailbox_repack **repackptr)
 
     xclose(repack->newindex_fd);
 
-    /* NOTE: cache files need commiting before index is renamed */
+    /* NOTE: cache files need committing before index is renamed */
     for (i = 0; i < repack->caches.count; i++) {
         struct mappedfile *cachefile = ptrarray_nth(&repack->caches, i);
         r = mappedfile_commit(cachefile);
@@ -6513,7 +6513,7 @@ EXPORTED const message_t *mailbox_iter_step(struct mailbox_iter *iter)
         const struct index_record *record = msg_record(iter->msg);
         if (!record->uid) continue; /* can happen on damaged mailboxes */
         if ((record->system_flags & iter->skipflags)) continue;
-        if (record->modseq <= iter->changedsince) continue;
+        if (iter->changedsince && record->modseq <= iter->changedsince) continue;
         return iter->msg;
     }
 

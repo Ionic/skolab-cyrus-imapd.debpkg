@@ -2713,7 +2713,7 @@ FIELD DESCRIPTIONS
         When set, the Cyrus NNTP server will add the header(s) specified in
         the **newsaddheaders** option to each incoming usenet article.
         The added header(s) will contain email delivery addresses
-        corresponding to each relevent newsgroup.  If not set, no headers
+        corresponding to each relevant newsgroup.  If not set, no headers
         are added to usenet articles. 
 
     .. endblob newspostuser
@@ -3491,7 +3491,7 @@ FIELD DESCRIPTIONS
 
         When searching, should diacriticals be stripped from the search
         terms.  The default is "true", a search for "hav" will match
-        "Håvard".  This is not :rfc:`5051` complient, but it backwards
+        "Håvard".  This is not :rfc:`5051` compliant, but it backwards
         compatible, and may be preferred by some sites. 
 
     .. endblob search_skipdiacrit
@@ -4497,7 +4497,7 @@ FIELD DESCRIPTIONS
     ``tls_versions:`` tls1_0 tls1_1 tls1_2
 
         A list of SSL/TLS versions to not disable. Cyrus IMAP SSL/TLS starts
-        with all protocols, and substracts protocols not in this list. Newer
+        with all protocols, and subtracts protocols not in this list. Newer
         versions of SSL/TLS will need to be added here to allow them to get
         disabled. 
 

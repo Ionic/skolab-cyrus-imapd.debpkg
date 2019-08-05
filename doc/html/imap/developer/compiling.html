@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Compiling &mdash; Cyrus IMAP 3.0.10 (stable) documentation</title>
+  <title>Compiling &mdash; Cyrus IMAP 3.0.11 (stable) documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.0.10 (stable) documentation" href="../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.0.11 (stable) documentation" href="../../index.html"/>
         <link rel="up" title="Setup" href="../../setup.html"/>
         <link rel="next" title="Installing Cyrus" href="../installing.html"/>
         <link rel="prev" title="Setup" href="../../setup.html"/> 
@@ -747,7 +747,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html">Docs v3.0.10 (stable)</a> &raquo;</li>
+      <li><a href="../../index.html">Docs v3.0.11 (stable)</a> &raquo;</li>
       
           <li><a href="../../setup.html">Setup</a> &raquo;</li>
       
@@ -909,11 +909,29 @@ code maintenance tasks or building the documentation.</p>
 <p class="last">Configure option: <code class="docutils literal"><span class="pre">--with-perl</span></code></p>
 </td>
 </tr>
+<tr class="row-even"><td><a class="reference external" href="https://metacpan.org/pod/Pod::POM::View::Restructured">perl(Pod::POM::View::Restructured)</a></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Perl library to generate man pages.  This has to be available to the system-wide perl interpreter, found by <code class="docutils literal"><span class="pre">which</span></code>:  <code class="docutils literal"><span class="pre">./configure</span> <span class="pre">--with-perl</span></code> is not honoured.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference external" href="https://www.sphinx-doc.org/">python(Sphinx)</a></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Python library needed for building the documentation</td>
+</tr>
 <tr class="row-even"><td><a class="reference external" href="http://www.valgrind.org/">valgrind</a></td>
 <td>valgrind</td>
 <td>valgrind</td>
 <td>no</td>
 <td>Performance and memory testing.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference external" href="https://github.com/ConorOG/xxd/">xxd</a></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>For rebuilding the _js.h files, for CalDAV and CardDAV support.</td>
 </tr>
 </tbody>
 </table>
@@ -943,14 +961,14 @@ code maintenance tasks or building the documentation.</p>
 <td>yes</td>
 <td>Cyrus SASL package that ships the library required to pass Cyrus IMAP&#8217;s PLAIN authentication unit tests.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference external" href=":ref:`CyrusSASL&lt;cyrussasl:sasl-index`">Cyrus SASL MD5</a></td>
+<tr class="row-odd"><td><a class="reference external" href=":ref:`CyrusSASL&lt;cyrussasl:sasl-index&gt;`">Cyrus SASL MD5</a></td>
 <td>libsasl2-modules</td>
 <td>cyrus-sasl-md5</td>
 <td>yes</td>
 <td>Cyrus SASL library required to pass Cyrus IMAP&#8217;s DIGEST-MD5
 authentication unit tests</td>
 </tr>
-<tr class="row-even"><td><a class="reference external" href=":ref:`CyrusSASL&lt;cyrussasl:sasl-index`">sasl binaries</a></td>
+<tr class="row-even"><td><a class="reference external" href=":ref:`CyrusSASL&lt;cyrussasl:sasl-index&gt;`">sasl binaries</a></td>
 <td>sasl2-bin</td>
 <td>sasl2-bin</td>
 <td>no</td>
@@ -1037,7 +1055,7 @@ it as the backend for its databases.</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><a class="reference external" href="http://freeassociation.sourceforge.net/">libical</a></td>
+<tr class="row-even"><td><a class="reference external" href="https://github.com/libical/libical/">libical</a></td>
 <td>libical-dev</td>
 <td>libical-devel</td>
 <td>no</td>
@@ -1080,13 +1098,19 @@ known to ship outdated <strong>libical</strong> packages versions 0.43 and
 <td>no</td>
 <td>Used if you&#8217;re installing SSL certificates</td>
 </tr>
-<tr class="row-odd"><td><a class="reference external" href="http://net-snmp.sourceforge.net/">net-snmp</a></td>
+<tr class="row-odd"><td><a class="reference external" href="https://www.clamav.net/">ClamAV</a></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Used by <strong>cyr_virusscan</strong>.</td>
+</tr>
+<tr class="row-even"><td><a class="reference external" href="http://net-snmp.sourceforge.net/">net-snmp</a></td>
 <td>libsnmp-dev</td>
 <td>net-snmp-devel</td>
 <td>no</td>
 <td>version 4.2 or higher</td>
 </tr>
-<tr class="row-even"><td><a class="reference external" href="http://www.openldap.org/">openldap</a></td>
+<tr class="row-odd"><td><a class="reference external" href="http://www.openldap.org/">openldap</a></td>
 <td>libldap2-dev</td>
 <td>openldap-devel</td>
 <td>no</td>
@@ -1097,23 +1121,41 @@ membership.</p>
 <p class="last">Configure option: <code class="docutils literal"><span class="pre">--with-ldap</span></code></p>
 </td>
 </tr>
-<tr class="row-odd"><td><a class="reference external" href="ftp://ftp.porcupine.org/pub/security/index.html">tcp_wrappers</a></td>
+<tr class="row-even"><td><a class="reference external" href="ftp://ftp.porcupine.org/pub/security/index.html">tcp_wrappers</a></td>
 <td>tcp_wrappers</td>
 <td>xx</td>
 <td>no</td>
 <td>&nbsp;</td>
 </tr>
-<tr class="row-even"><td><a class="reference external" href="http://www.xfig.org/">transfig</a></td>
+<tr class="row-odd"><td><a class="reference external" href="http://www.xfig.org/">transfig</a></td>
 <td>transfig</td>
 <td>xx</td>
 <td>no</td>
-<td>&nbsp;</td>
+<td>also known as fig2dev</td>
 </tr>
-<tr class="row-odd"><td><a class="reference external" href="http://zlib.net/">zlib</a></td>
+<tr class="row-even"><td><a class="reference external" href="http://www.pcre.org/">pcre</a></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>PCRE 1 (or 8) - for regular expression matching</td>
+</tr>
+<tr class="row-odd"><td><a class="reference external" href="https://metacpan.org/pod/Term::ReadLine">perl(Term::ReadLine)</a></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Perl library needed by cyradm</td>
+</tr>
+<tr class="row-even"><td><a class="reference external" href="http://zlib.net/">zlib</a></td>
 <td>zlib1g-dev</td>
 <td>zlib-devel</td>
 <td>no</td>
 <td>Compression support for httpd</td>
+</tr>
+<tr class="row-odd"><td><a class="reference external" href="https://github.com/google/brotli">libbrotli</a></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>Brotli compression support for httpd</td>
 </tr>
 <tr class="row-even"><td><a class="reference external" href="https://nghttp2.org/">nghttp2</a></td>
 <td>libnghttp2-dev</td>
@@ -1176,12 +1218,12 @@ via configure.</p>
 <div class="section" id="murder">
 <h4>Murder<a class="headerlink" href="#murder" title="Permalink to this headline">¶</a></h4>
 <blockquote>
-<div><code class="docutils literal"><span class="pre">`./configure</span> <span class="pre">--enable-murder</span></code></div></blockquote>
+<div><code class="docutils literal"><span class="pre">./configure</span> <span class="pre">--enable-murder</span></code></div></blockquote>
 </div>
 <div class="section" id="replication">
 <h4>Replication<a class="headerlink" href="#replication" title="Permalink to this headline">¶</a></h4>
 <blockquote>
-<div><code class="docutils literal"><span class="pre">`./configure</span> <span class="pre">--enable-replication</span></code></div></blockquote>
+<div><code class="docutils literal"><span class="pre">./configure</span> <span class="pre">--enable-replication</span></code></div></blockquote>
 </div>
 </div>
 <div class="section" id="compile">
@@ -1243,7 +1285,7 @@ version, operating system and affected libraries.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on Jan 24 2018
+        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on May 27 2019
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1263,7 +1305,7 @@ version, operating system and affected libraries.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'3.0.10 (stable)',
+            VERSION:'3.0.11 (stable)',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

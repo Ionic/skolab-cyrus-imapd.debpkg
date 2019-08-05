@@ -493,6 +493,12 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* Path to 'rm' binary */
+#undef RM_BIN
+
+/* Path to 'rsync' binary */
+#undef RSYNC_BIN
+
 /* ShapeLib Version */
 #undef SHAPELIB_VERSION
 

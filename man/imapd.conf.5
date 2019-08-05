@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "IMAPD.CONF" "5" "May 27, 2019" "3.0.10" "Cyrus IMAP"
+.TH "IMAPD.CONF" "5" "July 30, 2019" "3.0.11" "Cyrus IMAP"
 .SH NAME
 imapd.conf \- Cyrus IMAP documentation
 .
@@ -2425,7 +2425,7 @@ folder.
 When set, the Cyrus NNTP server will add the header(s) specified in
 the \fBnewsaddheaders\fP option to each incoming usenet article.
 The added header(s) will contain email delivery addresses
-corresponding to each relevent newsgroup.  If not set, no headers
+corresponding to each relevant newsgroup.  If not set, no headers
 are added to usenet articles.
 .UNINDENT
 .UNINDENT
@@ -3131,7 +3131,7 @@ of no value means search "forever" until other timeouts.
 .INDENT 3.5
 When searching, should diacriticals be stripped from the search
 terms.  The default is "true", a search for "hav" will match
-"Håvard".  This is not \fI\%RFC 5051\fP complient, but it backwards
+"Håvard".  This is not \fI\%RFC 5051\fP compliant, but it backwards
 compatible, and may be preferred by some sites.
 .UNINDENT
 .UNINDENT
@@ -4009,7 +4009,7 @@ default.  A value of 0 will disable session caching.
 .INDENT 0.0
 .INDENT 3.5
 A list of SSL/TLS versions to not disable. Cyrus IMAP SSL/TLS starts
-with all protocols, and substracts protocols not in this list. Newer
+with all protocols, and subtracts protocols not in this list. Newer
 versions of SSL/TLS will need to be added here to allow them to get
 disabled.
 .UNINDENT

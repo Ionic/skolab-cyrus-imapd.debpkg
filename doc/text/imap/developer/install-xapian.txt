@@ -38,6 +38,15 @@ Then follow on with the Cyrus compilation instructions, adding "--
 enable-xapian" to the flags to "./configure".
 
 
+Additional dependencies required for Cyrus with Xapian support
+==============================================================
+
+When building Cyrus with Xapian support enabled, the following
+additional packages are required:
+
+* rsync (used when compacting databases)
+
+
 Configuring Xapian
 ==================
 

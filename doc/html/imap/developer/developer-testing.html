@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Developer Test Environment &mdash; Cyrus IMAP 3.0.10 (stable) documentation</title>
+  <title>Developer Test Environment &mdash; Cyrus IMAP 3.0.11 (stable) documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.0.10 (stable) documentation" href="../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.0.11 (stable) documentation" href="../../index.html"/>
         <link rel="up" title="IMAP Developer Guide" href="../developer.html"/>
         <link rel="next" title="Tips for Hacking on Cyrus" href="developer-tips.html"/>
         <link rel="prev" title="GitHub guide" href="github-guide.html"/> 
@@ -747,7 +747,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html">Docs v3.0.10 (stable)</a> &raquo;</li>
+      <li><a href="../../index.html">Docs v3.0.11 (stable)</a> &raquo;</li>
       
           <li><a href="../../developers.html">Developers</a> &raquo;</li>
       
@@ -786,14 +786,14 @@ Persian Empire.  So that&#8217;s kinda cool.</p>
 </div></blockquote>
 </li>
 <li><p class="first">Install dependencies</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>sudo apt-get install libtest-unit-perl libconfig-inifiles-perl <span class="se">\</span>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>sudo apt-get install libanyevent-perl libtest-unit-perl libconfig-inifiles-perl <span class="se">\</span>
     libdatetime-perl libbsd-resource-perl libxml-generator-perl <span class="se">\</span>
     libencode-imaputf7-perl libio-stringy-perl libnews-nntpclient-perl <span class="se">\</span>
-    libfile-chdir-perl libnet-server-perl libunix-syslog-perl <span class="se">\</span>
+    libfile-chdir-perl libfile-libmagic-perl libnet-server-perl libunix-syslog-perl <span class="se">\</span>
     libdata-uuid-perl libjson-xs-perl libdata-ical-perl libjson-perl <span class="se">\</span>
     libdatetime-format-ical-perl libtext-levenshteinxs-perl <span class="se">\</span>
     libmime-types-perl libdatetime-format-iso8601-perl libcal-dav-perl <span class="se">\</span>
-    libclone-perl
+    libclone-perl libstring-crc32-perl libnet-ldap-server-perl
 </pre></div>
 </div>
 <p>The quickest option for the rest is installing via CPAN, but you could build
@@ -970,7 +970,7 @@ sudo -u cyrus ./testrunner.pl -f pretty -j <span class="m">8</span>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on Jan 24 2018
+        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on Jul 01 2019
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -990,7 +990,7 @@ sudo -u cyrus ./testrunner.pl -f pretty -j <span class="m">8</span>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'3.0.10 (stable)',
+            VERSION:'3.0.11 (stable)',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
