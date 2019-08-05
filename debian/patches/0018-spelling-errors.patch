@@ -1,0 +1,685 @@
+Description: spelling errors
+Author: Xavier Guimard <yadd@debian.org>
+Forwarded: https://github.com/cyrusimap/cyrus-imapd/issues/2842
+Last-Update: 2019-08-05
+
+--- a/doc/examples/cyrus_conf/murder-backend.conf
++++ b/doc/examples/cyrus_conf/murder-backend.conf
+@@ -5,7 +5,7 @@
+   recover       cmd="ctl_cyrusdb -r"
+ 
+   # this is useful on backend nodes of a Murder cluster it causes the
+-  # backend to syncronize its mailbox list with the mupdate master upon
++  # backend to synchronize its mailbox list with the mupdate master upon
+   # startup
+   mupdatepush   cmd="ctl_mboxlist -m"
+ }
+--- a/doc/html/_sources/imap/download/release-notes/2.2/2.2.x.txt
++++ b/doc/html/_sources/imap/download/release-notes/2.2/2.2.x.txt
+@@ -70,12 +70,12 @@
+ Changes to the Cyrus IMAP Server since 2.2.5
+ 
+ *   Fix a bug in the proxy code where a backend connection might get closed twice
+-*   Improved consistancy checking in chk_cyrus
++*   Improved consistency checking in chk_cyrus
+ *   Fix segfault in APPEND code
+ *   Fix a bug with an interaction between sieve and unixhierarchysep
+ *   Fix a file descriptor leak in the quotadb code
+ *   Fix a triggered assertation in service-thread services
+-*   Add a number of internal consistancy checks to the skiplist code
++*   Add a number of internal consistency checks to the skiplist code
+ *   Allow mbpath to handle virtual domains
+ *   Fix various MANAGESIEVE client authentication issues
+ *   Other minor fixes
+@@ -143,7 +143,7 @@
+ 
+ Changes to the Cyrus IMAP Server since 2.1.x
+ 
+-*   There have been extensive performance and consistancy changes to the configuration subsystem. This will both ensure greater consistancy between the documentation and the code, as well as a more standard format for specifing service-specific configuration options in imapd.conf. Important changes are detailed here:
++*   There have been extensive performance and consistency changes to the configuration subsystem. This will both ensure greater consistency between the documentation and the code, as well as a more standard format for specifing service-specific configuration options in imapd.conf. Important changes are detailed here:
+ *       The tls_[service]_* configuration options have been removed. Now use [servicename]_tls_*, where servicename is the service identifier from cyrus.conf for that particular process.
+ *       Administrative groups (e.g. admins and lmtp_admins) no longer union, service groups completely override the generic group.
+ *       lmtp_allowplaintext is no longer a defined parameter and must be specified using the service name of your lmtp process if you require a specific value
+--- a/doc/html/_sources/imap/reference/admin/murder/murder-installation.txt
++++ b/doc/html/_sources/imap/reference/admin/murder/murder-installation.txt
+@@ -170,7 +170,7 @@
+     If somehow a mailbox exists on two (or more) backend servers, each
+     time one of them synchronizes its database that backend server will
+     become authoritative. Though this should not happen during normal
+-    operation of the murder (because of the consistancy guarantees of
++    operation of the murder (because of the consistency guarantees of
+     the MUPDATE protocol, and the fact that mailbox operations are
+     denied if the mupdate master is down), it is possible when first
+     creating the mupdate database or when bringing a new backend server
+--- a/doc/html/_sources/imap/reference/manpages/configs/imapd.conf.txt
++++ b/doc/html/_sources/imap/reference/manpages/configs/imapd.conf.txt
+@@ -2328,7 +2328,7 @@
+ 
+         Default "options" field for the mailbox on create.  You'll want to know
+         what you're doing before setting this, but it can apply some default
+-        annotations like duplicate supression 
++        annotations like duplicate suppression 
+ 
+     .. endblob mailbox_default_options
+ 
+--- a/doc/html/_sources/imap/reference/manpages/systemcommands/chk_cyrus.txt
++++ b/doc/html/_sources/imap/reference/manpages/systemcommands/chk_cyrus.txt
+@@ -61,7 +61,7 @@
+ 
+ ..
+ 
+-        Perform consistancy checks on *default* partition.
++        Perform consistency checks on *default* partition.
+ 
+ .. parsed-literal::
+ 
+@@ -69,7 +69,7 @@
+ 
+ ..
+ 
+-        Perform consistancy checks on *default* partition using specified
++        Perform consistency checks on *default* partition using specified
+         configuration file.
+ 
+ .. parsed-literal::
+@@ -78,7 +78,7 @@
+ 
+ ..
+ 
+-        Perform consistancy checks on mailbox *user.marysmith*.
++        Perform consistency checks on mailbox *user.marysmith*.
+ 
+ See Also
+ ========
+--- a/doc/html/_sources/imap/reference/manpages/systemcommands/ctl_mboxlist.txt
++++ b/doc/html/_sources/imap/reference/manpages/systemcommands/ctl_mboxlist.txt
+@@ -151,7 +151,7 @@
+         Synchronize our mailboxes database with the MUPDATE server.  (One may
+         commonly put a command like this into the **START** section of
+         :cyrusman:`cyrus.conf(5)` on backend nodes of a Murder cluster to cause
+-        the backend to syncronize its mailbox list with the mupdate master upon
++        the backend to synchronize its mailbox list with the mupdate master upon
+         startup).
+ 
+ .. only:: html
+--- a/doc/html/_sources/imap/reference/manpages/systemcommands/reconstruct.txt
++++ b/doc/html/_sources/imap/reference/manpages/systemcommands/reconstruct.txt
+@@ -201,7 +201,7 @@
+ ..
+ 
+         Recursively reconstruct all mailboxes within the
+-        *tech.support.Archive* hierarchy with names begining with '2',
++        *tech.support.Archive* hierarchy with names beginning with '2',
+         restoring any directories containing ``cyrus.header``
+         files.
+ 
+--- a/doc/html/_sources/imap/reference/manpages/systemcommands/restore.txt
++++ b/doc/html/_sources/imap/reference/manpages/systemcommands/restore.txt
+@@ -55,7 +55,7 @@
+ Selected mailboxes will have their messages restored to a mailbox of the same
+ name, which will be created if necessary.  Individually-selected messages will
+ be restored to the mailboxes in which they previously existed.  In both cases
+-the **-M** option can be used to overrride the destination mailbox (see below),
++the **-M** option can be used to override the destination mailbox (see below),
+ but note the consequences of doing this when multiple mailbox objects have
+ been specified, or when the **-r** option is in use.
+ 
+--- a/doc/html/imap/download/release-notes/2.2/2.2.x.html
++++ b/doc/html/imap/download/release-notes/2.2/2.2.x.html
+@@ -836,12 +836,12 @@
+ <p>Changes to the Cyrus IMAP Server since 2.2.5</p>
+ <ul class="simple">
+ <li>Fix a bug in the proxy code where a backend connection might get closed twice</li>
+-<li>Improved consistancy checking in chk_cyrus</li>
++<li>Improved consistency checking in chk_cyrus</li>
+ <li>Fix segfault in APPEND code</li>
+ <li>Fix a bug with an interaction between sieve and unixhierarchysep</li>
+ <li>Fix a file descriptor leak in the quotadb code</li>
+ <li>Fix a triggered assertation in service-thread services</li>
+-<li>Add a number of internal consistancy checks to the skiplist code</li>
++<li>Add a number of internal consistency checks to the skiplist code</li>
+ <li>Allow mbpath to handle virtual domains</li>
+ <li>Fix various MANAGESIEVE client authentication issues</li>
+ <li>Other minor fixes</li>
+@@ -909,7 +909,7 @@
+ </ul>
+ <p>Changes to the Cyrus IMAP Server since 2.1.x</p>
+ <ul class="simple">
+-<li>There have been extensive performance and consistancy changes to the configuration subsystem. This will both ensure greater consistancy between the documentation and the code, as well as a more standard format for specifing service-specific configuration options in imapd.conf. Important changes are detailed here:</li>
++<li>There have been extensive performance and consistency changes to the configuration subsystem. This will both ensure greater consistency between the documentation and the code, as well as a more standard format for specifing service-specific configuration options in imapd.conf. Important changes are detailed here:</li>
+ <li>The tls_[service]_* configuration options have been removed. Now use [servicename]_tls_*, where servicename is the service identifier from cyrus.conf for that particular process.</li>
+ <li>Administrative groups (e.g. admins and lmtp_admins) no longer union, service groups completely override the generic group.</li>
+ <li>lmtp_allowplaintext is no longer a defined parameter and must be specified using the service name of your lmtp process if you require a specific value</li>
+@@ -996,4 +996,4 @@
+ 
+ 
+ </body>
+-</html>
+\ No newline at end of file
++</html>
+--- a/doc/html/imap/reference/admin/murder/murder-installation.html
++++ b/doc/html/imap/reference/admin/murder/murder-installation.html
+@@ -926,7 +926,7 @@
+ <p class="last">If somehow a mailbox exists on two (or more) backend servers, each
+ time one of them synchronizes its database that backend server will
+ become authoritative. Though this should not happen during normal
+-operation of the murder (because of the consistancy guarantees of
++operation of the murder (because of the consistency guarantees of
+ the MUPDATE protocol, and the fact that mailbox operations are
+ denied if the mupdate master is down), it is possible when first
+ creating the mupdate database or when bringing a new backend server
+@@ -1304,4 +1304,4 @@
+ 
+ 
+ </body>
+-</html>
+\ No newline at end of file
++</html>
+--- a/doc/html/imap/reference/manpages/configs/imapd.conf.html
++++ b/doc/html/imap/reference/manpages/configs/imapd.conf.html
+@@ -1935,7 +1935,7 @@
+ <blockquote>
+ <div>Default &#8220;options&#8221; field for the mailbox on create.  You&#8217;ll want to know
+ what you&#8217;re doing before setting this, but it can apply some default
+-annotations like duplicate supression</div></blockquote>
++annotations like duplicate suppression</div></blockquote>
+ <p><code class="docutils literal"><span class="pre">mailbox_initial_flags:</span></code> &lt;none&gt;</p>
+ <blockquote>
+ <div>space-separated list of permanent flags which will be pre-set in every
+@@ -3245,4 +3245,4 @@
+ 
+ 
+ </body>
+-</html>
+\ No newline at end of file
++</html>
+--- a/doc/html/imap/reference/manpages/systemcommands/chk_cyrus.html
++++ b/doc/html/imap/reference/manpages/systemcommands/chk_cyrus.html
+@@ -817,18 +817,18 @@
+ <strong>chk_cyrus -P</strong> <em>default</em>
+ </pre>
+ <blockquote>
+-<div>Perform consistancy checks on <em>default</em> partition.</div></blockquote>
++<div>Perform consistency checks on <em>default</em> partition.</div></blockquote>
+ <pre class="literal-block">
+ <strong>chk_cyrus -C</strong> <em>/usr/local/etc/imapd-slot1.conf</em> <strong>-P</strong> <em>default</em>
+ </pre>
+ <blockquote>
+-<div>Perform consistancy checks on <em>default</em> partition using specified
++<div>Perform consistency checks on <em>default</em> partition using specified
+ configuration file.</div></blockquote>
+ <pre class="literal-block">
+ <strong>chk_cyrus -M</strong> <em>user.marysmith</em>
+ </pre>
+ <blockquote>
+-<div>Perform consistancy checks on mailbox <em>user.marysmith</em>.</div></blockquote>
++<div>Perform consistency checks on mailbox <em>user.marysmith</em>.</div></blockquote>
+ </div>
+ <div class="section" id="see-also">
+ <h2>See Also<a class="headerlink" href="#see-also" title="Permalink to this headline">¶</a></h2>
+@@ -905,4 +905,4 @@
+ 
+ 
+ </body>
+-</html>
+\ No newline at end of file
++</html>
+--- a/doc/html/imap/reference/manpages/systemcommands/ctl_mboxlist.html
++++ b/doc/html/imap/reference/manpages/systemcommands/ctl_mboxlist.html
+@@ -914,7 +914,7 @@
+ <div>Synchronize our mailboxes database with the MUPDATE server.  (One may
+ commonly put a command like this into the <strong>START</strong> section of
+ <a class="reference internal" href="../configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a> on backend nodes of a Murder cluster to cause
+-the backend to syncronize its mailbox list with the mupdate master upon
++the backend to synchronize its mailbox list with the mupdate master upon
+ startup).</div></blockquote>
+ <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">START</span> <span class="p">{</span>
+     <span class="c1">##</span>
+@@ -1030,4 +1030,4 @@
+ 
+ 
+ </body>
+-</html>
+\ No newline at end of file
++</html>
+--- a/doc/html/imap/reference/manpages/systemcommands/reconstruct.html
++++ b/doc/html/imap/reference/manpages/systemcommands/reconstruct.html
+@@ -976,7 +976,7 @@
+ </pre>
+ <blockquote>
+ <div>Recursively reconstruct all mailboxes within the
+-<em>tech.support.Archive</em> hierarchy with names begining with &#8216;2&#8217;,
++<em>tech.support.Archive</em> hierarchy with names beginning with &#8216;2&#8217;,
+ restoring any directories containing <code class="docutils literal"><span class="pre">cyrus.header</span></code>
+ files.</div></blockquote>
+ <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">tech</span><span class="o">.</span><span class="n">support</span><span class="o">.</span><span class="n">Archive</span><span class="o">.</span><span class="mi">2001</span>
+@@ -1097,4 +1097,4 @@
+ 
+ 
+ </body>
+-</html>
+\ No newline at end of file
++</html>
+--- a/doc/html/imap/reference/manpages/systemcommands/restore.html
++++ b/doc/html/imap/reference/manpages/systemcommands/restore.html
+@@ -805,7 +805,7 @@
+ <p>Selected mailboxes will have their messages restored to a mailbox of the same
+ name, which will be created if necessary.  Individually-selected messages will
+ be restored to the mailboxes in which they previously existed.  In both cases
+-the <strong>-M</strong> option can be used to overrride the destination mailbox (see below),
++the <strong>-M</strong> option can be used to override the destination mailbox (see below),
+ but note the consequences of doing this when multiple mailbox objects have
+ been specified, or when the <strong>-r</strong> option is in use.</p>
+ <p>Mailboxes that are created during the restoration process will have their ACL
+@@ -1080,4 +1080,4 @@
+ 
+ 
+ </body>
+-</html>
+\ No newline at end of file
++</html>
+--- a/doc/legacy/changes.html
++++ b/doc/legacy/changes.html
+@@ -1289,12 +1289,12 @@
+ <ul>
+ <li>Fix a bug in the proxy code where a backend connection might get closed
+ twice</li>
+-<li>Improved consistancy checking in <tt>chk_cyrus</tt></li>
++<li>Improved consistency checking in <tt>chk_cyrus</tt></li>
+ <li>Fix segfault in APPEND code</li>
+ <li>Fix a bug with an interaction between sieve and unixhierarchysep</li>
+ <li>Fix a file descriptor leak in the quotadb code</li>
+ <li>Fix a triggered assertation in service-thread services</li>
+-<li>Add a number of internal consistancy checks to the skiplist code</li>
++<li>Add a number of internal consistency checks to the skiplist code</li>
+ <li>Allow <tt>mbpath</tt> to handle virtual domains</li>
+ <li>Fix various MANAGESIEVE client authentication issues</li>
+ <li>Other minor fixes</li>
+@@ -1409,8 +1409,8 @@
+ <h1>Changes to the Cyrus IMAP Server since 2.1.x</h1>
+ 
+ <ul>
+-<li>There have been extensive performance and consistancy changes to
+-the configuration subsystem.  This will both ensure greater consistancy
++<li>There have been extensive performance and consistency changes to
++the configuration subsystem.  This will both ensure greater consistency
+ between the documentation and the code, as well as a more standard format
+ for specifing service-specific configuration options in imapd.conf.  Important
+ changes are detailed here:
+--- a/doc/legacy/install-murder.html
++++ b/doc/legacy/install-murder.html
+@@ -146,7 +146,7 @@
+ <b>Warning</b>: If somehow a mailbox exists on two (or more) backend servers,
+ each time one of them synchronizes its database that backend server will
+ become authoritative.  Though this should not happen during normal operation
+-of the murder (because of the consistancy guarantees of the MUPDATE protocol,
++of the murder (because of the consistency guarantees of the MUPDATE protocol,
+ and the fact that mailbox operations are denied if the mupdate master is down),
+ it <b>is</b> possible when first creating the mupdate database or
+ when bringing a new backend server into the murder.
+@@ -243,7 +243,7 @@
+ (with no mailboxes existing on the same server), it is not a big deal
+ to resync the mupdate master using <tt>ctl_mboxlist -m</tt>.  If two servers
+ do have the same mailbox, this will need to be resolved before database
+-consistancy can be guranteed.</p>
++consistency can be guranteed.</p>
+ <h3>Moving Mailboxes between backends</h3>
+ <p>There is currently no 100% foolproof way to do this, however, if you issue
+ a rename command to a frontend (as you would to move a mailbox between partitions),
+--- a/doc/text/imap/download/release-notes/2.2/2.2.x.txt
++++ b/doc/text/imap/download/release-notes/2.2/2.2.x.txt
+@@ -123,7 +123,7 @@
+ * Fix a bug in the proxy code where a backend connection might get
+   closed twice
+ 
+-* Improved consistancy checking in chk_cyrus
++* Improved consistency checking in chk_cyrus
+ 
+ * Fix segfault in APPEND code
+ 
+@@ -133,7 +133,7 @@
+ 
+ * Fix a triggered assertation in service-thread services
+ 
+-* Add a number of internal consistancy checks to the skiplist code
++* Add a number of internal consistency checks to the skiplist code
+ 
+ * Allow mbpath to handle virtual domains
+ 
+@@ -284,9 +284,9 @@
+ 
+ Changes to the Cyrus IMAP Server since 2.1.x
+ 
+-* There have been extensive performance and consistancy changes to
++* There have been extensive performance and consistency changes to
+   the configuration subsystem. This will both ensure greater
+-  consistancy between the documentation and the code, as well as a
++  consistency between the documentation and the code, as well as a
+   more standard format for specifing service-specific configuration
+   options in imapd.conf. Important changes are detailed here:
+ 
+--- a/doc/text/imap/reference/admin/murder/murder-installation.txt
++++ b/doc/text/imap/reference/admin/murder/murder-installation.txt
+@@ -174,7 +174,7 @@
+   servers, each time one of them synchronizes its database that
+   backend server will become authoritative. Though this should not
+   happen during normal operation of the murder (because of the
+-  consistancy guarantees of the MUPDATE protocol, and the fact that
++  consistency guarantees of the MUPDATE protocol, and the fact that
+   mailbox operations are denied if the mupdate master is down), it is
+   possible when first creating the mupdate database or when bringing a
+   new backend server into the murder.
+--- a/doc/text/imap/reference/manpages/configs/imapd.conf.txt
++++ b/doc/text/imap/reference/manpages/configs/imapd.conf.txt
+@@ -1452,7 +1452,7 @@
+ 
+       Default "options" field for the mailbox on create.  You'll want
+       to know what you're doing before setting this, but it can apply
+-      some default annotations like duplicate supression
++      some default annotations like duplicate suppression
+ 
+    "mailbox_initial_flags:" <none>
+ 
+--- a/doc/text/imap/reference/manpages/systemcommands/chk_cyrus.txt
++++ b/doc/text/imap/reference/manpages/systemcommands/chk_cyrus.txt
+@@ -50,16 +50,16 @@
+ 
+    **chk_cyrus -P** *default*
+ 
+-   Perform consistancy checks on *default* partition.
++   Perform consistency checks on *default* partition.
+ 
+    **chk_cyrus -C** */usr/local/etc/imapd-slot1.conf* **-P** *default*
+ 
+-   Perform consistancy checks on *default* partition using specified
++   Perform consistency checks on *default* partition using specified
+    configuration file.
+ 
+    **chk_cyrus -M** *user.marysmith*
+ 
+-   Perform consistancy checks on mailbox *user.marysmith*.
++   Perform consistency checks on mailbox *user.marysmith*.
+ 
+ 
+ See Also
+--- a/doc/text/imap/reference/manpages/systemcommands/ctl_mboxlist.txt
++++ b/doc/text/imap/reference/manpages/systemcommands/ctl_mboxlist.txt
+@@ -116,7 +116,7 @@
+    Synchronize our mailboxes database with the MUPDATE server.  (One
+    may commonly put a command like this into the **START** section of
+    cyrus.conf(5) on backend nodes of a Murder cluster to cause the
+-   backend to syncronize its mailbox list with the mupdate master upon
++   backend to synchronize its mailbox list with the mupdate master upon
+    startup).
+ 
+    **ctl_mboxlist -m -w**
+--- a/doc/text/imap/reference/manpages/systemcommands/reconstruct.txt
++++ b/doc/text/imap/reference/manpages/systemcommands/reconstruct.txt
+@@ -176,7 +176,7 @@
+    **reconstruct -r -f** *tech.support.Archive.2%*
+ 
+    Recursively reconstruct all mailboxes within the
+-   *tech.support.Archive* hierarchy with names begining with '2',
++   *tech.support.Archive* hierarchy with names beginning with '2',
+    restoring any directories containing "cyrus.header" files.
+ 
+    **reconstruct -r -f -u** *jsmith*
+--- a/doc/text/imap/reference/manpages/systemcommands/restore.txt
++++ b/doc/text/imap/reference/manpages/systemcommands/restore.txt
+@@ -52,7 +52,7 @@
+ the same name, which will be created if necessary.  Individually-
+ selected messages will be restored to the mailboxes in which they
+ previously existed.  In both cases the **-M** option can be used to
+-overrride the destination mailbox (see below), but note the
++override the destination mailbox (see below), but note the
+ consequences of doing this when multiple mailbox objects have been
+ specified, or when the **-r** option is in use.
+ 
+--- a/docsrc/imap/download/release-notes/2.2/2.2.x.rst
++++ b/docsrc/imap/download/release-notes/2.2/2.2.x.rst
+@@ -70,12 +70,12 @@
+ Changes to the Cyrus IMAP Server since 2.2.5
+ 
+ *   Fix a bug in the proxy code where a backend connection might get closed twice
+-*   Improved consistancy checking in chk_cyrus
++*   Improved consistency checking in chk_cyrus
+ *   Fix segfault in APPEND code
+ *   Fix a bug with an interaction between sieve and unixhierarchysep
+ *   Fix a file descriptor leak in the quotadb code
+ *   Fix a triggered assertation in service-thread services
+-*   Add a number of internal consistancy checks to the skiplist code
++*   Add a number of internal consistency checks to the skiplist code
+ *   Allow mbpath to handle virtual domains
+ *   Fix various MANAGESIEVE client authentication issues
+ *   Other minor fixes
+@@ -143,7 +143,7 @@
+ 
+ Changes to the Cyrus IMAP Server since 2.1.x
+ 
+-*   There have been extensive performance and consistancy changes to the configuration subsystem. This will both ensure greater consistancy between the documentation and the code, as well as a more standard format for specifing service-specific configuration options in imapd.conf. Important changes are detailed here:
++*   There have been extensive performance and consistency changes to the configuration subsystem. This will both ensure greater consistency between the documentation and the code, as well as a more standard format for specifing service-specific configuration options in imapd.conf. Important changes are detailed here:
+ *       The tls_[service]_* configuration options have been removed. Now use [servicename]_tls_*, where servicename is the service identifier from cyrus.conf for that particular process.
+ *       Administrative groups (e.g. admins and lmtp_admins) no longer union, service groups completely override the generic group.
+ *       lmtp_allowplaintext is no longer a defined parameter and must be specified using the service name of your lmtp process if you require a specific value
+--- a/docsrc/imap/reference/admin/murder/murder-installation.rst
++++ b/docsrc/imap/reference/admin/murder/murder-installation.rst
+@@ -170,7 +170,7 @@
+     If somehow a mailbox exists on two (or more) backend servers, each
+     time one of them synchronizes its database that backend server will
+     become authoritative. Though this should not happen during normal
+-    operation of the murder (because of the consistancy guarantees of
++    operation of the murder (because of the consistency guarantees of
+     the MUPDATE protocol, and the fact that mailbox operations are
+     denied if the mupdate master is down), it is possible when first
+     creating the mupdate database or when bringing a new backend server
+--- a/docsrc/imap/reference/manpages/configs/imapd.conf.rst
++++ b/docsrc/imap/reference/manpages/configs/imapd.conf.rst
+@@ -2328,7 +2328,7 @@
+ 
+         Default "options" field for the mailbox on create.  You'll want to know
+         what you're doing before setting this, but it can apply some default
+-        annotations like duplicate supression 
++        annotations like duplicate suppression 
+ 
+     .. endblob mailbox_default_options
+ 
+--- a/docsrc/imap/reference/manpages/systemcommands/chk_cyrus.rst
++++ b/docsrc/imap/reference/manpages/systemcommands/chk_cyrus.rst
+@@ -61,7 +61,7 @@
+ 
+ ..
+ 
+-        Perform consistancy checks on *default* partition.
++        Perform consistency checks on *default* partition.
+ 
+ .. parsed-literal::
+ 
+@@ -69,7 +69,7 @@
+ 
+ ..
+ 
+-        Perform consistancy checks on *default* partition using specified
++        Perform consistency checks on *default* partition using specified
+         configuration file.
+ 
+ .. parsed-literal::
+@@ -78,7 +78,7 @@
+ 
+ ..
+ 
+-        Perform consistancy checks on mailbox *user.marysmith*.
++        Perform consistency checks on mailbox *user.marysmith*.
+ 
+ See Also
+ ========
+--- a/docsrc/imap/reference/manpages/systemcommands/ctl_mboxlist.rst
++++ b/docsrc/imap/reference/manpages/systemcommands/ctl_mboxlist.rst
+@@ -151,7 +151,7 @@
+         Synchronize our mailboxes database with the MUPDATE server.  (One may
+         commonly put a command like this into the **START** section of
+         :cyrusman:`cyrus.conf(5)` on backend nodes of a Murder cluster to cause
+-        the backend to syncronize its mailbox list with the mupdate master upon
++        the backend to synchronize its mailbox list with the mupdate master upon
+         startup).
+ 
+ .. only:: html
+--- a/docsrc/imap/reference/manpages/systemcommands/reconstruct.rst
++++ b/docsrc/imap/reference/manpages/systemcommands/reconstruct.rst
+@@ -201,7 +201,7 @@
+ ..
+ 
+         Recursively reconstruct all mailboxes within the
+-        *tech.support.Archive* hierarchy with names begining with '2',
++        *tech.support.Archive* hierarchy with names beginning with '2',
+         restoring any directories containing ``cyrus.header``
+         files.
+ 
+--- a/docsrc/imap/reference/manpages/systemcommands/restore.rst
++++ b/docsrc/imap/reference/manpages/systemcommands/restore.rst
+@@ -55,7 +55,7 @@
+ Selected mailboxes will have their messages restored to a mailbox of the same
+ name, which will be created if necessary.  Individually-selected messages will
+ be restored to the mailboxes in which they previously existed.  In both cases
+-the **-M** option can be used to overrride the destination mailbox (see below),
++the **-M** option can be used to override the destination mailbox (see below),
+ but note the consequences of doing this when multiple mailbox objects have
+ been specified, or when the **-r** option is in use.
+ 
+--- a/imap/chk_cyrus.c
++++ b/imap/chk_cyrus.c
+@@ -1,4 +1,4 @@
+-/* chk_cyrus.c: cyrus mailstore consistancy checker
++/* chk_cyrus.c: cyrus mailstore consistency checker
+  *
+  * Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
+  *
+--- a/lib/imapoptions
++++ b/lib/imapoptions
+@@ -1213,7 +1213,7 @@
+ { "mailbox_default_options", 0, INT }
+ /* Default "options" field for the mailbox on create.  You'll want to know
+    what you're doing before setting this, but it can apply some default
+-   annotations like duplicate supression */
++   annotations like duplicate suppression */
+ 
+ { "mailbox_initial_flags", NULL, STRING }
+ /* space-separated list of permanent flags which will be pre-set in every
+--- a/man/chk_cyrus.8
++++ b/man/chk_cyrus.8
+@@ -105,7 +105,7 @@
+ .fi
+ .INDENT 0.0
+ .INDENT 3.5
+-Perform consistancy checks on \fIdefault\fP partition.
++Perform consistency checks on \fIdefault\fP partition.
+ .UNINDENT
+ .UNINDENT
+ .sp
+@@ -114,7 +114,7 @@
+ .fi
+ .INDENT 0.0
+ .INDENT 3.5
+-Perform consistancy checks on \fIdefault\fP partition using specified
++Perform consistency checks on \fIdefault\fP partition using specified
+ configuration file.
+ .UNINDENT
+ .UNINDENT
+@@ -124,7 +124,7 @@
+ .fi
+ .INDENT 0.0
+ .INDENT 3.5
+-Perform consistancy checks on mailbox \fIuser.marysmith\fP\&.
++Perform consistency checks on mailbox \fIuser.marysmith\fP\&.
+ .UNINDENT
+ .UNINDENT
+ .SH SEE ALSO
+--- a/man/ctl_mboxlist.8
++++ b/man/ctl_mboxlist.8
+@@ -192,7 +192,7 @@
+ Synchronize our mailboxes database with the MUPDATE server.  (One may
+ commonly put a command like this into the \fBSTART\fP section of
+ cyrus.conf(5) on backend nodes of a Murder cluster to cause
+-the backend to syncronize its mailbox list with the mupdate master upon
++the backend to synchronize its mailbox list with the mupdate master upon
+ startup).
+ .UNINDENT
+ .UNINDENT
+--- a/man/imapd.conf.5
++++ b/man/imapd.conf.5
+@@ -2092,7 +2092,7 @@
+ .INDENT 3.5
+ Default "options" field for the mailbox on create.  You\(aqll want to know
+ what you\(aqre doing before setting this, but it can apply some default
+-annotations like duplicate supression
++annotations like duplicate suppression
+ .UNINDENT
+ .UNINDENT
+ .sp
+--- a/man/reconstruct.8
++++ b/man/reconstruct.8
+@@ -248,7 +248,7 @@
+ .INDENT 0.0
+ .INDENT 3.5
+ Recursively reconstruct all mailboxes within the
+-\fItech.support.Archive\fP hierarchy with names begining with \(aq2\(aq,
++\fItech.support.Archive\fP hierarchy with names beginning with \(aq2\(aq,
+ restoring any directories containing \fBcyrus.header\fP
+ files.
+ .UNINDENT
+--- a/man/restore.8
++++ b/man/restore.8
+@@ -101,7 +101,7 @@
+ Selected mailboxes will have their messages restored to a mailbox of the same
+ name, which will be created if necessary.  Individually\-selected messages will
+ be restored to the mailboxes in which they previously existed.  In both cases
+-the \fB\-M\fP option can be used to overrride the destination mailbox (see below),
++the \fB\-M\fP option can be used to override the destination mailbox (see below),
+ but note the consequences of doing this when multiple mailbox objects have
+ been specified, or when the \fB\-r\fP option is in use.
+ .sp
+--- a/perl/imap/IMAP/Shell.pm
++++ b/perl/imap/IMAP/Shell.pm
+@@ -1857,8 +1857,8 @@
+ 
+ Note that in the above example, the C<unixhierarchysep> setting in
+ imapd.conf is set to C<0>. When using the UNIX
+-hierarchy seperator, the C</> (forward slash) character would be
+-used as the hierarchy seperator, and the example would look as
++hierarchy separator, the C</> (forward slash) character would be
++used as the hierarchy separator, and the example would look as
+ follows:
+ 
+ =item Example Usage with C<unixhierarchysep: 1>
+--- a/perl/sieve/managesieve/managesieve.xs
++++ b/perl/sieve/managesieve/managesieve.xs
+@@ -296,7 +296,7 @@
+            check if SASL mech list changed */
+         if (detect_mitm(obj, mechlist)) {
+             globalerr = "possible MITM attack: "
+-                "list of available SASL mechamisms changed";
++                "list of available SASL mechanisms changed";
+             free(ret);
+             free(mechlist);
+             XSRETURN_UNDEF;
+--- a/sieve/bc_generate.c
++++ b/sieve/bc_generate.c
+@@ -999,7 +999,7 @@
+                 jumploc = codep+4;
+                 retval->data[codep++].op = B_IF;
+ 
+-                /* begining of then  code */
++                /* beginning of then  code */
+                 jumpVal = bc_test_generate(jumploc,retval,c->u.i.t);
+                 if (jumpVal == -1)
+                     return -1;
+--- a/sieve/sieve_err.et
++++ b/sieve/sieve_err.et
+@@ -45,7 +45,7 @@
+    "Generic Sieve error"
+ 
+ ec SIEVE_NOT_FINALIZED,
+-   "Sieve interpretor not finalized"
++   "Sieve interpreter not finalized"
+ 
+ ec SIEVE_PARSE_ERROR,
+    "Parse error in Sieve script"
