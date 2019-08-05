@@ -37,6 +37,7 @@ Build-Depends: bison,
                perl,
                pkg-config,
                po-debconf,
+               rsync,
                sqlite3,
                transfig,
                unicode-data,
@@ -130,6 +131,7 @@ Pre-Depends: dpkg (>= 1.17.14~),
 Depends: cyrus-common (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
+Recommends: rsync
 Provides: imap-server
 Conflicts: imap-server
 Description: Cyrus mail system - IMAP support
