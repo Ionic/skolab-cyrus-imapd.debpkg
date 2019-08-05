@@ -85,7 +85,7 @@ General notes and hints:
    be shown to you before the upgrade, see the apt-listchanges package for more
    information.
 
- o QUOTAS ARE LIMITIED TO 2GB on some platforms.
+ o QUOTAS ARE LIMITED TO 2GB on some platforms.
    Be careful to not set quotas over that amount if your platform doesn't
    support the C datatype "long long". Things will break in very bad ways.
    Yes, it is a big glitch, and no, there are no easy workarounds.
