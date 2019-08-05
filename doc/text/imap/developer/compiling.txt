@@ -104,7 +104,18 @@ Developers only
 |                      |                 |                 |       | binary perl libraries. Needs version 5+.      |
 |                      |                 |                 |       | Configure option: "--with-perl"               |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
+| perl(Pod::POM::View  |                 |                 |       | Perl library to generate man pages.  This has |
+| ::Restructured)      |                 |                 |       | to be available to the system-wide perl       |
+|                      |                 |                 |       | interpreter, found by "which":  "./configure  |
+|                      |                 |                 |       | --with- perl" is not honoured.                |
++----------------------+-----------------+-----------------+-------+-----------------------------------------------+
+| python(Sphinx)       |                 |                 |       | Python library needed for building the        |
+|                      |                 |                 |       | documentation                                 |
++----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | valgrind             | valgrind        | valgrind        | no    | Performance and memory testing.               |
++----------------------+-----------------+-----------------+-------+-----------------------------------------------+
+| xxd                  |                 |                 |       | For rebuilding the _js.h files, for CalDAV    |
+|                      |                 |                 |       | and CardDAV support.                          |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 
 
@@ -207,6 +218,8 @@ Other
 +======================+=================+=================+=======+===============================================+
 | SSL certificates     | ssl-cert-dev    | mod_ssl         | no    | Used if you're installing SSL certificates    |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
+| ClamAV               |                 |                 |       | Used by **cyr_virusscan**.                    |
++----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | net-snmp             | libsnmp-dev     | net-snmp-devel  | no    | version 4.2 or higher                         |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | openldap             | libldap2-dev    | openldap-devel  | no    | Development headers to enable **ptloader** to |
@@ -218,9 +231,16 @@ Other
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | tcp_wrappers         | tcp_wrappers    | xx              | no    |                                               |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| transfig             | transfig        | xx              | no    |                                               |
+| transfig             | transfig        | xx              | no    | also known as fig2dev                         |
++----------------------+-----------------+-----------------+-------+-----------------------------------------------+
+| pcre                 |                 |                 |       | PCRE 1 (or 8) - for regular expression        |
+|                      |                 |                 |       | matching                                      |
++----------------------+-----------------+-----------------+-------+-----------------------------------------------+
+| perl(Term::ReadLine) |                 |                 |       | Perl library needed by cyradm                 |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | zlib                 | zlib1g-dev      | zlib-devel      | no    | Compression support for httpd                 |
++----------------------+-----------------+-----------------+-------+-----------------------------------------------+
+| libbrotli            |                 |                 |       | Brotli compression support for httpd          |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | nghttp2              | libnghttp2-dev  | libnghttp2-dev  | no    | HTTP/2 support for httpd                      |
 |                      |                 | el              |       |                                               |
@@ -280,13 +300,13 @@ CalDAV and CardDAV
 Murder
 ~~~~~~
 
-   "`./configure --enable-murder"
+   "./configure --enable-murder"
 
 
 Replication
 ~~~~~~~~~~~
 
-   "`./configure --enable-replication"
+   "./configure --enable-replication"
 
 
 Compile
