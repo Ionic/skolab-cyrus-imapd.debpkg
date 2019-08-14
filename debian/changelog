@@ -1,3 +1,13 @@
+cyrus-imapd (3.0.11-1) unstable; urgency=medium
+
+  * Back to unstable
+  * New upstream version 3.0.11 (Closes: #933163)
+  * Add spelling errors patch
+  * Refresh patches
+  * Add rsync in recommended dependencies
+
+ -- Xavier Guimard <yadd@debian.org>  Mon, 05 Aug 2019 07:12:47 +0200
+
 cyrus-imapd (3.0.10-1) experimental; urgency=medium
 
   [ Sébastien Delafond ]
