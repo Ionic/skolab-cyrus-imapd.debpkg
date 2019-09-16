@@ -6,7 +6,7 @@ source functions.sh
 _cassandaneclone
 #_cyrusbuild
 apt update
-apt install -y cyrus-imapd
+DEBIAN_FRONTEND=noninteractive apt install -y cyrus-imapd libdbi-perl
 _updatejmaptestsuite
 _cassandane
 retval=$?
