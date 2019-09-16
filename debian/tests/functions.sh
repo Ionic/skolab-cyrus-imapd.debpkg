@@ -103,6 +103,7 @@ function _cassandane {
     fi
 
     cp -af cassandane.ini.dockertests cassandane.ini
+    perl -i -pe 's|(?<=\[cyrus default\])|\nprefix = /usr/lib|' cassandane.ini
 
     retval=$(_shell ./testrunner.pl -f pretty -j 4 ${CASSANDANEOPTS})
 
