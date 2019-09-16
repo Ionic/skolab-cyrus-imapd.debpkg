@@ -1,0 +1,3 @@
+Tests: cyrus-docker
+Depends: ca-certificates, docker.io
+Restrictions: needs-root

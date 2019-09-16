@@ -46,6 +46,7 @@ Build-Depends: bison,
 Vcs-Git: https://salsa.debian.org/debian/cyrus-imapd.git
 Vcs-Browser: https://salsa.debian.org/debian/cyrus-imapd
 Homepage: https://www.cyrusimap.org/
+Testsuite: autopkgtest
 
 Package: cyrus-common
 Architecture: any
