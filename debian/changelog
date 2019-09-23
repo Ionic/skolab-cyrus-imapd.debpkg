@@ -1,3 +1,17 @@
+cyrus-imapd (3.0.11-2) UNRELEASED; urgency=medium
+
+  [ Sébastien Delafond ]
+  * autopkgtest:
+    + Add cyrus-docker test, based on cyrus.works setup
+    + Install libdbi-perl (FIXME: move to Dockerfile later)
+    + Add Dockerfile.sid, and adjust entrypoint and shell functions
+    + Switch cyrus-docker test to Dockerfile.sid
+    + Remove harmless stderr warnings, so autokpgtest doesn't think the entire run failed
+    + Sneak locally built packages into test container
+    + Add TODO.txt
+
+ -- Xavier Guimard <yadd@debian.org>  Mon, 23 Sep 2019 21:51:34 +0200
+
 cyrus-imapd (3.0.11-1) unstable; urgency=medium
 
   * Back to unstable
