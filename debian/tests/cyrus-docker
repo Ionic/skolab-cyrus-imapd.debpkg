@@ -5,7 +5,7 @@ set -e
 cd debian/tests
 
 # build image
-docker build --rm -t cyrus-test -f Dockerfile.jessie .
+docker build --rm -t cyrus-test -f Dockerfile.sid .
 
 # run it
 docker run --rm cyrus-test
