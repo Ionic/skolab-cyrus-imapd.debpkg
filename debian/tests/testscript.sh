@@ -5,15 +5,15 @@ source functions.sh
 #_cyrusclone
 [ -d /srv/cassandane.git ] || _cassandaneclone
 #_cyrusbuild
-apt update
+apt-get update
 # FIXME: move libdbi-perl into Dockerfile.jessie
-DEBIAN_FRONTEND=noninteractive apt install -y libdbi-perl
+DEBIAN_FRONTEND=noninteractive apt-get install -y libdbi-perl
 
 # FIXME: move libhttp-daemon-perl into Dockerfile.sid
-DEBIAN_FRONTEND=noninteractive apt install -y libhttp-daemon-perl
+DEBIAN_FRONTEND=noninteractive apt-get install -y libhttp-daemon-perl
 
 # FIXME: install package from autopkgtest
-DEBIAN_FRONTEND=noninteractive apt install -y cyrus-imapd
+DEBIAN_FRONTEND=noninteractive apt-get install -y cyrus-imapd
 
 _updatejmaptestsuite
 
