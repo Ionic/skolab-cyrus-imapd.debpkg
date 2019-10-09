@@ -1,0 +1,20 @@
+Description: mailbox: don't skip records with modseq == 0
+Author: Bron Gondwana <brong@fastmailteam.com>
+Origin: upstream, https://github.com/cyrusimap/cyrus-imapd/commit/02840505
+Bug: https://github.com/cyrusimap/cyrus-imapd/issues/2839
+Bug-Debian: https://bugs.debian.org/933163
+Forwarded: not-needed
+Reviewed-By: Xavier Guimard <yadd@debian.org>
+Last-Update: 2019-10-09
+
+--- a/imap/mailbox.c
++++ b/imap/mailbox.c
+@@ -6513,7 +6513,7 @@
+         const struct index_record *record = msg_record(iter->msg);
+         if (!record->uid) continue; /* can happen on damaged mailboxes */
+         if ((record->system_flags & iter->skipflags)) continue;
+-        if (record->modseq <= iter->changedsince) continue;
++        if (iter->changedsince && record->modseq <= iter->changedsince) continue;
+         return iter->msg;
+     }
+ 
