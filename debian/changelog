@@ -1,3 +1,10 @@
+cyrus-imapd (3.0.8-6+deb10u1) buster; urgency=medium
+
+  * Add patch to fix data loss on upgrade from versions ≤ 3.0.0
+    (Closes: #933163)
+
+ -- Xavier Guimard <yadd@debian.org>  Wed, 09 Oct 2019 22:38:07 +0200
+
 cyrus-imapd (3.0.8-6) unstable; urgency=medium
 
   [ Anthony Prades ]
