@@ -475,6 +475,10 @@ Sitemap
 
           * How are you planning on upgrading?
 
+            * Upgrade by replicating
+
+            * Upgrade in place
+
           * Do What As Who?
 
         * 2. Install new 3.0 Cyrus

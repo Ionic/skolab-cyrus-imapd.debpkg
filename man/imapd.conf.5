@@ -1,35 +1,8 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "IMAPD.CONF" "5" "July 30, 2019" "3.0.11" "Cyrus IMAP"
+.TH "IMAPD.CONF" "5" "November 15, 2019" "3.0.12" "Cyrus IMAP"
 .SH NAME
 imapd.conf \- Cyrus IMAP documentation
-.
-.nr rst2man-indent-level 0
-.
-.de1 rstReportMargin
-\\$1 \\n[an-margin]
-level \\n[rst2man-indent-level]
-level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
--
-\\n[rst2man-indent0]
-\\n[rst2man-indent1]
-\\n[rst2man-indent2]
-..
-.de1 INDENT
-.\" .rstReportMargin pre:
-. RS \\$1
-. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
-. nr rst2man-indent-level +1
-.\" .rstReportMargin post:
-..
-.de UNINDENT
-. RE
-.\" indent \\n[an-margin]
-.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
-.nr rst2man-indent-level -1
-.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
-.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
-..
 .
 .nr rst2man-indent-level 0
 .
@@ -3950,7 +3923,7 @@ Prefer the ciphers on the server side instead of client side.
 .INDENT 0.0
 .INDENT 3.5
 Path to a directory with CA certificates used to verify certificates
-offered when this server connects to other servers. This directory must
+offered by the server, when cyrus acts as client. This directory must
 have filenames with the hashed value of the certificates (see
 openssl(1)).
 .UNINDENT
@@ -3960,14 +3933,14 @@ openssl(1)).
 .INDENT 0.0
 .INDENT 3.5
 Path to a file containing CA certificates used to verify certificates
-offered when this server connects to other servers.
+offered by the server, when cyrus acts as client.
 .UNINDENT
 .UNINDENT
 .sp
 \fBtls_server_cert:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-File containing the certificate presented to clients.
+File containing the certificate, including the full chain, presented to clients.
 .UNINDENT
 .UNINDENT
 .sp
@@ -4005,7 +3978,7 @@ default.  A value of 0 will disable session caching.
 .UNINDENT
 .UNINDENT
 .sp
-\fBtls_versions:\fP tls1_0 tls1_1 tls1_2
+\fBtls_versions:\fP tls1_0 tls1_1 tls1_2 tls1_3
 .INDENT 0.0
 .INDENT 3.5
 A list of SSL/TLS versions to not disable. Cyrus IMAP SSL/TLS starts
@@ -4090,14 +4063,28 @@ occur in mailbox names.  The default switched in 3.0 from off to on.
 \fBvirtdomains:\fP off
 .INDENT 0.0
 .INDENT 3.5
-Enable virtual domain support.  If enabled, the user\(aqs domain will
-be determined by splitting a fully qualified userid at the last \(aq@\(aq
-or \(aq%\(aq symbol.  If the userid is unqualified, and the virtdomains
-option is set to "on", then the domain will be determined by doing
-a reverse lookup on the IP address of the incoming network
-interface, otherwise the user is assumed to be in the default
-domain (if set).
+Configure virtual domain support.
+.INDENT 0.0
+.TP
+.B off
+Cyrus does not know or care about domains. Only the local part of email
+addresses is ever considered.  This is not recommended for any deployment,
+but is currently the default.
+.TP
+.B userid
+The user\(aqs domain is determined by splitting a fully qualified userid at the
+last \(aq@\(aq or \(aq%\(aq symbol.  If the userid is unqualified, the \fIdefaultdomain\fP
+will be used.  This is the recommended configuration for all deployments.
+If you wish to provide calendaring services you must use this configuration.
+.TP
+.B on
+Fully qualified userids are respected, as per "userid".  Unqualified userids
+will have their domain determined by doing a reverse lookup on the IP address
+of the incoming network interface, or if no record is found, the
+\fIdefaultdomain\fP will be used.
+.sp
 Allowed values: \fIoff\fP, \fIuserid\fP, \fIon\fP
+.UNINDENT
 .UNINDENT
 .UNINDENT
 .sp

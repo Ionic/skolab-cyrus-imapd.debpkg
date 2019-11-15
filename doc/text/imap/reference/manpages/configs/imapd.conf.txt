@@ -2755,18 +2755,19 @@ FIELD DESCRIPTIONS
    "tls_server_ca_dir:" <none>
 
       Path to a directory with CA certificates used to verify
-      certificates offered when this server connects to other servers.
+      certificates offered by the server, when cyrus acts as client.
       This directory must have filenames with the hashed value of the
       certificates (see openssl(1)).
 
    "tls_server_ca_file:" <none>
 
       Path to a file containing CA certificates used to verify
-      certificates offered when this server connects to other servers.
+      certificates offered by the server, when cyrus acts as client.
 
    "tls_server_cert:" <none>
 
-      File containing the certificate presented to clients.
+      File containing the certificate, including the full chain,
+      presented to clients.
 
    "tls_server_key:" <none>
 
@@ -2790,7 +2791,7 @@ FIELD DESCRIPTIONS
       cached for later reuse.  The maximum value is 1440 (24 hours),
       the default.  A value of 0 will disable session caching.
 
-   "tls_versions:" tls1_0 tls1_1 tls1_2
+   "tls_versions:" tls1_0 tls1_1 tls1_2 tls1_3
 
       A list of SSL/TLS versions to not disable. Cyrus IMAP SSL/TLS
       starts with all protocols, and subtracts protocols not in this
@@ -2850,14 +2851,29 @@ FIELD DESCRIPTIONS
 
    "virtdomains:" off
 
-      Enable virtual domain support.  If enabled, the user's domain
-      will be determined by splitting a fully qualified userid at the
-      last '@' or '%' symbol.  If the userid is unqualified, and the
-      virtdomains option is set to "on", then the domain will be
-      determined by doing a reverse lookup on the IP address of the
-      incoming network interface, otherwise the user is assumed to be
-      in the default domain (if set). Allowed values: *off*, *userid*,
-      *on*
+      Configure virtual domain support.
+
+      off
+         Cyrus does not know or care about domains. Only the local
+         part of email addresses is ever considered.  This is not
+         recommended for any deployment, but is currently the default.
+
+      userid
+         The user's domain is determined by splitting a fully
+         qualified userid at the last '@' or '%' symbol.  If the
+         userid is unqualified, the *defaultdomain* will be used.
+         This is the recommended configuration for all deployments. If
+         you wish to provide calendaring services you must use this
+         configuration.
+
+      on
+         Fully qualified userids are respected, as per "userid".
+         Unqualified userids will have their domain determined by
+         doing a reverse lookup on the IP address of the incoming
+         network interface, or if no record is found, the
+         *defaultdomain* will be used.
+
+         Allowed values: *off*, *userid*, *on*
 
    "xbackup_enabled:" 0
 

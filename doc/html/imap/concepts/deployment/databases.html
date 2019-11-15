@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Databases &mdash; Cyrus IMAP 3.0.11 (stable) documentation</title>
+  <title>Databases &mdash; Cyrus IMAP 3.0.12 (stable) documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.0.11 (stable) documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.0.12 (stable) documentation" href="../../../index.html"/>
         <link rel="up" title="Configuration Guide" href="../deployment.html"/>
         <link rel="next" title="Mailbox Creation Distribution" href="mailbox_creation_distribution.html"/>
         <link rel="prev" title="Deployment Scenarios" href="deployment_scenarios.html"/> 
@@ -747,7 +747,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.0.11 (stable)</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.0.12 (stable)</a> &raquo;</li>
       
           <li><a href="../../../setup.html">Setup</a> &raquo;</li>
       
@@ -814,17 +814,17 @@ Cyrus to automatically convert the file to the new format.</p>
 <span class="n">Data</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">Type</span> <span class="n">Number</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">Partition</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">ACL</span> <span class="p">(</span><span class="n">space</span><span class="o">-</span><span class="n">separated</span> <span class="n">userid</span><span class="o">/</span><span class="n">rights</span> <span class="n">pairs</span><span class="p">)</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#flat">flat</a>, <a class="reference internal" href="#skiplist">skiplist</a>, <a class="reference internal" href="#sql">sql</a>, <a class="reference internal" href="#twoskip">twoskip</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
+<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#flat">flat</a>, <a class="reference internal" href="#skiplist">skiplist</a>, <a class="reference internal" href="#sql">sql</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
 </div>
 <div class="section" id="annotations-annotations-db">
 <span id="imap-concepts-deployment-db-annotations"></span><h3>Annotations (annotations.db)<a class="headerlink" href="#annotations-annotations-db" title="Permalink to this headline">¶</a></h3>
-<p>This database contains mailbox and server annotations. The database is indexed by mailbox name (empty for server annotations) + annotation name + userid (empty for shared annotations) and each data record contains the value size, value data, content-type of the data and timestamp of the record. The format is each record is as follows:</p>
+<p>This database contains mailbox and server annotations, including WebDAV properties. The database is indexed by mailbox name (empty for server annotations) + annotation name + userid (empty for shared annotations) and each data record contains the value size, value data, content-type of the data and timestamp of the record. The format is each record is as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Key</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">Mailbox</span> <span class="n">Name</span><span class="o">&gt;</span>\<span class="mi">0</span><span class="o">&lt;</span><span class="n">Annotation</span> <span class="n">Name</span><span class="o">&gt;</span>\<span class="mi">0</span><span class="o">&lt;</span><span class="n">Userid</span><span class="o">&gt;</span>\<span class="mi">0</span>
 
 <span class="n">Data</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">Value</span> <span class="n">Size</span> <span class="p">(</span><span class="mi">4</span> <span class="nb">bytes</span><span class="p">)</span><span class="o">&gt;&lt;</span><span class="n">Value</span><span class="o">&gt;</span>\<span class="mi">0</span><span class="o">&lt;</span><span class="n">Content</span><span class="o">-</span><span class="n">Type</span><span class="o">&gt;</span>\<span class="mi">0</span><span class="o">&lt;</span><span class="n">Timestamp</span> <span class="p">(</span><span class="mi">4</span> <span class="nb">bytes</span><span class="p">)</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>File type can be <a class="reference internal" href="#twoskip">twoskip</a>  (default), <a class="reference internal" href="#skiplist">skiplist</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
+<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a>  (default), <a class="reference internal" href="#skiplist">skiplist</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
 </div>
 <div class="section" id="quotas-quotas-db">
 <span id="imap-concepts-deployment-db-quotas"></span><h3>Quotas (quotas.db)<a class="headerlink" href="#quotas-quotas-db" title="Permalink to this headline">¶</a></h3>
@@ -1099,7 +1099,7 @@ virtually no lock contention.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on Oct 24 2018
+        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on Sep 08 2019
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1119,7 +1119,7 @@ virtually no lock contention.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.0.11 (stable)',
+            VERSION:'3.0.12 (stable)',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

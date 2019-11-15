@@ -572,7 +572,7 @@ if test "x$enable_xapian" != xno ; then
     AC_DEFINE_UNQUOTED([RSYNC_BIN], ["$RSYNC_BIN"], [Path to 'rsync' binary])
 
     AC_ARG_VAR(XAPIAN_CONFIG, [Location of xapian-config])
-    AC_PATH_PROG(XAPIAN_CONFIG, xapian-config, [])
+    AC_PATH_PROGS(XAPIAN_CONFIG, [xapian-config-1.5 xapian-config], [])
     if test -z "$XAPIAN_CONFIG"; then
         AC_MSG_ERROR([Can't find Xapian library])
     else
@@ -651,7 +651,7 @@ AM_CONDITIONAL([SQUATTER],
 AC_ARG_ENABLE(sieve,
         [AS_HELP_STRING([--disable-sieve], [disable Sieve support])],,[enable_sieve="yes";])
 AC_ARG_ENABLE(pcre,
-        [AS_HELP_STRING([--disable-pcre], [disable PCRE library])])
+        [AS_HELP_STRING([--disable-pcre], [disable PCRE library])],[cyrus_cv_pcre_utf8="no"])
 
 if test "$enable_sieve" != "no"; then
         AC_DEFINE(USE_SIEVE,[],[Build in Sieve support?])
@@ -683,22 +683,20 @@ if test "$enable_pcre" != "no"; then
         else
             cyrus_cv_pcre_utf8="no"
         fi
+fi
 
-        if test "$cyrus_cv_pcre_utf8" = "yes"; then
-                LIBS="$LIBS -lpcre -lpcreposix";
-                AC_DEFINE(ENABLE_REGEX, [], [Do we have a regex library?])
-                AC_DEFINE(HAVE_PCREPOSIX_H, [], [Do we have usable pcre library?])
+if test "$cyrus_cv_pcre_utf8" = "yes"; then
+        LIBS="$LIBS -lpcre -lpcreposix";
+        AC_DEFINE(ENABLE_REGEX, [], [Do we have a regex library?])
+        AC_DEFINE(HAVE_PCREPOSIX_H, [], [Do we have usable pcre library?])
+else
+        AC_CHECK_HEADERS(rxposix.h)
+        if test "$ac_cv_header_rxposix_h" = "yes"; then
+            LIBS="$LIBS -lrx"
+            AC_DEFINE(ENABLE_REGEX, [], [Do we have a regex library?])
         else
-                AC_CHECK_HEADERS(rxposix.h)
-                if test "$ac_cv_header_rxposix_h" = "yes"; then
-                        LIBS="$LIBS -lrx"
-                        AC_DEFINE(ENABLE_REGEX, [],
-                                  [Do we have a regex library?])
-                else
-                        AC_SEARCH_LIBS(regcomp, regex,
-                                        AC_DEFINE(ENABLE_REGEX, [],
-                                        [Do we have a regex library?]), [])
-                fi
+            AC_SEARCH_LIBS(regcomp, regex,
+                           AC_DEFINE(ENABLE_REGEX, [], [Do we have a regex library?]), [])
         fi
 fi
 

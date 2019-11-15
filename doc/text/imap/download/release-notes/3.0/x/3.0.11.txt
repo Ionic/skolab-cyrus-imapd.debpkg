@@ -29,7 +29,7 @@ downloading this release, please report this to the mailing lists.
 Thanks!
 
 
-Data-loss bug fix (Issue #2389)
+Data-loss bug fix (Issue #2839)
 -------------------------------
 
 This bug affects upgrades to all Cyrus IMAP 3.0.x releases prior to
