@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Virtual Domains &mdash; Cyrus IMAP 3.0.11 (stable) documentation</title>
+  <title>Virtual Domains &mdash; Cyrus IMAP 3.0.12 (stable) documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.0.11 (stable) documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.0.12 (stable) documentation" href="../../../index.html"/>
         <link rel="up" title="Features" href="../features.html"/>
         <link rel="next" title="Mailbox Annotations (METADATA)" href="mailbox-annotations.html"/>
         <link rel="prev" title="Mailbox Namespaces" href="namespaces.html"/> 
@@ -747,7 +747,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.0.11 (stable)</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.0.12 (stable)</a> &raquo;</li>
       
           <li><a href="../../../overview.html">Overview</a> &raquo;</li>
       
@@ -780,17 +780,36 @@ There are two ways in which Cyrus can determine the domain:</p>
 <dt>Fully qualified userid</dt>
 <dd>The client logs in with a userid
 containing the domain in which the user belongs (for example:
-<code class="docutils literal"><span class="pre">test&#64;cyrusisgreat.org</span></code> or <code class="docutils literal"><span class="pre">test%ilovecyrus.com</span></code>)</dd>
+<code class="docutils literal"><span class="pre">test&#64;cyrusisgreat.org</span></code> or <code class="docutils literal"><span class="pre">test&#64;ilovecyrus.com</span></code>)</dd>
 <dt>IP address</dt>
 <dd>The server looks up the domain based on the IP
 address of the receiving interface (useful for servers with multiple
 NICs or those using IP aliasing)</dd>
 </dl>
-<p>If the <code class="docutils literal"><span class="pre">virtdomains</span></code> option is set to <code class="docutils literal"><span class="pre">on</span></code> (or <code class="docutils literal"><span class="pre">yes</span></code>, <code class="docutils literal"><span class="pre">1</span></code>, <code class="docutils literal"><span class="pre">true</span></code>),
-Cyrus uses both mechanisms to work out the domain (with the fully qualified userid
-taking precedence).</p>
+<p>If the <code class="docutils literal"><span class="pre">virtdomains</span></code> option is set to <code class="docutils literal"><span class="pre">off</span></code> (or <code class="docutils literal"><span class="pre">no</span></code>, <code class="docutils literal"><span class="pre">0</span></code>, <code class="docutils literal"><span class="pre">false</span></code>),
+Cyrus does not know or care about domains, and only ever considers the local
+part of email addresses.  This configuration is never recommended, but is
+currently the default.</p>
 <p>If the <code class="docutils literal"><span class="pre">virtdomains</span></code> option is set to <code class="docutils literal"><span class="pre">userid</span></code>, then only the
-fully qualified userid is used.</p>
+fully qualified userid is used.  This is the only recommended configuration
+for new deployments, and in the future may become the default or only option.
+Existing deployments should strongly consider migrating towards this
+configuration.</p>
+<p>If the <code class="docutils literal"><span class="pre">virtdomains</span></code> option is set to <code class="docutils literal"><span class="pre">on</span></code> (or <code class="docutils literal"><span class="pre">yes</span></code>, <code class="docutils literal"><span class="pre">1</span></code>, <code class="docutils literal"><span class="pre">true</span></code>),
+Cyrus uses both mechanisms to work out the domain (with the fully qualified
+userid taking precedence).  This configuration is not recommended.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>If you are providing calendaring services, you MUST use the
+<code class="docutils literal"><span class="pre">virtdomains:</span> <span class="pre">userid</span></code> configuration.  Calendaring services require
+a consistent single authoritative fully-qualified email address for
+each user in order to function, and this is the only configuration
+that provides it.</p>
+<p class="last">The <code class="docutils literal"><span class="pre">virtdomains:</span> <span class="pre">off</span></code> and <code class="docutils literal"><span class="pre">virtdomains:</span> <span class="pre">on</span></code> configurations both
+allow users&#8217; domains to be changed from outside of Cyrus without Cyrus
+knowing about it, which fundamentally breaks calendaring.  These
+configurations are only suitable for IMAP-only deployments.</p>
+</div>
 </div>
 <div class="section" id="concepts">
 <h2>Concepts<a class="headerlink" href="#concepts" title="Permalink to this headline">¶</a></h2>
@@ -832,7 +851,7 @@ have access to mailboxes in the associated domain.</p>
 <div class="section" id="quick-start">
 <h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>Add <code class="docutils literal"><span class="pre">virtdomains:</span> <span class="pre">yes</span></code> to <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a></li>
+<li>Add <code class="docutils literal"><span class="pre">virtdomains:</span> <span class="pre">userid</span></code> to <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a></li>
 <li>Add a <code class="docutils literal"><span class="pre">defaultdomain</span></code> entry to <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a></li>
 <li>Use cyradm (as a global or domain admin) to create mailboxes for each domain.</li>
 </ul>
@@ -974,7 +993,7 @@ specifying mailboxes outside of the <code class="docutils literal"><span class="
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on May 11 2017
+        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on Aug 16 2019
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -994,7 +1013,7 @@ specifying mailboxes outside of the <code class="docutils literal"><span class="
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.0.11 (stable)',
+            VERSION:'3.0.12 (stable)',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

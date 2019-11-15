@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Xapian for searching &mdash; Cyrus IMAP 3.0.11 (stable) documentation</title>
+  <title>Xapian for searching &mdash; Cyrus IMAP 3.0.12 (stable) documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.0.11 (stable) documentation" href="../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.0.12 (stable) documentation" href="../../index.html"/>
         <link rel="up" title="IMAP Developer Guide" href="../developer.html"/>
         <link rel="next" title="Namespaces: a developer view" href="namespaces.html"/>
         <link rel="prev" title="Tips for Hacking on Cyrus" href="developer-tips.html"/> 
@@ -747,7 +747,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html">Docs v3.0.11 (stable)</a> &raquo;</li>
+      <li><a href="../../index.html">Docs v3.0.12 (stable)</a> &raquo;</li>
       
           <li><a href="../../developers.html">Developers</a> &raquo;</li>
       
@@ -786,7 +786,7 @@ command line.</p>
 <div class="highlight-bash"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">CYRUSLIBS</span><span class="o">=</span><span class="s2">&quot;/usr/local/cyruslibs&quot;</span>
 <span class="nb">export</span> <span class="nv">PKG_CONFIG_PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$CYRUSLIBS</span><span class="s2">/lib/pkgconfig:</span><span class="nv">$PKG_CONFIG_PATH</span><span class="s2">&quot;</span>
 <span class="nb">export</span> <span class="nv">LDFLAGS</span><span class="o">=</span><span class="s2">&quot;-Wl,-rpath,</span><span class="nv">$CYRUSLIBS</span><span class="s2">/lib -Wl,-rpath,</span><span class="nv">$CYRUSLIBS</span><span class="s2">/lib/x86_64-linux-gnu&quot;</span>
-<span class="nb">export</span> <span class="nv">XAPIAN_CONFIG</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$CYRUSLIBS</span><span class="s2">/bin/xapian-config-1.5&quot;</span>
+<span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$PATH</span><span class="s2">:</span><span class="nv">$CYRUSLIBS</span><span class="s2">/bin&quot;</span>
 
 git clone git@github.com:cyrusimap/cyruslibs.git
 <span class="nb">cd</span> cyruslibs
@@ -853,7 +853,7 @@ packages are required:</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on Jun 06 2019
+        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on Aug 14 2019
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -873,7 +873,7 @@ packages are required:</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'3.0.11 (stable)',
+            VERSION:'3.0.12 (stable)',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
