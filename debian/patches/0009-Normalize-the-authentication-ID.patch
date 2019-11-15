@@ -15,11 +15,9 @@ By normalize, it is intended that;
  lib/libcyr_cfg.h |  2 ++
  5 files changed, 31 insertions(+)
 
-diff --git a/imap/global.c b/imap/global.c
-index f0d5c3a..e12e94f 100644
 --- a/imap/global.c
 +++ b/imap/global.c
-@@ -298,6 +298,8 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
+@@ -304,6 +304,8 @@
                                    config_getswitch(IMAPOPT_UNIX_GROUP_ENABLE));
          libcyrus_config_setswitch(CYRUSOPT_USERNAME_TOLOWER,
                                    config_getswitch(IMAPOPT_USERNAME_TOLOWER));
@@ -28,11 +26,9 @@ index f0d5c3a..e12e94f 100644
          libcyrus_config_setswitch(CYRUSOPT_SKIPLIST_UNSAFE,
                                    config_getswitch(IMAPOPT_SKIPLIST_UNSAFE));
          libcyrus_config_setstring(CYRUSOPT_TEMP_PATH,
-diff --git a/lib/auth_unix.c b/lib/auth_unix.c
-index 6caddaa..910453d 100644
 --- a/lib/auth_unix.c
 +++ b/lib/auth_unix.c
-@@ -150,9 +150,11 @@ static char allowedchars[256] = {
+@@ -150,9 +150,11 @@
  static const char *mycanonifyid(const char *identifier, size_t len)
  {
      static char retbuf[81];
@@ -44,7 +40,7 @@ index 6caddaa..910453d 100644
  
      if (!len) len = strlen(identifier);
      if (len >= sizeof(retbuf)) return NULL;
-@@ -194,6 +196,22 @@ static const char *mycanonifyid(const char *identifier, size_t len)
+@@ -194,6 +196,22 @@
          }
      }
  
@@ -67,11 +63,9 @@ index 6caddaa..910453d 100644
      return retbuf;
  }
  
-diff --git a/lib/imapoptions b/lib/imapoptions
-index e321a35..3fde339 100644
 --- a/lib/imapoptions
 +++ b/lib/imapoptions
-@@ -2430,6 +2430,11 @@ product version in the capabilities
+@@ -2444,6 +2444,11 @@
  { "fastmailsharing", 0, SWITCH }
  /* If enabled, use FastMail style sharing (oldschool full server paths) */
  
@@ -83,11 +77,9 @@ index e321a35..3fde339 100644
  /*
  .SH SEE ALSO
  .PP
-diff --git a/lib/libcyr_cfg.c b/lib/libcyr_cfg.c
-index 7fdb012..096d7ed 100644
 --- a/lib/libcyr_cfg.c
 +++ b/lib/libcyr_cfg.c
-@@ -145,6 +145,10 @@ static struct cyrusopt_s cyrus_options[] = {
+@@ -145,6 +145,10 @@
        CFGVAL(long, 1),
        CYRUS_OPT_SWITCH },
  
@@ -98,11 +90,9 @@ index 7fdb012..096d7ed 100644
      { CYRUSOPT_LAST, { NULL }, CYRUS_OPT_NOTOPT }
  };
  
-diff --git a/lib/libcyr_cfg.h b/lib/libcyr_cfg.h
-index 8e9a137..dfd88d3 100644
 --- a/lib/libcyr_cfg.h
 +++ b/lib/libcyr_cfg.h
-@@ -105,6 +105,8 @@ enum cyrus_opt {
+@@ -105,6 +105,8 @@
      CYRUSOPT_SQL_USESSL,
      /* Checkpoint after every recovery (OFF) */
      CYRUSOPT_SKIPLIST_ALWAYS_CHECKPOINT,

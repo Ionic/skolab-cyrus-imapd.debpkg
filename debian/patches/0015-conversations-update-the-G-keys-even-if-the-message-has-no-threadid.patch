@@ -7,11 +7,9 @@ Subject: [PATCH] conversations: update the G keys even if the message has no
  imap/conversations.c | 16 ++++++++++++++++
  1 file changed, 16 insertions(+)
 
-diff --git a/imap/conversations.c b/imap/conversations.c
-index 5db9254..0d2db30 100644
 --- a/imap/conversations.c
 +++ b/imap/conversations.c
-@@ -1869,6 +1869,22 @@ EXPORTED int conversations_update_record(struct conversations_state *cstate,
+@@ -1870,6 +1870,22 @@
      }
  
      const struct index_record *record = new ? new : old;

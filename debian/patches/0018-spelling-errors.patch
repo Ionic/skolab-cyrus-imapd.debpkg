@@ -186,7 +186,7 @@ Last-Update: 2019-08-05
  <p><code class="docutils literal"><span class="pre">mailbox_initial_flags:</span></code> &lt;none&gt;</p>
  <blockquote>
  <div>space-separated list of permanent flags which will be pre-set in every
-@@ -3245,4 +3245,4 @@
+@@ -3257,4 +3257,4 @@
  
  
  </body>
@@ -566,7 +566,7 @@ Last-Update: 2019-08-05
  /* space-separated list of permanent flags which will be pre-set in every
 --- a/man/chk_cyrus.8
 +++ b/man/chk_cyrus.8
-@@ -105,7 +105,7 @@
+@@ -78,7 +78,7 @@
  .fi
  .INDENT 0.0
  .INDENT 3.5
@@ -575,7 +575,7 @@ Last-Update: 2019-08-05
  .UNINDENT
  .UNINDENT
  .sp
-@@ -114,7 +114,7 @@
+@@ -87,7 +87,7 @@
  .fi
  .INDENT 0.0
  .INDENT 3.5
@@ -584,7 +584,7 @@ Last-Update: 2019-08-05
  configuration file.
  .UNINDENT
  .UNINDENT
-@@ -124,7 +124,7 @@
+@@ -97,7 +97,7 @@
  .fi
  .INDENT 0.0
  .INDENT 3.5
@@ -595,7 +595,7 @@ Last-Update: 2019-08-05
  .SH SEE ALSO
 --- a/man/ctl_mboxlist.8
 +++ b/man/ctl_mboxlist.8
-@@ -192,7 +192,7 @@
+@@ -165,7 +165,7 @@
  Synchronize our mailboxes database with the MUPDATE server.  (One may
  commonly put a command like this into the \fBSTART\fP section of
  cyrus.conf(5) on backend nodes of a Murder cluster to cause
@@ -606,7 +606,7 @@ Last-Update: 2019-08-05
  .UNINDENT
 --- a/man/imapd.conf.5
 +++ b/man/imapd.conf.5
-@@ -2092,7 +2092,7 @@
+@@ -2065,7 +2065,7 @@
  .INDENT 3.5
  Default "options" field for the mailbox on create.  You\(aqll want to know
  what you\(aqre doing before setting this, but it can apply some default
@@ -617,7 +617,7 @@ Last-Update: 2019-08-05
  .sp
 --- a/man/reconstruct.8
 +++ b/man/reconstruct.8
-@@ -248,7 +248,7 @@
+@@ -221,7 +221,7 @@
  .INDENT 0.0
  .INDENT 3.5
  Recursively reconstruct all mailboxes within the
@@ -628,7 +628,7 @@ Last-Update: 2019-08-05
  .UNINDENT
 --- a/man/restore.8
 +++ b/man/restore.8
-@@ -101,7 +101,7 @@
+@@ -74,7 +74,7 @@
  Selected mailboxes will have their messages restored to a mailbox of the same
  name, which will be created if necessary.  Individually\-selected messages will
  be restored to the mailboxes in which they previously existed.  In both cases

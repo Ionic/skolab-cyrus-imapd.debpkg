@@ -8,7 +8,7 @@ Subject: Use UnicodeData.txt from system
 
 --- a/Makefile.am
 +++ b/Makefile.am
-@@ -1438,9 +1438,9 @@
+@@ -1458,9 +1458,9 @@
  
  lib/chartable.c: lib/mkchartable.pl lib/charset/unifix.txt \
  	$(top_srcdir)/lib/charset/*.t \
