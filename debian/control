@@ -6,7 +6,7 @@ Uploaders: Henrique de Moraes Holschuh <hmh@debian.org>,
            Ondřej Surý <ondrej@debian.org>,
            Anthony Prades <toony.debian@chezouam.net>,
            Xavier Guimard <yadd@debian.org>
-Standards-Version: 4.4.0
+Standards-Version: 4.4.1
 Build-Depends: bison,
                comerr-dev,
                debhelper-compat (= 12),
