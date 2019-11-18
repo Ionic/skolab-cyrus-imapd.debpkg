@@ -1,18 +1,23 @@
 #!/bin/bash
 
+BUILD_CYRUS_FROM_SOURCE=${BUILD_CYRUS_FROM_SOURCE:-yes}
+export CASSANDANEOPTS=${CASSANDANEOPTS:-""}
+
 source functions.sh
 
-#_cyrusclone
 [ -d /srv/cassandane.git ] || _cassandaneclone
-#_cyrusbuild
-apt-get update
 
-DEBIAN_FRONTEND=noninteractive apt-get install -y cyrus-imapd
+if [ "$BUILD_CYRUS_FROM_SOURCE" = "yes" ] ; then
+  _cyrusclone
+  _cyrusbuild
+else
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y cyrus-imapd
+fi
 
 _updatejmaptestsuite
 
-export CASSANDANEOPTS="Cyrus::ImapTest"
-_cassandane
+_cassandane "$BUILD_CYRUS_FROM_SOURCE"
 retval=$?
 _report
 exit ${retval}
