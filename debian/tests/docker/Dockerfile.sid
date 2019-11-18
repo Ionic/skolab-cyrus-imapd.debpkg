@@ -1,16 +1,13 @@
 FROM debian:sid
 MAINTAINER Cyrus Works <docker@cyrus.works>
 
-RUN echo "CyrusWorksManualCacheInvalidationString000006"
-
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN echo 'APT::Install-Recommends "false";' > /etc/apt/apt.conf.d/docker-no-recommends && \
     echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/docker-no-recommends 
 
-RUN apt-get update && apt-get -y install apt-utils 2>&1
-
-RUN apt-get -y install \
+RUN apt-get update && apt-get -y install \
+    apt-utils \
     autoconf \
     automake \
     autotools-dev \
@@ -22,7 +19,6 @@ RUN apt-get -y install \
     cmake \
     comerr-dev \
     cpanminus \
-    cyrus-imapd \
     doxygen \
     debhelper \
     flex \
@@ -43,11 +39,13 @@ RUN apt-get -y install \
     libcunit1-dev \
     libdatetime-perl \
     libdb-dev \
+    libdbi-perl \
     libdigest-sha-perl \
     libencode-imaputf7-perl \
     libfile-chdir-perl \
     libfile-slurp-perl \
     libglib2.0-dev \
+    libhttp-daemon-perl \
     libio-socket-inet6-perl \
     libio-stringy-perl \
     libjson-perl \
@@ -88,7 +86,12 @@ RUN apt-get -y install \
     pkg-config \
     po-debconf \
     python-docutils \
+    python-sphinx \
+    python-pygments \
+    python3-pygments \
+    rsync \
     sudo \
+    sphinx-common \
     tcl-dev \
     transfig \
     uuid-dev \
@@ -100,17 +103,13 @@ RUN apt-get -y install \
 
 RUN dpkg -l
 
-RUN sed -r -i \
-    -e 's/^"([^ ]|\s{2})(.*)$/\1\2/g' \
-    -e 's/^set background=dark/"set background=dark/g' \
-    /etc/vim/vimrc
-
-# RUN groupadd -r saslauth ; \
-#     groupadd -r mail ; \
-#     useradd -c "Cyrus IMAP Server" -d /var/lib/imap \
-#     -g mail -G saslauth -s /bin/bash -r cyrus
+RUN groupadd -r saslauth ; \
+    groupadd -r mail ; \
+    useradd -c "Cyrus IMAP Server" -d /var/lib/imap \
+    -g mail -G saslauth -s /bin/bash -r cyrus
 
 WORKDIR /srv
+RUN apt-get -y install cyrus-imapd
 # RUN git config --global http.sslverify false && \
 #     git clone https://github.com/cyrusimap/cyrus-imapd.git \
 #     cyrus-imapd.git
@@ -139,24 +138,13 @@ RUN git config --global http.sslverify false && \
     git clone https://github.com/cyrusimap/CalDAVTester.git \
     caldavtester.git
 
-
 RUN cpan Term::ReadLine
-
-RUN echo "CyrusWorksWeeklyInvalidationString"
-
-
-
-
-
-
-
-
-
 RUN cpan Mail::IMAPTalk Net::CalDAVTalk Net::CardDAVTalk
 RUN cpan Convert::Base64 File::LibMagic;
 RUN cpan Net::LDAP::Constant
 RUN cpan Net::LDAP::Server
 RUN cpan Net::LDAP::Server::Test
+RUN cpan Math::Int64
 
 # The following packages are required by JMAP Test Suite
 RUN cpan Test::Routine
@@ -191,18 +179,6 @@ RUN make
 RUN make test
 RUN make install
 
-
-
-
-
-
-
-
-
-RUN cpan Math::Int64
-
-RUN cpan -l
-
 WORKDIR /srv/dovecot.git
 RUN git fetch
 # NOTE: change this only after testing
@@ -219,9 +195,6 @@ RUN ./configure --enable-silent-rules --with-dovecot=/srv/dovecot.git
 RUN make -j 8
 # need to run it once as root to link up libs
 RUN src/imaptest || true
-
-# FIXME: move up
-RUN apt-get install -y python3-pygments python-pygments
 
 # WORKDIR /srv/cyruslibs.git
 # RUN git fetch

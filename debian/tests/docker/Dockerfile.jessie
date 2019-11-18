@@ -38,6 +38,7 @@ RUN apt-get update && apt-get -y install \
     libcunit1-dev \
     libdatetime-perl \
     libdb-dev \
+    libdbi-perl \
     libdigest-sha-perl \
     libencode-imaputf7-perl \
     libfile-chdir-perl \
