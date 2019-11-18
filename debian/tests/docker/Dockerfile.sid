@@ -98,8 +98,6 @@ RUN apt-get -y install \
     xutils-dev \
     zlib1g-dev
 
-RUN apt-get install "cmake" -y
-
 RUN dpkg -l
 
 RUN sed -r -i \
