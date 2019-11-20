@@ -1,3 +1,9 @@
+cyrus-imapd (3.0.8-6+deb10u2) buster; urgency=high
+
+  * Fix privilege escalation on HTTP request (Closes: CVE-2019-18928)
+
+ -- Xavier Guimard <yadd@debian.org>  Tue, 19 Nov 2019 22:21:32 +0100
+
 cyrus-imapd (3.0.8-6+deb10u1) buster; urgency=medium
 
   * Add patch to fix data loss on upgrade from versions ≤ 3.0.0
