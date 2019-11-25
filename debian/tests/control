@@ -1,3 +1,7 @@
-Tests: cyrus-docker
-Depends: ca-certificates, docker.io
-Restrictions: needs-root
+# Tests: cyrus-docker
+# Depends: ca-certificates, docker.io
+# Restrictions: needs-root
+
+Tests: cyrus-no-docker
+Depends: ca-certificates
+Restrictions: needs-root, allow-stderr
