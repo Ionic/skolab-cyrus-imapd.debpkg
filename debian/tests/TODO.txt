@@ -4,9 +4,7 @@
   Travis, the tests are not even *run* (see for instance
   https://travis-ci.org/cyrusimap/cyrus-imapd/builds/588427681).
 
-2. move all files related to cyrus-docker into a dedicated subdirectory.
-
-3. convert Dockerfile.sid into a regular shell script, so we don't have
+2. convert Dockerfile.sid into a regular shell script, so we don't have
    to run inside docker. Over time this will significantly diverge from
    upstream's approach, and thus will require more maintenance.
 
@@ -16,5 +14,5 @@
    (because copying changes from upstream is easy), cyrus-no-docker
    could me marked "flaky".
 
-4. replace as many cpan/built-from-source libraries and executables with
+3. replace as many cpan/built-from-source libraries and executables with
    their equivalent Debian packages.

@@ -1,16 +1,12 @@
-FROM debian:sid
-MAINTAINER Cyrus Works <docker@cyrus.works>
+FROM debian:jessie
+MAINTAINER Cyrus IMAP <docker@role.fastmailteam.com>
 
-RUN echo "CyrusWorksManualCacheInvalidationString000006"
+RUN echo 'Acquire::Check-Valid-Until "0";' > /etc/apt/apt.conf.d/no-check-valid-until.conf
 
-ENV DEBIAN_FRONTEND=noninteractive
+RUN echo "deb [check-valid-until=no] http://archive.debian.org/debian jessie-backports main" >> /etc/apt/sources.list.d/sources.list
 
-RUN echo 'APT::Install-Recommends "false";' > /etc/apt/apt.conf.d/docker-no-recommends && \
-    echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf.d/docker-no-recommends 
 
-RUN apt-get update && apt-get -y install apt-utils 2>&1
-
-RUN apt-get -y install \
+RUN apt-get update && apt-get -y install \
     autoconf \
     automake \
     autotools-dev \
@@ -22,7 +18,6 @@ RUN apt-get -y install \
     cmake \
     comerr-dev \
     cpanminus \
-    cyrus-imapd \
     doxygen \
     debhelper \
     flex \
@@ -43,6 +38,7 @@ RUN apt-get -y install \
     libcunit1-dev \
     libdatetime-perl \
     libdb-dev \
+    libdbi-perl \
     libdigest-sha-perl \
     libencode-imaputf7-perl \
     libfile-chdir-perl \
@@ -67,7 +63,6 @@ RUN apt-get -y install \
     libssl-dev \
     libstring-crc32-perl \
     libtest-deep-perl \
-    libtest-deep-type-perl \
     libtest-most-perl \
     libtest-unit-perl \
     libtool \
@@ -83,8 +78,8 @@ RUN apt-get -y install \
     net-tools \
     pandoc \
     perl \
-    php-cli \
-    php-curl \
+    php5-cli \
+    php5-curl \
     pkg-config \
     po-debconf \
     python-docutils \
@@ -98,32 +93,16 @@ RUN apt-get -y install \
     xutils-dev \
     zlib1g-dev
 
-RUN apt-get install "cmake" -y
+RUN apt-get -t jessie-backports install "cmake" -y
 
 RUN dpkg -l
 
-RUN sed -r -i \
-    -e 's/^"([^ ]|\s{2})(.*)$/\1\2/g' \
-    -e 's/^set background=dark/"set background=dark/g' \
-    /etc/vim/vimrc
-
-# RUN groupadd -r saslauth ; \
-#     groupadd -r mail ; \
-#     useradd -c "Cyrus IMAP Server" -d /var/lib/imap \
-#     -g mail -G saslauth -s /bin/bash -r cyrus
+RUN groupadd -r saslauth ; \
+    groupadd -r mail ; \
+    useradd -c "Cyrus IMAP Server" -d /var/lib/imap \
+    -g mail -G saslauth -s /bin/bash -r cyrus
 
 WORKDIR /srv
-# RUN git config --global http.sslverify false && \
-#     git clone https://github.com/cyrusimap/cyrus-imapd.git \
-#     cyrus-imapd.git
-
-RUN git config --global http.sslverify false && \
-    git clone https://github.com/cyrusimap/cyrus-docker.git \
-    cyrus-docker.git
-
-RUN git config --global http.sslverify false && \
-    git clone https://github.com/cyrusimap/cassandane.git \
-    cassandane.git
 
 RUN git config --global http.sslverify false && \
     git clone https://github.com/cyrusimap/cyruslibs.git \
@@ -141,39 +120,14 @@ RUN git config --global http.sslverify false && \
     git clone https://github.com/cyrusimap/CalDAVTester.git \
     caldavtester.git
 
-
 RUN cpan Term::ReadLine
-
-RUN echo "CyrusWorksWeeklyInvalidationString"
-
-
-
-
-
-
-
-
-
 RUN cpan Mail::IMAPTalk Net::CalDAVTalk Net::CardDAVTalk
 RUN cpan Convert::Base64 File::LibMagic;
 RUN cpan Net::LDAP::Constant
 RUN cpan Net::LDAP::Server
 RUN cpan Net::LDAP::Server::Test
+RUN cpan Math::Int64
 
-# The following packages are required by JMAP Test Suite
-RUN cpan Test::Routine
-RUN cpan Test::Deep::JType
-RUN cpan Test::Deep::HashRec
-RUN cpan Test::Abortable
-RUN cpan JSON::Typist
-RUN cpan Email::MessageID
-RUN cpan MooseX::Role::Parameterized
-RUN cpan Process::Status
-RUN cpan Data::GUID
-RUN cpan JMAP::Tester
-RUN cpan Email::MIME
-RUN cpan Mail::IMAPClient
-RUN cpan Test::Routine
 
 RUN git config --global http.sslverify false && \
     git clone https://github.com/fastmail/JMAP-TestSuite.git \
@@ -183,6 +137,7 @@ WORKDIR /srv/JMAP-TestSuite.git
 RUN cpanm --installdeps .
 
 WORKDIR /srv
+
 RUN git config --global http.sslverify false && \
     git clone https://github.com/cyrusimap/Mail-JMAPTalk.git \
     Mail-JMAPTalk.git
@@ -193,37 +148,22 @@ RUN make
 RUN make test
 RUN make install
 
-
-
-
-
-
-
-
-
-RUN cpan Math::Int64
-
-RUN cpan -l
-
 WORKDIR /srv/dovecot.git
 RUN git fetch
 # NOTE: change this only after testing
-RUN git checkout -q 6264b51bcce8ae98efdcda3e55a765d7a13d15ed
+RUN git checkout 6264b51bcce8ae98efdcda3e55a765d7a13d15ed
 RUN ./autogen.sh
 RUN ./configure --enable-silent-rules
 RUN make -j 8
 
 WORKDIR /srv/imaptest.git
 RUN git fetch
-RUN git checkout -q origin/cyrus
+RUN git checkout origin/cyrus
 RUN sh autogen.sh
 RUN ./configure --enable-silent-rules --with-dovecot=/srv/dovecot.git
 RUN make -j 8
 # need to run it once as root to link up libs
 RUN src/imaptest || true
-
-# FIXME: move up
-RUN apt-get install -y python3-pygments python-pygments
 
 # WORKDIR /srv/cyruslibs.git
 # RUN git fetch
@@ -236,7 +176,7 @@ RUN mkdir /tmp/cass
 RUN chown cyrus /tmp/cass
 
 WORKDIR /root
-ENV IMAGE sid
+ENV IMAGE jessie
 
 WORKDIR /
 ADD entrypoint.sh /

@@ -2,7 +2,7 @@
 
 set -e
 
-cd debian/tests
+cd debian/tests/docker
 
 # build image
 docker build --rm -t cyrus-test -f Dockerfile.sid .
@@ -15,4 +15,6 @@ p=$(perl -pe 's#.*file://([^ ]+).*#$1#' $source_list)
 docker run --rm \
        -v ${source_list}:${source_list} \
        -v ${p}:${p} \
+       -e BUILD_CYRUS_FROM_SOURCE="no" \
+       -e CASSANDANEOPTS="Cyrus::ImapTest" \
        cyrus-test

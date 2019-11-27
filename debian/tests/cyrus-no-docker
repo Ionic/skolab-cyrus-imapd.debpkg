@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+
+cd debian/tests/no-docker
+
+export CASSANDANEOPTS="Cyrus::ImapTest"
+export BUILD_CYRUS_FROM_SOURCE="no"
+
+./run.sh
