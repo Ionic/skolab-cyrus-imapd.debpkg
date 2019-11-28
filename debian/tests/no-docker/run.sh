@@ -10,10 +10,10 @@ git config --global http.sslverify false
 git clone https://github.com/cyrusimap/cyrus-docker.git cyrus-docker.git
 git clone https://github.com/cyrusimap/cassandane.git cassandane.git
 git clone https://github.com/cyrusimap/cyruslibs.git cyruslibs.git
-#git clone https://github.com/dovecot/core.git dovecot.git
-wget https://github.com/dovecot/core/archive/2.3.8.tar.gz
-tar xzf 2.3.8.tar.gz
-mv core-2.3.8 dovecot.git
+git clone https://github.com/dovecot/core.git dovecot.git
+#wget https://github.com/dovecot/core/archive/2.3.8.tar.gz
+#tar xzf 2.3.8.tar.gz
+#mv core-2.3.8 dovecot.git
 git clone https://github.com/cyrusimap/imaptest.git imaptest.git
 git clone https://github.com/cyrusimap/CalDAVTester.git caldavtester.git
 
@@ -54,9 +54,9 @@ make test
 make install
 
 cd /srv/dovecot.git
-#git fetch
+git fetch
 # NOTE: change this only after testing
-#git checkout -q 6264b51bcce8ae98efdcda3e55a765d7a13d15ed
+git checkout -q 6264b51bcce8ae98efdcda3e55a765d7a13d15ed
 ./autogen.sh
 ./configure --enable-silent-rules
 make -j 8
