@@ -1,0 +1,18 @@
+1. upstream most of the changes (without the bits specific to debian and
+  autopkgtest), since https://travis-ci.org/cyrusimap/cyrus-imapd has
+  been failing for a while now: even though everything's green in
+  Travis, the tests are not even *run* (see for instance
+  https://travis-ci.org/cyrusimap/cyrus-imapd/builds/588427681).
+
+2. convert Dockerfile.sid into a regular shell script, so we don't have
+   to run inside docker. Over time this will significantly diverge from
+   upstream's approach, and thus will require more maintenance.
+
+   A good middle ground option would be to have a separate
+   cyrus-no-docker test in d/test/control, alongside the existing
+   cyrus-docker one; while cyrus-docker should be working at all times
+   (because copying changes from upstream is easy), cyrus-no-docker
+   could me marked "flaky".
+
+3. replace as many cpan/built-from-source libraries and executables with
+   their equivalent Debian packages.

@@ -9,11 +9,9 @@ if getrlimit(RLIMIT_NUMFDS) failed.
  master/master.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/master/master.c b/master/master.c
-index a28731f..62e4a9a 100644
 --- a/master/master.c
 +++ b/master/master.c
-@@ -1930,7 +1930,7 @@ static void limit_fds(rlim_t x)
+@@ -1930,7 +1930,7 @@
      struct rlimit rl;
  
  #ifdef HAVE_GETRLIMIT
@@ -22,7 +20,7 @@ index a28731f..62e4a9a 100644
          if (x != RLIM_INFINITY && rl.rlim_max != RLIM_INFINITY && x > rl.rlim_max) {
              syslog(LOG_WARNING,
                     "limit_fds: requested %" PRIu64 ", but capped to %" PRIu64,
-@@ -1949,7 +1949,7 @@ static void limit_fds(rlim_t x)
+@@ -1949,7 +1949,7 @@
                 rl.rlim_cur, rl.rlim_max);
      }
  

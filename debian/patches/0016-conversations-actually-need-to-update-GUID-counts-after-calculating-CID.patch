@@ -9,7 +9,7 @@ Subject: [PATCH] conversations: actually,
 
 --- a/imap/conversations.c
 +++ b/imap/conversations.c
-@@ -1885,6 +1885,21 @@
+@@ -1886,6 +1886,21 @@
          }
      }
  

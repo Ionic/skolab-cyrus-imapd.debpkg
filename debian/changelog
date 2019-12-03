@@ -1,3 +1,42 @@
+cyrus-imapd (3.0.12-2) unstable; urgency=medium
+
+  [ Sébastien Delafond ]
+  * Move all assets for docker-based tests in a dedicated directory
+  * Remove useless double install for cmake
+  * Bring our sid Dockerfile closer to recent upstream version based on buster
+  * Variabilize whether to build cyrus from source, and also list of
+    cassandane tests to run
+  * Bring changes from recent functions.sh in cyrus-docker's toplevel
+    directory
+  * Non-docker version of tests (Closes: #944819)
+
+  [ Xavier Guimard ]
+  * Improve autopkgtest:
+    + use native autopkgtest packages system
+    + add more perl packages to minimize cpan downloads
+
+ -- Xavier Guimard <yadd@debian.org>  Thu, 28 Nov 2019 07:08:47 +0100
+
+cyrus-imapd (3.0.12-1) unstable; urgency=medium
+
+  [ Sébastien Delafond ]
+  * autopkgtest:
+    + Add cyrus-docker test, based on cyrus.works setup
+    + Install libdbi-perl (FIXME: move to Dockerfile later)
+    + Add Dockerfile.sid, and adjust entrypoint and shell functions
+    + Switch cyrus-docker test to Dockerfile.sid
+    + Remove harmless stderr warnings, so autokpgtest doesn't think the entire
+      run failed
+    + Sneak locally built packages into test container
+    + Add TODO.txt
+
+  [ Xavier Guimard ]
+  * New upstream version 3.0.12
+  * Declare compliance with policy 4.4.1
+  * Refresh patches
+
+ -- Xavier Guimard <yadd@debian.org>  Fri, 15 Nov 2019 06:59:34 +0100
+
 cyrus-imapd (3.0.11-1~bpo10+1) buster-backports; urgency=medium
 
   * Rebuild for buster-backports.

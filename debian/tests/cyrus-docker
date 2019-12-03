@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -e
+
+cd debian/tests/docker
+
+# build image
+docker build --rm -t cyrus-test -f Dockerfile.sid .
+
+# get local repository path
+source_list="/etc/apt/sources.list.d/autopkgtest.list"
+p=$(perl -pe 's#.*file://([^ ]+).*#$1#' $source_list)
+
+# run it
+docker run --rm \
+       -v ${source_list}:${source_list} \
+       -v ${p}:${p} \
+       -e BUILD_CYRUS_FROM_SOURCE="no" \
+       -e CASSANDANEOPTS="Cyrus::ImapTest" \
+       cyrus-test

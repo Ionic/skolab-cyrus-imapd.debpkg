@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>master &mdash; Cyrus IMAP 3.0.11 (stable) documentation</title>
+  <title>master &mdash; Cyrus IMAP 3.0.12 (stable) documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.0.11 (stable) documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.0.12 (stable) documentation" href="../../../../index.html"/>
         <link rel="up" title="Man pages" href="../commands.html"/>
         <link rel="next" title="mbexamine" href="mbexamine.html"/>
         <link rel="prev" title="masssievec" href="masssievec.html"/> 
@@ -747,7 +747,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.0.11 (stable)</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.0.12 (stable)</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -782,7 +782,7 @@
 <h2>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
 <p><strong>master</strong> is the process that controls all of the Cyrus
 processes. This process is responsible for creating all imapd, pop3d,
-lmtpd and sieved child processes. This process also initializes the
+lmtpd and timsieved child processes. This process also initializes the
 Berkeley DB code and performs scheduled cleanup/maintenance.</p>
 <p>If this process dies, then no new sessions will be started.</p>
 <p>It kills itself and all child processes when it receives a SIGTERM.</p>
@@ -925,7 +925,7 @@ Setting it higher results in more log messages being generated.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on Jun 07 2019
+        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on Sep 08 2019
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -945,7 +945,7 @@ Setting it higher results in more log messages being generated.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.0.11 (stable)',
+            VERSION:'3.0.12 (stable)',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -78,8 +78,8 @@ In the case of usernames and passwords though, the exchange and
 verification of the credentials is at the basis of its security.
 Sending plain text usernames and passwords over the wire would not
 allow any application to verify the source of the credentials is
-actually the user &mdash; who is supposed to be the only party to know
-the unique combination of username and password.
+actually the user --- who is supposed to be the only party to know the
+unique combination of username and password.
 
 To obfuscate the login credentials, authentication can be encrypted
 with CRAM-MD5 or DIGEST-MD5, but this requires the server to have a
@@ -108,8 +108,8 @@ be.
 For example, the user logs in with username "john.doe@example.org" and
 password "verysecret".
 
-The **user's authentication entity** &mdash; with all attributes
-associated with it &mdash; can have one of those attributes be used to
+The **user's authentication entity** --- with all attributes
+associated with it --- can have one of those attributes be used to
 create the relationship between the user authentication entity on the
 one side, and the mailbox entity on the other side.
 

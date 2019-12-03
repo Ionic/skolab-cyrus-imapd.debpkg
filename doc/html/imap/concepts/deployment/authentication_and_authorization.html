@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Authentication and Authorization &mdash; Cyrus IMAP 3.0.11 (stable) documentation</title>
+  <title>Authentication and Authorization &mdash; Cyrus IMAP 3.0.12 (stable) documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.0.11 (stable) documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.0.12 (stable) documentation" href="../../../index.html"/>
         <link rel="up" title="Configuration Guide" href="../deployment.html"/>
         <link rel="next" title="Performance Recommendations" href="performance_recommendations.html"/>
         <link rel="prev" title="Known Protocol Limitations" href="known_protocol_limitations.html"/> 
@@ -747,7 +747,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.0.11 (stable)</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.0.12 (stable)</a> &raquo;</li>
       
           <li><a href="../../../setup.html">Setup</a> &raquo;</li>
       
@@ -785,7 +785,7 @@
 <p class="last">Authentication and authorization are two separate processes. Authentication is about verifying the credentials supplied by the client, while authorization is the process of determining what rights the client has. Authentication, logically, preseeds authorization.</p>
 </div>
 <p>The most common set of credentials is a <em>username</em> and <em>password</em>, but other forms exist like Kerberos v5 ticket exchange (for which, to obtain such, most often a password is supplied), or certificate based authentication (the secret keys for which are most often locked with a passphrase). In any case, authentication works based on a shared secret, and/or a trusted source for verification. Kerberos v5 works based on shared secrets (keytab), and certificate based authentication works based on shared, trusted sources for verification.</p>
-<p>In the case of usernames and passwords though, the exchange and verification of the credentials is at the basis of its security. Sending plain text usernames and passwords over the wire would not allow any application to verify the source of the credentials is actually the user &amp;mdash; who is supposed to be the only party to know the unique combination of username and password.</p>
+<p>In the case of usernames and passwords though, the exchange and verification of the credentials is at the basis of its security. Sending plain text usernames and passwords over the wire would not allow any application to verify the source of the credentials is actually the user &#8212; who is supposed to be the only party to know the unique combination of username and password.</p>
 <p>To obfuscate the login credentials, authentication can be encrypted with CRAM-MD5 or DIGEST-MD5, but this requires the server to have a copy of the original, plain text password. The password in this case becomes the shared secret.</p>
 <p>Another method is to allow the plain text username and password to be transmitted over the wire, but ensure Transport Layer Security (TLS) or the more implicit Secure Socket Layer (SSL). The plain text password can now be used to compare it against a SQL database, bind to an LDAP database, attempt PAM authentication with, etc.</p>
 </div>
@@ -794,7 +794,7 @@
 <p>User mailboxes have a globally unique identifier which is not necessarily the same as the login name used. There are three distinguishable aspects to a user&#8217;s entity and the mailbox associated with it;</p>
 <p>The <strong>user login credentials</strong> that are associated with the user authentication entity and verify the user is who the user claims to be.</p>
 <p>For example, the user logs in with username <code class="docutils literal"><span class="pre">john.doe&#64;example.org</span></code> and password <code class="docutils literal"><span class="pre">verysecret</span></code>.</p>
-<p>The <strong>user&#8217;s authentication entity</strong> &amp;mdash; with all attributes associated with it &amp;mdash; can have one of those attributes be used to create the relationship between the user authentication entity on the one side, and the mailbox entity on the other side.</p>
+<p>The <strong>user&#8217;s authentication entity</strong> &#8212; with all attributes associated with it &#8212; can have one of those attributes be used to create the relationship between the user authentication entity on the one side, and the mailbox entity on the other side.</p>
 <p>For example, the user that authenticated as <code class="docutils literal"><span class="pre">john.doe&#64;example.org</span></code> may have a mailbox named <code class="docutils literal"><span class="pre">jdoe</span></code>.</p>
 <p>The <strong>authorization entity</strong>, used to assign certain permissions to the user, uses the same attribute used to determine the mailbox name.</p>
 <p>For example, the user that authenticated as <code class="docutils literal"><span class="pre">john.doe&#64;example.com</span></code> and has mailbox <code class="docutils literal"><span class="pre">jdoe</span></code> needs an access control list entry on that mailbox that assigns <code class="docutils literal"><span class="pre">jdoe</span></code> certain rights on said mailbox.</p>
@@ -819,7 +819,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on Jan 31 2019
+        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on Sep 08 2019
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -839,7 +839,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.0.11 (stable)',
+            VERSION:'3.0.12 (stable)',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
