@@ -39,7 +39,7 @@ Description: fix file order to make build reproducible
  .
  Hence, sort()ing the arguments in the Perl script should fix this issue
 Author: Daniel Shahaf
-Forwarded: <no|not-needed|url proving that it has been forwarded>
+Forwarded: https://github.com/cyrusimap/cyrus-imapd/pull/2931
 Reviewed-By: Xavier Guimard <yadd@debian.org>
 Last-Update: 2019-12-04
 
