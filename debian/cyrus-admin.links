@@ -1,2 +1,4 @@
 /usr/sbin/cyrus /usr/bin/installsieve
 /usr/sbin/cyrus /usr/bin/sieveshell
+/usr/share/man/man1/cyrus-installsieve.1.gz /usr/share/man/man1/installsieve.1.gz
+/usr/share/man/man1/cyrus-sieveshell.1.gz /usr/share/man/man1/sieveshell.1.gz
