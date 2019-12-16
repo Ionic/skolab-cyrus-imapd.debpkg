@@ -46,6 +46,7 @@ Standards-Version: 4.4.1
 Vcs-Browser: https://salsa.debian.org/debian/cyrus-imapd
 Vcs-Git: https://salsa.debian.org/debian/cyrus-imapd.git
 Homepage: https://www.cyrusimap.org/
+Rules-Requires-Root: no
 
 Package: cyrus-common
 Architecture: any
