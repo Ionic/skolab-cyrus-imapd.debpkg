@@ -38,10 +38,10 @@ Cyrus IMAP system. All user access to mail is through software using
 the IMAP, POP3, or KPOP protocols.
 
 The private mailbox database design gives the server large advantages
-in efficiency, scalability, and administratability. Multiple
-concurrent read/write connections to the same mailbox are permitted.
-The server supports access control lists on mailboxes and storage
-quotas on mailbox hierarchies.
+in efficiency, scalability, and administrability. Multiple concurrent
+read/write connections to the same mailbox are permitted. The server
+supports access control lists on mailboxes and storage quotas on
+mailbox hierarchies.
 
 
 IMAP Version 4 (IMAP4)
@@ -71,7 +71,7 @@ clients that students use have no permanent storage for their use,
 necessitating use of a remote filesystem for storage, which leads to
 problems with access and scale.
 
-IMAP4 is a super-set of the functionality provided by POP3--that is,
+IMAP4 is a super-set of the functionality provided by POP3 -- that is,
 all the functionality of a POP3 client can be mimicked using the IMAP4
 protocol. The IMAP4 revision of the IMAP protocol adds support for
 disconnected operation. This will allow for a client on a notebook
@@ -117,6 +117,6 @@ Project Cyrus uses SMTP as the protocol for mail transport. For
 internal use between Cyrus clients and Cyrus post office machines,
 Kerberos extensions have been added to SMTP to allow for better
 guarantees of the originator of the message. Some time in the future,
-the Kerberos extentions may be replaced or augmented by some form of
+the Kerberos extensions may be replaced or augmented by some form of
 Privacy Enhanced Mail (PEM), but that is not in the original scope of
 Project Cyrus.

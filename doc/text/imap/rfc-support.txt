@@ -520,7 +520,7 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
    The Secure Sockets Layer (SSL) Protocol Version 3.0
 
-   Note: SSLv3 is considered inscure as it is vulnerable to
+   Note: SSLv3 is considered insecure as it is vulnerable to
      POODLE.Support for SSLv3 is being deprecated and removed.
 
 **RFC 6131**
@@ -710,10 +710,6 @@ RFC Wishlist
 **RFC 5183**
 
    Sieve Email Filtering: Environment Extension
-
-**RFC 5229**
-
-   Sieve Email Filtering: Variables Extension
 
 **RFC 5235**
 

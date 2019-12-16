@@ -2328,7 +2328,7 @@ FIELD DESCRIPTIONS
 
         Default "options" field for the mailbox on create.  You'll want to know
         what you're doing before setting this, but it can apply some default
-        annotations like duplicate supression 
+        annotations like duplicate suppression 
 
     .. endblob mailbox_default_options
 

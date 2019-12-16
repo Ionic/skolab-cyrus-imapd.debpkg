@@ -43,7 +43,7 @@ accessing the "/rss/" URL on the Cyrus server.
 The rss_feeds option uses the wildmat format to specify which
 mailboxes/folders will be made available via RSS. This list is further
 limited to only those mailboxes and folders that the authenticated
-user has peermissions to see.
+user has permissions to see.
 
 The rss_feeds option uses the internal namespace, which uses "." as a
 hierarchy separator, regardless of what "unixhierarchysep" is set to.

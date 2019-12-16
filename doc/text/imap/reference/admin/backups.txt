@@ -172,7 +172,7 @@ Requirements
 Cyrus Backups server
 --------------------
 
-1. Compile cyrus with the --enable-backup configure option and
+1. Compile cyrus with the "--enable-backup" configure option and
    install it.
 
 2. Set up an imapd.conf(5) file for it with the following options
@@ -463,8 +463,8 @@ need to shut down backupd. Just use the ctl_backups(8) "lock" command
 to hold a lock on each backup while you work with its files, and the
 rest of the backup system will work around that.
 
-Restorating is more complicated, depending on what you actually need
-to do: when you restart the backupd after restoring a filesystem
+Restoring is more complicated, depending on what you actually need to
+do: when you restart the backupd after restoring a filesystem
 snapshot, the next time your Cyrus IMAP server replicates to it, the
 restored backups will be brought up to date. Probably not what you
 wanted -- so don't restart backupd until you've done whatever you were

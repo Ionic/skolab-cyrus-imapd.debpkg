@@ -122,7 +122,7 @@ the CalDAV module.
 Freebusy URL
 ============
 
-When enabled in conjuction with the CalDAV module, the Freebusy URL
+When enabled in conjunction with the CalDAV module, the Freebusy URL
 module allows non-CalDAV and/or remote calendaring clients to query
 the freebusy information of Cyrus CalDAV users.
 
@@ -132,8 +132,12 @@ Access to the freebusy information is controlled by the "freebusy" ACL
 to access freebusy information, the freebusy ACL must be given to
 "anyone".
 
-Freebusy information is accessed via URLs of the following form:
-"https://<servername>/freebusy/user/<userid>"
+Freebusy information, consolidating the data of all user's calendars,
+is accessed via URLs of the following form:
+"https://<servername>/freebusy/user/<userid>".  Querying individual
+CalDAV collections, when they have explicitly "freebusy" ACL (9) set,
+is done via
+"https://<servername>/freebusy/user/<userid>/<collection>".
 
 Query parameters can be added to the URL per Section 4 of Freebusy
 Read URL, allowing the user to choose to set the start, end, period

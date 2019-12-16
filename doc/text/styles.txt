@@ -72,7 +72,7 @@ changes depending on circumstance. For example:
    **example.com** and your username on that machine is **john**, type
    "ssh john@example.com"
 
-   The "mount -o remount *file-system*" command remountes the named
+   The "mount -o remount *file-system*" command remounts the named
    file system. For example, to remount the "/home" file system, the
    command is "mount -o remount /home".
 

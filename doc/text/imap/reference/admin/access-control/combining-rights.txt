@@ -56,7 +56,7 @@ but only on the "\Seen" flag. To be more precise, all flags other than
 ACL "Macros"
 ============
 
-Cyrus adminitration supports short-hand macros you may use:
+Cyrus administration supports short-hand macros you may use:
 
 
 none

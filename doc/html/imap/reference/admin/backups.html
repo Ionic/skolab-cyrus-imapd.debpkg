@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Cyrus Backups &mdash; Cyrus IMAP 3.0.12 (stable) documentation</title>
+  <title>Cyrus Backups &mdash; Cyrus IMAP 3.0.13 (stable) documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.0.12 (stable) documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.0.13 (stable) documentation" href="../../../index.html"/>
         <link rel="up" title="Administrator Guide" href="../admin.html"/>
         <link rel="next" title="Cyrus NNTP" href="nntp.html"/>
         <link rel="prev" title="Cyrus Sieve" href="sieve.html"/> 
@@ -747,7 +747,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.0.12 (stable)</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.0.13 (stable)</a> &raquo;</li>
       
           <li><a href="../../../operations.html">Operations</a> &raquo;</li>
       
@@ -890,7 +890,7 @@ locations</p>
 <div class="section" id="cyrus-backups-server">
 <h3><a class="toc-backref" href="#id8">Cyrus Backups server</a><a class="headerlink" href="#cyrus-backups-server" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic">
-<li><p class="first">Compile cyrus with the &#8211;enable-backup configure option and install it.</p>
+<li><p class="first">Compile cyrus with the <code class="docutils literal"><span class="pre">--enable-backup</span></code> configure option and install it.</p>
 </li>
 <li><p class="first">Set up an <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> file for it with the following options
 (default values shown):</p>
@@ -1134,7 +1134,7 @@ backups will resume once your backupd is running again.</p>
 down backupd. Just use the <a class="reference internal" href="../manpages/systemcommands/ctl_backups.html#std:cyrusman-ctl_backups(8)">ctl_backups(8)</a> <code class="docutils literal"><span class="pre">lock</span></code> command to hold
 a lock on each backup while you work with its files, and the rest of the backup
 system will work around that.</p>
-<p>Restorating is more complicated, depending on what you actually need to do:
+<p>Restoring is more complicated, depending on what you actually need to do:
 when you restart the backupd after restoring a filesystem snapshot, the next
 time your Cyrus IMAP server replicates to it, the restored backups will be
 brought up to date. Probably not what you wanted &#8211; so don&#8217;t restart backupd
@@ -1270,7 +1270,7 @@ messages.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on Dec 01 2016
+        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on May 29 2019
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1290,7 +1290,7 @@ messages.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.0.12 (stable)',
+            VERSION:'3.0.13 (stable)',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

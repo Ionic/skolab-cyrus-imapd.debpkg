@@ -6761,6 +6761,8 @@ imap/http_carddav_js.h: imap/http_carddav.js
 @MAINTAINER_MODE_TRUE@lib/htmlchar.h: lib/htmlchar.st
 @MAINTAINER_MODE_TRUE@	$(AM_V_GEN)${top_srcdir}/tools/compile_st.pl -h $< > $@.NEW && mv $@.NEW $@
 
+# n.b. the order of the -m arguments to mkchartable.pl is important,
+# in particular ellie believes unifix.txt must be before UnicodeData.txt
 lib/chartable.c: lib/mkchartable.pl lib/charset/unifix.txt \
 	$(top_srcdir)/lib/charset/*.t \
 	lib/charset/UnicodeData.txt lib/charset/aliases.txt
