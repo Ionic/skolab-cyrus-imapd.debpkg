@@ -1,10 +1,15 @@
-cyrus-imapd (3.0.12-3) UNRELEASED; urgency=medium
+cyrus-imapd (3.0.13-1) unstable; urgency=medium
 
   * Remove dependency to dpkg
-  * Add patch to make build reproducible. Thanks to Daniel Shahaf!
   * Add hardening option to systemd service file (PrivateTmp=yes)
+  * Patch url
+  * New upstream version 3.0.13 (this adds a Debian patch to make build
+    reproducible, thanks to Daniel Shahaf)
+  * Refresh patches
+  * Update links
+  * Add "Rules-Requires-Root: no"
 
- -- Xavier Guimard <yadd@debian.org>  Wed, 04 Dec 2019 06:43:09 +0100
+ -- Xavier Guimard <yadd@debian.org>  Mon, 16 Dec 2019 06:48:53 +0100
 
 cyrus-imapd (3.0.12-2) unstable; urgency=medium
 
