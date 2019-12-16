@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>HTTP modules &mdash; Cyrus IMAP 3.0.12 (stable) documentation</title>
+  <title>HTTP modules &mdash; Cyrus IMAP 3.0.13 (stable) documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.0.12 (stable) documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.0.13 (stable) documentation" href="../../../index.html"/>
         <link rel="up" title="Installing Cyrus" href="../../installing.html"/>
         <link rel="next" title="CalDAV" href="http/caldav.html"/>
         <link rel="prev" title="Installing Cyrus" href="../../installing.html"/> 
@@ -747,7 +747,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.0.12 (stable)</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.0.13 (stable)</a> &raquo;</li>
       
           <li><a href="../../../setup.html">Setup</a> &raquo;</li>
       
@@ -935,7 +935,8 @@ needs to be customized to your specific hostnames.</p>
 <li><dl class="first docutils">
 <dt>Freebusy</dt>
 <dd><ul class="first last">
-<li><code class="docutils literal"><span class="pre">https://&lt;servername&gt;/freebusy/user/&lt;userid&gt;</span></code></li>
+<li><code class="docutils literal"><span class="pre">https://&lt;servername&gt;/freebusy/user/&lt;userid&gt;</span></code> - considers all CalDAV collections of the user</li>
+<li><code class="docutils literal"><span class="pre">https://&lt;servername&gt;/freebusy/user/&lt;userid&gt;/&lt;collection-name&gt;</span></code> - considers a single CalDAV collection</li>
 <li>Query parameters can be added to the URL per Section 4 of
 <a class="reference external" href="http://www.calconnect.org/pubdocs/CD0903%20Freebusy%20Read%20URL.pdf">Freebusy Read URL</a>.</li>
 </ul>
@@ -991,7 +992,7 @@ needs to be customized to your specific hostnames.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on Jan 24 2018
+        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on May 29 2019
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1011,7 +1012,7 @@ needs to be customized to your specific hostnames.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.0.12 (stable)',
+            VERSION:'3.0.13 (stable)',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

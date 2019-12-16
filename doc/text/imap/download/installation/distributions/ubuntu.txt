@@ -55,8 +55,8 @@ Note: The following non-Cyrus packages are required, and will be
   * [etc.]
 
 Note: The Debian Cyrus Team packages are split based upon functional
-  requirements of the installtion.  Depending upon your needs, you may
-  also wish to install any or all of these pacakges:
+  requirements of the installation.  Depending upon your needs, you
+  may also wish to install any or all of these packages:
 
   * cyrus-pop3d-2.4
 

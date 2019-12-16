@@ -21,12 +21,12 @@
 
 
 
+#define SNMPDEFINE_cmusieve "1.3.6.1.4.1.3.2.2.3.3"
 #define SNMPDEFINE_cmutree "1.3.6.1.4.1.3.2.2.3"
 #define SNMPDEFINE_mgmt "1.3.6.1.2"
-#define SNMPDEFINE_cmusieve "1.3.6.1.4.1.3.2.2.3.3"
-#define SNMPDEFINE_mtamib "1.3.6.1.2.1.28"
 #define SNMPDEFINE_mib2 "1.3.6.1.2.1"
 #define SNMPDEFINE_cmulmtp "1.3.6.1.4.1.3.2.2.3.2"
+#define SNMPDEFINE_mtamib "1.3.6.1.2.1.28"
 
 
 
@@ -68,27 +68,27 @@ typedef void lmtpstats_t;
 
 typedef enum {
 
-    mtaReceivedVolume,
-    TOTAL_CONNECTIONS,
-    SERVER_UPTIME,
-    SERVER_NAME_VERSION,
     mtaTransmittedVolume,
-    SIEVE_VACATION_TOTAL,
-    SIEVE_NOTIFY,
-    SIEVE_MESSAGES_PROCESSED,
-    mtaReceivedMessages,
-    AUTHENTICATION_YES,
     AUTHENTICATION_NO,
-    mtaTransmittedMessages,
     SIEVE_REJECT,
-    mtaSuccessfulConvertedMessages,
-    mtaReceivedRecipients,
+    SIEVE_MESSAGES_PROCESSED,
+    mtaReceivedVolume,
+    mtaReceivedMessages,
     SIEVE_KEEP,
-    SIEVE_DISCARD,
-    SIEVE_FILEINTO,
-    SIEVE_REDIRECT,
+    mtaTransmittedMessages,
     SIEVE_VACATION_REPLIED,
-    ACTIVE_CONNECTIONS
+    SIEVE_DISCARD,
+    SIEVE_VACATION_TOTAL,
+    SERVER_NAME_VERSION,
+    SIEVE_NOTIFY,
+    SERVER_UPTIME,
+    mtaReceivedRecipients,
+    SIEVE_REDIRECT,
+    mtaSuccessfulConvertedMessages,
+    SIEVE_FILEINTO,
+    ACTIVE_CONNECTIONS,
+    TOTAL_CONNECTIONS,
+    AUTHENTICATION_YES
 } lmtpstats_t;
 
 

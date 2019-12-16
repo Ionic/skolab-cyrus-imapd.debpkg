@@ -21,11 +21,11 @@ Cyrus IMAP 2.4.19 Release Notes
 * Fixed: lmtpd can now deliver when mupdate server isn't available
   (thanks Michael Menge)
 
-* Fixed task 227: service processes no longer divide by zero when
-  invoked with -T 0 argument (thanks Ian Batten and Jens Erat)
+* Fixed T227: service processes no longer divide by zero when
+  invoked with *-T 0* argument (thanks Ian Batten and Jens Erat)
 
-* Fixed task 229: ctl_cyrusdb now uses database paths from
-  imapd.conf (thanks Simon Matter)
+* Fixed T229: ctl_cyrusdb now uses database paths from imapd.conf
+  (thanks Simon Matter)
 
 * Fixed bug #3862: mailbox database changes now rolled back on
   mupdate failure during rename (thanks Michael Menge)

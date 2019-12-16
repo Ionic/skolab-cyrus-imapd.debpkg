@@ -25,7 +25,7 @@ access (which had been being mirrored from AMS to Cyrus), was cut over
 to Cyrus completely. AMS was finally phased out in May of 2002.
 
 As development on the project progressed, it became clear that
-scalability was a concern, in addition some additional reliablilty was
+scalability was a concern, in addition some additional reliability was
 desired beyond that which would be provided from a single machine
 configuration. To meet these goals, the Cyrus Murder was developed,
 and after several revisions was deployed to CMU in the summer of 2002.
