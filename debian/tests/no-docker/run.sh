@@ -11,6 +11,12 @@ git clone https://github.com/cyrusimap/cyrus-docker.git cyrus-docker.git
 git clone https://github.com/cyrusimap/cassandane.git cassandane.git
 git clone https://github.com/cyrusimap/cyruslibs.git cyruslibs.git
 git clone https://github.com/dovecot/core.git dovecot.git
+# Use pacakged UnicodeData.txt as it often 503's when downloading on
+# arm64 armhf in Ubuntu's autopkgtest infrastructure
+cp /usr/share/unicode/UnicodeData.txt dovecot.git/src/lib
+cp /usr/share/unicode/auxiliary/WordBreakProperty.txt dovecot.git/src/lib-fts
+cp /usr/share/unicode/PropList.txt dovecot.git/src/lib-fts
+
 #wget https://github.com/dovecot/core/archive/2.3.8.tar.gz
 #tar xzf 2.3.8.tar.gz
 #mv core-2.3.8 dovecot.git
