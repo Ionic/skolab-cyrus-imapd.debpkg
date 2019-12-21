@@ -62,6 +62,7 @@ upgradealldb() {
 
 	DO_UPGRADE_DB=
 	if [ "${NEW_DBVALUE}" != "${OLD_DBVALUE}" ] ; then
+	    echo "Upgrading $OLD_DBKEY from $OLD_DBVALUE to $NEW_DBVALUE ..."
 	    DO_UPGRADE_DB=yes
 	fi
 
@@ -82,10 +83,13 @@ upgradealldb() {
 		    return 1
 		fi
 		;;
-	    DUPLICATE|PTS|STATUSCACHE|TLS|ZONEINFO|SEEN)
+	    DUPLICATE|PTS|STATUSCACHE|TLS|ZONEINFO|SEEN|CONVERSATIONS|SEARCH_INDEXED|SORTCACHE)
 		;;
 	    USERDENY)
 		DBFILE=user_deny.db
+		;;
+	    BACKUP)
+	        DBFILE=backups.db
 		;;
 	    *)
 		echo "$0: Unknown type of DB: $OLD_DBKEY" 1>&2
