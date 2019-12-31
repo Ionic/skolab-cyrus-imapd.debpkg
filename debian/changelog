@@ -1,3 +1,9 @@
+cyrus-imapd (3.0.8-6+deb10u4) buster; urgency=medium
+
+  * Add BACKUP type to cyrus-upgrade-db (Closes: #930764)
+
+ -- Xavier Guimard <yadd@debian.org>  Sat, 21 Dec 2019 14:39:58 +0100
+
 cyrus-imapd (3.0.8-6+deb10u3) buster-security; urgency=medium
 
   * Add patch to avoid mailbox creation as administrator
