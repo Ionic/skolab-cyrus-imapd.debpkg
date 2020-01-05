@@ -50,16 +50,16 @@ Examples
 
    **chk_cyrus -P** *default*
 
-   Perform consistancy checks on *default* partition.
+   Perform consistency checks on *default* partition.
 
    **chk_cyrus -C** */usr/local/etc/imapd-slot1.conf* **-P** *default*
 
-   Perform consistancy checks on *default* partition using specified
+   Perform consistency checks on *default* partition using specified
    configuration file.
 
    **chk_cyrus -M** *user.marysmith*
 
-   Perform consistancy checks on mailbox *user.marysmith*.
+   Perform consistency checks on mailbox *user.marysmith*.
 
 
 See Also

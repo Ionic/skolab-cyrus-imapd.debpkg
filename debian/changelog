@@ -1,3 +1,22 @@
+cyrus-imapd (3.0.13-2) unstable; urgency=medium
+
+  * Add BACKUP type to cyrus-upgrade-db (Closes: #930764)
+
+ -- Xavier Guimard <yadd@debian.org>  Sat, 21 Dec 2019 14:34:54 +0100
+
+cyrus-imapd (3.0.13-1) unstable; urgency=medium
+
+  * Remove dependency to dpkg
+  * Add hardening option to systemd service file (PrivateTmp=yes)
+  * Patch url
+  * New upstream version 3.0.13 (this adds a Debian patch to make build
+    reproducible, thanks to Daniel Shahaf)
+  * Refresh patches
+  * Update links
+  * Add "Rules-Requires-Root: no"
+
+ -- Xavier Guimard <yadd@debian.org>  Mon, 16 Dec 2019 06:48:53 +0100
+
 cyrus-imapd (3.0.12-2~bpo10+1) buster-backports; urgency=medium
 
   * Rebuild for buster-backports.

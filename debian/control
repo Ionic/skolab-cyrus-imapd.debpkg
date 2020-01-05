@@ -1,12 +1,11 @@
 Source: cyrus-imapd
-Section: mail
-Priority: optional
 Maintainer: Debian Cyrus Team <team+cyrus@tracker.debian.org>
 Uploaders: Henrique de Moraes Holschuh <hmh@debian.org>,
            Ondřej Surý <ondrej@debian.org>,
            Anthony Prades <toony.debian@chezouam.net>,
            Xavier Guimard <yadd@debian.org>
-Standards-Version: 4.4.1
+Section: mail
+Priority: optional
 Build-Depends: bison,
                comerr-dev,
                debhelper-compat (= 12),
@@ -43,14 +42,14 @@ Build-Depends: bison,
                unicode-data,
                vim-common,
                xutils-dev
-Vcs-Git: https://salsa.debian.org/debian/cyrus-imapd.git
+Standards-Version: 4.4.1
 Vcs-Browser: https://salsa.debian.org/debian/cyrus-imapd
+Vcs-Git: https://salsa.debian.org/debian/cyrus-imapd.git
 Homepage: https://www.cyrusimap.org/
+Rules-Requires-Root: no
 
 Package: cyrus-common
 Architecture: any
-Pre-Depends: dpkg (>= 1.17.14~),
-             ${misc:Pre-Depends}
 Depends: adduser,
          db-upgrade-util,
          db-util,
@@ -75,6 +74,7 @@ Suggests: apt-listchanges,
           cyrus-pop3d,
           cyrus-replication,
           sasl2-bin
+Pre-Depends: ${misc:Pre-Depends}
 Description: Cyrus mail system - common files
  Cyrus is an IMAP server designed to handle massive quantities of mail,
  with a number of features not found in other IMAP implementations,
@@ -101,11 +101,10 @@ Description: Cyrus mail system - common files
 
 Package: cyrus-doc
 Architecture: all
-Section: doc
-Pre-Depends: dpkg (>= 1.17.14~),
-             ${misc:Pre-Depends}
-Depends: ${misc:Depends}
 Multi-Arch: foreign
+Section: doc
+Depends: ${misc:Depends}
+Pre-Depends: ${misc:Pre-Depends}
 Description: Cyrus mail system - documentation files
  Cyrus is an IMAP server designed to handle massive quantities of mail,
  with a number of features not found in other IMAP implementations,
@@ -126,14 +125,13 @@ Description: Cyrus mail system - documentation files
 
 Package: cyrus-imapd
 Architecture: any
-Pre-Depends: dpkg (>= 1.17.14~),
-             ${misc:Pre-Depends}
 Depends: cyrus-common (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
 Recommends: rsync
-Provides: imap-server
+Pre-Depends: ${misc:Pre-Depends}
 Conflicts: imap-server
+Provides: imap-server
 Description: Cyrus mail system - IMAP support
  Cyrus is an IMAP server designed to handle massive quantities of mail,
  with a number of features not found in other IMAP implementations,
@@ -155,13 +153,12 @@ Description: Cyrus mail system - IMAP support
 
 Package: cyrus-pop3d
 Architecture: any
-Pre-Depends: dpkg (>= 1.17.14~),
-             ${misc:Pre-Depends}
 Depends: cyrus-common (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
-Provides: pop3-server
+Pre-Depends: ${misc:Pre-Depends}
 Conflicts: pop3-server
+Provides: pop3-server
 Description: Cyrus mail system - POP3 support
  Cyrus is an IMAP server designed to handle massive quantities of mail,
  with a number of features not found in other IMAP implementations,
@@ -183,13 +180,12 @@ Description: Cyrus mail system - POP3 support
 
 Package: cyrus-admin
 Architecture: all
-Pre-Depends: dpkg (>= 1.17.14~),
-             ${misc:Pre-Depends}
 Depends: cyrus-common,
          libcyrus-imap-perl (>= ${binary:Version}),
          ${misc:Depends},
          ${perl:Depends}
 Suggests: sasl2-bin
+Pre-Depends: ${misc:Pre-Depends}
 Description: Cyrus mail system - administration tools
  This package provides the administrative tools for the Cyrus IMAPd suite.
  It contains the cyradm tool which can be used to administer
@@ -201,14 +197,13 @@ Description: Cyrus mail system - administration tools
 
 Package: cyrus-murder
 Architecture: any
-Pre-Depends: dpkg (>= 1.17.14~),
-             ${misc:Pre-Depends}
 Depends: cyrus-common (= ${binary:Version}),
          cyrus-imapd (= ${binary:Version}),
          cyrus-pop3d (= ${binary:Version}),
          cyrus-clients (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
+Pre-Depends: ${misc:Pre-Depends}
 Description: Cyrus mail system - proxies and aggregator
  This package contains the Cyrus IMAPd suite murder aggregator system,
  i.e. IMAP, POP3  and LMTP proxies, and the mupdate mailbox master daemon.
@@ -219,12 +214,11 @@ Description: Cyrus mail system - proxies and aggregator
 
 Package: cyrus-replication
 Architecture: any
-Pre-Depends: dpkg (>= 1.17.14~),
-             ${misc:Pre-Depends}
 Depends: cyrus-common (= ${binary:Version}),
          cyrus-imapd (= ${binary:Version}) | cyrus-pop3d (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
+Pre-Depends: ${misc:Pre-Depends}
 Description: Cyrus mail system - replication
  This package contains the Cyrus IMAPd suite replication system.
  It allows the replication of the mail spool between two imap or pop servers.
@@ -233,13 +227,12 @@ Description: Cyrus mail system - replication
 
 Package: cyrus-nntpd
 Architecture: any
-Pre-Depends: dpkg (>= 1.17.14~),
-             ${misc:Pre-Depends}
 Depends: cyrus-common (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
-Provides: news-transport-system
+Pre-Depends: ${misc:Pre-Depends}
 Conflicts: news-transport-system
+Provides: news-transport-system
 Description: Cyrus mail system - NNTP support
  This package contains the NNTP (Network News Transfer Protocol) portion of
  the Cyrus IMAPd suite.
@@ -248,11 +241,10 @@ Description: Cyrus mail system - NNTP support
 
 Package: cyrus-caldav
 Architecture: any
-Pre-Depends: dpkg (>= 1.17.14~),
-             ${misc:Pre-Depends}
 Depends: cyrus-common (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
+Pre-Depends: ${misc:Pre-Depends}
 Conflicts: cyrus-caldav-2.4
 Replaces: cyrus-caldav-2.4
 Description: Cyrus mail system - CalDAV and CardDAV support
@@ -263,10 +255,9 @@ Description: Cyrus mail system - CalDAV and CardDAV support
 
 Package: cyrus-clients
 Architecture: any
-Pre-Depends: dpkg (>= 1.17.14~),
-             ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends}
+Pre-Depends: ${misc:Pre-Depends}
 Description: Cyrus mail system - test clients
  This package contains client tools to test the Cyrus IMAPd suite.
  It contains the mupdatetest, sivtest, smtptest, lmtptest,
@@ -279,12 +270,11 @@ Description: Cyrus mail system - test clients
 Package: cyrus-dev
 Architecture: any
 Section: devel
-Pre-Depends: dpkg (>= 1.17.14~),
-             ${misc:Pre-Depends}
 Depends: cyrus-common (= ${binary:Version}),
          libcyrus-imap-perl (>= ${binary:Version}),
-         libsasl2-dev (>= 2.1.9),
+         libsasl2-dev,
          ${misc:Depends}
+Pre-Depends: ${misc:Pre-Depends}
 Description: Cyrus mail system - developer files
  This package contains header files and the static library needed
  to develop IMAP applications that interface with the Cyrus IMAPd suite.
@@ -293,13 +283,12 @@ Description: Cyrus mail system - developer files
 
 Package: libcyrus-imap-perl
 Architecture: any
-Pre-Depends: dpkg (>= 1.17.14~),
-             ${misc:Pre-Depends}
+Multi-Arch: same
+Section: perl
 Depends: ${misc:Depends},
          ${perl:Depends},
          ${shlibs:Depends}
-Section: perl
-Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
 Description: Interface to Cyrus imap client imclient library
  The Cyrus::IMAP module provides an interface to the Cyrus imclient
  library.  These are primarily useful for implementing cyradm operations

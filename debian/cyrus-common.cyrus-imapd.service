@@ -7,6 +7,7 @@ Type=simple
 Environment=LISTENQUEUE=32 CONF=/etc/imapd.conf MASTERCONF=/etc/cyrus.conf
 EnvironmentFile=/etc/default/cyrus-imapd
 ExecStart=/usr/sbin/cyrmaster -l $LISTENQUEUE -C $CONF -M $MASTERCONF $OPTIONS
+PrivateTmp=yes
 
 [Install]
 WantedBy=multi-user.target

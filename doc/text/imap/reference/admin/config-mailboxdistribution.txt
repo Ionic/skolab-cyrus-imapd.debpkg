@@ -241,7 +241,7 @@ If you tend to use the same service instance for a long lapse of time
 and perform a large amount of mailboxes creation, usage data will soon
 be out-of-date. For the cases where it is useful to refresh those
 data, you can configure the number of creation requests after which
-data are resetted:
+data are reset:
 
 * **serverlist_select_usage_reinit** for a frontend
 

@@ -257,9 +257,9 @@ Sieve has a lot of extensions. Cyrus supports a subset of these:
 
 * Sieve language reference **RFC 5228**
 
-* Vacation extension **RFC 5230**
+* Vacation Extension **RFC 5230**
 
-* Vacation seconds **RFC 6131**
+* Vacation Seconds **RFC 6131**
 
 * Relational Tests **RFC 5231**
 
@@ -269,7 +269,7 @@ Sieve has a lot of extensions. Cyrus supports a subset of these:
 
 * Regular Expression Extension Draft regex RFC
 
-* Checking mailbox status and accessing mailbox metadata **RFC
+* Checking Mailbox Status and Accessing Mailbox Metadata **RFC
   5490**
 
 * Notify Extension **RFC 5435**
@@ -284,7 +284,7 @@ Sieve has a lot of extensions. Cyrus supports a subset of these:
 
 * IMAP flag Extension Draft imap flags RFC
 
-* Body Extension Draft body extension RFC
+* Body Extension **RFC 5173**
 
 Note that the final RFCs of these last sieve extensions have
 significant changes that are not currently supported.
