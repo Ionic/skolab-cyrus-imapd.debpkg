@@ -4,8 +4,13 @@ cyrus-imapd (3.2.0~beta1-1) UNRELEASED; urgency=medium
   * Add build dependency to libcunit1-dev
   * Refresh patches
   * Update install
+  * Fix perl shebang
+  * Temporarily don't install some manpages (missing GitPython)
+  * Add build dependencies to libnghttp2-dev,
+    libpod-pom-view-restructured-perl, libbrotli-dev, libwslay-dev,
+    libzstd-dev, python-git-doc, python3-sphinx and shapelib
 
- -- Xavier Guimard <yadd@debian.org>  Mon, 10 Feb 2020 09:52:07 +0100
+ -- Xavier Guimard <yadd@debian.org>  Mon, 10 Feb 2020 12:01:14 +0100
 
 cyrus-imapd (3.0.13-2) unstable; urgency=medium
 
