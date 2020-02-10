@@ -67,16 +67,22 @@ typedef struct deliver_data {
     const struct auth_state *authstate;
 } deliver_data_t;
 
+struct imap4flags {
+    const strarray_t *flags;
+    const struct auth_state *authstate;
+};
+
 /* forward declarations */
 extern int deliver_local(deliver_data_t *mydata,
-                         const strarray_t *flags,
+                         struct imap4flags *imap4flags,
                          const mbname_t *mbname);
 
 extern int deliver_mailbox(FILE *f,
                            struct message_content *content,
                            struct stagemsg *stage,
                            unsigned size,
-                           const strarray_t *flags,
+                           struct imap4flags *imap4flags,
+                           struct entryattlist *annotations,
                            const char *authuser,
                            const struct auth_state *authstate,
                            char *id,
@@ -84,6 +90,7 @@ extern int deliver_mailbox(FILE *f,
                            char *notifyheader,
                            const char *mailboxname,
                            char *date,
+                           time_t savedate,
                            int quotaoverride,
                            int acloverride);
 

@@ -63,6 +63,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/param.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <netdb.h>
 #include <sys/socket.h>
@@ -80,7 +81,6 @@
 #include "auth.h"
 #include "backend.h"
 #include "duplicate.h"
-#include "exitcodes.h"
 #include "global.h"
 #include "hash.h"
 #include "idle.h"
@@ -236,13 +236,7 @@ extern int saslserver(sasl_conn_t *conn, const char *mech,
                       struct protstream *pin, struct protstream *pout,
                       int *sasl_result, char **success_data);
 
-static struct
-{
-    char *ipremoteport;
-    char *iplocalport;
-    sasl_ssf_t ssf;
-    char *authid;
-} saslprops = {NULL,NULL,0,NULL};
+static struct saslprops_t saslprops = SASLPROPS_INITIALIZER;
 
 static struct sasl_callback mysasl_cb[] = {
     { SASL_CB_GETOPT, (mysasl_cb_ft *) &mysasl_config, NULL },
@@ -312,7 +306,7 @@ static int read_response(struct backend *s, int force_notfatal, char **result)
     if (!prot_fgets(buf, sizeof(buf), s->in)) {
         /* uh oh */
         if (s == backend_current && !force_notfatal)
-            fatal("Lost connection to selected backend", EC_UNAVAILABLE);
+            fatal("Lost connection to selected backend", EX_UNAVAILABLE);
         proxy_downserver(s);
         return IMAP_SERVER_UNAVAILABLE;
     }
@@ -331,7 +325,7 @@ static int pipe_to_end_of_response(struct backend *s, int force_notfatal)
         if (!prot_fgets(buf, sizeof(buf), s->in)) {
             /* uh oh */
             if (s == backend_current && !force_notfatal)
-                fatal("Lost connection to selected backend", EC_UNAVAILABLE);
+                fatal("Lost connection to selected backend", EX_UNAVAILABLE);
             proxy_downserver(s);
             return IMAP_SERVER_UNAVAILABLE;
         }
@@ -411,19 +405,7 @@ static void nntp_reset(void)
     nntp_tls_comp = NULL;
     nntp_starttls_done = 0;
 
-    if(saslprops.iplocalport) {
-       free(saslprops.iplocalport);
-       saslprops.iplocalport = NULL;
-    }
-    if(saslprops.ipremoteport) {
-       free(saslprops.ipremoteport);
-       saslprops.ipremoteport = NULL;
-    }
-    if(saslprops.authid) {
-       free(saslprops.authid);
-       saslprops.authid = NULL;
-    }
-    saslprops.ssf = 0;
+    saslprops_reset(&saslprops);
 
     nntp_exists = 0;
     nntp_current = 0;
@@ -443,7 +425,7 @@ int service_init(int argc __attribute__((unused)),
 
     initialize_nntp_error_table();
 
-    if (geteuid() == 0) fatal("must run as the Cyrus user", EC_USAGE);
+    if (geteuid() == 0) fatal("must run as the Cyrus user", EX_USAGE);
     setproctitle_init(argc, argv, envp);
 
     /* set signal handlers */
@@ -463,20 +445,8 @@ int service_init(int argc __attribute__((unused)),
     if (duplicate_init(NULL) != 0) {
         syslog(LOG_ERR,
                "unable to init duplicate delivery database\n");
-        fatal("unable to init duplicate delivery database", EC_SOFTWARE);
+        fatal("unable to init duplicate delivery database", EX_SOFTWARE);
     }
-
-    /* open the mboxlist, we'll need it for real work */
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-
-    /* open the quota db, we'll need it for expunge */
-    quotadb_init(0);
-    quotadb_open(NULL);
-
-    /* open the user deny db */
-    denydb_init(0);
-    denydb_open(0);
 
     /* setup for sending IMAP IDLE notifications */
     idle_init();
@@ -488,7 +458,7 @@ int service_init(int argc __attribute__((unused)),
             if (!tls_enabled()) {
                 syslog(LOG_ERR, "nntps: required OpenSSL options not present");
                 fatal("nntps: required OpenSSL options not present",
-                      EC_CONFIG);
+                      EX_CONFIG);
             }
             break;
 
@@ -508,10 +478,6 @@ int service_init(int argc __attribute__((unused)),
             usage();
         }
     }
-
-    /* Initialize the annotatemore extention */
-    annotate_init(NULL, NULL);
-    annotatemore_open();
 
     newsmaster = (char *) config_getstring(IMAPOPT_NEWSMASTER);
     newsmaster_authstate = auth_newstate(newsmaster);
@@ -538,8 +504,6 @@ int service_main(int argc __attribute__((unused)),
 
     signals_poll();
 
-    sync_log_init();
-
     nntp_in = prot_new(0, 0);
     nntp_out = prot_new(1, 1);
     protgroup_insert(protin, nntp_in);
@@ -547,26 +511,25 @@ int service_main(int argc __attribute__((unused)),
     /* Find out name of client host */
     nntp_clienthost = get_clienthost(0, &localip, &remoteip);
 
+    if (localip && remoteip) {
+        buf_setcstr(&saslprops.ipremoteport, remoteip);
+        buf_setcstr(&saslprops.iplocalport, localip);
+    }
+
     /* other params should be filled in */
-    if (sasl_server_new("nntp", config_servername, NULL, NULL, NULL,
+    if (sasl_server_new("nntp", config_servername, NULL,
+                        buf_cstringnull_ifempty(&saslprops.iplocalport),
+                        buf_cstringnull_ifempty(&saslprops.ipremoteport),
                         NULL, SASL_SUCCESS_DATA, &nntp_saslconn) != SASL_OK)
-        fatal("SASL failed initializing: sasl_server_new()",EC_TEMPFAIL);
+        fatal("SASL failed initializing: sasl_server_new()",EX_TEMPFAIL);
 
     /* will always return something valid */
     secprops = mysasl_secprops(0);
     sasl_setprop(nntp_saslconn, SASL_SEC_PROPS, secprops);
     sasl_setprop(nntp_saslconn, SASL_SSF_EXTERNAL, &extprops_ssf);
 
-    if (localip) {
-        sasl_setprop(nntp_saslconn, SASL_IPLOCALPORT, localip);
-        saslprops.iplocalport = xstrdup(localip);
-    }
-
     if (remoteip) {
         char hbuf[NI_MAXHOST], *p;
-
-        sasl_setprop(nntp_saslconn, SASL_IPREMOTEPORT, remoteip);
-        saslprops.ipremoteport = xstrdup(remoteip);
 
         /* Create pre-authentication telemetry log based on client IP */
         strlcpy(hbuf, remoteip, NI_MAXHOST);
@@ -577,9 +540,8 @@ int service_main(int argc __attribute__((unused)),
     nntp_tls_required = config_getswitch(IMAPOPT_TLS_REQUIRED);
 
     /* Set inactivity timer */
-    nntp_timeout = config_getint(IMAPOPT_NNTPTIMEOUT);
-    if (nntp_timeout < 3) nntp_timeout = 3;
-    nntp_timeout *= 60;
+    nntp_timeout = config_getduration(IMAPOPT_NNTPTIMEOUT, 'm');
+    if (nntp_timeout < 3 * 60) nntp_timeout = 3 * 60;
     prot_settimeout(nntp_in, nntp_timeout);
     prot_setflushonread(nntp_in, nntp_out);
 
@@ -594,7 +556,7 @@ int service_main(int argc __attribute__((unused)),
     }
     if (config_serverinfo) prot_printf(nntp_out, " %s", config_servername);
     if (config_serverinfo == IMAP_ENUM_SERVERINFO_ON) {
-        prot_printf(nntp_out, " Cyrus NNTP %s", cyrus_version());
+        prot_printf(nntp_out, " Cyrus NNTP %s", CYRUS_VERSION);
     }
     if (shutdown) {
         prot_printf(nntp_out, "server unavailable, %s\r\n", unavail);
@@ -625,7 +587,7 @@ static void usage(void)
 {
     prot_printf(nntp_out, "503 usage: nntpd [-C <alt_config>] [-s]\r\n");
     prot_flush(nntp_out);
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 /*
@@ -653,21 +615,7 @@ void shut_down(int code)
     }
     if (backend_cached) free(backend_cached);
 
-    sync_log_done();
-
     duplicate_done();
-
-    mboxlist_close();
-    mboxlist_done();
-
-    quotadb_close();
-    quotadb_done();
-
-    denydb_close();
-    denydb_done();
-
-    annotatemore_close();
-    annotate_done();
 
     idle_done();
 
@@ -692,6 +640,8 @@ void shut_down(int code)
 
     if (newsgroups) free_wildmats(newsgroups);
     auth_freestate(newsmaster_authstate);
+
+    saslprops_free(&saslprops);
 
     cyrus_done();
 
@@ -725,20 +675,12 @@ static int reset_saslconn(sasl_conn_t **conn)
 
     sasl_dispose(conn);
     /* do initialization typical of service_main */
-    ret = sasl_server_new("nntp", config_servername,
-                         NULL, NULL, NULL,
-                         NULL, SASL_SUCCESS_DATA, conn);
+    ret = sasl_server_new("nntp", config_servername, NULL,
+                          buf_cstringnull_ifempty(&saslprops.iplocalport),
+                          buf_cstringnull_ifempty(&saslprops.ipremoteport),
+                          NULL, SASL_SUCCESS_DATA, conn);
     if(ret != SASL_OK) return ret;
 
-    if(saslprops.ipremoteport)
-       ret = sasl_setprop(*conn, SASL_IPREMOTEPORT,
-                          saslprops.ipremoteport);
-    if(ret != SASL_OK) return ret;
-
-    if(saslprops.iplocalport)
-       ret = sasl_setprop(*conn, SASL_IPLOCALPORT,
-                          saslprops.iplocalport);
-    if(ret != SASL_OK) return ret;
     secprops = mysasl_secprops(0);
     ret = sasl_setprop(*conn, SASL_SEC_PROPS, secprops);
     if(ret != SASL_OK) return ret;
@@ -746,17 +688,12 @@ static int reset_saslconn(sasl_conn_t **conn)
 
     /* If we have TLS/SSL info, set it */
     if(saslprops.ssf) {
-        ret = sasl_setprop(*conn, SASL_SSF_EXTERNAL, &saslprops.ssf);
+        ret = saslprops_set_tls(&saslprops, *conn);
     } else {
         ret = sasl_setprop(*conn, SASL_SSF_EXTERNAL, &extprops_ssf);
     }
 
     if(ret != SASL_OK) return ret;
-
-    if(saslprops.authid) {
-       ret = sasl_setprop(*conn, SASL_AUTH_EXTERNAL, saslprops.authid);
-       if(ret != SASL_OK) return ret;
-    }
     /* End TLS/SSL Info */
 
     return SASL_OK;
@@ -1601,7 +1538,7 @@ static int getuserpass(struct protstream *in, struct buf *buf)
         }
         buf_putc(buf, c);
         if (buf_len(buf) > MAX_NNTP_ARG) {
-            fatal("argument too long", EC_IOERR);
+            fatal("argument too long", EX_IOERR);
         }
     }
 }
@@ -1828,7 +1765,7 @@ static void cmd_capabilities(char *keyword __attribute__((unused)))
     prot_printf(nntp_out, "VERSION 2\r\n");
     if (nntp_authstate || (config_serverinfo == IMAP_ENUM_SERVERINFO_ON)) {
         prot_printf(nntp_out,
-                    "IMPLEMENTATION Cyrus NNTP %s\r\n", cyrus_version());
+                    "IMPLEMENTATION Cyrus NNTP %s\r\n", CYRUS_VERSION);
     }
 
     /* add STARTTLS */
@@ -1972,7 +1909,7 @@ static void cmd_article(int part, char *msgid, unsigned long uid)
                     break;
                 }
                 else if (part == ARTICLE_BODY) {
-                    /* start outputing text */
+                    /* start outputting text */
                     output = 1;
                     continue;
                 }
@@ -2081,9 +2018,9 @@ static void cmd_authinfo_pass(char *pass)
                             strlen(nntp_userid),
                             pass,
                             strlen(pass))!=SASL_OK) {
-        syslog(LOG_NOTICE, "badlogin: %s plaintext %s %s",
+        syslog(LOG_NOTICE, "badlogin: %s plaintext (%s) [%s]",
                nntp_clienthost, nntp_userid, sasl_errdetail(nntp_saslconn));
-        failedloginpause = config_getint(IMAPOPT_FAILEDLOGINPAUSE);
+        failedloginpause = config_getduration(IMAPOPT_FAILEDLOGINPAUSE, 's');
         if (failedloginpause != 0) {
             sleep(failedloginpause);
         }
@@ -2188,6 +2125,7 @@ static void cmd_authinfo_sasl(char *cmd, char *mech, char *resp)
     if (r) {
         int code;
         const char *errorstring = NULL;
+        const char *userid = "-notset-";
 
         switch (r) {
         case IMAP_SASL_CANCEL:
@@ -2218,10 +2156,13 @@ static void cmd_authinfo_sasl(char *cmd, char *mech, char *resp)
                 code = 481;
             }
 
-            syslog(LOG_NOTICE, "badlogin: %s %s [%s]",
-                   nntp_clienthost, mech, sasl_errdetail(nntp_saslconn));
+            if (sasl_result != SASL_NOUSER)
+                sasl_getprop(nntp_saslconn, SASL_USERNAME, (const void **) &userid);
 
-            failedloginpause = config_getint(IMAPOPT_FAILEDLOGINPAUSE);
+            syslog(LOG_NOTICE, "badlogin: %s %s (%s) [%s]",
+                   nntp_clienthost, mech, userid, sasl_errdetail(nntp_saslconn));
+
+            failedloginpause = config_getduration(IMAPOPT_FAILEDLOGINPAUSE, 's');
             if (failedloginpause != 0) {
                 sleep(failedloginpause);
             }
@@ -2608,7 +2549,9 @@ static int newsgroups_cb(const char *mailbox,
                   uint32_t uid __attribute__((unused)),
                   const char *entry __attribute__((unused)),
                   const char *userid,
-                  const struct buf *value, void *rock)
+                  const struct buf *value,
+                  const struct annotate_metadata *mdata __attribute__((unused)),
+                  void *rock)
 {
     struct wildmat *wild = (struct wildmat *) rock;
 
@@ -2723,8 +2666,8 @@ static void cmd_list(char *arg1, char *arg2)
 
         strcpy(pattern, newsprefix);
         strcat(pattern, "*");
-        annotatemore_findall(pattern, 0, "/comment",
-                             newsgroups_cb, lrock.wild);
+        annotatemore_findall(pattern, 0, "/comment", /*modseq*/0,
+                             newsgroups_cb, lrock.wild, /*flags*/0);
 
         prot_printf(nntp_out, ".\r\n");
 
@@ -2779,7 +2722,7 @@ static void cmd_mode(char *arg)
             prot_printf(nntp_out, " %s", config_servername);
         }
         if (nntp_authstate || (config_serverinfo == IMAP_ENUM_SERVERINFO_ON)) {
-            prot_printf(nntp_out, " Cyrus NNTP %s", cyrus_version());
+            prot_printf(nntp_out, " Cyrus NNTP %s", CYRUS_VERSION);
         }
         prot_printf(nntp_out, " server ready, posting %s\r\n",
                     (nntp_capa & MODE_READ) ? "allowed" : "prohibited");
@@ -3122,9 +3065,9 @@ static int savemsg(message_data_t *m, FILE *f)
     /* get date */
     if ((body = spool_getheader(m->hdrcache, "date")) == NULL) {
         /* no date, create one */
-        char datestr[RFC822_DATETIME_MAX+1];
+        char datestr[RFC5322_DATETIME_MAX+1];
 
-        time_to_rfc822(now, datestr, sizeof(datestr));
+        time_to_rfc5322(now, datestr, sizeof(datestr));
         m->date = xstrdup(datestr);
         fprintf(f, "Date: %s\r\n", datestr);
         spool_cache_header(xstrdup("Date"), xstrdup(datestr), m->hdrcache);
@@ -3363,7 +3306,7 @@ static int deliver(message_data_t *msg)
             if (!r) {
                 prot_rewind(msg->data);
                 if (stage) {
-                    r = append_fromstage(&as, &body, stage, 0,
+                    r = append_fromstage(&as, &body, stage, 0, 0,
                                          NULL, !singleinstance,
                                          /*annotations*/NULL);
                 } else {
@@ -3461,7 +3404,7 @@ static int rmgroup(message_data_t *msg)
 
     if (!r) r = mboxlist_deletemailbox(mailboxname, 0,
                                        newsmaster, newsmaster_authstate,
-                                       1, 0, 0);
+                                       1, 0, 0, 0);
 
     if (!r) sync_log_mailbox(mailboxname);
 
@@ -3475,6 +3418,7 @@ static int mvgroup(message_data_t *msg)
     char *group;
     char oldmailboxname[MAX_MAILBOX_BUFFER];
     char newmailboxname[MAX_MAILBOX_BUFFER];
+    struct mbentry_t *mbentry = NULL;
 
     /* isolate old newsgroup */
     group = msg->control + 7; /* skip "mvgroup" */
@@ -3492,8 +3436,12 @@ static int mvgroup(message_data_t *msg)
     snprintf(newmailboxname, sizeof(newmailboxname), "%s%.*s",
              newsprefix, (int)len, group);
 
-    r = mboxlist_renamemailbox(oldmailboxname, newmailboxname, NULL, 0,
-                               newsmaster, newsmaster_authstate, 0, 0, 0);
+    r = mlookup(oldmailboxname, &mbentry);
+    if (r) return r;
+
+    r = mboxlist_renamemailbox(mbentry, newmailboxname, NULL, 0,
+                               newsmaster, newsmaster_authstate, 0, 0, 0, 0, 0);
+    mboxlist_entry_free(&mbentry);
 
     /* XXX check body of message for useful MIME parts */
 
@@ -3831,23 +3779,12 @@ static void feedpeer(char *peer, message_data_t *msg)
 
 static void news2mail(message_data_t *msg)
 {
-    struct buf attrib = BUF_INITIALIZER;
+    struct buf attrib = BUF_INITIALIZER, msgbuf = BUF_INITIALIZER;
     int n, r;
-    FILE *sm;
-    static strarray_t smbuf = STRARRAY_INITIALIZER;
-    static int smbuf_basic_count;
-    int sm_stat;
-    pid_t sm_pid;
     char buf[4096], to[1024] = "";
 
-    if (!smbuf.count) {
-        strarray_append(&smbuf, "sendmail");
-        strarray_append(&smbuf, "-i");          /* ignore dots */
-        strarray_append(&smbuf, "-f");
-        strarray_append(&smbuf, "<>");
-        strarray_append(&smbuf, "--");
-        smbuf_basic_count = smbuf.count;
-    }
+    smtp_envelope_t sm_env = SMTP_ENVELOPE_INITIALIZER;
+    smtp_envelope_set_from(&sm_env, "<>");
 
     for (n = 0; n < msg->rcpt.count ; n++) {
         /* see if we want to send this to a mailing list */
@@ -3857,10 +3794,9 @@ static void news2mail(message_data_t *msg)
                                 &attrib);
         if (r) continue;
 
-        /* add the email address to our argv[] and to our To: header */
+        /* add the email address to the RCPT envelope and to our To: header */
         if (attrib.s) {
-            strarray_append(&smbuf, buf_cstring(&attrib));
-
+            smtp_envelope_add_rcpt(&sm_env, buf_cstring(&attrib));
             if (to[0]) strlcat(to, ", ", sizeof(to));
             strlcat(to, buf_cstring(&attrib), sizeof(to));
         }
@@ -3868,11 +3804,13 @@ static void news2mail(message_data_t *msg)
     buf_free(&attrib);
 
     /* send the message */
-    if (smbuf.count > smbuf_basic_count) {
-        sm_pid = open_sendmail((const char **)smbuf.data, &sm);
+    if (sm_env.rcpts.count) {
+        smtpclient_t *sm = NULL;
 
-        if (!sm)
-            syslog(LOG_ERR, "news2mail: could not spawn sendmail process");
+        r = smtpclient_open(&sm);
+
+        if (r)
+            syslog(LOG_ERR, "news2mail: could not open SMTP client: %s", error_message(r));
         else {
             int body = 0, skip, found_to = 0;
 
@@ -3884,7 +3822,7 @@ static void news2mail(message_data_t *msg)
                     body = 1;
 
                     /* insert a To: header if the message doesn't have one */
-                    if (!found_to) fprintf(sm, "To: %s\r\n", to);
+                    if (!found_to) buf_printf(&msgbuf, "To: %s\r\n", to);
                 }
 
                 skip = 0;
@@ -3892,7 +3830,7 @@ static void news2mail(message_data_t *msg)
                     /* munge various news-specific headers */
                     if (!strncasecmp(buf, "Newsgroups:", 11)) {
                         /* rename Newsgroups: to X-Newsgroups: */
-                        fprintf(sm, "X-");
+                        buf_appendcstr(&msgbuf, "X-");
                     } else if (!strncasecmp(buf, "Xref:", 5) ||
                                !strncasecmp(buf, "Path:", 5) ||
                                !strncasecmp(buf, "NNTP-Posting-", 13)) {
@@ -3901,7 +3839,7 @@ static void news2mail(message_data_t *msg)
                     } else if (!strncasecmp(buf, "To:", 3)) {
                         /* insert our mailing list RCPTs first, and then
                            fold the header to accomodate the original RCPTs */
-                        fprintf(sm, "To: %s,\r\n", to);
+                        buf_printf(&msgbuf, "To: %s,\r\n", to);
                         /* overwrite the original "To:" with spaces */
                         memset(buf, ' ', 3);
                         found_to = 1;
@@ -3912,25 +3850,28 @@ static void news2mail(message_data_t *msg)
                 }
 
                 do {
-                    if (!skip) fprintf(sm, "%s", buf);
+                    if (!skip) buf_appendcstr(&msgbuf, buf);
                 } while (buf[strlen(buf)-1] != '\n' &&
                          fgets(buf, sizeof(buf), msg->f));
             }
 
             /* Protect against messages not ending in CRLF */
-            if (buf[strlen(buf)-1] != '\n') fprintf(sm, "\r\n");
+            if (buf[strlen(buf)-1] != '\n') buf_appendcstr(&msgbuf, "\r\n");
 
-            fclose(sm);
-            while (waitpid(sm_pid, &sm_stat, 0) < 0);
-
-            if (sm_stat) /* sendmail exit value */
-                syslog(LOG_ERR, "news2mail failed: %s",
-                       sendmail_errstr(sm_stat));
         }
 
-        /* free the RCPTs */
-        strarray_truncate(&smbuf, smbuf_basic_count);
+        r = smtpclient_open(&sm);
+        if (!r) {
+            r = smtpclient_send(sm, &sm_env, &msgbuf);
+        }
+        if (r) {
+            syslog(LOG_ERR, "news2mail failed: %s", error_message(r));
+        }
+        smtpclient_close(&sm);
     }
+
+    smtp_envelope_fini(&sm_env);
+    buf_free(&msgbuf);
 
     return;
 }
@@ -4064,9 +4005,6 @@ static void cmd_post(char *msgid, int mode)
 static void cmd_starttls(int nntps)
 {
     int result;
-    int *layerp;
-    sasl_ssf_t ssf;
-    char *auth_id;
 
     if (nntp_starttls_done == 1) {
         prot_printf(nntp_out, "502 %s\r\n",
@@ -4078,9 +4016,6 @@ static void cmd_starttls(int nntps)
                     "Already authenticated");
         return;
     }
-
-    /* SASL and openssl have different ideas about whether ssf is signed */
-    layerp = (int *) &ssf;
 
     result=tls_init_serverengine("nntp",
                                  5,        /* depth to verify */
@@ -4094,7 +4029,7 @@ static void cmd_starttls(int nntps)
         if (nntps == 0)
             prot_printf(nntp_out, "580 %s\r\n", "Error initializing TLS");
         else
-            fatal("tls_init() failed",EC_TEMPFAIL);
+            fatal("tls_init() failed",EX_TEMPFAIL);
 
         return;
     }
@@ -4109,8 +4044,7 @@ static void cmd_starttls(int nntps)
     result=tls_start_servertls(0, /* read */
                                1, /* write */
                                nntps ? 180 : nntp_timeout,
-                               layerp,
-                               &auth_id,
+                               &saslprops,
                                &tls_conn);
 
     /* if error */
@@ -4126,27 +4060,15 @@ static void cmd_starttls(int nntps)
     }
 
     /* tell SASL about the negotiated layer */
-    result = sasl_setprop(nntp_saslconn, SASL_SSF_EXTERNAL, &ssf);
-    if (result == SASL_OK) {
-        saslprops.ssf = ssf;
-        result = sasl_setprop(nntp_saslconn, SASL_AUTH_EXTERNAL, auth_id);
-    }
-
+    result = saslprops_set_tls(&saslprops, nntp_saslconn);
     if (result != SASL_OK) {
-        syslog(LOG_NOTICE, "sasl_setprop() failed: cmd_starttls()");
+        syslog(LOG_NOTICE, "saslprops_set_tls() failed: cmd_starttls()");
         if (nntps == 0) {
-            fatal("sasl_setprop() failed: cmd_starttls()", EC_TEMPFAIL);
+            fatal("saslprops_set_tls() failed: cmd_starttls()", EX_TEMPFAIL);
         } else {
             shut_down(0);
         }
     }
-
-    if(saslprops.authid) {
-        free(saslprops.authid);
-        saslprops.authid = NULL;
-    }
-    if(auth_id)
-        saslprops.authid = xstrdup(auth_id);
 
     /* tell the prot layer about our new layers */
     prot_settls(nntp_in, tls_conn);
@@ -4171,7 +4093,7 @@ static void cmd_starttls(int nntps)
 static void cmd_starttls(int nntps __attribute__((unused)))
 {
     /* XXX should never get here */
-    fatal("cmd_starttls() called, but no OpenSSL", EC_SOFTWARE);
+    fatal("cmd_starttls() called, but no OpenSSL", EX_SOFTWARE);
 }
 #endif /* HAVE_SSL */
 

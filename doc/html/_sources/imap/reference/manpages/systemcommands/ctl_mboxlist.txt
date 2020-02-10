@@ -16,7 +16,7 @@ Synopsis
 
 .. parsed-literal::
 
-    **ctl_mboxlist** [ **-C** *config-file* ] **-d** [ **-x** ] [ **-p** *partition* ] [ **-f** *filename* ]
+    **ctl_mboxlist** [ **-C** *config-file* ] **-d** [ **-x** ] [**-y**] [ **-p** *partition* ] [ **-f** *filename* ]
     **ctl_mboxlist** [ **-C** *config-file* ] **-u** [ **-f** *filename* ]
     **ctl_mboxlist** [ **-C** *config-file* ] **-m** [ **-a** ] [ **-w** ] [ **-i** ] [ **-f** *filename* ]
     **ctl_mboxlist** [ **-C** *config-file* ] **-v** [ **-f** *filename* ]
@@ -53,9 +53,14 @@ Options
     When performing a dump, remove the mailboxes dumped from the mailbox
     list (mostly useful when specified with **-p**).
 
+.. option:: -y
+
+    When performing a dump, also list intermediary mailboxes which would
+    be hidden from IMAP.
+
 .. option:: -p partition
 
-    When performing a dump, dump only thise mailboxes that live on
+    When performing a dump, dump only those mailboxes that live on
     *partition*.
 
 .. option:: -f filename
@@ -79,7 +84,7 @@ Options
 
 .. option:: -a
 
-    When used with **-m**, assume the local mailboxes file is authoritiative,
+    When used with **-m**, assume the local mailboxes file is authoritative,
     that is, only change the mupdate server, do not delete any local
     mailboxes.
 

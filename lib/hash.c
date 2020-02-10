@@ -58,7 +58,7 @@ EXPORTED hash_table *construct_hash_table(hash_table *table, size_t size, int us
           table->table = xmalloc(sizeof(bucket *) * size);
       }
 
-      /* Allocate the table and initilize it */
+      /* Allocate the table and initialize it */
       memset(table->table, 0, sizeof(bucket *) * size);
 
       return table;
@@ -153,8 +153,13 @@ EXPORTED void *hash_insert(const char *key, void *data, hash_table *table)
 
 EXPORTED void *hash_lookup(const char *key, hash_table *table)
 {
-      unsigned val = strhash(key) % table->size;
+      unsigned val;
       bucket *ptr;
+
+      if (!table->size)
+          return NULL;
+
+      val = strhash(key) % table->size;
 
       if (!(table->table)[val])
             return NULL;
@@ -255,6 +260,8 @@ EXPORTED void free_hash_table(hash_table *table, void (*func)(void *))
       unsigned i;
       bucket *ptr, *temp;
 
+      if (!table) return;
+
       /* If we have a function to free the data, apply it everywhere */
       /* We also need to traverse this anyway if we aren't using a memory
        * pool */
@@ -346,4 +353,88 @@ EXPORTED int hash_numrecords(hash_table *table)
     }
 
     return count;
+}
+
+EXPORTED void hash_enumerate_sorted(hash_table *table, void (*func)(const char *, void *, void *),
+                    void *rock, strarray_cmp_fn_t *cmp)
+{
+    strarray_t *sa = hash_keys(table);
+    strarray_sort(sa, cmp);
+    int i;
+    for (i = 0; i < strarray_size(sa); i++) {
+        const char *key = strarray_nth(sa, i);
+        void *val = hash_lookup(key, table);
+        func(key, val, rock);
+    }
+    strarray_free(sa);
+}
+
+
+struct hash_iter {
+    hash_table *table;
+    size_t i;
+    bucket *peek;
+    bucket *curr;
+};
+
+EXPORTED hash_iter *hash_table_iter(hash_table *table)
+{
+    hash_iter *iter = xzmalloc(sizeof(struct hash_iter));
+    iter->table = table;
+    hash_iter_reset(iter);
+    return iter;
+}
+
+EXPORTED void hash_iter_reset(hash_iter *iter)
+{
+    hash_table *table = iter->table;
+    iter->curr = NULL;
+    iter->peek = NULL;
+    for (iter->i = 0; iter->i < table->size; iter->i++) {
+        if ((iter->peek = table->table[iter->i])) {
+            break;
+        }
+    }
+}
+
+EXPORTED int hash_iter_has_next(hash_iter *iter)
+{
+    return iter->peek != NULL;
+}
+
+EXPORTED const char *hash_iter_next(hash_iter *iter)
+{
+    hash_table *table = iter->table;
+    iter->curr = iter->peek;
+    iter->peek = NULL;
+    if (iter->curr == NULL)
+        return NULL;
+    else if (iter->curr->next)
+        iter->peek = iter->curr->next;
+    else if (iter->i < table->size) {
+        for (iter->i = iter->i + 1; iter->i < table->size; iter->i++) {
+            if ((iter->peek = table->table[iter->i])) {
+                break;
+            }
+        }
+    }
+    return iter->curr->key;
+}
+
+EXPORTED const char *hash_iter_key(hash_iter *iter)
+{
+    return iter->curr->key;
+}
+
+EXPORTED void *hash_iter_val(hash_iter *iter)
+{
+    return iter->curr->data;
+}
+
+EXPORTED void hash_iter_free(hash_iter **iterptr)
+{
+    if (iterptr) {
+        free(*iterptr);
+        *iterptr = NULL;
+    }
 }

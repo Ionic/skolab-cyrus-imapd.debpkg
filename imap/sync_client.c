@@ -1,4 +1,4 @@
-/* sync_client.c -- Cyrus synchonization client
+/* sync_client.c -- Cyrus synchronization client
  *
  * Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
  *
@@ -54,6 +54,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <string.h>
 #include <sys/wait.h>
@@ -64,7 +65,6 @@
 #include "global.h"
 #include "append.h"
 #include "mboxlist.h"
-#include "exitcodes.h"
 #include "mailbox.h"
 #include "quota.h"
 #include "xmalloc.h"
@@ -118,22 +118,18 @@ static void shut_down(int code)
     in_shutdown = 1;
 
     seen_done();
-    annotatemore_close();
-    annotate_done();
-    quotadb_close();
-    quotadb_done();
-    mboxlist_close();
-    mboxlist_done();
     cyrus_done();
     exit(code);
 }
 
-static int usage(const char *name)
+static int usage(const char *name, const char *message)
 {
+    if (message)
+        fprintf(stderr, "%s\n\n", message);
     fprintf(stderr,
-            "usage: %s -S <servername> [-C <alt_config>] [-r] [-v] mailbox...\n", name);
+            "Usage: %s -S <servername> [-C <alt_config>] [-r] [-v] mailbox...\n", name);
 
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 EXPORTED void fatal(const char *s, int code)
@@ -209,6 +205,7 @@ static int do_unmailbox(const char *mboxname, struct backend *sync_be,
     struct mailbox *mailbox = NULL;
     int r;
 
+    /* XXX - this should be looking for an explicit tombstone record locally */
     r = mailbox_open_irl(mboxname, &mailbox);
     if (r == IMAP_MAILBOX_NONEXISTENT) {
         r = sync_folder_delete(mboxname, sync_be, flags);
@@ -372,9 +369,6 @@ static int do_sync(sync_log_reader_t *slr, const char **channelp)
 
     /* And then run tasks. */
 
-    /* we want to be able to defer items to the subsequent sync log */
-    sync_log_init();
-
     for (action = quota_list->head; action; action = action->next) {
         if (!action->active)
             continue;
@@ -456,6 +450,9 @@ static int do_sync(sync_log_reader_t *slr, const char **channelp)
         }
     }
 
+    /* XXX - need to process this in sets of users at a time, such that we never split
+     * on a user boundary.  This will require a data structure change to carry the list
+     * of mailboxes in per-user sets */
     for (action = mailbox_list->head; action; action = action->next) {
         if (!action->active)
             continue;
@@ -478,6 +475,15 @@ static int do_sync(sync_log_reader_t *slr, const char **channelp)
     r = do_restart();
     if (r) goto cleanup;
 
+    /* XXX - is unmailbox used much anyway - we need to see if it's logged for a rename,
+     * e.g.
+     * RENAME A B:
+     *  MAILBOX A
+     *  MAILBOX B
+     *  UNMAILBOX A
+     *
+     * suggestion: PROMOTE ALL UNMAILBOX on user accounts to USER foo
+     */
     for (action = unmailbox_list->head; action; action = action->next) {
         if (!action->active)
             continue;
@@ -539,8 +545,6 @@ static int do_sync(sync_log_reader_t *slr, const char **channelp)
 
         syslog(LOG_ERR, "Error in do_sync(): bailing out! %s", error_message(r));
     }
-
-    sync_log_done();
 
     sync_action_list_free(&user_list);
     sync_action_list_free(&unuser_list);
@@ -741,7 +745,7 @@ static void replica_connect(const char *channel)
         prot_flush(sync_backend->out);
 
         if (sync_parse_response("COMPRESS", sync_backend->in, NULL)) {
-            if (do_compress) fatal("Failed to enable compression, aborting", EC_SOFTWARE);
+            if (do_compress) fatal("Failed to enable compression, aborting", EX_SOFTWARE);
             syslog(LOG_NOTICE, "Failed to enable compression, continuing uncompressed");
         }
         else {
@@ -749,7 +753,7 @@ static void replica_connect(const char *channel)
             prot_setcompress(sync_backend->out);
         }
     }
-    else if (do_compress) fatal("Backend does not support compression, aborting", EC_SOFTWARE);
+    else if (do_compress) fatal("Backend does not support compression, aborting", EX_SOFTWARE);
 #endif
 
     /* links to sockets */
@@ -762,7 +766,7 @@ static void replica_connect(const char *channel)
     }
 
     /* Set inactivity timer */
-    timeout = config_getint(IMAPOPT_SYNC_TIMEOUT);
+    timeout = config_getduration(IMAPOPT_SYNC_TIMEOUT, 's');
     if (timeout < 3) timeout = 3;
     prot_settimeout(sync_in, timeout);
 
@@ -951,31 +955,31 @@ int main(int argc, char **argv)
 
         case 'R':
             if (mode != MODE_UNKNOWN)
-                fatal("Mutually exclusive options defined", EC_USAGE);
+                usage("sync_client", "Mutually exclusive options defined");
             mode = MODE_REPEAT;
             break;
 
         case 'A':
             if (mode != MODE_UNKNOWN)
-                fatal("Mutually exclusive options defined", EC_USAGE);
+                usage("sync_client", "Mutually exclusive options defined");
             mode = MODE_ALLUSER;
             break;
 
         case 'u':
             if (mode != MODE_UNKNOWN)
-                fatal("Mutually exclusive options defined", EC_USAGE);
+                usage("sync_client", "Mutually exclusive options defined");
             mode = MODE_USER;
             break;
 
         case 'm':
             if (mode != MODE_UNKNOWN)
-                fatal("Mutually exclusive options defined", EC_USAGE);
+                usage("sync_client", "Mutually exclusive options defined");
             mode = MODE_MAILBOX;
             break;
 
         case 's':
             if (mode != MODE_UNKNOWN)
-                fatal("Mutually exclusive options defined", EC_USAGE);
+                usage("sync_client", "Mutually exclusive options defined");
             mode = MODE_META;
             break;
 
@@ -984,7 +988,7 @@ int main(int argc, char **argv)
             do_compress = 1;
 #else
             do_compress = 0;
-            fatal("Compress not available without zlib compiled in", EC_SOFTWARE);
+            fatal("Compress not available without zlib compiled in", EX_SOFTWARE);
 #endif
             break;
 
@@ -998,12 +1002,12 @@ int main(int argc, char **argv)
             break;
 
         default:
-            usage("sync_client");
+            usage("sync_client", NULL);
         }
     }
 
     if (mode == MODE_UNKNOWN)
-        fatal("No replication mode specified", EC_USAGE);
+        usage("sync_client", "No replication mode specified");
 
     if (verbose) flags |= SYNC_FLAG_VERBOSE;
     if (verbose_logging) flags |= SYNC_FLAG_LOGGING;
@@ -1032,7 +1036,7 @@ int main(int argc, char **argv)
         servername = sync_get_config(channel, "sync_host");
 
     if (!servername)
-        fatal("sync_host not defined", EC_SOFTWARE);
+        fatal("sync_host not defined", EX_SOFTWARE);
 
     /* Just to help with debugging, so we have time to attach debugger */
     if (wait > 0) {
@@ -1042,20 +1046,9 @@ int main(int argc, char **argv)
 
     /* Set namespace -- force standard (internal) */
     if ((r = mboxname_init_namespace(&sync_namespace, 1)) != 0) {
-        fatal(error_message(r), EC_CONFIG);
+        fatal(error_message(r), EX_CONFIG);
     }
-
-    /* open the mboxlist, we'll need it for real work */
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-
-    /* open the quota db, we'll need it for real work */
-    quotadb_init(0);
-    quotadb_open(NULL);
-
-    /* open the annotation db */
-    annotate_init(NULL, NULL);
-    annotatemore_open();
+    mboxevent_setnamespace(&sync_namespace);
 
     signals_set_shutdown(&shut_down);
     signals_add_handlers(0);
@@ -1195,7 +1188,7 @@ int main(int argc, char **argv)
                 sync_shutdown_file = sync_get_config(channel, "sync_shutdown_file");
 
             if (!min_delta)
-                min_delta = sync_get_intconfig(channel, "sync_repeat_interval");
+                min_delta = sync_get_durationconfig(channel, "sync_repeat_interval", 's');
 
             do_daemon(channel, sync_shutdown_file, timeout, min_delta);
         }

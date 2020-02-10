@@ -29,5 +29,4 @@ Cyrus IMAP 2.4.19 Release Notes
 * Fixed :issue:`1967`: EXISTS count reported earlier if fetching past size
   of previous message set
 
-
 :ref:`imap-release-notes-2.4`

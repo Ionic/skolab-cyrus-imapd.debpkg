@@ -108,7 +108,7 @@ static struct body *body_fetch_section(struct body *body, const char *section);
 
 /* Namespace for RSS feeds of mailboxes */
 struct namespace_t namespace_rss = {
-    URL_NS_RSS, 0, "/rss", NULL,
+    URL_NS_RSS, 0, "rss", "/rss", NULL,
     http_allow_noauth_get, /*authschemes*/0,
     /*mbtype*/0,
     ALLOW_READ,
@@ -116,6 +116,7 @@ struct namespace_t namespace_rss = {
     {
         { NULL,                 NULL },                 /* ACL          */
         { NULL,                 NULL },                 /* BIND         */
+        { NULL,                 NULL },                 /* CONNECT      */
         { NULL,                 NULL },                 /* COPY         */
         { NULL,                 NULL },                 /* DELETE       */
         { &meth_get,            NULL },                 /* GET          */
@@ -323,7 +324,7 @@ static int meth_get(struct transaction_t *txn,
 
 /* Create a mailbox name from the request URL */
 static int rss_parse_path(const char *path, struct request_target_t *tgt,
-                          const char **errstr)
+                          const char **resultstr)
 {
     const char *start, *end;
     char mboxname[MAX_MAILBOX_BUFFER+1];
@@ -365,7 +366,7 @@ static int rss_parse_path(const char *path, struct request_target_t *tgt,
         if (r) {
             syslog(LOG_ERR, "mlookup(%s) failed: %s",
                    mboxname, error_message(r));
-            *errstr = error_message(r);
+            *resultstr = error_message(r);
 
             switch (r) {
             case IMAP_PERMISSION_DENIED: return HTTP_FORBIDDEN;
@@ -480,7 +481,7 @@ static int do_list(const char *name, void *rock)
         else href = path;
 
         /* Populate new/updated node */
-        strncpy(node->name, name, len);
+        xstrncpy(node->name, name, len);
         node->name[len] = '\0';
         node->len = len;
         node->parent = last;
@@ -536,7 +537,7 @@ static int do_list(const char *name, void *rock)
 
 static int list_cb(struct findall_data *data, void *rock)
 {
-    if (data && data->mbname)
+    if (data && data->is_exactmatch)
         return do_list(mbname_intname(data->mbname), rock);
     return do_list(NULL, rock);
 }
@@ -697,7 +698,8 @@ static int fetch_message(struct transaction_t *txn, struct mailbox *mailbox,
     record->uid = uid;
     r = mailbox_reload_index_record(mailbox, record);
     if ((r == CYRUSDB_NOTFOUND) ||
-        (record->system_flags & (FLAG_DELETED|FLAG_EXPUNGED))) {
+        ((record->system_flags & FLAG_DELETED) ||
+         record->internal_flags & FLAG_INTERNAL_EXPUNGED)) {
         txn->error.desc = "Message has been removed\r\n";
 
         /* Fill in Expires */
@@ -841,8 +843,8 @@ static int list_messages(struct transaction_t *txn, struct mailbox *mailbox)
     }
 
     /* Get maximum age of items to display */
-    max_age = config_getint(IMAPOPT_RSS_MAXAGE);
-    if (max_age > 0) age_mark = time(0) - (max_age * 60 * 60 * 24);
+    max_age = config_getduration(IMAPOPT_RSS_MAXAGE, 'd');
+    if (max_age > 0) age_mark = time(0) - max_age;
 
     /* Get number of items to display */
     max_items = config_getint(IMAPOPT_RSS_MAXITEMS);
@@ -915,9 +917,9 @@ static int list_messages(struct transaction_t *txn, struct mailbox *mailbox)
     buf_printf_markup(buf, --level, "</author>");
 
     /* <subtitle> - optional */
-    annotatemore_lookup(mailbox->name, "/comment", NULL, &attrib);
+    annotatemore_lookup(mailbox->name, "/comment", "", &attrib);
     if (age_mark) {
-        time_to_rfc822(age_mark, datestr, sizeof(datestr));
+        time_to_rfc5322(age_mark, datestr, sizeof(datestr));
         buf_printf_markup(buf, level,
                         "<subtitle>%s [posts since %s]</subtitle>",
                           buf_cstring(&attrib), datestr);
@@ -938,7 +940,7 @@ static int list_messages(struct transaction_t *txn, struct mailbox *mailbox)
     /* <generator> - optional */
     if (config_serverinfo == IMAP_ENUM_SERVERINFO_ON) {
         buf_printf_markup(buf, level, "<generator>Cyrus HTTP %s</generator>",
-                          cyrus_version());
+                          CYRUS_VERSION);
     }
 
     write_body(HTTP_OK, txn, buf_cstring(buf), buf_len(buf));

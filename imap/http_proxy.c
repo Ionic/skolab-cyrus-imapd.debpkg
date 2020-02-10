@@ -85,14 +85,6 @@ HIDDEN struct protocol_t http_protocol =
 };
 
 
-EXPORTED const char *digest_recv_success(hdrcache_t hdrs)
-{
-    const char **hdr = spool_getheader(hdrs, "Authentication-Info");
-
-    return (hdr ? hdr[0]: NULL);
-}
-
-
 static const char *callback_getdata(sasl_conn_t *conn,
                                     sasl_callback_t *callbacks,
                                     unsigned long callbackid)
@@ -105,14 +97,14 @@ static const char *callback_getdata(sasl_conn_t *conn,
             switch (cb->id) {
             case SASL_CB_USER:
             case SASL_CB_AUTHNAME: {
-                sasl_getsimple_t *simple_cb = (sasl_getsimple_t *) cb->proc;
+                sasl_getsimple_t *simple_cb = (void *) cb->proc;
                 simple_cb(cb->context, cb->id, &result, NULL);
                 break;
             }
 
             case SASL_CB_PASS: {
                 sasl_secret_t *pass;
-                sasl_getsecret_t *pass_cb = (sasl_getsecret_t *) cb->proc;
+                sasl_getsecret_t *pass_cb = (void *) cb->proc;
                 pass_cb(conn, cb->context, cb->id, &pass);
                 result = (const char *) pass->data;
                 break;
@@ -128,8 +120,7 @@ static const char *callback_getdata(sasl_conn_t *conn,
 #define BASE64_BUF_SIZE 21848   /* per RFC 2222bis: ((16K / 3) + 1) * 4  */
 
 static int login(struct backend *s, const char *userid,
-                 sasl_callback_t *cb, const char **status,
-                 int noauth __attribute__((unused)))
+                 sasl_callback_t *cb, const char **status, int noauth)
 {
     int r = 0;
     socklen_t addrsize;
@@ -142,8 +133,11 @@ static int login(struct backend *s, const char *userid,
     struct auth_scheme_t *scheme = NULL;
     unsigned need_tls = 0, tls_done = 0, auth_done = 0, clientoutlen;
     hdrcache_t hdrs = NULL;
+    char *sid = NULL;
 
     if (status) *status = NULL;
+
+    if (noauth) return 0;
 
     /* set the IP addresses */
     addrsize = sizeof(struct sockaddr_storage);
@@ -195,6 +189,7 @@ static int login(struct backend *s, const char *userid,
         char base64[BASE64_BUF_SIZE+1];
         unsigned int serverinlen;
         struct body_t resp_body;
+        struct auth_scheme_t auth_scheme_basic = AUTH_SCHEME_BASIC;
 #ifdef SASL_HTTP_REQUEST
         sasl_http_request_t httpreq = { "OPTIONS",      /* Method */
                                         "*",            /* URI */
@@ -215,10 +210,20 @@ static int login(struct backend *s, const char *userid,
         /* Send Authorization and/or Upgrade request to server */
         prot_puts(s->out, "OPTIONS * HTTP/1.1\r\n");
         prot_printf(s->out, "Host: %s\r\n", s->hostname);
-        prot_printf(s->out, "User-Agent: %s\r\n", buf_cstring(&serverinfo));
+        prot_printf(s->out, "User-Agent: Cyrus/%s\r\n", CYRUS_VERSION);
         if (scheme) {
-            prot_printf(s->out, "Authorization: %s %s\r\n",
-                        scheme->name, clientout ? clientout : "");
+            prot_printf(s->out, "Authorization: %s", scheme->name);
+
+            if (clientout) {
+                prot_putc(' ', s->out);
+                if (scheme->flags & AUTH_DATA_PARAM) {
+                    if (sid) prot_printf(s->out, "sid=%s,", sid);
+                    prot_puts(s->out, "data=");
+                }
+                prot_write(s->out, clientout, clientoutlen);
+            }
+            prot_puts(s->out, "\r\n");
+
             prot_printf(s->out, "Authorize-As: %s\r\n",
                         userid ? userid : "anonymous");
         }
@@ -283,8 +288,17 @@ static int login(struct backend *s, const char *userid,
             break;
 
         case 200: /* OK */
-            if (scheme->recv_success &&
-                (serverin = scheme->recv_success(hdrs))) {
+            if ((hdr = spool_getheader(hdrs, "Authentication-Info"))) { 
+                /* Default handling of success data */
+                serverin = hdr[0];
+            }
+            else if (scheme && (scheme->flags & AUTH_SUCCESS_WWW) &&
+                     (hdr = spool_getheader(hdrs, "WWW-Authenticate"))) {
+                /* Special handling of success data for this scheme */
+                serverin = strchr(hdr[0], ' ');
+                if (serverin) serverin++;
+            }
+            if (serverin) {
                 /* Process success data */
                 serverinlen = strlen(serverin);
                 goto challenge;
@@ -318,7 +332,7 @@ static int login(struct backend *s, const char *userid,
                                 !((scheme->flags & AUTH_NEED_PERSIST) &&
                                   (resp_body.flags & BODY_CLOSE))) {
                                 /* Tag the scheme as available */
-                                avail_auth_schemes |= (1 << scheme->idx);
+                                avail_auth_schemes |= scheme->id;
 
                                 /* Add SASL-based schemes to SASL mech list */
                                 if (scheme->saslmech) {
@@ -370,11 +384,11 @@ static int login(struct backend *s, const char *userid,
                     }
                     else {
                         /* No matching SASL mechs - try Basic */
-                        scheme = &auth_schemes[AUTH_BASIC];
-                        if (!(avail_auth_schemes & (1 << scheme->idx))) {
+                        if (!(avail_auth_schemes & AUTH_BASIC)) {
                             need_tls = !tls_done;
                             break;  /* case 401 */
                         }
+                        scheme = &auth_scheme_basic;
                     }
 
                     /* Find the associated WWW-Authenticate header */
@@ -396,7 +410,7 @@ static int login(struct backend *s, const char *userid,
             if (serverin) {
                 /* Perform the next step in the auth exchange */
 
-                if (scheme->idx == AUTH_BASIC) {
+                if (scheme->id == AUTH_BASIC) {
                     /* Don't care about "realm" in server challenge */
                     const char *authid =
                         callback_getdata(s->saslconn, cb, SASL_CB_AUTHNAME);
@@ -409,6 +423,29 @@ static int login(struct backend *s, const char *userid,
                     auth_done = 1;
                 }
                 else {
+                    if (scheme->flags & AUTH_DATA_PARAM) {
+                        /* Parse parameters */
+                        const char *this_sid;
+                        unsigned int sid_len;
+
+                        r = http_parse_auth_params(serverin,
+                                                   NULL /* realm */, NULL,
+                                                   &this_sid, &sid_len,
+                                                   &serverin, &serverinlen);
+                        if ((r == SASL_OK) && this_sid) {
+                            if (!sid) sid = xstrndup(this_sid, sid_len);
+                            else if (sid_len != strlen(sid) ||
+                                     strncmp(this_sid, sid, sid_len)) {
+                                syslog(LOG_ERR,
+                                       "%s: Incorrect 'sid' parameter in challenge",
+                                       scheme->name);
+                                r = SASL_BADAUTH;
+                            }
+                        }
+
+                        if (r != SASL_OK) break;  /* case 401 */
+                    }
+
                     /* Base64 decode any server challenge, if necessary */
                     if (serverin && (scheme->flags & AUTH_BASE64)) {
                         r = sasl_decode64(serverin, serverinlen,
@@ -418,7 +455,7 @@ static int login(struct backend *s, const char *userid,
                         serverin = base64;
                     }
 
-                    /* SASL mech (Digest, Negotiate, NTLM) */
+                    /* SASL mech (SCRAM-*, Digest, Negotiate, NTLM) */
                     r = sasl_client_step(s->saslconn, serverin, serverinlen,
                                          NULL,          /* no prompts */
                                          &clientout, &clientoutlen);
@@ -431,6 +468,7 @@ static int login(struct backend *s, const char *userid,
     } while (need_tls || clientout);
 
   done:
+    free(sid);
     if (hdrs) spool_free_hdrcache(hdrs);
 
     if (r && status && !*status) *status = sasl_errstring(r, NULL, NULL);
@@ -449,7 +487,7 @@ static int ping(struct backend *s, const char *userid)
     /* Send Authorization request to server */
     prot_puts(s->out, "OPTIONS * HTTP/1.1\r\n");
     prot_printf(s->out, "Host: %s\r\n", s->hostname);
-    prot_printf(s->out, "User-Agent: %s\r\n", buf_cstring(&serverinfo));
+    prot_printf(s->out, "User-Agent: Cyrus/%s\r\n", CYRUS_VERSION);
     prot_printf(s->out, "Authorize-As: %s\r\n", userid ? userid : "anonymous");
     prot_puts(s->out, "\r\n");
     prot_flush(s->out);
@@ -537,7 +575,7 @@ EXPORTED void http_proto_host(hdrcache_t req_hdrs, const char **proto, const cha
     else {
         /* Use our protocol and host */
         if (proto) *proto = https ? "https" : "http";
-        if (host) *host = *spool_getheader(req_hdrs, "Host");
+        if (host) *host = *spool_getheader(req_hdrs, ":authority");
     }
 }
 
@@ -549,19 +587,19 @@ static void write_forwarding_hdrs(struct transaction_t *txn, hdrcache_t hdrs,
     const char **fwd = spool_getheader(hdrs, "Forwarded");
 
     /* Add any existing Via headers */
-    for (; via && *via; via++) simple_hdr(txn, "Via", *via);
+    for (; via && *via; via++) simple_hdr(txn, "Via", "%s", *via);
 
     /* Create our own Via header */
     simple_hdr(txn, "Via", (config_serverinfo == IMAP_ENUM_SERVERINFO_ON) ?
                "%s %s (Cyrus/%s)" : "%s %s",
-               version+5, config_servername,cyrus_version());
+               version+5, config_servername, CYRUS_VERSION);
 
     /* Add any existing Forwarded headers */
-    for (; fwd && *fwd; fwd++) simple_hdr(txn, "Forwarded", *fwd);
+    for (; fwd && *fwd; fwd++) simple_hdr(txn, "Forwarded", "%s", *fwd);
 
     /* Create our own Forwarded header */
     if (proto) {
-        const char **host = spool_getheader(hdrs, "Host");
+        const char **host = spool_getheader(hdrs, ":authority");
         size_t len;
 
         assert(!buf_len(&txn->buf));
@@ -576,14 +614,15 @@ static void write_forwarding_hdrs(struct transaction_t *txn, hdrcache_t hdrs,
             buf_printf(&txn->buf, ";for=%.*s", (int)len, httpd_localip);
         }
 
-        simple_hdr(txn, "Forwarded", buf_cstring(&txn->buf));
+        simple_hdr(txn, "Forwarded", "%s", buf_cstring(&txn->buf));
         buf_reset(&txn->buf);
     }
 }
 
 
 /* Write end-to-end header (ignoring hop-by-hop) from cache to protstream. */
-static void write_cachehdr(const char *name, const char *contents, void *rock)
+static void write_cachehdr(const char *name, const char *contents,
+                           const char *raw __attribute__((unused)), void *rock)
 {
     struct transaction_t *txn = (struct transaction_t *) rock;
     const char **hdr, *hop_by_hop[] =
@@ -594,7 +633,7 @@ static void write_cachehdr(const char *name, const char *contents, void *rock)
     /* Ignore private headers in our cache */
     if (name[0] == ':') return;
 
-    for (hdr = hop_by_hop; *hdr && strcmp(name, *hdr); hdr++);
+    for (hdr = hop_by_hop; *hdr && strcasecmp(name, *hdr); hdr++);
 
     if (!*hdr) {
         if (!strcmp(name, "max-forwards")) {
@@ -604,25 +643,9 @@ static void write_cachehdr(const char *name, const char *contents, void *rock)
             simple_hdr(txn, "Max-Forwards", "%lu", max-1);
         }
         else {
-            simple_hdr(txn, name, contents);
+            simple_hdr(txn, name, "%s", contents);
         }
     }
-}
-
-
-static long resp_code_to_http_err(unsigned code)
-{
-    int i, len, n_msgs = et_http_error_table.n_msgs;
-    const char * const *msgs = et_http_error_table.msgs;
-    char buf[100];
-
-    len = snprintf(buf, sizeof(buf), "%u ", code);
-
-    for (i = 0; i < n_msgs; i++) {
-        if (!strncmp(msgs[i], buf, len)) return et_http_error_table.base + i;
-    }
-
-    return HTTP_SERVER_ERROR;
 }
 
 
@@ -649,11 +672,7 @@ static void send_response(struct transaction_t *txn, long code,
         const char *conn_tokens[] =
             { "close", "Upgrade", "Keep-Alive", NULL };
         const char *upgrade_tokens[] =
-            { TLS_VERSION,
-#ifdef HAVE_NGHTTP2
-              NGHTTP2_CLEARTEXT_PROTO_VERSION_ID,
-#endif
-              NULL };
+            { TLS_VERSION, NGHTTP2_CLEARTEXT_PROTO_VERSION_ID, NULL };
 
         comma_list_hdr(txn, "Connection", conn_tokens, txn->flags.conn);
 
@@ -666,7 +685,7 @@ static void send_response(struct transaction_t *txn, long code,
         }
     }
 
-    if (httpd_tls_done) {
+    if (txn->conn->tls_ctx) {
         simple_hdr(txn, "Strict-Transport-Security", "max-age=600");
     }
 
@@ -680,11 +699,11 @@ static void send_response(struct transaction_t *txn, long code,
             txn->flags.te = TE_CHUNKED;
 
             if (txn->flags.ver == VER_1_1) {
-                simple_hdr(txn, "Transfer-Encoding", hdr[0]);
+                simple_hdr(txn, "Transfer-Encoding", "%s", hdr[0]);
             }
             if ((hdr = spool_getheader(hdrs, "Trailer"))) {
                 txn->flags.trailer = TRAILER_PROXY;
-                simple_hdr(txn, "Trailer", hdr[0]);
+                simple_hdr(txn, "Trailer", "%s", hdr[0]);
             }
         }
         else if ((hdr = spool_getheader(hdrs, "Content-Length"))) {
@@ -692,7 +711,7 @@ static void send_response(struct transaction_t *txn, long code,
                 /* Prevent end of stream */
                 txn->flags.te = TE_CHUNKED;
             }
-            else simple_hdr(txn, "Content-Length", hdr[0]);
+            else simple_hdr(txn, "Content-Length", "%s", hdr[0]);
         }
 
         end_resp_headers(txn, code);
@@ -733,7 +752,8 @@ static int pipe_resp_body(struct protstream *pin, struct transaction_t *txn,
     char buf[PROT_BUFSIZE];
     const char **errstr = &txn->error.desc;
 
-    txn->resp_body.enc = CE_IDENTITY;
+    txn->resp_body.enc.type = CE_IDENTITY;
+    txn->resp_body.enc.proc = NULL;
     txn->flags.te = TE_NONE;
 
     if (resp_body->framing == FRAMING_UNKNOWN) {
@@ -861,7 +881,7 @@ EXPORTED int http_pipe_req_resp(struct backend *be, struct transaction_t *txn)
      *
      * - Piece the Request Line back together
      * - Add/append-to Via: header
-     * - Add Expect:100-continue header (for synchonicity)
+     * - Add Expect:100-continue header (for synchronicity)
      * - Use all cached end-to-end headers from client
      * - Body will be sent using "chunked" TE, since we might not have it yet
      */
@@ -898,15 +918,14 @@ EXPORTED int http_pipe_req_resp(struct backend *be, struct transaction_t *txn)
                                &resp_hdrs, NULL, &txn->error.desc);
         if (r) break;
 
-        http_err = resp_code_to_http_err(code);
+        http_err = http_status_to_code(code);
 
         if (code == 100) { /* Continue */
             if (!sent_body++) {
                 unsigned len;
 
                 /* Read body from client */
-                r = http_read_body(httpd_in, httpd_out, txn->req_hdrs,
-                                   &txn->req_body, &txn->error.desc);
+                r = http_read_req_body(txn);
                 if (r) {
                     /* Couldn't get the body and can't finish request */
                     txn->flags.conn = CONN_CLOSE;
@@ -935,8 +954,7 @@ EXPORTED int http_pipe_req_resp(struct backend *be, struct transaction_t *txn)
         /* Don't pipe a 401 response (discard body).
            Frontend should send its own 401 since it will process auth */
         resp_body.flags |= BODY_DISCARD;
-        http_read_body(be->in, httpd_out,
-                       resp_hdrs, &resp_body, &txn->error.desc);
+        http_read_body(be->in, resp_hdrs, &resp_body, &txn->error.desc);
 
         r = HTTP_UNAUTHORIZED;
     }
@@ -1004,9 +1022,9 @@ EXPORTED int http_proxy_copy(struct backend *src_be, struct backend *dest_be,
          */
         prot_printf(src_be->out, "LOCK %s %s\r\n"
                                  "Host: %s\r\n"
-                                 "User-Agent: %s\r\n",
+                                 "User-Agent: Cyrus/%s\r\n",
                     txn->req_tgt.path, HTTP_VERSION,
-                    src_be->hostname, buf_cstring(&serverinfo));
+                    src_be->hostname, CYRUS_VERSION);
         write_hdr(src_be->out, "If", txn->req_hdrs);
         write_hdr(src_be->out, "If-Match", txn->req_hdrs);
         write_hdr(src_be->out, "If-Unmodified-Since", txn->req_hdrs);
@@ -1064,7 +1082,7 @@ EXPORTED int http_proxy_copy(struct backend *src_be, struct backend *dest_be,
 
         default:
             /* Send failure response to client */
-            http_err = resp_code_to_http_err(code);
+            http_err = http_status_to_code(code);
             send_response(txn, http_err, resp_hdrs, &resp_body.payload);
             goto done;
         }
@@ -1079,9 +1097,9 @@ EXPORTED int http_proxy_copy(struct backend *src_be, struct backend *dest_be,
      */
     prot_printf(src_be->out, "GET %s %s\r\n"
                              "Host: %s\r\n"
-                             "User-Agent: %s\r\n",
+                             "User-Agent: Cyrus/%s\r\n",
                 txn->req_tgt.path, HTTP_VERSION,
-                src_be->hostname, buf_cstring(&serverinfo));
+                src_be->hostname, CYRUS_VERSION);
     if (txn->meth != METH_MOVE) {
         write_hdr(src_be->out, "If", txn->req_hdrs);
         write_hdr(src_be->out, "If-Match", txn->req_hdrs);
@@ -1105,16 +1123,16 @@ EXPORTED int http_proxy_copy(struct backend *src_be, struct backend *dest_be,
 
     if (code != 200) {
         /* Send failure response to client */
-        http_err = resp_code_to_http_err(code);
+        http_err = http_status_to_code(code);
         send_response(txn, http_err, resp_hdrs, &resp_body.payload);
         goto done;
     }
 
 
     /*
-     * Send a synchonizing PUT request to dest backend:
+     * Send a synchronizing PUT request to dest backend:
      *
-     * - Add Expect:100-continue header (for synchonicity)
+     * - Add Expect:100-continue header (for synchronicity)
      * - Obey Overwrite by adding If-None-Match header
      * - Use any TE, Prefer, Accept* headers specified by client
      * - Use Content-Type, -Encoding, -Language headers from GET response
@@ -1122,10 +1140,10 @@ EXPORTED int http_proxy_copy(struct backend *src_be, struct backend *dest_be,
      */
     prot_printf(dest_be->out, "PUT %s %s\r\n"
                               "Host: %s\r\n"
-                              "User-Agent: %s\r\n"
+                              "User-Agent: Cyrus/%s\r\n"
                               "Expect: 100-continue\r\n",
                 *spool_getheader(txn->req_hdrs, "Destination"), HTTP_VERSION,
-                dest_be->hostname, buf_cstring(&serverinfo));
+                dest_be->hostname, CYRUS_VERSION);
     hdr = spool_getheader(txn->req_hdrs, "Overwrite");
     if (hdr && !strcmp(*hdr, "F"))
         prot_puts(dest_be->out, "If-None-Match: *\r\n");
@@ -1161,7 +1179,7 @@ EXPORTED int http_proxy_copy(struct backend *src_be, struct backend *dest_be,
     } while (code < 200);
 
     /* Send response to client */
-    http_err = resp_code_to_http_err(code);
+    http_err = http_status_to_code(code);
     send_response(txn, http_err, resp_hdrs, NULL);
     if (code != 204) {
         resp_body.framing = FRAMING_UNKNOWN;
@@ -1183,9 +1201,9 @@ EXPORTED int http_proxy_copy(struct backend *src_be, struct backend *dest_be,
          */
         prot_printf(src_be->out, "DELETE %s %s\r\n"
                                  "Host: %s\r\n"
-                                 "User-Agent: %s\r\n",
+                                 "User-Agent: Cyrus/%s\r\n",
                     txn->req_tgt.path, HTTP_VERSION,
-                    src_be->hostname, buf_cstring(&serverinfo));
+                    src_be->hostname, CYRUS_VERSION);
         if (lock) prot_printf(src_be->out, "If: (%s)\r\n", lock);
         prot_puts(src_be->out, "\r\n");
         prot_flush(src_be->out);
@@ -1216,10 +1234,10 @@ EXPORTED int http_proxy_copy(struct backend *src_be, struct backend *dest_be,
          */
         prot_printf(src_be->out, "UNLOCK %s %s\r\n"
                                  "Host: %s\r\n"
-                                 "User-Agent: %s\r\n"
+                                 "User-Agent: Cyrus/%s\r\n"
                                  "Lock-Token: %s\r\n\r\n",
                     txn->req_tgt.path, HTTP_VERSION,
-                    src_be->hostname, buf_cstring(&serverinfo), lock);
+                    src_be->hostname, CYRUS_VERSION, lock);
         prot_flush(src_be->out);
 
         /* Read response(s) from source backend until final resp or error */

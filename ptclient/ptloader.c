@@ -46,6 +46,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -57,7 +58,6 @@
 
 #include "auth_pts.h"
 #include "cyrusdb.h"
-#include "exitcodes.h"
 #include "imap/global.h"
 #include "libconfig.h"
 #include "retry.h"
@@ -94,7 +94,7 @@ static struct pts_module *pts_fromname()
         char errbuf[1024];
         snprintf(errbuf, sizeof(errbuf),
                  "PTS module %s not supported", name);
-        fatal(errbuf, EC_CONFIG);
+        fatal(errbuf, EX_CONFIG);
     }
 
     return pts;
@@ -130,7 +130,7 @@ int service_init(int argc, char *argv[], char **envp __attribute__((unused)))
     const char *fname;
     char *tofree = NULL;
 
-    if (geteuid() == 0) fatal("must run as the Cyrus user", EC_USAGE);
+    if (geteuid() == 0) fatal("must run as the Cyrus user", EX_USAGE);
     setproctitle_init(argc, argv, envp);
 
     /* set signal handlers */
@@ -162,8 +162,8 @@ int service_init(int argc, char *argv[], char **envp __attribute__((unused)))
     r = cyrusdb_open(config_ptscache_db, fname, CYRUSDB_CREATE, &ptsdb);
     if (r != 0) {
         syslog(LOG_ERR, "DBERROR: opening %s: %s", fname,
-               cyrusdb_strerror(ret));
-        fatal("can't read pts database", EC_TEMPFAIL);
+               cyrusdb_strerror(r));
+        fatal("can't read pts database", EX_TEMPFAIL);
     }
 
     if (tofree) free(tofree);

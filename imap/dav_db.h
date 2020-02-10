@@ -56,6 +56,7 @@ struct dav_data {
     const char *resource;
     uint32_t imap_uid;          /* zero (0) until URL is mapped */
     modseq_t modseq;
+    modseq_t createdmodseq;
     const char *lock_token;
     const char *lock_owner;
     const char *lock_ownerid;
@@ -71,5 +72,8 @@ sqldb_t *dav_open_mailbox(struct mailbox *mailbox);
 int dav_delete(struct mailbox *mailbox);
 
 int dav_reconstruct_user(const char *userid, const char *audit_tool);
+
+int dav_attach_userid(sqldb_t *db, const char *userid);
+int dav_attach_mailbox(sqldb_t *db, struct mailbox *mailbox);
 
 #endif /* DAV_DB_H */

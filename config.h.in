@@ -61,9 +61,6 @@
 /* Build with backup support */
 #undef ENABLE_BACKUP
 
-/* Build with support of mailbox event notification */
-#undef ENABLE_MBOXEVENT
-
 /* Build with Object Store support */
 #undef ENABLE_OBJECTSTORE
 
@@ -88,6 +85,9 @@
 /* Do we have ClamAV? */
 #undef HAVE_CLAMAV
 
+/* Build with cld2 library support */
+#undef HAVE_CLD2
+
 /* Do we have CU_SetUpFunc? */
 #undef HAVE_CU_SETUPFUNC
 
@@ -97,17 +97,12 @@
 /* Define to 1 if you have the `daemon' function. */
 #undef HAVE_DAEMON
 
-/* Define to 1 if you have the declaration of `icalproperty_get_parent', and
-   to 0 if you don't. */
-#undef HAVE_DECL_ICALPROPERTY_GET_PARENT
+/* Do we have support for optimize __attribute__? */
+#undef HAVE_DECLARE_OPTIMIZE
 
-/* Define to 1 if you have the declaration of `icalrecur_freq_to_string', and
-   to 0 if you don't. */
-#undef HAVE_DECL_ICALRECUR_FREQ_TO_STRING
-
-/* Define to 1 if you have the declaration of `icalrecur_weekday_to_string',
-   and to 0 if you don't. */
-#undef HAVE_DECL_ICALRECUR_WEEKDAY_TO_STRING
+/* Define to 1 if you have the declaration of
+   `NGHTTP2_SETTINGS_ENABLE_CONNECT_PROTOCOL', and to 0 if you don't. */
+#undef HAVE_DECL_NGHTTP2_SETTINGS_ENABLE_CONNECT_PROTOCOL
 
 /* Define to 1 if you have the declaration of `tzname', and to 0 if you don't.
    */
@@ -140,6 +135,9 @@
 
 /* Define to 1 if you have the `ftruncate' function. */
 #undef HAVE_FTRUNCATE
+
+/* Do we have function nesting support? */
+#undef HAVE_FUNCTION_NESTING
 
 /* Do we have a getaddrinfo? */
 #undef HAVE_GETADDRINFO
@@ -190,14 +188,17 @@
 /* Define if your GSSAPI implementation supports SPNEGO */
 #undef HAVE_GSS_SPNEGO
 
-/* Do we have support for IANA params? */
-#undef HAVE_IANA_PARAMS
-
 /* Build CalDAV support into httpd? */
 #undef HAVE_ICAL
 
+/* Build with ICU support */
+#undef HAVE_ICU
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
+
+/* Do we have Jansson? */
+#undef HAVE_JANSSON
 
 /* Support for Kerberos? */
 #undef HAVE_KRB
@@ -208,8 +209,14 @@
 /* Do we have libcap system capabilities handling (Linux systems only)? */
 #undef HAVE_LIBCAP
 
+/* Build with chardet library support */
+#undef HAVE_LIBCHARDET
+
 /* Define to 1 if you have the `curl' library (-lcurl). */
 #undef HAVE_LIBCURL
+
+/* Define to 1 if you have the `jansson' library (-ljansson). */
+#undef HAVE_LIBJANSSON
 
 /* Define to 1 if you have the `json-c' library (-ljson-c). */
 #undef HAVE_LIBJSON_C
@@ -223,20 +230,17 @@
 /* Define to 1 if you have the `resolv' library (-lresolv). */
 #undef HAVE_LIBRESOLV
 
+/* Define to 1 if you have the `srs2' library (-lsrs2). */
+#undef HAVE_LIBSRS2
+
 /* Do we have the uuid library */
 #undef HAVE_LIBUUID
 
 /* Do we have TCP wrappers? */
 #undef HAVE_LIBWRAP
 
-/* Build in cyrusdb_lmdb support? */
-#undef HAVE_LMDB
-
 /* Define to 1 if you support file names longer than 14 characters. */
 #undef HAVE_LONG_FILE_NAMES
-
-/* Do we have built-in support for managed attachment params? */
-#undef HAVE_MANAGED_ATTACH_PARAMS
 
 /* Define to 1 if you have the `memmem' function. */
 #undef HAVE_MEMMEM
@@ -260,6 +264,9 @@
    file. */
 #undef HAVE_NET_SNMP_AGENT_AGENT_MODULE_CONFIG_H
 
+/* Do we have support for new clone API? */
+#undef HAVE_NEW_CLONE_API
+
 /* Build HTTP/2 support into httpd? */
 #undef HAVE_NGHTTP2
 
@@ -275,8 +282,8 @@
 /* Define to 1 if you have the `pselect' function. */
 #undef HAVE_PSELECT
 
-/* Do we have support for setting start point of recurrences? */
-#undef HAVE_RECUR_ITERATOR_START
+/* Do we have built-in support for RFC7986 color prop? */
+#undef HAVE_RFC7986_COLOR
 
 /* Do we have an rlim_t? */
 #undef HAVE_RLIM_T
@@ -286,9 +293,6 @@
 
 /* Define to 1 if you have the <rxposix.h> header file. */
 #undef HAVE_RXPOSIX_H
-
-/* Do we have built-in support for scheduling params? */
-#undef HAVE_SCHEDULING_PARAMS
 
 /* Define to 1 if you have the `setrlimit' function. */
 #undef HAVE_SETRLIMIT
@@ -397,19 +401,16 @@
 /* Define to 1 if you have the `timegm' function. */
 #undef HAVE_TIMEGM
 
+/* Do we have support for TLS ALPN extension? */
+#undef HAVE_TLS_ALPN
+
 /* Define to 1 if your `struct tm' has `tm_zone'. Deprecated, use
    `HAVE_STRUCT_TM_TM_ZONE' instead. */
 #undef HAVE_TM_ZONE
 
-/* Do we have built-in support for TZdist props? */
-#undef HAVE_TZDIST_PROPS
-
 /* Define to 1 if you don't have `tm_zone' but do have the external array
    `tzname'. */
 #undef HAVE_TZNAME
-
-/* Build timezones by reference support into httpd? */
-#undef HAVE_TZ_BY_REF
 
 /* Do we have UCD-SNMP support? */
 #undef HAVE_UCDSNMP
@@ -417,27 +418,21 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Do we have built-in support for VALARM extensions props? */
-#undef HAVE_VALARM_EXT_PROPS
-
 /* Define to 1 if you have the <valgrind/valgrind.h> header file. */
 #undef HAVE_VALGRIND_VALGRIND_H
-
-/* Build VAVAILABILITY support into httpd? */
-#undef HAVE_VAVAILABILITY
 
 /* Define to 1 or 0, depending whether the compiler supports simple visibility
    declarations. */
 #undef HAVE_VISIBILITY
 
-/* Build VPATCH support into httpd? */
-#undef HAVE_VPATCH
-
-/* Build VPOLL support into httpd? */
-#undef HAVE_VPOLL
-
 /* Define to 1 if you have the `vprintf' function. */
 #undef HAVE_VPRINTF
+
+/* Build WebSockets support into httpd? */
+#undef HAVE_WSLAY
+
+/* Build with libxml support */
+#undef HAVE_XML2
 
 /* Do we have support for xmlBufferDetach()? */
 #undef HAVE_XML_BUFFERDETACH
@@ -448,17 +443,23 @@
 /* Build with Zephyr support? */
 #undef HAVE_ZEPHYR
 
+/* Do we have Zeroskip? */
+#undef HAVE_ZEROSKIP
+
 /* Do we have zlib? */
 #undef HAVE_ZLIB
 
-/* Does icaltimetype have is_utc field? */
-#undef ICALTIME_HAS_IS_UTC
+/* Build Zstandard compression support into httpd? */
+#undef HAVE_ZSTD
 
 /* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
 
 /* Name of the pidfile for master */
 #undef MASTER_PIDFILE
+
+/* Do we need to provide our own json_dumpb()? */
+#undef NEED_JANSSON_JSON_DUMPB
 
 /* Do we have a sys_errlist? */
 #undef NEED_SYS_ERRLIST
@@ -565,9 +566,6 @@
 /* Build in Sieve support? */
 #undef USE_SIEVE
 
-/* Build in Sphinx support? */
-#undef USE_SPHINX
-
 /* Build in Squat support? */
 #undef USE_SQUAT
 
@@ -596,14 +594,17 @@
 /* Build in Xapian support? */
 #undef USE_XAPIAN
 
-/* Use Xapian cyruslibs extensions? */
-#undef USE_XAPIAN_CYRUS_EXTENSIONS
+/* Use Xapian CJK word tokenizer, rather than n-grams? */
+#undef USE_XAPIAN_CJK_WORDS
 
 /* Version number of package */
 #undef VERSION
 
 /* Build *DAV support into httpd? */
 #undef WITH_DAV
+
+/* Build with JMAP support */
+#undef WITH_JMAP
 
 /* Enable support for OpenIO object storage. */
 #undef WITH_OPENIO
@@ -620,8 +621,8 @@
 # endif
 #endif
 
-/* Which Xapian are we running on? */
-#undef XAPIAN_FLAVOR
+/* Which Xapian CJK tokenzation are we using? */
+#undef XAPIAN_CJK_TOKENS
 
 /* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
    `char[]'. */

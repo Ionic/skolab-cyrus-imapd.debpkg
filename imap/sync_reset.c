@@ -50,6 +50,7 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
+#include <sysexits.h>
 #include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -60,7 +61,6 @@
 
 #include "global.h"
 #include "mboxlist.h"
-#include "exitcodes.h"
 #include "mailbox.h"
 #include "seen.h"
 #include "mboxname.h"
@@ -95,19 +95,11 @@ static void shut_down(int code)
 {
     in_shutdown = 1;
 
-    annotatemore_close();
-    annotate_done();
-
     if (sync_userid)    free(sync_userid);
     if (sync_authstate) auth_freestate(sync_authstate);
 
     seen_done();
 
-    quotadb_close();
-    quotadb_done();
-
-    mboxlist_close();
-    mboxlist_done();
     exit(code);
 }
 
@@ -116,7 +108,7 @@ static int usage(const char *name)
     fprintf(stderr,
             "usage: %s [-C <alt_config>] [-v] [-f] user...\n", name);
 
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 EXPORTED void fatal(const char* s, int code)
@@ -131,6 +123,7 @@ static int reset_single(const char *userid)
 {
     int r = 0;
     int i;
+    struct mboxlock *namespacelock = user_namespacelock(userid);
 
     /* XXX: adding an entry to userdeny_db here would avoid the need to
      * protect against new logins with external proxy rules - Cyrus could
@@ -148,13 +141,13 @@ static int reset_single(const char *userid)
         (void)mboxlist_changesub(name, userid, sync_authstate, 0, 0, 0);
     }
 
-    r = mboxlist_usermboxtree(userid, addmbox_cb, mblist, MBOXTREE_DELETED);
+    r = mboxlist_usermboxtree(userid, NULL, addmbox_cb, mblist, MBOXTREE_DELETED);
     if (r) goto fail;
 
     for (i = mblist->count; i; i--) {
         const char *name = strarray_nth(mblist, i-1);
         r = mboxlist_deletemailbox(name, 1, sync_userid,
-                                   sync_authstate, NULL, 0, 1, 1);
+                                   sync_authstate, NULL, 0, 1, 1, 0);
         if (r == IMAP_MAILBOX_NONEXISTENT) {
             printf("skipping already removed mailbox %s\n", name);
         }
@@ -168,6 +161,7 @@ static int reset_single(const char *userid)
     r = user_deletedata(userid, 1);
 
  fail:
+    mboxname_release(&namespacelock);
     strarray_free(mblist);
     strarray_free(sublist);
 
@@ -216,25 +210,15 @@ main(int argc, char **argv)
 
     /* Set namespace -- force standard (internal) */
     if ((r = mboxname_init_namespace(sync_namespacep, 1)) != 0) {
-        fatal(error_message(r), EC_CONFIG);
+        fatal(error_message(r), EX_CONFIG);
     }
-
-    /* open the mboxlist and quotadb, we'll need them for real work */
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-
-    quotadb_init(0);
-    quotadb_open(NULL);
 
     signals_set_shutdown(&shut_down);
     signals_add_handlers(0);
 
-    annotate_init(NULL, NULL);
-    annotatemore_open();
-
     if (!force) {
         fprintf(stderr, "Usage: sync_reset -f user user user ...\n");
-        fprintf(stderr, "         -f [force] is obligitory for safety\n");
+        fprintf(stderr, "         -f [force] is obligatory for safety\n");
         shut_down(0);
     }
 

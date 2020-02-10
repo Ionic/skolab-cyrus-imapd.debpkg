@@ -59,15 +59,16 @@
 #include <sys/poll.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <string.h>
 
 #include "annotate.h"
 #include "assert.h"
+#include "bitvector.h"
 #include "bsearch.h"
 #include "mboxlist.h"
 #include "global.h"
-#include "exitcodes.h"
 #include "search_engines.h"
 #include "sync_log.h"
 #include "mailbox.h"
@@ -97,9 +98,10 @@ const int SKIP_FUZZ = 60;
 static int verbose = 0;
 static int incremental_mode = 0;
 static int batch_mode = 0;
+static int xapindexed_mode = 0;
+static int reindex_parts_mode = 0;
 static int recursive_flag = 0;
 static int annotation_flag = 0;
-static int running_daemon = 0;
 static int sleepmicroseconds = 0;
 static const char *temp_root_dir = NULL;
 static search_text_receiver_t *rx = NULL;
@@ -108,7 +110,7 @@ static const char *name_starts_from = NULL;
 
 static void shut_down(int code) __attribute__((noreturn));
 
-static int usage(const char *name)
+__attribute__((noreturn)) static int usage(const char *name)
 {
     fprintf(stderr,
             "usage: %s [mode] [options] [source]\n"
@@ -118,14 +120,16 @@ static int usage(const char *name)
             "  -a          index [source] using /squat annotations\n"
             "  -r          index [source] recursively\n"
             "  -f file     index from synclog file\n"
-            "  -I file     index mbox/uids in file\n"
             "  -R          start rolling indexer\n"
             "  -z tier     compact to tier\n"
+            "  -l          list paths\n"
             "\n"
             "Index mode options:\n"
             "  -i          index incrementally\n"
             "  -N name     index mailbox names starting with name\n"
             "  -S seconds  sleep seconds between indexing mailboxes\n"
+            "  -P          reindex body parts\n"
+            "  -Z          Xapian: use internal index rather than cyrus.indexed.db\n"
             "\n"
             "Index sources:\n"
             "  none        all mailboxes (default)\n"
@@ -140,16 +144,16 @@ static int usage(const char *name)
             "  -t tier...  compact from tiers\n"
             "  -F          filter during compaction\n"
             "  -T dir      use temporary directory dir during compaction\n"
-            "  -X          reindex during compaction\n"
-            "  -U          reindex tiers having deprecated stems or prefixes\n"
+            "  -X          reindex during compaction (including body parts)\n"
             "  -o          copy db rather compacting\n"
+            "  -U          only compact if re-indexing\n"
             "\n"
             "General options:\n"
             "  -v          be verbose\n"
             "  -h          show usage\n",
         name);
 
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 /* ====================================================================== */
@@ -166,9 +170,9 @@ static void become_daemon(void)
         perror("/dev/null");
         exit(1);
     }
-    dup2(nullfd, 0);
-    dup2(nullfd, 1);
-    dup2(nullfd, 2);
+    dup2(nullfd, STDIN_FILENO);
+    dup2(nullfd, STDOUT_FILENO);
+    dup2(nullfd, STDERR_FILENO);
     for (fd = 3 ; fd < nfds ; fd++)
         close(fd);          /* this will close nullfd too */
 
@@ -182,27 +186,14 @@ static void become_daemon(void)
         exit(0); /* parent */
 }
 
-/* ====================================================================== */
-
-/* This is called once for each mailbox we're told to index. */
-static int index_one(const char *name, int blocking)
+static int should_index(const char *name)
 {
     mbentry_t *mbentry = NULL;
-    struct mailbox *mailbox = NULL;
-    int r;
-    int flags = 0;
-
-    if (incremental_mode)
-        flags |= SEARCH_UPDATE_INCREMENTAL;
-    if (batch_mode)
-        flags |= SEARCH_UPDATE_BATCH;
-
-    /* Convert internal name to external */
-    char *extname = mboxname_to_external(name, &squat_namespace, NULL);
-
     /* Skip remote mailboxes */
-    r = mboxlist_lookup(name, &mbentry, NULL);
+    int r = mboxlist_lookup(name, &mbentry, NULL);
     if (r) {
+        /* Convert internal name to external */
+        char *extname = mboxname_to_external(name, &squat_namespace, NULL);
         if (verbose) {
             printf("error looking up %s: %s\n",
                    extname, error_message(r));
@@ -211,15 +202,51 @@ static int index_one(const char *name, int blocking)
                extname, error_message(r));
 
         free(extname);
-        return r;
+        return 0;
     }
-    if (mbentry->mbtype & MBTYPE_REMOTE) {
+
+    // skip remote or not-real mailboxes
+    if (mbentry->mbtype & (MBTYPE_REMOTE|MBTYPE_DELETED|MBTYPE_INTERMEDIATE)) {
         mboxlist_entry_free(&mbentry);
-        free(extname);
+        return 0;
+    }
+
+    // skip email submissions
+    if (mboxname_issubmissionmailbox(mbentry->name, mbentry->mbtype)) {
+        mboxlist_entry_free(&mbentry);
+        return 0;
+    }
+
+    // skip COLLECTION mailboxes (just files)
+    if (mbentry->mbtype & MBTYPE_COLLECTION) {
+        mboxlist_entry_free(&mbentry);
         return 0;
     }
 
     mboxlist_entry_free(&mbentry);
+    return 1;
+}
+
+/* ====================================================================== */
+
+/* This is called once for each mailbox we're told to index. */
+static int index_one(const char *name, int blocking)
+{
+    struct mailbox *mailbox = NULL;
+    int r;
+    int flags = 0;
+
+    if (incremental_mode)
+        flags |= SEARCH_UPDATE_INCREMENTAL;
+    if (batch_mode)
+        flags |= SEARCH_UPDATE_BATCH;
+    if (xapindexed_mode)
+        flags |= SEARCH_UPDATE_XAPINDEXED;
+    if (reindex_parts_mode)
+        flags |= SEARCH_UPDATE_REINDEX_PARTS;
+
+    /* Convert internal name to external */
+    char *extname = mboxname_to_external(name, &squat_namespace, NULL);
 
     /* make sure the mailbox (or an ancestor) has
        /vendor/cmu/cyrus-imapd/squat set to "true" */
@@ -327,7 +354,7 @@ static void expand_mboxnames(strarray_t *sa, int nmboxnames,
 
     for (i = 0; i < nmboxnames; i++) {
         if (user_mode) {
-            mboxlist_usermboxtree(mboxnames[i], addmbox, sa, 0);
+            mboxlist_usermboxtree(mboxnames[i], NULL, addmbox, sa, 0);
         }
         else {
             /* Translate any separators in mailboxname */
@@ -339,7 +366,7 @@ static void expand_mboxnames(strarray_t *sa, int nmboxnames,
     }
 }
 
-static int do_indexer(const strarray_t *sa)
+static int do_indexer(const strarray_t *mboxnames)
 {
     int r = 0;
     int i;
@@ -348,8 +375,10 @@ static int do_indexer(const strarray_t *sa)
     if (rx == NULL)
         return 0;       /* no indexer defined */
 
-    for (i = 0 ; i < sa->count ; i++) {
-        r = index_one(sa->data[i], /*blocking*/1);
+    for (i = 0 ; i < strarray_size(mboxnames) ; i++) {
+        const char *mboxname = strarray_nth(mboxnames, i);
+        if (!should_index(mboxname)) continue;
+        r = index_one(mboxname, /*blocking*/1);
         if (r == IMAP_MAILBOX_NONEXISTENT)
             r = 0;
         if (r == IMAP_MAILBOX_LOCKED)
@@ -361,108 +390,6 @@ static int do_indexer(const strarray_t *sa)
 
     search_end_update(rx);
 
-    return r;
-}
-
-static int index_single_message(const char *mboxname, uint32_t uid)
-{
-    int r;
-    struct mailbox *mailbox = NULL;
-    message_t *msg = NULL;
-    int begun = 0;
-    struct index_record record;
-
-    r = mailbox_open_irl(mboxname, &mailbox);
-    if (r) goto out;
-
-    r = rx->begin_mailbox(rx, mailbox, SEARCH_UPDATE_INCREMENTAL);
-    if (r) goto out;
-    begun = 1;
-
-    r = mailbox_find_index_record(mailbox, uid, &record);
-    if (r) goto out;
-
-    if (record.system_flags & (FLAG_EXPUNGED|FLAG_UNLINKED)) goto out;
-
-    msg = message_new_from_record(mailbox, &record);
-    if (!msg) goto out;
-
-    if (rx->is_indexed(rx, msg))
-        goto out;
-
-    if (verbose) fprintf(stderr, "squatter: indexing mailbox:%s uid:%u\n",
-                         mboxname, uid);
-
-    r = index_getsearchtext(msg, rx, 0);
-
-out:
-    if (begun) {
-        int r2 = rx->end_mailbox(rx, mailbox);
-        if (r2 && !r) r = r2;
-    }
-    message_unref(&msg);
-    mailbox_close(&mailbox);
-    return r;
-}
-
-static int do_indexfrom(const char *fromfile)
-{
-    int r;
-    FILE *fp;
-    unsigned lineno = 0;
-    const char *p;
-    tok_t tok;
-    const char *mboxname;
-    uint32_t uid;
-    char buf[MAX_MAILBOX_BUFFER+128];
-
-    rx = search_begin_update(verbose);
-    if (rx == NULL) /* no indexer defined */
-        return 0;
-
-    fp = fopen(fromfile, "r");
-    if (!fp) {
-        r = errno;
-        perror(fromfile);
-        goto out;
-    }
-
-    while (fgets(buf, sizeof(buf), fp)) {
-        lineno++;
-        if (buf[0] == '#') continue;
-        tok_initm(&tok, buf, "\t", TOK_EMPTY|TOK_TRIMRIGHT);
-
-        /* first token is an mboxname */
-        mboxname = tok_next(&tok);
-        if (!mboxname) {
-syntax_error:
-            fprintf(stderr, "%s:%u: syntax error, skipping\n",
-                    fromfile, lineno);
-            continue;
-        }
-
-        /* 2nd token is a uid */
-        p = tok_next(&tok);
-        if (!p) goto syntax_error;
-        uid = strtoul(p, NULL, 0);
-        if (!uid) goto syntax_error;
-
-        /* no more tokens on the line */
-        p = tok_next(&tok);
-        if (p) goto syntax_error;
-
-        r = index_single_message(mboxname, uid);
-        if (r) {
-            fprintf(stderr, "Failed to index mailbox \"%s\" uid %u: %s\n",
-                    mboxname, uid, error_message(r));
-            /* ignore errors */
-            r = 0;
-        }
-    }
-
-out:
-    if (fp) fclose(fp);
-    search_end_update(rx);
     return r;
 }
 
@@ -547,7 +474,9 @@ error:
 }
 
 static int print_search_hit(const char *mboxname, uint32_t uidvalidity,
-                            uint32_t uid, void *rock)
+                            uint32_t uid,
+                            const strarray_t *partids __attribute__((unused)),
+                            void *rock)
 {
     int single = *(int *)rock;
 
@@ -556,6 +485,45 @@ static int print_search_hit(const char *mboxname, uint32_t uidvalidity,
     else
         printf("mailbox %s\nuidvalidity %u\nuid %u\n", mboxname, uidvalidity, uid);
     return 0;
+}
+
+static int do_list(const strarray_t *mboxnames)
+{
+    char *prev_userid = NULL;
+    strarray_t files = STRARRAY_INITIALIZER;
+    int i;
+    int r = 0;
+
+    for (i = 0; i < strarray_size(mboxnames); i++) {
+        const char *mboxname = strarray_nth(mboxnames, i);
+        char *userid = mboxname_to_userid(mboxname);
+        if (!userid) continue;
+
+        if (!strcmpsafe(prev_userid, userid)) {
+            free(userid);
+            continue;
+        }
+
+        r = search_list_files(userid, &files);
+        if (r) break;
+
+        int j;
+        for (j = 0; j < strarray_size(&files); j++) {
+            printf("%s\n", strarray_nth(&files, j));
+        }
+
+        strarray_truncate(&files, 0);
+
+        free(prev_userid);
+        prev_userid = userid;
+
+        if (sleepmicroseconds)
+            usleep(sleepmicroseconds);
+    }
+
+    strarray_fini(&files);
+    free(prev_userid);
+    return r;
 }
 
 static int compact_mbox(const char *userid, const strarray_t *srctiers,
@@ -569,10 +537,10 @@ static int do_compact(const strarray_t *mboxnames, const strarray_t *srctiers,
 {
     char *prev_userid = NULL;
     int i;
-    int r = 0;
 
-    for (i = 0 ; i < mboxnames->count ; i++) {
-        char *userid = mboxname_to_userid(mboxnames->data[i]);
+    for (i = 0; i < strarray_size(mboxnames); i++) {
+        const char *mboxname = strarray_nth(mboxnames, i);
+        char *userid = mboxname_to_userid(mboxname);
         if (!userid) continue;
 
         if (!strcmpsafe(prev_userid, userid)) {
@@ -580,8 +548,13 @@ static int do_compact(const strarray_t *mboxnames, const strarray_t *srctiers,
             continue;
         }
 
-        r = compact_mbox(userid, srctiers, desttier, flags);
-        if (r) break;
+        int retry;
+        for (retry = 1; retry <= 3; retry++) {
+            int r = compact_mbox(userid, srctiers, desttier, flags);
+            if (!r) break;
+            syslog(LOG_ERR, "IOERROR: failed to compact %s (%d): %s",
+                   userid, retry, error_message(r));
+        }
 
         free(prev_userid);
         prev_userid = userid;
@@ -591,7 +564,7 @@ static int do_compact(const strarray_t *mboxnames, const strarray_t *srctiers,
     }
 
     free(prev_userid);
-    return r;
+    return 0;
 }
 
 static int do_search(const char *query, int single, const strarray_t *mboxnames)
@@ -607,6 +580,7 @@ static int do_search(const char *query, int single, const strarray_t *mboxnames)
 
     for (i = 0 ; i < mboxnames->count ; i++) {
         const char *mboxname = mboxnames->data[i];
+        if (!should_index(mboxname)) continue;
 
         r = mailbox_open_irl(mboxname, &mailbox);
         if (r) {
@@ -634,23 +608,23 @@ static int do_search(const char *query, int single, const strarray_t *mboxnames)
 static strarray_t *read_sync_log_items(sync_log_reader_t *slr)
 {
     const char *args[3];
-    strarray_t *folders = strarray_new();
+    strarray_t *mboxnames = strarray_new();
 
     while (sync_log_reader_getitem(slr, args) == 0) {
         if (!strcmp(args[0], "APPEND")) {
             if (!mboxname_isdeletedmailbox(args[1], NULL))
-                strarray_add(folders, args[1]);
+                strarray_add(mboxnames, args[1]);
         }
         else if (!strcmp(args[0], "USER"))
-            mboxlist_usermboxtree(args[1], addmbox, folders, /*flags*/0);
+            mboxlist_usermboxtree(args[1], NULL, addmbox, mboxnames, /*flags*/0);
     }
 
-    return folders;
+    return mboxnames;
 }
 
 static int do_synclogfile(const char *synclogfile)
 {
-    strarray_t *folders = NULL;
+    strarray_t *mboxnames = NULL;
     sync_log_reader_t *slr;
     int nskipped = 0;
     int i;
@@ -659,11 +633,11 @@ static int do_synclogfile(const char *synclogfile)
     slr = sync_log_reader_create_with_filename(synclogfile);
     r = sync_log_reader_begin(slr);
     if (r) goto out;
-    folders = read_sync_log_items(slr);
+    mboxnames = read_sync_log_items(slr);
     sync_log_reader_end(slr);
 
-    /* sort folders for locality of reference in file processing mode */
-    strarray_sort(folders, cmpstringp_raw);
+    /* sort mboxnames for locality of reference in file processing mode */
+    strarray_sort(mboxnames, cmpstringp_raw);
 
     signals_poll();
 
@@ -673,8 +647,9 @@ static int do_synclogfile(const char *synclogfile)
         r = 1;
         goto out;
     }
-    for (i = 0; i < folders->count; i++) {
-        const char *mboxname = strarray_nth(folders, i);
+    for (i = 0; i < strarray_size(mboxnames); i++) {
+        const char *mboxname = strarray_nth(mboxnames, i);
+        if (!should_index(mboxname)) continue;
         if (verbose > 1)
             syslog(LOG_INFO, "do_synclogfile: indexing %s", mboxname);
         r = index_one(mboxname, /*blocking*/1);
@@ -688,7 +663,7 @@ static int do_synclogfile(const char *synclogfile)
             }
             r = 0;
             /* try again at the end */
-            strarray_append(folders, mboxname);
+            strarray_append(mboxnames, mboxname);
         }
         if (r) {
             syslog(LOG_ERR, "IOERROR: failed to index %s: %s",
@@ -702,14 +677,14 @@ static int do_synclogfile(const char *synclogfile)
     rx = NULL;
 
 out:
-    strarray_free(folders);
+    strarray_free(mboxnames);
     sync_log_reader_free(slr);
     return r;
 }
 
 static void do_rolling(const char *channel)
 {
-    strarray_t *folders = NULL;
+    strarray_t *mboxnames = NULL;
     sync_log_reader_t *slr;
     int i;
     int r;
@@ -717,9 +692,16 @@ static void do_rolling(const char *channel)
     slr = sync_log_reader_create_with_channel(channel);
 
     for (;;) {
-        signals_poll();
+        int sig = signals_poll();
+
+        if (sig == SIGHUP && getenv("CYRUS_ISDAEMON")) {
+            syslog(LOG_DEBUG, "received SIGHUP, shutting down gracefully\n");
+            sync_log_reader_end(slr);
+            shut_down(0);
+        }
+
         if (shutdown_file(NULL, 0))
-            shut_down(EC_TEMPFAIL);
+            shut_down(EX_TEMPFAIL);
 
         r = sync_log_reader_begin(slr);
         if (r) { /* including IMAP_AGAIN */
@@ -727,22 +709,23 @@ static void do_rolling(const char *channel)
             continue;
         }
 
-        folders = read_sync_log_items(slr);
+        mboxnames = read_sync_log_items(slr);
 
-        if (folders->count) {
+        if (mboxnames->count) {
             /* have some due items in the queue, try to index them */
             rx = search_begin_update(verbose);
             if (NULL == rx) {
                 /* XXX if xapian, probably don't have conversations enabled? */
-                fatal("could not construct search text receiver", EC_CONFIG);
+                fatal("could not construct search text receiver", EX_CONFIG);
             }
-            for (i = 0; i < folders->count; i++) {
-                const char *mboxname = strarray_nth(folders, i);
+            for (i = 0; i < strarray_size(mboxnames); i++) {
+                const char *mboxname = strarray_nth(mboxnames, i);
+                if (!should_index(mboxname)) continue;
                 if (verbose > 1)
                     syslog(LOG_INFO, "do_rolling: indexing %s", mboxname);
                 r = index_one(mboxname, /*blocking*/0);
                 if (r == IMAP_AGAIN || r == IMAP_MAILBOX_LOCKED) {
-                    /* XXX: alternative, just append to strarray_t *folders ... */
+                    /* XXX: alternative, just append to strarray_t *mboxnames ... */
                     sync_log_channel_append(channel, mboxname);
                 }
                 if (sleepmicroseconds)
@@ -752,58 +735,90 @@ static void do_rolling(const char *channel)
             rx = NULL;
         }
 
-        strarray_free(folders);
-        folders = NULL;
+        strarray_free(mboxnames);
+        mboxnames = NULL;
     }
 
     /* XXX - we don't really get here... */
-    strarray_free(folders);
+    strarray_free(mboxnames);
     sync_log_reader_free(slr);
 }
 
-/*
- * Run a search daemon in such a way that the natural shutdown
- * mechanism for Cyrus (sending a SIGTERM to the master process)
- * will cleanly shut down the search daemon too.  For Sphinx
- * this currently means running a loop in a forked process whose
- * job it is to live in the master process' process group and thus
- * receive the SIGTERM that master re-sends.
- */
-static void do_run_daemon(void)
+static int audit_one(const char *mboxname, bitvector_t *unindexed)
 {
-    int r;
+    int r2, r = 0;
+    struct mailbox *mailbox = NULL;
 
-    /* We start the daemon before forking.  This eliminates a
-     * race condition during slot startup by ensuring that
-     * Sphinx is fully running before the rolling squatter
-     * tries to use it. */
-    r = search_start_daemon(verbose);
-    if (r) exit(EC_TEMPFAIL);
+    r = mailbox_open_irl(mboxname, &mailbox);
+    if (r) goto done;
 
-    /* tell shut_down() to shut down the searchd too */
-    running_daemon = 1;
+    r = rx->begin_mailbox(rx, mailbox, SEARCH_UPDATE_AUDIT);
+    if (r) goto done;
 
-    become_daemon();
-    signals_set_shutdown(&shut_down);
-    signals_add_handlers(0);
+    r = rx->audit_mailbox(rx, unindexed);
+    if (r) goto done;
 
-    for (;;) {
-        signals_poll();         /* will call shut_down() after SIGTERM */
-        poll(NULL, 0, -1);      /* sleeps until signalled */
+done:
+    r2 = rx->end_mailbox(rx, mailbox);
+    mailbox_close(&mailbox);
+    if (!r) r = r2;
+    return r;
+}
+
+
+static int do_audit(const strarray_t *mboxnames)
+{
+    rx = search_begin_update(verbose);
+    if (rx == NULL)
+        return 0;       /* no indexer defined */
+
+    int r = 0;
+    if (!rx->audit_mailbox) {
+        syslog(LOG_ERR, "squatter: indexer does not support audits");
+        r = IMAP_INTERNAL;
+        goto done;
     }
+
+    bitvector_t unindexed = BV_INITIALIZER;
+    int i;
+    for (i = 0 ; i < mboxnames->count ; i++) {
+        const char *mboxname = strarray_nth(mboxnames, i);
+        if (!should_index(mboxname)) continue;
+        r = audit_one(mboxname, &unindexed);
+        if (r == IMAP_MAILBOX_NONEXISTENT)
+            r = 0;
+        if (r == IMAP_MAILBOX_LOCKED)
+            r = 0; /* XXX - try again? */
+        if (r) break;
+        if (sleepmicroseconds)
+            usleep(sleepmicroseconds);
+
+        if (bv_count(&unindexed)) {
+            printf("Unindexed message(s) in %s: ", mboxname);
+            int uid;
+            for (uid = bv_next_set(&unindexed, 0);
+                 uid != -1;
+                 uid = bv_next_set(&unindexed, uid+1)) {
+                printf("%d ", uid);
+            }
+            printf("\n");
+        }
+        bv_clearall(&unindexed);
+    }
+    bv_fini(&unindexed);
+
+done:
+    search_end_update(rx);
+    return r;
 }
 
 static void shut_down(int code)
 {
-    if (running_daemon)
-        search_stop_daemon(verbose);
     seen_done();
-    mboxlist_close();
-    mboxlist_done();
-    annotatemore_close();
-    annotate_done();
 
     cyrus_done();
+
+    index_text_extractor_destroy();
 
     exit(code);
 }
@@ -822,16 +837,21 @@ int main(int argc, char **argv)
     int multi_folder = 0;
     int user_mode = 0;
     int compact_flags = 0;
-    const char *fromfile = NULL;
     strarray_t *srctiers = NULL;
     const char *desttier = NULL;
-    enum { UNKNOWN, INDEXER, INDEXFROM, SEARCH, ROLLING, SYNCLOG,
-           START_DAEMON, STOP_DAEMON, RUN_DAEMON, COMPACT } mode = UNKNOWN;
+    char *errstr = NULL;
+    enum { UNKNOWN, INDEXER, SEARCH, ROLLING, SYNCLOG,
+           COMPACT, AUDIT, LIST } mode = UNKNOWN;
 
     setbuf(stdout, NULL);
 
-    while ((opt = getopt(argc, argv, "C:I:N:RXT:S:Fc:de:f:mn:riavz:t:ouh")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:N:RUXPZT:S:Fde:f:mn:riavAz:t:ouhl")) != EOF) {
         switch (opt) {
+        case 'A':
+            if (mode != UNKNOWN) usage(argv[0]);
+            mode = AUDIT;
+            break;
+
         case 'C':               /* alt config file */
             alt_config = optarg;
             break;
@@ -844,14 +864,19 @@ int main(int argc, char **argv)
             compact_flags |= SEARCH_COMPACT_REINDEX;
             break;
 
-        case 'N':
-            name_starts_from = optarg;
+        case 'P':
+            reindex_parts_mode = 1;
             break;
 
-        case 'I':               /* indexer, using specified mbox/uids in file */
-            if (mode != UNKNOWN && mode != INDEXFROM) usage(argv[0]);
-            fromfile = optarg;
-            mode = INDEXFROM;
+        case 'Z':
+            /* we have two different flag types for the two different modes,
+             * set both of them even though only one will be used */
+            xapindexed_mode = 1;
+            compact_flags |= SEARCH_COMPACT_XAPINDEXED;
+            break;
+
+        case 'N':
+            name_starts_from = optarg;
             break;
 
         case 'R':               /* rolling indexer */
@@ -861,25 +886,17 @@ int main(int argc, char **argv)
             batch_mode = 1;
             break;
 
+        case 'l':               /* list paths */
+            if (mode != UNKNOWN) usage(argv[0]);
+            mode = LIST;
+            break;
+
         case 'S':               /* sleep time in seconds */
             sleepmicroseconds = (atof(optarg) * 1000000);
             break;
 
         case 'T':               /* temporary root directory for search */
             temp_root_dir = optarg;
-            break;
-
-        /* This option is deliberately undocumented, for testing only */
-        case 'c':               /* daemon control mode */
-            if (mode != UNKNOWN) usage(argv[0]);
-            if (!strcmp(optarg, "start"))
-                mode = START_DAEMON;
-            else if (!strcmp(optarg, "stop"))
-                mode = STOP_DAEMON;
-            else if (!strcmp(optarg, "run"))
-                mode = RUN_DAEMON;
-            else
-                usage(argv[0]);
             break;
 
         case 'd':               /* foreground (with -R) */
@@ -913,14 +930,18 @@ int main(int argc, char **argv)
             compact_flags |= SEARCH_COMPACT_COPYONE;
             break;
 
+        case 'U':
+            compact_flags |= SEARCH_COMPACT_ONLYUPGRADE;
+            break;
+
         case 'v':               /* verbose */
             verbose++;
             break;
 
         case 'r':               /* recurse */
-            if (mode != UNKNOWN && mode != INDEXER) usage(argv[0]);
+            if (mode != UNKNOWN && mode != INDEXER && mode != AUDIT) usage(argv[0]);
             recursive_flag = 1;
-            mode = INDEXER;
+            if (mode == UNKNOWN) mode = INDEXER;
             break;
 
         case 'i':               /* incremental mode */
@@ -960,12 +981,6 @@ int main(int argc, char **argv)
     if (mode == UNKNOWN)
         mode = INDEXER;
 
-    /* fork and close fds if required */
-    if (mode == ROLLING && background && !getenv("CYRUS_ISDAEMON")) {
-        become_daemon();
-        init_flags &= ~CYRUSINIT_PERROR;
-    }
-
     if (mode == COMPACT && (!desttier || !srctiers)) {
         /* need both src and dest for compact */
         usage("squatter");
@@ -975,19 +990,23 @@ int main(int argc, char **argv)
 
     /* Set namespace -- force standard (internal) */
     if ((r = mboxname_init_namespace(&squat_namespace, 1)) != 0) {
-        fatal(error_message(r), EC_CONFIG);
+        fatal(error_message(r), EX_CONFIG);
     }
 
-    annotate_init(NULL, NULL);
-    annotatemore_open();
-
-    mboxlist_init(0);
-    mboxlist_open(NULL);
+    /* make sure we're correctly configured */
+    if ((r = search_check_config(&errstr))) {
+        if (errstr)
+            fatal(errstr, EX_CONFIG);
+        else
+            fatal(error_message(r), EX_CONFIG);
+    }
 
     if (mode == ROLLING || mode == SYNCLOG) {
         signals_set_shutdown(&shut_down);
         signals_add_handlers(0);
     }
+
+    index_text_extractor_init(NULL);
 
     switch (mode) {
     case UNKNOWN:
@@ -1000,42 +1019,37 @@ int main(int argc, char **argv)
         r = do_indexer(&mboxnames);
         syslog(LOG_NOTICE, "done indexing mailboxes");
         break;
-    case INDEXFROM:
-        syslog(LOG_NOTICE, "indexing messages");
-        r = do_indexfrom(fromfile);
-        syslog(LOG_NOTICE, "done indexing messages");
-        break;
     case SEARCH:
         if (recursive_flag && optind == argc) usage(argv[0]);
         expand_mboxnames(&mboxnames, argc-optind, (const char **)argv+optind, user_mode);
         r = do_search(query, !multi_folder, &mboxnames);
         break;
     case ROLLING:
+        if (background && !getenv("CYRUS_ISDAEMON"))
+            become_daemon();
         do_rolling(channel);
         /* never returns */
         break;
     case SYNCLOG:
         r = do_synclogfile(synclogfile);
         break;
-    case START_DAEMON:
-        if (optind != argc) usage("squatter");
-        search_start_daemon(verbose);
-        break;
-    case STOP_DAEMON:
-        if (optind != argc) usage("squatter");
-        search_stop_daemon(verbose);
-        break;
-    case RUN_DAEMON:
-        if (optind != argc) usage("squatter");
-        do_run_daemon();
-        break;
     case COMPACT:
         if (recursive_flag && optind == argc) usage(argv[0]);
         expand_mboxnames(&mboxnames, argc-optind, (const char **)argv+optind, user_mode);
         r = do_compact(&mboxnames, srctiers, desttier, compact_flags);
         break;
+    case AUDIT:
+        if (recursive_flag && optind == argc) usage(argv[0]);
+        expand_mboxnames(&mboxnames, argc-optind, (const char **)argv+optind, user_mode);
+        r = do_audit(&mboxnames);
+        break;
+    case LIST:
+        if (recursive_flag && optind == argc) usage(argv[0]);
+        expand_mboxnames(&mboxnames, argc-optind, (const char **)argv+optind, user_mode);
+        r = do_list(&mboxnames);
+        break;
     }
 
     strarray_fini(&mboxnames);
-    shut_down(r ? EC_TEMPFAIL : 0);
+    shut_down(r ? EX_TEMPFAIL : 0);
 }

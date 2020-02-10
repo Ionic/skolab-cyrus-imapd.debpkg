@@ -147,7 +147,7 @@ static int compact_closerename(struct backup **originalp,
 
     /* link original files into timestamped names */
     r = link(original->data_fname, buf_cstring(&ts_data_fname));
-    if (!r) link(original->index_fname, buf_cstring(&ts_index_fname));
+    if (!r) r = link(original->index_fname, buf_cstring(&ts_index_fname));
 
     if (r) {
         /* on error, trash the new links and bail out */
@@ -164,8 +164,10 @@ static int compact_closerename(struct backup **originalp,
         /* on error, put original files back */
         unlink(original->data_fname);
         unlink(original->index_fname);
-        link(buf_cstring(&ts_data_fname), original->data_fname);
-        link(buf_cstring(&ts_index_fname), original->index_fname);
+        if (link(buf_cstring(&ts_data_fname), original->data_fname))
+            syslog(LOG_ERR, "IOERROR: failed to link file back (%s %s)!", buf_cstring(&ts_data_fname), original->data_fname);
+        if (link(buf_cstring(&ts_index_fname), original->index_fname))
+            syslog(LOG_ERR, "IOERROR: failed to link file back (%s %s)!", buf_cstring(&ts_index_fname), original->index_fname);
         goto done;
     }
 
@@ -460,12 +462,12 @@ EXPORTED int backup_compact(const char *name,
     /* calculate current time after obtaining locks, in case of a wait */
     const time_t now = time(NULL);
 
-    const int retention_days = config_getint(IMAPOPT_BACKUP_RETENTION_DAYS);
-    if (retention_days > 0) {
-        since = now - (retention_days * 24 * 60 * 60);
+    const int retention = config_getduration(IMAPOPT_BACKUP_RETENTION, 'd');
+    if (retention > 0) {
+        since = now - retention;
     }
     else {
-        /* zero or negative retention days means "keep forever" */
+        /* zero or negative retention means "keep forever" */
         since = -1;
     }
 
@@ -519,11 +521,11 @@ EXPORTED int backup_compact(const char *name,
                 const char *error = prot_error(in);
                 if (error && 0 != strcmp(error, PROT_EOF_STRING)) {
                     syslog(LOG_ERR,
-                           "IOERROR: %s: error reading chunk at offset %jd, byte %i: %s\n",
+                           "IOERROR: %s: error reading chunk at offset " OFF_T_FMT ", byte %i: %s\n",
                            name, chunk->offset, prot_bytes_in(in), error);
 
                     if (out)
-                        fprintf(out, "error reading chunk at offset %jd, byte %i: %s\n",
+                        fprintf(out, "error reading chunk at offset " OFF_T_FMT ", byte %i: %s\n",
                                 chunk->offset, prot_bytes_in(in), error);
 
                     /* chunk is corrupt, discard the rest of it and get on with

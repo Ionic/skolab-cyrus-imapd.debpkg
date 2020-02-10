@@ -46,6 +46,7 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -53,15 +54,12 @@
 /* cyrus includes */
 #include "assert.h"
 #include "bsearch.h"
-#include "exitcodes.h"
 #include "global.h"
 #include "index.h"
 #include "conversations.h"
 #include "mailbox.h"
 #include "mboxlist.h"
 #include "message.h"
-#include "sync_log.h"
-#include "sysexits.h"
 #include "util.h"
 #include "xmalloc.h"
 
@@ -78,14 +76,16 @@ int verbose = 0;
 int mode = UNKNOWN;
 static const char *audit_temp_directory;
 
-static int do_dump(const char *fname)
+int recalc_silent = 1;
+
+static int do_dump(const char *fname, const char *userid)
 {
     struct conversations_state *state = NULL;
     struct stat sb;
     int r;
 
     /* What we really want here is read-only database access without
-     * the create-if-nonexistant semantics.  However, the cyrusdb
+     * the create-if-nonexistent semantics.  However, the cyrusdb
      * interface makes it difficult to do that properly.  In the
      * meantime, we can just check if the file exists here. */
     r = stat(fname, &sb);
@@ -94,7 +94,7 @@ static int do_dump(const char *fname)
         return -1;
     }
 
-    r = conversations_open_path(fname, &state);
+    r = conversations_open_path(fname, userid, 0/*shared*/, &state);
     if (r) {
         fprintf(stderr, "Failed to open conversations database %s: %s\n",
                 fname, error_message(r));
@@ -107,12 +107,12 @@ static int do_dump(const char *fname)
     return 0;
 }
 
-static int do_undump(const char *fname)
+static int do_undump(const char *fname, const char *userid)
 {
     struct conversations_state *state;
     int r;
 
-    r = conversations_open_path(fname, &state);
+    r = conversations_open_path(fname, userid, 0/*shared*/, &state);
     if (r) {
         fprintf(stderr, "Failed to open conversations database %s: %s\n",
                 fname, error_message(r));
@@ -162,6 +162,8 @@ static int zero_cid_cb(const mbentry_t *mbentry,
 
         struct index_record oldrecord = *record;
         oldrecord.cid = NULLCONVERSATION;
+        oldrecord.basecid = NULLCONVERSATION;
+        oldrecord.internal_flags &= ~FLAG_INTERNAL_SPLITCONVERSATION;
         r = mailbox_rewrite_index_record(mailbox, &oldrecord);
         if (r) break;
     }
@@ -176,13 +178,19 @@ static int do_zero(const char *userid)
     struct conversations_state *state = NULL;
     int r;
 
-    r = conversations_open_user(userid, &state);
+    r = conversations_open_user(userid, 0/*shared*/, &state);
     if (r) return r;
 
-    r = mboxlist_usermboxtree(userid, zero_cid_cb, NULL, 0);
+    r = mboxlist_usermboxtree(userid, NULL, zero_cid_cb, NULL, 0);
+    if (r) goto done;
 
+    /* XXX:
+     * annotatemore_findall(state->annotmboxname, IMAP_ANNOT_NS "basecid/%", &deleteannot);
+     * remove all the basecid mappings so they don't create bad splits on rebuild
+     */
+
+done:
     conversations_commit(&state);
-
     return r;
 }
 
@@ -214,7 +222,7 @@ static int build_cid_cb(const mbentry_t *mbentry,
             r = mailbox_cacherecord(mailbox, &oldrecord);
             if (r) goto done;
 
-            r = message_update_conversations(cstate, &oldrecord, NULL);
+            r = message_update_conversations(cstate, mailbox, &oldrecord, NULL);
             if (r) goto done;
 
             r = mailbox_rewrite_index_record(mailbox, &oldrecord);
@@ -239,10 +247,10 @@ static int do_build(const char *userid)
     struct conversations_state *state = NULL;
     int r;
 
-    r = conversations_open_user(userid, &state);
+    r = conversations_open_user(userid, 0/*shared*/, &state);
     if (r) return r;
 
-    r = mboxlist_usermboxtree(userid, build_cid_cb, NULL, 0);
+    r = mboxlist_usermboxtree(userid, NULL, build_cid_cb, NULL, 0);
 
     conversations_commit(&state);
     return r;
@@ -254,13 +262,13 @@ static int recalc_counts_cb(const mbentry_t *mbentry,
     struct mailbox *mailbox = NULL;
     int r;
 
-    r = mailbox_open_irl(mbentry->name, &mailbox);
+    r = mailbox_open_iwl(mbentry->name, &mailbox);
     if (r) return r;
 
     if (verbose)
         printf("%s\n", mbentry->name);
 
-    r = mailbox_add_conversations(mailbox);
+    r = mailbox_add_conversations(mailbox, recalc_silent);
 
     mailbox_close(&mailbox);
     return r;
@@ -278,7 +286,7 @@ static int audit_counts_cb(const mbentry_t *mbentry,
     if (verbose)
         printf("%s\n", mbentry->name);
 
-    r = mailbox_add_conversations(mailbox);
+    r = mailbox_add_conversations(mailbox, /*silent*/1);
 
     mailbox_close(&mailbox);
     return r;
@@ -289,13 +297,13 @@ static int do_recalc(const char *userid)
     struct conversations_state *state = NULL;
     int r;
 
-    r = conversations_open_user(userid, &state);
+    r = conversations_open_user(userid, 0/*shared*/, &state);
     if (r) return r;
 
     r = conversations_zero_counts(state);
     if (r) goto err;
 
-    r = mboxlist_usermboxtree(userid, recalc_counts_cb, NULL, 0);
+    r = mboxlist_usermboxtree(userid, NULL, recalc_counts_cb, NULL, 0);
     if (r) goto err;
 
     r = conversations_cleanup_zero(state);
@@ -443,7 +451,7 @@ static int fix_modseqs(struct conversations_state *a,
                 /* need to add record if it's zero */
                 r = conversation_parsestatus(ca.data, ca.datalen, &status);
                 if (r) return r;
-                if (status.exists == 0) {
+                if (status.threadexists == 0) {
                     r = conversation_storestatus(b, ca.key, ca.keylen, &status);
                     if (r) {
                         fprintf(stderr, "Failed to store conversations "
@@ -489,8 +497,8 @@ static int fix_modseqs(struct conversations_state *a,
                                 b->path, error_message(r));
                 goto next;
             }
-            if (statusa.modseq > statusb.modseq) {
-                statusb.modseq = statusa.modseq;
+            if (statusa.threadmodseq > statusb.threadmodseq) {
+                statusb.threadmodseq = statusa.threadmodseq;
                 r = conversation_storestatus(b, cb.key, cb.keylen, &statusb);
                 if (r) {
                     fprintf(stderr, "Failed to store conversations "
@@ -505,13 +513,13 @@ static int fix_modseqs(struct conversations_state *a,
         }
         if (ca.key[0] == 'B') {
             /* B keys - check all the modseqs, both top level and per folder */
-            conversation_t *conva = NULL;
-            conversation_t *convb = NULL;
+            conversation_t conva = CONVERSATION_INIT;
+            conversation_t convb = CONVERSATION_INIT;
             conv_folder_t *foldera;
             conv_folder_t *folderb;
             conv_sender_t *sendera;
 
-            r = conversation_parse(a, ca.data, ca.datalen, &conva);
+            r = conversation_parse(ca.data, ca.datalen, &conva, CONV_WITHALL);
             if (r) {
                 fprintf(stderr, "Failed to parse conversations "
                                 "record \"%.*s\" in %s: %s\n",
@@ -519,45 +527,45 @@ static int fix_modseqs(struct conversations_state *a,
                                 a->path, error_message(r));
                 goto next;
             }
-            r = conversation_parse(b, cb.data, cb.datalen, &convb);
+            r = conversation_parse(cb.data, cb.datalen, &convb, CONV_WITHALL);
             if (r) {
                 fprintf(stderr, "Failed to parse conversations "
                                 "record \"%.*s\" in %s: %s\n",
                                 (int)cb.keylen, cb.key,
                                 b->path, error_message(r));
-                conversation_free(conva);
+                conversation_fini(&conva);
                 goto next;
             }
 
             /* because expunged messages could have had higher modseqs,
              * we need to re-copy any higher modseqs in */
-            if (conva->modseq > convb->modseq)
-                convb->modseq = conva->modseq;
+            if (conva.modseq > convb.modseq)
+                convb.modseq = conva.modseq;
 
-            for (foldera = conva->folders; foldera; foldera = foldera->next) {
-                folderb = conversation_get_folder(convb, foldera->number, 1);
+            for (foldera = conva.folders; foldera; foldera = foldera->next) {
+                folderb = conversation_get_folder(&convb, foldera->number, 1);
                 if (folderb->modseq < foldera->modseq)
                     folderb->modseq = foldera->modseq;
             }
 
             /* senders are timestamped, and the timestamp might be for a
              * deleted message! */
-            for (sendera = conva->senders; sendera; sendera = sendera->next) {
+            for (sendera = conva.senders; sendera; sendera = sendera->next) {
                 /* always update!  The delta logic will ensure we don't add
                  * the record if it's not already at least present in the
                  * other conversation */
-                conversation_update_sender(convb, sendera->name, sendera->route,
+                conversation_update_sender(&convb, sendera->name, sendera->route,
                                            sendera->mailbox, sendera->domain,
                                            sendera->lastseen, /*delta_count*/0);
             }
 
             /* be nice to know if this is needed, but at least twoskip
              * will dedup for us */
-            r = conversation_store(b, cb.key, cb.keylen, convb);
+            r = conversation_store(b, cb.key, cb.keylen, &convb);
 
             /* free first before checking for errors */
-            conversation_free(conva);
-            conversation_free(convb);
+            conversation_fini(&conva);
+            conversation_fini(&convb);
 
             if (r) {
                 fprintf(stderr, "Failed to store conversations "
@@ -583,7 +591,7 @@ int do_checkfolders(const char *userid)
     strarray_t *copy1, *copy2;
 
     /* open the DB */
-    r = conversations_open_user(userid, &state);
+    r = conversations_open_user(userid, 0/*shared*/, &state);
     if (r) {
         fprintf(stderr, "Cannot open conversations db %s: %s\n",
                 userid, error_message(r));
@@ -650,7 +658,7 @@ static int do_audit(const char *userid)
     }
 
     /* Begin recalculating in the temp db */
-    r = conversations_open_path(filename_temp, &state_temp);
+    r = conversations_open_path(filename_temp, userid, 0/*shared*/, &state_temp);
     if (r) {
         fprintf(stderr, "Cannot open conversations db %s: %s\n",
                 filename_temp, error_message(r));
@@ -672,7 +680,7 @@ static int do_audit(const char *userid)
     conversations_set_suffix(temp_suffix);
     conversations_set_directory(audit_temp_directory);
 
-    r = mboxlist_usermboxtree(userid, audit_counts_cb, NULL, 0);
+    r = mboxlist_usermboxtree(userid, NULL, audit_counts_cb, NULL, 0);
     if (r) {
         fprintf(stderr, "Failed to recalculate counts in %s: %s\n",
                 filename_temp, error_message(r));
@@ -699,14 +707,14 @@ static int do_audit(const char *userid)
     if (verbose)
         printf("Pass 2: find differences from recalculated to live dbs\n");
 
-    r = conversations_open_path(filename_temp, &state_temp);
+    r = conversations_open_path(filename_temp, userid, 0/*shared*/, &state_temp);
     if (r) {
         fprintf(stderr, "Cannot open conversations db %s: %s\n",
                 filename_temp, error_message(r));
         goto out;
     }
 
-    r = conversations_open_path(filename_real, &state_real);
+    r = conversations_open_path(filename_real, userid, 0/*shared*/, &state_real);
     if (r) {
         fprintf(stderr, "Cannot open conversations db %s: %s\n",
                 filename_real, error_message(r));
@@ -751,48 +759,48 @@ static int do_user(const char *userid, void *rock __attribute__((unused)))
         fprintf(stderr, "Unable to get conversations database "
                         "filename for userid \"%s\"\n",
                         userid);
-        return EC_USAGE;
+        return EX_USAGE;
     }
 
     switch (mode)
     {
     case DUMP:
-        if (do_dump(fname))
-            r = EC_NOINPUT;
+        if (do_dump(fname, userid))
+            r = EX_NOINPUT;
         break;
 
     case UNDUMP:
-        if (do_undump(fname))
-            r = EC_NOINPUT;
+        if (do_undump(fname, userid))
+            r = EX_NOINPUT;
         break;
 
     case ZERO:
         if (do_zero(userid))
-            r = EC_NOINPUT;
+            r = EX_NOINPUT;
         break;
 
     case BUILD:
         if (do_build(userid))
-            r = EC_NOINPUT;
+            r = EX_NOINPUT;
         break;
 
     case RECALC:
         if (do_recalc(userid))
-            r = EC_NOINPUT;
+            r = EX_NOINPUT;
         break;
 
     case AUDIT:
         if (do_audit(userid))
-            r = EC_NOINPUT;
+            r = EX_NOINPUT;
         break;
 
     case CHECKFOLDERS:
         if (do_checkfolders(userid))
-            r = EC_NOINPUT;
+            r = EX_NOINPUT;
         break;
 
     case UNKNOWN:
-        fatal("UNKNOWN MODE", EC_SOFTWARE);
+        fatal("UNKNOWN MODE", EX_SOFTWARE);
     }
 
     free(fname);
@@ -808,7 +816,7 @@ int main(int argc, char **argv)
     int r = 0;
     int recursive = 0;
 
-    while ((c = getopt(argc, argv, "durzAbvRFC:T:")) != EOF) {
+    while ((c = getopt(argc, argv, "durzSAbvRFC:T:")) != EOF) {
         switch (c) {
         case 'd':
             if (mode != UNKNOWN)
@@ -868,6 +876,10 @@ int main(int argc, char **argv)
             audit_temp_directory = optarg;
             break;
 
+        case 'S':
+            recalc_silent = 0;
+            break;
+
         default:
             usage(argv[0]);
             break;
@@ -886,21 +898,11 @@ int main(int argc, char **argv)
 
     cyrus_init(alt_config, "ctl_conversationsdb", 0, 0);
 
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-
-    sync_log_init();
-
     if (recursive) {
         mboxlist_alluser(do_user, NULL);
     }
     else
         do_user(userid, NULL);
-
-    sync_log_done();
-
-    mboxlist_close();
-    mboxlist_done();
 
     cyrus_done();
 
@@ -925,7 +927,7 @@ static int usage(const char *name)
     fprintf(stderr, "\n");
     fprintf(stderr, "    -r             recursive mode: username is a prefix\n");
 
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 void fatal(const char* s, int code)

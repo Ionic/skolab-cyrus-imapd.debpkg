@@ -50,6 +50,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sysexits.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -63,7 +64,6 @@
 #include <sys/un.h>
 
 #include "global.h"
-#include "exitcodes.h"
 #include "xmalloc.h"
 #include "xstrlcpy.h"
 #include "xstrlcat.h"
@@ -115,8 +115,8 @@ static void usage(void)
     fprintf(stderr,
             "421-4.3.0 usage: deliver [-C <alt_config> ] [-m mailbox]"
             " [-a auth] [-r return_path] [-l] [-D]\r\n");
-    fprintf(stderr, "421 4.3.0 %s\n", cyrus_version());
-    exit(EC_USAGE);
+    fprintf(stderr, "421 4.3.0 %s\n", CYRUS_VERSION);
+    exit(EX_USAGE);
 }
 
 EXPORTED void fatal(const char* s, int code)
@@ -277,7 +277,7 @@ static void just_exit(const char *msg)
 {
     com_err(msg, 0, "%s", error_message(errno));
 
-    fatal(msg, EC_CONFIG);
+    fatal(msg, EX_CONFIG);
 }
 
 /* initialize the network
@@ -386,7 +386,7 @@ static int deliver_msg(char *return_path, char *authuser, int ignorequota,
             break;
 
         case RCPT_TEMPFAIL:
-            r = EC_TEMPFAIL;
+            r = EX_TEMPFAIL;
             break;
 
         case RCPT_PERMFAIL:
@@ -394,12 +394,13 @@ static int deliver_msg(char *return_path, char *authuser, int ignorequota,
                probably return data from the client-side LMTP info */
             printf("%s: %s\n",
                    txn->rcpt[j].addr, error_message(txn->rcpt[j].r));
-            if (r != EC_TEMPFAIL) {
-                r = EC_DATAERR;
+            if (r != EX_TEMPFAIL) {
+                r = EX_DATAERR;
             }
             break;
         }
         free(txn->rcpt[j].addr);
+        strarray_free(txn->rcpt[j].resp);
     }
 
     free(txn);

@@ -282,6 +282,18 @@ Sieve has a lot of extensions. Cyrus supports a subset of these:
 
 * Variables **RFC 5229**
 
+* Editheader Extension **RFC 5293**
+
+* Reject and Extended Reject **RFC 5429**
+
+* Externally Stored Lists **RFC 6134**
+
+* Duplicate Extension **RFC 7352**
+
+* Ihave Extension **RFC 5463**
+
+* Delivering to Special-Use Mailboxes Draft special-use RFC
+
 * IMAP flag Extension Draft imap flags RFC
 
 * Body Extension **RFC 5173**

@@ -28,16 +28,15 @@ Our Cyrus installation has about 80K users, close to 1TB of disk, and
 many millions of files. Just the number of files alone would be enough
 to kill the idea of using GPFS.
 
-Cyrus makes pretty extensive use of mmap(), and so does Berkeley DB.
-While GPFS implements mmap(), the GPFS architect had some words about
-the way certain operations are accomplished in Cyrus. I think there
-are (or used to be) places where an mmap'd file is opened for write
-with another file handle (or from another process). GPFS doesn't
-handle this well. This technique works accidentally on non-clustered
-filesystems because AIX (also) mmap's things for you behind your back
-(in addition to whatever you do) and then serializes all of the access
-to regions of those files. That's really the only reason why Cyrus
-works on JFS.
+Cyrus makes pretty extensive use of mmap(). While GPFS implements
+mmap(), the GPFS architect had some words about the way certain
+operations are accomplished in Cyrus. I think there are (or used to
+be) places where an mmap'd file is opened for write with another file
+handle (or from another process). GPFS doesn't handle this well. This
+technique works accidentally on non-clustered filesystems because AIX
+(also) mmap's things for you behind your back (in addition to whatever
+you do) and then serializes all of the access to regions of those
+files. That's really the only reason why Cyrus works on JFS.
 
 Also note that the other groups/developers within IBM (especially the
 group that does the automounter) have their collective heads up their

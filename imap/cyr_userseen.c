@@ -48,11 +48,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sysexits.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 
 #include "global.h"
-#include "exitcodes.h"
 #include "libcyr_cfg.h"
 #include "mailbox.h"
 #include "mboxlist.h"
@@ -115,14 +115,10 @@ int main(int argc, char *argv[])
 
     cyrus_init(alt_config, "cyr_userseen", 0, 0);
 
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-
     /* build a list of mailboxes - we're using internal names here */
-    mboxlist_allmbox("", deluserseen, NULL, /*incdel*/0);
+    mboxlist_allmbox("", deluserseen, NULL, /*flags*/0);
 
-    mboxlist_close();
-    mboxlist_done();
+    cyrus_done();
 
     return 0;
 }

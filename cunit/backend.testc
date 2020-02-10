@@ -5,7 +5,7 @@
 #include <sys/wait.h>
 #include <sys/mman.h>
 #include <assert.h>
-#include "cunit/cunit.h"
+#include "cunit/cyrunit.h"
 #include "imap/saslclient.h"
 #include <sasl/saslutil.h>
 #include <sasl/saslplug.h>
@@ -157,7 +157,7 @@ static void test_badhost(void)
 
     default_conditions();
 
-    be = backend_connect(NULL, "nonexistanthost", &test_prot,
+    be = backend_connect(NULL, "nonexistenthost", &test_prot,
                          USERID, callbacks, &auth_status, /*fd*/-1);
     CU_ASSERT_PTR_NULL(be);
     CU_ASSERT_EQUAL(server_state->is_connected, 0);
@@ -172,7 +172,7 @@ static void test_badservice(void)
     const char *auth_status = NULL;
 
     default_conditions();
-    test_prot.service = "nonexistantservice";
+    test_prot.service = "nonexistentservice";
 
     be = backend_connect(NULL, HOST, &test_prot,
                          USERID, callbacks, &auth_status, /*fd*/-1);
@@ -621,10 +621,9 @@ static void server_unaccept(struct server_state *state)
 /*
  * Main routine for pushing text back to the client.
  */
-static void server_printf(struct server_state *, const char *fmt, ...)
-    __attribute__((format(printf,2,3)));
-
-static void server_printf(struct server_state *state, const char *fmt, ...)
+static void
+__attribute__((format(printf, 2, 3)))
+server_printf(struct server_state *state, const char *fmt, ...)
 {
     va_list args;
     int r;
@@ -719,7 +718,7 @@ static void server_emit_caps(struct server_state *state)
                 words[n++] = "LOGIN";
                 got_login = 1;
             }
-            if (!strcasecmp(p, "LOGIN") && state->config.sasl_plain) {
+            if (!strcasecmp(p, "PLAIN") && state->config.sasl_plain) {
                 words[n++] = "PLAIN";
                 got_plain = 1;
             }
@@ -914,9 +913,8 @@ static void cmd_starttls(struct server_state *state)
 {
 #ifdef HAVE_SSL
     int r;
-    char *auth_id = NULL;
     SSL *tls_conn = NULL;
-    sasl_ssf_t ssf;
+    static struct saslprops_t saslprops = SASLPROPS_INITIALIZER;
 
     r = tls_init_serverengine("backend_test", /*verifydepth*/5,
                               /*askcert*/1, NULL);
@@ -933,7 +931,8 @@ static void cmd_starttls(struct server_state *state)
     r = tls_start_servertls(/*readfd*/state->in->fd,
                             /*writefd*/state->out->fd,
                             /*timeout_sec*/3000,
-                            (int *)&ssf, &auth_id, &tls_conn);
+                            &saslprops,
+                            &tls_conn);
     if (r < 0) {
         server_printf(state, "BAD STARTTLS negotiation failed\r\n");
         server_flush(state);
@@ -941,18 +940,10 @@ static void cmd_starttls(struct server_state *state)
     }
 
     /* tell SASL about the negotiated layer */
-    r = sasl_setprop(state->saslconn, SASL_SSF_EXTERNAL, &ssf);
+    r = saslprops_set_tls(&saslprops, state->saslconn);
     if (r != SASL_OK) {
-        server_printf(state, "BAD sasl_setprop(SASL_SSF_EXTERNAL) "
-                              "failed: cmd_starttls()\r\n");
-        server_flush(state);
-        return;
-    }
-
-    r = sasl_setprop(state->saslconn, SASL_AUTH_EXTERNAL, auth_id);
-    if (r != SASL_OK) {
-        server_printf(state, "BAD sasl_setprop(SASL_AUTH_EXTERNAL) "
-                             "failed: cmd_starttls()\r\n");
+        server_printf(state,
+                      "BAD saslprops_set_tls() failed: cmd_starttls()\r\n");
         server_flush(state);
         return;
     }
@@ -1148,9 +1139,9 @@ static AUXPROP_RTYPE server_auxprop_lookup(void *glob_context __attribute__((unu
 }
 
 /*
- * Helps create a fake "auxiliary propert plugin" for the SASL library,
+ * Helps create a fake "auxiliary property plugin" for the SASL library,
  * which is how we hook into the DIGEST-MD5 mechanism when it wants to
- * get a plaintext password to check aginst the hash received from the
+ * get a plaintext password to check against the hash received from the
  * client.
  */
 static int server_auxprop_init(const sasl_utils_t *utils __attribute__((unused)),

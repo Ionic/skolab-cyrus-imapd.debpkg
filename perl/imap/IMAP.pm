@@ -219,7 +219,7 @@ sub authenticate {
   $opts{-authz} = "" if (!defined($opts{-authz}));
   $rc = 0;
 
-  # Fetch all relevant capabilities
+  # Fetch all relevent capabilities
   $self->addcallback({-trigger => 'CAPABILITY',
                       -callback => sub {my %a = @_;
                                         map {
@@ -263,7 +263,7 @@ sub authenticate {
 
       $self->_starttls($opts{-tlskey}, $opts{-tlskey}, $opts{-cafile}, $opts{-capath});
 
-      # Refetch all relevant capabilities
+      # Refetch all relevent capabilities
       ($starttls, $logindisabled, $availmechs) = (0, 0, "");
       $self->send(undef, undef, 'CAPABILITY');
       $opts{-mechanism} = $availmechs if ($opts{-mechanism} eq '');
@@ -285,7 +285,7 @@ sub authenticate {
   if (!$rc && $logindisabled) {
     $self->_starttls('', '', $opts{-cafile}, $opts{-capath}) || return undef;
 
-    # Refetch all relevant capabilities
+    # Refetch all relevent capabilities
     ($starttls, $logindisabled, $availmechs) = (0, 0, "");
     $self->send(undef, undef, 'CAPABILITY');
 

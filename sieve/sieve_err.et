@@ -1,6 +1,6 @@
 # sieve_err.et -- Error codes for the Sieve subsystem
 #
-# Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
+# Copyright (c) 1994-2017 Carnegie Mellon University.  All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -74,6 +74,9 @@ ec SIEVE_MISSING_REQUIRE,
 ec SIEVE_MISSING_TAG,
    "%s tag is required"
 
+ec SIEVE_UNEXPECTED_TAG,
+   "unexpected %s tag"
+
 ec SIEVE_DUPLICATE_TAG,
    "duplicate/conflicting %s tag"
 
@@ -83,7 +86,13 @@ ec SIEVE_DUPLICATE_ARG,
 ec SIEVE_INVALID_VALUE,
    "invalid %s value"
 
-ec SIEVE_BUILD_FAILURE,
-   "unable to build %s"
+ec SIEVE_UNSUPP_EXT,
+    "unsupported extension"
+
+ec SIEVE_IHAVE_INCOMPAT,
+   "\"%s\" extension MUST NOT be used in \"ihave\" test"
+
+ec SIEVE_MATCH_INCOMPAT,
+   "\"%s\" match-type MUST be used with \"%s\" comparator"
 
 end

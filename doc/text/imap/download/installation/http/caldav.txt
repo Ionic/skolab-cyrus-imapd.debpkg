@@ -80,7 +80,7 @@ autocreate options
 
    "caldav_create_attach:" 1
 
-      Create the 'Attachments' calendar if it doesn't already exist
+      Create the 'Attachments' collection if it doesn't already exist
 
    "caldav_create_sched:" 1
 
@@ -103,6 +103,22 @@ allows you to:
    * Set visibility attributes such as Public or Transparent
 
    * Delete existing collections
+
+The Cyrus web GUI for CalDAV Collection Management is disabled by
+default, but can be enabled with the "caldav_allowcalendaradmin"
+option.
+
+
+caldav_allowcalendaradmin
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+   *This shows the default value: change it in imapd.conf to suit your
+   needs.*
+
+   "caldav_allowcalendaradmin:" 0
+
+      Enable per-user calendar administration web UI on the CalDAV
+      server.
 
 To access the Cyrus web GUI for CalDAV Collection Management, point a
 web browser at "https://<servername>/dav/calendars/user/<username>"
@@ -188,7 +204,7 @@ zoneinfo config
 
       The cyrusdb backend to use for zoneinfo.
 
-      Allowed values: *flat*, *skiplist*, *twoskip*, *lmdb*
+      Allowed values: *flat*, *skiplist*, *twoskip*, *zeroskip*
 
 This module stores time zone data in the "zoneinfo/" subdirectory of
 the Cyrus configuration directory (as specified by the

@@ -80,7 +80,8 @@ These need to be set in imapd.conf(5).
       *vnd.cmu.davFilename*, *vnd.cmu.davUid*,
       *vnd.fastmail.clientId*, *vnd.fastmail.sessionId*,
       *vnd.fastmail.convExists*, *vnd.fastmail.convUnseen*,
-      *vnd.fastmail.cid*, *vnd.fastmail.counters*
+      *vnd.fastmail.cid*, *vnd.fastmail.counters*, *vnd.cmu.emailid*,
+      *vnd.cmu.threadid*
 
    "event_groups:" message mailbox
 

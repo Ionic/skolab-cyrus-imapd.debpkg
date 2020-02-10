@@ -42,9 +42,10 @@
 
 #include <config.h>
 #include <stdlib.h>
+#include <sysexits.h>
+#include <syslog.h>
 
 #include "auth.h"
-#include "exitcodes.h"
 #include "xmalloc.h"
 
 #ifdef HAVE_GSSAPI_H
@@ -196,13 +197,19 @@ static void myfreestate(struct auth_state *auth_state)
     free(auth_state);
 }
 
+static strarray_t *mygroups(const struct auth_state *auth_state __attribute__((unused)))
+{
+    syslog(LOG_WARNING, "Authentication mechanism (krb) does not support groups");
+    return NULL;
+}
+
 #else /* HAVE_GSSAPI_H */
 
 static int mymemberof(
     const struct auth_state *auth_state __attribute__((unused)),
     const char *identifier __attribute__((unused)))
 {
-        fatal("Authentication mechanism (krb5) not compiled in", EC_CONFIG);
+        fatal("Authentication mechanism (krb5) not compiled in", EX_CONFIG);
         return 0;
 }
 
@@ -210,21 +217,27 @@ static const char *mycanonifyid(
     const char *identifier __attribute__((unused)),
     size_t len __attribute__((unused)))
 {
-        fatal("Authentication mechanism (krb5) not compiled in", EC_CONFIG);
+        fatal("Authentication mechanism (krb5) not compiled in", EX_CONFIG);
         return NULL;
 }
 
 static struct auth_state *mynewstate(
     const char *identifier __attribute__((unused)))
 {
-        fatal("Authentication mechanism (krb5) not compiled in", EC_CONFIG);
+        fatal("Authentication mechanism (krb5) not compiled in", EX_CONFIG);
         return NULL;
 }
 
 static void myfreestate(
     struct auth_state *auth_state __attribute__((unused)))
 {
-        fatal("Authentication mechanism (krb5) not compiled in", EC_CONFIG);
+        fatal("Authentication mechanism (krb5) not compiled in", EX_CONFIG);
+}
+
+static strarray_t *mygroups(
+    const struct auth_state *auth_state __attribute__((unused)))
+{
+        fatal("Authentication mechanism (krb5) not compiled in", EX_CONFIG);
 }
 
 #endif
@@ -237,4 +250,5 @@ HIDDEN struct auth_mech auth_krb5 =
     &mymemberof,
     &mynewstate,
     &myfreestate,
+    &mygroups,
 };

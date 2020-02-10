@@ -1482,6 +1482,7 @@ AC_SUBST([am__untar])
 
 m4_include([cmulocal/ax_cxx_compile_stdcxx_11.m4])
 m4_include([cmulocal/ax_prog_perl_modules.m4])
+m4_include([cmulocal/ax_python_module.m4])
 m4_include([cmulocal/bsd_sockets.m4])
 m4_include([cmulocal/common.m4])
 m4_include([cmulocal/cyrus.m4])

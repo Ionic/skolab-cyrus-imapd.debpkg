@@ -30,4 +30,4 @@ Cyrus IMAP 2.5 Releases
 
 * Cyrus IMAP 2.5.13 Release Notes
 
-* Cyrus IMAP 2.5.14 Release Notes
+* Cyrus IMAP 2.5.15 Release Notes

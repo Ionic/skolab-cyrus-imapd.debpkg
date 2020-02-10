@@ -17,7 +17,6 @@ more recently "/run/cyrus/socket/":
    idle      <rundir>/idle   # idled daemon socket
    notify    <rundir>/notify # Notification daemon socket
    ptloader  <rundir>/ptsock # PT Loader socket (alternative authorization)
-   sphinx    <rundir>/sphinx # Sphinx full-text search daemon socket
 
 
 Controlling Socket Locations
@@ -43,7 +42,3 @@ via the use of several settings in imapd.conf(5):
 
       Unix domain socket that ptloader listens on. (defaults to
       configdirectory/ptclient/ptsock)
-
-   "sphinx_socket:" {configdirectory}/socket/sphinx
-
-      Unix domain socket that the Sphinx searchd daemons listens on.

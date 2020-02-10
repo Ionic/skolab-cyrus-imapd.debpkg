@@ -79,27 +79,6 @@
 #include "util.h"
 #include "xmalloc.h"
 
-#define MF_UNLOCKED 0
-#define MF_READLOCKED 1
-#define MF_WRITELOCKED 2
-
-struct mappedfile {
-    char *fname;
-
-    /* obviously you will need 64 bit size_t for 64 bit files... */
-    struct buf map_buf;
-    size_t map_size;
-
-    /* the file itself */
-    int fd;
-
-    /* tracking */
-    int lock_status;
-    int dirty;
-    int was_resized;
-    int is_rw;
-};
-
 static void _ensure_mapped(struct mappedfile *mf, size_t offset, int update)
 {
     /* we may be rewriting inside a file, so don't shrink, only extend */
@@ -111,7 +90,7 @@ static void _ensure_mapped(struct mappedfile *mf, size_t offset, int update)
     }
 
     /* always give refresh another go, we may be map_nommap */
-    buf_init_mmap(&mf->map_buf, /*onceonly*/0, mf->fd, mf->fname,
+    buf_refresh_mmap(&mf->map_buf, /*onceonly*/0, mf->fd, mf->fname,
                   offset, /*mboxname*/NULL);
 
     mf->map_size = offset;
@@ -240,6 +219,7 @@ EXPORTED int mappedfile_readlock(struct mappedfile *mf)
     }
 
     mf->lock_status = MF_READLOCKED;
+    gettimeofday(&mf->starttime, 0);
 
     _ensure_mapped(mf, sbuf.st_size, /*update*/0);
 
@@ -264,6 +244,7 @@ EXPORTED int mappedfile_writelock(struct mappedfile *mf)
         return r;
     }
     mf->lock_status = MF_WRITELOCKED;
+    gettimeofday(&mf->starttime, 0);
 
     if (changed) buf_free(&mf->map_buf);
 
@@ -274,6 +255,9 @@ EXPORTED int mappedfile_writelock(struct mappedfile *mf)
 
 EXPORTED int mappedfile_unlock(struct mappedfile *mf)
 {
+    struct timeval endtime;
+    double timediff;
+
     int r;
 
     /* make this safe to call multiple times */
@@ -290,6 +274,12 @@ EXPORTED int mappedfile_unlock(struct mappedfile *mf)
     }
 
     mf->lock_status = MF_UNLOCKED;
+    gettimeofday(&endtime, 0);
+    timediff = timesub(&mf->starttime, &endtime);
+    if (timediff > 1.0) {
+        syslog(LOG_NOTICE, "mappedfile: longlock %s for %0.1f seconds",
+               mf->fname, timediff);
+    }
 
     return 0;
 }
@@ -323,7 +313,7 @@ EXPORTED int mappedfile_commit(struct mappedfile *mf)
 }
 
 EXPORTED ssize_t mappedfile_pwrite(struct mappedfile *mf,
-                                   const char *base, size_t len,
+                                   const void *base, size_t len,
                                    off_t offset)
 {
     ssize_t written;
@@ -469,47 +459,4 @@ EXPORTED int mappedfile_rename(struct mappedfile *mf, const char *newname)
     if (dirfd >= 0) close(dirfd);
     free(copy);
     return r;
-}
-
-
-EXPORTED int mappedfile_islocked(const struct mappedfile *mf)
-{
-    return (mf->lock_status != MF_UNLOCKED);
-}
-
-//FIXME this function is nowhere used
-EXPORTED int mappedfile_isreadlocked(const struct mappedfile *mf)
-{
-    return (mf->lock_status == MF_READLOCKED);
-}
-
-EXPORTED int mappedfile_iswritelocked(const struct mappedfile *mf)
-{
-    return (mf->lock_status == MF_WRITELOCKED);
-}
-
-EXPORTED int mappedfile_iswritable(const struct mappedfile *mf)
-{
-    return !!mf->is_rw;
-}
-
-EXPORTED const char *mappedfile_base(const struct mappedfile *mf)
-{
-    /* XXX - require locked? */
-    return mf->map_buf.s;
-}
-
-EXPORTED size_t mappedfile_size(const struct mappedfile *mf)
-{
-    return mf->map_size;
-}
-
-EXPORTED const struct buf *mappedfile_buf(const struct mappedfile *mf)
-{
-    return &mf->map_buf;
-}
-
-EXPORTED const char *mappedfile_fname(const struct mappedfile *mf)
-{
-    return mf->fname;
 }

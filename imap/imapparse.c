@@ -42,10 +42,10 @@
 #include <config.h>
 
 #include <ctype.h>
-#include <string.h>
 #include <limits.h>
+#include <string.h>
+#include <sysexits.h>
 
-#include "exitcodes.h"
 #include "global.h"
 #include "imparse.h"
 #include "search_expr.h"
@@ -74,7 +74,7 @@ EXPORTED int getword(struct protstream *in, struct buf *buf)
         }
         buf_putc(buf, c);
         if (config_maxword && buf_len(buf) > config_maxword) {
-            fatal("word too long", EC_IOERR);
+            fatal("word too long", EX_IOERR);
         }
     }
 }
@@ -83,9 +83,11 @@ EXPORTED int getword(struct protstream *in, struct buf *buf)
  * Parse an xstring
  * (astring, nstring or string based on type)
  */
+#ifdef HAVE_DECLARE_OPTIMIZE
 EXPORTED int getxstring(struct protstream *pin, struct protstream *pout,
                         struct buf *buf, enum getxstring_flags flags)
     __attribute__((optimize("-O3")));
+#endif
 EXPORTED int getxstring(struct protstream *pin, struct protstream *pout,
                         struct buf *buf, enum getxstring_flags flags)
 {
@@ -133,7 +135,7 @@ EXPORTED int getxstring(struct protstream *pin, struct protstream *pout,
             }
             buf_putc(buf, c);
             if (config_maxquoted && buf_len(buf) > config_maxquoted) {
-                fatal("quoted value too long", EC_IOERR);
+                fatal("quoted value too long", EX_IOERR);
             }
         }
 
@@ -182,6 +184,8 @@ EXPORTED int getxstring(struct protstream *pin, struct protstream *pout,
             buf_putc(buf, c);
         }
         buf_cstring(buf);
+        /* n.b. we've consumed an exact number of bytes according to the literal, do
+         * not unget anything even if we don't like the literal */
         if (!(flags & GXS_BINARY) && strlen(buf_cstring(buf)) != (unsigned)buf_len(buf))
             return EOF; /* Disallow imbedded NUL */
         return prot_getc(pin);
@@ -209,22 +213,40 @@ EXPORTED int getxstring(struct protstream *pin, struct protstream *pout,
         }
         else if ((flags & GXS_NIL)) {
             /*
-             * Look for "NIL"
+             * Look carefully for "NIL"
              */
             if (c == 'N') {
-                prot_ungetc(c, pin);
-                c = getword(pin, buf);
-                if (buf->len == 3 && !memcmp(buf->s, "NIL", 3)) {
-                    /* indicated NIL with a NULL buf.s pointer */
-                    buf_free(buf);
-                    return c;
+                int sep = 0;
+                int matched;
+
+                matched = prot_lookahead(pin, "IL", strlen("IL"), &sep);
+                if (matched == strlen("IL") + 1) {
+                    if (isspace(sep) || sep == '(' || sep == ')' || sep == '\"') {
+                        /* found NIL and a separator, consume it */
+                        prot_ungetc(c, pin);
+                        c = getword(pin, buf);
+                        /* indicate NIL with a NULL buf.s pointer */
+                        buf_free(buf);
+                        return c;
+                    }
                 }
-                return EOF;
+                else if (matched > 0) {
+                    /* partially matched NIL, but not enough buffer to be sure:
+                     * fall back to old behaviour */
+                    prot_ungetc(c, pin);
+                    c = getword(pin, buf);
+                    if (buf->len == 3 && !memcmp(buf->s, "NIL", 3)) {
+                        /* indicated NIL with a NULL buf.s pointer */
+                        buf_free(buf);
+                        return c;
+                    }
+                }
             }
         }
         goto fail;
     }
 
+    /* XXX i think we can never get to this line? */
     return EOF;
 
 fail:
@@ -236,19 +258,21 @@ fail:
 EXPORTED int getint32(struct protstream *pin, int32_t *num)
 {
     int32_t result = 0;
-    int c;
+    int c = EOF;
     int gotchar = 0;
 
     /* INT_MAX == 2147483647 */
     while ((c = prot_getc(pin)) != EOF && cyrus_isdigit(c)) {
         if (result > 214748364 || (result == 214748364 && (c > '7')))
-            fatal("num too big", EC_IOERR);
+            fatal("num too big", EX_IOERR);
         result = result * 10 + c - '0';
         gotchar = 1;
     }
 
-    if (!gotchar)
+    if (!gotchar) {
+        if (c != EOF) prot_ungetc(c, pin);
         return EOF;
+    }
 
     *num = result;
 
@@ -287,19 +311,21 @@ EXPORTED int getsint32(struct protstream *pin, int32_t *num)
 EXPORTED int getuint32(struct protstream *pin, uint32_t *num)
 {
     uint32_t result = 0;
-    int c;
+    int c = EOF;
     int gotchar = 0;
 
     /* UINT_MAX == 4294967295U */
     while ((c = prot_getc(pin)) != EOF && cyrus_isdigit(c)) {
         if (result > 429496729 || (result == 429496729 && (c > '5')))
-            fatal("num too big", EC_IOERR);
+            fatal("num too big", EX_IOERR);
         result = result * 10 + c - '0';
         gotchar = 1;
     }
 
-    if (!gotchar)
+    if (!gotchar) {
+        if (c != EOF) prot_ungetc(c, pin);
         return EOF;
+    }
 
     *num = result;
 
@@ -309,19 +335,21 @@ EXPORTED int getuint32(struct protstream *pin, uint32_t *num)
 EXPORTED int getint64(struct protstream *pin, int64_t *num)
 {
     int64_t result = 0;
-    int c;
+    int c = EOF;
     int gotchar = 0;
 
     /* LLONG_MAX == 9223372036854775807LL */
     while ((c = prot_getc(pin)) != EOF && cyrus_isdigit(c)) {
         if (result > 922337203685477580LL || (result == 922337203685477580LL && (c > '7')))
-            fatal("num too big", EC_IOERR);
+            fatal("num too big", EX_IOERR);
         result = result * 10 + c - '0';
         gotchar = 1;
     }
 
-    if (!gotchar)
+    if (!gotchar) {
+        if (c != EOF) prot_ungetc(c, pin);
         return EOF;
+    }
 
     *num = result;
 
@@ -360,19 +388,21 @@ EXPORTED int getsint64(struct protstream *pin, int64_t *num)
 EXPORTED int getuint64(struct protstream *pin, uint64_t *num)
 {
     uint64_t result = 0;
-    int c;
+    int c = EOF;
     int gotchar = 0;
 
     /* ULLONG_MAX == 18446744073709551615ULL */
     while ((c = prot_getc(pin)) != EOF && cyrus_isdigit(c)) {
         if (result > 1844674407370955161ULL || (result == 1844674407370955161ULL && (c > '5')))
-            fatal("num too big", EC_IOERR);
+            fatal("num too big", EX_IOERR);
         result = result * 10 + c - '0';
         gotchar = 1;
     }
 
-    if (!gotchar)
+    if (!gotchar) {
+        if (c != EOF) prot_ungetc(c, pin);
         return EOF;
+    }
 
     *num = result;
 
@@ -383,7 +413,7 @@ EXPORTED int getuint64(struct protstream *pin, uint64_t *num)
  * all were right with the world */
 EXPORTED int getmodseq(struct protstream *pin, modseq_t *num)
 {
-    int c;
+    int c = EOF;
     unsigned int i = 0;
     char buf[32];
     int gotchar = 0;
@@ -395,8 +425,10 @@ EXPORTED int getmodseq(struct protstream *pin, modseq_t *num)
         gotchar = 1;
     }
 
-    if (!gotchar || i == sizeof(buf))
+    if (!gotchar || i == sizeof(buf)) {
+        if (c != EOF) prot_ungetc(c, pin);
         return EOF;
+    }
 
     buf[i] = '\0';
     *num = strtoull(buf, NULL, 10);
@@ -552,7 +584,7 @@ static int get_search_return_opts(struct protstream *pin,
     if (c != '(') {
         prot_printf(pout,
                     "%s BAD Missing return options in Search\r\n", searchargs->tag);
-        return EOF;
+        goto bad;
     }
 
     do {
@@ -579,7 +611,7 @@ static int get_search_return_opts(struct protstream *pin,
             prot_printf(pout,
                         "%s BAD Invalid Search return option %s\r\n",
                         searchargs->tag, opt.s);
-            return EOF;
+            goto bad;
         }
 
     } while (c == ' ');
@@ -596,12 +628,16 @@ static int get_search_return_opts(struct protstream *pin,
         prot_printf(pout,
                     "%s BAD Missing close parenthesis in Search\r\n",
                     searchargs->tag);
-        return EOF;
+        goto bad;
     }
 
     c = prot_getc(pin);
 
     return c;
+
+bad:
+    if (c != EOF) prot_ungetc(c, pin);
+    return EOF;
 }
 
 /*
@@ -620,32 +656,29 @@ static int get_search_annotation(struct protstream *pin,
     struct buf value = BUF_INITIALIZER;
 
     if (c != ' ')
-        return EOF;
+        goto bad;
 
     /* parse the entry */
     c = getastring(pin, pout, &entry);
     if (!entry.len || c != ' ') {
-        c = EOF;
-        goto out;
+        goto bad;
     }
 
     /* parse the attrib */
     c = getastring(pin, pout, &attrib);
     if (!attrib.len || c != ' ') {
-        c = EOF;
-        goto out;
+        goto bad;
     }
     if (strcmp(attrib.s, "value") &&
         strcmp(attrib.s, "value.shared") &&
         strcmp(attrib.s, "value.priv")) {
-        c = EOF;
-        goto out;
+        goto bad;
     }
 
     /* parse the value */
     c = getbnstring(pin, pout, &value);
     if (c == EOF)
-        goto out;
+        goto bad;
 
     sa = xzmalloc(sizeof(*sa));
     sa->entry = buf_release(&entry);
@@ -658,11 +691,18 @@ static int get_search_annotation(struct protstream *pin,
 
     *lp = sa;
 
-out:
     buf_free(&entry);
     buf_free(&attrib);
     buf_free(&value);
     return c;
+
+bad:
+    buf_free(&entry);
+    buf_free(&attrib);
+    buf_free(&value);
+
+    if (c != EOF) prot_ungetc(c, pin);
+    return EOF;
 }
 
 
@@ -679,7 +719,24 @@ static void string_match(search_expr_t *parent, const char *val,
 
     e = search_expr_new(parent, op);
     e->attr = attr;
-    e->value.s = charset_convert(val, base->charset, charset_flags);
+    e->value.s = charset_convert(val, base->charset, charset_flags|CHARSET_KEEPCASE);
+    if (!e->value.s) {
+        e->op = SEOP_FALSE;
+        e->attr = NULL;
+    }
+}
+
+static void bytestring_match(search_expr_t *parent, const char *val,
+                             const char *aname,
+                             struct searchargs *base __attribute__((unused)))
+{
+    search_expr_t *e;
+    const search_attr_t *attr = search_attr_find(aname);
+    enum search_op op = SEOP_MATCH;
+
+    e = search_expr_new(parent, op);
+    e->attr = attr;
+    e->value.s = xstrdupnull(val);
     if (!e->value.s) {
         e->op = SEOP_FALSE;
         e->attr = NULL;
@@ -708,14 +765,15 @@ static void indexflag_match(search_expr_t *parent, unsigned int flag, int not)
     e->value.u = flag;
 }
 
-static void convflag_match(search_expr_t *parent, const char *flagname, int not)
+static void convflag_match(search_expr_t *parent, const char *flagname, int not,
+                           int matchall)
 {
     search_expr_t *e;
 
     if (not)
         parent = search_expr_new(parent, SEOP_NOT);
     e = search_expr_new(parent, SEOP_MATCH);
-    e->attr = search_attr_find("convflags");
+    e->attr = search_attr_find(matchall ? "allconvflags" : "convflags");
     e->value.s = xstrdup(flagname);
 }
 
@@ -749,7 +807,7 @@ static int get_search_criterion(struct protstream *pin,
     int c;
     int keep_charset = 0;
     time_t start, end, now = time(0);
-    int32_t i32;
+    uint32_t u;
     int hasconv = config_getswitch(IMAPOPT_CONVERSATIONS);
 
     if (base->state & GETSEARCH_CHARSET_FIRST) {
@@ -859,19 +917,19 @@ static int get_search_criterion(struct protstream *pin,
             if (c != ' ') goto missingarg;
             c = getword(pin, &arg);
             lcase(arg.s);
-            convflag_match(parent, arg.s, /*not*/0);
+            convflag_match(parent, arg.s, /*not*/0, /*all*/0);
         }
         else if (hasconv && !strcmp(criteria.s, "convread")) {  /* nonstandard */
-            convflag_match(parent, "\\Seen", /*not*/0);
+            convflag_match(parent, "\\Seen", /*not*/0, /*all*/0);
         }
         else if (hasconv && !strcmp(criteria.s, "convunread")) {    /* nonstandard */
-            convflag_match(parent, "\\Seen", /*not*/1);
+            convflag_match(parent, "\\Seen", /*not*/1, /*all*/1);
         }
         else if (hasconv && !strcmp(criteria.s, "convseen")) {  /* nonstandard */
-            convflag_match(parent, "\\Seen", /*not*/0);
+            convflag_match(parent, "\\Seen", /*not*/0, /*all*/0);
         }
         else if (hasconv && !strcmp(criteria.s, "convunseen")) {    /* nonstandard */
-            convflag_match(parent, "\\Seen", /*not*/1);
+            convflag_match(parent, "\\Seen", /*not*/1, /*all*/1);
         }
         else if (hasconv && !strcmp(criteria.s, "convmodseq")) {    /* nonstandard */
             modseq_t ms;
@@ -915,6 +973,16 @@ static int get_search_criterion(struct protstream *pin,
         else goto badcri;
         break;
 
+    case 'e':
+        if (!strcmp(criteria.s, "emailid")) {   /* draft-gondwana-imap-uniqueid */
+            if (c != ' ') goto missingarg;
+            c = getastring(pin, pout, &arg);
+            if (c == EOF) goto missingarg;
+            bytestring_match(parent, arg.s, criteria.s, base);
+        }
+        else goto badcri;
+        break;
+
     case 'f':
         if (!strcmp(criteria.s, "flagged")) {           /* RFC 3501 */
             systemflag_match(parent, FLAG_FLAGGED, /*not*/0);
@@ -953,7 +1021,7 @@ static int get_search_criterion(struct protstream *pin,
 
             e = search_expr_new(parent, SEOP_MATCH);
             e->attr = search_attr_find_field(arg.s);
-            e->value.s = charset_convert(arg2.s, base->charset, charset_flags);
+            e->value.s = charset_convert(arg2.s, base->charset, charset_flags|CHARSET_KEEPCASE);
             if (!e->value.s) {
                 e->op = SEOP_FALSE;
                 e->attr = NULL;
@@ -977,11 +1045,11 @@ static int get_search_criterion(struct protstream *pin,
     case 'l':
         if (!strcmp(criteria.s, "larger")) {            /* RFC 3501 */
             if (c != ' ') goto missingarg;
-            c = getint32(pin, &i32);
+            c = getint32(pin, (int32_t *)&u);
             if (c == EOF) goto badnumber;
             e = search_expr_new(parent, SEOP_GT);
             e->attr = search_attr_find("size");
-            e->value.u = i32;
+            e->value.u = u;
         }
         else goto badcri;
         break;
@@ -1035,12 +1103,23 @@ static int get_search_criterion(struct protstream *pin,
             indexflag_match(parent, MESSAGE_RECENT, /*not*/1);
         }
         else if (!strcmp(criteria.s, "older")) {    /* RFC 5032 */
+#if SIZEOF_TIME_T >= 8
+            int64_t uu;
+#endif
             if (c != ' ') goto missingarg;
-            c = getint32(pin, &i32);
+#if SIZEOF_TIME_T >= 8
+            c = getint64(pin, (int64_t *)&uu);
+#else
+            c = getint32(pin, (int32_t *)&u);
+#endif
             if (c == EOF) goto badinterval;
             e = search_expr_new(parent, SEOP_LE);
             e->attr = search_attr_find("internaldate");
-            e->value.t = now - i32;
+#if SIZEOF_TIME_T >= 8
+            e->value.t = now - uu;
+#else
+            e->value.t = now - u;
+#endif
         }
         else if (!strcmp(criteria.s, "on")) {   /* RFC 3501 */
             if (c != ' ') goto missingarg;
@@ -1065,7 +1144,35 @@ static int get_search_criterion(struct protstream *pin,
         break;
 
     case 's':
-        if (!strcmp(criteria.s, "seen")) {              /* RFC 3501 */
+        if (!strcmp(criteria.s, "savedatesupported")) {   /* draft-ietf-extra-imap-savedate */
+            // savedate is supported in index version 15+
+            e = search_expr_new(parent, SEOP_GE);
+            e->attr = search_attr_find("indexversion");
+            e->value.u = 15;
+        }
+        else if (!strcmp(criteria.s, "savedbefore")) {   /* draft-ietf-extra-imap-savedate */
+            if (c != ' ') goto missingarg;
+            c = get_search_date(pin, &start, &end);
+            if (c == EOF) goto baddate;
+            e = search_expr_new(parent, SEOP_LT);
+            e->attr = search_attr_find("savedate");
+            e->value.u = start;
+        }
+        else if (!strcmp(criteria.s, "savedon")) {   /* draft-ietf-extra-imap-savedate */
+            if (c != ' ') goto missingarg;
+            c = get_search_date(pin, &start, &end);
+            if (c == EOF) goto baddate;
+            date_range(parent, "savedate", start, end);
+        }
+        else if (!strcmp(criteria.s, "savedsince")) {    /* draft-ietf-extra-imap-savedate */
+            if (c != ' ') goto missingarg;
+            c = get_search_date(pin, &start, &end);
+            if (c == EOF) goto baddate;
+            e = search_expr_new(parent, SEOP_GE);
+            e->attr = search_attr_find("savedate");
+            e->value.u = start;
+        }
+        else if (!strcmp(criteria.s, "seen")) {              /* RFC 3501 */
             indexflag_match(parent, MESSAGE_SEEN, /*not*/0);
         }
         else if (!strcmp(criteria.s, "sentbefore")) {   /* RFC 3501 */
@@ -1100,11 +1207,11 @@ static int get_search_criterion(struct protstream *pin,
         }
         else if (!strcmp(criteria.s, "smaller")) {  /* RFC 3501 */
             if (c != ' ') goto missingarg;
-            c = getint32(pin, &i32);
+            c = getint32(pin, (int32_t *)&u);
             if (c == EOF) goto badnumber;
             e = search_expr_new(parent, SEOP_LT);
             e->attr = search_attr_find("size");
-            e->value.u = i32;
+            e->value.u = u;
         }
         else if (!strcmp(criteria.s, "spamabove")) {  /* nonstandard */
             if (c != ' ') goto missingarg;
@@ -1143,6 +1250,12 @@ static int get_search_criterion(struct protstream *pin,
             c = getastring(pin, pout, &arg);
             if (c == EOF) goto missingarg;
             string_match(parent, arg.s, criteria.s, base);
+        }
+        else if (!strcmp(criteria.s, "threadid")) {   /* draft-gondwana-imap-uniqueid */
+            if (c != ' ') goto missingarg;
+            c = getastring(pin, pout, &arg);
+            if (c == EOF) goto missingarg;
+            bytestring_match(parent, arg.s, criteria.s, base);
         }
         else goto badcri;
         break;
@@ -1211,12 +1324,23 @@ static int get_search_criterion(struct protstream *pin,
 
     case 'y':
         if (!strcmp(criteria.s, "younger")) {           /* RFC 5032 */
+#if SIZEOF_TIME_T >= 8
+            int64_t uu;
+#endif
             if (c != ' ') goto missingarg;
-            c = getint32(pin, &i32);
+#if SIZEOF_TIME_T >= 8
+            c = getint64(pin, (int64_t *)&uu);
+#else
+            c = getint32(pin, (int32_t *)&u);
+#endif
             if (c == EOF) goto badinterval;
             e = search_expr_new(parent, SEOP_GE);
             e->attr = search_attr_find("internaldate");
-            e->value.t = now - i32;
+#if SIZEOF_TIME_T >= 8
+            e->value.t = now - uu;
+#else
+            e->value.t = now - u;
+#endif
         }
         else goto badcri;
         break;

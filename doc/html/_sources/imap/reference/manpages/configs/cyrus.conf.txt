@@ -138,7 +138,7 @@ on certain Internet/UNIX sockets.
     (as listed in ``/etc/services``).
 
     If *host* is missing, 0.0.0.0 (all interfaces) is assumed.  Use
-    localhost or 127.0.0.1 to restict access, i.e. when a proxy
+    localhost or 127.0.0.1 to restrict access, i.e. when a proxy
     on the same host is front-ending Cyrus.
 
     Note that on most systems UNIX socket paths are limited to around
@@ -243,8 +243,10 @@ DAEMON
 ------
 
 This section lists long running daemons to start before any
-**SERVICES** are spawned.  They will be shutdown when
-:cyrusman:`master(8)` is exiting.
+**SERVICES** are spawned.  :cyrusman:`master(8)`  will ensure that
+these processes are running, restarting any process which dies or
+forks. All listed processes will be shutdown when :cyrusman:`master(8)`
+is exiting.
 
 .. parsed-literal::
 
@@ -302,6 +304,7 @@ See Also
 :cyrusman:`imapd(8)`,
 :cyrusman:`pop3d(8)`,
 :cyrusman:`lmtpd(8)`,
+:cyrusman:`smmapd(8)`,
 :cyrusman:`timsieved(8)`,
 :cyrusman:`idled(8)`,
 :cyrusman:`notifyd(8)`,

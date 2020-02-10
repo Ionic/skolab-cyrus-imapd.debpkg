@@ -65,6 +65,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#include <sysexits.h>
 #include <syslog.h>
 #include <stdlib.h>
 #include <string.h>
@@ -73,11 +74,11 @@
 #include "assert.h"
 #include "annotate.h"
 #include "dlist.h"
-#include "exitcodes.h"
 #include "global.h"
 #include "libcyr_cfg.h"
 #include "mboxlist.h"
 #include "mupdate.h"
+#include "user.h"
 #include "util.h"
 #include "xmalloc.h"
 #include "xstrlcpy.h"
@@ -276,7 +277,7 @@ static int dump_cb(const mbentry_t *mbentry, void *rockp)
                             mbentry->name, realpart, mbentry->acl );
                     fprintf( stderr, "mupdate says: %s %s %s\n",
                             mdata->mailbox, mdata->location, mdata->acl );
-                    fatal("mupdate said not us before it said us", EC_SOFTWARE);
+                    fatal("mupdate said not us before it said us", EX_SOFTWARE);
                 }
 
                 /*
@@ -374,7 +375,7 @@ static int dump_cb(const mbentry_t *mbentry, void *rockp)
 }
 
 /*
- * True if user types Y\n or y\n.  Anthing else is false.
+ * True if user types Y\n or y\n.  Anything else is false.
  */
 static int yes(void)
 {
@@ -406,7 +407,7 @@ static int yes(void)
  *    mupdate.
  */
 
-static void do_dump(enum mboxop op, const char *part, int purge)
+static void do_dump(enum mboxop op, const char *part, int purge, int intermediary)
 {
     struct dumprock d;
     int ret;
@@ -460,7 +461,9 @@ static void do_dump(enum mboxop op, const char *part, int purge)
     }
 
     /* Dump Database */
-    mboxlist_allmbox("", &dump_cb, &d, /*incdel*/1);
+    int flags = MBOXTREE_TOMBSTONES;
+    if (intermediary) flags |= MBOXTREE_INTERMEDIATES;
+    mboxlist_allmbox("", &dump_cb, &d, flags);
 
     if (op == M_POPULATE) {
         /* Remove MBTYPE_MOVING flags (unflag_head) */
@@ -522,15 +525,19 @@ static void do_dump(enum mboxop op, const char *part, int purge)
 
         while (wipe_head) {
             struct mb_node *me = wipe_head;
-
             wipe_head = wipe_head->next;
+
+            struct mboxlock *namespacelock = mboxname_usernamespacelock(me->mailbox);
+
             if (!mboxlist_delayed_delete_isenabled()) {
-                ret = mboxlist_deletemailbox(me->mailbox, 1, "", NULL, NULL, 0, 1, 1);
+                ret = mboxlist_deletemailbox(me->mailbox, 1, "", NULL, NULL, 0, 1, 1, 0);
             } else if (mboxname_isdeletedmailbox(me->mailbox, NULL)) {
-                ret = mboxlist_deletemailbox(me->mailbox, 1, "", NULL, NULL, 0, 1, 1);
+                ret = mboxlist_deletemailbox(me->mailbox, 1, "", NULL, NULL, 0, 1, 1, 0);
             } else {
-                ret = mboxlist_delayed_deletemailbox(me->mailbox, 1, "", NULL, NULL, 0, 1, 1);
+                ret = mboxlist_delayed_deletemailbox(me->mailbox, 1, "", NULL, NULL, 0, 1, 1, 0);
             }
+
+            mboxname_release(&namespacelock);
 
             if (ret) {
                 fprintf(stderr, "couldn't delete defunct mailbox %s\n",
@@ -825,8 +832,9 @@ static void do_verify(void)
 
         if (!(dirp = opendir(found.data[i].path))) continue;
         while ((dirent = readdir(dirp))) {
+            const char *fname = FNAME_HEADER;
             if (dirent->d_name[0] == '.') continue;
-            else if (!strcmp(dirent->d_name, FNAME_HEADER+1)) {
+            else if (!strcmp(dirent->d_name, fname+1)) {
                 /* XXX - check that it can be opened */
                 found.data[i].type |= MBOX;
             }
@@ -867,13 +875,13 @@ static void do_verify(void)
 
     qsort(found.data, found.size, sizeof(struct found_data), compar_mbox);
 
-    mboxlist_allmbox("", &verify_cb, &found, /*incdel*/1);
+    mboxlist_allmbox("", &verify_cb, &found, MBOXTREE_TOMBSTONES);
 }
 
 static void usage(void)
 {
     fprintf(stderr, "DUMP:\n");
-    fprintf(stderr, "  ctl_mboxlist [-C <alt_config>] -d [-x] [-p partition] [-f filename]\n");
+    fprintf(stderr, "  ctl_mboxlist [-C <alt_config>] -d [-x] [-y] [-p partition] [-f filename]\n");
     fprintf(stderr, "UNDUMP:\n");
     fprintf(stderr,
             "  ctl_mboxlist [-C <alt_config>] -u [-f filename]"
@@ -893,8 +901,9 @@ int main(int argc, char *argv[])
     int opt;
     enum mboxop op = NONE;
     char *alt_config = NULL;
+    int dointermediary = 0;
 
-    while ((opt = getopt(argc, argv, "C:awmdurcxf:p:vi")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:awmdurcxf:p:viy")) != EOF) {
         switch (opt) {
         case 'C': /* alt config file */
             alt_config = optarg;
@@ -968,6 +977,10 @@ int main(int argc, char *argv[])
             interactive = 1;
             break;
 
+        case 'y':
+            dointermediary = 1;
+            break;
+
         default:
             usage();
             break;
@@ -977,6 +990,7 @@ int main(int argc, char *argv[])
     if (op != M_POPULATE && (local_authoritative || warn_only)) usage();
     if (op != DUMP && partition) usage();
     if (op != DUMP && dopurge) usage();
+    if (op != DUMP && dointermediary) usage();
 
     if (op == RECOVER) {
         syslog(LOG_NOTICE, "running mboxlist recovery");
@@ -995,6 +1009,8 @@ int main(int argc, char *argv[])
     case CHECKPOINT:
         syslog(LOG_NOTICE, "checkpointing mboxlist");
         mboxlist_init(MBOXLIST_SYNC);
+        mboxlist_open(NULL);
+        mboxlist_close();
         mboxlist_done();
         syslog(LOG_NOTICE, "done checkpointing mboxlist");
         break;
@@ -1007,19 +1023,7 @@ int main(int argc, char *argv[])
         mboxlist_init(0);
         mboxlist_open(mboxdb_fname);
 
-        quotadb_init(0);
-        quotadb_open(NULL);
-
-        annotate_init(NULL, NULL);
-        annotatemore_open();
-
-        do_dump(op, partition, dopurge);
-
-        annotatemore_close();
-        annotate_done();
-
-        quotadb_close();
-        quotadb_done();
+        do_dump(op, partition, dopurge, dointermediary);
 
         mboxlist_close();
         mboxlist_done();
@@ -1034,19 +1038,7 @@ int main(int argc, char *argv[])
         mboxlist_init(0);
         mboxlist_open(mboxdb_fname);
 
-        quotadb_init(0);
-        quotadb_open(NULL);
-
-        annotate_init(NULL, NULL);
-        annotatemore_open();
-
         do_undump();
-
-        annotatemore_close();
-        annotate_done();
-
-        quotadb_close();
-        quotadb_done();
 
         mboxlist_close();
         mboxlist_done();

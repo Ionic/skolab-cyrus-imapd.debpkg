@@ -42,9 +42,9 @@
 #include <config.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sysexits.h>
 
 #include "auth.h"
-#include "exitcodes.h"
 #include "libcyr_cfg.h"
 #include "xmalloc.h"
 
@@ -77,7 +77,7 @@ static struct auth_mech *auth_fromname(void)
         char errbuf[1024];
         snprintf(errbuf, sizeof(errbuf),
                  "Authorization mechanism %s not supported", name);
-        fatal(errbuf, EC_CONFIG);
+        fatal(errbuf, EX_CONFIG);
     }
 
     return auth;
@@ -109,4 +109,11 @@ EXPORTED void auth_freestate(struct auth_state *auth_state)
     struct auth_mech *auth = auth_fromname();
 
     if (auth_state) auth->freestate(auth_state);
+}
+
+EXPORTED strarray_t *auth_groups(const struct auth_state *auth_state)
+{
+    struct auth_mech *auth = auth_fromname();
+
+    return auth->groups(auth_state);
 }

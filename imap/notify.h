@@ -43,16 +43,12 @@
 #ifndef NOTIFY_H
 #define NOTIFY_H
 
+#define NOTIFY_MAXSIZE 65536  /* 64k */
+
 void notify(const char *method,
             const char *class, const char *priority,
             const char *user, const char *mailbox,
             int nopt, const char **options,
             const char *message, const char *fname);
-
-int notify_at(time_t when, const char *method,
-            const char *class, const char *priority,
-            const char *user, const char *mboxname,
-            int nopt, const char **options,
-            const char *message);
 
 #endif /* NOTIFY_H */

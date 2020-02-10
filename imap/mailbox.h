@@ -74,8 +74,8 @@
  * make sure all the mailbox upgrade and downgrade code in mailbox.c is
  * changed to be able to convert both backwards and forwards between the
  * new version and all supported previous versions */
-#define MAILBOX_MINOR_VERSION   13
-#define MAILBOX_CACHE_MINOR_VERSION 6
+#define MAILBOX_MINOR_VERSION   16
+#define MAILBOX_CACHE_MINOR_VERSION 9
 
 #define FNAME_HEADER "/cyrus.header"
 #define FNAME_INDEX "/cyrus.index"
@@ -86,6 +86,11 @@
 #define FNAME_DAV "/cyrus.dav"
 #endif
 #define FNAME_ANNOTATIONS "/cyrus.annotations"
+
+#define CRC_INIT_BASIC 0
+// annot value should be visible as an integer via replication protocol,
+// so let's make it easy to see there
+#define CRC_INIT_ANNOT 12345678
 
 enum meta_filename {
   META_HEADER = 1,
@@ -111,14 +116,14 @@ enum meta_filename {
 #define NUM_CACHE_FIELDS 10
 
 struct cacheitem {
-    unsigned offset;
-    unsigned len;
+    size_t offset;
+    size_t len;
 };
 
 struct cacherecord {
     const struct buf *buf;
-    unsigned offset;
-    unsigned len;
+    size_t offset;
+    size_t len;
     struct cacheitem item[NUM_CACHE_FIELDS];
 };
 
@@ -130,12 +135,16 @@ struct statusdata {
     uint32_t recent;
     uint32_t uidnext;
     uint32_t uidvalidity;
+    const char *mailboxid;
     uint32_t unseen;
+    uint32_t mboptions;
+    quota_t size;
+    modseq_t createdmodseq;
     modseq_t highestmodseq;
     conv_status_t xconv;
 };
 
-#define STATUSDATA_INIT { NULL, 0, 0, 0, 0, 0, 0, 0, CONV_STATUS_INIT }
+#define STATUSDATA_INIT { NULL, 0, 0, 0, 0, 0, NULL, 0, 0, 0, 0, 0, CONV_STATUS_INIT }
 
 struct index_record {
     uint32_t uid;
@@ -144,20 +153,23 @@ struct index_record {
     uint32_t size;
     uint32_t header_size;
     time_t gmtime;
-    uint32_t cache_offset;
+    size_t cache_offset;
     time_t last_updated;
     uint32_t system_flags;
+    uint32_t internal_flags;
     uint32_t user_flags[MAX_USER_FLAGS/32];
-    uint32_t content_lines;
-    uint32_t cache_version;
+    time_t savedate;
+    uint16_t cache_version;
     struct message_guid guid;
     modseq_t modseq;
     bit64 cid;
+    modseq_t createdmodseq;
     bit32 cache_crc;
 
     /* metadata */
     uint32_t recno;
     int silent;
+    bit64 basecid;
     struct cacherecord crec;
 };
 
@@ -186,6 +198,7 @@ struct index_header {
     uint32_t deleted;
     uint32_t answered;
     uint32_t flagged;
+    uint32_t unseen;
 
     uint32_t options;
     uint32_t leaked_cache_records;
@@ -194,6 +207,8 @@ struct index_header {
     uint32_t exists;
     time_t first_expunged;
     time_t last_repack_time;
+
+    modseq_t createdmodseq;
 
     bit32 header_file_crc;
     struct synccrcs synccrcs;
@@ -211,6 +226,7 @@ struct index_header {
 
 struct index_change {
     struct index_record record;
+    char *msgid;
     uint32_t mapnext;
     uint32_t flags;
 };
@@ -331,10 +347,18 @@ struct mailbox_iter {
                           /* Spares - only use these if the index */
                           /*  record size remains the same */
 #define OFFSET_SYNCCRCS_ANNOT 120 /* SYNC_CRC of the annotations */
-#define OFFSET_HEADER_CRC 124 /* includes all zero for the spares! */
+#define OFFSET_UNSEEN 124         /* total number of UNSEEN messages (owner) */
 /* NEXT UPDATE - add Bug #3562 "TOTAL_MAILBOX_USED" field, 64 bit
  * value which counts the total size of all files included expunged
- * files.  This will need a header size change, hence putting it off */
+ * files. We've created the header space now, but will also need code
+ * changes, so holding off */
+#define OFFSET_MAILBOX_CREATEDMODSEQ 128 /* MODSEQ at creation time */
+#define OFFSET_SPARE0 136
+#define OFFSET_SPARE1 140
+#define OFFSET_SPARE2 144
+#define OFFSET_SPARE3 148
+#define OFFSET_SPARE4 152
+#define OFFSET_HEADER_CRC 156 /* includes all zero for the spares! */
 
 /* Offsets of index_record fields in index/expunge file
  *
@@ -352,32 +376,41 @@ struct mailbox_iter {
 #define OFFSET_LAST_UPDATED 28
 #define OFFSET_SYSTEM_FLAGS 32
 #define OFFSET_USER_FLAGS 36
-#define OFFSET_CONTENT_LINES 52 /* added for nntpd */
+#define OFFSET_SAVEDATE 52 /* added in v15 */
 #define OFFSET_CACHE_VERSION 56
 #define OFFSET_MESSAGE_GUID 60
 #define OFFSET_MODSEQ 80 /* CONDSTORE (64-bit modseq) */
 #define OFFSET_THRID 88       /* conversation id, added in v13 */
-#define OFFSET_CACHE_CRC 96 /* CRC32 of cache record */
-#define OFFSET_RECORD_CRC 100
+#define OFFSET_CREATEDMODSEQ 96 /* modseq of creation time, added in v16 */
+#define OFFSET_CACHE_CRC 104 /* CRC32 of cache record */
+#define OFFSET_RECORD_CRC 108
 
 #define INDEX_HEADER_SIZE (OFFSET_HEADER_CRC+4)
 #define INDEX_RECORD_SIZE (OFFSET_RECORD_CRC+4)
 
-#define FLAG_ANSWERED (1<<0)
-#define FLAG_FLAGGED (1<<1)
-#define FLAG_DELETED (1<<2)
-#define FLAG_DRAFT (1<<3)
-#define FLAG_SEEN (1<<4)
-#define FLAG_NEEDS_CLEANUP (1<<28)
-#define FLAG_ARCHIVED (1<<29)
-#define FLAG_UNLINKED (1<<30)
-#define FLAG_EXPUNGED (1U<<31)
+typedef enum _MsgFlags {
+    FLAG_ANSWERED           = (1<<0),
+    FLAG_FLAGGED            = (1<<1),
+    FLAG_DELETED            = (1<<2),
+    FLAG_DRAFT              = (1<<3),
+    FLAG_SEEN               = (1<<4),
+} MsgFlags;
+
+typedef enum _MsgInternalFlags {
+    FLAG_INTERNAL_SNOOZED            = (1<<26),
+    FLAG_INTERNAL_SPLITCONVERSATION  = (1<<27),
+    FLAG_INTERNAL_NEEDS_CLEANUP      = (1<<28),
+    FLAG_INTERNAL_ARCHIVED           = (1<<29),
+    FLAG_INTERNAL_UNLINKED           = (1<<30),
+    FLAG_INTERNAL_EXPUNGED           = (1U<<31),
+} MsgInternalFlags;
 
 #define FLAGS_SYSTEM   (FLAG_ANSWERED|FLAG_FLAGGED|FLAG_DELETED|FLAG_DRAFT|FLAG_SEEN)
-#define FLAGS_INTERNAL (FLAG_NEEDS_CLEANUP|FLAG_ARCHIVED|FLAG_UNLINKED|FLAG_EXPUNGED)
-/* for replication */
-#define FLAGS_LOCAL    (FLAG_NEEDS_CLEANUP|FLAG_ARCHIVED|FLAG_UNLINKED)
-#define FLAGS_GLOBAL   (FLAGS_SYSTEM|FLAG_EXPUNGED)
+#define FLAGS_INTERNAL (FLAG_INTERNAL_SPLITCONVERSATION |       \
+                        FLAG_INTERNAL_NEEDS_CLEANUP |           \
+                        FLAG_INTERNAL_ARCHIVED |                \
+                        FLAG_INTERNAL_UNLINKED |                \
+                        FLAG_INTERNAL_EXPUNGED)
 
 #define OPT_POP3_NEW_UIDL (1<<0)        /* added for Outlook stupidity */
 /* NOTE: not used anymore - but don't reuse it */
@@ -387,13 +420,17 @@ struct mailbox_iter {
  * struct annotate_mailbox_flags */
 #define OPT_IMAP_SHAREDSEEN (1<<2)      /* added for shared \Seen flag */
 #define OPT_IMAP_DUPDELIVER (1<<3)      /* added to allow duplicate delivery */
+
+#define OPT_IMAP_HAS_ALARMS (1<<4)      /* messages in mailbox have alarms */
+
 #define OPT_MAILBOX_NEEDS_UNLINK (1<<29)        /* files to be unlinked */
 #define OPT_MAILBOX_NEEDS_REPACK (1<<30)        /* repacking to do */
 #define OPT_MAILBOX_DELETED (1U<<31)    /* mailbox is deleted an awaiting cleanup */
 
 #define MAILBOX_OPTIONS_MASK (OPT_POP3_NEW_UIDL | \
                               OPT_IMAP_SHAREDSEEN | \
-                              OPT_IMAP_DUPDELIVER)
+                              OPT_IMAP_DUPDELIVER | \
+                              OPT_IMAP_HAS_ALARMS) 
 #define MAILBOX_CLEANUP_MASK (OPT_MAILBOX_NEEDS_UNLINK | \
                               OPT_MAILBOX_NEEDS_REPACK | \
                               OPT_MAILBOX_DELETED)
@@ -411,14 +448,7 @@ struct mailbox_iter {
 #define RECONSTRUCT_IGNORE_ODDFILES (1<<8)
 #define RECONSTRUCT_PREFER_MBOXLIST (1<<9)
 
-struct mailbox_header_cache {
-    const char *name; /* Name of header */
-    bit32 min_cache_version; /* Cache version it appeared in */
-};
-
 #define MAX_CACHED_HEADER_SIZE 32 /* Max size of a cached header name */
-extern const struct mailbox_header_cache mailbox_cache_headers[];
-extern const int MAILBOX_NUM_CACHE_HEADERS;
 
 /* Aligned buffer for manipulating index header/record fields */
 typedef union {
@@ -431,7 +461,7 @@ typedef union {
 /* CACHE_ITEM_BIT32: Convert to host byte order */
 /* CACHE_ITEM_LEN: Get the length out */
 /* CACHE_ITEM_NEXT: Return a pointer to the next entry.  Sizes are
- * 4-byte aligned, so round up to the next 4 byte boundry */
+ * 4-byte aligned, so round up to the next 4 byte boundary */
 #define CACHE_ITEM_BIT32(ptr) (ntohl(*((bit32 *)(ptr))))
 #define CACHE_ITEM_LEN(ptr) CACHE_ITEM_BIT32(ptr)
 #define CACHE_ITEM_NEXT(ptr) ((ptr)+4+((3+CACHE_ITEM_LEN(ptr))&~3))
@@ -468,6 +498,14 @@ enum {
 };
 #define NUMENVTOKENS (10)
 
+/*
+ * This structure maintains a list of FLAG_ to the string literal mapping.
+ */
+struct MsgFlagMap {
+    const char *code;
+    MsgFlags flag;
+};
+
 unsigned mailbox_cached_header(const char *s);
 unsigned mailbox_cached_header_inline(const char *text);
 
@@ -492,6 +530,8 @@ extern const char *mailbox_datapath(struct mailbox *mailbox, uint32_t uid);
 extern unsigned mailbox_should_archive(struct mailbox *mailbox,
                                        const struct index_record *record,
                                        void *rock);
+
+extern int open_mailboxes_exist();
 
 /* map individual messages in */
 extern int mailbox_map_record(struct mailbox *mailbox, const struct index_record *record, struct buf *buf);
@@ -529,13 +569,18 @@ extern int mailbox_write_header(struct mailbox *mailbox, int force);
 extern void mailbox_index_dirty(struct mailbox *mailbox);
 extern modseq_t mailbox_modseq_dirty(struct mailbox *mailbox);
 extern int mailbox_reload_index_record(struct mailbox *mailbox,
-                                     struct index_record *record);
+                                       struct index_record *record);
+extern int mailbox_reload_index_record_dirty(struct mailbox *mailbox,
+                                             struct index_record *record);
 extern int mailbox_rewrite_index_record(struct mailbox *mailbox,
                                         struct index_record *record);
 extern int mailbox_append_index_record(struct mailbox *mailbox,
                                        struct index_record *record);
 extern int mailbox_find_index_record(struct mailbox *mailbox, uint32_t uid,
                                      struct index_record *record);
+extern int mailbox_read_basecid(struct mailbox *mailbox,
+                                const struct index_record *record);
+
 
 extern int mailbox_set_acl(struct mailbox *mailbox, const char *acl,
                            int dirty_modseq);
@@ -574,12 +619,10 @@ extern void mailbox_remove_files_from_object_storage(struct mailbox *mailbox, un
 extern int mailbox_cleanup(struct mailbox *mailbox, int iscurrentdir,
                            mailbox_decideproc_t *decideproc, void *deciderock);
 extern void mailbox_unlock_index(struct mailbox *mailbox, struct statusdata *sd);
-/* unlock and immediately lock again with the same type */
-extern int mailbox_yield_index(struct mailbox *mailbox);
 
 extern int mailbox_create(const char *name, uint32_t mbtype, const char *part, const char *acl,
                           const char *uniqueid, int options, unsigned uidvalidity,
-                          modseq_t highestmodseq,
+                          modseq_t createdmodseq, modseq_t highestmodseq,
                           struct mailbox **mailboxptr);
 
 extern int mailbox_copy_files(struct mailbox *mailbox, const char *newpart,
@@ -590,6 +633,7 @@ extern int mailbox_rename_copy(struct mailbox *oldmailbox,
                                const char *newname, const char *newpart,
                                unsigned uidvalidity,
                                const char *userid, int ignorequota,
+                               int silent,
                                struct mailbox **newmailboxptr);
 extern int mailbox_rename_cleanup(struct mailbox **mailboxptr, int isinbox);
 
@@ -612,7 +656,8 @@ void mailbox_annot_changed(struct mailbox *mailbox,
                            const char *entry,
                            const char *userid,
                            const struct buf *oldval,
-                           const struct buf *newval);
+                           const struct buf *newval,
+                           int silent);
 
 extern int mailbox_get_annotate_state(struct mailbox *mailbox,
                                       unsigned int uid,
@@ -645,17 +690,24 @@ extern void mailbox_iter_done(struct mailbox_iter **iterp);
 struct synccrcs mailbox_synccrcs(struct mailbox *mailbox, int recalc);
 
 extern int mailbox_add_dav(struct mailbox *mailbox);
+extern int mailbox_add_email_alarms(struct mailbox *mailbox);
 
 /* Rename a CID.  Note - this is just one mailbox! */
 extern int mailbox_cid_rename(struct mailbox *mailbox,
                               conversation_id_t from_cid,
                               conversation_id_t to_cid);
-extern int mailbox_add_conversations(struct mailbox *mailbox);
+extern int mailbox_add_conversations(struct mailbox *mailbox, int silent);
 extern int mailbox_get_xconvmodseq(struct mailbox *mailbox, modseq_t *);
 extern int mailbox_update_xconvmodseq(struct mailbox *mailbox, modseq_t, int force);
 extern int mailbox_has_conversations(struct mailbox *mailbox);
 
 extern struct conversations_state *mailbox_get_cstate(struct mailbox *mailbox);
 
+typedef void mailbox_wait_cb_t(void *rock);
+extern void mailbox_set_wait_cb(mailbox_wait_cb_t *cb, void *rock);
+
+extern void mailbox_cleanup_uid(struct mailbox *mailbox, uint32_t uid, const char *flagstr);
+
+extern int mailbox_crceq(struct synccrcs a, struct synccrcs b);
 
 #endif /* INCLUDED_MAILBOX_H */

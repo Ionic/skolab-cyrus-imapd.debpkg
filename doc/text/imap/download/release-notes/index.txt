@@ -35,6 +35,14 @@ Supported Product Series
 ========================
 
 
+Series 3.2
+----------
+
+Documentation at https://www.cyrusimap.org/3.2/.
+
+* Cyrus IMAP 3.2 Releases
+
+
 Series 3.0
 ----------
 

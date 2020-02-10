@@ -50,6 +50,7 @@
 #include <libxml/tree.h>
 
 #include "httpd.h"
+#include "ical_support.h"
 #include "tok.h"
 #include "util.h"
 #include "version.h"
@@ -255,11 +256,9 @@ static xmlNodePtr icalparameter_as_xml_element(icalparameter *param)
         kind_string = icalparameter_get_xname(param);
         break;
 
-#ifdef HAVE_IANA_PARAMS
     case ICAL_IANA_PARAMETER:
         kind_string = icalparameter_get_iana_name(param);
         break;
-#endif
 
     default:
         kind_string = icalparameter_kind_to_string(kind);
@@ -731,7 +730,7 @@ static icalvalue *xml_element_to_icalvalue(xmlNodePtr xtype,
                     buf_printf(vals, ",%s", (char *) content);
                 }
                 else {
-                    /* create new list with this valiue */
+                    /* create new list with this value */
                     vals = xzmalloc(sizeof(struct buf));
                     buf_setcstr(vals, (char *) content);
                     hash_insert((char *) node->name, vals, &byrules);
@@ -1094,23 +1093,44 @@ icalcomponent *xcal_string_as_icalcomponent(const struct buf *buf)
 }
 
 
-const char *begin_xcal(struct buf *buf)
+const char *begin_xcal(struct buf *buf, struct mailbox *mailbox,
+                       const char *prodid, const char *name,
+                       const char *desc, const char *color)
 {
+    icalcomponent *ical;
+    icalproperty *prop;
+    xmlDocPtr doc;
+    xmlNodePtr props;
+    xmlBufferPtr xmlbuf;
+
+    /* Add toplevel properties */
+    ical = icalcomponent_new_stream(mailbox, prodid, name, desc, color);
+    doc = xmlNewDoc(BAD_CAST "1.0");
+    props = xmlNewNode(NULL, BAD_CAST "properties");
+    xmlDocSetRootElement(doc, props);
+
+    for (prop = icalcomponent_get_first_property(ical, ICAL_ANY_PROPERTY);
+         prop;
+         prop = icalcomponent_get_next_property(ical, ICAL_ANY_PROPERTY)) {
+
+        xmlAddChild(props, icalproperty_as_xml_element(prop));
+    }
+    icalcomponent_free(ical);
+
+
+    /* Dump XML node into buffer */
+    xmlbuf = xmlBufferCreate();
+    xmlNodeDump(xmlbuf, doc, props, 1, config_httpprettytelemetry);
+    xmlFreeDoc(doc);
+
     /* Begin xCal stream */
-    buf_reset(buf);
-    buf_printf_markup(buf, 0, "<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-    buf_printf_markup(buf, 0, "<icalendar xmlns=\"%s\">", XML_NS_ICALENDAR);
-    buf_printf_markup(buf, 1, "<vcalendar>");
-    buf_printf_markup(buf, 2, "<properties>");
-    buf_printf_markup(buf, 3, "<prodid>");
-    buf_printf_markup(buf, 4, "<text>-//CyrusIMAP.org/Cyrus %s//EN</text>",
-                      cyrus_version());
-    buf_printf_markup(buf, 3, "</prodid>");
-    buf_printf_markup(buf, 3, "<version>");
-    buf_printf_markup(buf, 4, "<text>2.0</text>");
-    buf_printf_markup(buf, 3, "</version>");
-    buf_printf_markup(buf, 2, "</properties>");
-    buf_printf_markup(buf, 2, "<components>");
+    buf_setcstr(buf, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n");
+    buf_printf(buf, "<icalendar xmlns=\"%s\">\r\n", XML_NS_ICALENDAR);
+    buf_appendcstr(buf, "<vcalendar>\r\n  ");
+    buf_appendmap(buf,
+                  (char *) xmlBufferContent(xmlbuf), xmlBufferLength(xmlbuf));
+    buf_appendcstr(buf, "\r\n<components>\r\n");
+    xmlBufferFree(xmlbuf);
 
     return "";
 }
@@ -1119,8 +1139,5 @@ const char *begin_xcal(struct buf *buf)
 void end_xcal(struct buf *buf)
 {
     /* End xCal stream */
-    buf_reset(buf);
-    buf_printf_markup(buf, 2, "</components>");
-    buf_printf_markup(buf, 1, "</vcalendar>");
-    buf_printf_markup(buf, 0, "</icalendar>");
+    buf_setcstr(buf, "\r\n</components>\r\n</vcalendars>\r\n</icalendar>");
 }

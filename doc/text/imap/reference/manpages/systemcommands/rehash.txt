@@ -52,7 +52,7 @@ imapd.conf
       -f forces fulldirhash: no
       -F forces fulldirhash: yes
 
--i
+-i | -I
 
       -i forces hashimapspool: no
       -I forces hashimapspool: yes

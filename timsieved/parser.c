@@ -48,6 +48,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <sysexits.h>
 #include <syslog.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -57,7 +58,6 @@
 #include <sasl/saslutil.h>
 
 #include "assert.h"
-#include "exitcodes.h"
 #include "libconfig.h"
 #include "xmalloc.h"
 #include "xstrlcpy.h"
@@ -104,7 +104,9 @@ static int cmd_authenticate(struct protstream *sieved_out, struct protstream *si
                             const char *mech, const struct buf *initial_challenge, const char **errmsg);
 static void cmd_unauthenticate(struct protstream *sieved_out,
                                struct protstream *sieved_in);
-static int cmd_starttls(struct protstream *sieved_out, struct protstream *sieved_in);
+static int cmd_starttls(struct protstream *sieved_out,
+                        struct protstream *sieved_in,
+                        struct saslprops_t *saslprops);
 
 static char *sieve_parsesuccess(char *str, const char **status)
 {
@@ -138,7 +140,8 @@ static struct protocol_t sieve_protocol =
 };
 
 /* Returns TRUE if we are done */
-int parser(struct protstream *sieved_out, struct protstream *sieved_in)
+int parser(struct protstream *sieved_out, struct protstream *sieved_in,
+           struct saslprops_t *saslprops)
 {
   int token = EOL;
   const char *error_msg = "Generic Error";
@@ -238,11 +241,6 @@ int parser(struct protstream *sieved_out, struct protstream *sieved_in)
         goto error;
     }
 
-#if 0 /* XXX - not implemented in sieveshell*/
-    /* referral_host is non-null only once we are authenticated */
-    if(referral_host)
-        goto do_referral;
-#endif
     break;
 
   case CAPABILITY:
@@ -524,7 +522,7 @@ int parser(struct protstream *sieved_out, struct protstream *sieved_in)
     if(referral_host)
         goto do_referral;
 
-    cmd_starttls(sieved_out, sieved_in);
+    cmd_starttls(sieved_out, sieved_in, saslprops);
 
     break;
 
@@ -629,20 +627,19 @@ void cmd_logout(struct protstream *sieved_out,
     prot_flush(sieved_out);
 }
 
-static sasl_ssf_t ssf = 0;
-static char *authid = NULL;
-
-extern int reset_saslconn(sasl_conn_t **conn, sasl_ssf_t ssf, char *authid);
+extern int reset_saslconn(sasl_conn_t **conn);
 
 static void cmd_unauthenticate(struct protstream *sieved_out,
                               struct protstream *sieved_in)
 {
+    prot_printf(sieved_out, "OK\r\n");
+    prot_flush(sieved_out);
+
     if (chdir("/tmp/"))
         syslog(LOG_ERR, "Failed to chdir to /tmp/");
-    reset_saslconn(&sieved_saslconn, sieved_in->saslssf, authid);
+    reset_saslconn(&sieved_saslconn);
     prot_unsetsasl(sieved_out);
     prot_unsetsasl(sieved_in);
-    prot_printf(sieved_out, "OK\r\n");
     authenticated = 0;
 }
 
@@ -907,21 +904,19 @@ cleanup:
   return ret;
 
 reset:
-  if(reset_saslconn(&sieved_saslconn, ssf, authid) != SASL_OK)
+  if(reset_saslconn(&sieved_saslconn) != SASL_OK)
       fatal("could not reset the sasl_conn_t after failure",
-            EC_TEMPFAIL);
+            EX_TEMPFAIL);
   ret = FALSE;
   goto cleanup;
 }
 
 #ifdef HAVE_SSL
-static int cmd_starttls(struct protstream *sieved_out, struct protstream *sieved_in)
+static int cmd_starttls(struct protstream *sieved_out,
+                        struct protstream *sieved_in,
+                        struct saslprops_t *saslprops)
 {
     int result;
-    int *layerp;
-
-    /* SASL and openssl have different ideas about whether ssf is signed */
-    layerp = (int *) &ssf;
 
     if (starttls_done == 1)
     {
@@ -950,8 +945,7 @@ static int cmd_starttls(struct protstream *sieved_out, struct protstream *sieved
     result=tls_start_servertls(0, /* read */
                                1, /* write */
                                sieved_timeout,
-                               layerp,
-                               &authid,
+                               saslprops,
                                &tls_conn);
 
     /* if error */
@@ -962,16 +956,10 @@ static int cmd_starttls(struct protstream *sieved_out, struct protstream *sieved
     }
 
     /* tell SASL about the negotiated layer */
-    result = sasl_setprop(sieved_saslconn, SASL_SSF_EXTERNAL, &ssf);
+    result = saslprops_set_tls(saslprops, sieved_saslconn);
 
     if (result != SASL_OK) {
-        fatal("sasl_setprop() failed: cmd_starttls()", EC_TEMPFAIL);
-    }
-
-    result = sasl_setprop(sieved_saslconn, SASL_AUTH_EXTERNAL, authid);
-
-    if (result != SASL_OK) {
-        fatal("sasl_setprop() failed: cmd_starttls()", EC_TEMPFAIL);
+        fatal("saslprops_set_tls() failed: cmd_starttls()", EX_TEMPFAIL);
     }
 
     /* tell the prot layer about our new layers */
@@ -986,8 +974,9 @@ static int cmd_starttls(struct protstream *sieved_out, struct protstream *sieved
 }
 #else
 static int cmd_starttls(struct protstream *sieved_out __attribute__((unused)),
-                        struct protstream *sieved_in __attribute__((unused)))
+                        struct protstream *sieved_in __attribute__((unused)),
+                        struct saslprops_t *saslprops __attribute__((unused)))
 {
-    fatal("cmd_starttls() called, but no OpenSSL", EC_SOFTWARE);
+    fatal("cmd_starttls() called, but no OpenSSL", EX_SOFTWARE);
 }
 #endif /* HAVE_SSL */

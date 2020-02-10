@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Databases &mdash; Cyrus IMAP 3.0.13 (stable) documentation</title>
+  <title>Databases &mdash; Cyrus IMAP 3.2.0-beta1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.0.13 (stable) documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.0-beta1 documentation" href="../../../index.html"/>
         <link rel="up" title="Configuration Guide" href="../deployment.html"/>
         <link rel="next" title="Mailbox Creation Distribution" href="mailbox_creation_distribution.html"/>
         <link rel="prev" title="Deployment Scenarios" href="deployment_scenarios.html"/> 
@@ -130,6 +130,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../download/release-notes/index.html#stable-version">Stable Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../download/release-notes/index.html#development-version">Development Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../download/release-notes/index.html#supported-product-series">Supported Product Series</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../download/release-notes/index.html#series-3-2">Series 3.2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../download/release-notes/index.html#series-3-0">Series 3.0</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../download/release-notes/index.html#series-2-5">Series 2.5</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../download/release-notes/index.html#series-2-4">Series 2.4</a></li>
@@ -143,6 +144,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../download/packagers.html">Notes for Packagers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#binary-naming">Binary naming</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#sample-configuration-files">Sample configuration files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#predefined-configurations">Predefined configurations</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../download/packagers.html#the-configuration-file-for-master-cyrus-conf">The configuration file for master: cyrus.conf</a></li>
@@ -159,7 +161,6 @@
 <li class="toctree-l3"><a class="reference internal" href="../../quickstart/introduction.html#what-is-imap">What is IMAP?</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../../quickstart.html#coming-soon">Coming Soon</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../quickstart.html#quick-install">Quick install</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../quickstart.html#install-cyrus-reference-packages">1. Install Cyrus reference packages</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../quickstart.html#use-apt-get-install-f-to-complete-installation">2. Use &#8220;apt-get install -f&#8221; to complete installation</a></li>
@@ -392,6 +393,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="performance_recommendations.html">Performance Recommendations</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="performance_recommendations.html#databases-on-temporary-filesystems">Databases on Temporary Filesystems</a></li>
+<li class="toctree-l4"><a class="reference internal" href="performance_recommendations.html#certificates">Certificates</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="storage.html">Storage Considerations</a><ul>
@@ -419,7 +421,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../reference/manpages/commands.html">Man pages</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/manpages/commands.html#configuration-files">(5) Configuration Files</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/manpages/configs/cyrus.conf.html"><strong>cyrus.conf</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html">imapd.conf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html"><strong>imapd.conf</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/manpages/configs/krb.equiv.html"><strong>krb.equiv</strong></a></li>
 </ul>
 </li>
@@ -508,34 +510,6 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../reference/administration-tools.html">Tools &amp; Utilities</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#arbitron">arbitron</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#arbitronsort-pl">arbitronsort.pl</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#chk-cyrus">chk_cyrus</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#ctl-cyrusdb">ctl_cyrusdb</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#ctl-deliver">ctl_deliver</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#ctl-mboxlist">ctl_mboxlist</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#cvt-cyrusdb">cvt_cyrusdb</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#cvt-cyrusdb-all">cvt_cyrusdb_all</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#cyr-dbtool">cyr_dbtool</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#cyr-df">cyr_df</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#cyrdump">cyrdump</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#cyr-expire">cyr_expire</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#cyr-virusscan">cyr_virusscan</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#fetchnews">fetchnews</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#cyr-sequence">cyr_sequence</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#cyr-synclog">cyr_synclog</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#cyr-userseen">cyr_userseen</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#masssievec">masssievec</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#mbexamine">mbexamine</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#mbpath">mbpath</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#mkimap">mkimap</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#mknewsgroups">mknewsgroups</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#rehash">rehash</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#translatesieve">translatesieve</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../reference/administration-tools.html#undohash">undohash</a></li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="../../reference/admin.html">Administrator Guide</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/admin.html#architecture">Architecture</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/architecture.html">System Architecture</a></li>
@@ -552,6 +526,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/admin/protlayer.html">Cyrus Prot Layer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/admin/sop.html">Standard Operating Procedures</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/admin/eventsource.html">Cyrus Event Source</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/admin/monitoring.html">Monitoring</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/admin/config-mailboxdistribution.html">Mailbox Distribution</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/admin/murder/murder.html">Cyrus Murder</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/admin/nginx-proxy.html">HOWTO: Using an NGINX IMAP Proxy</a></li>
@@ -568,7 +543,6 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-detecting-berkeley.html">Problems detecting Berkley DB on Red Hat Linux</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-linkerwarnings.html#libical-v1-0-1-or-v2-0">Libical v1.0.1 or v2.0</a></li>
@@ -584,10 +558,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-operational-questions">Common Operational Questions</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-acls.html">How do I view ACLs on a mailbox?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-annotations.html">What annotations are available?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-berkeleydb.html">Why does ctl_cyrusdb -r take so long with Berkeley DB?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-coredump.html">How to enable core dumps</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-db3-lockers.html">Is the &#8220;db3: x Lockers&#8221; log message harmful?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
@@ -648,6 +620,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../developer/compiling.html">Compiling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../installing.html">Installing Cyrus</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../developer/developer-testing.html">Developer Test Environment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/jmap.html">JMAP support</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../developer.html#system-files-and-databases">System files and Databases</a><ul>
@@ -667,9 +640,55 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../developer/cyrusworks.html">Cyrus.Works</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../developer/cyrusworks.html#about-cyrus-works">About Cyrus Works</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../developer/cyrusworks.html#testing">Testing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../developer/cyrusworks.html#how-it-works">How it works</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../developer/cyrusworks.html#adding-rules">Adding Rules</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../developers.html#cyrus-internals">Cyrus Internals</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../developer/API.html">Cyrus APIs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/API/cyrusdb.html">CyrusDB API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/API/cyrusdb2.html">cyrusdb API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/API/index-api.html">Index API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/API/mailbox-api.html">Mailbox API</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../developer/thoughts.html">Thoughts &amp; Notes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/thoughts/backup.html">Notes for backup implementation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/thoughts/bytecode.html">Cyrus IMAP Server: Sieve Bytecode</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/thoughts/caldav_scheduling_flowchart.html">Cyrus CalDAV Scheduling Flowchart</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/thoughts/improved_mboxlist_sort.html">Enabling improved_mboxlist_sort</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/thoughts/notes.html">Cyrus IMAP Server: Notes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/thoughts/prot-events.html">Cyrus IMAP Server: Prot Events</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../developer/guidance.html">Guidance for Developers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/guidance/hacking.html">Cyrus IMAP Server: Hacking</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/guidance/internationalization.html">Cyrus IMAP Server: Internationalization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/guidance/locking.html">Cyrus IMAP Server: Locking</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/guidance/mailbox-format.html">Cyrus IMAP Server: Mailbox File Formats</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/guidance/namelocks.html">Cyrus IMAP Server: Namelocks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/guidance/prot.html">Cyrus IMAP Server: prot layer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/guidance/replication_examples.html">Cyrus IMAP Server: Replication Examples</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/guidance/replication_protocol.html">Cyrus IMAP Server: Replication Protocol v2.4+</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/guidance/special_chars.html">Cyrus IMAP Server: Special Characters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/guidance/var_directory_structure.html">Cyrus IMAP Server: var directory structure</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../developers.html#unit-tests">Unit Tests</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../developer/unit-tests.html">Unit Tests</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/unit-tests.html#table-of-contents">Table of Contents</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/unit-tests.html#introduction">1. Introduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/unit-tests.html#what-is-a-unit-test">2. What Is A Unit Test?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/unit-tests.html#running-the-tests">3. Running The Tests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/unit-tests.html#debugging-a-test">3.6 Debugging A Test</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/unit-tests.html#adding-your-own-tests">4. Adding Your Own Tests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/unit-tests.html#where-to-put-your-tests">4.1 Where To Put Your Tests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/unit-tests.html#adding-a-new-suite">4.1 Adding A New Suite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/unit-tests.html#adding-a-test-to-a-suite">4.2 Adding A Test To A Suite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../developer/unit-tests.html#suite-setup-and-teardown">4.3 Suite Setup And Teardown</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -727,7 +746,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd/branches" target="_blank">cyrus-imapd-3.0: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.0"></a>
+    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.2: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.2"></a>
 </div>
       &nbsp;
     </nav>
@@ -747,7 +766,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.0.13 (stable)</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.2.0-beta1</a> &raquo;</li>
       
           <li><a href="../../../setup.html">Setup</a> &raquo;</li>
       
@@ -757,7 +776,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.0/docsrc/imap/concepts/deployment/databases.rst" class="fa fa-github"> Edit on GitHub</a>
+            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.2/docsrc/imap/concepts/deployment/databases.rst" class="fa fa-github"> Edit on GitHub</a>
           
         
       </li>
@@ -804,7 +823,7 @@ Cyrus to automatically convert the file to the new format.</p>
 <li><a class="reference internal" href="#mailbox-keys-userid-mboxkey">Mailbox Keys (&lt;userid&gt;.mboxkey)</a></li>
 <li><a class="reference internal" href="#seen-state-userid-seen">Seen State (&lt;userid&gt;.seen)</a></li>
 <li><a class="reference internal" href="#subscriptions-userid-sub">Subscriptions (&lt;userid&gt;.sub)</a></li>
-<li><a class="reference internal" href="#search-indexes-cyrus-squat-userid-xapianactive">Search Indexes (cyrus.squat, &lt;userid&gt;.xapianactive)</a></li>
+<li><a class="reference internal" href="#search-indexes-cyrus-squat-userid-xapianactive-cyrus-indexed-db">Search Indexes (cyrus.squat, &lt;userid&gt;.xapianactive, cyrus.indexed.db)</a></li>
 </ul>
 <div class="section" id="mailbox-list-mailboxes-db">
 <span id="imap-concepts-deployment-db-mailboxes"></span><h3>Mailbox List (mailboxes.db)<a class="headerlink" href="#mailbox-list-mailboxes-db" title="Permalink to this headline">¶</a></h3>
@@ -814,7 +833,7 @@ Cyrus to automatically convert the file to the new format.</p>
 <span class="n">Data</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">Type</span> <span class="n">Number</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">Partition</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">ACL</span> <span class="p">(</span><span class="n">space</span><span class="o">-</span><span class="n">separated</span> <span class="n">userid</span><span class="o">/</span><span class="n">rights</span> <span class="n">pairs</span><span class="p">)</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#flat">flat</a>, <a class="reference internal" href="#skiplist">skiplist</a>, <a class="reference internal" href="#sql">sql</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
+<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#flat">flat</a>, <a class="reference internal" href="#skiplist">skiplist</a>, or <a class="reference internal" href="#sql">sql</a>.</p>
 </div>
 <div class="section" id="annotations-annotations-db">
 <span id="imap-concepts-deployment-db-annotations"></span><h3>Annotations (annotations.db)<a class="headerlink" href="#annotations-annotations-db" title="Permalink to this headline">¶</a></h3>
@@ -824,7 +843,7 @@ Cyrus to automatically convert the file to the new format.</p>
 <span class="n">Data</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">Value</span> <span class="n">Size</span> <span class="p">(</span><span class="mi">4</span> <span class="nb">bytes</span><span class="p">)</span><span class="o">&gt;&lt;</span><span class="n">Value</span><span class="o">&gt;</span>\<span class="mi">0</span><span class="o">&lt;</span><span class="n">Content</span><span class="o">-</span><span class="n">Type</span><span class="o">&gt;</span>\<span class="mi">0</span><span class="o">&lt;</span><span class="n">Timestamp</span> <span class="p">(</span><span class="mi">4</span> <span class="nb">bytes</span><span class="p">)</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a>  (default), <a class="reference internal" href="#skiplist">skiplist</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
+<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a>  (default) or <a class="reference internal" href="#skiplist">skiplist</a>.</p>
 </div>
 <div class="section" id="quotas-quotas-db">
 <span id="imap-concepts-deployment-db-quotas"></span><h3>Quotas (quotas.db)<a class="headerlink" href="#quotas-quotas-db" title="Permalink to this headline">¶</a></h3>
@@ -834,7 +853,7 @@ Cyrus to automatically convert the file to the new format.</p>
 <span class="n">Data</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">Usage</span> <span class="p">(</span><span class="ow">in</span> <span class="nb">bytes</span><span class="p">)</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">Limit</span> <span class="p">(</span><span class="ow">in</span> <span class="n">Kbytes</span><span class="p">)</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>File type can be: <a class="reference internal" href="#quotalegacy">quotalegacy</a> (default), <a class="reference internal" href="#flat">flat</a>, <a class="reference internal" href="#skiplist">skiplist</a>, <a class="reference internal" href="#sql">sql</a>, <a class="reference internal" href="#twoskip">twoskip</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
+<p>File type can be: <a class="reference internal" href="#quotalegacy">quotalegacy</a> (default), <a class="reference internal" href="#flat">flat</a>, <a class="reference internal" href="#skiplist">skiplist</a>, <a class="reference internal" href="#sql">sql</a>, or <a class="reference internal" href="#twoskip">twoskip</a>.</p>
 <p><strong>Legacy Quotas</strong></p>
 <p>The legacy quota database uses a distributed system in which each quota root is stored in a separate file named by quota root and the contents had the following format in older versions:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">Usage</span> <span class="p">(</span><span class="ow">in</span> <span class="nb">bytes</span><span class="p">)</span><span class="o">&gt;</span>\<span class="n">n</span>
@@ -852,7 +871,7 @@ Cyrus to automatically convert the file to the new format.</p>
 <span class="n">Data</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">Timestamp</span> <span class="p">(</span><span class="mi">4</span> <span class="nb">bytes</span><span class="p">)</span><span class="o">&gt;&lt;</span><span class="n">Message</span> <span class="n">UID</span> <span class="p">(</span><span class="mi">4</span> <span class="nb">bytes</span><span class="p">)</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#skiplist">skiplist</a>, <a class="reference internal" href="#sql">sql</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
+<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#skiplist">skiplist</a>, or <a class="reference internal" href="#sql">sql</a>.</p>
 </div>
 <div class="section" id="tls-cache-tls-sessions-db">
 <span id="imap-concepts-deployment-db-tls"></span><h3>TLS cache (tls_sessions.db)<a class="headerlink" href="#tls-cache-tls-sessions-db" title="Permalink to this headline">¶</a></h3>
@@ -862,7 +881,7 @@ Cyrus to automatically convert the file to the new format.</p>
 <span class="n">Data</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">Timestamp</span> <span class="p">(</span><span class="mi">4</span> <span class="nb">bytes</span><span class="p">)</span><span class="o">&gt;&lt;</span><span class="n">Session</span> <span class="n">Data</span> <span class="p">(</span><span class="n">multi</span><span class="o">-</span><span class="n">byte</span><span class="p">)</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#skiplist">skiplist</a>, <a class="reference internal" href="#sql">sql</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
+<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#skiplist">skiplist</a>, or <a class="reference internal" href="#sql">sql</a>.</p>
 </div>
 <div class="section" id="pts-cache-ptscache-db">
 <span id="imap-concepts-deployment-db-pts"></span><h3>PTS cache (ptscache.db)<a class="headerlink" href="#pts-cache-ptscache-db" title="Permalink to this headline">¶</a></h3>
@@ -872,7 +891,7 @@ Cyrus to automatically convert the file to the new format.</p>
 <span class="n">Data</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">Auth</span> <span class="n">State</span> <span class="p">(</span><span class="n">multi</span><span class="o">-</span><span class="n">byte</span><span class="p">)</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#skiplist">skiplist</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
+<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default) or <a class="reference internal" href="#skiplist">skiplist</a>.</p>
 </div>
 <div class="section" id="status-cache-statuscache-db">
 <span id="imap-concepts-deployment-db-status"></span><h3>STATUS cache (statuscache.db)<a class="headerlink" href="#status-cache-statuscache-db" title="Permalink to this headline">¶</a></h3>
@@ -882,23 +901,23 @@ Cyrus to automatically convert the file to the new format.</p>
 <span class="n">Data</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">Version</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">Bitmask</span> <span class="n">of</span> <span class="n">Items</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">Mtime</span> <span class="n">of</span> <span class="n">Index</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">Inode</span> <span class="n">of</span> <span class="n">Index</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">Size</span> <span class="n">of</span> <span class="n">Index</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;-</span> <span class="n">of</span> <span class="n">Messages</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;-</span> <span class="n">of</span> <span class="n">Recent</span> <span class="n">Messages</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">Next</span> <span class="n">UID</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">UID</span> <span class="n">Validity</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;-</span> <span class="n">of</span> <span class="n">Unseen</span> <span class="n">Messages</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">Highest</span> <span class="n">Mod</span> <span class="n">Sequence</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#skiplist">skiplist</a>, <a class="reference internal" href="#sql">sql</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
+<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#skiplist">skiplist</a>, or <a class="reference internal" href="#sql">sql</a>.</p>
 </div>
 <div class="section" id="user-access-user-deny-db">
 <span id="imap-concepts-deployment-db-userdeny"></span><h3>User Access (user_deny.db)<a class="headerlink" href="#user-access-user-deny-db" title="Permalink to this headline">¶</a></h3>
-<p>This database contains a list of users that are denied access to Cyrus services. The database is indexed by userid and each data record contains the database version number (currently 2), a list of wildmat patterns specifying Cyrus services to be denied, and a text message to be displayed to the user upon denial. The service names to be matched are those as used in cyrus.conf(5). The format of each record is as follows:</p>
+<p>This database contains a list of users that are denied access to Cyrus services. The database is indexed by userid and each data record contains the database version number (currently 2), a list of <a class="reference external" href="https://tools.ietf.org/html/rfc3977#section-4">wildmat</a> patterns specifying Cyrus services to be denied, and a text message to be displayed to the user upon denial. The service names to be matched are those as used in <a class="reference internal" href="../../reference/manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a>. The format of each record is as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Key</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">Userid</span><span class="o">&gt;</span>
 
 <span class="n">Data</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">Version</span><span class="o">&gt;</span><span class="n">TAB</span><span class="o">&lt;</span><span class="n">Deny</span> <span class="n">List</span> <span class="p">(</span><span class="n">comma</span><span class="o">-</span><span class="n">separated</span> <span class="n">wildmat</span> <span class="n">patterns</span><span class="p">)</span><span class="o">&gt;</span><span class="n">TAB</span><span class="o">&lt;</span><span class="n">Deny</span> <span class="n">Message</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>File type can be: <a class="reference internal" href="#flat">flat</a> (default), <a class="reference internal" href="#skiplist">skiplist</a>, <a class="reference internal" href="#sql">sql</a>, <a class="reference internal" href="#twoskip">twoskip</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
+<p>File type can be: <a class="reference internal" href="#flat">flat</a> (default), <a class="reference internal" href="#skiplist">skiplist</a>, <a class="reference internal" href="#sql">sql</a>, or <a class="reference internal" href="#twoskip">twoskip</a>.</p>
 </div>
 <div class="section" id="backups-backups-db">
 <span id="imap-concepts-deployment-db-backups"></span><h3>Backups (backups.db)<a class="headerlink" href="#backups-backups-db" title="Permalink to this headline">¶</a></h3>
 <p>This database maps userids to the location of their backup files.  It only exists
 on Cyrus Backup servers (compiled with the <cite>&#8211;enable-backup</cite> configure option).</p>
-<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#skiplist">skiplist</a>, <a class="reference internal" href="#sql">sql</a>, <a class="reference internal" href="#twoskip">twoskip</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
+<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#skiplist">skiplist</a>, <a class="reference internal" href="#sql">sql</a>, or <a class="reference internal" href="#twoskip">twoskip</a>.</p>
 </div>
 <div class="section" id="conversations-userid-conversations">
 <span id="imap-concepts-deployment-db-conversations"></span><h3>Conversations (&lt;userid&gt;.conversations)<a class="headerlink" href="#conversations-userid-conversations" title="Permalink to this headline">¶</a></h3>
@@ -906,10 +925,10 @@ on Cyrus Backup servers (compiled with the <cite>&#8211;enable-backup</cite> con
 in the past three months, mapping to the conversation IDs in which this message
 ID has been seen, and the timestamp when it was last seen.</p>
 <p>It also has a records for each conversation ID with details about which folders
-have that converations ID in them, and counts of messages and flags.</p>
+have that conversations ID in them, and counts of messages and flags.</p>
 <p>Finally there are records for each folder with the counts of conversations in
 that folder.</p>
-<p>File type can be: <a class="reference internal" href="#skiplist">skiplist</a> (default), <a class="reference internal" href="#sql">sql</a>, <a class="reference internal" href="#twoskip">twoskip</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
+<p>File type can be: <a class="reference internal" href="#skiplist">skiplist</a> (default), <a class="reference internal" href="#sql">sql</a>, or <a class="reference internal" href="#twoskip">twoskip</a>.</p>
 </div>
 <div class="section" id="counters-userid-counters">
 <span id="imap-concepts-deployment-db-counters"></span><h3>Counters (&lt;userid&gt;.counters)<a class="headerlink" href="#counters-userid-counters" title="Permalink to this headline">¶</a></h3>
@@ -920,11 +939,16 @@ that folder.</p>
 <span id="imap-concepts-deployment-db-fetchnews"></span><h3>News database (fetchnews.db)<a class="headerlink" href="#news-database-fetchnews-db" title="Permalink to this headline">¶</a></h3>
 <p>File format not selectable.</p>
 </div>
-<div class="section" id="search-indexes-cyrus-squat-userid-xapianactive">
-<span id="imap-concepts-deployment-db-search"></span><h3>Search Indexes (cyrus.squat, &lt;userid&gt;.xapianactive)<a class="headerlink" href="#search-indexes-cyrus-squat-userid-xapianactive" title="Permalink to this headline">¶</a></h3>
-<p>This is either cyrus.squat in each folder, or if you&#8217;re using xapian a single
-&lt;userid&gt;.xapianactive file listing active databases by tier name and number.</p>
-<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#flat">flat</a>, <a class="reference internal" href="#skiplist">skiplist</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
+<div class="section" id="search-indexes-cyrus-squat-userid-xapianactive-cyrus-indexed-db">
+<span id="imap-concepts-deployment-db-search"></span><h3>Search Indexes (cyrus.squat, &lt;userid&gt;.xapianactive, cyrus.indexed.db)<a class="headerlink" href="#search-indexes-cyrus-squat-userid-xapianactive-cyrus-indexed-db" title="Permalink to this headline">¶</a></h3>
+<p>This is either cyrus.squat in each folder, or if you&#8217;re using Xapian a single
+&lt;userid&gt;.xapianactive file listing active databases with tier name and number.</p>
+<p>cyrus.indexed.db is used by the Xapian search engine.  Its file type
+can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#flat">flat</a>, <a class="reference internal" href="#skiplist">skiplist</a>, or <code class="docutils literal"><span class="pre">zeroskip</span></code> and is
+determined by <cite>search_indexed_db</cite> in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.</p>
+<p>The xapianactive file contains a space separated list of tiers and databases within
+the tier.  The first element is the active tier/database, to which new entries are
+added by <cite>squatter -R</cite>.</p>
 </div>
 <div class="section" id="zoneinfo-db-zoneinfo-db">
 <span id="imap-concepts-deployment-db-zoneinfo"></span><h3>Zoneinfo db (zoneinfo.db)<a class="headerlink" href="#zoneinfo-db-zoneinfo-db" title="Permalink to this headline">¶</a></h3>
@@ -939,7 +963,7 @@ alias).  The format of each record is as follows:</p>
 <span class="n">Data</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">Version</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">Record</span> <span class="n">Type</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">Timestamp</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">Data</span> <span class="n">Strings</span> <span class="p">(</span><span class="n">TAB</span><span class="o">-</span><span class="n">separated</span><span class="p">)</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#flat">flat</a>, <a class="reference internal" href="#skiplist">skiplist</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
+<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#flat">flat</a>, or <a class="reference internal" href="#skiplist">skiplist</a>.</p>
 </div>
 <div class="section" id="seen-state-userid-seen">
 <span id="imap-concepts-deployment-db-seen"></span><h3>Seen State (&lt;userid&gt;.seen)<a class="headerlink" href="#seen-state-userid-seen" title="Permalink to this headline">¶</a></h3>
@@ -949,7 +973,7 @@ alias).  The format of each record is as follows:</p>
 <span class="n">Data</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">Version</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">Last</span> <span class="n">Read</span> <span class="n">Time</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">Last</span> <span class="n">Read</span> <span class="n">UID</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">Last</span> <span class="n">Change</span> <span class="n">Time</span><span class="o">&gt;</span><span class="n">SP</span><span class="o">&lt;</span><span class="n">List</span> <span class="n">of</span> <span class="n">Read</span> <span class="n">UIDs</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#flat">flat</a>, <a class="reference internal" href="#skiplist">skiplist</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
+<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#flat">flat</a>, or <a class="reference internal" href="#skiplist">skiplist</a>.</p>
 </div>
 <div class="section" id="subscriptions-userid-sub">
 <span id="imap-concepts-deployment-db-sub"></span><h3>Subscriptions (&lt;userid&gt;.sub)<a class="headerlink" href="#subscriptions-userid-sub" title="Permalink to this headline">¶</a></h3>
@@ -959,7 +983,7 @@ alias).  The format of each record is as follows:</p>
 <span class="n">Data</span><span class="p">:</span> <span class="kc">None</span>
 </pre></div>
 </div>
-<p>File type can be: <a class="reference internal" href="#flat">flat</a> (default), <a class="reference internal" href="#skiplist">skiplist</a>, <a class="reference internal" href="#twoskip">twoskip</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
+<p>File type can be: <a class="reference internal" href="#flat">flat</a> (default), <a class="reference internal" href="#skiplist">skiplist</a>, or <a class="reference internal" href="#twoskip">twoskip</a>.</p>
 </div>
 <div class="section" id="search-index-db-list-userid-xapianactive">
 <span id="imap-concepts-deployment-db-xapianactive"></span><h3>Search Index DB List (&lt;userid&gt;.xapianactive)<a class="headerlink" href="#search-index-db-list-userid-xapianactive" title="Permalink to this headline">¶</a></h3>
@@ -973,7 +997,7 @@ alias).  The format of each record is as follows:</p>
 <span class="n">Data</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">Version</span> <span class="p">(</span><span class="mi">2</span> <span class="nb">bytes</span><span class="p">)</span><span class="o">&gt;&lt;</span><span class="n">Access</span> <span class="n">Key</span> <span class="p">(</span><span class="n">multi</span><span class="o">-</span><span class="n">byte</span><span class="p">)</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default), <a class="reference internal" href="#skiplist">skiplist</a>, or <a class="reference internal" href="#lmdb">lmdb</a>.</p>
+<p>File type can be: <a class="reference internal" href="#twoskip">twoskip</a> (default) or <a class="reference internal" href="#skiplist">skiplist</a>.</p>
 </div>
 <div class="section" id="dav-index-userid-dav">
 <span id="imap-concepts-deployment-db-userdav"></span><h3>DAV Index (&lt;userid&gt;.dav)<a class="headerlink" href="#dav-index-userid-dav" title="Permalink to this headline">¶</a></h3>
@@ -1058,13 +1082,6 @@ Developers interested in the details can find more information at <a class="refe
 data structure. Deprecated in favour of <a class="reference internal" href="#twoskip">Twoskip</a> as it is not robust in
 the face of disk failure.</p>
 </div>
-<div class="section" id="lmdb">
-<h3>lmdb<a class="headerlink" href="#lmdb" title="Permalink to this headline">¶</a></h3>
-<p><a class="reference external" href="http://symas.com/mdb">Lightning Memory-Mapped Database (lmdb)</a> is a
-high-performance transactional key-value store.</p>
-<p>Fast while in memory, but slow when the database is loaded. Best for databases
-that are held open for a long time: <a class="reference internal" href="#mailbox-list-mailboxes-db">Mailbox List (mailboxes.db)</a></p>
-</div>
 <div class="section" id="sql">
 <h3>sql<a class="headerlink" href="#sql" title="Permalink to this headline">¶</a></h3>
 <p>It is possible to store data in a normal relational SQL database. Generally
@@ -1099,7 +1116,7 @@ virtually no lock contention.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on Sep 08 2019
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jan 10 2020
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1119,7 +1136,7 @@ virtually no lock contention.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.0.13 (stable)',
+            VERSION:'3.2.0-beta1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

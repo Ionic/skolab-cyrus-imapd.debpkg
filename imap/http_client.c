@@ -238,35 +238,20 @@ EXPORTED int http_read_headers(struct protstream *pin, int read_sep,
  * Handles close-delimited response bodies (no Content-Length specified)
  * Handles gzip and deflate CE only.
  */
-EXPORTED int http_read_body(struct protstream *pin, struct protstream *pout,
-                            hdrcache_t hdrs, struct body_t *body,
-                            const char **errstr)
+EXPORTED int http_read_body(struct protstream *pin, hdrcache_t hdrs,
+                            struct body_t *body, const char **errstr)
 {
     char buf[PROT_BUFSIZE];
     unsigned n;
     int r = 0;
 
-    syslog(LOG_DEBUG, "read_body(flags=%#x, framing=%d)", body->flags, body->framing);
-
-    if (body->flags & BODY_DONE) return 0;
-    body->flags |= BODY_DONE;
-
-    if ((body->flags & BODY_DISCARD) && (body->flags & BODY_CONTINUE)) {
-        /* Don't care about the body and client hasn't sent it, we're done */
-        return 0;
-    }
+    syslog(LOG_DEBUG, "http_read_body(flags=%#x, framing=%d)",
+           body->flags, body->framing);
 
     if (body->framing == FRAMING_UNKNOWN) {
         /* Get message framing */
         r = http_parse_framing(0, hdrs, body, errstr);
         if (r) return r;
-    }
-
-    if (body->flags & BODY_CONTINUE) {
-        /* Tell client to send the body */
-        prot_printf(pout, "%s %s\r\n\r\n",
-                    HTTP_VERSION, error_message(HTTP_CONTINUE));
-        prot_flush(pout);
     }
 
     /* Read and buffer the body */
@@ -487,11 +472,91 @@ EXPORTED int http_read_response(struct backend *be, unsigned meth,
             body->flags |= BODY_RESPONSE;
             body->framing = FRAMING_UNKNOWN;
 
-            if (http_read_body(be->in, be->out, *hdrs, body, errstr)) {
+            if (http_read_body(be->in, *hdrs, body, errstr)) {
                 return HTTP_BAD_GATEWAY;
             }
         }
     }
 
     return 0;
+}
+
+
+/* Convert a HTTP status to one of our error codes */
+EXPORTED long http_status_to_code(unsigned status)
+{
+    int i, len, n_msgs = et_http_error_table.n_msgs;
+    const char * const *msgs = et_http_error_table.msgs;
+    char buf[100];
+
+    len = snprintf(buf, sizeof(buf), "%u ", status);
+
+    for (i = 0; i < n_msgs; i++) {
+        if (!strncmp(msgs[i], buf, len)) return et_http_error_table.base + i;
+    }
+
+    return HTTP_SERVER_ERROR;
+}
+
+
+EXPORTED int http_parse_auth_params(const char *params,
+                                    const char **realm, unsigned int *realm_len,
+                                    const char **sid, unsigned int *sid_len,
+                                    const char **data, unsigned int *data_len)
+{
+    const char *param = params;
+
+    if (realm) {
+        *realm = NULL;
+        *realm_len = 0;
+    }
+    if (sid) {
+        *sid = NULL;
+        *sid_len = 0;
+    }
+    if (data) {
+        *data = NULL;
+        *data_len = 0;
+    }
+
+    while (param && *param) {
+        size_t tok_len, val_len;
+        const char *value;
+
+        /* Trim leading and trailing BWS */
+        while (strchr(", \t", *param)) param++;
+        tok_len = strcspn(param, "= \t");
+
+        /* Find value */
+        value = strchr(param + tok_len, '=');
+        if (!value) {
+            syslog(LOG_ERR,
+                   "Missing value for '%.*s' parameter in credentials",
+                   (int) tok_len, param);
+            return SASL_BADAUTH;
+        }
+
+        /* Trim leading and trailing BWS */
+        while (strchr(" \t", *++value));
+        val_len = strcspn(value, ", \t");
+
+        /* Check known parameters */
+        if (realm && !strncmp("realm", param, tok_len)) {
+            *realm = value;
+            *realm_len = val_len;
+        }
+        else if (sid && !strncmp("sid", param, tok_len)) {
+            *sid = value;
+            *sid_len = val_len;
+        }
+        else if (data && !strncmp("data", param, tok_len)) {
+            *data = value;
+            *data_len = val_len;
+        }
+
+        /* Find next param */
+        param = strchr(value + val_len, ',');
+    }
+
+    return SASL_OK;
 }

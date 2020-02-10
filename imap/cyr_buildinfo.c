@@ -1,4 +1,4 @@
-/* cyr_buildinfo.c - tool to insepct Cyrus build configuration
+/* cyr_buildinfo.c - tool to inspect Cyrus build configuration
  *
  * Copyright (c) 1994-2016 Carnegie Mellon University.  All rights reserved.
  *
@@ -48,10 +48,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sysexits.h>
 #include <jansson.h>
 
 #include "global.h"
-#include "exitcodes.h"
 #include "proc.h"
 #include "util.h"
 #include "../master/masterconf.h"
@@ -93,11 +93,7 @@ static json_t *buildinfo()
     /* Yikes... */
 
     /* Enabled components */
-#ifdef ENABLE_MBOXEVENT
     json_object_set_new(component, "event_notification", json_true());
-#else
-    json_object_set_new(component, "event_notification", json_false());
-#endif
 #ifdef HAVE_GSSAPI_H
     json_object_set_new(component, "gssapi", json_true());
 #else
@@ -148,6 +144,11 @@ static json_t *buildinfo()
 #else
     json_object_set_new(component, "calalarmd", json_false());
 #endif
+#ifdef WITH_JMAP
+    json_object_set_new(component, "jmap", json_true());
+#else
+    json_object_set_new(component, "jmap", json_false());
+#endif
 #ifdef ENABLE_OBJECTSTORE
     json_object_set_new(component, "objectstore", json_true());
 #else
@@ -157,6 +158,17 @@ static json_t *buildinfo()
     json_object_set_new(component, "backup", json_true());
 #else
     json_object_set_new(component, "backup", json_false());
+#endif
+#if defined(HAVE_UCDSNMP) || defined(HAVE_NETSNMP)
+    json_object_set_new(component, "snmp", json_true());
+#else
+    json_object_set_new(component, "snmp", json_false());
+#endif
+#ifdef CYRUS_TIMEZONES_ZONEINFO_DIR
+    json_object_set_new(component, "default_zoneinfo_dir",
+                        json_string(CYRUS_TIMEZONES_ZONEINFO_DIR));
+#else
+    json_object_set_new(component, "default_zoneinfo_dir", json_null());
 #endif
 
     /* Build dependencies */
@@ -170,6 +182,16 @@ static json_t *buildinfo()
 #else
     json_object_set_new(dependency, "openssl", json_false());
 #endif
+#ifdef HAVE_ZLIB
+    json_object_set_new(dependency, "zlib", json_true());
+#else
+    json_object_set_new(dependency, "zlib", json_false());
+#endif
+#ifdef HAVE_JANSSON
+    json_object_set_new(dependency, "jansson", json_true());
+#else
+    json_object_set_new(dependency, "jansson", json_false());
+#endif
 #if defined(ENABLE_REGEX) && defined(HAVE_PCREPOSIX_H)
     json_object_set_new(dependency, "pcre", json_true());
 #else
@@ -179,6 +201,66 @@ static json_t *buildinfo()
     json_object_set_new(dependency, "clamav", json_true());
 #else
     json_object_set_new(dependency, "clamav", json_false());
+#endif
+#ifdef HAVE_UCDSNMP
+    json_object_set_new(dependency, "ucdsnmp", json_true());
+#else
+    json_object_set_new(dependency, "ucdsnmp", json_false());
+#endif
+#ifdef HAVE_NETSNMP
+    json_object_set_new(dependency, "netsnmp", json_true());
+#else
+    json_object_set_new(dependency, "netsnmp", json_false());
+#endif
+#ifdef WITH_OPENIO
+    json_object_set_new(dependency, "openio", json_true());
+#else
+    json_object_set_new(dependency, "openio", json_false());
+#endif
+#ifdef HAVE_NGHTTP2
+    json_object_set_new(dependency, "nghttp2", json_true());
+#else
+    json_object_set_new(dependency, "nghttp2", json_false());
+#endif
+#ifdef HAVE_WSLAY
+    json_object_set_new(dependency, "wslay", json_true());
+#else
+    json_object_set_new(dependency, "wslay", json_false());
+#endif
+#ifdef HAVE_BROTLI
+    json_object_set_new(dependency, "brotli", json_true());
+#else
+    json_object_set_new(dependency, "brotli", json_false());
+#endif
+#ifdef USE_HTTPD
+    json_object_set_new(dependency, "xml2", json_true());
+#else
+    json_object_set_new(dependency, "xml2", json_false());
+#endif
+#ifdef HAVE_ICAL
+    json_object_set_new(dependency, "ical", json_true());
+#else
+    json_object_set_new(dependency, "ical", json_false());
+#endif
+#ifdef HAVE_ICU
+    json_object_set_new(dependency, "icu4c", json_true());
+#else
+    json_object_set_new(dependency, "icu4c", json_false());
+#endif
+#ifdef HAVE_SHAPELIB
+    json_object_set_new(dependency, "shapelib", json_true());
+#else
+    json_object_set_new(dependency, "shapelib", json_false());
+#endif
+#ifdef HAVE_LIBCHARDET
+    json_object_set_new(dependency, "chardet", json_true());
+#else
+    json_object_set_new(dependency, "chardet", json_false());
+#endif
+#ifdef HAVE_CLD2
+    json_object_set_new(dependency, "cld2", json_true());
+#else
+    json_object_set_new(dependency, "cld2", json_false());
 #endif
 
     /* Enabled databases */
@@ -197,11 +279,6 @@ static json_t *buildinfo()
 #else
     json_object_set_new(database, "sqlite", json_false());
 #endif
-#ifdef HAVE_LMDB
-    json_object_set_new(database, "lmdb", json_true());
-#else
-    json_object_set_new(database, "lmdb", json_false());
-#endif
 
     /* Enabled search engines */
 #ifdef USE_SQUAT
@@ -209,17 +286,12 @@ static json_t *buildinfo()
 #else
     json_object_set_new(search, "squat", json_false());
 #endif
-#ifdef USE_SPHINX
-    json_object_set_new(search, "sphinx", json_true());
-#else
-    json_object_set_new(search, "sphinx", json_false());
-#endif
 #ifdef USE_XAPIAN
     json_object_set_new(search, "xapian", json_true());
 #else
     json_object_set_new(search, "xapian", json_false());
 #endif
-    json_object_set_new(search, "xapian_flavor", json_string(XAPIAN_FLAVOR));
+    json_object_set_new(search, "xapian_cjk_tokens", json_string(XAPIAN_CJK_TOKENS));
 
     /* Supported hardware features */
 #ifdef HAVE_SSE42

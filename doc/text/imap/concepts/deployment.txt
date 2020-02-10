@@ -59,7 +59,8 @@ deployment of Cyrus IMAP.
 
     * News database (fetchnews.db)
 
-    * Search Indexes (cyrus.squat, <userid>.xapianactive)
+    * Search Indexes (cyrus.squat, <userid>.xapianactive,
+      cyrus.indexed.db)
 
     * Zoneinfo db (zoneinfo.db)
 
@@ -84,8 +85,6 @@ deployment of Cyrus IMAP.
     * Twoskip
 
     * Skiplist
-
-    * lmdb
 
     * sql
 
@@ -136,6 +135,8 @@ deployment of Cyrus IMAP.
 * Performance Recommendations
 
   * Databases on Temporary Filesystems
+
+  * Certificates
 
 * Storage Considerations
 

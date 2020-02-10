@@ -80,7 +80,7 @@ installcheck:
 EOT
 }
 
-WriteMakefile( 
+WriteMakefile(
     'NAME'	=> 'Cyrus::IMAP',
     'ABSTRACT'  => 'Cyrus administrative interface',
     'VERSION_FROM' => "../../perl/imap/IMAP.pm", # finds $VERSION
@@ -88,11 +88,12 @@ WriteMakefile(
 		    'IMCLIENT_LIBS' => '',	# hack
 		},
     'clean'	=> {'FILES' => 'libcyrperl.a cyradm'},
+    'LD'       => $Config{ld} . ' ',
     'OBJECT'    => 'IMAP.o',
     'MYEXTLIB'  => '../../perl/.libs/libcyrus.a ../../perl/.libs/libcyrus_min.a',
-    'LIBS'	=> [ "$LIB_SASL -lssl -lcrypto -lssl -lcrypto  -luuid -lz"],
-    'DEFINE'	=> '-DPERL_POLLUTE',    # e.g., '-DHAVE_SOMETHING' 
-    'INC'	=> "-I../.. -I../../com_err/et   -I../../perl/imap", 
+    'LIBS'	=> [ "$LIB_SASL -lssl -lcrypto -lssl -lcrypto  -luuid -lz  "],
+    'DEFINE'	=> '-DPERL_POLLUTE',    # e.g., '-DHAVE_SOMETHING'
+    'INC'	=> "-I../.. -I../../com_err/et    -I../../perl/imap",
     'EXE_FILES' => [cyradm],
     # This is a disgusting hack to effectively disable the stupid
     # behaviour of the generated Makefile which moves itself aside

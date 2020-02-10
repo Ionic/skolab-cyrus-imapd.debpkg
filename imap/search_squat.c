@@ -102,7 +102,8 @@ static const char * const doctypes_by_part[SEARCH_NUM_PARTS] = {
     "h",
     "m",
     "o",
-    "a"
+    "a",
+    "ab"
 };
 
 /* The document name is of the form
@@ -239,7 +240,7 @@ static void opstack_pop(SquatBuilderData *bb)
         parent->valid = 1;
     }
 
-    bv_free(&child->msg_vector);
+    bv_fini(&child->msg_vector);
 
 #if DEBUG
     if (bb->verbose > 1)
@@ -310,8 +311,12 @@ static void match(search_builder_t *bx, int part, const char *str)
     top = opstack_push(bb, /*doesn't matter*/0);
     bb->part_types = doctypes_by_part[part];
 
-    r = squat_search_execute(bb->index, str, strlen(str),
+    charset_t utf8 = charset_lookupname("utf-8");
+    char *mystr = charset_convert(str, utf8, charset_flags);
+    r = squat_search_execute(bb->index, mystr, strlen(mystr),
                              fill_with_hits, bb);
+    free(mystr);
+    charset_free(&utf8);
     if (r != SQUAT_OK) {
         if (squat_get_last_error() == SQUAT_ERR_SEARCH_STRING_TOO_SHORT)
             goto out; /* The rest of the search is still viable */
@@ -444,7 +449,7 @@ static int run(search_builder_t *bx, search_hit_cb_t proc, void *rock)
         if (bv_isset(&bb->stack[0].msg_vector, uid)) {
             r = proc(bb->mailbox->name,
                      bb->mailbox->i.uidvalidity,
-                     uid, rock);
+                     uid, NULL, rock);
             if (r) goto out;
         }
     }
@@ -572,7 +577,6 @@ static int begin_message(search_text_receiver_t *rx,
     message_get_uid(msg, &d->uid);
     d->doc_is_open = 0;
     d->doc_name[0] = '\0';
-    buf_init(&d->pending_text);
 
     d->mailbox_stats.indexed_messages++;
     d->total_stats.indexed_messages++;
@@ -580,7 +584,8 @@ static int begin_message(search_text_receiver_t *rx,
     return 0;
 }
 
-static void begin_part(search_text_receiver_t *rx, int part)
+static void begin_part(search_text_receiver_t *rx, int part,
+                       const struct message_guid *content_guid __attribute__((unused)))
 {
     SquatReceiverData *d = (SquatReceiverData *) rx;
     char part_char = 0;
@@ -964,6 +969,11 @@ out:
     return r;
 }
 
+static int squat_charset_flags(int flags)
+{
+    return flags & ~CHARSET_KEEPCASE;
+}
+
 static search_text_receiver_t *begin_update(int verbose)
 {
     SquatReceiverData *d;
@@ -978,6 +988,7 @@ static search_text_receiver_t *begin_update(int verbose)
     d->super.end_part = end_part;
     d->super.end_message = end_message;
     d->super.end_mailbox = end_mailbox;
+    d->super.index_charset_flags = squat_charset_flags;
 
     d->fd = -1;
     d->verbose = verbose;
@@ -996,7 +1007,7 @@ static int end_update(search_text_receiver_t *rx)
         print_stats("Total", &d->total_stats);
     }
 
-    bv_free(&d->indexed);
+    bv_fini(&d->indexed);
     free(d);
     return 0;
 }
@@ -1012,10 +1023,10 @@ const struct search_engine squat_search_engine = {
     /* end_snippets */NULL,
     /* describe_internalised */NULL,
     /* free_internalised */NULL,
-    /* start_daemon */NULL,
-    /* stop_daemon */NULL,
     /* list_files */NULL,
     /* compact */NULL,
-    /* deluser */NULL
+    /* deluser */NULL,
+    /* check_config */NULL,
+    /* list_lang_stats */NULL
 };
 

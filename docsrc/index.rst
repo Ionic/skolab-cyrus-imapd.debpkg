@@ -1,5 +1,6 @@
 .. _imap-index:
 
+===================
 What is Cyrus IMAP?
 ===================
 
@@ -25,6 +26,7 @@ Features
 * Supports antivirus and antispam toolkits
 * Handles deliverability: SPF, DKIM, DMARC
 * Extensive authentication options, through Cyrus SASL
+* JMAP support
 * Long list of supported standards
 
 Read more in our full :ref:`list of features <imap-features>`.
@@ -50,6 +52,7 @@ Need help? We have :ref:`active mailing lists <feedback-mailing-lists>`.
 
 --------
 
+===================
 What is Cyrus SASL?
 ===================
 Simple Authentication and Security Layer (SASL_) is a specification that describes how authentication mechanisms can be plugged into an application protocol on the wire. Cyrus SASL is an implementation of SASL that makes it easy for application developers to integrate authentication mechanisms into their application in a generic way.

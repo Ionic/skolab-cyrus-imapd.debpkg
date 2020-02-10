@@ -71,11 +71,7 @@ format.
    with any missing changes.
 
 If you are using skiplist for your mailboxes.db then you can just copy
-the file. If you are using a berkeley format then things are trickier
-since there is environmental state. It should be possible to run
-db_recover on both databases, then delete the db folder the
-mailboxes.db from the murder master and copy those from the frontend
-(this has not been tested)
+the file.
 
 
 Hard recovery

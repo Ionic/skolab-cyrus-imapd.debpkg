@@ -82,6 +82,17 @@ It allows you to:
     * Set visibility attributes such as Public or Transparent
     * Delete existing collections
 
+The Cyrus web GUI for CalDAV Collection Management is disabled by
+default, but can be enabled with the "caldav_allowcalendaradmin" option.
+
+.. sidebar:: caldav_allowcalendaradmin
+
+    |change-default-config|
+
+   .. include:: /imap/reference/manpages/configs/imapd.conf.rst
+      :start-after: startblob caldav_allowcalendaradmin
+      :end-before: endblob caldav_allowcalendaradmin
+
 To access the Cyrus web GUI for CalDAV Collection Management, point
 a web browser at ``https://<servername>/dav/calendars/user/<username>``
 
@@ -167,7 +178,8 @@ The tables below show how the access controls are used by the CalDAV module.
         <td>CYRUS:admin</td>
         <td>DAV:read-acl
           <br>DAV:write-acl
-            <br>DAV:unlock</td>
+	  <br>DAV:share
+          <br>DAV:unlock</td>
         <td>ACL
           <br>PROPFIND <small>(DAV:acl property ONLY)</small>
           <br>UNLOCK <small>(ANY lock)</small></td>
@@ -295,6 +307,7 @@ accessed via URLs of the following form:
 ``https://<servername>/freebusy/user/<userid>``.  Querying individual CalDAV
 collections, when they have explicitly "freebusy" ACL (9) set, is done via
 ``https://<servername>/freebusy/user/<userid>/<collection>``.
+
 
 Query parameters can be added to the URL per Section 4 of
 `Freebusy Read URL <http://www.calconnect.org/pubdocs/CD0903%20Freebusy%20Read%20URL.pdf>`_,

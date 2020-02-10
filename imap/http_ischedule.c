@@ -47,6 +47,7 @@
 #include <unistd.h>
 #endif
 #include <errno.h>
+#include <sysexits.h>
 #include <syslog.h>
 
 #include <libical/ical.h>
@@ -116,7 +117,7 @@ static struct mime_type_t isched_mime_types[] = {
 };
 
 struct namespace_t namespace_ischedule = {
-    URL_NS_ISCHEDULE, 0, "/ischedule", ISCHED_WELLKNOWN_URI,
+    URL_NS_ISCHEDULE, 0, "ischedule", "/ischedule", ISCHED_WELLKNOWN_URI,
     http_allow_noauth, /*authschemes*/0,
     /*mbtype*/0,
     (ALLOW_READ | ALLOW_POST | ALLOW_ISCHEDULE),
@@ -124,6 +125,7 @@ struct namespace_t namespace_ischedule = {
     {
         { NULL,                 NULL }, /* ACL          */
         { NULL,                 NULL }, /* BIND         */
+        { NULL,                 NULL }, /* CONNECT      */
         { NULL,                 NULL }, /* COPY         */
         { NULL,                 NULL }, /* DELETE       */
         { &meth_get_isched,     NULL }, /* GET          */
@@ -146,7 +148,7 @@ struct namespace_t namespace_ischedule = {
 };
 
 struct namespace_t namespace_domainkey = {
-    URL_NS_DOMAINKEY, 0, "/domainkeys", "/.well-known/domainkey",
+    URL_NS_DOMAINKEY, 0, "domainkey", "/domainkeys", "/.well-known/domainkey",
     http_allow_noauth, /*authschemes*/0,
     /*mbtype*/0,
     ALLOW_READ,
@@ -154,6 +156,7 @@ struct namespace_t namespace_domainkey = {
     {
         { NULL,                 NULL }, /* ACL          */
         { NULL,                 NULL }, /* BIND         */
+        { NULL,                 NULL }, /* CONNECT      */
         { NULL,                 NULL }, /* COPY         */
         { NULL,                 NULL }, /* DELETE       */
         { &meth_get_domainkey,  NULL }, /* GET          */
@@ -293,7 +296,6 @@ static int meth_get_isched(struct transaction_t *txn,
         meth = xmlNewChild(comp, NULL, BAD_CAST "method", NULL);
         xmlNewProp(meth, BAD_CAST "name", BAD_CAST "CANCEL");
 
-#ifdef HAVE_VPOLL
         comp = xmlNewChild(node, NULL, BAD_CAST "component", NULL);
         xmlNewProp(comp, BAD_CAST "name", BAD_CAST "VPOLL");
         meth = xmlNewChild(comp, NULL, BAD_CAST "method", NULL);
@@ -304,7 +306,6 @@ static int meth_get_isched(struct transaction_t *txn,
         xmlNewProp(meth, BAD_CAST "name", BAD_CAST "REPLY");
         meth = xmlNewChild(comp, NULL, BAD_CAST "method", NULL);
         xmlNewProp(meth, BAD_CAST "name", BAD_CAST "CANCEL");
-#endif /* HAVE_VPOLL */
 
         comp = xmlNewChild(node, NULL, BAD_CAST "component", NULL);
         xmlNewProp(comp, BAD_CAST "name", BAD_CAST "VFREEBUSY");
@@ -448,8 +449,7 @@ static int meth_post_isched(struct transaction_t *txn,
 
     /* Read body */
     txn->req_body.flags |= BODY_DECODE;
-    r = http_read_body(httpd_in, httpd_out,
-                       txn->req_hdrs, &txn->req_body, &txn->error.desc);
+    r = http_read_req_body(txn);
     if (r) {
         txn->flags.conn = CONN_CLOSE;
         return r;
@@ -468,7 +468,8 @@ static int meth_post_isched(struct transaction_t *txn,
         authd = 1;
     }
     else if (!spool_getheader(txn->req_hdrs, "DKIM-Signature")) {
-        txn->error.desc = "No signature";
+        if (!config_getswitch(IMAPOPT_ISCHEDULE_DKIM_REQUIRED)) authd = 1;
+        else txn->error.desc = "No signature";
     }
     else {
         authd = dkim_auth(txn);
@@ -532,7 +533,7 @@ static int meth_post_isched(struct transaction_t *txn,
         case ICAL_METHOD_CANCEL: {
             struct sched_data sched_data =
                 { 1, meth == ICAL_METHOD_REPLY, 0,
-                  ical, ICAL_SCHEDULEFORCESEND_NONE, NULL };
+                  ical, NULL, NULL, ICAL_SCHEDULEFORCESEND_NONE, NULL, NULL };
             xmlNodePtr root = NULL;
             xmlNsPtr ns[NUM_NAMESPACE];
             struct auth_state *authstate;
@@ -557,13 +558,14 @@ static int meth_post_isched(struct transaction_t *txn,
                 while ((recipient = tok_next(&tok))) {
                     /* Is recipient remote or local? */
                     struct caldav_sched_param sparam;
-                    int r = caladdress_lookup(recipient, &sparam, /*myuserid*/NULL);
+                    int r = caladdress_lookup(recipient, &sparam, /*schedule_addresses*/NULL);
 
                     /* Don't allow scheduling with remote users via iSchedule */
                     if (sparam.flags & SCHEDTYPE_REMOTE) r = HTTP_FORBIDDEN;
+                    sched_param_fini(&sparam);
 
                     if (r) sched_data.status = REQSTAT_NOUSER;
-                    else sched_deliver(recipient, &sched_data, authstate);
+                    else sched_deliver(httpd_userid, recipient, &sched_data, authstate);
 
                     xml_add_schedresponse(root, NULL, BAD_CAST recipient,
                                           BAD_CAST sched_data.status);
@@ -614,6 +616,7 @@ int isched_send(struct caldav_sched_param *sparam, const char *recipient,
     icalproperty *prop;
     unsigned code;
     struct transaction_t txn;
+    struct http_connection conn;
 
     *xml = NULL;
     memset(&txn, 0, sizeof(struct transaction_t));
@@ -633,6 +636,11 @@ int isched_send(struct caldav_sched_param *sparam, const char *recipient,
     be = proxy_findserver(buf_cstring(&txn.buf), &http_protocol, httpd_userid,
                           &backend_cached, NULL, NULL, httpd_in);
     if (!be) return HTTP_UNAVAILABLE;
+
+    /* Setup HTTP connection for reading response */
+    memset(&conn, 0, sizeof(struct http_connection));
+    conn.pin = be->in;
+    txn.conn = &conn;
 
     /* Create iSchedule request body */
     body = icalcomponent_as_ical_string(ical);
@@ -696,6 +704,9 @@ int isched_send(struct caldav_sched_param *sparam, const char *recipient,
         buf_printf(&hdrs, "\r\n");
     }
 
+    /* Don't send body until told to */
+    buf_appendcstr(&hdrs, "Expect: 100-continue\r\n");
+
     if (sparam->flags & SCHEDTYPE_REMOTE) {
 #ifdef WITH_DKIM
         DKIM *dkim = NULL;
@@ -750,11 +761,11 @@ int isched_send(struct caldav_sched_param *sparam, const char *recipient,
     /* Send request line */
     prot_printf(be->out, "POST %s %s\r\n", uri, HTTP_VERSION);
 
-    /* Send request headers and body */
+    /* Send request headers */
     prot_putbuf(be->out, &hdrs);
     prot_puts(be->out, "\r\n");
-    prot_write(be->out, body, bodylen);
 
+  response:
     /* Read response (req_hdr and req_body are actually the response) */
     txn.req_body.flags = BODY_DECODE;
     r = http_read_response(be, METH_POST, &code,
@@ -764,8 +775,25 @@ int isched_send(struct caldav_sched_param *sparam, const char *recipient,
 
     if (!r) {
         switch (code) {
+        case 100:  /* Continue */
+            /* Send request body (only ONCE for a given request) */
+            prot_write(be->out, body, bodylen);
+            bodylen = 0;
+
+            GCC_FALLTHROUGH
+            
+        case 102:
+        case 103:  /* Provisional */
+            goto response;
+
         case 200:  /* Successful */
+            /* Create XML parser context */
+            if (!(conn.xml = xmlNewParserCtxt())) {
+                fatal("Unable to create XML parser", EX_TEMPFAIL);
+            }
+
             r = parse_xml_body(&txn, xml, NULL);
+            xmlFreeParserCtxt(conn.xml);
             break;
 
         case 301:
@@ -783,6 +811,8 @@ int isched_send(struct caldav_sched_param *sparam, const char *recipient,
                     break;
                 }
             }
+
+            if (!bodylen) bodylen = strlen(body);  /* Need to send body again */
             goto redirect;
 
         default:
@@ -870,7 +900,8 @@ static DKIM_CBSTAT isched_get_key(DKIM *dkim, DKIM_SIGINFO *sig,
 }
 
 
-static void dkim_cachehdr(const char *name, const char *contents, void *rock)
+static void dkim_cachehdr(const char *name, const char *contents,
+                          const char *raw __attribute__((unused)), void *rock)
 {
     struct buf *hdrfield = &tmpbuf;
     static const char *lastname = NULL;
@@ -979,6 +1010,8 @@ static int dkim_auth(struct transaction_t *txn)
 #else
 static int dkim_auth(struct transaction_t *txn __attribute__((unused)))
 {
+    if (!config_getswitch(IMAPOPT_ISCHEDULE_DKIM_REQUIRED)) return 1;
+
     syslog(LOG_WARNING, "DKIM-Signature provided, but DKIM isn't supported");
 
     return 0;
@@ -1067,12 +1100,12 @@ static void isched_init(struct buf *serverinfo)
         namespace_ischedule.enabled = -1;
         buf_cstring(serverinfo);  // squash compiler warning when #undef WITH_DKIM
     }
-#ifdef WITH_DKIM
     else {
         namespace_ischedule.enabled =
             config_httpmodules & IMAP_ENUM_HTTPMODULES_ISCHEDULE;
     }
 
+#ifdef WITH_DKIM
     /* Add OpenDKIM version to serverinfo string */
     uint32_t ver = dkim_libversion();
     buf_printf(serverinfo, " OpenDKIM/%u.%u.%u",

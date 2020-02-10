@@ -306,7 +306,7 @@ until you're able to finish your 3.0 installation.
 
 .. warning::
 
-    Versions of 3.0 prior to 3.0.11 contained a bug (:issue:`2389`) that
+    Versions of 3.0 prior to 3.0.11 contained a bug (:issue:`2839`) that
     could lead to loss of seen state/flags during `reconstruct` for some
     messages that already existed prior to Cyrus 2.3.  The :ref:`3.0.11
     release notes <relnotes-3.0.11-changes>` contain the specifics.
@@ -322,7 +322,8 @@ To upgrade all the mailboxes to the latest version. This will take hours, possib
 
     reconstruct -V max
 
-New configuration: if turning on conversations, you need to create conversations.db for each user.::
+New configuration: if turning on conversations, you need to create conversations.db for each user.
+(This is required for jmap).::
 
      ctl_conversationsdb -b -r
 
@@ -342,6 +343,7 @@ databases need to be reconstructed due to format changes.::
 Here are some which may interest you. Check the :ref:`3.0 release notes <imap-release-notes-3.0>`
 for the full list.
 
+* :ref:`JMAP <developer-jmap>`
 * :ref:`Backups <cyrus-backups>`
 * :ref:`Xapian for searching <imapinstall-xapian>`
 * Cross-domain support. See ``crossdomains`` in :cyrusman:`imapd.conf(5)`

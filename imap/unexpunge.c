@@ -50,11 +50,11 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <signal.h>
 
 #include "annotate.h"
-#include "exitcodes.h"
 #include "global.h"
 #include "index.h"
 #include "libcyr_cfg.h"
@@ -121,7 +121,7 @@ static void list_expunged(const char *mboxname)
     while ((msg = mailbox_iter_step(iter))) {
         const struct index_record *record = msg_record(msg);
         /* still active */
-        if (!(record->system_flags & FLAG_EXPUNGED))
+        if (!(record->internal_flags & FLAG_INTERNAL_EXPUNGED))
             continue;
 
         /* pre-allocate more space */
@@ -186,7 +186,7 @@ static int restore_expunged(struct mailbox *mailbox, int mode, unsigned long *ui
     while ((msg = mailbox_iter_step(iter))) {
         const struct index_record *record = msg_record(msg);
         /* still active */
-        if (!(record->system_flags & FLAG_EXPUNGED))
+        if (!(record->internal_flags & FLAG_INTERNAL_EXPUNGED))
             continue;
 
         if (mode == MODE_UID) {
@@ -213,7 +213,7 @@ static int restore_expunged(struct mailbox *mailbox, int mode, unsigned long *ui
 
         /* bump the UID, strip the flags */
         newrecord.uid = mailbox->i.last_uid + 1;
-        newrecord.system_flags &= ~FLAG_EXPUNGED;
+        newrecord.internal_flags &= ~FLAG_INTERNAL_EXPUNGED;
         if (unsetdeleted)
             newrecord.system_flags &= ~FLAG_DELETED;
 
@@ -252,7 +252,8 @@ static int restore_expunged(struct mailbox *mailbox, int mode, unsigned long *ui
 
         /* mark the old one unlinked so we don't see it again */
         struct index_record oldrecord = *record;
-        oldrecord.system_flags |= FLAG_UNLINKED | FLAG_NEEDS_CLEANUP;
+        oldrecord.internal_flags |= FLAG_INTERNAL_UNLINKED |
+            FLAG_INTERNAL_NEEDS_CLEANUP;
         r = mailbox_rewrite_index_record(mailbox, &oldrecord);
         if (r) break;
 
@@ -353,23 +354,17 @@ int main(int argc, char *argv[])
 
     cyrus_init(alt_config, "unexpunge", 0, 0);
 
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-
-    quotadb_init(0);
-    quotadb_open(NULL);
-
     sync_log_init();
 
     if (addflag && addflag[0] == '\\') {
         syslog(LOG_ERR, "can't set a system flag");
-        fatal("can't set a system flag", EC_SOFTWARE);
+        fatal("can't set a system flag", EX_SOFTWARE);
     }
 
     /* Set namespace -- force standard (internal) */
     if ((r = mboxname_init_namespace(&unex_namespace, 1)) != 0) {
         syslog(LOG_ERR, "%s", error_message(r));
-        fatal(error_message(r), EC_CONFIG);
+        fatal(error_message(r), EX_CONFIG);
     }
 
     /* Translate mailboxname */
@@ -421,12 +416,6 @@ done:
     free(intname);
     free(extname);
     sync_log_done();
-
-    quotadb_close();
-    quotadb_done();
-
-    mboxlist_close();
-    mboxlist_done();
 
     cyrus_done();
 

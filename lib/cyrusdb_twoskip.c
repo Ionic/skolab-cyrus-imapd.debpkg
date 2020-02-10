@@ -293,6 +293,10 @@
 #define DELETE '-'
 #define COMMIT '$'
 
+/* magic 8-byte pad - space for type, easy to read on hexdump
+ * and with both low and high bits to be unlikely in real data */
+#define BLANK " BLANK\x07\xa0"
+
 /********** DATA STRUCTURES *************/
 
 /* A single "record" in the twoskip file.  This could be a
@@ -356,18 +360,13 @@ struct skiploc {
     size_t end;
 };
 
-enum {
-    UNLOCKED = 0,
-    READLOCKED = 1,
-    WRITELOCKED = 2,
-};
-
 #define DIRTY (1<<0)
 
 struct txn {
     /* logstart is where we start changes from on commit, where we truncate
        to on abort */
     int num;
+    int shared;
 };
 
 struct db_header {
@@ -422,6 +421,9 @@ enum {
 #define HEADER_SIZE 64
 #define DUMMY_OFFSET HEADER_SIZE
 #define MAXRECORDHEAD ((MAXLEVEL + 5)*8)
+// NOTE: MAXLEVEL should be chosen so that MAXRECORDHEAD always
+// fits within BLOCKSIZE so header rewrites are atomic.
+#define BLOCKSIZE 512
 
 /* mount a scratch monkey */
 static union skipwritebuf {
@@ -732,6 +734,36 @@ static int rewrite_record(struct dbengine *db, struct skiprecord *record)
     return 0;
 }
 
+/* Add BLANK padding sets of 8 bytes until the entire header will write
+ * in a single disk block for safety.
+ * This ONLY works if the header is small enough obviously (should always be)
+ * the algorithm checks if the end % BLOCKSIZE is smaller than the start % BLOCKSIZE
+ * in which case we've wrapped a block */
+static int add_padding(struct dbengine *db, size_t iolen) {
+    // if it will always span a block, there's no point padding (and besides the
+    // algorithm won't work)
+    if (iolen > BLOCKSIZE - 8) return 0;
+
+    // start with 8 byte offset, because the first 8 bytes never get rewritten
+    // and end with 8 before, because if it fits exactly that's OK too
+    // consider 480 bytes in, 32 bytes to write
+    // 480+8 == 488, 480 - 8 + 32 == 504, so no padding
+    // consider 488 bytes in:
+    // 488+8 == 496, 488 - 8 + 32 == 512 -> 0 so we pad
+    // 496+8 == 504 to 8, so we pad again
+    // 504+8 == 512 -> 0, so we don't pad any more!
+    // we write the new record from 504 onwards, with the header line before the
+    // block boundary, maximising use of space!
+
+    while (((db->end + 8) % BLOCKSIZE) > ((db->end - 8 + iolen) % BLOCKSIZE)) {
+        int n = mappedfile_pwrite(db->mf, BLANK, 8, db->end);
+        if (n < 0) return CYRUSDB_IOERROR;
+        db->end += 8;
+    }
+
+    return 0;
+}
+
 /* you can only write records at the end */
 static int write_record(struct dbengine *db, struct skiprecord *record,
                         const char *key, const char *val)
@@ -741,6 +773,7 @@ static int write_record(struct dbengine *db, struct skiprecord *record,
     size_t iolen = 0;
     struct iovec io[4];
     int n;
+    int r;
 
     assert(!record->offset);
 
@@ -766,6 +799,10 @@ static int write_record(struct dbengine *db, struct skiprecord *record,
     prepare_record(record, scratchspace.s, &iolen);
     io[0].iov_base = scratchspace.s;
     io[0].iov_len = iolen;
+
+    /* ensure that the record header be contained within a single disk block */
+    r = add_padding(db, iolen);
+    if (r) return r;
 
     /* write to the mapped file, getting the offset updated */
     n = mappedfile_pwritev(db->mf, io, 4, db->end);
@@ -1232,24 +1269,27 @@ static int read_lock(struct dbengine *db)
     return 0;
 }
 
-static int newtxn(struct dbengine *db, struct txn **tidptr)
+static int newtxn(struct dbengine *db, int shared, struct txn **tidptr)
 {
     int r;
 
     assert(!db->current_txn);
     assert(!*tidptr);
 
-    /* grab a r/w lock */
-    r = write_lock(db);
+    /* grab a lock */
+    r = shared ? read_lock(db) : write_lock(db);
     if (r) return r;
 
-    /* create the transaction */
     db->txn_num++;
-    db->current_txn = xmalloc(sizeof(struct txn));
-    db->current_txn->num = db->txn_num;
+
+    /* create the transaction */
+    struct txn *txn = xzmalloc(sizeof(struct txn));
+    txn->num = db->txn_num;
+    txn->shared = shared;
+    db->current_txn = txn;
 
     /* pass it back out */
-    *tidptr = db->current_txn;
+    *tidptr = txn;
 
     return 0;
 }
@@ -1367,7 +1407,7 @@ static int opendb(const char *fname, int flags, struct dbengine **ret, struct tx
     *ret = db;
 
     if (mytid) {
-        r = newtxn(db, mytid);
+        r = newtxn(db, flags & CYRUSDB_SHARED, mytid);
         if (r) goto done;
     }
 
@@ -1385,10 +1425,16 @@ static int myopen(const char *fname, int flags, struct dbengine **ret, struct tx
     /* do we already have this DB open? */
     for (ent = open_twoskip; ent; ent = ent->next) {
         if (strcmp(FNAME(ent->db), fname)) continue;
-        if (ent->db->current_txn)
+        if (ent->db->current_txn) {
+            /* XXX we could gracefully handle attempts to open
+             * a shared-lock database multiple times.e.g by
+             * ref-counting transactions. But it's likely that
+             * multiple open attempts are a bug in the caller's
+             * logic, so error out here */
             return CYRUSDB_LOCKED;
+        }
         if (mytid) {
-            r = newtxn(ent->db, mytid);
+            r = newtxn(ent->db, flags & CYRUSDB_SHARED, mytid);
             if (r) return r;
         }
         ent->refcount++;
@@ -1464,7 +1510,7 @@ static int myfetch(struct dbengine *db,
 
     if (tidptr) {
         if (!*tidptr) {
-            r = newtxn(db, tidptr);
+            r = newtxn(db, 0/*shared*/, tidptr);
             if (r) return r;
         }
     } else {
@@ -1505,7 +1551,7 @@ done:
     return r;
 }
 
-/* foreach allows for subsidary mailbox operations in 'cb'.
+/* foreach allows for subsidiary mailbox operations in 'cb'.
    if there is a txn, 'cb' must make use of it.
 */
 static int myforeach(struct dbengine *db,
@@ -1534,7 +1580,7 @@ static int myforeach(struct dbengine *db,
         tidptr = &db->current_txn;
     if (tidptr) {
         if (!*tidptr) {
-            r = newtxn(db, tidptr);
+            r = newtxn(db, 0/*shared*/, tidptr);
             if (r) return r;
         }
     } else {
@@ -1676,9 +1722,13 @@ static int mycommit(struct dbengine *db, struct txn *tid)
     assert(db);
     assert(tid == db->current_txn);
 
-    /* no need to abort if we're not dirty */
+    /* no need to commit if we're not dirty */
     if (!(db->header.flags & DIRTY))
         goto done;
+
+    assert(db->current_txn);
+
+    if (db->current_txn->shared) goto done;
 
     /* build a commit record */
     memset(&newrecord, 0, sizeof(struct skiprecord));
@@ -1711,7 +1761,8 @@ static int mycommit(struct dbengine *db, struct txn *tid)
         }
     }
     else {
-        if (!(db->open_flags & CYRUSDB_NOCOMPACT)
+        if (db->current_txn && !db->current_txn->shared
+            && !(db->open_flags & CYRUSDB_NOCOMPACT)
             && db->header.current_size > MINREWRITE
             && db->header.current_size > 2 * db->header.repack_size) {
             int r2 = mycheckpoint(db);
@@ -1766,13 +1817,17 @@ static int mystore(struct dbengine *db,
     assert(db);
     assert(key && keylen);
 
+    /* reject store for shared locks */
+    if (tidptr && *tidptr && (*tidptr)->shared)
+        return CYRUSDB_READONLY;
+
     /* not keeping the transaction, just create one local to
      * this function */
     if (!tidptr) tidptr = &localtid;
 
     /* make sure we're write locked and up to date */
     if (!*tidptr) {
-        r = newtxn(db, tidptr);
+        r = newtxn(db, 0/*shared*/, tidptr);
         if (r) return r;
     }
 
@@ -1851,11 +1906,13 @@ static int mycheckpoint(struct dbengine *db)
     r = mycommit(cr.db, cr.tid);
     if (r) goto err;
 
+    cr.tid = NULL;  /* avoid later errors trying to call abort, it's too late! */
+
     /* move new file to original file name */
     r = mappedfile_rename(cr.db->mf, FNAME(db));
     if (r) goto err;
 
-    /* OK, we're commmitted now - clean up */
+    /* OK, we're committed now - clean up */
     unlock(db);
 
     /* gotta clean it all up */
@@ -1890,7 +1947,7 @@ static int mycheckpoint(struct dbengine *db)
    if detail == 2, also dump pointers for active records.
    if detail == 3, dump all records/all pointers.
 */
-static int dump(struct dbengine *db, int detail __attribute__((unused)))
+static int dump(struct dbengine *db, int detail)
 {
     struct skiprecord record;
     struct buf scratch = BUF_INITIALIZER;
@@ -1907,6 +1964,13 @@ static int dump(struct dbengine *db, int detail __attribute__((unused)))
 
     while (offset < db->header.current_size) {
         printf("%08llX ", (LLU)offset);
+
+        // skip over blanks
+        if (!memcmp(BASE(db) + offset, BLANK, 8)) {
+            printf("BLANK\n");
+            offset += 8;
+            continue;
+        }
 
         r = read_onerecord(db, offset, &record);
 
@@ -1939,6 +2003,11 @@ static int dump(struct dbengine *db, int detail __attribute__((unused)))
                     printf("\n\t");
             }
             printf("\n");
+            if (detail > 2) {
+                buf_setmap(&scratch, VAL(db, &record), record.vallen);
+                buf_replace_char(&scratch, '\0', '-');
+                printf("\tv=(%s)\n", buf_cstring(&scratch));
+            }
             break;
         }
 
@@ -2045,28 +2114,37 @@ static int _copy_commit(struct dbengine *db, struct dbengine *newdb,
 {
     struct txn *tid = NULL;
     struct skiprecord record;
-    const char *val;
     size_t offset;
     int r = 0;
 
     for (offset = commit->nextloc[0]; offset < commit->offset; offset += record.len) {
+        // skip over blanks
+        if (!memcmp(BASE(db) + offset, BLANK, 8)) {
+            record.len = 8;
+            continue;
+        }
+
         r = read_onerecord(db, offset, &record);
         if (r) goto err;
+
         switch (record.type) {
         case DELETE:
-            val = NULL;
+            /* find the record we are deleting */
+            r = read_onerecord(db, record.nextloc[0], &record);
+            if (r) goto err;
+            /* and delete it from the new DB */
+            r = mystore(newdb, KEY(db, &record), record.keylen, NULL, 0, &tid, 1);
+            if (r) goto err;
             break;
         case RECORD:
-            val = VAL(db, &record);
+            /* store into the new DB */
+            r = mystore(newdb, KEY(db, &record), record.keylen, VAL(db, &record), record.vallen, &tid, 1);
+            if (r) goto err;
             break;
         default:
             r = CYRUSDB_IOERROR;
             goto err;
         }
-
-        /* store into the new DB */
-        r = mystore(newdb, KEY(db, &record), record.keylen, val, record.vallen, &tid, 1);
-        if (r) goto err;
     }
 
     if (tid) r = mycommit(newdb, tid);
@@ -2102,20 +2180,32 @@ static int recovery2(struct dbengine *db, int *count)
     newdb->header.generation = db->header.generation + 1;
 
     /* start with the dummy */
+    int dirty = 0;
     for (offset = DUMMY_OFFSET; offset < SIZE(db); offset += record.len) {
+        // skip over blanks
+        if (!memcmp(BASE(db) + offset, BLANK, 8)) {
+            record.len = 8;
+            continue;
+        }
+        // if this record fails to read, keep looking ahead for a commit,
+        // and mark this entire transaction as dirty
         r = read_onerecord(db, offset, &record);
         if (r) {
-            syslog(LOG_ERR, "DBERROR: %s failed to read at %08llX in recovery2, truncating",
+            dirty++;
+            syslog(LOG_ERR, "DBERROR: %s failed to read at %08llX in recovery2, continuing",
                    FNAME(db), (LLU)offset);
-            break;
+            record.len = 8;
+            continue;
         }
         if (record.type == COMMIT) {
-            r = _copy_commit(db, newdb, &record);
-            if (r) {
-                syslog(LOG_ERR, "DBERROR: %s failed to apply commit at %08llX in recovery2, truncating",
-                      FNAME(db), (LLU)offset);
-                break;
+            if (!dirty) {
+                r = _copy_commit(db, newdb, &record);
+                if (r) {
+                    syslog(LOG_ERR, "DBERROR: %s failed to apply commit at %08llX in recovery2, continuing",
+                           FNAME(db), (LLU)offset);
+                }
             }
+            dirty = 0;
         }
     }
 
@@ -2135,7 +2225,7 @@ static int recovery2(struct dbengine *db, int *count)
     r = mappedfile_rename(newdb->mf, FNAME(db));
     if (r) goto err;
 
-    /* OK, we're commmitted now - clean up */
+    /* OK, we're committed now - clean up */
     unlock(db);
 
     /* gotta clean it all up */
@@ -2174,11 +2264,11 @@ static int recovery1(struct dbengine *db, int *count)
     int cmp;
     int i;
 
-    assert(mappedfile_iswritelocked(db->mf));
-
     /* no need to run recovery if we're consistent */
     if (db_is_clean(db))
         return 0;
+
+    assert(mappedfile_iswritelocked(db->mf));
 
     /* we can't recovery a file that's not created yet */
     assert(db->header.current_size > HEADER_SIZE);
@@ -2215,7 +2305,7 @@ static int recovery1(struct dbengine *db, int *count)
         r = read_onerecord(db, nextoffset, &record);
         if (r) return r;
 
-        /* just skip over delele records */
+        /* just skip over delete records */
         if (record.type == DELETE) {
             nextoffset = record.nextloc[0];
             continue;

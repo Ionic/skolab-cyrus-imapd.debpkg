@@ -50,11 +50,11 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <signal.h>
 
 #include "global.h"
-#include "exitcodes.h"
 #include "libcyr_cfg.h"
 #include "proc.h"
 #include "userdeny.h"
@@ -70,7 +70,7 @@ static void usage(void)
     fprintf(stderr, "Usage: cyr_deny [-C <altconfig>] [ -s services ] [ -m message ] user\n");
     fprintf(stderr, "       cyr_deny [-C <altconfig>] -a user\n");
     fprintf(stderr, "       cyr_deny [-C <altconfig>] -l\n");
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 static int list_one(const char *user, const char *services,

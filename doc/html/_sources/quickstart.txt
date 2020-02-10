@@ -1,5 +1,3 @@
-:orphan:
-
 ================
 Quickstart Guide
 ================
@@ -9,12 +7,8 @@ Quickstart Guide
 
     imap/quickstart/introduction
 
-Coming Soon
-===========
-
-.. note::
-
-    The deb packages referenced below are not yet available.  Sorry!
+.. Coming Soon
+.. -----------
 
 Quick install
 =============
@@ -195,6 +189,7 @@ Cyrus Server configured components
     * replication        : yes
     * sieve              : yes
     * calalarmd          : no
+    * jmap               : yes
     * objectstore        : no
     * backup             : no
 
@@ -218,11 +213,9 @@ Database support
     * mysql             : no
     * postgresql        : no
     * sqlite            : yes
-    * lmdb              : no
 
 Search engine
     * squat             : yes
-    * sphinx            : no
     * xapian            : yes
     * xapian_flavor     : vanilla
 

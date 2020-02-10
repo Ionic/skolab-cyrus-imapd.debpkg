@@ -46,6 +46,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <sys/statvfs.h>
 #include <sys/types.h>
@@ -63,7 +64,7 @@
 #include "acl.h"
 #include "assert.h"
 #include "charset.h"
-#include "exitcodes.h"
+#include "cyr_lock.h"
 #include "gmtoff.h"
 #include "iptostring.h"
 #include "global.h"
@@ -76,9 +77,11 @@
 #include "userdeny.h"
 #include "util.h"
 #include "xmalloc.h"
+#include "xstrlcat.h"
 #include "xstrlcpy.h"
 
 /* generated headers are not necessarily in current directory */
+#include "imap/http_err.h"
 #include "imap/imap_err.h"
 #include "imap/mupdate_err.h"
 
@@ -153,6 +156,30 @@ static int get_facility(const char *name)
     return SYSLOG_FACILITY;
 }
 
+struct cyrus_module {
+    void (*done)(void *rock);
+    void *rock;
+};
+
+static ptrarray_t cyrus_modules = PTRARRAY_INITIALIZER;
+
+EXPORTED void cyrus_modules_add(void (*done)(void*), void *rock)
+{
+    struct cyrus_module *cm = xmalloc(sizeof(struct cyrus_module));
+    cm->done = done;
+    cm->rock = rock;
+    ptrarray_append(&cyrus_modules, cm);
+}
+
+static void cyrus_modules_done()
+{
+    struct cyrus_module *cm;
+    while ((cm = ptrarray_pop(&cyrus_modules))) {
+        cm->done(cm->rock);
+        free(cm);
+    }
+}
+
 /* Called before a cyrus application starts (but after command line parameters
  * are read) */
 EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flags, int config_need_data)
@@ -163,9 +190,10 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
     int umaskval = 0;
     int syslog_opts = LOG_PID;
     const char *facility;
+    char *ident_buf = NULL;
 
-    if(cyrus_init_run != NOT_RUNNING) {
-        fatal("cyrus_init called twice!", EC_CONFIG);
+    if (cyrus_init_run != NOT_RUNNING) {
+        fatal("cyrus_init called twice!", EX_CONFIG);
     } else {
         cyrus_init_run = RUNNING;
     }
@@ -176,45 +204,64 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
         syslog_opts |= LOG_PERROR;
 #endif
 
+    initialize_http_error_table();
     initialize_imap_error_table();
     initialize_mupd_error_table();
 
-    if(!ident)
-        fatal("service name was not specified to cyrus_init", EC_CONFIG);
+    /* various things can run our commands with only two file descriptors, e.g. old strace on FreeBSD,
+     * or IPC::Run from Perl.  Make sure we don't accidentally reuse low FD numbers */
+    while (1) {
+        int fd = open("/dev/null", 0);
+        if (fd == -1) fatal("can't open /dev/null", EX_SOFTWARE);
+        if (fd >= 3) {
+            close(fd);
+            break;
+        }
+    }
+
+    if (!ident)
+        fatal("service name was not specified to cyrus_init", EX_SOFTWARE);
 
     config_ident = ident;
 
-    /* xxx we lose here since we can't have the prefix until we load the
-     * config file */
-    openlog(config_ident, syslog_opts, SYSLOG_FACILITY);
+    /* If we have the syslog prefix in the environment, set it before reading
+     * config, so that config read failures get logged with the right prefix!
+     */
+    if ((prefix = getenv("CYRUS_SYSLOG_PREFIX"))) {
+        ident_buf = strconcat(prefix, "/", ident, NULL);
+        openlog(ident_buf, syslog_opts, SYSLOG_FACILITY);
+    }
+    else {
+        openlog(config_ident, syslog_opts, SYSLOG_FACILITY);
+    }
 
     /* Load configuration file.  This will set config_dir when it finds it */
     config_read(alt_config, config_need_data);
 
     /* changed user if needed */
     if ((geteuid()) == 0 && (become_cyrus(/*is_master*/0) != 0)) {
-        fatal("must run as the Cyrus user", EC_USAGE);
+        fatal("must run as the Cyrus user", EX_USAGE);
     }
 
-
+    /* Now that we have config loaded, we might need to openlog again with
+     * the configured facility and/or prefix. */
     prefix = config_getstring(IMAPOPT_SYSLOG_PREFIX);
     facility = config_getstring(IMAPOPT_SYSLOG_FACILITY);
-
-    /* Reopen the log with the new prefix, if needed  */
     if (prefix || facility) {
-        char *ident_buf;
         int facnum = facility ? get_facility(facility) : SYSLOG_FACILITY;
 
-        if (prefix)
-            ident_buf = strconcat(prefix, "/", ident, (char *)NULL);
-        else
-            ident_buf = xstrdup(ident);
+        /* The $CYRUS_SYSLOG_PREFIX environment variable takes precedence */
+        if (!ident_buf) {
+            if (prefix)
+                ident_buf = strconcat(prefix, "/", ident, NULL);
+            else
+                ident_buf = xstrdup(ident);
+        }
 
         closelog();
         openlog(ident_buf, syslog_opts, facnum);
-
-        /* don't free the openlog() string! */
     }
+    /* Do not free ident_buf, syslog needs it for the life of this process! */
 
     /* allow debug logging */
     if (!config_debug)
@@ -225,7 +272,7 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
     for (p = (char *)config_defpartition; p && *p; p++) {
         if (!Uisalnum(*p))
           fatal("defaultpartition option contains non-alphanumeric character",
-                EC_CONFIG);
+                EX_CONFIG);
         if (Uisupper(*p)) *p = tolower((unsigned char) *p);
     }
 
@@ -270,7 +317,7 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
         charset_flags |= CHARSET_MIME_UTF8;
 
     /* Set snippet conversion flags. */
-    charset_snippet_flags = CHARSET_SNIPPET;
+    charset_snippet_flags = CHARSET_KEEPCASE;
     if (config_getenum(IMAPOPT_SEARCH_ENGINE) != IMAP_ENUM_SEARCH_ENGINE_XAPIAN) {
         /* All search engines other than Xapian require escaped HTML */
         charset_snippet_flags |= CHARSET_ESCAPEHTML;
@@ -303,8 +350,8 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
                                   config_getswitch(IMAPOPT_SKIPLIST_UNSAFE));
         libcyrus_config_setstring(CYRUSOPT_TEMP_PATH,
                                   config_getstring(IMAPOPT_TEMP_PATH));
-        libcyrus_config_setint(CYRUSOPT_PTS_CACHE_TIMEOUT,
-                               config_getint(IMAPOPT_PTSCACHE_TIMEOUT));
+        libcyrus_config_setint(CYRUSOPT_PTS_CACHE_TIMEOUT, /* <-- n.b. still an int */
+                               config_getduration(IMAPOPT_PTSCACHE_TIMEOUT, 's'));
         libcyrus_config_setswitch(CYRUSOPT_FULLDIRHASH,
                                   config_getswitch(IMAPOPT_FULLDIRHASH));
         libcyrus_config_setstring(CYRUSOPT_PTSCACHE_DB,
@@ -338,6 +385,12 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
         libcyrus_init();
     }
 
+    /* debug lock timing */
+    const char *locktime = config_getstring(IMAPOPT_LOCK_DEBUGTIME);
+    if (locktime) {
+        debug_locks_longer_than = atof(locktime);
+    }
+
     return 0;
 }
 
@@ -363,11 +416,11 @@ EXPORTED void global_sasl_init(int client, int server, const sasl_callback_t *ca
                    (sasl_mutex_free_t *) &cyrus_mutex_free);
 
     if(client && sasl_client_init(callbacks)) {
-        fatal("could not init sasl (client)", EC_SOFTWARE);
+        fatal("could not init sasl (client)", EX_SOFTWARE);
     }
 
     if(server && sasl_server_init(callbacks, "Cyrus")) {
-        fatal("could not init sasl (server)", EC_SOFTWARE);
+        fatal("could not init sasl (server)", EX_SOFTWARE);
     }
 }
 
@@ -717,6 +770,7 @@ EXPORTED int mysasl_proxy_policy(sasl_conn_t *conn,
 /* call before a cyrus application exits */
 EXPORTED void cyrus_done(void)
 {
+    cyrus_modules_done();
     if (cyrus_init_run != RUNNING)
         return;
     cyrus_init_run = DONE;
@@ -732,16 +786,39 @@ EXPORTED void cyrus_done(void)
 EXPORTED int shutdown_file(char *buf, int size)
 {
     FILE *f;
-    static char shutdownfilename[1024] = "";
+    static char *shutdownfilename = NULL, *suffix;
     char *p;
     char tmpbuf[1024];
 
-    if (!shutdownfilename[0])
-        snprintf(shutdownfilename, sizeof(shutdownfilename),
-                 "%s/msg/shutdown", config_dir);
+    if (!shutdownfilename) {
+        /* Create system shutdownfile name */
+        struct buf buf = BUF_INITIALIZER;
+        size_t system_len;
 
+        buf_printf(&buf, "%s/msg/shutdown", config_dir);
+        system_len = buf_len(&buf);
+
+        /* Add per-service suffix */
+        buf_printf(&buf, ".%s", config_ident);
+        shutdownfilename = buf_release(&buf);
+        suffix = shutdownfilename + system_len;
+    }
+
+    /* Try per-service shutdown file */
     f = fopen(shutdownfilename, "r");
-    if (!f) return 0;
+    if (!f) {
+        /* Trim per-service suffix and try system shutdownfile */
+        *suffix = '\0';
+
+        f = fopen(shutdownfilename, "r");
+        if (!f) {
+            /* Restore per-service suffix */
+            *suffix = '.';
+            return 0;
+        }
+    }
+
+    free(shutdownfilename);
 
     if (!buf) {
         buf = tmpbuf;
@@ -782,10 +859,10 @@ EXPORTED void session_new_id(void)
     unsigned long long random;
     RAND_bytes((unsigned char *) &random, sizeof(random));
     snprintf(session_id_buf, MAX_SESSIONID_SIZE, "%.128s-%d-%d-%d-%llu",
-             base, getpid(), session_id_time, session_id_count, random);
+             base, session_id_time, getpid(), session_id_count, random);
 #else
     snprintf(session_id_buf, MAX_SESSIONID_SIZE, "%.128s-%d-%d-%d",
-             base, getpid(), session_id_time, session_id_count);
+             base, session_id_time, getpid(), session_id_count);
 #endif
 }
 
@@ -979,7 +1056,7 @@ EXPORTED const char *get_clienthost(int s, const char **localip, const char **re
                 *remoteip = ripbuf;
             }
         } else {
-            fatal("can't get local addr", EC_SOFTWARE);
+            fatal("can't get local addr", EX_SOFTWARE);
         }
     } else {
         /* we're not connected to a internet socket! */
@@ -989,11 +1066,56 @@ EXPORTED const char *get_clienthost(int s, const char **localip, const char **re
     return buf_cstring(&clientbuf);
 }
 
-EXPORTED int cmd_cancelled()
+EXPORTED int cmd_cancelled(int insearch)
 {
     if (signals_cancelled())
         return IMAP_CANCELLED;
-    if (cmdtime_checksearch())
+    if (insearch && cmdtime_checksearch())
         return IMAP_SEARCH_SLOW;
     return 0;
+}
+
+EXPORTED void saslprops_reset(struct saslprops_t *saslprops)
+{
+    buf_reset(&saslprops->iplocalport);
+    buf_reset(&saslprops->ipremoteport);
+    buf_reset(&saslprops->authid);
+    saslprops->ssf = 0;
+    saslprops->cbinding.name = NULL;
+}
+
+EXPORTED void saslprops_free(struct saslprops_t *saslprops)
+{
+    buf_free(&saslprops->iplocalport);
+    buf_free(&saslprops->ipremoteport);
+    buf_free(&saslprops->authid);
+}
+
+EXPORTED int saslprops_set_tls(struct saslprops_t *saslprops,
+                               sasl_conn_t *saslconn)
+{
+    int r;
+
+    r = sasl_setprop(saslconn, SASL_SSF_EXTERNAL, &saslprops->ssf);
+    if (r != SASL_OK) {
+        syslog(LOG_NOTICE, "sasl_setprop(SSF_EXTERNAL) failed");
+        return r;
+    }
+
+    r = sasl_setprop(saslconn, SASL_AUTH_EXTERNAL,
+                     buf_cstringnull(&saslprops->authid));
+    if (r != SASL_OK) {
+        syslog(LOG_NOTICE, "sasl_setprop(AUTH_EXTERNAL) failed");
+        return r;
+    }
+
+    if (saslprops->cbinding.name) {
+        r = sasl_setprop(saslconn, SASL_CHANNEL_BINDING, &saslprops->cbinding);
+        if (r != SASL_OK) {
+            syslog(LOG_NOTICE, "sasl_setprop(CHANNEL_BINDING) failed");
+            return r;
+        }
+    }
+
+    return SASL_OK;
 }

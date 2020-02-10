@@ -59,7 +59,6 @@ struct appendstate {
     struct mailbox *mailbox;
     /* do we own it? */
     int close_mailbox_when_done:1;
-    int isoutbox:1;
     int myrights;
     char userid[MAX_MAILBOX_BUFFER];
 
@@ -113,14 +112,20 @@ extern int append_commit(struct appendstate *as);
 extern int append_abort(struct appendstate *as);
 
 /* creates a new stage and returns stage file corresponding to mailboxname */
-extern FILE *append_newstage(const char *mailboxname, time_t internaldate,
-                             int msgnum, struct stagemsg **stagep);
+extern FILE *append_newstage_full(const char *mailboxname, time_t internaldate,
+                                  int msgnum, struct stagemsg **stagep,
+                                  const char *sourcefile);
+#define append_newstage(m, i, n, s) append_newstage_full((m), (i), (n), (s), NULL)
 
 /* adds a new mailbox to the stage initially created by append_newstage() */
-extern int append_fromstage(struct appendstate *mailbox, struct body **body,
-                            struct stagemsg *stage, time_t internaldate,
-                            const strarray_t *flags, int nolink,
-                            struct entryattlist *annotations);
+extern int append_fromstage_full(struct appendstate *mailbox, struct body **body,
+                                 struct stagemsg *stage,
+                                 time_t internaldate, time_t savedate,
+                                 modseq_t createdmodseq,
+                                 const strarray_t *flags, int nolink,
+                                 struct entryattlist *annotations);
+#define append_fromstage(m, b, s, i, c, f, n, a) \
+  append_fromstage_full((m), (b), (s), (i), 0, (c), (f), (n), (a))
 
 /* removes the stage (frees memory, deletes the staging files) */
 extern int append_removestage(struct stagemsg *stage);
@@ -132,7 +137,7 @@ extern int append_fromstream(struct appendstate *as, struct body **body,
 
 extern int append_copy(struct mailbox *mailbox,
                        struct appendstate *append_mailbox,
-                       int nummsg, struct index_record *records,
+                       ptrarray_t *msgrecs,
                        int nolink, int is_same_user);
 
 extern int append_collectnews(struct appendstate *mailbox,
@@ -142,7 +147,7 @@ extern int append_collectnews(struct appendstate *mailbox,
 #define append_getlastuid(as) ((as)->m.last_uid)
 
 extern int append_run_annotator(struct appendstate *as,
-                                struct index_record *record);
+                                msgrecord_t *msgrec);
 
 extern const char *append_stagefname(struct stagemsg *stage);
 

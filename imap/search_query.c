@@ -1,6 +1,6 @@
-/* search_result.c -- search result data structure
+/* search_query.c -- search query routines
  *
- * Copyright (c) 1994-2012 Carnegie Mellon University.  All rights reserved.
+ * Copyright (c) 1994-2018 Carnegie Mellon University.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -60,6 +60,7 @@
 #include "bsearch.h"
 #include "xstrlcpy.h"
 #include "xmalloc.h"
+#include "statuscache.h"
 
 /* generated headers are not necessarily in current directory */
 #include "imap/imap_err.h"
@@ -83,13 +84,19 @@ EXPORTED search_query_t *search_query_new(struct index_state *state,
     return query;
 }
 
+static void folder_free_partids(void *data)
+{
+    strarray_free((strarray_t*)data);
+}
+
 static void folder_free(void *data)
 {
     search_folder_t *folder = data;
 
     free(folder->mboxname);
-    bv_free(&folder->uids);
-    bv_free(&folder->unchecked_uids);
+    bv_fini(&folder->uids);
+    bv_fini(&folder->found_uids);
+    free_hashu64_table(&folder->partids, folder_free_partids);
     free(folder);
 }
 
@@ -153,7 +160,7 @@ EXPORTED void search_folder_use_msn(search_folder_t *folder, struct index_state 
         if (index_getuid(state, msgno) == (unsigned)uid)
             bv_set(&msns, msgno);
     }
-    bv_free(&folder->uids);
+    bv_fini(&folder->uids);
     folder->uids = msns;
 }
 
@@ -261,21 +268,26 @@ static search_folder_t *query_get_valid_folder(search_query_t *query,
                                                uint32_t uidvalidity)
 {
     search_folder_t *folder;
+    uint32_t have_mbtype = 0;
 
-    if (mboxname_isdeletedmailbox(mboxname, 0) &&
-        !(query->want_mbtype & MBTYPE_DELETED)) {
+    // check if we want to process this mailbox
+    if (query->checkfolder &&
+        !query->checkfolder(mboxname, query->checkfolderrock)) {
         return NULL;
     }
 
-    if (mboxname_iscalendarmailbox(mboxname, 0) &&
-       !(query->want_mbtype & MBTYPE_CALENDAR)) {
-        return NULL;
-    }
+    if (mboxname_isdeletedmailbox(mboxname, 0))
+        have_mbtype = MBTYPE_DELETED;
 
-    if (mboxname_isaddressbookmailbox(mboxname, 0) &&
-       !(query->want_mbtype & MBTYPE_ADDRESSBOOK)) {
+    if (mboxname_iscalendarmailbox(mboxname, 0))
+        have_mbtype = MBTYPE_CALENDAR;
+
+    if (mboxname_isaddressbookmailbox(mboxname, 0))
+        have_mbtype = MBTYPE_ADDRESSBOOK;
+
+    /* not the type we want?  Abort now */
+    if (have_mbtype != query->want_mbtype)
         return NULL;
-    }
 
     folder = query_get_folder(query, mboxname);
     if (uidvalidity) {
@@ -289,7 +301,7 @@ static search_folder_t *query_get_valid_folder(search_query_t *query,
             * remember the uidvalidity for later */
             if (folder->uidvalidity) {
                 bv_clearall(&folder->uids);
-                bv_clearall(&folder->unchecked_uids);
+                bv_clearall(&folder->found_uids);
             }
             folder->uidvalidity = uidvalidity;
         }
@@ -330,6 +342,7 @@ static int query_begin_index(search_query_t *query,
         init.out = query->state->out;
         init.want_expunged = query->want_expunged;
         init.want_mbtype = query->want_mbtype;
+        init.examine_mode = 1;
 
         r = index_open(mboxname, &init, statep);
         if (r == IMAP_PERMISSION_DENIED) r = IMAP_MAILBOX_NONEXISTENT;
@@ -351,7 +364,7 @@ static int query_begin_index(search_query_t *query,
         if (r) goto out;
     }
 
-    r = cmd_cancelled();
+    r = cmd_cancelled(!query->ignore_timer);
 
 out:
     return r;
@@ -442,16 +455,17 @@ static void query_load_msgdata(search_query_t *query,
 struct subquery_rock {
     search_query_t *query;
     search_subquery_t *sub;
+    int is_excluded;
 };
 
 /*
  * After an indexed subquery is run, we have accumulated a number of
- * unchecked UID hits in folders.  Here we check those UIDs for a) not
+ * found UID hits in folders.  Here we check those UIDs for a) not
  * being deleted since indexing and b) matching any unindexed scan
  * expression.  We also take advantage of having an open index_state to
  * load some MsgData objects and save them to query->merged_msgdata.
  */
-static void subquery_post_indexed(const char *key, void *data, void *rock)
+static void subquery_post_enginesearch(const char *key, void *data, void *rock)
 {
     const char *mboxname = key;
     search_folder_t *folder = data;
@@ -465,7 +479,7 @@ static void subquery_post_indexed(const char *key, void *data, void *rock)
     int r = 0;
 
     if (query->error) return;
-    if (!folder->unchecked_dirty) return;
+    if (!folder->found_dirty) return;
 
     if (sub->expr && query->verbose) {
         char *s = search_expr_serialise(sub->expr);
@@ -501,19 +515,23 @@ static void subquery_post_indexed(const char *key, void *data, void *rock)
     for (msgno = 1 ; msgno <= state->exists ; msgno++) {
         struct index_map *im = &state->map[msgno-1];
 
-        r = cmd_cancelled();
-        if (r) goto out;
+        if (!(msgno % 128)) {
+            r = cmd_cancelled(!query->ignore_timer);
+            if (r) goto out;
+        }
 
-        /* we only want to look at unchecked UIDs */
-        if (!bv_isset(&folder->unchecked_uids, im->uid))
+        /* we only want to look at found UIDs */
+        if ((!qr->is_excluded && !bv_isset(&folder->found_uids, im->uid)) ||
+             (qr->is_excluded && bv_isset(&folder->found_uids, im->uid))) {
             continue;
+        }
 
         /* moot if already in the uids set */
         if (bv_isset(&folder->uids, im->uid))
             continue;
 
         /* can happen if we didn't "tellchanges" yet */
-        if ((im->system_flags & FLAG_EXPUNGED) && !query->want_expunged)
+        if ((im->internal_flags & FLAG_INTERNAL_EXPUNGED) && !query->want_expunged)
             continue;
 
         /* run the search program */
@@ -536,13 +554,35 @@ static void subquery_post_indexed(const char *key, void *data, void *rock)
     if (query->sortcrit && nmsgs)
         query_load_msgdata(query, folder, state, msgno_list, nmsgs);
 
-    folder->unchecked_dirty = 0;
+    folder->found_dirty = 0;
     r = 0;
 
 out:
     query_end_index(query, &state);
     free(msgno_list);
     if (r) query->error = r;
+}
+
+static int subquery_post_excluded(const mbentry_t *mbentry, void *rock)
+{
+    struct subquery_rock *qr = rock;
+    search_folder_t *folder;
+
+    folder = query_get_valid_folder(qr->query, mbentry->name, 0);
+    if (folder) {
+        folder->found_dirty = 1;
+        subquery_post_enginesearch(mbentry->name, folder, rock);
+    }
+
+    return 0;
+}
+
+static void subquery_clear_found(const char *key __attribute__((unused)),
+                                     void *data,
+                                     void *rock __attribute__((unused)))
+{
+    search_folder_t *folder = data;
+    bv_clearall(&folder->found_uids);
 }
 
 EXPORTED void search_build_query(search_builder_t *bx, search_expr_t *e)
@@ -566,7 +606,11 @@ EXPORTED void search_build_query(search_builder_t *bx, search_expr_t *e)
 
     case SEOP_FUZZYMATCH:
         if (e->attr && e->attr->part >= 0) {
-            bx->match(bx, e->attr->part, e->value.s);
+            if (e->attr->flags & SEA_ISLIST) {
+                bx->matchlist(bx, e->attr->part, e->value.list);
+            } else {
+                bx->match(bx, e->attr->part, e->value.s);
+            }
         }
         return;
 
@@ -583,14 +627,29 @@ EXPORTED void search_build_query(search_builder_t *bx, search_expr_t *e)
     }
 }
 
-static int add_unchecked_uid(const char *mboxname, uint32_t uidvalidity,
-                             uint32_t uid, void *rock)
+static int add_found_uid(const char *mboxname, uint32_t uidvalidity,
+                             uint32_t uid, const strarray_t *partids,
+                             void *rock)
 {
-    search_query_t *query = rock;
-    search_folder_t *folder = query_get_valid_folder(query, mboxname, uidvalidity);
+    struct subquery_rock *qr = rock;
+    search_folder_t *folder = query_get_valid_folder(qr->query, mboxname, uidvalidity);
     if (folder) {
-        bv_set(&folder->unchecked_uids, uid);
-        folder->unchecked_dirty = 1;
+        bv_set(&folder->found_uids, uid);
+        folder->found_dirty = 1;
+        if (partids && !qr->is_excluded) {
+            if (!folder->partids.size) {
+                if (!construct_hashu64_table(&folder->partids, 4096, 0))
+                    return IMAP_INTERNAL;
+            }
+            strarray_t *have_partids = hashu64_lookup(uid, &folder->partids);
+            if (have_partids) {
+                int i;
+                for (i = 0; i < strarray_size(partids); i++) {
+                    strarray_add(have_partids, strarray_nth(partids, i));
+                }
+            }
+            else hashu64_insert(uid, strarray_dup(partids), &folder->partids);
+        }
     }
     return 0;
 }
@@ -601,6 +660,7 @@ static void subquery_run_indexed(const char *key __attribute__((unused)),
 //     const char *mboxname = key;
     search_subquery_t *sub = data;
     search_query_t *query = rock;
+    search_expr_t *excluded = NULL;
     search_builder_t *bx;
     struct subquery_rock qr;
     int r;
@@ -613,25 +673,93 @@ static void subquery_run_indexed(const char *key __attribute__((unused)),
         free(s);
     }
 
-    bx = search_begin_search(query->state->mailbox,
-                             (query->multiple ? SEARCH_MULTIPLE : 0)|
-                             SEARCH_VERBOSE(query->verbose));
+    int opts = SEARCH_VERBOSE(query->verbose);
+    if (query->multiple) opts |= SEARCH_MULTIPLE;
+    if (query->attachments_in_any) opts |= SEARCH_ATTACHMENTS_IN_ANY;
+
+    /* If the subquery is NOT(x) or AND(NOT(x)..(NOT(y))) then
+     * it's likely that we will get lots of results to look up
+     * in conversations.db. We mitigate that by running the
+     * inverse query on the index, and check any uids that do
+     * _not_ match the query result. */
+    if (sub->indexed->op == SEOP_AND) {
+        search_expr_t *child = sub->indexed->children;
+        while (child && child->op == SEOP_NOT) {
+            child = child->next;
+        }
+        if (!child) {
+            excluded = search_expr_new(NULL, SEOP_OR);
+            search_expr_t *dupl = search_expr_duplicate(sub->indexed);
+            child = dupl->children;
+            while (child) {
+                search_expr_t *expr = child->children;
+                search_expr_detach(child, expr);
+                search_expr_append(excluded, expr);
+                child = child->next;
+            }
+            search_expr_free(dupl);
+        }
+    }
+    else if (sub->indexed->op == SEOP_NOT) {
+        excluded = search_expr_duplicate(sub->indexed->children);
+    }
+
+    bx = search_begin_search(query->state->mailbox, opts);
     if (!bx) {
         r = IMAP_INTERNAL;
         goto out;
     }
-    search_build_query(bx, sub->indexed);
-    r = bx->run(bx, add_unchecked_uid, query);
-    search_end_search(bx);
-    if (r) goto out;
 
     qr.query = query;
     qr.sub = sub;
-    hash_enumerate(&query->folders_by_name, subquery_post_indexed, &qr);
+    qr.is_excluded = excluded != NULL;
+    search_build_query(bx, excluded ? excluded : sub->indexed);
+    r = bx->run(bx, add_found_uid, &qr);
+
+    search_end_search(bx);
+    if (r) goto out;
+
+    if (excluded) {
+        if (query->multiple) {
+            char *userid = mboxname_to_userid(index_mboxname(query->state));
+            r = mboxlist_usermboxtree(userid, NULL, subquery_post_excluded,
+                    &qr, /*flags*/0);
+            free(userid);
+        }
+        else {
+            mbentry_t *mbentry = NULL;
+            r = mboxlist_lookup(index_mboxname(query->state), &mbentry, NULL);
+            if (!r) r = subquery_post_excluded(mbentry, &qr);
+            mboxlist_entry_free(&mbentry);
+        }
+    }
+    else hash_enumerate(&query->folders_by_name, subquery_post_enginesearch, &qr);
+    hash_enumerate(&query->folders_by_name, subquery_clear_found, NULL);
 
 out:
+    search_expr_free(excluded);
     if (r) query->error = r;
 }
+
+static modseq_t _get_sincemodseq(search_expr_t *e)
+{
+    const search_attr_t *modseq_attr = search_attr_find("modseq");
+
+    if (e->op == SEOP_AND) {
+        search_expr_t *child;
+
+        for (child = e->children ; child ; child = child->next) {
+            modseq_t res = _get_sincemodseq(child);
+            if (res) return res;
+        }
+    }
+    if (e->op == SEOP_GT && e->attr == modseq_attr) {
+        return e->value.u;
+    }
+
+    return 0;
+}
+
 
 static int subquery_run_one_folder(search_query_t *query,
                                    const char *mboxname,
@@ -657,6 +785,21 @@ static int subquery_run_one_folder(search_query_t *query,
         free(s);
     }
 
+    // check if we want to process this mailbox
+    if (query->checkfolder &&
+        !query->checkfolder(mboxname, query->checkfolderrock)) {
+        goto out;
+    }
+
+    modseq_t sincemodseq = _get_sincemodseq(e);
+    if (sincemodseq) {
+        struct statusdata sdata = STATUSDATA_INIT;
+        int r = status_lookup_mboxname(mboxname, query->state->userid,
+                                       STATUS_HIGHESTMODSEQ, &sdata);
+        // if unchangedsince, then we can skip the index query
+        if (!r && sdata.highestmodseq <= sincemodseq) goto out;
+    }
+
     r = query_begin_index(query, mboxname, &state);
     if (r == IMAP_MAILBOX_NONEXISTENT) {
         /* Silently swallow mailboxes which have been deleted, renamed,
@@ -678,11 +821,13 @@ static int subquery_run_one_folder(search_query_t *query,
     for (msgno = 1 ; msgno <= state->exists ; msgno++) {
         struct index_map *im = &state->map[msgno-1];
 
-        r = cmd_cancelled();
-        if (r) goto out;
+        if (!(msgno % 128)) {
+            r = cmd_cancelled(!query->ignore_timer);
+            if (r) goto out;
+        }
 
         /* can happen if we didn't "tellchanges" yet */
-        if ((im->system_flags & FLAG_EXPUNGED) && !query->want_expunged)
+        if ((im->internal_flags & FLAG_INTERNAL_EXPUNGED) && !query->want_expunged)
             continue;
 
         /* run the search program */
@@ -718,7 +863,7 @@ static int subquery_run_one_folder(search_query_t *query,
     r = 0;
 
 out:
-    query_end_index(query, &state);
+    if (state) query_end_index(query, &state);
     free(msgno_list);
     return r;
 }
@@ -857,7 +1002,8 @@ EXPORTED int search_query_run(search_query_t *query)
          * Walk over every folder, applying the scan expression. */
         if (query->multiple) {
             char *userid = mboxname_to_userid(index_mboxname(query->state));
-            r = mboxlist_usermboxtree(userid, subquery_run_global_cb, query, /*flags*/0);
+            r = mboxlist_usermboxtree(userid, NULL, subquery_run_global_cb,
+                                      query, /*flags*/0);
             free(userid);
         }
         else {
@@ -898,3 +1044,47 @@ out:
 }
 
 /* ====================================================================== */
+
+static int is_mutable_sort(struct sortcrit *sortcrit)
+{
+    int i;
+
+    if (!sortcrit) return 0;
+
+    for (i = 0; sortcrit[i].key; i++) {
+        switch (sortcrit[i].key) {
+            /* these are the mutable fields */
+            case SORT_ANNOTATION:
+            case SORT_MODSEQ:
+            case SORT_HASFLAG:
+            case SORT_CONVMODSEQ:
+            case SORT_CONVEXISTS:
+            case SORT_CONVSIZE:
+            case SORT_HASCONVFLAG:
+                return 1;
+            default:
+                break;
+        }
+    }
+
+    return 0;
+}
+
+/* This function will return 2 if the search criteria are mutable
+ * but the sort is not,
+ * 1 if the sort is mutable but the search isn't, 3 if both, and
+ * zero if nither are mutable.
+ * i.e. the user can/can't take actions which will change the order
+ * in which the results are returned.  For example, the base
+ * case of UID sort and all messages is NOT mutable */
+EXPORTED int search_is_mutable(struct sortcrit *sortcrit,
+                               struct searchargs *searchargs)
+{
+    int res = 0;
+    if (search_expr_is_mutable(searchargs->root))
+        res |= 2;
+    if (is_mutable_sort(sortcrit))
+        res |= 1;
+    return res;
+}
+

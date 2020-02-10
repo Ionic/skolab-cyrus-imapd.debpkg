@@ -5,7 +5,7 @@
  * - * Larry Greenfield
  *
  */
-#include "cunit/cunit.h"
+#include "cunit/cyrunit.h"
 #include <malloc.h>
 #include "sieve/bytecode.h"
 #include "sieve/comparator.h"
@@ -67,9 +67,13 @@ typedef struct {
 } sieve_test_message_t;
 
 /* set to SIEVE_DONE if you want to test "already responded */
-int autorespond_reponse = SIEVE_OK;
+int autorespond_response = SIEVE_OK;
 
 extern int verbose;
+
+static void context_setup(sieve_test_context_t *ctx,
+                          const char *script);
+static void context_cleanup(sieve_test_context_t *ctx);
 
 static void test_variable_modifiers(void)
 {
@@ -81,7 +85,8 @@ static void test_variable_modifiers(void)
       set :lower "b" "${a}";                 => "jumbled letters"
       set :upperfirst "b" "${a}";            => "JuMBlEd lETteRS"
       set :upperfirst :lower "b" "${a}";     => "Jumbled letters"
-      set :quotewildcard "b" "Rock*";        => "Rock\*"
+      set :quotewildcard "b" "^Rock*";       => "^Rock\*"
+      set :quoteregex "b" "^Rock*";          => "\^Rock\*"
      */
     const char *a = "juMBlEd lETteRS";
     char *b;
@@ -98,28 +103,37 @@ static void test_variable_modifiers(void)
     b = variables_modify_string(a, BFV_UPPERFIRST | BFV_LOWER);
     CU_ASSERT_STRING_EQUAL(b, "Jumbled letters");
     free(b);
-    b = variables_modify_string("Rock*", BFV_QUOTEWILDCARD);
-    CU_ASSERT_STRING_EQUAL(b, "Rock\\*");
+    b = variables_modify_string("^Rock*", BFV_QUOTEWILDCARD);
+    CU_ASSERT_STRING_EQUAL(b, "^Rock\\*");
     free(b);
-    b = variables_modify_string("Rock\\*", BFV_QUOTEWILDCARD | BFV_ENCODEURL);
-    CU_ASSERT_STRING_EQUAL(b, "Rock%5C%5C%5C%2A");
+    b = variables_modify_string("^Rock*", BFV_QUOTEREGEX);
+    CU_ASSERT_STRING_EQUAL(b, "\\^Rock\\*");
+    free(b);
+    b = variables_modify_string("~Rock\\*", BFV_QUOTEWILDCARD | BFV_ENCODEURL);
+    CU_ASSERT_STRING_EQUAL(b, "~Rock%5C%5C%5C%2A");
     free(b);
 }
 
 #define TESTCASE(_comp, _mode, _pat, _text, _result)            \
     comprock = NULL;                                            \
-    c = lookup_comp(_comp, _mode, -1, &comprock);               \
+    c = lookup_comp(ctx.interp, _comp, _mode, -1, &comprock);   \
     CU_ASSERT_PTR_NOT_NULL(c);                                  \
     if (c) {                                                    \
-        res = c(_text, strlen(_text), _pat, comprock);          \
+        res = c(_text, strlen(_text), _pat, NULL, comprock);    \
         CU_ASSERT_EQUAL(res, _result);                          \
     }
 
 static void test_comparator(void)
 {
+    static const char SCRIPT[] =
+    "require [\"comparator-i;ascii-numeric\"];\n"
+    ;
+    sieve_test_context_t ctx;
     void *comprock;
     comparator_t *c;
     int res;
+
+    context_setup(&ctx, SCRIPT);
 
     TESTCASE( B_OCTET, B_IS, "", "", 1 );
     TESTCASE( B_OCTET, B_IS, "a", "", 0 );
@@ -280,6 +294,8 @@ static void test_comparator(void)
     TESTCASE( B_ASCIICASEMAP, B_MATCHES, "a*b", "aBBB", 1 );
     TESTCASE( B_ASCIICASEMAP, B_MATCHES, "a*b", "ACB", 1 );
     TESTCASE( B_ASCIICASEMAP, B_MATCHES, "a*b", "ACBC", 0 );
+
+    context_cleanup(&ctx);
 }
 
 
@@ -314,7 +330,8 @@ static int getbody(void *mc, const char **content_types, sieve_bodypart_t ***par
         r = message_parse_file(fp,
                                &msg->content.base,
                                &msg->content.len,
-                               &msg->content.body);
+                               &msg->content.body,
+                               msg->filename);
         CU_ASSERT_EQUAL(r, 0);
         fclose(fp);
     }
@@ -485,7 +502,7 @@ static int autorespond(void *ac __attribute__((unused)),
                        void *mc __attribute__((unused)),
                        const char **errmsg __attribute__((unused)))
 {
-    return autorespond_reponse;
+    return autorespond_response;
 }
 
 static int send_response(void *ac, void *ic, void *sc __attribute__((unused)),
@@ -595,7 +612,7 @@ static void context_setup(sieve_test_context_t *ctx,
     sieve_register_include(ctx->interp, getinclude);
     sieve_register_vacation(ctx->interp, &vacation);
     sieve_register_imapflags(ctx->interp, &mark);
-    sieve_register_notify(ctx->interp, notify);
+    sieve_register_notify(ctx->interp, notify, NULL);
     sieve_register_parse_error(ctx->interp, mysieve_error);
     sieve_register_execute_error(ctx->interp, mysieve_execute_error);
 

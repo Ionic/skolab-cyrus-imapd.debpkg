@@ -1,0 +1,23 @@
+
+Developer Guidance
+******************
+
+* Cyrus IMAP Server: Hacking
+
+* Cyrus IMAP Server: Internationalization
+
+* Cyrus IMAP Server: Locking
+
+* Cyrus IMAP Server: Mailbox File Formats
+
+* Cyrus IMAP Server: Namelocks
+
+* Cyrus IMAP Server: prot layer
+
+* Cyrus IMAP Server: Replication Examples
+
+* Cyrus IMAP Server: Replication Protocol v2.4+
+
+* Cyrus IMAP Server: Special Characters
+
+* Cyrus IMAP Server: var directory structure

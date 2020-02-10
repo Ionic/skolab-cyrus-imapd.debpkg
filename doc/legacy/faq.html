@@ -12,10 +12,7 @@
 <li><b>POP-Before-SMTP</b> It is not included in the default distribution
 because there is already a standard way of doing this with SMTP AUTH.
 Any good MTA and/or MUA should support SMTP AUTH, so we shouldn't have
-to create a hack in an unrelated service.  However, if you would like
-to install it anyway, we recommend using
-<a href="http://mail.cc.umanitoba.ca/drac/">DRAC</a>,
-along with the patch available in <tt>contrib/drac_auth.patch</tt>.</li>
+to create a hack in an unrelated service.</li>
 
 <li><b>Using NFS</b> We don't recommend it. If you want to do it,
 it may possibly work but you may also lose your email or have
@@ -40,7 +37,7 @@ href="install-virtdomains.html">virtual domains configuration</a>.</li>
 
 <li><b>dots in userids</b> - you can have a '.' in your username
 IF, AND ONLY IF, you use the <a
-href="altnamespace.html#unixhiersep">UNIX hierarchy
+href="altnamespace.html#unixhierarchysep">UNIX hierarchy
 convention</a>.</li>
 
 <li><b>renaming users</b> - Supported, but try to make sure that the
@@ -133,17 +130,6 @@ PLAIN or plaintext login commands on encrypted connections
 (SSL-wrapped connections or after a successful STARTTLS command).
 This behavior can be changed with the use of the
 <tt>allowplaintext</tt> option in <tt>imapd.conf.5</tt>.</p>
-</dd>
-
-<dt><b>Q:</b> I'm getting syslog'd messages from the master process
-saying processes are "signaled to death by 10". What's up?</dt>
-
-<dd>
-<p><b>A:</b> If you're using Berkeley DB 3.0.55, try installing
-some <a
-href="http://www.sleepycat.com/update/3.0.55/patch.3.0.55.html">patches
-to Berkeley DB</a> available from <a
-href="http://www.sleepycat.com/update/3.0.55/patch.3.0.55.html">http://www.sleepycat.com/update/3.0.55/patch.3.0.55.html</a>.</p>
 </dd>
 
 <dt><b>Q:</b> I've used <tt>saslpasswd2</tt> to create CRAM-MD5
@@ -247,21 +233,6 @@ tls.c:</p>
 </pre>
 </dd>
 
-<dt><b>Q:</b> I'm getting messages in <tt>imapd.log</tt> like
-"DBERROR db3: 16 lockers".  What's wrong?
-</dt>
-
-<dd>
-<p><b>A:</b> Nothing is wrong. These messages are logged whenever
-Berkeley DB encounters lock contention, but aren't necessarily
-problems. This is especially likely when you have an
-empty or small duplicate delivery database and are receiving a large
-volume of e-mail.</p>
-
-<p>Berkeley DB 4.0 has a bug where the number of lockers isn't
-decremented properly, causing this number to be unreliable.</p>
-</dd>
-
 <dt><b>Q:</b> All of the 8bit characters in the headers of messages
 that I receive are being changed to 'X's.  What's going on?</dt>
 
@@ -299,7 +270,7 @@ are a few options here:</p>
 <ul>
 <li>Contact your client vendor to have
 the broken client fixed (one possibility is to have the client ask the user
-if they wish to permanantly delete the message if the COPY operation fails).</li>
+if they wish to permanently delete the message if the COPY operation fails).</li>
 <li>Stop using the 'trash mailbox' feature of your client (if possible).</li>
 <li>Set a separate quota root on the 'trash folders'
 of users.  This last option is significantly harder to do correctly, since
