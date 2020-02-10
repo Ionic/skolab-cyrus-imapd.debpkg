@@ -29,6 +29,14 @@ Last-Update: 2020-02-10
  #
  # Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
  #
+--- a/tools/rehash
++++ b/tools/rehash
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env perl
++#!/usr/bin/perl
+ #
+ # Copyright (c) 1994-2012 Carnegie Mellon University.  All rights reserved.
+ #
 --- a/tools/translatesieve
 +++ b/tools/translatesieve
 @@ -1,6 +1,4 @@
