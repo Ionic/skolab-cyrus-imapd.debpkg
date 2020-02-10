@@ -4,21 +4,17 @@ Upstream-Contact: cyrus-devel@lists.andrew.cmu.edu
 Source: https://www.cyrusimap.org/
 
 Files: *
-Copyright: 1994-2016 Carnegie Mellon University.
+Copyright: 1994-2020, Carnegie Mellon University.
 License: CMU
 
-Files: tools/vzic/*
-Copyright: 2000-2001 Ximian, Inc.
-	   2003 Damon Chaplin.
-License: GPL-2+
-
 Files: debian/*
-Copyright: 2002-2010 Henrique de Moraes Holschuh
-	   	     Sven Mueller
-		     Benjamin Seidenberg
-		     Farzad FARID
-		     Christoph Berg
-           2005-2015 Ondřej Surý
+Copyright: 2002-2010, Henrique de Moraes Holschuh
+ 2002-2010, Sven Mueller
+ 2002-2010, Benjamin Seidenberg
+ 2002-2010, Farzad FARID
+ 2002-2010, Christoph Berg
+ 2005-2015, Ondřej Surý
+ 2019-2020, Xavier Guimard <yadd@debian.org>
 License: CMU
 
 License: CMU
