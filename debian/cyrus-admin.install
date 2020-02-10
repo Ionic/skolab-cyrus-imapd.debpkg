@@ -1,5 +1,6 @@
 usr/bin/cyradm
 usr/lib/cyrus/bin/installsieve
+usr/lib/cyrus/bin/promstatsd
 usr/lib/cyrus/bin/sieveshell
 usr/share/icons/*
 usr/share/man/man1/cyradm.1p

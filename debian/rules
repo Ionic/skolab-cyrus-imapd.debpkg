@@ -194,7 +194,7 @@ override_dh_auto_install:
 
 	# Install the stuff needed for upgrades
 	install -d -m 755 $(TMPPKG)/usr/lib/cyrus/upgrade
-	for i in convert-sieve.pl dohash rehash undohash translatesieve upgradesieve masssievec; do \
+	for i in rehash translatesieve masssievec; do \
 	  install -m 755 tools/$$i $(TMPPKG)/usr/lib/cyrus/upgrade ;\
 	done
 
