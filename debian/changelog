@@ -1,3 +1,12 @@
+cyrus-imapd (3.2.0~beta1-1) UNRELEASED; urgency=medium
+
+  * New upstream version 3.2.0~beta1
+  * Add build dependency to libcunit1-dev
+  * Refresh patches
+  * Update install
+
+ -- Xavier Guimard <yadd@debian.org>  Mon, 10 Feb 2020 09:52:07 +0100
+
 cyrus-imapd (3.0.13-2) unstable; urgency=medium
 
   * Add BACKUP type to cyrus-upgrade-db (Closes: #930764)
@@ -1103,7 +1112,7 @@ cyrus-imapd-2.3 (2.3.14-1) UNRELEASED; urgency=low
 
   * New upstream release.
   * Remove the sections of Sven's 10-fix_potential_overflows.dpatch
-    superceded by upstream fixes by Bron.
+    superseded by upstream fixes by Bron.
 
   [Sven Mueller]
   * change example script mbox2cyrus to remove bashisms (Closes: #489558,
