@@ -117,7 +117,7 @@ static inline int adjust_index_rw(arrayu64_t *au, int idx, int grow)
          * outside the current bounds, plus perhaps @grow */
         ensure_alloc(au, idx+grow);
     } else if (idx < 0) {
-        /* adjust Perl-style negative indeces */
+        /* adjust Perl-style negative indices */
         idx += au->count;
         if (idx >= 0 && grow)
             ensure_alloc(au, au->count+grow);
@@ -246,8 +246,8 @@ EXPORTED uint64_t arrayu64_max(const arrayu64_t *au)
 
 static int _numeric_sort(const void *a, const void *b)
 {
-    uint64_t *av = (uint64_t *)a;
-    uint64_t *bv = (uint64_t *)b;
+    uint64_t av = *((uint64_t *)a);
+    uint64_t bv = *((uint64_t *)b);
 
     if (av == bv)
         return 0;

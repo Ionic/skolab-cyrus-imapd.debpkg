@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <fcntl.h>
 
-#include "xmalloc.h"
 #include "vparse.h"
 #include "xmalloc.h"
 
@@ -202,7 +201,7 @@ repeat:
     r = _parse_param_key(state, &haseq);
     if (r) return r;
 
-    if (state->multiparam && strarray_find(state->multiparam, state->param->name, 0))
+    if (state->multiparam && strarray_find_case(state->multiparam, state->param->name, 0) >= 0)
         multiparam = 1;
 
     /* now get the value */
@@ -818,7 +817,7 @@ static void _checkwrap(unsigned char c, struct vparse_target *tgt)
     buf_putc(tgt->buf, ' ');
 }
 
-static void _value_to_tgt(const char *value, struct vparse_target *tgt, char multivalsep)
+static void _value_to_tgt(const char *value, struct vparse_target *tgt)
 {
     if (!value) return; /* null fields or array items are empty string */
     for (; *value; value++) {
@@ -837,15 +836,6 @@ static void _value_to_tgt(const char *value, struct vparse_target *tgt, char mul
             buf_putc(tgt->buf, 'n');
             break;
         case ';':
-            /* this doesn't need to be quoted, but , does. yay. So special case this one */
-            if (multivalsep == ';') {
-                buf_putc(tgt->buf, '\\');
-                buf_putc(tgt->buf, *value);
-            }
-            else {
-                buf_putc(tgt->buf, *value);
-            }
-            break;
         case ',':
         case '\\':
             buf_putc(tgt->buf, '\\');
@@ -944,11 +934,11 @@ static void _entry_to_tgt(const struct vparse_entry *entry, struct vparse_target
         int i;
         for (i = 0; i < entry->v.values->count; i++) {
             if (i) buf_putc(tgt->buf, entry->multivaluesep);
-            _value_to_tgt(strarray_nth(entry->v.values, i), tgt, entry->multivaluesep);
+            _value_to_tgt(strarray_nth(entry->v.values, i), tgt);
         }
     }
     else {
-        _value_to_tgt(entry->v.value, tgt, '\0');
+        _value_to_tgt(entry->v.value, tgt);
     }
 
     _endline(tgt);
@@ -1022,10 +1012,22 @@ EXPORTED struct vparse_entry *vparse_get_entry(struct vparse_card *card, const c
 
 EXPORTED void vparse_replace_entry(struct vparse_card *card, const char *group, const char *name, const char *value)
 {
-    struct vparse_entry *res = vparse_get_entry(card, group, name);
-    if (!res) res = vparse_add_entry(card, group, name, NULL);
-    free(res->v.value);
-    res->v.value = xstrdupnull(value);
+    struct vparse_entry *entry = vparse_get_entry(card, group, name);
+    if (entry) {
+        if (entry->multivaluesep) {
+            /* FN isn't allowed to be a multi-value, but let's
+             * rather check than deal with corrupt memory */
+            strarray_free(entry->v.values);
+            entry->v.values = NULL;
+        } else {
+            free(entry->v.value);
+        }
+        entry->v.value = xstrdupnull(value);
+        entry->multivaluesep = '\0';
+    }
+    else {
+        vparse_add_entry(card, group, name, value);
+    }
 }
 
 EXPORTED void vparse_delete_entries(struct vparse_card *card, const char *group, const char *name)
@@ -1079,6 +1081,63 @@ EXPORTED void vparse_delete_params(struct vparse_entry *entry, const char *name)
             paramp = &((*paramp)->next);
         }
     }
+}
+
+static const struct {
+    const char *name;  /* property name */
+    struct {
+        unsigned min;  /* mandatory minimum number of occurrences */
+        unsigned max;  /* allowed maximum number of occurrences */
+    } version[3];      /* 1 min/max per vCard version */
+} restrictions[] = {
+    { "VERSION",     { { 1,  1 }, { 1,  1 }, { 1,  1 } } },
+    { "ANNIVERSARY", { { 0,  1 }, { 0,  1 }, { 0,  1 } } },
+    { "BDAY",        { { 0,  1 }, { 0,  1 }, { 0,  1 } } },
+    { "FN",          { { 0, -1 }, { 1, -1 }, { 1, -1 } } },
+    { "GENDER",      { { 0,  1 }, { 0,  1 }, { 0,  1 } } },
+    { "KIND",        { { 0,  1 }, { 0,  1 }, { 0,  1 } } },
+    { "N",           { { 1,  1 }, { 1,  1 }, { 0,  1 } } },
+    { "PRODID",      { { 0,  1 }, { 0,  1 }, { 0,  1 } } },
+    { "REV",         { { 0,  1 }, { 0,  1 }, { 0,  1 } } },
+    { "UID",         { { 0,  1 }, { 0,  1 }, { 0,  1 } } }
+};
+
+#define NUM_CHECK_PROPS 10
+
+EXPORTED int vparse_restriction_check(struct vparse_card *card)
+{
+    enum { VER_2_1 = 0, VER_3_0, VER_4_0 };
+    struct vparse_entry *entry = NULL;
+    unsigned counts[NUM_CHECK_PROPS];
+    unsigned i, ver = VER_3_0;
+
+    /* Zero property counts */
+    memset(counts, 0, NUM_CHECK_PROPS * sizeof(unsigned));
+
+    /* Count interesting properties */
+    for (entry = card->properties; entry; entry = entry->next) {
+        for (i = 0; i < NUM_CHECK_PROPS; i++) {
+            if (!strcasecmpsafe(entry->name, restrictions[i].name)) {
+                counts[i]++;
+
+                if (i == 0) {
+                    /* VERSION */
+                    if (!strcmp(entry->v.value, "2.1")) ver = VER_2_1;
+                    else if (!strcmp(entry->v.value, "3.0")) ver = VER_3_0;
+                    else if (!strcmp(entry->v.value, "4.0")) ver = VER_4_0;
+                    else return 0;
+                }
+            }
+        }
+    }
+
+    /* Check property counts against restrictions */
+    for (i = 0; i < NUM_CHECK_PROPS; i++) {
+        if (counts[i] < restrictions[i].version[ver].min) return 0;
+        if (counts[i] > restrictions[i].version[ver].max) return 0;
+    }
+
+    return 1;
 }
 
 #if DEBUG

@@ -44,6 +44,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -55,7 +56,6 @@
 
 #include "auth_pts.h"
 #include "cyrusdb.h"
-#include "exitcodes.h"
 #include "libcyr_cfg.h"
 #include "retry.h"
 #include "strhash.h"
@@ -352,7 +352,7 @@ static int ptload(const char *identifier, struct auth_state **state)
     }
 
     if(!state || *state) {
-        fatal("bad state pointer passed to ptload()", EC_TEMPFAIL);
+        fatal("bad state pointer passed to ptload()", EX_TEMPFAIL);
     }
 
     fname = libcyrus_config_getstring(CYRUSOPT_PTSCACHE_DB_PATH);
@@ -364,7 +364,7 @@ static int ptload(const char *identifier, struct auth_state **state)
     r = cyrusdb_open(the_ptscache_db, fname, CYRUSDB_CREATE, &ptdb);
     if (r != 0) {
         syslog(LOG_ERR, "DBERROR: opening %s: %s", fname,
-               cyrusdb_strerror(ret));
+               cyrusdb_strerror(r));
         free(tofree);
         *state = NULL;
         return -1;
@@ -390,7 +390,7 @@ static int ptload(const char *identifier, struct auth_state **state)
         goto done;
     }
 
-    /* if it's expired (or nonexistant),
+    /* if it's expired (or nonexistent),
      * ask the ptloader to reload it and reread it */
     fetched = (struct auth_state *) data;
 
@@ -434,7 +434,7 @@ static int ptload(const char *identifier, struct auth_state **state)
 
     memset((char *)&srvaddr, 0, sizeof(srvaddr));
     srvaddr.sun_family = AF_UNIX;
-    strcpy(srvaddr.sun_path, fname);
+    strlcpy(srvaddr.sun_path, fname, sizeof(srvaddr.sun_path));
     r = nb_connect(s, (struct sockaddr *)&srvaddr, sizeof(srvaddr), PT_TIMEOUT_SEC);
     free(tofree);
 
@@ -469,6 +469,7 @@ static int ptload(const char *identifier, struct auth_state **state)
       if (n < 1) break;
       start += n;
     }
+    response[sizeof(response)-1] = '\0';
 
     close(s);
     syslog(LOG_DEBUG, "ptload read data back");
@@ -523,6 +524,23 @@ static void myfreestate(struct auth_state *auth_state)
     free(auth_state);
 }
 
+static strarray_t *mygroups(const struct auth_state *auth_state)
+{
+    strarray_t *sa;
+    int i;
+
+    if (!auth_state->ngroups)
+        return NULL;
+
+    sa = strarray_new();
+    strarray_truncate(sa, auth_state->ngroups);
+    for (i = 0; i < auth_state->ngroups; i++) {
+        strarray_append(sa, auth_state->groups[i].id);
+    }
+
+    return sa;
+}
+
 HIDDEN struct auth_mech auth_pts =
 {
     "pts",              /* name */
@@ -531,4 +549,5 @@ HIDDEN struct auth_mech auth_pts =
     &mymemberof,
     &mynewstate,
     &myfreestate,
+    &mygroups,
 };

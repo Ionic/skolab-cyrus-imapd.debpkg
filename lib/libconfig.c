@@ -47,13 +47,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
 
 #include "assert.h"
-#include "exitcodes.h"
 #include "hash.h"
 #include "libconfig.h"
 #include "xmalloc.h"
@@ -87,15 +87,39 @@ EXPORTED unsigned config_maxquoted;
 EXPORTED int config_qosmarking;
 EXPORTED int config_debug;
 
+static int config_loaded;
+
 extern void fatal(const char *fatal_message, int fatal_code)
    __attribute__ ((noreturn));
 
 /* prototype to allow for sane function ordering */
 static void config_read_file(const char *filename);
 
+static void assert_not_deprecated(enum imapopt opt)
+{
+    if (imapopts[opt].deprecated_since) {
+        char errbuf[1024];
+        enum imapopt popt = imapopts[opt].preferred_opt;
+        if (popt != IMAPOPT_ZERO) {
+            snprintf(errbuf, sizeof(errbuf),
+                    "Option '%s' is deprecated in favor of '%s' since version %s.",
+                    imapopts[opt].optname, imapopts[popt].optname,
+                    imapopts[opt].deprecated_since);
+        }
+        else {
+            snprintf(errbuf, sizeof(errbuf),
+                    "Option '%s' is deprecated in version %s.",
+                    imapopts[opt].optname, imapopts[opt].deprecated_since);
+        }
+        fatal(errbuf, EX_SOFTWARE);
+    }
+}
+
 EXPORTED const char *config_getstring(enum imapopt opt)
 {
+    assert(config_loaded);
     assert(opt > IMAPOPT_ZERO && opt < IMAPOPT_LAST);
+    assert_not_deprecated(opt);
     assert((imapopts[opt].t == OPT_STRING) ||
            (imapopts[opt].t == OPT_STRINGLIST));
 
@@ -104,7 +128,9 @@ EXPORTED const char *config_getstring(enum imapopt opt)
 
 EXPORTED int config_getint(enum imapopt opt)
 {
+    assert(config_loaded);
     assert(opt > IMAPOPT_ZERO && opt < IMAPOPT_LAST);
+    assert_not_deprecated(opt);
     assert(imapopts[opt].t == OPT_INT);
 #if (SIZEOF_LONG != 4)
     if ((imapopts[opt].val.i > 0x7fffffff)||
@@ -118,7 +144,9 @@ EXPORTED int config_getint(enum imapopt opt)
 
 EXPORTED int config_getswitch(enum imapopt opt)
 {
+    assert(config_loaded);
     assert(opt > IMAPOPT_ZERO && opt < IMAPOPT_LAST);
+    assert_not_deprecated(opt);
     assert(imapopts[opt].t == OPT_SWITCH);
 #if (SIZEOF_LONG != 4)
     if ((imapopts[opt].val.b > 0x7fffffff)||
@@ -132,7 +160,9 @@ EXPORTED int config_getswitch(enum imapopt opt)
 
 EXPORTED enum enum_value config_getenum(enum imapopt opt)
 {
+    assert(config_loaded);
     assert(opt > IMAPOPT_ZERO && opt < IMAPOPT_LAST);
+    assert_not_deprecated(opt);
     assert(imapopts[opt].t == OPT_ENUM);
 
     return imapopts[opt].val.e;
@@ -140,10 +170,121 @@ EXPORTED enum enum_value config_getenum(enum imapopt opt)
 
 EXPORTED unsigned long config_getbitfield(enum imapopt opt)
 {
+    assert(config_loaded);
     assert(opt > IMAPOPT_ZERO && opt < IMAPOPT_LAST);
+    assert_not_deprecated(opt);
     assert(imapopts[opt].t == OPT_BITFIELD);
 
     return imapopts[opt].val.x;
+}
+
+/* Parse a duration value, converted to seconds.
+ *
+ * defunit is one of 'd', 'h', 'm', 's' and determines how
+ * unitless values are parsed.
+ *
+ * On success, 0 is returned and the duration in seconds is written to
+ * out_duration (if provided).
+
+ * On error, -1 is returned and out_duration is unchanged.
+ */
+EXPORTED int config_parseduration(const char *str, int defunit, int *out_duration)
+{
+    assert(strchr("dhms", defunit) != NULL); /* n.b. also permits \0 */
+
+    const size_t len = strlen(str);
+    const char *p;
+    int accum = 0, duration = 0, neg = 0, sawdigit = 0, r = 0;
+    char *copy = NULL;
+
+    /* the default default unit is seconds */
+    if (!defunit) defunit = 's';
+
+    /* make a copy and append the default unit if necessary */
+    copy = xzmalloc(len + 2);
+    strlcpy(copy, str, len + 2);
+    if (cyrus_isdigit(copy[len-1]))
+        copy[len] = defunit;
+
+    p = copy;
+    if (*p == '-') {
+        neg = 1;
+        p++;
+    }
+    for (; *p; p++) {
+        if (cyrus_isdigit(*p)) {
+            accum *= 10;
+            accum += (*p - '0');
+            sawdigit = 1;
+        }
+        else {
+            if (!sawdigit) {
+                syslog(LOG_DEBUG, "%s: no digit before '%c' in '%s'",
+                                  __func__, *p, str);
+                r = -1;
+                goto done;
+            }
+            sawdigit = 0;
+            switch (*p) {
+            case 'd':
+                accum *= 24;
+                /* fall through */
+            case 'h':
+                accum *= 60;
+                /* fall through */
+            case 'm':
+                accum *= 60;
+                /* fall through */
+            case 's':
+                duration += accum;
+                accum = 0;
+                break;
+            default:
+                syslog(LOG_DEBUG, "%s: bad unit '%c' in %s",
+                                  __func__, *p, str);
+                r = -1;
+                goto done;
+            }
+        }
+    }
+
+    /* we shouldn't have anything left in the accumulator */
+    assert(accum == 0);
+
+    if (neg) duration = -duration;
+    if (out_duration) *out_duration = duration;
+
+done:
+    if (copy) free(copy);
+    return r;
+}
+
+/* Get a duration value, converted to seconds.
+ *
+ * defunit is one of 'd', 'h', 'm', 's' and determines how
+ * unitless values are parsed.
+ */
+EXPORTED int config_getduration(enum imapopt opt, int defunit)
+{
+    int duration;
+
+    assert(opt > IMAPOPT_ZERO && opt < IMAPOPT_LAST);
+    assert(imapopts[opt].t == OPT_DURATION);
+    assert_not_deprecated(opt);
+    assert(strchr("dhms", defunit) != NULL); /* n.b. also permits \0 */
+
+    if (imapopts[opt].val.s == NULL) return 0;
+
+    if (config_parseduration(imapopts[opt].val.s, defunit, &duration)) {
+        /* should have been rejected by config_read_file, but just in case */
+        char errbuf[1024];
+        snprintf(errbuf, sizeof(errbuf),
+                 "%s: %s: couldn't parse duration '%s'",
+                 __func__, imapopts[opt].optname, imapopts[opt].val.s);
+        fatal(errbuf, EX_CONFIG);
+    }
+
+    return duration;
 }
 
 EXPORTED const char *config_getoverflowstring(const char *key, const char *def)
@@ -158,7 +299,7 @@ EXPORTED const char *config_getoverflowstring(const char *key, const char *def)
 
     if (config_ident) {
         if (snprintf(buf,sizeof(buf),"%s_%s",config_ident,key) == -1)
-            fatal("key too long in config_getoverflowstring", EC_TEMPFAIL);
+            fatal("key too long in config_getoverflowstring", EX_TEMPFAIL);
 
         lcase(buf);
         ret = hash_lookup(buf, &confighash);
@@ -218,10 +359,13 @@ EXPORTED const char *config_archivepartitiondir(const char *partition)
 {
     char buf[80];
 
+    if (!config_getswitch(IMAPOPT_ARCHIVE_ENABLED))
+        return NULL;
+
     if(strlcpy(buf, "archivepartition-", sizeof(buf)) >= sizeof(buf))
-        return 0;
+        return NULL;
     if(strlcat(buf, partition, sizeof(buf)) >= sizeof(buf))
-        return 0;
+        return NULL;
 
     const char *dir = config_getoverflowstring(buf, NULL);
     if (!dir)
@@ -294,6 +438,7 @@ static void config_option_deprecate(const int dopt)
 
     case OPT_STRINGLIST:
     case OPT_STRING:
+    case OPT_DURATION:
         imapopts[opt].val.s = imapopts[dopt].val.s;
         imapopts[dopt].val.s = NULL;
         break;
@@ -368,16 +513,18 @@ EXPORTED void config_read(const char *alt_config, const int config_need_data)
     char *p;
     int ival;
 
+    config_loaded = 1;
+
     /* xxx this is leaked, this may be able to be better in 2.2 (cyrus_done) */
     if (alt_config) config_filename = xstrdup(alt_config);
     else config_filename = xstrdup(CONFIG_FILENAME);
 
     if (!construct_hash_table(&confighash, CONFIGHASHSIZE, 1)) {
-        fatal("could not construct configuration hash table", EC_CONFIG);
+        fatal("could not construct configuration hash table", EX_CONFIG);
     }
 
     if (!construct_hash_table(&includehash, INCLUDEHASHSIZE, 1)) {
-        fatal("could not construct include file  hash table", EC_CONFIG);
+        fatal("could not construct include file  hash table", EX_CONFIG);
     }
 
     config_read_file(config_filename);
@@ -387,7 +534,7 @@ EXPORTED void config_read(const char *alt_config, const int config_need_data)
     /* Check configdirectory config option */
     if (!config_dir) {
         fatal("configdirectory option not specified in configuration file",
-              EC_CONFIG);
+              EX_CONFIG);
     }
 
     for (opt = IMAPOPT_ZERO; opt < IMAPOPT_LAST; opt++) {
@@ -445,7 +592,7 @@ EXPORTED void config_read(const char *alt_config, const int config_need_data)
             syslog(LOG_ERR, "INVALID defaultpartition: %s",
                    config_defpartition);
             fatal("defaultpartition option contains non-alnum character",
-                  EC_CONFIG);
+                  EX_CONFIG);
         }
         if (Uisupper(*p)) *p = tolower((unsigned char) *p);
     }
@@ -476,7 +623,7 @@ EXPORTED void config_read(const char *alt_config, const int config_need_data)
             snprintf(buf, sizeof(buf),
                      "partition-%s option not specified in configuration file",
                      config_defpartition ? config_defpartition : "<name>");
-            fatal(buf, EC_CONFIG);
+            fatal(buf, EX_CONFIG);
         }
     }
 
@@ -520,6 +667,19 @@ EXPORTED void config_read(const char *alt_config, const int config_need_data)
 
 #define GROWSIZE 4096
 
+static void config_add_overflowstring(const char *key, const char *value, int lineno)
+{
+    char *newval = xstrdup(value);
+    if (newval != hash_insert(key, newval, &confighash)) {
+        char errbuf[1024];
+        snprintf(errbuf, sizeof(errbuf),
+                "option '%s' was specified twice in config file "
+                "(second occurrence on line %d)",
+                key, lineno);
+        fatal(errbuf, EX_CONFIG);
+    }
+}
+
 static void config_read_file(const char *filename)
 {
     FILE *infile = NULL;
@@ -528,7 +688,7 @@ static void config_read_file(const char *filename)
     char *buf, errbuf[1024];
     const char *cyrus_path;
     unsigned bufsize, len;
-    char *p, *q, *key, *fullkey, *srvkey, *val, *newval;
+    char *p, *q, *key, *fullkey, *srvkey;
     int service_specific;
     int idlen = (config_ident ? strlen(config_ident) : 0);
 
@@ -550,14 +710,14 @@ static void config_read_file(const char *filename)
     if (!infile) {
         snprintf(buf, bufsize, "can't open configuration file %s: %s",
                  filename, strerror(errno));
-        fatal(buf, EC_CONFIG);
+        fatal(buf, EX_CONFIG);
     }
 
     /* check to see if we've already read this file */
     if (hash_lookup(filename, &includehash)) {
         snprintf(buf, bufsize, "configuration file %s included twice",
                  filename);
-        fatal(buf, EC_CONFIG);
+        fatal(buf, EX_CONFIG);
     }
     else {
         hash_insert(filename, (void*) 0xDEADBEEF, &includehash);
@@ -606,7 +766,7 @@ static void config_read_file(const char *filename)
             snprintf(errbuf, sizeof(errbuf),
                     "invalid option name on line %d of configuration file %s",
                     lineno, filename);
-            fatal(errbuf, EC_CONFIG);
+            fatal(errbuf, EX_CONFIG);
         }
         *p++ = '\0';
 
@@ -622,7 +782,7 @@ static void config_read_file(const char *filename)
             snprintf(errbuf, sizeof(errbuf),
                     "empty option value on line %d of configuration file",
                     lineno);
-            fatal(errbuf, EC_CONFIG);
+            fatal(errbuf, EX_CONFIG);
         }
 
         srvkey = NULL;
@@ -637,7 +797,7 @@ static void config_read_file(const char *filename)
                 snprintf(errbuf, sizeof(errbuf),
                          "invalid directive on line %d of configuration file %s",
                          lineno, filename);
-                fatal(errbuf, EC_CONFIG);
+                fatal(errbuf, EX_CONFIG);
             }
         }
 
@@ -689,7 +849,7 @@ static void config_read_file(const char *filename)
                 sprintf(errbuf,
                         "option '%s' was specified twice in config file (second occurrence on line %d)",
                         fullkey, lineno);
-                fatal(errbuf, EC_CONFIG);
+                fatal(errbuf, EX_CONFIG);
 
             } else if (imapopts[opt].seen == 2 && !service_specific) {
                 continue;
@@ -704,6 +864,14 @@ static void config_read_file(const char *filename)
                 imapopts[opt].seen = 2;
             else
                 imapopts[opt].seen = 1;
+
+            /* If this is a deprecated option, save a copy of its value to the
+             * overflow hash.  If we need to look up the deprecated name for
+             * some reason, we can do so with config_getoverflowstring().
+             */
+            if (imapopts[opt].deprecated_since) {
+                config_add_overflowstring(fullkey, p, lineno);
+            }
 
             /* this is a known option */
             switch (imapopts[opt].t) {
@@ -726,7 +894,7 @@ static void config_read_file(const char *filename)
                     /* error during conversion */
                     sprintf(errbuf, "non-integer value for %s in line %d",
                             imapopts[opt].optname, lineno);
-                    fatal(errbuf, EC_CONFIG);
+                    fatal(errbuf, EX_CONFIG);
                 }
 
                 imapopts[opt].val.i = val;
@@ -746,7 +914,7 @@ static void config_read_file(const char *filename)
                     /* error during conversion */
                     sprintf(errbuf, "non-switch value for %s in line %d",
                             imapopts[opt].optname, lineno);
-                    fatal(errbuf, EC_CONFIG);
+                    fatal(errbuf, EX_CONFIG);
                 }
                 break;
             }
@@ -789,7 +957,7 @@ static void config_read_file(const char *filename)
                         /* error during conversion */
                         sprintf(errbuf, "invalid value '%s' for %s in line %d",
                                 p, imapopts[opt].optname, lineno);
-                        fatal(errbuf, EC_CONFIG);
+                        fatal(errbuf, EX_CONFIG);
                     }
                     else if (imapopts[opt].t == OPT_STRINGLIST)
                         imapopts[opt].val.s = e->name;
@@ -803,6 +971,22 @@ static void config_read_file(const char *filename)
                     q = p;
                 }
 
+                break;
+            }
+            case OPT_DURATION:
+            {
+                /* make sure it's parseable, though we don't know the default units */
+                if (config_parseduration(p, '\0', NULL)) {
+                    snprintf(errbuf, sizeof(errbuf),
+                             "unparsable duration '%s' for %s in line %d",
+                             p, imapopts[opt].optname, lineno);
+                    fatal(errbuf, EX_CONFIG);
+                }
+
+                /* but then store it unparsed, it will be parsed again by
+                 * config_getduration() where the caller knows the appropriate
+                 * default units */
+                imapopts[opt].val.s = xstrdup(p);
                 break;
             }
             case OPT_NOTOPT:
@@ -822,19 +1006,12 @@ static void config_read_file(const char *filename)
                 sprintf(errbuf,
                         "option '%s' is unknown on line %d of config file",
                         fullkey, lineno);
-                fatal(errbuf, EC_CONFIG);
+                fatal(errbuf, EX_CONFIG);
             }
 */
 
             /* Put it in the overflow hash table */
-            newval = xstrdup(p);
-            val = hash_insert(key, newval, &confighash);
-            if (val != newval) {
-                snprintf(errbuf, sizeof(errbuf),
-                        "option '%s' was specified twice in config file (second occurrence on line %d)",
-                        fullkey, lineno);
-                fatal(errbuf, EC_CONFIG);
-            }
+            config_add_overflowstring(key, p, lineno);
         }
     }
 

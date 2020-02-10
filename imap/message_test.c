@@ -46,6 +46,7 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -53,7 +54,6 @@
 /* cyrus includes */
 #include "assert.h"
 #include "bsearch.h"
-#include "exitcodes.h"
 #include "global.h"
 #include "index.h"
 #include "search_engines.h"
@@ -61,7 +61,6 @@
 #include "mailbox.h"
 #include "mboxlist.h"
 #include "message.h"
-#include "sysexits.h"
 #include "util.h"
 #include "xmalloc.h"
 
@@ -116,6 +115,8 @@ static int dump_one_section(int partno, charset_t charset, int encoding,
                             const struct param *type_params __attribute__((unused)),
                             const char *disposition __attribute__((unused)),
                             const struct param *disposition_params __attribute__((unused)),
+                            const struct message_guid *content_guid __attribute__((unused)),
+                            const char *part __attribute__((unused)),
                             struct buf *data,
                             void *rock __attribute__((unused)))
 {
@@ -203,9 +204,6 @@ int main(int argc, char **argv)
 
     cyrus_init(alt_config, "message_test", 0, CONFIG_NEED_PARTITION_DATA);
 
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-
     if (mboxname && record_flag) {
         struct mailbox *mailbox = NULL;
         struct index_record record;
@@ -292,9 +290,6 @@ int main(int argc, char **argv)
         buf_free(&buf);
     }
 
-    mboxlist_close();
-    mboxlist_done();
-
     cyrus_done();
 
     return r;
@@ -309,7 +304,7 @@ static int usage(const char *name)
     fprintf(stderr, "-p         dump message part tree\n");
     fprintf(stderr, "-s         dump text sections\n");
     fprintf(stderr, "-t         dump output from search text receiver\n");
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 void fatal(const char* s, int code)

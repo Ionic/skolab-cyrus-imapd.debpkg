@@ -15,8 +15,8 @@ Description
 ===========
 
 **sync_reset** is a small utility program to destroy user accounts on
-a system.  The only safeguard which is in place is the obligary force
-option.
+a system.  The only safeguard which is in place is the obligatory
+force option.
 
 **sync_reset** reads its configuration options out of the
 imapd.conf(5) file unless specified otherwise by **-C**.

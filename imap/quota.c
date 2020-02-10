@@ -49,6 +49,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -74,7 +75,6 @@
 
 #include "bsearch.h"
 #include "global.h"
-#include "exitcodes.h"
 #include "mailbox.h"
 #include "xmalloc.h"
 #include "xstrlcpy.h"
@@ -103,10 +103,10 @@ struct quotaentry {
 /* forward declarations */
 static void usage(void);
 static void reportquota(void);
-static int buildquotalist(char *domain, char **roots, int nroots);
-static int fixquotas(char *domain, char **roots, int nroots);
+static int buildquotalist(char *domain, char **roots, int nroots, int isuser);
+static int fixquotas(char *domain, char **roots, int nroots, int isuser);
 static int fixquota_dopass(char *domain, char **roots, int nroots,
-                           mboxlist_cb *pass);
+                           mboxlist_cb *pass, int isuser);
 static int fixquota_fixroot(struct mailbox *mailbox, const char *root);
 static int fixquota_finish(int thisquota);
 static int (*compar)(const char *s1, const char *s2);
@@ -116,6 +116,7 @@ static int (*compar)(const char *s1, const char *s2);
 static struct quotaentry *quotaroots;
 static int quota_num = 0, quota_alloc = 0;
 static int quota_todo = 0;
+static int flag_reportonly = 0;
 
 static int test_sync_mode = 0;
 
@@ -126,11 +127,12 @@ int main(int argc,char **argv)
     int opt;
     int i;
     int fflag = 0;
+    int isuser = 0;
     int r, code = 0;
     int do_report = 1;
     char *alt_config = NULL, *domain = NULL;
 
-    while ((opt = getopt(argc, argv, "C:d:fqJZ")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:d:fqJZu")) != EOF) {
         switch (opt) {
         case 'C': /* alt config file */
             alt_config = optarg;
@@ -146,6 +148,14 @@ int main(int argc,char **argv)
 
         case 'f':
             fflag = 1;
+            break;
+
+        case 'u':
+            isuser = 1;
+            break;
+
+        case 'n':
+            flag_reportonly = 1;
             break;
 
         case 'J':
@@ -171,7 +181,7 @@ int main(int argc,char **argv)
     /* Set namespace -- force standard (internal) */
     if ((r = mboxname_init_namespace(&quota_namespace, 1)) != 0) {
         syslog(LOG_ERR, "%s", error_message(r));
-        fatal(error_message(r), EC_CONFIG);
+        fatal(error_message(r), EX_CONFIG);
     }
 
     if (config_getswitch(IMAPOPT_IMPROVED_MBOXLIST_SORT))
@@ -186,24 +196,18 @@ int main(int argc,char **argv)
     mboxlist_init(0);
     mboxlist_open(NULL);
 
-    quotadb_init(0);
-    quotadb_open(NULL);
-
     quota_changelock();
 
     if (!r)
-        r = buildquotalist(domain, argv+optind, argc-optind);
+        r = buildquotalist(domain, argv+optind, argc-optind, isuser);
 
     if (!r && fflag)
-        r = fixquotas(domain, argv+optind, argc-optind);
+        r = fixquotas(domain, argv+optind, argc-optind, isuser);
 
     quota_changelockrelease();
 
     if (r) code = convert_code(r);
     else if (do_report) reportquota();
-
-    quotadb_close();
-    quotadb_done();
 
     mboxlist_close();
     mboxlist_done();
@@ -223,16 +227,24 @@ int main(int argc,char **argv)
 static void usage(void)
 {
     fprintf(stderr,
-            "usage: quota [-C <alt_config>] [-d <domain>] [-f] [-q] [prefix]...\n");
-    exit(EC_USAGE);
+            "usage: quota [-C <alt_config>] [-d <domain>] [-f] [-q] [-u] [mailbox-spec]...\n");
+    exit(EX_USAGE);
 }
 
-static void errmsg(const char *fmt, const char *arg, int err)
+static void
+__attribute__((format(printf, 2, 3)))
+errmsg(int err, const char *fmt, ...)
 {
     char buf[1024];
     size_t len;
+    va_list ap;
 
-    len = snprintf(buf, sizeof(buf), fmt, arg);
+    /* XXX handling of 'len' here smells bad */
+
+    va_start(ap, fmt);
+    len = vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+
     if (len < sizeof(buf))
         len += snprintf(buf+len, sizeof(buf)-len, ": %s", error_message(err));
     if ((err == IMAP_IOERROR) && (len < sizeof(buf)))
@@ -327,8 +339,8 @@ static int fixquota_addroot(struct quota *q,
     quota_init(&localq, quotaroots[quota_num].name);
     r = quota_read(&localq, &tid, 1);
     if (r) {
-        errmsg("failed reading quota record for '%s'",
-               q->root, r);
+        errmsg(r, "failed reading quota record for '%s'",
+               q->root);
         goto done;
     }
 
@@ -337,10 +349,10 @@ static int fixquota_addroot(struct quota *q,
         free(localq.scanmbox);
         localq.scanmbox = NULL;
 
-        r = quota_write(&localq, &tid);
+        r = quota_write(&localq, 0, &tid);
         if (r) {
-            errmsg("failed writing quota record for '%s'",
-                   q->root, r);
+            errmsg(r, "failed writing quota record for '%s'",
+                   q->root);
             goto done;
         }
     }
@@ -363,7 +375,7 @@ done:
 /*
  * Build the list of quota roots in 'quota'
  */
-int buildquotalist(char *domain, char **roots, int nroots)
+int buildquotalist(char *domain, char **roots, int nroots, int isuser)
 {
     int i, r = 0;
     char buf[MAX_MAILBOX_BUFFER], *tail;
@@ -380,7 +392,7 @@ int buildquotalist(char *domain, char **roots, int nroots)
     if (!nroots) {
         r = quota_foreach(buf, fixquota_addroot, buf, NULL);
         if (r) {
-            errmsg("failed building quota list for '%s'", buf, IMAP_IOERROR);
+            errmsg(IMAP_IOERROR, "failed building quota list for '%s'", buf);
         }
     }
 
@@ -389,12 +401,18 @@ int buildquotalist(char *domain, char **roots, int nroots)
      * with the matching prefixes.
      */
     for (i = 0; i < nroots; i++) {
-        strlcpy(tail, roots[i], sizeof(buf) - domainlen);
+        if (isuser) {
+            char *res = mboxname_user_mbox(roots[i], NULL);
+            strlcpy(buf, res, sizeof(buf));
+            free(res);
+        }
+        else {
+            strlcpy(tail, roots[i], sizeof(buf) - domainlen);
+        }
         /* XXX - namespace fixes here */
-
         r = quota_foreach(buf, fixquota_addroot, buf, NULL);
         if (r) {
-            errmsg("failed building quota list for '%s'", buf, IMAP_IOERROR);
+            errmsg(IMAP_IOERROR, "failed building quota list for '%s'", buf);
             break;
         }
     }
@@ -466,13 +484,13 @@ static int fixquota_dombox(const mbentry_t *mbentry, void *rock)
 
     r = findroot(mbentry->name, &thisquota);
     if (r) {
-        errmsg("failed finding quotaroot for mailbox '%s'", mbentry->name, r);
+        errmsg(r, "failed finding quotaroot for mailbox '%s'", mbentry->name);
         goto done;
     }
 
     r = mailbox_open_iwl(mbentry->name, &mailbox);
     if (r) {
-        errmsg("failed opening header for mailbox '%s'", mbentry->name, r);
+        errmsg(r, "failed opening header for mailbox '%s'", mbentry->name);
         goto done;
     }
 
@@ -514,7 +532,7 @@ static int fixquota_dombox(const mbentry_t *mbentry, void *rock)
         free(localq.scanmbox);
         localq.scanmbox = xstrdup(mbentry->name);
 
-        r = quota_write(&localq, &txn);
+        r = quota_write(&localq, 0, &txn);
         quota_free(&localq);
 
         if (r) {
@@ -542,7 +560,7 @@ int fixquota_fixroot(struct mailbox *mailbox,
            root ? root : "(none)");
 
     r = mailbox_set_quotaroot(mailbox, root);
-    if (r) errmsg("failed writing header for mailbox '%s'", mailbox->name, r);
+    if (r) errmsg(r, "failed writing header for mailbox '%s'", mailbox->name);
 
     return r;
 }
@@ -561,9 +579,10 @@ int fixquota_finish(int thisquota)
     if (!quotaroots[thisquota].refcount) {
         quotaroots[thisquota].deleted = 1;
         fprintf(stderr, "%s: removed\n", root);
-        r = quota_deleteroot(root);
+        if (!flag_reportonly)
+            r = quota_deleteroot(root, 0);
         if (r) {
-            errmsg("failed deleting quotaroot '%s'", root, r);
+            errmsg(r, "failed deleting quotaroot '%s'", root);
         }
         return r;
     }
@@ -572,7 +591,7 @@ int fixquota_finish(int thisquota)
     quota_init(&localq, root);
     r = quota_read(&localq, &tid, 1);
     if (r) {
-        errmsg("failed reading quotaroot '%s'", root, r);
+        errmsg(r, "failed reading quotaroot '%s'", root);
         goto done;
     }
 
@@ -584,7 +603,8 @@ int fixquota_finish(int thisquota)
                 quota_names[res],
                 localq.useds[res],
                 localq.scanuseds[res]);
-            localq.useds[res] = localq.scanuseds[res];
+            if (!flag_reportonly)
+                localq.useds[res] = localq.scanuseds[res];
         }
     }
 
@@ -592,9 +612,9 @@ int fixquota_finish(int thisquota)
     free(localq.scanmbox);
     localq.scanmbox = NULL;
 
-    r = quota_write(&localq, &tid);
+    r = quota_write(&localq, 0, &tid);
     if (r) {
-        errmsg("failed writing quotaroot: '%s'", root, r);
+        errmsg(r, "failed writing quotaroot: '%s'", root);
         goto done;
     }
 
@@ -611,7 +631,7 @@ done:
  * Run a pass over all the quota roots
  */
 int fixquota_dopass(char *domain, char **roots, int nroots,
-                    mboxlist_cb *cb)
+                    mboxlist_cb *cb, int isuser)
 {
     int i, r = 0;
     char buf[MAX_MAILBOX_BUFFER], *tail;
@@ -626,9 +646,9 @@ int fixquota_dopass(char *domain, char **roots, int nroots,
 
     /* basic case - everything (potentially limited by domain still) */
     if (!nroots) {
-        r = mboxlist_allmbox(buf, cb, buf, /*incdel*/0);
+        r = mboxlist_allmbox(buf, cb, buf, /*flags*/0);
         if (r) {
-            errmsg("processing mbox list for '%s'", buf, IMAP_IOERROR);
+            errmsg(IMAP_IOERROR, "processing mbox list for '%s'", buf);
         }
     }
 
@@ -637,11 +657,17 @@ int fixquota_dopass(char *domain, char **roots, int nroots,
      * with the matching prefixes.
      */
     for (i = 0; i < nroots; i++) {
-        strlcpy(tail, roots[i], sizeof(buf) - domainlen);
-
-        r = mboxlist_allmbox(buf, cb, buf, /*incdel*/0);
+        if (isuser) {
+            char *inbox = mboxname_user_mbox(roots[i], NULL);
+            r = mboxlist_usermboxtree(roots[i], NULL, cb, inbox, /*flags*/0);
+            free(inbox);
+        }
+        else {
+            strlcpy(tail, roots[i], sizeof(buf) - domainlen);
+            r = mboxlist_allmbox(buf, cb, buf, /*flags*/0);
+        }
         if (r) {
-            errmsg("processing mbox list for '%s'", buf, IMAP_IOERROR);
+            errmsg(IMAP_IOERROR, "processing mbox list for '%s'", buf);
             break;
         }
     }
@@ -652,11 +678,11 @@ int fixquota_dopass(char *domain, char **roots, int nroots,
 /*
  * Fix all the quota roots
  */
-int fixquotas(char *domain, char **roots, int nroots)
+int fixquotas(char *domain, char **roots, int nroots, int isuser)
 {
     int r;
 
-    r = fixquota_dopass(domain, roots, nroots, fixquota_dombox);
+    r = fixquota_dopass(domain, roots, nroots, fixquota_dombox, isuser);
 
     while (!r && quota_todo < quota_num) {
         r = fixquota_finish(quota_todo);

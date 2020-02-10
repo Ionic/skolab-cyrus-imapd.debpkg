@@ -16,8 +16,6 @@ Installation Problems
 
 * Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora
 
-* Problems detecting Berkley DB on Red Hat Linux
-
 * Help! There must be an easier way to get all this going...
 
 * OpenSSL Version Mismatches
@@ -45,14 +43,10 @@ Common Operational Questions
 
 * What annotations are available?
 
-* Why does ctl_cyrusdb -r take so long with Berkeley DB?
-
 * Is it safe to put <configdirectory>/proc and
   <configdirectory>/lock on a tmpfs filesystem?
 
 * How to enable core dumps
-
-* Is the "db3: x Lockers" log message harmful?
 
 * Why can I not delete a mailbox as an admin user?
 

@@ -17,7 +17,7 @@ Synopsis
 
     **reconstruct** [ **-C** *config-file* ] [ **-p** *partition* ] [ **-x** ] [ **-r** ]
         [ **-f** ] [ **-U** ] [ **-s** ] [ **-q** ] [ **-G** ] [ **-R** ] [ **-o** ]
-        [ **-O** ] [ **-M** ] *mailbox*...
+        [ **-O** ] [ **-M** ] [ **-V** *version* ] *mailbox*...
 
     **reconstruct** [ **-C** *config-file* ] [ **-p** *partition* ] [ **-x** ] [ **-r** ]
         [ **-f** ] [ **-U** ] [ **-s** ] [ **-q** ] [ **-G** ] [ **-R** ] [ **-o** ]
@@ -94,7 +94,7 @@ Options
 
     Don't stat underlying files.  This makes reconstruct run faster, at
     the expense of not noticing some issues (like zero byte files or
-    size mistmatches).  "**reconstruct -s**" should be quite fast.
+    size mismatches).  "**reconstruct -s**" should be quite fast.
 
 .. option:: -q
 
@@ -229,7 +229,7 @@ Examples
 
 ..
 
-        Recusively reconstruct all mailboxes belonging to *jsmith*,
+        Recursively reconstruct all mailboxes belonging to *jsmith*,
         restoring any directories containing ``cyrus.header`` files.
 
 .. only:: html

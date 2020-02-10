@@ -32,8 +32,96 @@ Developers
 
   * About Cyrus Works
 
-  * Testing
-
   * How it works
 
-  * Adding Rules
+
+Cyrus Internals
+===============
+
+These documents are intended for persons interested in contributing to
+the Cyrus IMAP development effort, or for those interested in lower-
+level details about how Cyrus is implemented.
+
+* Cyrus APIs
+
+  * CyrusDB API
+
+  * cyrusdb API
+
+  * Index API
+
+  * Mailbox API
+
+* Thoughts & Notes
+
+  * Notes for backup implementation
+
+  * Cyrus IMAP Server: Sieve Bytecode
+
+  * Cyrus CalDAV Scheduling Flowchart
+
+  * Enabling improved_mboxlist_sort
+
+  * Cyrus IMAP Server: Notes
+
+  * Cyrus IMAP Server: Prot Events
+
+* Guidance for Developers
+
+  * Cyrus IMAP Server: Hacking
+
+  * Cyrus IMAP Server: Internationalization
+
+  * Cyrus IMAP Server: Locking
+
+  * Cyrus IMAP Server: Mailbox File Formats
+
+  * Cyrus IMAP Server: Namelocks
+
+  * Cyrus IMAP Server: prot layer
+
+  * Cyrus IMAP Server: Replication Examples
+
+  * Cyrus IMAP Server: Replication Protocol v2.4+
+
+  * Cyrus IMAP Server: Special Characters
+
+  * Cyrus IMAP Server: var directory structure
+
+This "diagram" shows the Master State Machine.
+
+
+Unit Tests
+==========
+
+* Unit Tests
+
+  * Table of Contents
+
+  * 1. Introduction
+
+  * 2. What Is A Unit Test?
+
+  * 3. Running The Tests
+
+    * 3.1. Setting Up The Machine
+
+    * 3.2 Configure Script
+
+    * 3.3 Make
+
+    * 3.4 Using Valgrind
+
+    * 3.5 The Tests Are Failing
+
+  * 3.6 Debugging A Test
+
+  * 4. Adding Your Own Tests
+
+  * 4.1 Where To Put Your Tests
+
+  * 4.1 Adding A New Suite
+
+  * 4.2 Adding A Test To A Suite
+
+  * 4.3 Suite Setup And Teardown

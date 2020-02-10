@@ -31,6 +31,8 @@ Its feature set is limited to:
 * File Storage (WebDAV)
     * Acts as a remote storage server server by using IMAP mailboxes as
       collections and :rfc:`5322` message to store files.
+* JMAP support
+    * Allows synchronization of mail clients via the JSON Mail Access Protocol (JMAP).
 * Other (RSS, static content)
     * Serves static content (such as the RSS feed list template and the
       CalDAV/CardDAV web GUIs ).
@@ -94,12 +96,12 @@ Module-specific information
 ===========================
 
 .. toctree::
-    :glob:
     :maxdepth: 2
 
     http/caldav
     http/carddav
     http/webdav
+    http/jmap
     http/rss
 
 For end users

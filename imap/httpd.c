@@ -1,6 +1,6 @@
-/* httpd.c -- HTTP/WebDAV/CalDAV server protocol parsing
+/* httpd.c -- HTTP/RSS/xDAV/JMAP/TZdist/iSchedule server protocol parsing
  *
- * Copyright (c) 1994-2011 Carnegie Mellon University.  All rights reserved.
+ * Copyright (c) 1994-2017 Carnegie Mellon University.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -54,6 +54,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/param.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <netdb.h>
 #include <sys/socket.h>
@@ -64,9 +65,12 @@
 
 #include <sasl/sasl.h>
 #include <sasl/saslutil.h>
+#include <jansson.h>
 
 #include "httpd.h"
+#include "http_h2.h"
 #include "http_proxy.h"
+#include "http_ws.h"
 
 #include "acl.h"
 #include "assert.h"
@@ -76,16 +80,15 @@
 #include "tls.h"
 #include "map.h"
 
-#include "acl.h"
-#include "exitcodes.h"
 #include "imapd.h"
 #include "proc.h"
 #include "version.h"
+#include "stristr.h"
 #include "xstrlcpy.h"
 #include "xstrlcat.h"
-#include "sync_log.h"
 #include "telemetry.h"
 #include "backend.h"
+#include "prometheus.h"
 #include "proxy.h"
 #include "userdeny.h"
 #include "message.h"
@@ -106,14 +109,110 @@
 #include <libxml/HTMLtree.h>
 #include <libxml/uri.h>
 
+static unsigned accept_encodings = 0;
+
 #ifdef HAVE_ZLIB
 #include <zlib.h>
+
+HIDDEN void *zlib_init()
+{
+    z_stream *zstrm = xzmalloc(sizeof(z_stream));
+
+    /* Always use gzip format because IE incorrectly uses raw deflate */
+    if (deflateInit2(zstrm, Z_DEFAULT_COMPRESSION, Z_DEFLATED,
+                     16+MAX_WBITS /* gzip */,
+                     MAX_MEM_LEVEL, Z_DEFAULT_STRATEGY) != Z_OK) {
+        free(zstrm);
+        return NULL;
+    }
+    else {
+        accept_encodings |= CE_DEFLATE | CE_GZIP;
+        return zstrm;
+    }
+}
+
+HIDDEN int zlib_compress(struct transaction_t *txn, unsigned flags,
+                         const char *buf, unsigned len)
+{
+    z_stream *zstrm = txn->zstrm;
+    unsigned flush;
+
+    if (flags & COMPRESS_START) deflateReset(zstrm);
+
+    if (txn->ws_ctx) flush = Z_SYNC_FLUSH;
+    else {
+        /* Only flush for static content or on last (zero-length) chunk */
+        if (flags & COMPRESS_END) flush = Z_FINISH;
+        else flush = Z_NO_FLUSH;
+    }
+
+    zstrm->next_in = (Bytef *) buf;
+    zstrm->avail_in = len;
+
+    buf_ensure(&txn->zbuf, deflateBound(zstrm, zstrm->avail_in));
+    buf_reset(&txn->zbuf);
+
+    do {
+        int zr;
+
+        if (!zstrm->avail_out) {
+            unsigned pending;
+
+            zr = deflatePending(zstrm, &pending, Z_NULL);
+            if (zr != Z_OK) {
+                /* something went wrong */
+                syslog(LOG_ERR, "zlib deflate error: %d %s", zr, zstrm->msg);
+                return -1;
+            }
+
+            buf_ensure(&txn->zbuf, pending);
+        }
+
+        zstrm->next_out = (Bytef *) txn->zbuf.s + txn->zbuf.len;
+        zstrm->avail_out = txn->zbuf.alloc - txn->zbuf.len;
+
+        zr = deflate(zstrm, flush);
+        if (!(zr == Z_OK || zr == Z_STREAM_END || zr == Z_BUF_ERROR)) {
+            /* something went wrong */
+            syslog(LOG_ERR, "zlib deflate error: %d %s", zr, zstrm->msg);
+            return -1;
+        }
+
+        txn->zbuf.len = txn->zbuf.alloc - zstrm->avail_out;
+
+    } while (!zstrm->avail_out);
+
+    return 0;
+}
+
+static void zlib_done(z_stream *zstrm)
+{
+    if (zstrm) {
+        deflateEnd(zstrm);
+        free(zstrm);
+    }
+}
+#else /* !HAVE_ZLIB */
+
+HIDDEN void *zlib_init() { return NULL; }
+
+HIDDEN int zlib_compress(struct transaction_t *txn __attribute__((unused)),
+                         unsigned flags __attribute__((unused)),
+                         const char *buf __attribute__((unused)),
+                         unsigned len __attribute__((unused)))
+{
+    fatal("Compression requested, but no zlib", EX_SOFTWARE);
+}
+
+static void zlib_done(void *zstrm __attribute__((unused))) { }
+
 #endif /* HAVE_ZLIB */
+
 
 #ifdef HAVE_BROTLI
 #include <brotli/encode.h>
 
-BrotliEncoderState *brotli_init()
+HIDDEN void *brotli_init()
 {
     BrotliEncoderState *brotli = BrotliEncoderCreateInstance(NULL, NULL, NULL);
 
@@ -124,12 +223,137 @@ BrotliEncoderState *brotli_init()
                                   BROTLI_DEFAULT_QUALITY);
         BrotliEncoderSetParameter(brotli, BROTLI_PARAM_LGWIN,
                                   BROTLI_DEFAULT_WINDOW);
-        BrotliEncoderSetParameter(brotli, BROTLI_PARAM_LGBLOCK, 0);
+        BrotliEncoderSetParameter(brotli, BROTLI_PARAM_LGBLOCK,
+                                  BROTLI_MAX_INPUT_BLOCK_BITS);
     }
 
     return brotli;
 }
+
+static int brotli_compress(struct transaction_t *txn,
+                           unsigned flags, const char *buf, unsigned len)
+{
+    /* Only flush for static content or on last (zero-length) chunk */
+    unsigned op = (flags & COMPRESS_END) ?
+        BROTLI_OPERATION_FINISH : BROTLI_OPERATION_FLUSH;
+    BrotliEncoderState *brotli = txn->brotli;
+    const uint8_t *next_in = (const uint8_t *) buf;
+    size_t avail_in = (size_t) len;
+
+    buf_ensure(&txn->zbuf, BrotliEncoderMaxCompressedSize(avail_in));
+    buf_reset(&txn->zbuf);
+
+    do {
+        uint8_t *next_out = (uint8_t *) txn->zbuf.s + txn->zbuf.len;
+        size_t avail_out = txn->zbuf.alloc - txn->zbuf.len;
+
+        if (!BrotliEncoderCompressStream(brotli, op,
+                                         &avail_in, &next_in,
+                                         &avail_out, &next_out, NULL)) {
+            syslog(LOG_ERR, "Brotli: Error while compressing data");
+            return -1;
+        }
+
+        txn->zbuf.len = txn->zbuf.alloc - avail_out;
+    } while (avail_in || BrotliEncoderHasMoreOutput(brotli));
+
+    if (BrotliEncoderIsFinished(brotli)) {
+        BrotliEncoderDestroyInstance(brotli);
+        txn->brotli = brotli_init();
+    }
+
+    return 0;
+}
+
+static void brotli_done(BrotliEncoderState *brotli)
+{
+    if (brotli) BrotliEncoderDestroyInstance(brotli);
+}
+
+#else /* !HAVE_BROTLI */
+
+HIDDEN void *brotli_init() { return NULL; }
+
+static int brotli_compress(struct transaction_t *txn __attribute__((unused)),
+                           unsigned flags __attribute__((unused)),
+                           const char *buf __attribute__((unused)),
+                           unsigned len __attribute__((unused)))
+{
+    fatal("Brotli Compression requested, but not available", EX_SOFTWARE);
+}
+
+static void brotli_done(void *brotli __attribute__((unused))) {}
+
 #endif /* HAVE_BROTLI */
+
+
+#ifdef HAVE_ZSTD
+#include <zstd.h>
+#include <zstd_errors.h>
+
+HIDDEN void *zstd_init()
+{
+    ZSTD_CCtx *cctx = ZSTD_createCCtx();
+
+    if (cctx) {
+        ZSTD_CCtx_setParameter(cctx, ZSTD_c_compressionLevel,
+                               ZSTD_CLEVEL_DEFAULT);
+        ZSTD_CCtx_setParameter(cctx, ZSTD_c_checksumFlag, 1);
+    }
+
+    return cctx;
+}
+
+static int zstd_compress(struct transaction_t *txn,
+                         unsigned flags, const char *buf, unsigned len)
+{
+    /* Only flush for static content or on last (zero-length) chunk */
+    ZSTD_EndDirective mode = (flags & COMPRESS_END) ? ZSTD_e_end : ZSTD_e_flush;
+    ZSTD_inBuffer input = { buf, len, 0 };
+    ZSTD_CCtx *cctx = txn->zstd;
+    size_t remaining;
+
+    if (flags & COMPRESS_START) ZSTD_CCtx_reset(cctx, ZSTD_reset_session_only);
+
+    buf_ensure(&txn->zbuf, ZSTD_compressBound(len));
+    buf_reset(&txn->zbuf);
+
+    ZSTD_outBuffer output = { txn->zbuf.s, txn->zbuf.alloc, 0 };
+    do {
+        remaining = ZSTD_compressStream2(cctx, &output, &input, mode);
+
+        if (ZSTD_isError(remaining)) {
+            syslog(LOG_ERR, "Zstandard: %s",
+                   ZSTD_getErrorString(ZSTD_getErrorCode(remaining)));
+            return -1;
+        }
+    } while (remaining || (input.pos != input.size));
+
+    buf_truncate(&txn->zbuf, output.pos);
+
+    return 0;
+}
+
+static void zstd_done(ZSTD_CCtx *cctx)
+{
+    if (cctx) ZSTD_freeCCtx(cctx);
+}
+
+#else /* !HAVE_ZSTD */
+
+HIDDEN void *zstd_init() { return NULL; }
+
+static int zstd_compress(struct transaction_t *txn __attribute__((unused)),
+                           unsigned flags __attribute__((unused)),
+                           const char *buf __attribute__((unused)),
+                           unsigned len __attribute__((unused)))
+{
+    fatal("Zstandard Compression requested, but not available", EX_SOFTWARE);
+}
+
+static void zstd_done(void *brotli __attribute__((unused))) {}
+
+#endif /* HAVE_ZSTD */
 
 
 static const char tls_message[] =
@@ -143,14 +367,11 @@ extern int optind;
 extern char *optarg;
 extern int opterr;
 
-#ifdef HAVE_SSL
-static SSL *tls_conn;
-#endif /* HAVE_SSL */
-
 sasl_conn_t *httpd_saslconn; /* the sasl connection context */
 
 static struct wildmat *allow_cors = NULL;
 int httpd_timeout, httpd_keepalive;
+char *httpd_authid = NULL;
 char *httpd_userid = NULL;
 char *httpd_extrafolder = NULL;
 char *httpd_extradomain = NULL;
@@ -158,16 +379,13 @@ struct auth_state *httpd_authstate = 0;
 int httpd_userisadmin = 0;
 int httpd_userisproxyadmin = 0;
 int httpd_userisanonymous = 1;
-static const char *httpd_clienthost = "[local]";
 const char *httpd_localip = NULL, *httpd_remoteip = NULL;
 struct protstream *httpd_out = NULL;
 struct protstream *httpd_in = NULL;
 struct protgroup *protin = NULL;
-static int httpd_logfd = -1;
 
 static sasl_ssf_t extprops_ssf = 0;
 int https = 0;
-int httpd_tls_done = 0;
 int httpd_tls_required = 0;
 unsigned avail_auth_schemes = 0; /* bitmask of available auth schemes */
 unsigned long config_httpmodules;
@@ -179,400 +397,24 @@ struct buf serverinfo = BUF_INITIALIZER;
 int ignorequota = 0;
 int apns_enabled = 0;
 
-#ifdef HAVE_NGHTTP2
-
-static nghttp2_session_callbacks *http2_callbacks = NULL;
-
-#if OPENSSL_VERSION_NUMBER >= 0x10002000L
-static int alpn_select_cb(SSL *ssl __attribute__((unused)),
-                          const unsigned char **out, unsigned char *outlen,
-                          const unsigned char *in, unsigned int inlen,
-                          void *arg)
-{
-    int *is_h2 = (int *) arg;
-
-    if (nghttp2_select_next_protocol((u_char **) out, outlen, in, inlen) == 1) {
-        *is_h2 = 1;
-        return SSL_TLSEXT_ERR_OK;
-    }
-
-    return SSL_TLSEXT_ERR_NOACK;
-}
-#endif /* OPENSSL_VERSION_NUMBER >= 0x10002000L */
-
-static ssize_t http2_send_cb(nghttp2_session *session __attribute__((unused)),
-                             const uint8_t *data, size_t length,
-                             int flags __attribute__((unused)),
-                             void *user_data)
-{
-    struct http_connection *conn = (struct http_connection *) user_data;
-    struct protstream *pout = conn->pout;
-    int r;
-
-    r = prot_write(pout, (const char *) data, length);
-
-    syslog(LOG_DEBUG, "http2_send_cb(%zu): %d", length, r);
-
-    if (r) return NGHTTP2_ERR_CALLBACK_FAILURE;
-
-    return length;
-}
-
-static ssize_t http2_recv_cb(nghttp2_session *session __attribute__((unused)),
-                             uint8_t *buf, size_t length,
-                             int flags __attribute__((unused)),
-                             void *user_data)
-{
-    struct http_connection *conn = (struct http_connection *) user_data;
-    struct protstream *pin = conn->pin;
-    ssize_t n;
-
-    
-    n = prot_read(pin, (char *) buf, length);
-    if (n) {
-        /* We received some data - don't block next time
-           Note: This callback gets called multiple times until it
-           would block.  We don't actually want to block and prevent
-           output from being submitted */
-        prot_NONBLOCK(pin);
-    }
-    else {
-        /* No data -  block next time (for client timeout) */
-        prot_BLOCK(pin);
-
-        if (pin->eof) n = NGHTTP2_ERR_EOF;
-        else if (pin->error) n = NGHTTP2_ERR_CALLBACK_FAILURE;
-        else n = NGHTTP2_ERR_WOULDBLOCK;
-    }
-
-    syslog(LOG_DEBUG,
-           "http2_recv_cb(%zu): n = %zd, eof = %d, err = '%s', errno = %d",
-           length, n, pin->eof, pin->error ? pin->error : "", errno);
-
-    return n;
-}
-
-static ssize_t http2_data_source_read_cb(nghttp2_session *session __attribute__((unused)),
-                                         int32_t stream_id,
-                                         uint8_t *buf, size_t length,
-                                         uint32_t *data_flags,
-                                         nghttp2_data_source *source,
-                                         void *user_data __attribute__((unused)))
-{
-    struct protstream *s = source->ptr;
-    size_t n = prot_read(s, (char *) buf, length);
-
-    syslog(LOG_DEBUG,
-           "http2_data_source_read_cb(id=%d, len=%zu): n=%zu, eof=%d",
-           stream_id, length, n, !s->cnt);
-
-    if (!s->cnt) *data_flags |= NGHTTP2_DATA_FLAG_EOF;
-
-    return n;
-}
-
-static int http2_begin_headers_cb(nghttp2_session *session,
-                                  const nghttp2_frame *frame, void *user_data)
-{
-    if (frame->hd.type != NGHTTP2_HEADERS ||
-        frame->headers.cat != NGHTTP2_HCAT_REQUEST) {
-        return 0;
-    }
-
-    syslog(LOG_DEBUG, "http2_begin_headers_cb(id=%d, type=%d)",
-           frame->hd.stream_id, frame->hd.type);
-
-    struct transaction_t *txn = xzmalloc(sizeof(struct transaction_t));
-
-    txn->conn = (struct http_connection *) user_data;
-    txn->http2.stream_id = frame->hd.stream_id;
-    txn->meth = METH_UNKNOWN;
-    txn->flags.ver = VER_2;
-    txn->flags.vary = VARY_AE;
-    txn->req_line.ver = HTTP2_VERSION;
-
-    /* Create header cache */
-    if (!(txn->req_hdrs = spool_new_hdrcache())) {
-        syslog(LOG_ERR, "Unable to create header cache");
-        return NGHTTP2_ERR_CALLBACK_FAILURE;
-    }
-
-    nghttp2_session_set_stream_user_data(session, frame->hd.stream_id, txn);
-
-    return 0;
-}
-
-static int http2_header_cb(nghttp2_session *session,
-                           const nghttp2_frame *frame,
-                           const uint8_t *name, size_t namelen,
-                           const uint8_t *value, size_t valuelen,
-                           uint8_t flags __attribute__((unused)),
-                           void *user_data __attribute__((unused)))
-{
-    if (frame->hd.type != NGHTTP2_HEADERS ||
-        frame->headers.cat != NGHTTP2_HCAT_REQUEST) {
-        return 0;
-    }
-
-    char *my_name, *my_value;
-    struct transaction_t *txn =
-        nghttp2_session_get_stream_user_data(session, frame->hd.stream_id);
-
-    if (!txn) return 0;
-
-    my_name = xstrndup((const char *) name, namelen);
-    my_value = xstrndup((const char *) value, valuelen);
-
-    syslog(LOG_DEBUG, "http2_header_cb(%s: %s)", my_name, my_value);
-
-    if (my_name[0] == ':') {
-        switch (my_name[1]) {
-        case 'm': /* :method */
-            if (!strcmp("ethod", my_name+2)) txn->req_line.meth = my_value;
-            break;
-
-        case 's': /* :scheme */
-            break;
-
-        case 'a': /* :authority */
-            break;
-
-        case 'p': /* :path */
-            if (!strcmp("ath", my_name+2)) txn->req_line.uri = my_value;
-            break;
-        }
-    }
-
-    spool_cache_header(my_name, my_value, txn->req_hdrs);
-
-    return 0;
-}
-
-static int http2_data_chunk_recv_cb(nghttp2_session *session,
-                                    uint8_t flags __attribute__((unused)),
-                                    int32_t stream_id,
-                                    const uint8_t *data, size_t len,
-                                    void *user_data __attribute__((unused)))
-{
-    struct transaction_t *txn =
-        nghttp2_session_get_stream_user_data(session, stream_id);
-
-    if (!txn) return 0;
-
-    syslog(LOG_DEBUG, "http2_data_chunk_recv_cb(id=%d, len=%zu, txnflags=%#x)",
-           stream_id, len, txn->req_body.flags);
-
-    if (txn->req_body.flags & BODY_DISCARD) return 0;
-
-    if (len) {
-        txn->req_body.framing = FRAMING_HTTP2;
-        txn->req_body.len += len;
-        buf_appendmap(&txn->req_body.payload, (const char *) data, len);
-    }
-
-    return 0;
-}
-
-static int examine_request(struct transaction_t *txn);
-
-static int client_need_auth(struct transaction_t *txn, int sasl_result);
-
-static void transaction_free(struct transaction_t *txn);
-
-static int http2_frame_recv_cb(nghttp2_session *session,
-                               const nghttp2_frame *frame,
-                               void *user_data __attribute__((unused)))
-{
-    int ret = 0;
-    struct transaction_t *txn =
-        nghttp2_session_get_stream_user_data(session, frame->hd.stream_id);
-
-    if (!txn) return 0;
-
-    syslog(LOG_DEBUG, "http2_frame_recv_cb(id=%d, type=%d, flags=%#x",
-           frame->hd.stream_id, frame->hd.type, frame->hd.flags);
-
-    switch (frame->hd.type) {
-    case NGHTTP2_HEADERS:
-        if (frame->headers.cat == NGHTTP2_HCAT_REQUEST) {
-            /* Examine request */
-            ret = examine_request(txn);
-
-            if (ret) {
-                txn->req_body.flags |= BODY_DISCARD;
-                error_response(ret, txn);
-                break;
-            }
-
-            if (txn->req_body.flags & BODY_CONTINUE) {
-                txn->req_body.flags &= ~BODY_CONTINUE;
-                response_header(HTTP_CONTINUE, txn);
-                break;
-            }
-        }
-
-        GCC_FALLTHROUGH
-
-    case NGHTTP2_DATA:
-        /* Check that the client request has finished */
-        if (!(frame->hd.flags & NGHTTP2_FLAG_END_STREAM)) break;
-
-        /* Check that we still want to process the request */
-        if (txn->req_body.flags & BODY_DISCARD) break;
-
-        /* Process the requested method */
-        if (txn->req_tgt.namespace->premethod) {
-            ret = txn->req_tgt.namespace->premethod(txn);
-        }
-        if (!ret) {
-            const struct method_t *meth_t =
-                &txn->req_tgt.namespace->methods[txn->meth];
-
-            ret = (*meth_t->proc)(txn, meth_t->params);
-        }
-
-        if (ret == HTTP_UNAUTHORIZED) {
-            /* User must authenticate */
-            ret = client_need_auth(txn, 0);
-        }
-
-        /* Handle errors (success responses handled by method functions) */
-        if (ret) error_response(ret, txn);
-
-        if (txn->flags.conn & CONN_CLOSE) {
-            syslog(LOG_DEBUG, "nghttp2_submit_goaway()");
-
-            nghttp2_submit_goaway(session, NGHTTP2_FLAG_NONE,
-                                  nghttp2_session_get_last_proc_stream_id(
-                                      txn->conn->http2_session),
-                                  NGHTTP2_NO_ERROR, NULL, 0);
-        }
-
-        break;
-    }
-
-    return 0;
-}
-
-static int http2_stream_close_cb(nghttp2_session *session, int32_t stream_id,
-                                 uint32_t error_code __attribute__((unused)),
-                                 void *user_data __attribute__((unused)))
-{
-    struct transaction_t *txn =
-        nghttp2_session_get_stream_user_data(session, stream_id);
-
-    syslog(LOG_DEBUG, "http2_stream_close_cb(id=%d)", stream_id);
-
-    if (txn) {
-        /* Memory cleanup */
-        transaction_free(txn);
-        free(txn);
-    }
-            
-    return 0;
-}
-
-static int http2_frame_not_send_cb(nghttp2_session *session,
-                                   const nghttp2_frame *frame,
-                                   int lib_error_code,
-                                   void *user_data __attribute__((unused)))
-{
-    syslog(LOG_DEBUG, "http2_frame_not_send_cb(id=%d)", frame->hd.stream_id);
-
-    /* Issue RST_STREAM so that stream does not hang around. */
-    nghttp2_submit_rst_stream(session, NGHTTP2_FLAG_NONE,
-                              frame->hd.stream_id, lib_error_code);
-
-    return 0;
-}
-
-
-static int starthttp2(struct http_connection *conn, struct transaction_t *txn)
-{
-    int r;
-    nghttp2_settings_entry iv =
-        { NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 100 };
-
-    r = nghttp2_session_server_new2(&conn->http2_session,
-                                    http2_callbacks, conn, conn->http2_options);
-    if (r) {
-        syslog(LOG_WARNING,
-               "nghttp2_session_server_new: %s", nghttp2_strerror(r));
-        return r;
-    }
-
-    if (txn && txn->flags.conn & CONN_UPGRADE) {
-        const char **hdr = spool_getheader(txn->req_hdrs, "HTTP2-Settings");
-        if (!hdr || hdr[1]) return 0;
-
-        /* base64url decode the settings.
-           Use the SASL base64 decoder after replacing the encoded values
-           for chars 62 and 63 and adding appropriate padding. */
-        unsigned outlen;
-        struct buf buf;
-        buf_init_ro_cstr(&buf, hdr[0]);
-        buf_replace_char(&buf, '-', '+');
-        buf_replace_char(&buf, '_', '/');
-        buf_appendmap(&buf, "==", (4 - (buf_len(&buf) % 4)) % 4);
-        r = sasl_decode64(buf_base(&buf), buf_len(&buf),
-                          (char *) buf_base(&buf), buf_len(&buf), &outlen);
-        if (r != SASL_OK) {
-            syslog(LOG_WARNING, "sasl_decode64 failed: %s",
-                   sasl_errstring(r, NULL, NULL));
-            buf_free(&buf);
-            return r;
-        }
-        r = nghttp2_session_upgrade2(conn->http2_session,
-                                     (const uint8_t *) buf_base(&buf),
-                                     outlen, txn->meth == METH_HEAD, NULL);
-        buf_free(&buf);
-        if (r) {
-            syslog(LOG_WARNING, "nghttp2_session_upgrade: %s",
-                   nghttp2_strerror(r));
-            return r;
-        }
-
-        /* tell client to start h2c upgrade (RFC 7540) */
-        response_header(HTTP_SWITCH_PROT, txn);
-
-        txn->flags.ver = VER_2;
-        txn->http2.stream_id =
-            nghttp2_session_get_last_proc_stream_id(conn->http2_session);
-    }
-
-    r = nghttp2_submit_settings(conn->http2_session, NGHTTP2_FLAG_NONE, &iv, 1);
-    if (r) {
-        syslog(LOG_ERR, "nghttp2_submit_settings: %s", nghttp2_strerror(r));
-        return r;
-    }
-
-    return 0;
-}
-#else
-static int starthttp2(void *conn __attribute__((unused)),
-                      struct transaction_t *txn __attribute__((unused)))
-{
-    fatal("starthttp2() called, but no Nghttp2", EC_SOFTWARE);
-}
-#endif /* HAVE_NGHTTP2 */
-
-
-static void digest_send_success(struct transaction_t *txn,
-                                const char *name __attribute__((unused)),
-                                const char *data)
-{
-    simple_hdr(txn, "Authentication-Info", data);
-}
-
 /* List of HTTP auth schemes that we support */
 struct auth_scheme_t auth_schemes[] = {
-    { AUTH_BASIC, "Basic", NULL, AUTH_SERVER_FIRST | AUTH_BASE64, NULL, NULL },
-    { AUTH_DIGEST, "Digest", HTTP_DIGEST_MECH, AUTH_NEED_REQUEST|AUTH_SERVER_FIRST,
-      &digest_send_success, digest_recv_success },
-    { AUTH_SPNEGO, "Negotiate", "GSS-SPNEGO", AUTH_BASE64, NULL, NULL },
-    { AUTH_NTLM, "NTLM", "NTLM", AUTH_NEED_PERSIST | AUTH_BASE64, NULL, NULL },
-    { AUTH_BEARER, "Bearer", NULL, AUTH_NEED_REQUEST|AUTH_SERVER_FIRST, NULL, NULL },
-    { -1, NULL, NULL, 0, NULL, NULL }
+      AUTH_SCHEME_BASIC,
+    { AUTH_SCRAM_SHA256, "SCRAM-SHA-256", "SCRAM-SHA-256",
+      AUTH_NEED_PERSIST | AUTH_SERVER_FIRST | AUTH_BASE64 |
+      AUTH_REALM_PARAM | AUTH_DATA_PARAM },
+    { AUTH_SCRAM_SHA1, "SCRAM-SHA-1", "SCRAM-SHA-1",
+      AUTH_NEED_PERSIST | AUTH_SERVER_FIRST | AUTH_BASE64 |
+      AUTH_REALM_PARAM | AUTH_DATA_PARAM },
+    { AUTH_DIGEST, "Digest", HTTP_DIGEST_MECH,
+      AUTH_NEED_REQUEST | AUTH_SERVER_FIRST },
+    { AUTH_SPNEGO, "Negotiate", "GSS-SPNEGO",
+      AUTH_BASE64 | AUTH_SUCCESS_WWW },
+    { AUTH_NTLM, "NTLM", "NTLM",
+      AUTH_NEED_PERSIST | AUTH_BASE64 },
+    { AUTH_BEARER, "Bearer", NULL,
+      AUTH_SERVER_FIRST | AUTH_REALM_PARAM },
+    { 0, NULL, NULL, 0 }
 };
 
 
@@ -599,7 +441,7 @@ struct backend **backend_cached = NULL;
 
 /* end PROXY stuff */
 
-static int starttls(struct transaction_t *txn, int *http2);
+static int starttls(struct transaction_t *txn, struct http_connection *conn);
 void usage(void);
 void shut_down(int code) __attribute__ ((noreturn));
 
@@ -612,19 +454,13 @@ static int parse_connection(struct transaction_t *txn);
 static int parse_ranges(const char *hdr, unsigned long len,
                         struct range **ranges);
 static int proxy_authz(const char **authzid, struct transaction_t *txn);
-static void auth_success(struct transaction_t *txn, const char *userid);
+static int auth_success(struct transaction_t *txn, const char *userid);
 static int http_auth(const char *creds, struct transaction_t *txn);
 
 static int meth_get(struct transaction_t *txn, void *params);
 static int meth_propfind_root(struct transaction_t *txn, void *params);
 
-
-static struct {
-    char *ipremoteport;
-    char *iplocalport;
-    sasl_ssf_t ssf;
-    char *authid;
-} saslprops = {NULL,NULL,0,NULL};
+static struct saslprops_t saslprops = SASLPROPS_INITIALIZER;
 
 static struct sasl_callback mysasl_cb[] = {
     { SASL_CB_GETOPT, (mysasl_cb_ft *) &mysasl_config, NULL },
@@ -635,32 +471,41 @@ static struct sasl_callback mysasl_cb[] = {
 
 /* Array of HTTP methods known by our server. */
 const struct known_meth_t http_methods[] = {
-    { "ACL",            0 },
-    { "BIND",           0 },
-    { "COPY",           METH_NOBODY },
-    { "DELETE",         METH_NOBODY },
-    { "GET",            METH_NOBODY },
-    { "HEAD",           METH_NOBODY },
-    { "LOCK",           0 },
-    { "MKCALENDAR",     0 },
-    { "MKCOL",          0 },
-    { "MOVE",           METH_NOBODY },
-    { "OPTIONS",        METH_NOBODY },
-    { "PATCH",          0 },
-    { "POST",           0 },
-    { "PROPFIND",       0 },
-    { "PROPPATCH",      0 },
-    { "PUT",            0 },
-    { "REPORT",         0 },
-    { "TRACE",          METH_NOBODY },
-    { "UNBIND",         0 },
-    { "UNLOCK",         METH_NOBODY },
-    { NULL,             0 }
+    { "ACL",            0,              CYRUS_HTTP_ACL_TOTAL },
+    { "BIND",           0,              CYRUS_HTTP_BIND_TOTAL },
+    { "CONNECT",        METH_NOBODY,    CYRUS_HTTP_CONNECT_TOTAL },
+    { "COPY",           METH_NOBODY,    CYRUS_HTTP_COPY_TOTAL },
+    { "DELETE",         METH_NOBODY,    CYRUS_HTTP_DELETE_TOTAL },
+    { "GET",            METH_NOBODY,    CYRUS_HTTP_GET_TOTAL },
+    { "HEAD",           METH_NOBODY,    CYRUS_HTTP_HEAD_TOTAL },
+    { "LOCK",           0,              CYRUS_HTTP_LOCK_TOTAL },
+    { "MKCALENDAR",     0,              CYRUS_HTTP_MKCALENDAR_TOTAL },
+    { "MKCOL",          0,              CYRUS_HTTP_MKCOL_TOTAL },
+    { "MOVE",           METH_NOBODY,    CYRUS_HTTP_MOVE_TOTAL },
+    { "OPTIONS",        METH_NOBODY,    CYRUS_HTTP_OPTIONS_TOTAL },
+    { "PATCH",          0,              CYRUS_HTTP_PATCH_TOTAL },
+    { "POST",           0,              CYRUS_HTTP_POST_TOTAL },
+    { "PROPFIND",       0,              CYRUS_HTTP_PROPFIND_TOTAL },
+    { "PROPPATCH",      0,              CYRUS_HTTP_PROPPATCH_TOTAL },
+    { "PUT",            0,              CYRUS_HTTP_PUT_TOTAL },
+    { "REPORT",         0,              CYRUS_HTTP_REPORT_TOTAL },
+    { "TRACE",          METH_NOBODY,    CYRUS_HTTP_TRACE_TOTAL },
+    { "UNBIND",         0,              CYRUS_HTTP_UNBIND_TOTAL },
+    { "UNLOCK",         METH_NOBODY,    CYRUS_HTTP_UNLOCK_TOTAL },
+    { NULL,             0,              0 }
+};
+
+/* WebSocket handler */
+static int ws_echo(struct buf *inbuf, struct buf *outbuf,
+                   struct buf *logbuf, void **rock);
+
+static struct connect_params ws_params = {
+    "/", NULL /* sub-protocol */, &ws_echo
 };
 
 /* Namespace to fetch static content from filesystem */
 struct namespace_t namespace_default = {
-    URL_NS_DEFAULT, 1, "", NULL,
+    URL_NS_DEFAULT, 1, "default", "", NULL,
     http_allow_noauth, /*authschemes*/0,
     /*mbtype*/0,
     ALLOW_READ,
@@ -668,6 +513,7 @@ struct namespace_t namespace_default = {
     {
         { NULL,                 NULL },                 /* ACL          */
         { NULL,                 NULL },                 /* BIND         */
+        { &meth_connect,        &ws_params },           /* CONNECT      */
         { NULL,                 NULL },                 /* COPY         */
         { NULL,                 NULL },                 /* DELETE       */
         { &meth_get,            NULL },                 /* GET          */
@@ -690,7 +536,10 @@ struct namespace_t namespace_default = {
 };
 
 /* Array of different namespaces and features supported by the server */
-struct namespace_t *namespaces[] = {
+struct namespace_t *http_namespaces[] = {
+#ifdef WITH_JMAP
+    &namespace_jmap,
+#endif
     &namespace_tzdist,          /* MUST be before namespace_calendar!! */
 #ifdef WITH_DAV
     &namespace_calendar,
@@ -700,29 +549,29 @@ struct namespace_t *namespaces[] = {
     &namespace_principal,       /* MUST be after namespace_cal & addr & drive */
     &namespace_notify,          /* MUST be after namespace_principal */
     &namespace_applepush,       /* MUST be after namespace_cal & addr */
-#ifdef HAVE_IANA_PARAMS
     &namespace_ischedule,
     &namespace_domainkey,
-#endif /* HAVE_IANA_PARAMS */
 #endif /* WITH_DAV */
     &namespace_rss,
     &namespace_dblookup,
     &namespace_admin,
+    &namespace_prometheus,
+    &namespace_cgi,
     &namespace_default,         /* MUST be present and be last!! */
     NULL,
 };
 
 
-static void httpd_reset(void)
+static void httpd_reset(struct http_connection *conn)
 {
     int i;
     int bytes_in = 0;
     int bytes_out = 0;
 
     /* Do any namespace specific cleanup */
-    for (i = 0; namespaces[i]; i++) {
-        if (namespaces[i]->enabled && namespaces[i]->reset)
-            namespaces[i]->reset();
+    for (i = 0; http_namespaces[i]; i++) {
+        if (http_namespaces[i]->enabled && http_namespaces[i]->reset)
+            http_namespaces[i]->reset();
     }
 
     /* Reset available authentication schemes */
@@ -741,6 +590,8 @@ static void httpd_reset(void)
     if (backend_cached) free(backend_cached);
     backend_cached = NULL;
     backend_current = NULL;
+
+    index_text_extractor_destroy();
 
     if (httpd_in) {
         prot_NONBLOCK(httpd_in);
@@ -766,18 +617,27 @@ static void httpd_reset(void)
     if (protin) protgroup_reset(protin);
 
 #ifdef HAVE_SSL
-    if (tls_conn) {
-        tls_reset_servertls(&tls_conn);
-        tls_conn = NULL;
+    if (conn->tls_ctx) {
+        tls_reset_servertls((SSL **) &conn->tls_ctx);
+        conn->tls_ctx = NULL;
     }
 #endif
 
+    xmlFreeParserCtxt(conn->xml);
+
+    http2_end_session(conn->sess_ctx);
+
     cyrus_reset_stdio();
 
-    httpd_clienthost = "[local]";
-    if (httpd_logfd != -1) {
-        close(httpd_logfd);
-        httpd_logfd = -1;
+    conn->clienthost = "[local]";
+    buf_free(&conn->logbuf);
+    if (conn->logfd != -1) {
+        close(conn->logfd);
+        conn->logfd = -1;
+    }
+    if (httpd_authid != NULL) {
+        free(httpd_authid);
+        httpd_authid = NULL;
     }
     if (httpd_userid != NULL) {
         free(httpd_userid);
@@ -800,21 +660,8 @@ static void httpd_reset(void)
         sasl_dispose(&httpd_saslconn);
         httpd_saslconn = NULL;
     }
-    httpd_tls_done = 0;
 
-    if(saslprops.iplocalport) {
-       free(saslprops.iplocalport);
-       saslprops.iplocalport = NULL;
-    }
-    if(saslprops.ipremoteport) {
-       free(saslprops.ipremoteport);
-       saslprops.ipremoteport = NULL;
-    }
-    if(saslprops.authid) {
-       free(saslprops.authid);
-       saslprops.authid = NULL;
-    }
-    saslprops.ssf = 0;
+    saslprops_reset(&saslprops);
 
     session_new_id();
 }
@@ -829,12 +676,12 @@ int service_init(int argc __attribute__((unused)),
 {
     int r, events, opt, i;
     int allow_trace = config_getswitch(IMAPOPT_HTTPALLOWTRACE);
+    unsigned long version;
+    unsigned int status, patch, fix, minor, major;
 
     LIBXML_TEST_VERSION
 
-    initialize_http_error_table();
-
-    if (geteuid() == 0) fatal("must run as the Cyrus user", EC_USAGE);
+    if (geteuid() == 0) fatal("must run as the Cyrus user", EX_USAGE);
     setproctitle_init(argc, argv, envp);
 
     /* set signal handlers */
@@ -844,28 +691,12 @@ int service_init(int argc __attribute__((unused)),
     /* load the SASL plugins */
     global_sasl_init(1, 1, mysasl_cb);
 
-    /* open the mboxlist, we'll need it for real work */
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-
-    /* open the quota db, we'll need it for expunge */
-    quotadb_init(0);
-    quotadb_open(NULL);
-
-    /* open the user deny db */
-    denydb_init(0);
-    denydb_open(/*create*/0);
-
-    /* open annotations.db, we'll need it for collection properties */
-    annotatemore_open();
-
     /* setup for sending IMAP IDLE notifications */
     idle_enabled();
 
     /* Set namespace */
     if ((r = mboxname_init_namespace(&httpd_namespace, 1)) != 0) {
-        syslog(LOG_ERR, "%s", error_message(r));
-        fatal(error_message(r), EC_CONFIG);
+        fatal(error_message(r), EX_CONFIG);
     }
 
     /* open the mboxevent system */
@@ -879,9 +710,8 @@ int service_init(int argc __attribute__((unused)),
         case 's': /* https (do TLS right away) */
             https = 1;
             if (!tls_enabled()) {
-                syslog(LOG_ERR, "https: required OpenSSL options not present");
                 fatal("https: required OpenSSL options not present",
-                      EC_CONFIG);
+                      EX_CONFIG);
             }
             break;
 
@@ -910,59 +740,58 @@ int service_init(int argc __attribute__((unused)),
     }
 
     /* Construct serverinfo string */
-    buf_printf(&serverinfo, "Cyrus-HTTP/%s Cyrus-SASL/%u.%u.%u",
-               cyrus_version(),
-               SASL_VERSION_MAJOR, SASL_VERSION_MINOR, SASL_VERSION_STEP);
+    buf_printf(&serverinfo,
+               "Cyrus-HTTP/%s Cyrus-SASL/%u.%u.%u Lib/XML%s Jansson/%s",
+               CYRUS_VERSION,
+               SASL_VERSION_MAJOR, SASL_VERSION_MINOR, SASL_VERSION_STEP,
+               LIBXML_DOTTED_VERSION, JANSSON_VERSION);
+
+    http2_init(&serverinfo);
+    ws_init(&serverinfo);
+
 #ifdef HAVE_SSL
-    buf_printf(&serverinfo, " OpenSSL/%s", SHLIB_VERSION_NUMBER);
+    version = OPENSSL_VERSION_NUMBER;
+    status  = version & 0x0f; version >>= 4;
+    patch   = version & 0xff; version >>= 8;
+    fix     = version & 0xff; version >>= 8;
+    minor   = version & 0xff; version >>= 8;
+    major   = version & 0xff;
+    
+    buf_printf(&serverinfo, " OpenSSL/%u.%u.%u", major, minor, fix);
+
+    if (status == 0) buf_appendcstr(&serverinfo, "-dev");
+    else if (status < 15) buf_printf(&serverinfo, "-beta%u", status);
+    else if (patch) buf_putc(&serverinfo, patch + 'a' - 1);
 #endif
-
-#ifdef HAVE_NGHTTP2
-    buf_printf(&serverinfo, " Nghttp2/%s", NGHTTP2_VERSION);
-
-    /* Setup HTTP/2 callbacks */
-    if ((r = nghttp2_session_callbacks_new(&http2_callbacks))) {
-        syslog(LOG_WARNING,
-               "nghttp2_session_callbacks_new: %s", nghttp2_strerror(r));
-    }
-    else {
-        nghttp2_session_callbacks_set_send_callback(http2_callbacks,
-                                                    &http2_send_cb);
-        nghttp2_session_callbacks_set_recv_callback(http2_callbacks,
-                                                    &http2_recv_cb);
-        nghttp2_session_callbacks_set_on_begin_headers_callback(http2_callbacks,
-                                                                &http2_begin_headers_cb);
-        nghttp2_session_callbacks_set_on_header_callback(http2_callbacks,
-                                                         http2_header_cb);
-        nghttp2_session_callbacks_set_on_data_chunk_recv_callback(http2_callbacks,
-                                                                  http2_data_chunk_recv_cb);
-        nghttp2_session_callbacks_set_on_frame_recv_callback(http2_callbacks,
-                                                             http2_frame_recv_cb);
-        nghttp2_session_callbacks_set_on_stream_close_callback(http2_callbacks,
-                                                               &http2_stream_close_cb);
-        nghttp2_session_callbacks_set_on_frame_not_send_callback(http2_callbacks,
-                                                                 &http2_frame_not_send_cb);
-    }
-#endif /* HAVE_NGHTTP2 */
 
 #ifdef HAVE_ZLIB
     buf_printf(&serverinfo, " Zlib/%s", ZLIB_VERSION);
 #endif
 #ifdef HAVE_BROTLI
-    uint32_t version = BrotliEncoderVersion();
-    buf_printf(&serverinfo, " Brotli/%u.%u.%u",
-               (version >> 24) & 0xfff, (version >> 12) & 0xfff, version & 0xfff);
+    version = BrotliEncoderVersion();
+    fix     = version & 0xfff; version >>= 12;
+    minor   = version & 0xfff; version >>= 12;
+    major   = version & 0xfff;
+
+    buf_printf(&serverinfo, " Brotli/%u.%u.%u", major, minor, fix);
 #endif
-    buf_printf(&serverinfo, " LibXML/%s", LIBXML_DOTTED_VERSION);
+#ifdef HAVE_ZSTD
+    buf_printf(&serverinfo, " Zstd/%s", ZSTD_versionString());
+#endif
+
+    /* Initialize libical */
+    ical_support_init();
 
     /* Do any namespace specific initialization */
     config_httpmodules = config_getbitfield(IMAPOPT_HTTPMODULES);
-    for (i = 0; namespaces[i]; i++) {
-        if (allow_trace) namespaces[i]->allow |= ALLOW_TRACE;
-        if (namespaces[i]->init) namespaces[i]->init(&serverinfo);
+    for (i = 0; http_namespaces[i]; i++) {
+        if (allow_trace) http_namespaces[i]->allow |= ALLOW_TRACE;
+        if (http_namespaces[i]->init) http_namespaces[i]->init(&serverinfo);
     }
 
     compile_time = calc_compile_time(__TIME__, __DATE__);
+
+    prometheus_increment(CYRUS_HTTP_READY_LISTENERS);
 
     return 0;
 }
@@ -990,23 +819,41 @@ int service_main(int argc __attribute__((unused)),
     struct auth_scheme_t *scheme;
     struct http_connection http_conn;
 
+    prometheus_decrement(CYRUS_HTTP_READY_LISTENERS);
+
     session_new_id();
 
     signals_poll();
-
-    sync_log_init();
 
     httpd_in = prot_new(0, 0);
     httpd_out = prot_new(1, 1);
     protgroup_insert(protin, httpd_in);
 
+    /* Setup HTTP connection */
+    memset(&http_conn, 0, sizeof(struct http_connection));
+    http_conn.pin = httpd_in;
+    http_conn.pout = httpd_out;
+    http_conn.logfd = -1;
+
+    /* Create XML parser context */
+    if (!(http_conn.xml = xmlNewParserCtxt())) {
+        fatal("Unable to create XML parser", EX_TEMPFAIL);
+    }
+
     /* Find out name of client host */
-    httpd_clienthost = get_clienthost(0, &httpd_localip, &httpd_remoteip);
+    http_conn.clienthost = get_clienthost(0, &httpd_localip, &httpd_remoteip);
+
+    if (httpd_localip && httpd_remoteip) {
+        buf_setcstr(&saslprops.ipremoteport, httpd_remoteip);
+        buf_setcstr(&saslprops.iplocalport, httpd_localip);
+    }
 
     /* other params should be filled in */
-    if (sasl_server_new("HTTP", config_servername, NULL, NULL, NULL, NULL,
-                        SASL_USAGE_FLAGS, &httpd_saslconn) != SASL_OK)
-        fatal("SASL failed initializing: sasl_server_new()",EC_TEMPFAIL);
+    if (sasl_server_new("HTTP", config_servername, NULL,
+                        buf_cstringnull_ifempty(&saslprops.iplocalport),
+                        buf_cstringnull_ifempty(&saslprops.ipremoteport),
+                        NULL, SASL_USAGE_FLAGS, &httpd_saslconn) != SASL_OK)
+        fatal("SASL failed initializing: sasl_server_new()",EX_TEMPFAIL);
 
     /* will always return something valid */
     secprops = mysasl_secprops(0);
@@ -1015,31 +862,23 @@ int service_main(int argc __attribute__((unused)),
     secprops->max_ssf = 0;                              /* "auth" only */
     secprops->maxbufsize = 0;                           /* don't need maxbuf */
     if (sasl_setprop(httpd_saslconn, SASL_SEC_PROPS, secprops) != SASL_OK)
-        fatal("Failed to set SASL property", EC_TEMPFAIL);
+        fatal("Failed to set SASL property", EX_TEMPFAIL);
     if (sasl_setprop(httpd_saslconn, SASL_SSF_EXTERNAL, &extprops_ssf) != SASL_OK)
-        fatal("Failed to set SASL property", EC_TEMPFAIL);
-
-    if (httpd_localip) {
-        sasl_setprop(httpd_saslconn, SASL_IPLOCALPORT, httpd_localip);
-        saslprops.iplocalport = xstrdup(httpd_localip);
-    }
+        fatal("Failed to set SASL property", EX_TEMPFAIL);
 
     if (httpd_remoteip) {
         char hbuf[NI_MAXHOST], *p;
 
-        sasl_setprop(httpd_saslconn, SASL_IPREMOTEPORT, httpd_remoteip);
-        saslprops.ipremoteport = xstrdup(httpd_remoteip);
-
         /* Create pre-authentication telemetry log based on client IP */
         strlcpy(hbuf, httpd_remoteip, NI_MAXHOST);
         if ((p = strchr(hbuf, ';'))) *p = '\0';
-        httpd_logfd = telemetry_log(hbuf, httpd_in, httpd_out, 0);
+        http_conn.logfd = telemetry_log(hbuf, httpd_in, httpd_out, 0);
     }
 
     /* See which auth schemes are available to us */
     avail_auth_schemes = 0; /* Reset auth schemes for each connection */
     if ((extprops_ssf >= 2) || config_getswitch(IMAPOPT_ALLOWPLAINTEXT)) {
-        avail_auth_schemes |= (1 << AUTH_BASIC);
+        avail_auth_schemes |=  AUTH_BASIC;
     }
     sasl_listmech(httpd_saslconn, NULL, NULL, " ", NULL,
                   &mechlist, NULL, &mechcount);
@@ -1047,7 +886,7 @@ int service_main(int argc __attribute__((unused)),
         mechlen = strcspn(mech, " \0");
         for (scheme = auth_schemes; scheme->name; scheme++) {
             if (scheme->saslmech && !strncmp(mech, scheme->saslmech, mechlen)) {
-                avail_auth_schemes |= (1 << scheme->idx);
+                avail_auth_schemes |= scheme->id;
                 break;
             }
         }
@@ -1055,32 +894,27 @@ int service_main(int argc __attribute__((unused)),
     httpd_tls_required =
         config_getswitch(IMAPOPT_TLS_REQUIRED) || !avail_auth_schemes;
 
-    proc_register(config_ident, httpd_clienthost, NULL, NULL, NULL);
+    proc_register(config_ident, http_conn.clienthost, NULL, NULL, NULL);
 
     /* Set inactivity timer */
-    httpd_timeout = config_getint(IMAPOPT_HTTPTIMEOUT);
+    httpd_timeout = config_getduration(IMAPOPT_HTTPTIMEOUT, 'm');
     if (httpd_timeout < 0) httpd_timeout = 0;
-    httpd_timeout *= 60;
     prot_settimeout(httpd_in, httpd_timeout);
     prot_setflushonread(httpd_in, httpd_out);
 
-    /* Setup HTTP connection */
-    memset(&http_conn, 0, sizeof(struct http_connection));
-    http_conn.pin = httpd_in;
-    http_conn.pout = httpd_out;
-
     /* we were connected on https port so we should do
-       TLS negotiation immediatly */
+       TLS negotiation immediately */
     if (https == 1) {
-        int r, http2 = 0;
-
-        r = starttls(NULL, &http2);
-        if (!r && http2) r = starthttp2(&http_conn, NULL);
-        if (r) shut_down(0);
+        if (starttls(NULL, &http_conn) != 0) shut_down(0);
+    }
+    else if (http2_preface(&http_conn)) {
+        /* HTTP/2 client connection preface */
+        if (http2_start_session(NULL, &http_conn) != 0)
+            fatal("Failed initializing HTTP/2 session", EX_TEMPFAIL);
     }
 
     /* Setup the signal handler for keepalive heartbeat */
-    httpd_keepalive = config_getint(IMAPOPT_HTTPKEEPALIVE);
+    httpd_keepalive = config_getduration(IMAPOPT_HTTPKEEPALIVE, 's');
     if (httpd_keepalive < 0) httpd_keepalive = 0;
     if (httpd_keepalive) {
         struct sigaction action;
@@ -1097,44 +931,22 @@ int service_main(int argc __attribute__((unused)),
         }
     }
 
-    if (config_getswitch(IMAPOPT_HTTPALLOWCOMPRESS)) {
-#ifdef HAVE_ZLIB
-        http_conn.zstrm = xzmalloc(sizeof(z_stream));
-        /* Always use gzip format because IE incorrectly uses raw deflate */
-        if (deflateInit2(http_conn.zstrm, Z_DEFAULT_COMPRESSION, Z_DEFLATED,
-                         16+MAX_WBITS /* gzip */,
-                         MAX_MEM_LEVEL, Z_DEFAULT_STRATEGY) != Z_OK) {
-            free(http_conn.zstrm);
-            http_conn.zstrm = NULL;
-        }
-#endif
-#ifdef HAVE_BROTLI
-        http_conn.brotli = brotli_init();
-#endif
-    }
+    index_text_extractor_init(httpd_in);
+
+    prometheus_increment(CYRUS_HTTP_CONNECTIONS_TOTAL);
+    prometheus_increment(CYRUS_HTTP_ACTIVE_CONNECTIONS);
 
     cmdloop(&http_conn);
+
+    prometheus_decrement(CYRUS_HTTP_ACTIVE_CONNECTIONS);
 
     /* Closing connection */
 
     /* cleanup */
     signal(SIGALRM, SIG_IGN);
-    httpd_reset();
+    httpd_reset(&http_conn);
 
-#ifdef HAVE_NGHTTP2
-    nghttp2_option_del(http_conn.http2_options);
-    nghttp2_session_del(http_conn.http2_session);
-#endif
-
-#ifdef HAVE_ZLIB
-    if (http_conn.zstrm) {
-        deflateEnd(http_conn.zstrm);
-        free(http_conn.zstrm);
-    }
-#endif
-#ifdef HAVE_BROTLI
-    if (http_conn.brotli) BrotliEncoderDestroyInstance(http_conn.brotli);
-#endif
+    prometheus_increment(CYRUS_HTTP_READY_LISTENERS);
 
     return 0;
 }
@@ -1152,7 +964,7 @@ void usage(void)
     prot_printf(httpd_out, "%s: usage: httpd [-C <alt_config>] [-s]\r\n",
                 error_message(HTTP_SERVER_ERROR));
     prot_flush(httpd_out);
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 
@@ -1170,9 +982,9 @@ void shut_down(int code)
     if (allow_cors) free_wildmats(allow_cors);
 
     /* Do any namespace specific cleanup */
-    for (i = 0; namespaces[i]; i++) {
-        if (namespaces[i]->enabled && namespaces[i]->shutdown)
-            namespaces[i]->shutdown();
+    for (i = 0; http_namespaces[i]; i++) {
+        if (http_namespaces[i]->enabled && http_namespaces[i]->shutdown)
+            http_namespaces[i]->shutdown();
     }
 
     xmlCleanupParser();
@@ -1189,16 +1001,7 @@ void shut_down(int code)
     }
     if (backend_cached) free(backend_cached);
 
-    sync_log_done();
-
-    mboxlist_close();
-    mboxlist_done();
-
-    quotadb_close();
-    quotadb_done();
-
-    denydb_close();
-    denydb_done();
+    index_text_extractor_destroy();
 
     annotatemore_close();
 
@@ -1213,7 +1016,17 @@ void shut_down(int code)
         prot_flush(httpd_out);
         bytes_out = prot_bytes_out(httpd_out);
         prot_free(httpd_out);
+
+        /* one less active connection */
+        prometheus_decrement(CYRUS_HTTP_ACTIVE_CONNECTIONS);
     }
+    else {
+        /* one less ready listener */
+        prometheus_decrement(CYRUS_HTTP_READY_LISTENERS);
+    }
+
+    prometheus_increment(code ? CYRUS_HTTP_SHUTDOWN_TOTAL_STATUS_ERROR
+                              : CYRUS_HTTP_SHUTDOWN_TOTAL_STATUS_OK);
 
     if (protin) protgroup_free(protin);
 
@@ -1226,9 +1039,9 @@ void shut_down(int code)
     tls_shutdown_serverengine();
 #endif
 
-#ifdef HAVE_NGHTTP2
-    nghttp2_session_callbacks_del(http2_callbacks);
-#endif
+    saslprops_free(&saslprops);
+
+    http2_done();
 
     cyrus_done();
 
@@ -1239,6 +1052,7 @@ void shut_down(int code)
 void fatal(const char* s, int code)
 {
     static int recurse_code = 0;
+    const char *fatal = "Fatal error: ";
 
     if (recurse_code) {
         /* We were called recursively. Just give up */
@@ -1250,28 +1064,27 @@ void fatal(const char* s, int code)
         prot_printf(httpd_out,
                     "HTTP/1.1 %s\r\n"
                     "Content-Type: text/plain\r\n"
-                    "Connection: close\r\n\r\n"
-                    "Fatal error: %s\r\n",
-                    error_message(HTTP_SERVER_ERROR), s);
+                    "Content-Length: %zu\r\n"
+                    "Connection: close\r\n"
+                    "\r\n"
+                    "%s%s\r\n",
+                    error_message(HTTP_SERVER_ERROR),
+                    strlen(fatal) + strlen(s) + 2, fatal, s);
         prot_flush(httpd_out);
     }
-    syslog(LOG_ERR, "Fatal error: %s", s);
+    syslog(LOG_ERR, "%s%s", fatal, s);
     shut_down(code);
 }
 
 
 #ifdef HAVE_SSL
-static int starttls(struct transaction_t *txn, int *http2)
+static int starttls(struct transaction_t *txn, struct http_connection *conn)
 {
     int https = (txn == NULL);
     int result;
-    int *layerp;
-    sasl_ssf_t ssf;
-    char *auth_id;
     SSL_CTX *ctx = NULL;
 
-    /* SASL and openssl have different ideas about whether ssf is signed */
-    layerp = (int *) &ssf;
+    if (!conn) conn = txn->conn;
 
     result=tls_init_serverengine("http",
                                  5,        /* depth to verify */
@@ -1285,14 +1098,12 @@ static int starttls(struct transaction_t *txn, int *http2)
         return HTTP_SERVER_ERROR;
     }
 
-#if (defined HAVE_NGHTTP2 && OPENSSL_VERSION_NUMBER >= 0x10002000L)
-    if (http2_callbacks) {
+    if (http2_enabled()) {
+#ifdef HAVE_TLS_ALPN
         /* enable TLS ALPN extension */
-        SSL_CTX_set_alpn_select_cb(ctx, alpn_select_cb, http2);
-    }
-#else
-    (void) http2; /* silence 'unused variable http2' warning */
+        SSL_CTX_set_alpn_select_cb(ctx, alpn_select_cb, conn);
 #endif
+    }
 
     if (!https) {
         /* tell client to start TLS upgrade (RFC 2817) */
@@ -1302,52 +1113,43 @@ static int starttls(struct transaction_t *txn, int *http2)
     result=tls_start_servertls(0, /* read */
                                1, /* write */
                                https ? 180 : httpd_timeout,
-                               layerp,
-                               &auth_id,
-                               &tls_conn);
+                               &saslprops,
+                               (SSL **) &conn->tls_ctx);
 
     /* if error */
     if (result == -1) {
-        syslog(LOG_NOTICE, "starttls failed: %s", httpd_clienthost);
+        syslog(LOG_NOTICE, "starttls failed: %s", conn->clienthost);
 
         if (txn) txn->error.desc = "Error negotiating TLS";
         return HTTP_BAD_REQUEST;
     }
 
     /* tell SASL about the negotiated layer */
-    result = sasl_setprop(httpd_saslconn, SASL_SSF_EXTERNAL, &ssf);
-    if (result == SASL_OK) {
-        saslprops.ssf = ssf;
-
-        result = sasl_setprop(httpd_saslconn, SASL_AUTH_EXTERNAL, auth_id);
-    }
+    result = saslprops_set_tls(&saslprops, httpd_saslconn);
     if (result != SASL_OK) {
-        syslog(LOG_NOTICE, "sasl_setprop() failed: starttls()");
-
-        fatal("sasl_setprop() failed: starttls()", EC_TEMPFAIL);
+        syslog(LOG_NOTICE, "saslprops_set_tls() failed: cmd_starttls()");
+        if (https == 0) {
+            fatal("saslprops_set_tls() failed: cmd_starttls()", EX_TEMPFAIL);
+        } else {
+            shut_down(0);
+        }
     }
-    if (saslprops.authid) {
-        free(saslprops.authid);
-        saslprops.authid = NULL;
-    }
-    if (auth_id) saslprops.authid = xstrdup(auth_id);
 
     /* tell the prot layer about our new layers */
-    prot_settls(httpd_in, tls_conn);
-    prot_settls(httpd_out, tls_conn);
+    prot_settls(httpd_in, conn->tls_ctx);
+    prot_settls(httpd_out, conn->tls_ctx);
 
-    httpd_tls_done = 1;
     httpd_tls_required = 0;
 
-    avail_auth_schemes |= (1 << AUTH_BASIC);
+    avail_auth_schemes |= AUTH_BASIC;
 
     return 0;
 }
 #else
 static int starttls(struct transaction_t *txn __attribute__((unused)),
-                    int *http2 __attribute__((unused)))
+                    struct http_connection *conn __attribute__((unused)))
 {
-    fatal("starttls() called, but no OpenSSL", EC_SOFTWARE);
+    fatal("starttls() called, but no OpenSSL", EX_SOFTWARE);
 }
 #endif /* HAVE_SSL */
 
@@ -1360,19 +1162,12 @@ static int reset_saslconn(sasl_conn_t **conn)
 
     sasl_dispose(conn);
     /* do initialization typical of service_main */
-    ret = sasl_server_new("HTTP", config_servername, NULL, NULL, NULL, NULL,
-                          SASL_USAGE_FLAGS, conn);
+    ret = sasl_server_new("HTTP", config_servername, NULL,
+                          buf_cstringnull_ifempty(&saslprops.iplocalport),
+                          buf_cstringnull_ifempty(&saslprops.ipremoteport),
+                          NULL, SASL_USAGE_FLAGS, conn);
     if(ret != SASL_OK) return ret;
 
-    if(saslprops.ipremoteport)
-       ret = sasl_setprop(*conn, SASL_IPREMOTEPORT,
-                          saslprops.ipremoteport);
-    if(ret != SASL_OK) return ret;
-
-    if(saslprops.iplocalport)
-       ret = sasl_setprop(*conn, SASL_IPLOCALPORT,
-                          saslprops.iplocalport);
-    if(ret != SASL_OK) return ret;
     secprops = mysasl_secprops(0);
 
     /* no HTTP clients seem to use "auth-int" */
@@ -1384,17 +1179,12 @@ static int reset_saslconn(sasl_conn_t **conn)
 
     /* If we have TLS/SSL info, set it */
     if(saslprops.ssf) {
-        ret = sasl_setprop(*conn, SASL_SSF_EXTERNAL, &saslprops.ssf);
+        ret = saslprops_set_tls(&saslprops, *conn);
     } else {
         ret = sasl_setprop(*conn, SASL_SSF_EXTERNAL, &extprops_ssf);
     }
 
     if(ret != SASL_OK) return ret;
-
-    if(saslprops.authid) {
-       ret = sasl_setprop(*conn, SASL_AUTH_EXTERNAL, saslprops.authid);
-       if(ret != SASL_OK) return ret;
-    }
     /* End TLS/SSL Info */
 
     return SASL_OK;
@@ -1468,7 +1258,7 @@ static int client_need_auth(struct transaction_t *txn, int sasl_result)
 
         /* Check which response is required */
         if ((hdr = spool_getheader(txn->req_hdrs, "Upgrade")) &&
-            strstr(hdr[0], TLS_VERSION)) {
+            stristr(hdr[0], TLS_VERSION)) {
             /* Client (Murder proxy) supports RFC 2817 (TLS upgrade) */
 
             txn->flags.conn |= CONN_UPGRADE;
@@ -1482,7 +1272,7 @@ static int client_need_auth(struct transaction_t *txn, int sasl_result)
             struct buf *html = &txn->resp_body.payload;
 
             /* Create https URL */
-            hdr = spool_getheader(txn->req_hdrs, "Host");
+            hdr = spool_getheader(txn->req_hdrs, ":authority");
             buf_printf(&txn->buf, "https://%s", hdr[0]);
             if (strcmp(path, "*")) {
                 buf_appendcstr(&txn->buf, path);
@@ -1514,13 +1304,12 @@ static int client_need_auth(struct transaction_t *txn, int sasl_result)
 }
 
 
-static int examine_request(struct transaction_t *txn)
+static int check_method(struct transaction_t *txn)
 {
-    int ret = 0, r = 0, i;
-    const char **hdr, *query;
-    const struct namespace_t *namespace;
-    const struct method_t *meth_t;
+    const char **hdr;
     struct request_line_t *req_line = &txn->req_line;
+
+    if (txn->flags.redirect) return 0;
 
     /* Check for HTTP method override */
     if (!strcmp(req_line->meth, "POST") &&
@@ -1536,27 +1325,38 @@ static int examine_request(struct transaction_t *txn)
 
     if (txn->meth == METH_UNKNOWN) return HTTP_NOT_IMPLEMENTED;
 
-    /* Parse request-target URI */
-    if (!(txn->req_uri = parse_uri(txn->meth, req_line->uri, 1,
-                                   &txn->error.desc))) {
-        return HTTP_BAD_REQUEST;
-    }
+    return 0;
+}
+
+static int preauth_check_hdrs(struct transaction_t *txn)
+{
+    int ret = 0;
+    const char **hdr;
+
+    if (txn->flags.redirect) return 0;
 
     /* Check for mandatory Host header (HTTP/1.1+ only) */
-    if ((hdr = spool_getheader(txn->req_hdrs, "Host")) && hdr[1]) {
-        txn->error.desc = "Too many Host headers";
-        return HTTP_BAD_REQUEST;
+    if ((hdr = spool_getheader(txn->req_hdrs, "Host"))) {
+        if (hdr[1]) {
+            txn->error.desc = "Too many Host headers";
+            return HTTP_BAD_REQUEST;
+        }
+
+        /* Create an :authority pseudo header from Host */
+        spool_cache_header(xstrdup(":authority"),
+                           xstrdup(hdr[0]), txn->req_hdrs);
     }
-    else if (!hdr) {
+    else {
         switch (txn->flags.ver) {
         case VER_2:
-            /* HTTP/2 - create a Host header from :authority */
-            hdr = spool_getheader(txn->req_hdrs, ":authority");
-            spool_cache_header(xstrdup("Host"), xstrdup(hdr[0]), txn->req_hdrs);
-            break;
+            /* HTTP/2 - check for :authority pseudo header */
+            if (spool_getheader(txn->req_hdrs, ":authority")) break;
+
+            /* Fall through and create an :authority pseudo header */
+            GCC_FALLTHROUGH
 
         case VER_1_0:
-            /* HTTP/1.0 - create a Host header from URI */
+            /* HTTP/1.0 - create an :authority pseudo header from URI */
             if (txn->req_uri->server) {
                 buf_setcstr(&txn->buf, txn->req_uri->server);
                 if (txn->req_uri->port)
@@ -1564,9 +1364,8 @@ static int examine_request(struct transaction_t *txn)
             }
             else buf_setcstr(&txn->buf, config_servername);
 
-            spool_cache_header(xstrdup("Host"),
-                               xstrdup(buf_cstring(&txn->buf)), txn->req_hdrs);
-            buf_reset(&txn->buf);
+            spool_cache_header(xstrdup(":authority"),
+                               buf_release(&txn->buf), txn->req_hdrs);
             break;
 
         case VER_1_1:
@@ -1591,67 +1390,76 @@ static int examine_request(struct transaction_t *txn)
     if (txn->flags.conn & CONN_UPGRADE) {
         /* Read any request body (can't upgrade in middle of request) */
         txn->req_body.flags |= BODY_DECODE;
-        ret = http_read_body(httpd_in, httpd_out,
-                             txn->req_hdrs, &txn->req_body, &txn->error.desc);
+        ret = http_read_req_body(txn);
         if (ret) {
             txn->flags.conn = CONN_CLOSE;
             return ret;
         }
 
         if (txn->flags.upgrade & UPGRADE_TLS) {
-            int http2 = 0;
-            if ((ret = starttls(txn, &http2))) {
+            if ((ret = starttls(txn, NULL))) {
                 txn->flags.conn = CONN_CLOSE;
                 return ret;
             }
-            if (http2) txn->flags.upgrade |= UPGRADE_HTTP2;
+
+            /* Don't advertise TLS Upgrade anymore */
+            txn->flags.upgrade &= ~UPGRADE_TLS;
         }
 
         syslog(LOG_DEBUG, "upgrade flags: %#x  tls req: %d",
                txn->flags.upgrade, httpd_tls_required);
         if ((txn->flags.upgrade & UPGRADE_HTTP2) && !httpd_tls_required) {
-            if ((ret = starthttp2(txn->conn, httpd_tls_done ? NULL : txn))) {
+            if ((ret = http2_start_session(txn, NULL))) {
                 txn->flags.conn = CONN_CLOSE;
                 return ret;
             }
-        }
 
-        txn->flags.conn &= ~CONN_UPGRADE;
-        txn->flags.upgrade = 0;
+            /* Upgrade header field mechanism not available under HTTP/2 */
+            txn->flags.upgrade = 0;
+        }
     }
-    else if (!httpd_tls_done && txn->flags.ver == VER_1_1) {
+    else if (!txn->conn->tls_ctx && txn->flags.ver == VER_1_1) {
         /* Advertise available upgrade protocols */
-#ifdef HAVE_NGHTTP2
-        txn->flags.conn |= CONN_UPGRADE;
-        txn->flags.upgrade = UPGRADE_HTTP2;
-#endif
-        if (config_mupdate_server && config_getstring(IMAPOPT_PROXYSERVERS)) {
+        if (tls_enabled() &&
+            config_mupdate_server && config_getstring(IMAPOPT_PROXYSERVERS)) {
             txn->flags.upgrade |= UPGRADE_TLS;
-            txn->flags.conn |= CONN_UPGRADE;
         }
+        if (http2_enabled()) txn->flags.upgrade |= UPGRADE_HTTP2;
     }
 
-    query = URI_QUERY(txn->req_uri);
+    if (txn->flags.upgrade) txn->flags.conn |= CONN_UPGRADE;
+    else txn->flags.conn &= ~CONN_UPGRADE;
+
+    return 0;
+}
+
+
+static int check_namespace(struct transaction_t *txn)
+{
+    int i;
+    const char **hdr, *query = URI_QUERY(txn->req_uri);
+    const struct namespace_t *namespace;
+    const struct method_t *meth_t;
 
     /* Find the namespace of the requested resource */
-    for (i = 0; namespaces[i]; i++) {
+    for (i = 0; http_namespaces[i]; i++) {
         const char *path = txn->req_uri->path;
         size_t len;
 
         /* Skip disabled namespaces */
-        if (!namespaces[i]->enabled) continue;
+        if (!http_namespaces[i]->enabled) continue;
 
         /* Handle any /.well-known/ bootstrapping */
-        if (namespaces[i]->well_known) {
-            len = strlen(namespaces[i]->well_known);
-            if (!strncmp(path, namespaces[i]->well_known, len) &&
+        if (http_namespaces[i]->well_known) {
+            len = strlen(http_namespaces[i]->well_known);
+            if (!strncmp(path, http_namespaces[i]->well_known, len) &&
                 (!path[len] || path[len] == '/')) {
 
-                hdr = spool_getheader(txn->req_hdrs, "Host");
+                hdr = spool_getheader(txn->req_hdrs, ":authority");
                 buf_reset(&txn->buf);
                 buf_printf(&txn->buf, "%s://%s",
-                           https? "https" : "http", hdr[0]);
-                buf_appendcstr(&txn->buf, namespaces[i]->prefix);
+                           https ? "https" : "http", hdr[0]);
+                buf_appendcstr(&txn->buf, http_namespaces[i]->prefix);
                 buf_appendcstr(&txn->buf, path + len);
                 if (query) buf_printf(&txn->buf, "?%s", query);
                 txn->location = buf_cstring(&txn->buf);
@@ -1661,13 +1469,13 @@ static int examine_request(struct transaction_t *txn)
         }
 
         /* See if the prefix matches - terminated with NUL or '/' */
-        len = strlen(namespaces[i]->prefix);
-        if (!strncmp(path, namespaces[i]->prefix, len) &&
+        len = strlen(http_namespaces[i]->prefix);
+        if (!strncmp(path, http_namespaces[i]->prefix, len) &&
             (!path[len] || (path[len] == '/') || !strcmp(path, "*"))) {
             break;
         }
     }
-    if ((namespace = namespaces[i])) {
+    if ((namespace = http_namespaces[i])) {
         txn->req_tgt.namespace = namespace;
         txn->req_tgt.allow = namespace->allow;
 
@@ -1692,10 +1500,21 @@ static int examine_request(struct transaction_t *txn)
         avail_auth_schemes = (namespace->auth_schemes & avail_auth_schemes);
 
         /* Bearer auth must be advertised and supported by the namespace */
-        if ((namespace->auth_schemes & (1<<AUTH_BEARER)) && namespace->bearer) {
-            avail_auth_schemes |= (1<<AUTH_BEARER);
+        if ((namespace->auth_schemes & AUTH_BEARER) && namespace->bearer) {
+            avail_auth_schemes |= AUTH_BEARER;
         }
     }
+
+    return 0;
+}
+
+
+static int auth_check_hdrs(struct transaction_t *txn, int *sasl_result)
+{
+    int ret = 0, r = 0;
+    const char **hdr;
+
+    if (txn->flags.redirect) return 0;
 
     /* Perform authentication, if necessary */
     if ((hdr = spool_getheader(txn->req_hdrs, "Authorization"))) {
@@ -1718,7 +1537,20 @@ static int examine_request(struct transaction_t *txn)
                 syslog(LOG_DEBUG, "auth failed - reinit");
                 reset_saslconn(&httpd_saslconn);
                 txn->auth_chal.scheme = NULL;
-                ret = HTTP_UNAUTHORIZED;
+                if (r == SASL_UNAVAIL) {
+                    /* The namespace to authenticate to is unavailable.
+                     * There could be any reason for this, e.g. the DAV
+                     * handler could have run into a timeout for the
+                     * user's dabatase. In any case, there's no sense
+                     * to challenge the client for authentication. */
+                    ret = HTTP_UNAVAILABLE;
+                }
+                else if (r == SASL_FAIL) {
+                    ret = HTTP_SERVER_ERROR;
+                }
+                else {
+                    ret = HTTP_UNAUTHORIZED;
+                }
             }
             else if (r == SASL_CONTINUE) {
                 /* Continue with multi-step authentication */
@@ -1753,7 +1585,7 @@ static int examine_request(struct transaction_t *txn)
     }
 
     /* Perform proxy authorization, if necessary */
-    else if (saslprops.authid &&
+    else if (httpd_authid &&
              (hdr = spool_getheader(txn->req_hdrs, "Authorize-As")) &&
              *hdr[0]) {
         const char *authzid = hdr[0];
@@ -1767,24 +1599,21 @@ static int examine_request(struct transaction_t *txn)
             ret = HTTP_UNAUTHORIZED;
         }
         else {
-            auth_success(txn, authzid);
+            ret = auth_success(txn, authzid);
         }
     }
 
-    /* Register service/module and method */
-    buf_printf(&txn->buf, "%s%s", config_ident,
-               namespace->well_known ? strrchr(namespace->well_known, '/') :
-               namespace->prefix);
-    proc_register(buf_cstring(&txn->buf), httpd_clienthost, httpd_userid,
-                  txn->req_line.uri, txn->req_line.meth);
-    buf_reset(&txn->buf);
+    *sasl_result = r;
 
-    /* Request authentication, if necessary */
-    if (!httpd_userid && namespace->need_auth(txn)) {
-        ret = HTTP_UNAUTHORIZED;
-    }
+    return ret;
+}
 
-    if (ret) return client_need_auth(txn, r);
+
+static void postauth_check_hdrs(struct transaction_t *txn)
+{
+    const char **hdr;
+
+    if (txn->flags.redirect) return;
 
     /* Check if this is a Cross-Origin Resource Sharing request */
     if (allow_cors && (hdr = spool_getheader(txn->req_hdrs, "Origin"))) {
@@ -1796,7 +1625,7 @@ static int examine_request(struct transaction_t *txn)
 
             if ((https == o_https) &&
                 !strcasecmp(uri->server,
-                            *spool_getheader(txn->req_hdrs, "Host"))) {
+                            *spool_getheader(txn->req_hdrs, ":authority"))) {
                 txn->flags.cors = CORS_SIMPLE;
             }
             else {
@@ -1830,7 +1659,7 @@ static int examine_request(struct transaction_t *txn)
 
        XXX  Do we want to support deflate even though M$
        doesn't implement it correctly (raw deflate vs. zlib)? */
-    if (txn->conn->zstrm &&
+    if (txn->zstrm &&
         txn->flags.ver == VER_1_1 &&
         (hdr = spool_getheader(txn->req_hdrs, "TE"))) {
         struct accept *e, *enc = parse_accept(hdr);
@@ -1845,23 +1674,38 @@ static int examine_request(struct transaction_t *txn)
         }
         if (enc) free(enc);
     }
-    else if ((txn->conn->zstrm || txn->conn->brotli) &&
+    else if ((txn->zstrm || txn->brotli || txn->zstd) &&
              (hdr = spool_getheader(txn->req_hdrs, "Accept-Encoding"))) {
         struct accept *e, *enc = parse_accept(hdr);
         float qual = 0.0;
 
         for (e = enc; e && e->token; e++) {
-            if (e->qual > 0.0) {
-                /* Favor Brotli over GZIP if q values are equal */
-                if (txn->conn->brotli &&
-                    (e->qual >= qual) && !strcasecmp(e->token, "br")) {
-                    txn->resp_body.enc = CE_BR;
-                    qual = e->qual;
+            if (e->qual > 0.0 && e->qual >= qual) {
+                unsigned ce = CE_IDENTITY;
+                encode_proc_t proc = NULL;
+
+                if (txn->zstd && !strcasecmp(e->token, "zstd")) {
+                    ce = CE_ZSTD;
+                    proc = &zstd_compress;
                 }
-                else if (txn->conn->zstrm &&
-                         (e->qual > qual) && (!strcasecmp(e->token, "gzip") ||
-                                              !strcasecmp(e->token, "x-gzip"))) {
-                    txn->resp_body.enc = CE_GZIP;
+                else if (txn->brotli && !strcasecmp(e->token, "br")) {
+                    ce = CE_BR;
+                    proc = &brotli_compress;
+                }
+                else if (txn->zstrm && (!strcasecmp(e->token, "gzip") ||
+                                        !strcasecmp(e->token, "x-gzip"))) {
+                    ce = CE_GZIP;
+                    proc = &zlib_compress;
+                }
+                else {
+                    /* Unknown/unsupported */
+                    e->qual = 0.0;
+                }
+
+                /* Favor Zstandard over Brotli over GZIP if q values are equal */
+                if (e->qual > qual || txn->resp_body.enc.type < ce) {
+                    txn->resp_body.enc.type = ce;
+                    txn->resp_body.enc.proc = proc;
                     qual = e->qual;
                 }
             }
@@ -1869,10 +1713,155 @@ static int examine_request(struct transaction_t *txn)
         }
         if (enc) free(enc);
     }
+}
+
+
+EXPORTED int examine_request(struct transaction_t *txn, const char *uri)
+{
+    int ret = 0, sasl_result = 0;
+    const char *query;
+    const struct namespace_t *namespace;
+    struct request_line_t *req_line = &txn->req_line;
+
+    if (!uri) uri = req_line->uri;
+
+    /* Check method */
+    if ((ret = check_method(txn))) return ret;
+
+    /* Parse request-target URI */
+    if (!(txn->req_uri = parse_uri(txn->meth, uri, 1, &txn->error.desc))) {
+        return HTTP_BAD_REQUEST;
+    }
+
+    /* Perform pre-authentication check of headers */
+    if ((ret = preauth_check_hdrs(txn))) return ret;
+
+    /* Find the namespace of the requested resource */
+    if ((ret = check_namespace(txn))) return ret;
+
+    /* Perform check of authentication headers */
+    ret = auth_check_hdrs(txn, &sasl_result);
+
+    if (ret && ret != HTTP_UNAUTHORIZED) return ret;
+
+    /* Register service/module and method */
+    namespace = txn->req_tgt.namespace;
+    buf_printf(&txn->buf, "%s%s", config_ident,
+               namespace->well_known ? strrchr(namespace->well_known, '/') :
+               namespace->prefix);
+    proc_register(buf_cstring(&txn->buf), txn->conn->clienthost, httpd_userid,
+                  txn->req_tgt.path, txn->req_line.meth);
+    buf_reset(&txn->buf);
+
+    /* Request authentication, if necessary */
+    if (!httpd_userid && namespace->need_auth(txn)) {
+        ret = HTTP_UNAUTHORIZED;
+    }
+
+    if (ret) return client_need_auth(txn, sasl_result);
 
     /* Parse any query parameters */
     construct_hash_table(&txn->req_qparams, 10, 1);
+    query = URI_QUERY(txn->req_uri);
     if (query) parse_query_params(txn, query);
+
+    /* Perform post-authentication check of headers */
+    postauth_check_hdrs(txn);
+
+    return 0;
+}
+
+
+EXPORTED int process_request(struct transaction_t *txn)
+{
+    int ret = 0;
+
+    if (txn->req_tgt.namespace->premethod) {
+        ret = txn->req_tgt.namespace->premethod(txn);
+    }
+    if (!ret) {
+        const struct method_t *meth_t =
+            &txn->req_tgt.namespace->methods[txn->meth];
+        
+        ret = (*meth_t->proc)(txn, meth_t->params);
+
+        prometheus_increment(
+            prometheus_lookup_label(http_methods[txn->meth].metric,
+                                    txn->req_tgt.namespace->name));
+    }
+
+    if (ret == HTTP_UNAUTHORIZED) {
+        /* User must authenticate */
+        ret = client_need_auth(txn, 0);
+    }
+
+    return ret;
+}
+
+
+static int http1_input(struct transaction_t *txn)
+{
+    struct request_line_t *req_line = &txn->req_line;
+    int ignore_empty = 1, ret = 0;
+
+    do {
+        /* Read request-line */
+        syslog(LOG_DEBUG, "read & parse request-line");
+        if (!prot_fgets(req_line->buf, MAX_REQ_LINE+1, httpd_in)) {
+            txn->error.desc = prot_error(httpd_in);
+            if (txn->error.desc && strcmp(txn->error.desc, PROT_EOF_STRING)) {
+                /* client timed out */
+                syslog(LOG_WARNING, "%s, closing connection", txn->error.desc);
+                ret = HTTP_TIMEOUT;
+            }
+            else {
+                /* client closed connection */
+                syslog(LOG_DEBUG, "client closed connection");
+            }
+
+            txn->flags.conn = CONN_CLOSE;
+            return ret;
+        }
+
+        /* Ignore 1 empty line before request-line per RFC 7230 Sec 3.5 */
+    } while (ignore_empty-- && (strcspn(req_line->buf, "\r\n") == 0));
+
+
+    /* Parse request-line = method SP request-target SP HTTP-version CRLF */
+    ret = parse_request_line(txn);
+
+    /* Parse headers */
+    if (!ret) {
+        ret = http_read_headers(httpd_in, 1 /* read_sep */,
+                                &txn->req_hdrs, &txn->error.desc);
+    }
+
+    if (ret) {
+        txn->flags.conn = CONN_CLOSE;
+        goto done;
+    }
+
+    /* Examine request */
+    ret = examine_request(txn, NULL);
+    if (ret) goto done;
+
+    /* Start method processing alarm (HTTP/1.1 only) */
+    if (txn->flags.ver == VER_1_1) alarm(httpd_keepalive);
+
+    /* Process the requested method */
+    ret = process_request(txn);
+
+  done:
+    /* Handle errors (success responses handled by method functions) */
+    if (ret) error_response(ret, txn);
+
+    /* Read and discard any unread request body */
+    if (!(txn->flags.conn & CONN_CLOSE)) {
+        txn->req_body.flags |= BODY_DISCARD;
+        if (http_read_req_body(txn)) {
+            txn->flags.conn = CONN_CLOSE;
+        }
+    }
 
     return 0;
 }
@@ -1889,7 +1878,7 @@ static void transaction_reset(struct transaction_t *txn)
     memset(&txn->req_line, 0, sizeof(struct request_line_t));
 
     /* Reset Bearer auth scheme for each transaction */
-    avail_auth_schemes &= ~(1 << AUTH_BEARER);
+    avail_auth_schemes &= ~AUTH_BEARER;
 
     if (txn->req_uri) xmlFreeURI(txn->req_uri);
     txn->req_uri = NULL;
@@ -1911,25 +1900,27 @@ static void transaction_reset(struct transaction_t *txn)
     txn->location = NULL;
     memset(&txn->error, 0, sizeof(struct error_t));
 
+    strarray_fini(&txn->resp_body.links);
     memset(&txn->resp_body, 0,  /* Don't zero the response payload buffer */
            sizeof(struct resp_body_t) - sizeof(struct buf));
     buf_reset(&txn->resp_body.payload);
 
+    /* Pre-allocate our working buffer */
     buf_reset(&txn->buf);
+    buf_ensure(&txn->buf, 1024);
 }
 
 
-static void transaction_free(struct transaction_t *txn)
+EXPORTED void transaction_free(struct transaction_t *txn)
 {
-#ifdef HAVE_NGHTTP2
-    size_t i;
-
-    for (i = 0; i < HTTP2_MAX_HEADERS; i++) {
-        free(txn->http2.resp_hdrs[i].value);
-    }
-#endif /* HAVE_NGHTTP2 */
-
     transaction_reset(txn);
+
+    ws_end_channel(txn->ws_ctx);
+    http2_end_stream(txn->strm_ctx);
+
+    zlib_done(txn->zstrm);
+    zstd_done(txn->zstd);
+    brotli_done(txn->brotli);
 
     buf_free(&txn->req_body.payload);
     buf_free(&txn->resp_body.payload);
@@ -1943,40 +1934,36 @@ static void transaction_free(struct transaction_t *txn)
  */
 static void cmdloop(struct http_connection *conn)
 {
-    int empty = 0;
     struct transaction_t txn;
 
     /* Start with an empty (clean) transaction */
     memset(&txn, 0, sizeof(struct transaction_t));
     txn.conn = conn;
 
-    /* Pre-allocate our working buffer */
-    buf_ensure(&txn.buf, 1024);
+    if (config_getswitch(IMAPOPT_HTTPALLOWCOMPRESS)) {
+        txn.zstrm = zlib_init();
+        txn.zstd = zstd_init();
+        txn.brotli = brotli_init();
+    }
 
-    for (;;) {
+    /* Enable command timer */
+    cmdtime_settimer(1);
+
+    /* Enable provisional responses for long-running mailbox ops */
+    mailbox_set_wait_cb((mailbox_wait_cb_t *) &keepalive_response, &txn);
+
+    do {
         int ret = 0;
 
         /* Reset txn state */
         transaction_reset(&txn);
 
+        /* make sure nothing leaked */
+        assert(!open_mailboxes_exist());
+
         /* Check for input from client */
         do {
             /* Flush any buffered output */
-#ifdef HAVE_NGHTTP2
-            if (conn->http2_session &&
-                nghttp2_session_want_write(conn->http2_session)) {
-                /* Send queued frame(s) */
-                int r = nghttp2_session_send(conn->http2_session);
-                if (r) {
-                    syslog(LOG_ERR,
-                           "nghttp2_session_send: %s", nghttp2_strerror(r));
-                    /* XXX  can we do anything else here? */
-                    transaction_free(&txn);
-                    return;
-                }
-            }
-#endif /* HAVE_NGHTTP2 */
-
             prot_flush(httpd_out);
             if (backend_current) prot_flush(backend_current->out);
 
@@ -1985,7 +1972,8 @@ static void cmdloop(struct http_connection *conn)
                 (httpd_userid &&
                  userdeny(httpd_userid, config_ident, txn.buf.s, txn.buf.alloc))) {
                 txn.error.desc = txn.buf.s;
-                ret = HTTP_UNAVAILABLE;
+                txn.flags.conn = CONN_CLOSE;
+                ret = HTTP_SHUTDOWN;
                 break;
             }
 
@@ -1993,168 +1981,36 @@ static void cmdloop(struct http_connection *conn)
 
         } while (!proxy_check_input(protin, httpd_in, httpd_out,
                                     backend_current ? backend_current->in : NULL,
-                                    NULL, 0));
+                                    NULL, 30));
 
         
-#ifdef HAVE_NGHTTP2
-        if (conn->http2_session) {
-            syslog(LOG_DEBUG, "ret: %d, eof: %d, want read: %d", ret,
-                   httpd_in->eof, nghttp2_session_want_read(conn->http2_session));
-            if (nghttp2_session_want_read(conn->http2_session)) {
-                if (!ret) {
-                    /* Read frame(s) */
-                    int r = nghttp2_session_recv(conn->http2_session);
-                    if (!r) continue;
-                    else if (r != NGHTTP2_ERR_EOF) {
-                        syslog(LOG_WARNING, "nghttp2_session_recv: %s (%s)",
-                               nghttp2_strerror(r), prot_error(httpd_in));
-                        txn.error.desc = prot_error(httpd_in);
-                        ret = HTTP_TIMEOUT;
-                    }
-                }
+        /* Start command timer */
+        cmdtime_starttimer();
 
-                if (ret) {
-                    /* Tell client we are closing session */
-                    syslog(LOG_WARNING, "%s, closing connection", txn.error.desc);
-                    syslog(LOG_DEBUG, "nghttp2_submit_goaway()");
-                    nghttp2_submit_goaway(conn->http2_session, NGHTTP2_FLAG_NONE,
-                                          nghttp2_session_get_last_proc_stream_id(
-                                              conn->http2_session),
-                                          NGHTTP2_NO_ERROR,
-                                          (const uint8_t *) txn.error.desc,
-                                          strlen(txn.error.desc));
-                    continue;
-                }
-            }
-            else if (ret) {
-                protgroup_free(protin);
-                shut_down(0);
-            }
-
-            /* client closed connection */
-            syslog(LOG_DEBUG, "client closed connection");
-            transaction_free(&txn);
-            return;
+        if (txn.conn->sess_ctx) {
+            /* HTTP/2 input */
+            http2_input(&txn);
         }
-#endif /* HAVE_NGHTTP2 */
+        else if (txn.ws_ctx) {
+            /* WebSocket over HTTP/1.1 input */
+            ws_input(&txn);
+        }
+        else if (!ret) {
+            /* HTTP/1.x request */
+            http1_input(&txn);
+        }
 
-
-        if (ret) {
-            txn.flags.conn = CONN_CLOSE;
-            error_response(ret, &txn);
+        if (ret == HTTP_SHUTDOWN) {
+            syslog(LOG_WARNING,
+                   "Shutdown file: \"%s\", closing connection", txn.error.desc);
             protgroup_free(protin);
             shut_down(0);
         }
 
-        /* Read request-line */
-        struct request_line_t *req_line = &txn.req_line;
-        syslog(LOG_DEBUG, "read & parse request-line");
-        if (!prot_fgets(req_line->buf, MAX_REQ_LINE+1, httpd_in)) {
-            txn.error.desc = prot_error(httpd_in);
-            if (txn.error.desc && strcmp(txn.error.desc, PROT_EOF_STRING)) {
-                /* client timed out */
-                syslog(LOG_WARNING, "%s, closing connection", txn.error.desc);
-                ret = HTTP_TIMEOUT;
-            }
-            else {
-                /* client closed connection */
-            }
+    } while (!(txn.flags.conn & CONN_CLOSE));
 
-            txn.flags.conn = CONN_CLOSE;
-            goto done;
-        }
-
-        /* Ignore 1 empty line before request-line per RFC 7230 Sec 3.5 */
-        if (!empty++ && !strcspn(req_line->buf, "\r\n")) continue;
-        empty = 0;
-
-
-#ifdef HAVE_NGHTTP2
-        /* Check for HTTP/2 client connection preface */
-        if (http2_callbacks &&
-            !strncmp(NGHTTP2_CLIENT_MAGIC,
-                     req_line->buf, strlen(req_line->buf))) {
-            syslog(LOG_DEBUG, "HTTP/2 client connection preface");
-
-            /* Read remainder of preface */
-            prot_readbuf(httpd_in, &txn.req_body.payload,
-                         NGHTTP2_CLIENT_MAGIC_LEN - strlen(req_line->buf));
-
-            /* Tell library not to look for preface */
-            nghttp2_option_new(&conn->http2_options);
-            nghttp2_option_set_no_recv_client_magic(conn->http2_options, 1);
-
-            /* Start HTTP/2 */
-            ret = starthttp2(conn, &txn);
-            if (ret) {
-                /* XXX  what do we do here? */
-                transaction_free(&txn);
-                return;
-            }
-
-            continue;
-        }
-#endif /* HAVE_NGHTTP2 */
-
-
-        /* Parse request-line = method SP request-target SP HTTP-version CRLF */
-        ret = parse_request_line(&txn);
-
-        /* Parse headers */
-        if (!ret) {
-            ret = http_read_headers(httpd_in, 1 /* read_sep */,
-                                    &txn.req_hdrs, &txn.error.desc);
-        }
-
-        if (ret) {
-            txn.flags.conn = CONN_CLOSE;
-            goto done;
-        }
-
-        /* Examine request */
-        ret = examine_request(&txn);
-        if (ret) goto done;
-
-        /* Start method processing alarm (HTTP/1.1 only) */
-        if (txn.flags.ver == VER_1_1) alarm(httpd_keepalive);
-
-        /* Process the requested method */
-        if (txn.req_tgt.namespace->premethod) {
-            ret = txn.req_tgt.namespace->premethod(&txn);
-        }
-        if (!ret) {
-            const struct method_t *meth_t =
-                &txn.req_tgt.namespace->methods[txn.meth];
-
-            ret = (*meth_t->proc)(&txn, meth_t->params);
-        }
-
-        if (ret == HTTP_UNAUTHORIZED) {
-            /* User must authenticate */
-            ret = client_need_auth(&txn, 0);
-        }
-
-      done:
-        /* Handle errors (success responses handled by method functions) */
-        if (ret) error_response(ret, &txn);
-
-        /* Read and discard any unread request body */
-        if (!(txn.flags.conn & CONN_CLOSE)) {
-            txn.req_body.flags |= BODY_DISCARD;
-            if (http_read_body(httpd_in, httpd_out,
-                               txn.req_hdrs, &txn.req_body, &txn.error.desc)) {
-                txn.flags.conn = CONN_CLOSE;
-            }
-        }
-
-        if (txn.flags.conn & CONN_CLOSE) {
-            /* Memory cleanup */
-            transaction_free(&txn);
-            return;
-        }
-
-        continue;
-    }
+    /* Memory cleanup */
+    transaction_free(&txn);
 }
 
 /****************************  Parsing Routines  ******************************/
@@ -2187,18 +2043,24 @@ EXPORTED xmlURIPtr parse_uri(unsigned meth, const char *uri, unsigned path_reqd,
         goto bad_request;
     }
     else if (p_uri->path) {
+        size_t pathlen = strlen(p_uri->path);
         if ((p_uri->path[0] != '/') &&
             (strcmp(p_uri->path, "*") || (meth != METH_OPTIONS))) {
             /* No special URLs except for "OPTIONS * HTTP/1.1" */
             *errstr = "Illegal request target URI";
             goto bad_request;
         }
-        else if (strstr(p_uri->path, "/..")) {
+        else if (strstr(p_uri->path, "/../")) {
             /* Don't allow access up directory tree */
             *errstr = "Illegal request target URI";
             goto bad_request;
         }
-        else if (strlen(p_uri->path) > MAX_MAILBOX_PATH) {
+        else if (pathlen >= 3 && !strcmp("/..", p_uri->path + pathlen - 3)) {
+            /* Don't allow access up directory tree */
+            *errstr = "Illegal request target URI";
+            goto bad_request;
+        }
+        else if (pathlen > MAX_MAILBOX_PATH) {
             *errstr = "Request target URI too long";
             goto bad_request;
         }
@@ -2217,10 +2079,6 @@ EXPORTED time_t calc_compile_time(const char *time, const char *date)
 {
     struct tm tm;
     char month[4];
-    const char *monthname[] = {
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    };
 
     memset(&tm, 0, sizeof(struct tm));
     tm.tm_isdst = -1;
@@ -2297,26 +2155,28 @@ static int parse_connection(struct transaction_t *txn)
                         spool_getheader(txn->req_hdrs, "Upgrade");
 
                     if (upgrade && upgrade[0]) {
-                        syslog(LOG_NOTICE,
-                               "client requested upgrade to %s", upgrade[0]);
-
-                        if (!httpd_tls_done && tls_enabled() &&
-                            !strncmp(upgrade[0], TLS_VERSION,
-                                     strcspn(upgrade[0], " ,"))) {
+                        if (!txn->conn->tls_ctx && tls_enabled() &&
+                            !strncasecmp(upgrade[0], TLS_VERSION,
+                                         strcspn(upgrade[0], " ,"))) {
                             /* Upgrade to TLS */
                             txn->flags.conn |= CONN_UPGRADE;
                             txn->flags.upgrade |= UPGRADE_TLS;
                         }
-#ifdef HAVE_NGHTTP2
-                        else if (http2_callbacks &&
-                                 !strncmp(upgrade[0],
-                                          NGHTTP2_CLEARTEXT_PROTO_VERSION_ID,
-                                          strcspn(upgrade[0], " ,"))) {
+                        else if (http2_enabled() &&
+                                 !strncasecmp(upgrade[0],
+                                              NGHTTP2_CLEARTEXT_PROTO_VERSION_ID,
+                                              strcspn(upgrade[0], " ,"))) {
                             /* Upgrade to HTTP/2 */
                             txn->flags.conn |= CONN_UPGRADE;
                             txn->flags.upgrade |= UPGRADE_HTTP2;
                         }
-#endif /* HAVE_NGHTTP2 */
+                        else if (ws_enabled() &&
+                                 !strncasecmp(upgrade[0], WS_TOKEN,
+                                              strcspn(upgrade[0], " ,"))) {
+                            /* Upgrade to WebSockets */
+                            txn->flags.conn |= CONN_UPGRADE;
+                            txn->flags.upgrade |= UPGRADE_WS;
+                        }
                         else {
                             /* Unknown/unsupported protocol - no upgrade */
                         }
@@ -2426,15 +2286,11 @@ void parse_query_params(struct transaction_t *txn, const char *query)
 /* Create HTTP-date ('buf' must be at least 30 characters) */
 EXPORTED char *httpdate_gen(char *buf, size_t len, time_t t)
 {
-    static char *month[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-    static char *wday[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-
     struct tm *tm = gmtime(&t);
 
     snprintf(buf, len, "%3s, %02d %3s %4d %02d:%02d:%02d GMT",
              wday[tm->tm_wday],
-             tm->tm_mday, month[tm->tm_mon], tm->tm_year + 1900,
+             tm->tm_mday, monthname[tm->tm_mon], tm->tm_year + 1900,
              tm->tm_hour, tm->tm_min, tm->tm_sec);
 
     return buf;
@@ -2442,18 +2298,17 @@ EXPORTED char *httpdate_gen(char *buf, size_t len, time_t t)
 
 
 /* Create an HTTP Status-Line given response code */
-EXPORTED const char *http_statusline(long code)
+EXPORTED const char *http_statusline(unsigned ver, long code)
 {
     static struct buf statline = BUF_INITIALIZER;
-    static unsigned tail = 0;
 
-    if (!tail) {
-        buf_setcstr(&statline, HTTP_VERSION);
-        buf_putc(&statline, ' ');
-        tail = buf_len(&statline);
+    if (ver == VER_2) buf_setcstr(&statline, HTTP2_VERSION);
+    else {
+        buf_setmap(&statline, HTTP_VERSION, HTTP_VERSION_LEN-1);
+        buf_putc(&statline, ver + '0');
     }
 
-    buf_truncate(&statline, tail);
+    buf_putc(&statline, ' ');
     buf_appendcstr(&statline, error_message(code));
     return buf_cstring(&statline);
 }
@@ -2476,33 +2331,16 @@ EXPORTED void simple_hdr(struct transaction_t *txn,
 
     syslog(LOG_DEBUG, "simple_hdr(%s: %s)", name, buf_cstring(&buf));
 
-#ifdef HAVE_NGHTTP2
     if (txn->flags.ver == VER_2) {
-        if (txn->http2.num_resp_hdrs >= HTTP2_MAX_HEADERS) {
-            buf_free(&buf);
-            return;
-        }
-
-        nghttp2_nv *nv = &txn->http2.resp_hdrs[txn->http2.num_resp_hdrs];
-
-        free(nv->value);
-
-        nv->namelen = strlen(name);
-        nv->name = (uint8_t *) name;
-        nv->valuelen = buf_len(&buf);
-        nv->value = (uint8_t *) buf_release(&buf);
-        nv->flags = NGHTTP2_NV_FLAG_NO_COPY_VALUE;
-
-        txn->http2.num_resp_hdrs++;
-        return;
+        http2_add_header(txn, name, &buf);
     }
-#endif /* HAVE_NGHTTP2 */
+    else {
+        prot_printf(txn->conn->pout, "%c%s: ", toupper(name[0]), name+1);
+        prot_puts(txn->conn->pout, buf_cstring(&buf));
+        prot_puts(txn->conn->pout, "\r\n");
 
-    prot_printf(txn->conn->pout, "%c%s: ", toupper(name[0]), name+1);
-    prot_puts(txn->conn->pout, buf_cstring(&buf));
-    prot_puts(txn->conn->pout, "\r\n");
-
-    buf_free(&buf);
+        buf_free(&buf);
+    }
 }
 
 #define WWW_Authenticate(name, param)                           \
@@ -2511,31 +2349,39 @@ EXPORTED void simple_hdr(struct transaction_t *txn,
 #define Access_Control_Expose(hdr)                              \
     simple_hdr(txn, "Access-Control-Expose-Headers", hdr)
 
-EXPORTED void comma_list_hdr(struct transaction_t *txn, const char *name,
-                             const char *vals[], unsigned flags, ...)
+static void comma_list_body(struct buf *buf,
+                            const char *vals[], unsigned flags, va_list args)
 {
-    struct buf buf = BUF_INITIALIZER;
     const char *sep = "";
-    va_list args;
     int i;
-
-    va_start(args, flags);
 
     for (i = 0; vals[i]; i++) {
         if (flags & (1 << i)) {
-            buf_appendcstr(&buf, sep);
-            buf_vprintf(&buf, vals[i], args);
+            buf_appendcstr(buf, sep);
+            if (args) buf_vprintf(buf, vals[i], args);
+            else buf_appendcstr(buf, vals[i]);
             sep = ", ";
         }
-        else {
+        else if (args) {
             /* discard any unused args */
             vsnprintf(NULL, 0, vals[i], args);
         }
     }
+}
+
+EXPORTED void comma_list_hdr(struct transaction_t *txn, const char *name,
+                             const char *vals[], unsigned flags, ...)
+{
+    struct buf buf = BUF_INITIALIZER;
+    va_list args;
+
+    va_start(args, flags);
+
+    comma_list_body(&buf, vals, flags, args);
 
     va_end(args);
 
-    simple_hdr(txn, name, buf_cstring(&buf));
+    simple_hdr(txn, name, "%s", buf_cstring(&buf));
 
     buf_free(&buf);
 }
@@ -2548,7 +2394,7 @@ EXPORTED void list_auth_schemes(struct transaction_t *txn)
 
     /* Advertise available schemes that can work with the type of connection */
     for (scheme = auth_schemes; scheme->name; scheme++) {
-        if ((avail_auth_schemes & (1 << scheme->idx)) &&
+        if ((avail_auth_schemes & scheme->id) &&
             !(conn_close && (scheme->flags & AUTH_NEED_PERSIST))) {
             auth_chal->param = NULL;
 
@@ -2567,7 +2413,8 @@ EXPORTED void allow_hdr(struct transaction_t *txn,
                         const char *name, unsigned allow)
 {
     const char *meths[] = {
-        "OPTIONS, GET, HEAD", "POST", "PUT", "PATCH", "DELETE", "TRACE", NULL
+        "OPTIONS, GET, HEAD", "POST", "PUT",
+        "PATCH", "DELETE", "TRACE", "CONNECT", NULL
     };
 
     comma_list_hdr(txn, name, meths, allow);
@@ -2597,7 +2444,7 @@ EXPORTED void accept_patch_hdr(struct transaction_t *txn,
         sep = ", ";
     }
 
-    simple_hdr(txn, "Accept-Patch", buf_cstring(&buf));
+    simple_hdr(txn, "Accept-Patch", "%s", buf_cstring(&buf));
 
     buf_free(&buf);
 }
@@ -2609,109 +2456,71 @@ EXPORTED void content_md5_hdr(struct transaction_t *txn,
 {
     char base64[MD5_BASE64_LEN+1];
 
-    sasl_encode64((char *) md5, MD5_DIGEST_LENGTH,
-                  base64, MD5_BASE64_LEN, NULL);
-    simple_hdr(txn, "Content-MD5", base64);
+    sasl_encode64((char *) md5, MD5_DIGEST_LENGTH, base64, MD5_BASE64_LEN, NULL);
+    simple_hdr(txn, "Content-MD5", "%s", base64);
 }
 
 EXPORTED void begin_resp_headers(struct transaction_t *txn, long code)
 {
-#ifdef HAVE_NGHTTP2
     if (txn->flags.ver == VER_2) {
-        txn->http2.num_resp_hdrs = 0;
+        http2_begin_headers(txn);
         if (code) simple_hdr(txn, ":status", "%.3s", error_message(code));
-        return;
     }
-#endif /* HAVE_NGHTTP2 */
-
-    if (code) prot_printf(txn->conn->pout, "%s\r\n", http_statusline(code));
-    return;
+    else if (code) prot_printf(txn->conn->pout, "%s\r\n",
+                               http_statusline(txn->flags.ver, code));
 }
 
 EXPORTED int end_resp_headers(struct transaction_t *txn, long code)
 {
-#ifdef HAVE_NGHTTP2
+    int r = 0;
+
     if (txn->flags.ver == VER_2) {
-        uint8_t flags = NGHTTP2_FLAG_NONE;
-        int r;
-
-        syslog(LOG_DEBUG,
-               "end_resp_headers(code = %ld, len = %ld, flags.te = %#x)",
-               code, txn->resp_body.len, txn->flags.te);
-
-        switch (code) {
-        case 0:
-            /* Trailer */
-            flags = NGHTTP2_FLAG_END_STREAM;
-            break;
-
-        case HTTP_CONTINUE:
-        case HTTP_PROCESSING:
-            /* Provisional response */
-            break;
-
-        case HTTP_NO_CONTENT:
-        case HTTP_NOT_MODIFIED:
-            /* MUST NOT include a body */
-            flags = NGHTTP2_FLAG_END_STREAM;
-            break;
-
-        default:
-            if (txn->meth == METH_HEAD) {
-                /* MUST NOT include a body */
-                flags = NGHTTP2_FLAG_END_STREAM;
-            }
-            else if (!(txn->resp_body.len || (txn->flags.te & TE_CHUNKED))) {
-                /* Empty body */
-                flags = NGHTTP2_FLAG_END_STREAM;
-            }
-            break;
-        }
-
-        syslog(LOG_DEBUG, "%s(id=%d, flags=%#x)",
-               code ? "nghttp2_submit headers" : "nghttp2_submit_trailers",
-               txn->http2.stream_id, flags);
-
-        if (code) {
-            r = nghttp2_submit_headers(txn->conn->http2_session,
-                                       flags, txn->http2.stream_id, NULL,
-                                       txn->http2.resp_hdrs,
-                                       txn->http2.num_resp_hdrs, NULL);
-        }
-        else {
-            r = nghttp2_submit_trailer(txn->conn->http2_session,
-                                       txn->http2.stream_id,
-                                       txn->http2.resp_hdrs,
-                                       txn->http2.num_resp_hdrs);
-        }
-        if (r) {
-            syslog(LOG_ERR, "%s: %s",
-                   code ? "nghttp2_submit headers" : "nghttp2_submit_trailers",
-                   nghttp2_strerror(r));
-            return r;
-        }
-
-        return 0;
+        r = http2_end_headers(txn, code);
     }
-#else
-    (void) code; /* silence 'unused variable code' warning */
-#endif /* HAVE_NGHTTP2 */
+    else {
+        /* CRLF terminating the header block */
+        prot_puts(txn->conn->pout, "\r\n");
+    }
 
-    /* CRLF terminating the header block */
-    prot_puts(txn->conn->pout, "\r\n");
+    return r;
+}
 
-    return 0;
+
+/* Write end-to-end header (ignoring hop-by-hop) from cache to protstream. */
+static void write_cachehdr(const char *name, const char *contents,
+                           const char *raw __attribute__((unused)), void *rock)
+{
+    struct transaction_t *txn = (struct transaction_t *) rock;
+    const char **hdr, *hop_by_hop[] =
+        { "connection", "content-length", "content-type", "date", "forwarded",
+          "keep-alive", "location", "status", "strict-transport-security",
+          "upgrade", "via", NULL };
+
+    /* Ignore private headers in our cache */
+    if (name[0] == ':') return;
+
+    for (hdr = hop_by_hop; *hdr; hdr++) {
+        if (!strcasecmp(name, *hdr)) return;
+    }
+
+    simple_hdr(txn, name, "%s", contents);
 }
 
 
 EXPORTED void response_header(long code, struct transaction_t *txn)
 {
+    int i;
     time_t now;
     char datestr[30];
-    const char **hdr;
+    double cmdtime, nettime;
+    const char **hdr, *sep;
     struct auth_challenge_t *auth_chal = &txn->auth_chal;
     struct resp_body_t *resp_body = &txn->resp_body;
-    static struct buf log = BUF_INITIALIZER;
+    struct buf *logbuf = &txn->conn->logbuf;
+    const char *upgrd_tokens[] =
+        { TLS_VERSION, NGHTTP2_CLEARTEXT_PROTO_VERSION_ID, WS_TOKEN, NULL };
+    const char *te[] = { "deflate", "gzip", "chunked", NULL };
+    const char *ce[] = { "deflate", "gzip", "br", "zstd", NULL };
 
     /* Stop method processing alarm */
     alarm(0);
@@ -2727,15 +2536,13 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
         /* Final response */
         now = time(0);
         httpdate_gen(datestr, sizeof(datestr), now);
-        simple_hdr(txn, "Date", datestr);
+        simple_hdr(txn, "Date", "%s", datestr);
 
-        if (txn->flags.ver == VER_2) break;
-
-        /* Fall through and specify connection options - HTTP/1.x only */
+        /* Fall through and specify connection options and/or links */
         GCC_FALLTHROUGH
 
     case HTTP_SWITCH_PROT:
-        if (txn->flags.conn) {
+        if (txn->flags.conn && (txn->flags.ver < VER_2)) {
             /* Construct Connection header */
             const char *conn_tokens[] =
                 { "close", "Upgrade", "Keep-Alive", NULL };
@@ -2744,21 +2551,27 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
 
             if (txn->flags.upgrade) {
                 /* Construct Upgrade header */
-                const char *upgrd_tokens[] =
-                    { TLS_VERSION,
-#ifdef HAVE_NGHTTP2
-                      NGHTTP2_CLEARTEXT_PROTO_VERSION_ID,
-#endif
-                      NULL };
-
                 comma_list_hdr(txn, "Upgrade", upgrd_tokens, txn->flags.upgrade);
+
+                if (txn->flags.upgrade & UPGRADE_WS) {
+                    /* Add WebSocket headers */
+                    ws_add_resp_hdrs(txn);
+                }
             }
             if (txn->flags.conn & CONN_KEEPALIVE) {
                 simple_hdr(txn, "Keep-Alive", "timeout=%d", httpd_timeout);
             }
         }
 
-        if (code != HTTP_SWITCH_PROT) break;
+        /* Fall through and specify links */
+        GCC_FALLTHROUGH
+
+    case HTTP_EARLY_HINTS:
+        for (i = 0; i < strarray_size(&resp_body->links); i++) {
+            simple_hdr(txn, "Link", "%s", strarray_nth(&resp_body->links, i));
+        }
+
+        if (code >= HTTP_OK) break;
 
         /* Fall through as provisional response */
         GCC_FALLTHROUGH
@@ -2771,16 +2584,19 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
         /* Force the response to the client immediately */
         prot_flush(httpd_out);
 
-        return;
+        /* Restart method processing alarm (HTTP/1.1 only) */
+        if (!txn->ws_ctx && (txn->flags.ver == VER_1_1)) alarm(httpd_keepalive);
+
+        goto log;
     }
 
 
     /* Control Data */
-    if (httpd_tls_done) {
+    if (txn->conn->tls_ctx) {
         simple_hdr(txn, "Strict-Transport-Security", "max-age=600");
     }
     if (txn->location) {
-        simple_hdr(txn, "Location", txn->location);
+        simple_hdr(txn, "Location", "%s", txn->location);
     }
     if (txn->flags.mime) {
         simple_hdr(txn, "MIME-Version", "1.0");
@@ -2796,12 +2612,12 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
 
         if (txn->flags.cc & CC_MAXAGE) {
             httpdate_gen(datestr, sizeof(datestr), now + resp_body->maxage);
-            simple_hdr(txn, "Expires", datestr);
+            simple_hdr(txn, "Expires", "%s", datestr);
         }
     }
     if (txn->flags.cors) {
         /* Construct Cross-Origin Resource Sharing headers */
-        simple_hdr(txn, "Access-Control-Allow-Origin",
+        simple_hdr(txn, "Access-Control-Allow-Origin", "%s",
                       *spool_getheader(txn->req_hdrs, "Origin"));
         simple_hdr(txn, "Access-Control-Allow-Credentials", "true");
 
@@ -2811,15 +2627,16 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
             for (hdr = spool_getheader(txn->req_hdrs,
                                        "Access-Control-Request-Headers");
                  hdr && *hdr; hdr++) {
-                simple_hdr(txn, "Access-Control-Allow-Headers", *hdr);
+                simple_hdr(txn, "Access-Control-Allow-Headers", "%s", *hdr);
             }
             simple_hdr(txn, "Access-Control-Max-Age", "3600");
         }
     }
     if (txn->flags.vary && !(txn->flags.cc & CC_NOCACHE)) {
         /* Construct Vary header */
-        const char *vary_hdrs[] =
-            { "Accept", "Accept-Encoding", "Brief", "Prefer", NULL };
+        const char *vary_hdrs[] = { "Accept", "Accept-Encoding", "Brief",
+                                    "Prefer", "If-None-Match",
+                                    "CalDAV-Timezones", NULL };
 
         comma_list_hdr(txn, "Vary", vary_hdrs, txn->flags.vary);
     }
@@ -2838,18 +2655,16 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
     }
     else if (auth_chal->param) {
         /* Authentication completed with success data */
-        if (auth_chal->scheme->send_success) {
+        if (auth_chal->scheme->flags & AUTH_SUCCESS_WWW) {
             /* Special handling of success data for this scheme */
-            auth_chal->scheme->send_success(txn, auth_chal->scheme->name,
-                                            auth_chal->param);
+            WWW_Authenticate(auth_chal->scheme->name, auth_chal->param);
         }
         else {
             /* Default handling of success data */
-            WWW_Authenticate(auth_chal->scheme->name, auth_chal->param);
+            simple_hdr(txn, "Authentication-Info", "%s", auth_chal->param);
         }
     }
 
-    
     /* Response Context */
     if (txn->req_tgt.allow & ALLOW_ISCHEDULE) {
         simple_hdr(txn, "iSchedule-Version", "1.0");
@@ -2858,9 +2673,6 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
             simple_hdr(txn, "iSchedule-Capabilities", "%ld", resp_body->iserial);
         }
     }
-    if (resp_body->link) {
-        simple_hdr(txn, "Link", resp_body->link);
-    }
     if (resp_body->patch) {
         accept_patch_hdr(txn, resp_body->patch);
     }
@@ -2868,6 +2680,13 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
     switch (code) {
     case HTTP_OK:
         switch (txn->meth) {
+        case METH_CONNECT:
+            if (txn->ws_ctx) {
+                /* Add WebSocket headers */
+                ws_add_resp_hdrs(txn);
+            }
+            break;
+
         case METH_GET:
         case METH_HEAD:
             /* Construct Accept-Ranges header for GET and HEAD responses */
@@ -2877,7 +2696,7 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
 
         case METH_OPTIONS:
             if (config_serverinfo == IMAP_ENUM_SERVERINFO_ON) {
-                simple_hdr(txn, "Server", buf_cstring(&serverinfo));
+                simple_hdr(txn, "Server", "%s", buf_cstring(&serverinfo));
             }
 
             if (!httpd_userid && !auth_chal->scheme) {
@@ -2929,11 +2748,10 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
 
     case HTTP_BAD_CE:
         /* Construct Accept-Encoding header for 415 response */
-#ifdef HAVE_ZLIB
-        simple_hdr(txn, "Accept-Encoding", "gzip, deflate");
-#else
-        simple_hdr(txn, "Accept-Encoding", "identity");
-#endif
+        if (accept_encodings) {
+            comma_list_hdr(txn, "Accept-Encoding", ce, accept_encodings);
+        }
+        else simple_hdr(txn, "Accept-Encoding", "identity");
         break;
     }
 
@@ -2953,14 +2771,14 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
     }
     if (resp_body->etag) {
         simple_hdr(txn, "ETag", "%s\"%s\"",
-                      resp_body->enc ? "W/" : "", resp_body->etag);
+                      resp_body->enc.proc ? "W/" : "", resp_body->etag);
         if (txn->flags.cors) Access_Control_Expose("ETag");
     }
     if (resp_body->lastmod) {
         /* Last-Modified MUST NOT be in the future */
         resp_body->lastmod = MIN(resp_body->lastmod, now);
         httpdate_gen(datestr, sizeof(datestr), resp_body->lastmod);
-        simple_hdr(txn, "Last-Modified", datestr);
+        simple_hdr(txn, "Last-Modified", "%s", datestr);
     }
 
 
@@ -2974,28 +2792,42 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
         if (txn->flags.cors) Access_Control_Expose("Preference-Applied");
     }
     if (resp_body->cmid) {
-        simple_hdr(txn, "Cal-Managed-ID", "\"%s\"", resp_body->cmid);
+        simple_hdr(txn, "Cal-Managed-ID", "%s", resp_body->cmid);
         if (txn->flags.cors) Access_Control_Expose("Cal-Managed-ID");
     }
     if (resp_body->type) {
-        simple_hdr(txn, "Content-Type", resp_body->type);
-
-        if (resp_body->fname) {
-            simple_hdr(txn, "Content-Disposition",
-                       "attachment; filename=\"%s\"", resp_body->fname);
+        simple_hdr(txn, "Content-Type", "%s", resp_body->type);
+        if (resp_body->dispo.fname) {
+            /* Construct Content-Disposition header */
+            const unsigned char *p = (const unsigned char *)resp_body->dispo.fname;
+            char *encfname = NULL;
+            for (p = (unsigned char *)resp_body->dispo.fname; p && *p; p++) {
+                if (*p >= 0x80) {
+                    encfname = charset_encode_mimexvalue(resp_body->dispo.fname, NULL);
+                    break;
+                }
+            }
+            if (encfname) {
+                simple_hdr(txn, "Content-Disposition", "%s; filename*=%s",
+                        resp_body->dispo.attach ? "attachment" : "inline",
+                        encfname);
+            }
+            else {
+                simple_hdr(txn, "Content-Disposition", "%s; filename=\"%s\"",
+                        resp_body->dispo.attach ? "attachment" : "inline",
+                        resp_body->dispo.fname);
+            }
+            free(encfname);
         }
-        if (txn->resp_body.enc) {
+        if (txn->resp_body.enc.proc) {
             /* Construct Content-Encoding header */
-            const char *ce[] =
-                { "deflate", "gzip", "br", NULL };
-
-            comma_list_hdr(txn, "Content-Encoding", ce, txn->resp_body.enc);
+            comma_list_hdr(txn, "Content-Encoding", ce, txn->resp_body.enc.type);
         }
         if (resp_body->lang) {
-            simple_hdr(txn, "Content-Language", resp_body->lang);
+            simple_hdr(txn, "Content-Language", "%s", resp_body->lang);
         }
         if (resp_body->loc) {
-            simple_hdr(txn, "Content-Location", resp_body->loc);
+            simple_hdr(txn, "Content-Location", "%s", resp_body->loc);
             if (txn->flags.cors) Access_Control_Expose("Content-Location");
         }
         if (resp_body->md5) {
@@ -3038,22 +2870,44 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
             /* HTTP/1.1 only - we use close-delimiting for HTTP/1.0 */
             if (txn->flags.ver == VER_1_1) {
                 /* Construct Transfer-Encoding header */
-                const char *te[] =
-                    { "deflate", "gzip", "chunked", NULL };
-
                 comma_list_hdr(txn, "Transfer-Encoding", te, txn->flags.te);
             }
 
             if (txn->flags.trailer & ~TRAILER_PROXY) {
                 /* Construct Trailer header */
-                const char *trailer_hdrs[] = { "Content-MD5", NULL };
+                const char *trailer_hdrs[] = { "Content-MD5", "CTag", NULL };
 
                 comma_list_hdr(txn, "Trailer", trailer_hdrs, txn->flags.trailer);
             }
         }
-        else if (resp_body->len || txn->meth != METH_HEAD) {
-            simple_hdr(txn, "Content-Length", "%lu", resp_body->len);
+        else {
+            /* Content-Length */
+            switch (txn->meth) {
+            case METH_CONNECT:
+                /* MUST NOT include per Section 4.3.6 of RFC 7231 */
+                break;
+
+            case METH_HEAD:
+                if (!resp_body->len) {
+                    /* We don't know if the length is zero or if it wasn't set -
+                       MUST NOT include if it doesn't match what would be
+                       returned for GET, per Section 3.3.2 of RFC 7231 */
+                    break;
+                }
+
+                GCC_FALLTHROUGH
+
+            default:
+                simple_hdr(txn, "Content-Length", "%lu", resp_body->len);
+                break;
+            }
         }
+    }
+
+
+    /* Extra headers */
+    if (resp_body->extra_hdrs) {
+        spool_enum_hdrcache(resp_body->extra_hdrs, &write_cachehdr, txn);
     }
 
 
@@ -3061,117 +2915,212 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
     end_resp_headers(txn, code);
 
 
+  log:
     /* Log the client request and our response */
-    buf_reset(&log);
+    buf_reset(logbuf);
+
     /* Add client data */
-    buf_printf(&log, "%s", httpd_clienthost);
-    if (httpd_userid) buf_printf(&log, " as \"%s\"", httpd_userid);
+    buf_printf(logbuf, "%s", txn->conn->clienthost);
+    if (httpd_userid) buf_printf(logbuf, " as \"%s\"", httpd_userid);
     if (txn->req_hdrs &&
         (hdr = spool_getheader(txn->req_hdrs, "User-Agent"))) {
-        buf_printf(&log, " with \"%s\"", hdr[0]);
+        buf_printf(logbuf, " with \"%s\"", hdr[0]);
         if ((hdr = spool_getheader(txn->req_hdrs, "X-Client")))
-            buf_printf(&log, " by \"%s\"", hdr[0]);
+            buf_printf(logbuf, " by \"%s\"", hdr[0]);
         else if ((hdr = spool_getheader(txn->req_hdrs, "X-Requested-With")))
-            buf_printf(&log, " by \"%s\"", hdr[0]);
+            buf_printf(logbuf, " by \"%s\"", hdr[0]);
     }
+
+    /* Add session id */
+    buf_printf(logbuf, " via SESSIONID=<%s>", session_id());
+
     /* Add request-line */
-    buf_appendcstr(&log, "; \"");
+    buf_appendcstr(logbuf, "; \"");
     if (txn->req_line.meth) {
-        buf_printf(&log, "%s",
+        buf_printf(logbuf, "%s",
                    txn->flags.override ? "POST" : txn->req_line.meth);
         if (txn->req_line.uri) {
-            buf_printf(&log, " %s", txn->req_line.uri);
+            buf_printf(logbuf, " %s", txn->req_line.uri);
             if (txn->req_line.ver) {
-                buf_printf(&log, " %s", txn->req_line.ver);
+                buf_printf(logbuf, " %s", txn->req_line.ver);
                 if (code != HTTP_URI_TOO_LONG && *txn->req_line.buf) {
-                    char *p = txn->req_line.ver + strlen(txn->req_line.ver) + 1;
-                    if (*p) buf_printf(&log, " %s", p);
+                    const char *p =
+                        txn->req_line.ver + strlen(txn->req_line.ver) + 1;
+                    if (*p) buf_printf(logbuf, " %s", p);
                 }
             }
         }
     }
-    buf_appendcstr(&log, "\"");
+    buf_appendcstr(logbuf, "\"");
+
     if (txn->req_hdrs) {
         /* Add any request modifying headers */
-        const char *sep = " (";
+        sep = " (";
 
         if (txn->flags.override) {
-            buf_printf(&log, "%smethod-override=%s", sep, txn->req_line.meth);
+            buf_printf(logbuf, "%smethod-override=%s", sep, txn->req_line.meth);
             sep = "; ";
         }
         if ((hdr = spool_getheader(txn->req_hdrs, "Origin"))) {
-            buf_printf(&log, "%sorigin=%s", sep, hdr[0]);
+            buf_printf(logbuf, "%sorigin=%s", sep, hdr[0]);
             sep = "; ";
         }
         if ((hdr = spool_getheader(txn->req_hdrs, "Referer"))) {
-            buf_printf(&log, "%sreferer=%s", sep, hdr[0]);
+            buf_printf(logbuf, "%sreferer=%s", sep, hdr[0]);
+            sep = "; ";
+        }
+        if (txn->flags.upgrade &&
+            (hdr = spool_getheader(txn->req_hdrs, "Upgrade"))) {
+            buf_printf(logbuf, "%supgrade=%s", sep, hdr[0]);
+            sep = "; ";
+        }
+        if (code == HTTP_CONTINUE || code == HTTP_EXPECT_FAILED) {
+            hdr = spool_getheader(txn->req_hdrs, "Expect");
+            buf_printf(logbuf, "%sexpect=%s", sep, hdr[0]);
+            sep = "; ";
+        }
+        if ((hdr = spool_getheader(txn->req_hdrs, "Transfer-Encoding"))) {
+            buf_printf(logbuf, "%stx-encoding=%s", sep, hdr[0]);
+            sep = "; ";
+        }
+        if ((hdr = spool_getheader(txn->req_hdrs, "Content-Encoding"))) {
+            buf_printf(logbuf, "%scnt-encoding=%s", sep, hdr[0]);
+            sep = "; ";
+        }
+        if (txn->auth_chal.scheme) {
+            buf_printf(logbuf, "%sauth=%s", sep, txn->auth_chal.scheme->name);
             sep = "; ";
         }
         if ((hdr = spool_getheader(txn->req_hdrs, "Destination"))) {
-            buf_printf(&log, "%sdestination=%s", sep, hdr[0]);
+            buf_printf(logbuf, "%sdestination=%s", sep, hdr[0]);
             sep = "; ";
         }
         if ((hdr = spool_getheader(txn->req_hdrs, "Lock-Token"))) {
-            buf_printf(&log, "%slock-token=%s", sep, hdr[0]);
+            buf_printf(logbuf, "%slock-token=%s", sep, hdr[0]);
             sep = "; ";
         }
         if ((hdr = spool_getheader(txn->req_hdrs, "If"))) {
-            buf_printf(&log, "%sif=%s", sep, hdr[0]);
+            buf_printf(logbuf, "%sif=%s", sep, hdr[0]);
             sep = "; ";
         }
         if ((hdr = spool_getheader(txn->req_hdrs, "If-Schedule-Tag-Match"))) {
-            buf_printf(&log, "%sif-schedule-tag-match=%s", sep, hdr[0]);
+            buf_printf(logbuf, "%sif-schedule-tag-match=%s", sep, hdr[0]);
             sep = "; ";
         }
         else if ((hdr = spool_getheader(txn->req_hdrs, "If-Match"))) {
-            buf_printf(&log, "%sif-match=%s", sep, hdr[0]);
+            buf_printf(logbuf, "%sif-match=%s", sep, hdr[0]);
             sep = "; ";
         }
         else if ((hdr = spool_getheader(txn->req_hdrs, "If-Unmodified-Since"))) {
-            buf_printf(&log, "%sif-unmodified-since=%s", sep, hdr[0]);
+            buf_printf(logbuf, "%sif-unmodified-since=%s", sep, hdr[0]);
             sep = "; ";
         }
         if ((hdr = spool_getheader(txn->req_hdrs, "If-None-Match"))) {
-            buf_printf(&log, "%sif-none-match=%s", sep, hdr[0]);
+            buf_printf(logbuf, "%sif-none-match=%s", sep, hdr[0]);
             sep = "; ";
         }
         else if ((hdr = spool_getheader(txn->req_hdrs, "If-Modified-Since"))) {
-            buf_printf(&log, "%sif-modified-since=%s", sep, hdr[0]);
+            buf_printf(logbuf, "%sif-modified-since=%s", sep, hdr[0]);
             sep = "; ";
         }
         if ((hdr = spool_getheader(txn->req_hdrs, ":type"))) {
-            buf_printf(&log, "%stype=%s", sep, hdr[0]);
+            buf_printf(logbuf, "%stype=%s", sep, hdr[0]);
+            sep = "; ";
+        }
+        if ((hdr = spool_getheader(txn->req_hdrs, ":token"))) {
+            buf_printf(logbuf, "%stoken=%s", sep, hdr[0]);
+            sep = "; ";
+        }
+        if ((hdr = spool_getheader(txn->req_hdrs, ":jmap"))) {
+            buf_printf(logbuf, "%sjmap=%s", sep, hdr[0]);
+            sep = "; ";
+        }
+        if ((hdr = spool_getheader(txn->req_hdrs, ":dblookup"))) {
+            buf_printf(logbuf, "%slookup=%s", sep, hdr[0]);
             sep = "; ";
         }
         if ((hdr = spool_getheader(txn->req_hdrs, "Depth"))) {
-            buf_printf(&log, "%sdepth=%s", sep, hdr[0]);
+            buf_printf(logbuf, "%sdepth=%s", sep, hdr[0]);
             sep = "; ";
         }
-        if (*sep == ';') buf_appendcstr(&log, ")");
+        if ((hdr = spool_getheader(txn->req_hdrs, "Prefer"))) {
+            buf_printf(logbuf, "%sprefer=%s", sep, hdr[0]);
+            sep = "; ";
+        }
+        else if ((hdr = spool_getheader(txn->req_hdrs, "Brief"))) {
+            buf_printf(logbuf, "%sbrief=%s", sep, hdr[0]);
+            sep = "; ";
+        }
+        if ((hdr = spool_getheader(txn->req_hdrs, "CalDAV-Timezones"))) {
+            buf_printf(logbuf, "%scaldav-timezones=%s", sep, hdr[0]);
+            sep = "; ";
+        }
+
+        if (*sep == ';') buf_appendcstr(logbuf, ")");
     }
+
+    if (txn->flags.redirect) {
+        /* Add CGI local redirect */
+        buf_printf(logbuf, " => \"%s %s %s\"",
+                   txn->req_line.meth, txn->req_tgt.path, txn->req_line.ver);
+    }
+
     /* Add response */
-    buf_printf(&log, " => \"%s %s\"",
-               txn->flags.ver == VER_2 ? HTTP2_VERSION : HTTP_VERSION,
-               error_message(code));
+    buf_printf(logbuf, " => \"%s\"", http_statusline(txn->flags.ver, code));
+
     /* Add any auxiliary response data */
+    sep = " (";
+    if (txn->strm_ctx) {
+        buf_printf(logbuf, "%sstream-id=%d", sep,
+                   http2_get_streamid(txn->strm_ctx));
+        sep = "; ";
+    }
+    if (code == HTTP_SWITCH_PROT || code == HTTP_UPGRADE) {
+        buf_printf(logbuf, "%supgrade=", sep);
+        comma_list_body(logbuf, upgrd_tokens, txn->flags.upgrade, NULL);
+        sep = "; ";
+    }
+    if (txn->flags.te) {
+        buf_printf(logbuf, "%stx-encoding=", sep);
+        comma_list_body(logbuf, te, txn->flags.te, NULL);
+        sep = "; ";
+    }
+    if (txn->resp_body.enc.proc) {
+        buf_printf(logbuf, "%scnt-encoding=", sep);
+        comma_list_body(logbuf, ce, txn->resp_body.enc.type, NULL);
+        sep = "; ";
+    }
     if (txn->location) {
-        buf_printf(&log, " (location=%s)", txn->location);
+        buf_printf(logbuf, "%slocation=%s", sep, txn->location);
+        sep = "; ";
     }
     else if (txn->flags.cors) {
-        buf_appendcstr(&log, " (allow-origin)");
+        buf_printf(logbuf, "%sallow-origin", sep);
+        sep = "; ";
     }
     else if (txn->error.desc) {
-        buf_printf(&log, " (error=%s)", txn->error.desc);
+        buf_printf(logbuf, "%serror=%s", sep, txn->error.desc);
+        sep = "; ";
     }
-    syslog(LOG_INFO, "%s", buf_cstring(&log));
+    if (*sep == ';') buf_appendcstr(logbuf, ")");
+
+    /* Add timing stats */
+    cmdtime_endtimer(&cmdtime, &nettime);
+    buf_printf(logbuf, " [timing: cmd=%f net=%f total=%f]",
+               cmdtime, nettime, cmdtime + nettime);
+
+    syslog(LOG_INFO, "%s", buf_cstring(logbuf));
 }
 
 
+#ifdef HAVE_DECLARE_OPTIMIZE
+EXPORTED inline void keepalive_response(struct transaction_t *txn)
+    __attribute__((always_inline, optimize("-O3")));
+#endif
 EXPORTED void keepalive_response(struct transaction_t *txn)
 {
     if (gotsigalrm) {
         response_header(HTTP_PROCESSING, txn);
-        alarm(httpd_keepalive);
     }
 }
 
@@ -3181,11 +3130,16 @@ EXPORTED void keepalive_response(struct transaction_t *txn)
  *
  * An initial call with 'code' != 0 will output a response header
  * and the preamble.
+ *
  * All subsequent calls should have 'code' = 0 to output just a body part.
+ * A body part may include custom headers (exluding Content-Type and Length),
+ * which must be properly folded and must end with CRLF.
+ *
  * A final call with 'len' = 0 ends the multipart body.
  */
 EXPORTED void write_multipart_body(long code, struct transaction_t *txn,
-                          const char *buf, unsigned len)
+                                   const char *buf, unsigned len,
+                                   const char *part_headers)
 {
     static char boundary[100];
     struct buf *body = &txn->resp_body.payload;
@@ -3198,7 +3152,7 @@ EXPORTED void write_multipart_body(long code, struct transaction_t *txn,
 
         /* Create multipart boundary */
         snprintf(boundary, sizeof(boundary), "%s-%ld-%ld-%ld",
-                 *spool_getheader(txn->req_hdrs, "Host"),
+                 *spool_getheader(txn->req_hdrs, ":authority"),
                  (long) getpid(), (long) time(0), (long) rand());
 
         /* Create Content-Type w/ boundary */
@@ -3226,7 +3180,11 @@ EXPORTED void write_multipart_body(long code, struct transaction_t *txn,
                        txn->resp_body.range->last,
                        txn->resp_body.len);
         }
-        buf_printf(body, "Content-Length: %d\r\n\r\n", len);
+        buf_printf(body, "Content-Length: %d\r\n", len);
+        if (part_headers) {
+            buf_appendcstr(body, part_headers);
+        }
+        buf_appendcstr(body, "\r\n");
         write_body(0, txn, buf_cstring(body), buf_len(body));
 
         /* Output body-part data */
@@ -3257,7 +3215,7 @@ static void multipart_byteranges(struct transaction_t *txn,
     /* Start multipart response */
     txn->resp_body.range = NULL;
     txn->resp_body.type = "multipart/byteranges";
-    write_multipart_body(HTTP_PARTIAL, txn, NULL, 0);
+    write_multipart_body(HTTP_PARTIAL, txn, NULL, 0, NULL);
 
     txn->resp_body.type = type;
     while (range) {
@@ -3267,7 +3225,7 @@ static void multipart_byteranges(struct transaction_t *txn,
 
         /* Output range as body part */
         txn->resp_body.range = range;
-        write_multipart_body(0, txn, msg_base + offset, datalen);
+        write_multipart_body(0, txn, msg_base + offset, datalen, NULL);
 
         /* Cleanup */
         free(range);
@@ -3275,7 +3233,7 @@ static void multipart_byteranges(struct transaction_t *txn,
     }
 
     /* End of multipart body */
-    write_multipart_body(0, txn, NULL, 0);
+    write_multipart_body(0, txn, NULL, 0, NULL);
 }
 
 
@@ -3309,100 +3267,25 @@ EXPORTED void write_body(long code, struct transaction_t *txn,
 
         if (len < GZIP_MIN_LEN) {
             /* Don't compress small static content */
-            txn->resp_body.enc = CE_IDENTITY;
+            txn->resp_body.enc.type = CE_IDENTITY;
+            txn->resp_body.enc.proc = NULL;
             txn->flags.te = TE_NONE;
         }
     }
 
     /* Compress data */
-    if (txn->resp_body.enc == CE_BR) {
-#ifdef HAVE_BROTLI
-        /* Only flush for static content or on last (zero-length) chunk */
-        unsigned op = last_chunk ?
-            BROTLI_OPERATION_FINISH : BROTLI_OPERATION_FLUSH;
-        BrotliEncoderState *brotli = txn->conn->brotli;
-        const uint8_t *next_in = (const uint8_t *) buf;
-        size_t avail_in = (size_t) len;
+    if (txn->resp_body.enc.proc || txn->flags.te & ~TE_CHUNKED) {
+        unsigned flags = 0;
 
-        buf_ensure(&txn->zbuf, BrotliEncoderMaxCompressedSize(avail_in));
-        buf_reset(&txn->zbuf);
+        if (code) flags |= COMPRESS_START;
+        if (last_chunk) flags |= COMPRESS_END;
 
-        do {
-            uint8_t *next_out = (uint8_t *) txn->zbuf.s + txn->zbuf.len;
-            size_t avail_out = txn->zbuf.alloc - txn->zbuf.len;
-
-            if (!BrotliEncoderCompressStream(brotli, op,
-                                             &avail_in, &next_in,
-                                             &avail_out, &next_out, NULL)) {
-                syslog(LOG_ERR, "Brotli: Error while compressing data");
-                fatal("Brotli: Error while compressing data", EC_SOFTWARE);
-            }
-
-            txn->zbuf.len = txn->zbuf.alloc - avail_out;
-        } while (avail_in || BrotliEncoderHasMoreOutput(brotli));
-
-        buf = txn->zbuf.s;
-        outlen = txn->zbuf.len;
-
-        if (BrotliEncoderIsFinished(brotli)) {
-            BrotliEncoderDestroyInstance(brotli);
-            txn->conn->brotli = brotli_init();
+        if (txn->resp_body.enc.proc(txn, flags, buf, len) < 0) {
+            fatal("Error while compressing data", EX_SOFTWARE);
         }
-#else
-        /* XXX should never get here */
-        fatal("Brotli Compression requested, but not available", EC_SOFTWARE);
-#endif /* HAVE_BROTLI */
-    }
-    else if (txn->resp_body.enc || txn->flags.te & ~TE_CHUNKED) {
-#ifdef HAVE_ZLIB
-        /* Only flush for static content or on last (zero-length) chunk */
-        unsigned flush = last_chunk ? Z_FINISH : Z_NO_FLUSH;
-        z_stream *zstrm = txn->conn->zstrm;
-
-        if (code) deflateReset(zstrm);
-
-        zstrm->next_in = (Bytef *) buf;
-        zstrm->avail_in = len;
-
-        buf_ensure(&txn->zbuf, deflateBound(zstrm, zstrm->avail_in));
-        buf_reset(&txn->zbuf);
-
-        do {
-	    int zr;
-
-	    if (!zstrm->avail_out) {
-		unsigned pending;
-
-		zr = deflatePending(zstrm, &pending, Z_NULL);
-		if (zr != Z_OK) {
-		    /* something went wrong */
-		    syslog(LOG_ERR, "zlib deflate error: %d %s", zr, zstrm->msg);
-		    fatal("zlib: Error while compressing data", EC_SOFTWARE);
-		}
-
-		buf_ensure(&txn->zbuf, pending);
-	    }
-
-            zstrm->next_out = (Bytef *) txn->zbuf.s + txn->zbuf.len;
-            zstrm->avail_out = txn->zbuf.alloc - txn->zbuf.len;
-
-            zr = deflate(zstrm, flush);
-            if (!(zr == Z_OK || zr == Z_STREAM_END || zr == Z_BUF_ERROR)) {
-		/* something went wrong */
-		syslog(LOG_ERR, "zlib deflate error: %d %s", zr, zstrm->msg);
-                fatal("zlib: Error while compressing data", EC_SOFTWARE);
-            }
-
-            txn->zbuf.len = txn->zbuf.alloc - zstrm->avail_out;
-
-        } while (!zstrm->avail_out);
 
         buf = txn->zbuf.s;
         outlen = txn->zbuf.len;
-#else
-        /* XXX should never get here */
-        fatal("Compression requested, but no zlib", EC_SOFTWARE);
-#endif /* HAVE_ZLIB */
     }
 
     if (code) {
@@ -3467,7 +3350,7 @@ EXPORTED void write_body(long code, struct transaction_t *txn,
             /* HTTP/1.0 doesn't support chunked - close-delimit the body */
             txn->flags.conn = CONN_CLOSE;
         }
-        else if (do_md5) txn->flags.trailer = TRAILER_CMD5;
+        else if (do_md5) txn->flags.trailer |= TRAILER_CMD5;
 
         response_header(code, txn);
 
@@ -3486,57 +3369,13 @@ EXPORTED void write_body(long code, struct transaction_t *txn,
     }
 
     /* Output data */
-#ifdef HAVE_NGHTTP2
     if (txn->flags.ver == VER_2) {
-        int r;
-        uint8_t flags = NGHTTP2_FLAG_END_STREAM;
-        struct protstream *s = prot_readmap(buf + offset, outlen);
-        nghttp2_data_provider prd;
-
-        prd.source.ptr = s;
-        prd.read_callback = http2_data_source_read_cb;
-
-        if (txn->flags.te) {
-            if (!last_chunk) {
-                flags = NGHTTP2_FLAG_NONE;
-                if (outlen && (txn->flags.trailer & TRAILER_CMD5)) {
-                    MD5Update(&ctx, buf + offset, outlen);
-                }
-            }
-            else if (txn->flags.trailer) {
-                flags = NGHTTP2_FLAG_NONE;
-                if (txn->flags.trailer & TRAILER_CMD5) MD5Final(md5, &ctx);
-            }
+        /* HTTP/2 chunk */
+        if (outlen || txn->flags.te) {
+            http2_data_chunk(txn, buf + offset, outlen, last_chunk, &ctx);
         }
-
-        syslog(LOG_DEBUG,
-               "nghttp2_submit_data(id=%d, len=%d, outlen=%d, flags=%#x)",
-               txn->http2.stream_id, len, outlen, flags);
-
-        r = nghttp2_submit_data(txn->conn->http2_session,
-                                flags, txn->http2.stream_id, &prd);
-        if (r) {
-            syslog(LOG_ERR, "nghttp2_submit_data: %s", nghttp2_strerror(r));
-        }
-        else {
-            r = nghttp2_session_send(txn->conn->http2_session);
-            if (r) {
-                syslog(LOG_ERR, "nghttp2_session_send: %s", nghttp2_strerror(r));
-            }
-        }
-
-        if (last_chunk && (txn->flags.trailer & TRAILER_CMD5)) {
-            begin_resp_headers(txn, 0);
-            content_md5_hdr(txn, md5);
-            end_resp_headers(txn, 0);
-        }
-
-        prot_free(s);
-        return;
     }
-#endif /* HAVE_NGHTTP2 */
-
-    if (txn->flags.te && txn->flags.ver == VER_1_1) {
+    else if (txn->flags.te && txn->flags.ver == VER_1_1) {
         /* HTTP/1.1 chunk */
         if (outlen) {
             syslog(LOG_DEBUG, "write_body: chunk(%d)", outlen);
@@ -3553,9 +3392,13 @@ EXPORTED void write_body(long code, struct transaction_t *txn,
 
             /* Trailer */
             if (txn->flags.trailer & TRAILER_CMD5) {
-                syslog(LOG_DEBUG, "write_body: trailer");
+                syslog(LOG_DEBUG, "write_body: trailer Content-MD5");
                 MD5Final(md5, &ctx);
                 content_md5_hdr(txn, md5);
+            }
+            if ((txn->flags.trailer & TRAILER_CTAG) && txn->resp_body.ctag) {
+                syslog(LOG_DEBUG, "write_body: trailer CTag");
+                simple_hdr(txn, "CTag", "%s", txn->resp_body.ctag);
             }
 
             if (txn->flags.trailer != TRAILER_PROXY) {
@@ -3595,6 +3438,17 @@ EXPORTED void xml_response(long code, struct transaction_t *txn, xmlDocPtr xml)
                               config_httpprettytelemetry);
 
     if (buf) {
+        if (txn->flags.te & TE_CHUNKED) {
+            /* Start of XML chunked response */
+            xmlChar *cp;
+            int n;
+
+            /* Leave root element open */
+            for (cp = buf + --bufsiz, n = 0; *cp != '/'; cp--, n++);
+            if (*(cp+1) == '>') memmove(cp, cp+1, n);  /* <root/> */
+            else bufsiz -= n+1;  /* </root> */
+        }
+
         /* Output the XML response */
         txn->resp_body.type = "application/xml; charset=utf-8";
 
@@ -3610,7 +3464,61 @@ EXPORTED void xml_response(long code, struct transaction_t *txn, xmlDocPtr xml)
     }
 }
 
-EXPORTED void buf_printf_markup(struct buf *buf, unsigned level, const char *fmt, ...)
+/* Output a chunk of an XML response */
+EXPORTED void xml_partial_response(struct transaction_t *txn,
+                                   xmlDocPtr doc, xmlNodePtr node,
+                                   unsigned level, xmlBufferPtr *buf)
+{
+    const char *eol = "\n";
+    unsigned n;
+
+    if (!config_httpprettytelemetry) {
+        level = 0;
+        eol = "";
+    }
+
+    /* Start with clean buffer */
+    if (!*buf) *buf = xmlBufferCreate();
+
+    if (node) {
+        /* Add leading indent to buffer */
+        for (n = 0; n < level * MARKUP_INDENT; n++) xmlBufferCCat(*buf, " ");
+
+        /* Dump XML node into buffer */
+        xmlNodeDump(*buf, doc, node, level, config_httpprettytelemetry);
+
+        /* Add trailing EOL to buffer */
+        xmlBufferCCat(*buf, eol);
+    }
+    else {
+        /* End of chunked XML response */
+        xmlNodePtr root = xmlDocGetRootElement(doc);
+
+        /* Add close of root element to buffer */
+        xmlBufferCCat(*buf, "</");
+        if (root->ns->prefix) {
+            xmlBufferCat(*buf, root->ns->prefix);
+            xmlBufferCCat(*buf, ":");
+        }
+        xmlBufferCat(*buf, root->name);
+        xmlBufferCCat(*buf, ">");
+
+        /* Add trailing EOL to buffer */
+        xmlBufferCCat(*buf, eol);
+    }
+
+    if (txn) {
+        /* Output the XML buffer */
+        write_body(0, txn,
+                   (char *) xmlBufferContent(*buf), xmlBufferLength(*buf));
+
+        /* Reset the buffer for next chunk */
+        xmlBufferEmpty(*buf);
+    }
+}
+
+EXPORTED void buf_printf_markup(struct buf *buf, unsigned level,
+                                const char *fmt, ...)
 {
     va_list args;
     const char *eol = "\n";
@@ -3698,7 +3606,7 @@ EXPORTED void error_response(long code, struct transaction_t *txn)
         unsigned level = 0;
 
         if (txn->req_hdrs &&
-            (hdr = spool_getheader(txn->req_hdrs, "Host")) &&
+            (hdr = spool_getheader(txn->req_hdrs, ":authority")) &&
             hdr[0] && *hdr[0]) {
             host = (char *) hdr[0];
             if ((port = strchr(host, ':'))) *port++ = '\0';
@@ -3707,8 +3615,8 @@ EXPORTED void error_response(long code, struct transaction_t *txn)
             host = config_servername;
         }
         if (!port) {
-            port = (saslprops.iplocalport) ?
-                strchr(saslprops.iplocalport, ';')+1 : "";
+            port = (buf_len(&saslprops.iplocalport)) ?
+                strchr(buf_cstring(&saslprops.iplocalport), ';')+1 : "";
         }
 
         buf_printf_markup(html, level, HTML_DOCTYPE);
@@ -3763,7 +3671,7 @@ static int proxy_authz(const char **authzid, struct transaction_t *txn)
     if (!(config_mupdate_server && config_getstring(IMAPOPT_PROXYSERVERS))) {
         /* Not a backend in a Murder - proxy authz is not allowed */
         syslog(LOG_NOTICE, "badlogin: %s %s %s %s",
-               httpd_clienthost, txn->auth_chal.scheme->name, saslprops.authid,
+               txn->conn->clienthost, txn->auth_chal.scheme->name, httpd_authid,
                "proxy authz attempted on non-Murder backend");
         return SASL_NOAUTHZ;
     }
@@ -3775,7 +3683,7 @@ static int proxy_authz(const char **authzid, struct transaction_t *txn)
                                authzbuf, sizeof(authzbuf), &authzlen);
     if (status) {
         syslog(LOG_NOTICE, "badlogin: %s %s %s invalid user",
-               httpd_clienthost, txn->auth_chal.scheme->name,
+               txn->conn->clienthost, txn->auth_chal.scheme->name,
                beautify_string(*authzid));
         return status;
     }
@@ -3783,12 +3691,12 @@ static int proxy_authz(const char **authzid, struct transaction_t *txn)
     /* See if auth'd user is allowed to proxy */
     status = mysasl_proxy_policy(httpd_saslconn, &httpd_proxyctx,
                                  authzbuf, authzlen,
-                                 saslprops.authid, strlen(saslprops.authid),
+                                 httpd_authid, strlen(httpd_authid),
                                  NULL, 0, NULL);
 
     if (status) {
         syslog(LOG_NOTICE, "badlogin: %s %s %s %s",
-               httpd_clienthost, txn->auth_chal.scheme->name, saslprops.authid,
+               txn->conn->clienthost, txn->auth_chal.scheme->name, httpd_authid,
                sasl_errdetail(httpd_saslconn));
         return status;
     }
@@ -3800,35 +3708,40 @@ static int proxy_authz(const char **authzid, struct transaction_t *txn)
 
 
 /* Write cached header (redacting authorization credentials) to buffer. */
-static void log_cachehdr(const char *name, const char *contents, void *rock)
+HIDDEN void log_cachehdr(const char *name, const char *contents,
+                         const char *raw, void *rock)
 {
     struct buf *buf = (struct buf *) rock;
 
     /* Ignore private headers in our cache */
     if (name[0] == ':') return;
 
-    buf_printf(buf, "%c%s: ", toupper(name[0]), name+1);
-    if (!strcmp(name, "authorization")) {
+    if (!strcasecmp(name, "authorization")) {
         /* Replace authorization credentials with an ellipsis */
         const char *creds = strchr(contents, ' ') + 1;
-        buf_printf(buf, "%.*s%-*s\r\n", (int) (creds - contents), contents,
+        buf_printf(buf, "%c%s: %.*s%-*s\r\n", toupper(name[0]), name+1,
+                   (int) (creds - contents), contents,
                    (int) strlen(creds), "...");
     }
-    else buf_printf(buf, "%s\r\n", contents);
+    else if (raw)
+        buf_appendcstr(buf, raw);
+    else
+        buf_printf(buf, "%c%s: %s\r\n", toupper(name[0]), name+1, contents);
 }
 
 
-static void auth_success(struct transaction_t *txn, const char *userid)
+static int auth_success(struct transaction_t *txn, const char *userid)
 {
     struct auth_scheme_t *scheme = txn->auth_chal.scheme;
+    int logfd = txn->conn->logfd;
     int i;
 
     httpd_userid = xstrdup(userid);
     httpd_userisanonymous = is_userid_anonymous(httpd_userid);
 
     syslog(LOG_NOTICE, "login: %s %s %s%s %s SESSIONID=<%s>",
-           httpd_clienthost, httpd_userid, scheme->name,
-           httpd_tls_done ? "+TLS" : "", "User logged in",
+           txn->conn->clienthost, httpd_userid, scheme->name,
+           txn->conn->tls_ctx ? "+TLS" : "", "User logged in",
            session_id());
 
 
@@ -3844,34 +3757,43 @@ static void auth_success(struct transaction_t *txn, const char *userid)
     buf_appendmap(&txn->buf,                            /* buffered input */
                   (const char *) httpd_in->ptr, httpd_in->cnt);
 
-    if (httpd_logfd != -1) {
+    if (logfd != -1) {
         /* Rewind log to current request and truncate it */
-        off_t end = lseek(httpd_logfd, 0, SEEK_END);
+        off_t end = lseek(logfd, 0, SEEK_END);
 
-        ftruncate(httpd_logfd, end - buf_len(&txn->buf));
+        if (ftruncate(logfd, end - buf_len(&txn->buf)))
+            syslog(LOG_ERR, "IOERROR: failed to truncate http log");
 
         /* Close existing telemetry log */
-        close(httpd_logfd);
+        close(logfd);
     }
 
     prot_setlog(httpd_in, PROT_NO_FD);
     prot_setlog(httpd_out, PROT_NO_FD);
 
     /* Create telemetry log based on new userid */
-    httpd_logfd = telemetry_log(httpd_userid, httpd_in, httpd_out, 0);
+    if (txn->conn->sess_ctx)
+        txn->conn->logfd = logfd = telemetry_log(userid, NULL, NULL, 0);
+    else
+        txn->conn->logfd = logfd = telemetry_log(userid, httpd_in, httpd_out, 0);
 
-    if (httpd_logfd != -1) {
+    if (logfd != -1) {
         /* Log credential-redacted request */
-        write(httpd_logfd, buf_cstring(&txn->buf), buf_len(&txn->buf));
+        if (write(logfd, buf_cstring(&txn->buf), buf_len(&txn->buf)) < 0)
+            syslog(LOG_ERR, "IOERROR: failed to write to http log");
     }
 
     buf_reset(&txn->buf);
 
     /* Do any namespace specific post-auth processing */
-    for (i = 0; namespaces[i]; i++) {
-        if (namespaces[i]->enabled && namespaces[i]->auth)
-            namespaces[i]->auth(httpd_userid);
+    for (i = 0; http_namespaces[i]; i++) {
+        if (http_namespaces[i]->enabled && http_namespaces[i]->auth) {
+            int ret = http_namespaces[i]->auth(httpd_userid);
+            if (ret) return ret;
+        }
     }
+
+    return 0;
 }
 
 /* Perform HTTP Authentication based on the given credentials ('creds').
@@ -3879,22 +3801,27 @@ static void auth_success(struct transaction_t *txn, const char *userid)
  * May be called multiple times if auth scheme requires multiple steps.
  * SASL status between steps is maintained in 'status'.
  */
-#define BASE64_BUF_SIZE 21848   /* per RFC 4422: ((16K / 3) + 1) * 4  */
+#define MAX_AUTHPARAM_SIZE 10   /* "sid=,data=" */
+#define MAX_BASE64_SIZE 21848   /* per RFC 4422: ((16K / 3) + 1) * 4  */
+#define BASE64_BUF_SIZE (MAX_AUTHPARAM_SIZE +MAX_SESSIONID_SIZE +MAX_BASE64_SIZE)
 
 static int http_auth(const char *creds, struct transaction_t *txn)
 {
     struct auth_challenge_t *chal = &txn->auth_chal;
     static int status = SASL_OK;
-    int slen;
+    int slen, r;
     const char *clientin = NULL, *realm = NULL, *user, **authzid;
     unsigned int clientinlen = 0;
     struct auth_scheme_t *scheme;
     static char base64[BASE64_BUF_SIZE+1];
-    const void *canon_user;
+    const void *canon_user = NULL;
 
     /* Split credentials into auth scheme and response */
-    slen = strcspn(creds, " \0");
-    if ((clientin = strchr(creds, ' '))) clientinlen = strlen(++clientin);
+    slen = strcspn(creds, " ");
+    if ((clientin = strchr(creds + slen, ' '))) {
+        while (strchr(" ", *++clientin));  /* Trim leading 1*SP */
+        clientinlen = strlen(clientin);
+    }
 
     syslog(LOG_DEBUG,
            "http_auth: status=%d   scheme='%s'   creds='%.*s%s'",
@@ -3939,7 +3866,7 @@ static int http_auth(const char *creds, struct transaction_t *txn)
         for (scheme = auth_schemes; scheme->name; scheme++) {
             if (slen && !strncasecmp(scheme->name, creds, slen)) {
                 /* Found a supported scheme, see if its available */
-                if (!(avail_auth_schemes & (1 << scheme->idx))) scheme = NULL;
+                if (!(avail_auth_schemes & scheme->id)) scheme = NULL;
                 break;
             }
         }
@@ -3952,12 +3879,62 @@ static int http_auth(const char *creds, struct transaction_t *txn)
         syslog(LOG_DEBUG, "http_auth: found matching scheme: %s", scheme->name);
         chal->scheme = scheme;
         status = SASL_OK;
+
+        if (!clientin && (scheme->flags & AUTH_REALM_PARAM)) {
+            /* Get realm - based on namespace of URL */
+            switch (txn->req_tgt.namespace->id) {
+            case URL_NS_DEFAULT:
+            case URL_NS_PRINCIPAL:
+                realm = config_getstring(IMAPOPT_DAV_REALM);
+                break;
+
+            case URL_NS_CALENDAR:
+                realm = config_getstring(IMAPOPT_CALDAV_REALM);
+                break;
+
+            case URL_NS_ADDRESSBOOK:
+                realm = config_getstring(IMAPOPT_CARDDAV_REALM);
+                break;
+
+            case URL_NS_RSS:
+                realm = config_getstring(IMAPOPT_RSS_REALM);
+                break;
+            }
+            if (!realm) realm = config_servername;
+
+            /* Create initial challenge (base64 buffer is static) */
+            snprintf(base64, BASE64_BUF_SIZE, "realm=\"%s\"", realm);
+            chal->param = base64;
+            chal->scheme = NULL;  /* make sure we don't reset the SASL ctx */
+            return status;
+        }
     }
 
-    /* Base64 decode any client response, if necesary */
+    /* Parse any auth parameters, if necessary */
+    if (clientin && (scheme->flags & AUTH_DATA_PARAM)) {
+        const char *sid = NULL;
+        unsigned int sid_len;
+
+        r = http_parse_auth_params(clientin, NULL /* realm */, NULL,
+                                   &sid, &sid_len, &clientin, &clientinlen);
+        if (r != SASL_OK) return r;
+
+        if (sid) {
+            const char *mysid = session_id();
+
+            if (sid_len != strlen(mysid) ||
+                strncmp(mysid, sid, sid_len)) {
+                syslog(LOG_ERR, "%s: Incorrect 'sid' parameter in credentials",
+                       scheme->name);
+                return SASL_BADAUTH;
+            }
+        }
+    }
+
+    /* Base64 decode any client response, if necessary */
     if (clientin && (scheme->flags & AUTH_BASE64)) {
-        int r = sasl_decode64(clientin, clientinlen,
-                              base64, BASE64_BUF_SIZE, &clientinlen);
+        r = sasl_decode64(clientin, clientinlen,
+                          base64, BASE64_BUF_SIZE, &clientinlen);
         if (r != SASL_OK) {
             syslog(LOG_ERR, "Base64 decode failed: %s",
                    sasl_errstring(r, NULL, NULL));
@@ -3966,55 +3943,12 @@ static int http_auth(const char *creds, struct transaction_t *txn)
         clientin = base64;
     }
 
-    /* Get realm - based on namespace of URL */
-    switch (txn->req_tgt.namespace->id) {
-    case URL_NS_DEFAULT:
-    case URL_NS_PRINCIPAL:
-        realm = config_getstring(IMAPOPT_DAV_REALM);
-        break;
-
-    case URL_NS_CALENDAR:
-        realm = config_getstring(IMAPOPT_CALDAV_REALM);
-        break;
-
-    case URL_NS_ADDRESSBOOK:
-        realm = config_getstring(IMAPOPT_CARDDAV_REALM);
-        break;
-
-    case URL_NS_RSS:
-        realm = config_getstring(IMAPOPT_RSS_REALM);
-        break;
-    }
-    if (!realm) realm = config_servername;
-
-#ifdef SASL_HTTP_REQUEST
-    /* Setup SASL HTTP request, if necessary */
-    if (scheme->flags & AUTH_NEED_REQUEST) {
-        sasl_http_request_t sasl_http_req;
-
-        sasl_http_req.method = txn->req_line.meth;
-        sasl_http_req.uri = txn->req_line.uri;
-        sasl_http_req.entity = NULL;
-        sasl_http_req.elen = 0;
-        sasl_http_req.non_persist = txn->flags.conn & CONN_CLOSE;
-        sasl_setprop(httpd_saslconn, SASL_HTTP_REQUEST, &sasl_http_req);
-    }
-#endif /* SASL_HTTP_REQUEST */
-
-    if (scheme->idx == AUTH_BASIC) {
+    if (scheme->id == AUTH_BASIC) {
         /* Basic (plaintext) authentication */
         char *pass;
         char *extra;
         char *plus;
         char *domain;
-
-        if (!clientin) {
-            /* Create initial challenge (base64 buffer is static) */
-            snprintf(base64, BASE64_BUF_SIZE, "realm=\"%s\"", realm);
-            chal->param = base64;
-            chal->scheme = NULL;  /* make sure we don't reset the SASL ctx */
-            return status;
-        }
 
         /* Split credentials into <user> ':' <pass>.
          * We are working with base64 buffer, so we can modify it.
@@ -4032,15 +3966,19 @@ static int http_auth(const char *creds, struct transaction_t *txn)
         if (extra) *extra++ = '\0';
         plus = strchr(user, '+');
         if (plus) *plus++ = '\0';
+
         /* Verify the password */
-        char *realuser = domain ? strconcat(user, "@", domain, (char *)NULL) : xstrdup(user);
+        char *realuser =
+            domain ? strconcat(user, "@", domain, (char *) NULL) : xstrdup(user);
+
         status = sasl_checkpass(httpd_saslconn, realuser, strlen(realuser),
                                 pass, strlen(pass));
         memset(pass, 0, strlen(pass));          /* erase plaintext password */
 
         if (status) {
             syslog(LOG_NOTICE, "badlogin: %s Basic %s %s",
-                   httpd_clienthost, realuser, sasl_errdetail(httpd_saslconn));
+                   txn->conn->clienthost, realuser,
+                   sasl_errdetail(httpd_saslconn));
             free(realuser);
 
             /* Don't allow user probing */
@@ -4053,25 +3991,18 @@ static int http_auth(const char *creds, struct transaction_t *txn)
         httpd_extrafolder = xstrdupnull(plus);
         httpd_extradomain = xstrdupnull(extra);
     }
-    else if (scheme->idx == AUTH_BEARER) {
+    else if (scheme->id == AUTH_BEARER) {
         /* Bearer authentication */
         assert(txn->req_tgt.namespace->bearer);
-
-        if (!clientin) {
-            /* Create initial challenge (base64 buffer is static) */
-            snprintf(base64, BASE64_BUF_SIZE, "realm=\"%s\"", realm);
-            chal->param = base64;
-            chal->scheme = NULL;  /* make sure we don't reset the SASL ctx */
-            return status;
-        }
 
         /* Call namespace bearer authentication.
          * We are working with base64 buffer, so the namespace can
          * write the canonicalized userid into the buffer */
         base64[0] = 0;
-        status = txn->req_tgt.namespace->bearer(clientin, base64, BASE64_BUF_SIZE);
+        status = txn->req_tgt.namespace->bearer(clientin,
+                                                base64, BASE64_BUF_SIZE);
         if (status) return status;
-        user = base64;
+        canon_user = user = base64;
 
         /* Successful authentication - fall through */
         httpd_extrafolder = NULL;
@@ -4079,9 +4010,24 @@ static int http_auth(const char *creds, struct transaction_t *txn)
         httpd_authstate = auth_newstate(user);
     }
     else {
-        /* SASL-based authentication (Digest, Negotiate, NTLM) */
+        /* SASL-based authentication (SCRAM_*, Digest, Negotiate, NTLM) */
         const char *serverout = NULL;
         unsigned int serveroutlen = 0;
+        unsigned int auth_params_len = 0;
+
+#ifdef SASL_HTTP_REQUEST
+        /* Setup SASL HTTP request, if necessary */
+        sasl_http_request_t sasl_http_req;
+
+        if (scheme->flags & AUTH_NEED_REQUEST) {
+            sasl_http_req.method = txn->req_line.meth;
+            sasl_http_req.uri = txn->req_line.uri;
+            sasl_http_req.entity = NULL;
+            sasl_http_req.elen = 0;
+            sasl_http_req.non_persist = txn->flags.conn & CONN_CLOSE;
+            sasl_setprop(httpd_saslconn, SASL_HTTP_REQUEST, &sasl_http_req);
+        }
+#endif /* SASL_HTTP_REQUEST */
 
         if (status == SASL_CONTINUE) {
             /* Continue current authentication exchange */
@@ -4104,10 +4050,18 @@ static int http_auth(const char *creds, struct transaction_t *txn)
             return status;
         }
 
-        /* Base64 encode any server challenge, if necesary */
+        /* Prepend any auth parameters, if necessary */
+        if (scheme->flags & AUTH_DATA_PARAM) {
+            auth_params_len = snprintf(base64,
+                                       MAX_AUTHPARAM_SIZE + MAX_SESSIONID_SIZE,
+                                       "sid=%s%s", session_id(),
+                                       serverout ? ",data=" : "");
+        }
+
+        /* Base64 encode any server challenge, if necessary */
         if (serverout && (scheme->flags & AUTH_BASE64)) {
-            int r = sasl_encode64(serverout, serveroutlen,
-                                   base64, BASE64_BUF_SIZE, NULL);
+            r = sasl_encode64(serverout, serveroutlen,
+                              base64 + auth_params_len, MAX_BASE64_SIZE, NULL);
             if (r != SASL_OK) {
                 syslog(LOG_ERR, "Base64 encode failed: %s",
                        sasl_errstring(r, NULL, NULL));
@@ -4130,7 +4084,7 @@ static int http_auth(const char *creds, struct transaction_t *txn)
          */
     }
 
-    if (scheme->idx != AUTH_BEARER) {
+    if (!canon_user) {
         /* Get the userid from SASL - already canonicalized */
         status = sasl_getprop(httpd_saslconn, SASL_USERNAME, &canon_user);
         if (status != SASL_OK) {
@@ -4140,8 +4094,8 @@ static int http_auth(const char *creds, struct transaction_t *txn)
         user = (const char *) canon_user;
     }
 
-    if (saslprops.authid) free(saslprops.authid);
-    saslprops.authid = xstrdup(user);
+    if (httpd_authid) free(httpd_authid);
+    httpd_authid = xstrdup(user);
 
     authzid = spool_getheader(txn->req_hdrs, "Authorize-As");
     if (authzid && *authzid[0]) {
@@ -4152,7 +4106,19 @@ static int http_auth(const char *creds, struct transaction_t *txn)
         if (status) return status;
     }
 
-    auth_success(txn, user);
+    /* Post-process the successful authentication. */
+    r = auth_success(txn, user);
+    if (r == HTTP_UNAVAILABLE) {
+        status = SASL_UNAVAIL;
+    }
+    else if (r) {
+        /* Any error here comes after the user already logged in,
+         * so avoid to return SASL_BADAUTH. It would trigger the
+         * HTTP handler to send UNAUTHORIZED, and might confuse
+         * users that provided their correct credentials. */
+        syslog(LOG_ERR, "auth_success returned error: %s", error_message(r));
+        status = SASL_FAIL;
+    }
 
     return status;
 }
@@ -4295,7 +4261,8 @@ EXPORTED int check_precond(struct transaction_t *txn,
 
     /* Step 2 */
     else if ((hdr = spool_getheader(hdrcache, "If-Unmodified-Since"))) {
-        if (time_from_rfc822(hdr[0], &since) < 0) return HTTP_BAD_REQUEST;
+        if (time_from_rfc5322(hdr[0], &since, DATETIME_FULL) < 0)
+            return HTTP_BAD_REQUEST;
 
         if (lastmod > since) return HTTP_PRECOND_FAILED;
 
@@ -4317,7 +4284,8 @@ EXPORTED int check_precond(struct transaction_t *txn,
     /* Step 4 */
     else if ((txn->meth == METH_GET || txn->meth == METH_HEAD) &&
              (hdr = spool_getheader(hdrcache, "If-Modified-Since"))) {
-        if (time_from_rfc822(hdr[0], &since) < 0) return HTTP_BAD_REQUEST;
+        if (time_from_rfc5322(hdr[0], &since, DATETIME_FULL) < 0)
+            return HTTP_BAD_REQUEST;
 
         if (lastmod <= since) return HTTP_NOT_MODIFIED;
 
@@ -4329,7 +4297,7 @@ EXPORTED int check_precond(struct transaction_t *txn,
         txn->meth == METH_GET && (hdr = spool_getheader(hdrcache, "Range"))) {
 
         if ((hdr = spool_getheader(hdrcache, "If-Range"))) {
-            time_from_rfc822(hdr[0], &since); /* error OK here, could be an etag */
+            time_from_rfc5322(hdr[0], &since, DATETIME_FULL); /* error OK here, could be an etag */
         }
 
         /* Only process Range if If-Range isn't present or validator matches */
@@ -4459,13 +4427,13 @@ static int list_well_known(struct transaction_t *txn)
 
         /* Add the list of enabled /.well-known/ URLs */
         http_proto_host(txn->req_hdrs, &proto, &host);
-        for (i = 0; namespaces[i]; i++) {
+        for (i = 0; http_namespaces[i]; i++) {
 
-            if (namespaces[i]->enabled && namespaces[i]->well_known) {
+            if (http_namespaces[i]->enabled && http_namespaces[i]->well_known) {
                 buf_printf_markup(&body, level,
                                   "<li><a href=\"%s://%s%s\">%s</a></li>",
-                                  proto, host, namespaces[i]->prefix,
-                                  namespaces[i]->well_known);
+                                  proto, host, http_namespaces[i]->prefix,
+                                  http_namespaces[i]->well_known);
             }
         }
 
@@ -4485,6 +4453,51 @@ static int list_well_known(struct transaction_t *txn)
 }
 
 
+/*
+ * WebSockets data callback (no sub-protocol): Echo back non-control messages.
+ *
+ * Can be tested with:
+ *   https://github.com/websockets/wscat
+ *   https://addons.mozilla.org/en-US/firefox/addon/simple-websocket-client/
+ *   https://chrome.google.com/webstore/detail/simple-websocket-client/gobngblklhkgmjhbpbdlkglbhhlafjnh
+ *   https://chrome.google.com/webstore/detail/web-socket-client/lifhekgaodigcpmnakfhaaaboididbdn
+ *
+ * WebSockets over HTTP/2 currently only available in:
+ *   https://www.google.com/chrome/browser/canary.html
+ */
+static int ws_echo(struct buf *inbuf, struct buf *outbuf,
+                   struct buf *logbuf __attribute__((unused)),
+                   void **rock __attribute__((unused)))
+{
+    buf_init_ro(outbuf, buf_base(inbuf), buf_len(inbuf));
+
+    return 0;
+}
+
+
+HIDDEN int meth_connect(struct transaction_t *txn, void *params)
+{
+    struct connect_params *cparams = (struct connect_params *) params;
+
+    /* Bootstrap WebSockets over HTTP/2, if requested */
+    if ((txn->flags.ver != VER_2) ||
+        !ws_enabled() || !cparams || !cparams->endpoint) {
+        return HTTP_NOT_IMPLEMENTED;
+    }
+
+    if (strcmp(txn->req_uri->path, cparams->endpoint)) return HTTP_NOT_ALLOWED;
+
+    if (!(txn->flags.upgrade & UPGRADE_WS)) {
+        txn->error.desc = "Missing/unsupported :protocol value ";
+        return HTTP_BAD_REQUEST;
+    }
+
+    int ret = ws_start_channel(txn, cparams->subprotocol, cparams->data_cb);
+
+    return (ret == HTTP_UPGRADE) ? HTTP_BAD_REQUEST : ret;
+}
+
+
 #define WELL_KNOWN_PREFIX "/.well-known"
 
 /* Perform a GET/HEAD request */
@@ -4498,6 +4511,17 @@ static int meth_get(struct transaction_t *txn,
     const char *msg_base = NULL;
     size_t msg_size = 0;
     struct resp_body_t *resp_body = &txn->resp_body;
+
+    /* Upgrade to WebSockets over HTTP/1.1 on root, if requested */
+    if (!strcmp(txn->req_uri->path, "/")) {
+        if (txn->flags.upgrade & UPGRADE_WS) {
+            return ws_start_channel(txn, NULL, &ws_echo);
+        }
+        else if (ws_enabled()) {
+            txn->flags.upgrade |= UPGRADE_WS;
+            txn->flags.conn |= CONN_UPGRADE;
+        }
+    }
 
     /* Check if this is a request for /.well-known/ listing */
     len = strlen(WELL_KNOWN_PREFIX);
@@ -4560,7 +4584,8 @@ static int meth_get(struct transaction_t *txn,
                     resp_body->type = mtype->type;
                     if (!mtype->compressible) {
                         /* Never compress non-compressible resources */
-                        txn->resp_body.enc = CE_IDENTITY;
+                        txn->resp_body.enc.type = CE_IDENTITY;
+                        txn->resp_body.enc.proc = NULL;
                         txn->flags.te = TE_NONE;
                         txn->flags.vary &= ~VARY_AE;
                     }
@@ -4630,9 +4655,14 @@ EXPORTED int meth_options(struct transaction_t *txn, void *params)
 
     /* Special case "*" - show all features/methods available on server */
     if (!strcmp(txn->req_uri->path, "*")) {
-        for (i = 0; namespaces[i]; i++) {
-            if (namespaces[i]->enabled)
-                txn->req_tgt.allow |= namespaces[i]->allow;
+        for (i = 0; http_namespaces[i]; i++) {
+            if (http_namespaces[i]->enabled)
+                txn->req_tgt.allow |= http_namespaces[i]->allow;
+        }
+
+        if (ws_enabled() && (txn->flags.ver == VER_2)) {
+            /* CONNECT allowed for bootstrapping WebSocket over HTTP/2 */
+            txn->req_tgt.allow |= ALLOW_CONNECT;
         }
     }
     else {
@@ -4640,6 +4670,11 @@ EXPORTED int meth_options(struct transaction_t *txn, void *params)
             /* Parse the path */
             r = parse_path(txn->req_uri->path, &txn->req_tgt, &txn->error.desc);
             if (r) return r;
+        }
+        else if (!strcmp(txn->req_uri->path, "/") &&
+                 ws_enabled() && (txn->flags.ver == VER_2)) {
+            /* WS 'echo' endpoint */
+            txn->req_tgt.allow |= ALLOW_CONNECT;
         }
 
         if (txn->flags.cors) {
@@ -4714,7 +4749,7 @@ static int meth_propfind_root(struct transaction_t *txn,
 
 
 /* Write cached header to buf, excluding any that might have sensitive data. */
-static void trace_cachehdr(const char *name, const char *contents, void *rock)
+static void trace_cachehdr(const char *name, const char *contents, const char *raw, void *rock)
 {
     struct buf *buf = (struct buf *) rock;
     const char **hdr, *sensitive[] =
@@ -4725,8 +4760,11 @@ static void trace_cachehdr(const char *name, const char *contents, void *rock)
 
     for (hdr = sensitive; *hdr && strcmp(name, *hdr); hdr++);
 
-    if (!*hdr) buf_printf(buf, "%c%s: %s\r\n",
-                          toupper(name[0]), name+1, contents);
+    if (!*hdr) {
+        if (raw) buf_appendcstr(buf, raw);
+        else buf_printf(buf, "%c%s: %s\r\n",
+                            toupper(name[0]), name+1, contents);
+    }
 }
 
 /* Perform an TRACE request */
@@ -4822,4 +4860,32 @@ EXPORTED int http_allow_noauth_get(struct transaction_t *txn)
 EXPORTED int http_allow_noauth(struct transaction_t *txn __attribute__((unused)))
 {
     return 0;
+}
+
+
+/* Read the body of a request */
+EXPORTED int http_read_req_body(struct transaction_t *txn)
+{
+    struct body_t *body = &txn->req_body;
+
+    syslog(LOG_DEBUG, "http_read_req_body(flags=%#x, framing=%d)",
+           body->flags, body->framing);
+
+    if (body->flags & BODY_DONE) return 0;
+    body->flags |= BODY_DONE;
+
+    if (body->flags & BODY_CONTINUE) {
+        body->flags &= ~BODY_CONTINUE;
+
+        if (body->flags & BODY_DISCARD) {
+            /* Don't care about the body and client hasn't sent it, we're done */
+            return 0;
+        }
+
+        /* Tell client to send the body */
+        response_header(HTTP_CONTINUE, txn);
+    }
+
+    /* Read body from client */
+    return http_read_body(txn->conn->pin, txn->req_hdrs, body, &txn->error.desc);
 }

@@ -79,6 +79,10 @@ const char *strarray_safenth(const strarray_t *sa, int idx);
 void strarray_truncate(strarray_t *sa, int newlen);
 strarray_t *strarray_dup(const strarray_t *);
 void strarray_cat(strarray_t *dest, const strarray_t *src);
+void strarray_swap(strarray_t *, int, int);
+void strarray_addfirst(strarray_t *, const char *);
+void strarray_addfirst_case(strarray_t *, const char *);
+void strarray_subtract_complement(strarray_t *sa, const strarray_t *sb);
 
 #define strarray_shift(sa)          strarray_remove((sa), 0)
 #define strarray_unshift(sa, s)     strarray_insert((sa), 0, (s))
@@ -100,12 +104,16 @@ void strarray_sort(strarray_t *, strarray_cmp_fn_t *);
 
 void strarray_uniq(strarray_t *);
 
+char **strarray_safetakevf(strarray_t *sa);
 char **strarray_takevf(strarray_t *sa);
 
 int strarray_find(const strarray_t *sa, const char *match,
                   int starting);
 int strarray_find_case(const strarray_t *sa, const char *match,
                        int starting);
+
+int strarray_intersect(const strarray_t *sa, const strarray_t *b);
+int strarray_intersect_case(const strarray_t *sa, const strarray_t *b);
 
 int strarray_size(const strarray_t *sa);
 

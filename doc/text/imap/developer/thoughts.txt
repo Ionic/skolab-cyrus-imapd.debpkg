@@ -1,0 +1,15 @@
+
+Developer Thoughts & Notes
+**************************
+
+* Notes for backup implementation
+
+* Cyrus IMAP Server: Sieve Bytecode
+
+* Cyrus CalDAV Scheduling Flowchart
+
+* Enabling improved_mboxlist_sort
+
+* Cyrus IMAP Server: Notes
+
+* Cyrus IMAP Server: Prot Events

@@ -60,12 +60,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <string.h>
 
 #include "assert.h"
 #include "global.h"
-#include "exitcodes.h"
 #include "xmalloc.h"
 #include "xstrlcpy.h"
 #include "xstrlcat.h"
@@ -87,7 +87,7 @@ static int usage(const char *name)
             "usage: %s [-C <alt_config>] mailbox [...]\n",
             name);
 
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 static const char *squat_strerror(int err)
@@ -197,17 +197,11 @@ int main(int argc, char **argv)
 
     cyrus_init(alt_config, "squat_dump", 0, CONFIG_NEED_PARTITION_DATA);
 
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-
     if (optind == argc)
         usage(argv[0]);
 
     for (i = optind; i < argc; i++)
         dump_one(argv[i]);
-
-    mboxlist_close();
-    mboxlist_done();
 
     cyrus_done();
 

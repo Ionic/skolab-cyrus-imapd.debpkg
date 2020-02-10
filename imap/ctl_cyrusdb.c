@@ -50,6 +50,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <errno.h>
 
@@ -74,7 +75,6 @@
 #include "cyrusdb.h"
 #include "duplicate.h"
 #include "global.h"
-#include "exitcodes.h"
 #include "libcyr_cfg.h"
 #include "mboxlist.h"
 #include "seen.h"
@@ -131,6 +131,23 @@ static int fixmbox(const mbentry_t *mbentry,
 {
     int r;
 
+    /* if MBTYPE_RESERVED, unset it & call mboxlist_delete */
+    if (mbentry->mbtype & MBTYPE_RESERVE) {
+        r = mboxlist_deletemailboxlock(mbentry->name, 1, NULL, NULL, NULL, 0, 0, 1, 0);
+        if (r) {
+            /* log the error */
+            syslog(LOG_ERR,
+                   "could not remove reserved mailbox '%s': %s",
+                   mbentry->name, error_message(r));
+        } else {
+            syslog(LOG_NOTICE,
+                   "removed reserved mailbox '%s'",
+                   mbentry->name);
+        }
+        return 0;
+    }
+
+    /* clean out any legacy specialuse */
     if (mbentry->legacy_specialuse) {
         char *userid = mboxname_to_userid(mbentry->name);
         if (userid) {
@@ -148,19 +165,11 @@ static int fixmbox(const mbentry_t *mbentry,
         mboxlist_entry_free(&copy);
     }
 
-    /* if MBTYPE_RESERVED, unset it & call mboxlist_delete */
-    if (mbentry->mbtype & MBTYPE_RESERVE) {
-        r = mboxlist_deletemailbox(mbentry->name, 1, NULL, NULL, NULL, 0, 0, 1);
-        if (r) {
-            /* log the error */
-            syslog(LOG_ERR,
-                   "could not remove reserved mailbox '%s': %s",
-                   mbentry->name, error_message(r));
-        } else {
-            syslog(LOG_NOTICE,
-                   "removed reserved mailbox '%s'",
-                   mbentry->name);
-        }
+    r = mboxlist_update_intermediaries(mbentry->name, mbentry->mbtype, /*modseq*/0);
+    if (r) {
+        syslog(LOG_ERR,
+               "failed to update intermediaries to mailboxes list for %s: %s",
+               mbentry->name, cyrusdb_strerror(r));
     }
 
     return 0;
@@ -168,32 +177,11 @@ static int fixmbox(const mbentry_t *mbentry,
 
 static void process_mboxlist(void)
 {
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-
-    /* Need annotations.db for mboxlist_deletemailbox() and also
-     * for fixing legacy specialuse support */
-    annotate_init(NULL, NULL);
-    annotatemore_open();
-
-    /* Need quotadb for deleting mailboxes with quotas */
-    quotadb_init(0);
-    quotadb_open(NULL);
-
     /* build a list of mailboxes - we're using internal names here */
-    mboxlist_allmbox(NULL, fixmbox, NULL, 0);
+    mboxlist_allmbox(NULL, fixmbox, NULL, MBOXTREE_INTERMEDIATES);
 
     /* enable or disable RACLs per config */
     mboxlist_set_racls(config_getswitch(IMAPOPT_REVERSEACLS));
-
-    quotadb_close();
-    quotadb_done();
-
-    annotatemore_close();
-    annotate_done();
-
-    mboxlist_close();
-    mboxlist_done();
 }
 
 static const char *dbfname(struct cyrusdb *db)
@@ -215,7 +203,7 @@ static const char *dbfname(struct cyrusdb *db)
     else if (!strcmp(db->name, FNAME_DELIVERDB))
         fname = config_getstring(IMAPOPT_DUPLICATE_DB_PATH);
     else if (!strcmp(db->name, FNAME_TLSSESSIONS))
-        fname = config_getstring(IMAPOPT_TLSCACHE_DB_PATH);
+        fname = config_getstring(IMAPOPT_TLS_SESSIONS_DB_PATH);
     else if (!strcmp(db->name, FNAME_PTSDB))
         fname = config_getstring(IMAPOPT_PTSCACHE_DB_PATH);
     else if (!strcmp(db->name, FNAME_STATUSCACHEDB))

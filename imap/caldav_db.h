@@ -52,21 +52,7 @@ extern time_t caldav_eternity;
 #include <libical/ical.h>
 
 #include "dav_db.h"
-
-#ifndef HAVE_VAVAILABILITY
-/* Allow us to compile without #ifdef HAVE_VAVAILABILITY everywhere */
-#define ICAL_VAVAILABILITY_COMPONENT  ICAL_X_COMPONENT
-#define ICAL_XAVAILABLE_COMPONENT     ICAL_X_COMPONENT
-#endif
-
-#ifndef HAVE_VPOLL
-/* Allow us to compile without #ifdef HAVE_VPOLL everywhere */
-#define ICAL_VPOLL_COMPONENT          ICAL_NO_COMPONENT
-#define ICAL_VVOTER_COMPONENT         ICAL_X_COMPONENT
-#define ICAL_METHOD_POLLSTATUS        ICAL_METHOD_NONE
-#define ICAL_VOTER_PROPERTY           ICAL_NO_PROPERTY
-#define icalproperty_get_voter        icalproperty_get_attendee
-#endif
+#include "ical_support.h"
 
 /* Bitmask of calendar components */
 enum {
@@ -85,6 +71,9 @@ enum {
     CAL_COMP_VCALENDAR =        (1<<15)
 };
 
+/* Returns NULL for unknown type */
+extern const char *caldav_comp_type_as_string(unsigned comp_type);
+
 #define CAL_COMP_REAL            0xff   /* All "real" components */
 
 struct caldav_db;
@@ -95,6 +84,7 @@ struct comp_flags {
     unsigned status       : 2;          /* STATUS property value (see below) */
     unsigned tzbyref      : 1;          /* VTIMEZONEs by reference */
     unsigned mattach      : 1;          /* Has managed ATTACHment(s) */
+    unsigned shared       : 1;          /* Is shared (per-user-data stripped) */
 };
 
 /* Status values */
@@ -114,6 +104,8 @@ struct caldav_data {
     const char *dtend;
     struct comp_flags comp_flags;
     const char *sched_tag;
+    int jmapversion;
+    const char *jmapdata;
 };
 
 typedef int caldav_cb_t(void *rock, struct caldav_data *cdata);
@@ -154,12 +146,23 @@ int caldav_lookup_uid(struct caldav_db *caldavdb, const char *ical_uid,
 int caldav_foreach(struct caldav_db *caldavdb, const char *mailbox,
                    caldav_cb_t *cb, void *rock);
 
+enum caldav_sort {
+    CAL_SORT_NONE = 0,
+    CAL_SORT_UID,
+    CAL_SORT_START,
+    CAL_SORT_MAILBOX,
+    CAL_SORT_DESC  = 0x80 /* bit-flag for descending sort */
+};
+
 /* process each entry for 'mailbox' in 'caldavdb' with cb()
  * which last recurrence ends after 'after' and first
  * recurrence starts before 'before'. The largest possible
- * timerange spans from caldav_epoch to caldav_eternity. */
+ * timerange spans from caldav_epoch to caldav_eternity.
+ * The callback is called in order of sort, or by an
+ * arbitrary order if no sort is specified. */
 int caldav_foreach_timerange(struct caldav_db *caldavdb, const char *mailbox,
                              time_t after, time_t before,
+                             enum caldav_sort* sort, size_t nsort,
                              caldav_cb_t *cb, void *rock);
 
 /* write an entry to 'caldavdb' */
@@ -184,16 +187,24 @@ int caldav_abort(struct caldav_db *caldavdb);
 
 char *caldav_mboxname(const char *userid, const char *name);
 
-int caldav_get_events(struct caldav_db *caldavdb,
+int caldav_get_events(struct caldav_db *caldavdb, const char *asuserid,
                       const char *mailbox, const char *ical_uid,
                       caldav_cb_t *cb, void *rock);
+
+int caldav_write_jmapcache(struct caldav_db *caldavdb, int rowid,
+                           const char *userid, int version, const char *data);
+
 
 /* Process each entry for 'caldavdb' with a modseq higher than oldmodseq,
  * in ascending order of modseq.
  * If mailbox is not NULL, only process entries of this mailbox.
+ * If kind is non-negative, only process entries of this kind.
  * If max_records is positive, only call cb for at most this entries. */
 int caldav_get_updates(struct caldav_db *caldavdb,
                        modseq_t oldmodseq, const char *mailbox, int kind,
                        int max_records, caldav_cb_t *cb, void *rock);
+
+/* Update all the share ACLs */
+int caldav_update_shareacls(const char *userid);
 
 #endif /* CALDAV_DB_H */

@@ -18,6 +18,8 @@ Getting Started
 
 * Developer Test Environment
 
+* JMAP support
+
 
 System files and Databases
 ==========================

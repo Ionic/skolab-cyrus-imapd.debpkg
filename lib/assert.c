@@ -42,9 +42,9 @@
 
 #include <config.h>
 #include <stdio.h>
+#include <sysexits.h>
 
 #include "xmalloc.h"
-#include "exitcodes.h"
 #include "assert.h"
 
 EXPORTED void
@@ -54,5 +54,5 @@ assertionfailed(const char *file, int line, const char *expr)
 
     snprintf(buf, sizeof(buf), "Internal error: assertion failed: %s: %d%s%s",
             file, line, expr ? ": " : "", expr ? expr : "");
-    fatal(buf, EC_SOFTWARE);
+    fatal(buf, EX_SOFTWARE);
 }

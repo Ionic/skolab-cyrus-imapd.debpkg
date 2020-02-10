@@ -315,7 +315,7 @@ section of cyrus.conf(5) like any of these:
 
    EVENTS {
        <...>
-       # Peridoically sync ALL user mailboxes every 4 hours
+       # Periodically sync ALL user mailboxes every 4 hours
        syncclient       cmd="/usr/cyrus/bin/sync_client -A" period=240
 
        # Periodically sync changes at specific times
@@ -403,7 +403,7 @@ Then these entries in cyrus.conf(5) would complete the exercise:
 
 Again, this is just an example for illustration.  The system provides
 so much flexibility, and one can combine channels with chaining to
-acheive even more.
+achieve even more.
 
 
 Other Considerations

@@ -46,6 +46,7 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -53,14 +54,12 @@
 /* cyrus includes */
 #include "assert.h"
 #include "bsearch.h"
-#include "exitcodes.h"
 #include "global.h"
 #include "index.h"
 #include "search_engines.h"
 #include "search_expr.h"
 #include "search_query.h"
 #include "message.h"
-#include "sysexits.h"
 #include "util.h"
 #include "xmalloc.h"
 
@@ -298,10 +297,6 @@ int main(int argc, char **argv)
     cyrus_init(alt_config, "search_test",
                CYRUSINIT_PERROR, CONFIG_NEED_PARTITION_DATA);
 
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-    search_attr_init();
-
     char *freeme = NULL;
 
     switch (mode) {
@@ -322,9 +317,6 @@ int main(int argc, char **argv)
         break;
     }
 
-    mboxlist_close();
-    mboxlist_done();
-
     cyrus_done();
 
     return r;
@@ -333,7 +325,7 @@ int main(int argc, char **argv)
 static int usage(const char *name)
 {
     fprintf(stderr, "usage: %s [format-options] -m mailbox -u userid searchprogram...\n", name);
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 void fatal(const char* s, int code)

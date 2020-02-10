@@ -97,8 +97,10 @@ static int json_response(int code, struct transaction_t *txn, json_t *root,
                          char **resp);
 static int json_error_response(struct transaction_t *txn, long tz_code,
                                struct strlist *param, icaltimetype *time);
-static struct buf *icaltimezone_as_tzfile(icalcomponent* comp);
-static struct buf *icaltimezone_as_tzfile_leap(icalcomponent* comp);
+static struct buf *icaltimezone_as_tzif(icalcomponent* comp);
+static struct buf *icaltimezone_as_tzif_leap(icalcomponent* comp);
+static struct buf *_icaltimezone_as_tzif(icalcomponent* ical, bit32 leapcnt,
+                                         icaltimetype *startp, icaltimetype *endp);
 
 struct observance {
     const char *name;
@@ -124,12 +126,12 @@ static struct mime_type_t tz_mime_types[] = {
       (struct buf* (*)(void *)) &icalcomponent_as_jcal_string,
       NULL, NULL, NULL, NULL
     },
-    { "application/tzfile", NULL, "tz",
-      (struct buf* (*)(void *)) &icaltimezone_as_tzfile,
+    { "application/tzif", NULL, NULL,
+      (struct buf* (*)(void *)) &icaltimezone_as_tzif,
       NULL, NULL, NULL, NULL
     },
-    { "application/tzfile+leap", NULL, "tz",
-      (struct buf* (*)(void *)) &icaltimezone_as_tzfile_leap,
+    { "application/tzif-leap", NULL, NULL,
+      (struct buf* (*)(void *)) &icaltimezone_as_tzif_leap,
       NULL, NULL, NULL, NULL
     },
     { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }
@@ -138,7 +140,7 @@ static struct mime_type_t tz_mime_types[] = {
 
 /* Namespace for tzdist service */
 struct namespace_t namespace_tzdist = {
-    URL_NS_TZDIST, 0, "/tzdist", TZDIST_WELLKNOWN_URI,
+    URL_NS_TZDIST, 0, "tzdist", "/tzdist", TZDIST_WELLKNOWN_URI,
     http_allow_noauth, /*authschemes*/0,
     /*mbtype*/0,
     ALLOW_READ,
@@ -146,6 +148,7 @@ struct namespace_t namespace_tzdist = {
     {
         { NULL,                 NULL },                 /* ACL          */
         { NULL,                 NULL },                 /* BIND         */
+        { NULL,                 NULL },                 /* CONNECT      */
         { NULL,                 NULL },                 /* COPY         */
         { NULL,                 NULL },                 /* DELETE       */
         { &meth_get,            NULL },                 /* GET          */
@@ -469,7 +472,7 @@ static strarray_t *tzid_from_geo(struct transaction_t *txn,
 
     if (!strarray_size(tzids)) {
         /* No tzids found in shapefile(s) */
-        char tzid_buf[19];
+        char tzid_buf[20];
 
         if (latitude <= -60) {
             /* Antarctic region - guess-timate offset from GMT based on:
@@ -492,21 +495,21 @@ static strarray_t *tzid_from_geo(struct transaction_t *txn,
                 /* Uninhabited */
                 tzid = "Etc/GMT";
             }
-            else if (longitude >= 142.033333) {     /* 142*  2' */
+            else if (longitude >= 142.033333) {     /* 142° 2' */
                 /* Australian Claim (George V / Oates Lands) */
                 tzid = "Etc/GMT+10";
             }
-            else if (longitude >= 136.183333) {     /* 136* 11' */
+            else if (longitude >= 136.183333) {     /* 136° 11' */
                 /* French Claim (Adelie Land) */
                 tzid = "Etc/GMT+10";
             }
-            else if (longitude >= 44.633333) {      /*  44* 38' */
+            else if (longitude >= 44.633333) {      /*  44° 38' */
                 /* Australian Claim */
-                if (longitude >= 100.5) {           /* 100* 30' */
+                if (longitude >= 100.5) {           /* 100° 30' */
                     /* Wilkes Land */
                     tzid = "Etc/GMT+8";
                 }
-                else if (longitude >= 72.583333) {  /*  72* 35' */
+                else if (longitude >= 72.583333) {  /*  72° 35' */
                     /* Princess Elizabeth / Kaiser Wilhelm II / Queen Mary Lands */
                     tzid = "Etc/GMT+7";
                 }
@@ -554,8 +557,8 @@ static strarray_t *tzid_from_geo(struct transaction_t *txn,
                XXX  Which offset does an exact multiple of +/- 7.5
                and +/- 180 degrees belong to?
             */
-            sprintf(tzid_buf, "Etc/GMT%+d",
-                    (int) (longitude + copysign(1.0, longitude) * 7.5) / 15);
+            snprintf(tzid_buf, sizeof(tzid_buf), "Etc/GMT%+d",
+                    (short) (longitude + copysign(1.0, longitude) * 7.5) / 15);
             tzid = tzid_buf;
         }
 
@@ -592,7 +595,7 @@ struct leapsec {
     long int sec;         /* leap seconds */
 };
 
-void read_leap_seconds()
+static void read_leap_seconds()
 {
     FILE *fp;
     char buf[1024];
@@ -660,11 +663,11 @@ static void tzdist_init(struct buf *serverinfo __attribute__((unused)))
 
     read_leap_seconds();
     if (!leap_seconds || leap_seconds->count < 2) {
-        /* Disable application/tzfile+leap */
+        /* Disable application/tzif-leap */
         struct mime_type_t *mime;
 
         for (mime = tz_mime_types; mime->content_type; mime++) {
-            if (!strcmp(mime->content_type, "application/tzfile+leap")) {
+            if (!strcmp(mime->content_type, "application/tzif-leap")) {
                 mime->content_type = NULL;
                 break;
             }
@@ -900,6 +903,7 @@ static int action_capa(struct transaction_t *txn)
             buf_truncate(&txn->buf, strcspn(mime->content_type, ";"));
             json_array_append_new(formats, json_string(buf_cstring(&txn->buf)));
         }
+        buf_reset(&txn->buf);
 
         /* Update lastmod */
         lastmod = txn->resp_body.lastmod;
@@ -1278,7 +1282,8 @@ static void truncate_vtimezone(icalcomponent *vtz,
                                struct observance **proleptic,
                                icalcomponent **eternal_std,
                                icalcomponent **eternal_dst,
-                               icaltimetype *last_dtstart)
+                               icaltimetype *last_dtstart,
+                               int ms_compatible)
 {
     icaltimetype start = *startp, end = *endp;
     icalcomponent *comp, *nextc, *tomb_std = NULL, *tomb_day = NULL;
@@ -1457,6 +1462,9 @@ static void truncate_vtimezone(icalcomponent *vtz,
                 if (trunc_dtstart) {
                     /* Bump RRULE start to 1 year prior to our window open */
                     dtstart.year = start.year - 1;
+                    dtstart.month = start.month;
+                    dtstart.day = start.day;
+                    icaltime_normalize(dtstart);
                 }
 
                 ritr = icalrecur_iterator_new(rrule, dtstart);
@@ -1500,7 +1508,7 @@ static void truncate_vtimezone(icalcomponent *vtz,
                                 icalcomponent_add_property(comp, prop);
                             }
                         }
-                        else {
+                        else if (!eternal) {
                             /* Set UNTIL to previous onset */
                             rrule.until = prev_onset;
                             icalproperty_set_rrule(rrule_prop, rrule);
@@ -1515,6 +1523,19 @@ static void truncate_vtimezone(icalcomponent *vtz,
                     if (r < 0) {
                         /* Observance is prior to our window open -
                            check it vs tombstone */
+                        if (ms_compatible) {
+                            /* XXX  We don't want to move DTSTART of the RRULE
+                               as Outlook/Exchange doesn't appear to like
+                               truncating the frontend of RRULEs */
+                            need_tomb = 0;
+                            trunc_dtstart = 0;
+                            if (proleptic_prop) {
+                                icalcomponent_remove_property(vtz,
+                                                              proleptic_prop);
+                                icalproperty_free(proleptic_prop);
+                                proleptic_prop = NULL;
+                            }
+                        }
                         if (need_tomb) check_tombstone(&tombstone, &obs);
                     }
                     else {
@@ -1526,6 +1547,11 @@ static void truncate_vtimezone(icalcomponent *vtz,
                             icalproperty_set_dtstart(dtstart_prop, recur);
                             dtstart = obs.onset;
                             trunc_dtstart = 0;
+
+                            if (last_dtstart &&
+                                icaltime_compare(dtstart, *last_dtstart) > 0) {
+                                *last_dtstart = dtstart;
+                            }
 
                             /* Check if new DSTART is within 1yr of UNTIL */
                             ydiff = rrule.until.year - recur.year;
@@ -1659,6 +1685,7 @@ static void truncate_vtimezone(icalcomponent *vtz,
         if (obsarray) {
             /* Add the tombstone to our array */
             tombstone.onset = start;
+            tombstone.is_gmt = tombstone.is_std = 1;
             icalarray_append(obsarray, &tombstone);
         }
 
@@ -1834,7 +1861,7 @@ static int action_get(struct transaction_t *txn)
         size_t msg_size = 0;
         icalcomponent *ical, *vtz;
         icalproperty *prop;
-        struct buf *buf;
+        struct buf *buf = NULL;
         int fd;
 
         /* Open, mmap, and parse the file */
@@ -1854,7 +1881,8 @@ static int action_get(struct transaction_t *txn)
         vtz = icalcomponent_get_first_component(ical, ICAL_VTIMEZONE_COMPONENT);
         prop = icalcomponent_get_first_property(vtz, ICAL_TZID_PROPERTY);
 
-        if (zi.type == ZI_LINK) {
+        if ((zi.type == ZI_LINK) &&
+            !icalcomponent_get_first_property(vtz, ICAL_TZIDALIASOF_PROPERTY)) {
             /* Add TZID-ALIAS-OF */
             const char *aliasof = icalproperty_get_tzid(prop);
             icalproperty *atzid = icalproperty_new_tzidaliasof(aliasof);
@@ -1896,8 +1924,20 @@ static int action_get(struct transaction_t *txn)
             /* Add truncation parameter(s) to TZURL */
             buf_printf(&pathbuf, "?%s", URI_QUERY(txn->req_uri));
 
-            /* Truncate the VTIMEZONE */
-            truncate_vtimezone(vtz, &start, &end, NULL, NULL, NULL, NULL, NULL);
+            if (!strncmp(mime->content_type, "application/tzif", 16)) {
+                /* Truncate and convert the VTIMEZONE */
+                bit32 leapcnt = 0;
+
+                if (!strcmp(mime->content_type + 16, "-leap"))
+                    leapcnt = leap_seconds->count - 2;
+
+                buf =_icaltimezone_as_tzif(ical, leapcnt, &start, &end);
+            }
+            else {
+                /* Truncate the VTIMEZONE */
+                truncate_vtimezone(vtz, &start, &end, NULL, NULL,
+                                   NULL, NULL, NULL, 0);
+            }
         }
 
         /* Set TZURL property */
@@ -1905,15 +1945,15 @@ static int action_get(struct transaction_t *txn)
         icalcomponent_add_property(vtz, prop);
 
         /* Convert to requested MIME type */
-        buf = mime->from_object(ical);
+        if (!buf) buf = mime->from_object(ical);
         datalen = buf_len(buf);
         data = buf_release(buf);
         buf_destroy(buf);
 
         /* Set Content-Disposition filename */
-        buf_reset(&pathbuf);
-        buf_printf(&pathbuf, "%s.%s", tzid, mime->file_ext);
-        resp_body->fname = buf_cstring(&pathbuf);
+        buf_setcstr(&pathbuf, tzid);
+        if (mime->file_ext) buf_printf(&pathbuf, ".%s", mime->file_ext);
+        resp_body->dispo.fname = buf_cstring(&pathbuf);
 
         txn->flags.vary |= VARY_ACCEPT;
 
@@ -1928,13 +1968,9 @@ static int action_get(struct transaction_t *txn)
 }
 
 
-static const char *dow[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-static const char *mon[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-
 #define CTIME_FMT "%s %s %2d %02d:%02d:%02d %4d"
 #define CTIME_ARGS(tt) \
-    dow[icaltime_day_of_week(tt)-1], mon[tt.month-1], \
+    wday[icaltime_day_of_week(tt)-1], monthname[tt.month-1], \
     tt.day, tt.hour, tt.minute, tt.second, tt.year
 
 
@@ -1972,7 +2008,7 @@ static int action_expand(struct transaction_t *txn)
     /* Check requested format (debugging only) */
     if ((param = hash_lookup("format", &txn->req_qparams)) &&
         !strcmp(param->s, "application/zdump")) {
-        /* Mimic zdump(8) -V output for comparision:
+        /* Mimic zdump(8) -V output for comparison:
 
            For each zonename, print the times both one  second  before  and
            exactly at each detected time discontinuity, the time at one day
@@ -2056,7 +2092,7 @@ static int action_expand(struct transaction_t *txn)
         obsarray = icalarray_new(sizeof(struct observance), 20);
         vtz = icalcomponent_get_first_component(ical, ICAL_VTIMEZONE_COMPONENT);
         truncate_vtimezone(vtz, &start, &end, obsarray, &proleptic,
-                           NULL, NULL, NULL);
+                           NULL, NULL, NULL, 0);
 
         if (zdump) {
             struct buf *body = &txn->resp_body.payload;
@@ -2157,12 +2193,15 @@ static int json_response(int code, struct transaction_t *txn, json_t *root,
                          char **resp)
 {
     size_t flags = JSON_PRESERVE_ORDER;
-    char *buf = NULL;
+    static char *buf = NULL;  /* keep generated data until next call */
+    char *json = NULL;
+
+    free(buf);
 
     if (root) {
         /* Dump JSON object into a text buffer */
         flags |= (config_httpprettytelemetry ? JSON_INDENT(2) : JSON_COMPACT);
-        buf = json_dumps(root, flags);
+        json = buf = json_dumps(root, flags);
         json_decref(root);
 
         if (!buf) {
@@ -2172,18 +2211,17 @@ static int json_response(int code, struct transaction_t *txn, json_t *root,
         else if (resp) {
             if (*resp) free(*resp);
             *resp = buf;
+            buf = NULL;
         }
     }
-    else if (resp) buf = *resp;
+    else if (resp) json = *resp;
 
     /* Output the JSON object */
     if (code == HTTP_OK)
         txn->resp_body.type = "application/json; charset=utf-8";
     else
         txn->resp_body.type = "application/problem+json; charset=utf-8";
-    write_body(code, txn, buf, buf ? strlen(buf) : 0);
-
-    if (!resp && buf) free(buf);
+    write_body(code, txn, json, json ? strlen(json) : 0);
 
     return 0;
 }
@@ -2418,9 +2456,9 @@ static unsigned buf_append_rrule_as_posix_string(struct buf *buf,
     return ver;
 }
 
-/* Convert VTIMEZONE into tzfile(5) format */
-static struct buf *_icaltimezone_as_tzfile(icalcomponent* ical,
-                                     bit32 leapcnt)
+/* Convert VTIMEZONE into tzif format (draft-murchison-tzdist-tzif) */
+static struct buf *_icaltimezone_as_tzif(icalcomponent* ical, bit32 leapcnt,
+                                         icaltimetype *startp, icaltimetype *endp)
 {
     icalcomponent *vtz, *eternal_std = NULL, *eternal_dst = NULL;
     icalarray *obsarray;
@@ -2440,27 +2478,29 @@ static struct buf *_icaltimezone_as_tzfile(icalcomponent* ical,
         unsigned char idx;    /* index into 'types' array */
     } *times = NULL;
     struct ttinfo types[256]; /* only indexed by unsigned char */
-    struct buf *tzfile, posix = BUF_INITIALIZER, abbrev = BUF_INITIALIZER;
+    struct buf *tzif, posix = BUF_INITIALIZER, abbrev = BUF_INITIALIZER;
     struct observance *obs;
     unsigned do_bit64;
     struct leapsec *leap = NULL;
     bit32 leap_init = 0, leap_sec = 0;
 
-    tzfile = buf_new();
-    buf_init(tzfile);
+    tzif = buf_new();
 
     vtz = icalcomponent_get_first_component(ical, ICAL_VTIMEZONE_COMPONENT);
-    if (!vtz) return tzfile;
+    if (!vtz) return tzif;
 
     if (leapcnt) {
         leap = ptrarray_nth(leap_seconds, 1);
         leap_init = leap->sec;
     }
 
+    if (!startp) startp = &start;
+    if (!endp || icaltime_is_null_time(*endp)) endp = &end;
+
     /* Create an array of observances */
     obsarray = icalarray_new(sizeof(struct observance), 100);
-    truncate_vtimezone(vtz, &start, &end, obsarray,
-                       &proleptic, &eternal_std, &eternal_dst, &last_dtstart);
+    truncate_vtimezone(vtz, startp, endp, obsarray,
+                       &proleptic, &eternal_std, &eternal_dst, &last_dtstart, 0);
 
     /* Create an array of transitions */
     times = xmalloc((obsarray->num_elements+1) * sizeof(struct transition));
@@ -2480,7 +2520,7 @@ static struct buf *_icaltimezone_as_tzfile(icalcomponent* ical,
         }
     }
 
-    /* Add two tzfile datasets:
+    /* Add two tzif datasets:
        The first using 32-bit times and the second using 64-bit times. */
     for (do_bit64 = 0; do_bit64 <= 1; do_bit64++) {
         long long int epoch = do_bit64 ? BIG_BANG : INT32_MIN;
@@ -2591,32 +2631,32 @@ static struct buf *_icaltimezone_as_tzfile(icalcomponent* ical,
         /* Output dataset */
 
         /* Header */
-        buf_appendmap(tzfile, header, sizeof(header));
-        buf_appendbit32(tzfile, typecnt);           /* isgmtcnt */
-        buf_appendbit32(tzfile, typecnt);           /* isstdcnt */
-        buf_appendbit32(tzfile, leapcnt);           /* leapcnt */
-        buf_appendbit32(tzfile, timecnt);           /* timecnt */
-        buf_appendbit32(tzfile, typecnt);           /* typecnt */
-        buf_appendbit32(tzfile, buf_len(&abbrev));  /* charcnt */
+        buf_appendmap(tzif, header, sizeof(header));
+        buf_appendbit32(tzif, typecnt);           /* isgmtcnt */
+        buf_appendbit32(tzif, typecnt);           /* isstdcnt */
+        buf_appendbit32(tzif, leapcnt);           /* leapcnt */
+        buf_appendbit32(tzif, timecnt);           /* timecnt */
+        buf_appendbit32(tzif, typecnt);           /* typecnt */
+        buf_appendbit32(tzif, buf_len(&abbrev));  /* charcnt */
 
         /* Transition times */
         for (n = 0; n < timecnt; n++) {
-            if (do_bit64) buf_appendbit64(tzfile, times[n].t);
-            else buf_appendbit32(tzfile, times[n].t);
+            if (do_bit64) buf_appendbit64(tzif, times[n].t);
+            else buf_appendbit32(tzif, times[n].t);
         }
 
         /* Transition time indices */
-        for (n = 0; n < timecnt; n++) buf_putc(tzfile, times[n].idx);
+        for (n = 0; n < timecnt; n++) buf_putc(tzif, times[n].idx);
 
         /* Types structures */
         for (n = 0; n < typecnt; n++) {
-            buf_appendbit32(tzfile, types[n].offset);
-            buf_putc(tzfile, types[n].isdst);
-            buf_putc(tzfile, types[n].idx);
+            buf_appendbit32(tzif, types[n].offset);
+            buf_putc(tzif, types[n].isdst);
+            buf_putc(tzif, types[n].idx);
         }
 
         /* Abbreviation array */
-        buf_append(tzfile, &abbrev);
+        buf_append(tzif, &abbrev);
 
         /* Leap second records */
         if (leapcnt) {
@@ -2627,19 +2667,19 @@ static struct buf *_icaltimezone_as_tzfile(icalcomponent* ical,
 
                 leap = ptrarray_nth(leap_seconds, leapidx);
                 t = leap->t + leap_sec;
-                if (do_bit64) buf_appendbit64(tzfile, t);
-                else buf_appendbit32(tzfile, t);
+                if (do_bit64) buf_appendbit64(tzif, t);
+                else buf_appendbit32(tzif, t);
 
                 leap_sec = leap->sec - leap_init;
-                buf_appendbit32(tzfile, leap_sec);
+                buf_appendbit32(tzif, leap_sec);
             }
         }
 
         /* Standard/wall indicators */
-        for (n = 0; n < typecnt; n++) buf_putc(tzfile, types[n].isstd);
+        for (n = 0; n < typecnt; n++) buf_putc(tzif, types[n].isstd);
 
         /* GMT/local indicators */
-        for (n = 0; n < typecnt; n++) buf_putc(tzfile, types[n].isgmt);
+        for (n = 0; n < typecnt; n++) buf_putc(tzif, types[n].isgmt);
     }
 
     free(times);
@@ -2647,7 +2687,7 @@ static struct buf *_icaltimezone_as_tzfile(icalcomponent* ical,
 
 
     /* POSIX timezone string */
-    buf_putc(tzfile, '\n');
+    buf_putc(tzif, '\n');
 
     /* std offset [dst [offset] [,rule] ] */
     if (buf_len(&posix)) {
@@ -2658,29 +2698,29 @@ static struct buf *_icaltimezone_as_tzfile(icalcomponent* ical,
         /* std name */
         prop = icalcomponent_get_first_property(eternal_std,
                                                 ICAL_TZNAME_PROPERTY);
-        buf_appendcstr(tzfile, icalproperty_get_tzname(prop));
+        buf_appendcstr(tzif, icalproperty_get_tzname(prop));
 
         /* std offset */
         prop = icalcomponent_get_first_property(eternal_std,
                                                 ICAL_TZOFFSETTO_PROPERTY);
         stdoff = icalproperty_get_tzoffsetto(prop);
-        buf_append_utcoffset_as_iso_string(tzfile, stdoff);
+        buf_append_utcoffset_as_iso_string(tzif, stdoff);
 
         /* dst name */
         prop = icalcomponent_get_first_property(eternal_dst,
                                                 ICAL_TZNAME_PROPERTY);
-        buf_appendcstr(tzfile, icalproperty_get_tzname(prop));
+        buf_appendcstr(tzif, icalproperty_get_tzname(prop));
 
         /* dst offset */
         prop = icalcomponent_get_first_property(eternal_dst,
                                                 ICAL_TZOFFSETTO_PROPERTY);
         dstoff = icalproperty_get_tzoffsetto(prop);
         if (dstoff - stdoff != 3600) {  /* default is 1hr from std */
-            buf_append_utcoffset_as_iso_string(tzfile, dstoff);
+            buf_append_utcoffset_as_iso_string(tzif, dstoff);
         }
 
         /* rule */
-        buf_append(tzfile, &posix);
+        buf_append(tzif, &posix);
     }
     else if (!eternal_dst &&
              !icalcomponent_get_tzuntil_property(vtz)) {
@@ -2690,34 +2730,36 @@ static struct buf *_icaltimezone_as_tzfile(icalcomponent* ical,
         /* std name */
         if (obs->name[0] == ':' ||
             strcspn(obs->name, ",+-0123456789") < strlen(obs->name)) {
-            buf_printf(tzfile, "<%s>", obs->name);
+            buf_printf(tzif, "<%s>", obs->name);
         }
-        else buf_appendcstr(tzfile, obs->name);
+        else buf_appendcstr(tzif, obs->name);
 
         /* std offset */
-        buf_append_utcoffset_as_iso_string(tzfile, obs->offset_to);
+        buf_append_utcoffset_as_iso_string(tzif, obs->offset_to);
     }
-    buf_putc(tzfile, '\n');
+    buf_putc(tzif, '\n');
 
     buf_free(&posix);
     icalarray_free(obsarray);
 
-    return tzfile;
+    return tzif;
 }
 
 static void tzdist_truncate_vtimezone(icalcomponent *vtz,
-                                      icaltimetype *startp, icaltimetype *endp) {
-    truncate_vtimezone(vtz, startp, endp, NULL, NULL, NULL, NULL, NULL);
+                                      icaltimetype *startp, icaltimetype *endp)
+{
+    truncate_vtimezone(vtz, startp, endp, NULL, NULL, NULL, NULL, NULL,
+                       1 /* ms_compatible */);
 }
 
-static struct buf *icaltimezone_as_tzfile(icalcomponent* ical)
+static struct buf *icaltimezone_as_tzif(icalcomponent* ical)
 {
-    return _icaltimezone_as_tzfile(ical, 0);
+    return _icaltimezone_as_tzif(ical, 0, NULL, NULL);
 }
 
-static struct buf *icaltimezone_as_tzfile_leap(icalcomponent* ical)
+static struct buf *icaltimezone_as_tzif_leap(icalcomponent* ical)
 {
-    return _icaltimezone_as_tzfile(ical, leap_seconds->count - 2);
+    return _icaltimezone_as_tzif(ical, leap_seconds->count - 2, NULL, NULL);
 }
 
 static icaltimezone *tz_from_tzid(const char *tzid)
@@ -2760,7 +2802,7 @@ EXPORTED void icalcomponent_add_required_timezones(icalcomponent *ical)
     /* Determine recurrence span. */
     comp = icalcomponent_get_first_real_component(ical);
     span = icalrecurrenceset_get_utc_timespan(ical, icalcomponent_isa(comp),
-                                              NULL, NULL, NULL);
+                                              NULL, NULL, NULL, NULL);
 
     /* Remove all VTIMEZONE components for known TZIDs. This operation is
      * a bit hairy: we could expunge a timezone which is in use by an ical
@@ -2777,7 +2819,7 @@ EXPORTED void icalcomponent_add_required_timezones(icalcomponent *ical)
         prop = icalcomponent_get_first_property(tzcomp, ICAL_TZID_PROPERTY);
         if (prop) {
             const char *tzid = icalproperty_get_tzid(prop);
-            if (tz_from_tzid(tzid)) {
+            if (tzid && tz_from_tzid(tzid)) {
                 icalcomponent_remove_component(ical, tzcomp);
                 icalcomponent_free(tzcomp);
             }
@@ -2794,7 +2836,7 @@ EXPORTED void icalcomponent_add_required_timezones(icalcomponent *ical)
 
         /* Clone tz to overwrite its TZID property. */
         icalcomponent *tzcomp =
-            icalcomponent_new_clone(icaltimezone_get_component(tz));
+            icalcomponent_clone(icaltimezone_get_component(tz));
         icalproperty *tzprop =
             icalcomponent_get_first_property(tzcomp, ICAL_TZID_PROPERTY);
         icalproperty_set_tzid(tzprop, icaltimezone_get_location(tz));
@@ -2802,9 +2844,20 @@ EXPORTED void icalcomponent_add_required_timezones(icalcomponent *ical)
         /* Truncate the timezone to the events timespan. */
         tzdist_truncate_vtimezone(tzcomp, &span.start, &span.end);
 
-        /* Add TZUNTIL to timezone */
-        icalproperty *tzuntil = icalproperty_new_tzuntil(span.end);
-        icalcomponent_add_property(tzcomp, tzuntil);
+        if (icaltime_as_timet_with_zone(span.end, NULL) < caldav_eternity) {
+            /* Add TZUNTIL to timezone */
+            icalproperty *tzuntil = icalproperty_new_tzuntil(span.end);
+            icalcomponent_add_property(tzcomp, tzuntil);
+        }
+
+        /* Strip any COMMENT property */
+        /* XXX  These were added by KSM in a previous version of vzic,
+           but libical doesn't allow them in its restrictions checks */
+        tzprop = icalcomponent_get_first_property(tzcomp, ICAL_COMMENT_PROPERTY);
+        if (tzprop) {
+            icalcomponent_remove_property(tzcomp, tzprop);
+            icalproperty_free(tzprop);
+        }
 
         /* Add the truncated timezone. */
         icalcomponent_add_component(ical, tzcomp);

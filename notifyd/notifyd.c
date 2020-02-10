@@ -47,6 +47,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -60,9 +61,9 @@
 
 #include "notifyd.h"
 
-#include "exitcodes.h"
 #include "imap/global.h"
 #include "libconfig.h"
+#include "imap/notify.h"
 #include "xmalloc.h"
 #include "strarray.h"
 
@@ -95,8 +96,6 @@ static char *fetch_arg(char *head, char* tail)
     return (cp == tail ? NULL : cp + 1);
 }
 
-#define NOTIFY_MAXSIZE 8192
-
 static int do_notify(void)
 {
     struct sockaddr_un sun_data;
@@ -109,6 +108,19 @@ static int do_notify(void)
     char *reply;
     char *fname;
     notifymethod_t *nmethod;
+    unsigned bufsiz;
+    socklen_t optlen;
+
+    /* Get receive buffer size */
+    optlen = sizeof(bufsiz);
+    r = getsockopt(soc, SOL_SOCKET, SO_RCVBUF, &bufsiz, &optlen);
+    if (r == -1) {
+        syslog(LOG_ERR, "unable to getsockopt(SO_RCVBUF) on notify socket: %m");
+        return (errno);
+    }
+
+    /* Use minimum of 1/10 of receive buffer size (-overhead) NOTIFY_MAXSIZE */
+    bufsiz = MIN(bufsiz / 10 - 32, NOTIFY_MAXSIZE);
 
     while (1) {
         method = class = priority = user = mailbox = message = reply = NULL;
@@ -118,7 +130,7 @@ static int do_notify(void)
             /* caught a SIGHUP, return */
             return 0;
         }
-        r = recvfrom(soc, buf, NOTIFY_MAXSIZE, 0,
+        r = recvfrom(soc, buf, bufsiz, 0,
                      (struct sockaddr *) &sun_data, &sunlen);
         if (r == -1) {
             return (errno);
@@ -177,7 +189,7 @@ static int do_notify(void)
         else {
             reply = strdup("NO unknown notification method");
             if (!reply) {
-                fatal("strdup failed", EC_OSERR);
+                fatal("strdup failed", EX_OSERR);
             }
         }
 #endif
@@ -208,7 +220,7 @@ EXPORTED void fatal(const char *s, int code)
 static void usage(void)
 {
     syslog(LOG_ERR, "usage: notifyd [-C <alt_config>]");
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 EXPORTED int service_init(int argc, char **argv, char **envp __attribute__((unused)))
@@ -216,7 +228,7 @@ EXPORTED int service_init(int argc, char **argv, char **envp __attribute__((unus
     int opt;
     char *method = "null";
 
-    if (geteuid() == 0) fatal("must run as the Cyrus user", EC_USAGE);
+    if (geteuid() == 0) fatal("must run as the Cyrus user", EX_USAGE);
 
     while ((opt = getopt(argc, argv, "m:")) != EOF) {
         switch(opt) {
@@ -234,7 +246,7 @@ EXPORTED int service_init(int argc, char **argv, char **envp __attribute__((unus
         default_method++;
     }
 
-    if (!default_method) fatal("unknown notification method %s", EC_USAGE);
+    if (!default_method) fatal("unknown notification method %s", EX_USAGE);
 
     signals_set_shutdown(&shut_down);
 

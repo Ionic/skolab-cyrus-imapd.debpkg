@@ -1,0 +1,38 @@
+:tocdepth: 3
+
+==================================
+Cyrus IMAP 3.1.0-dev Release Notes
+==================================
+
+Unavailable for download as this is a development branch only.
+
+Access is via git.
+
+.. _relnotes-3.1.0-changes:
+
+Major changes since the 3.0.x series
+====================================
+
+*
+
+Updates to default configuration
+================================
+
+* The `specialusealways` option is now enabled by default. It must
+  explicitly be disabled for interoperability with legacy clients that
+  can't handle RFC 6154 attributes in extended LIST commands.
+
+* The per-user calendar and addressbook administrative web user
+  interfaces (e.g. /dav/calendars/user/<userid>) are now disabled by
+  default.  They can be enabled with the `caldav_allowcalendaradmin`
+  and `carddav_allowaddressbookadmin` options respectively.
+
+Significant bugfixes
+====================
+
+*
+
+
+.. _Xapian: https://xapian.org
+.. _ClamAV: https://www.clamav.net
+.. _JMAP: http://jmap.io

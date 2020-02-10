@@ -51,6 +51,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -71,13 +72,14 @@
 #include "prot.h"
 #include "times.h"
 #include "global.h"
-#include "exitcodes.h"
+#include "prometheus.h"
 #include "xmalloc.h"
 #include "xstrlcpy.h"
 #include "version.h"
 
 /* generated headers are not necessarily in current directory */
 #include "imap/imap_err.h"
+#include "imap/lmtp_err.h"
 #include "imap/lmtpstats.h"
 #include "imap/mupdate_err.h"
 
@@ -92,6 +94,7 @@ struct address_data {
     mbname_t *mbname;
     int ignorequota;
     int status;
+    strarray_t *resp;
 };
 
 struct clientdata {
@@ -117,7 +120,7 @@ struct clientdata {
     int starttls_done;
 };
 
-/* defined in lmtpd.c or lmtpproxyd.c */
+/* defined in lmtpd.c */
 extern int deliver_logfd;
 
 extern int saslserver(sasl_conn_t *conn, const char *mech,
@@ -126,12 +129,7 @@ extern int saslserver(sasl_conn_t *conn, const char *mech,
                       struct protstream *pin, struct protstream *pout,
                       int *sasl_result, char **success_data);
 
-static struct {
-    char *ipremoteport;
-    char *iplocalport;
-    sasl_ssf_t ssf;
-    char *authid;
-} saslprops = {NULL,NULL,0,NULL};
+static struct saslprops_t saslprops = SASLPROPS_INITIALIZER;
 
 
 #ifdef USING_SNMPGEN
@@ -151,15 +149,22 @@ static int roundToK(int x)
 #define roundToK(x)
 #endif /* USING_SNMPGEN */
 
-static void send_lmtp_error(struct protstream *pout, int r)
+static void send_lmtp_error(struct protstream *pout, int r, strarray_t *resp)
 {
+    int code;
+
+    if (resp) {
+        int i;
+
+        for (i = 0; i < strarray_size(resp); i++) {
+            prot_puts(pout, strarray_nth(resp, i));
+        }
+        return;
+    }
+
     switch (r) {
     case 0:
-        prot_printf(pout, "250 2.1.5 Ok SESSIONID=<%s>\r\n", session_id());
-        break;
-
-    case IMAP_IOERROR:
-        prot_printf(pout, "451 4.3.0 System I/O error\r\n");
+        code = LMTP_OK;
         break;
 
     case IMAP_SERVER_UNAVAILABLE:
@@ -167,103 +172,73 @@ static void send_lmtp_error(struct protstream *pout, int r)
     case MUPDATE_NOAUTH:
     case MUPDATE_TIMEOUT:
     case MUPDATE_PROTOCOL_ERROR:
-        prot_printf(pout, "451 4.4.3 Remote server unavailable\r\n");
+        code = LMTP_SERVER_FAILURE;
         break;
 
     case IMAP_NOSPACE:
-        prot_printf(pout, "451 4.3.1 cannot create file: out of space\r\n");
-        break;
-
-    case IMAP_AGAIN:
-        prot_printf(pout, "451 4.3.0 transient system error\r\n");
+        code = LMTP_SERVER_FULL;
         break;
 
     case IMAP_PERMISSION_DENIED:
         if (LMTP_LONG_ERROR_MSGS) {
-            prot_printf(pout,
-"550-You do not have permission to post a message to this mailbox.\r\n"
-"550-Please contact the owner of this mailbox in order to submit\r\n"
-"550-your message, or %s if you believe you\r\n"
-"550-received this message in error.\r\n"
-"550 5.7.1 Permission denied\r\n",
+            prot_printf(pout, error_message(LMTP_NOT_AUTHORIZED_LONG),
                         config_getstring(IMAPOPT_POSTMASTER));
-        } else {
-            prot_printf(pout, "550 5.7.1 Permission denied\r\n");
         }
+        code = LMTP_NOT_AUTHORIZED;
         break;
 
     case IMAP_QUOTA_EXCEEDED:
         if(config_getswitch(IMAPOPT_LMTP_OVER_QUOTA_PERM_FAILURE)) {
             /* Not Default - Perm Failure */
-            prot_printf(pout, "552 5.2.2 Over quota SESSIONID=<%s>\r\n", session_id());
+            code = LMTP_MAILBOX_FULL_PERM;
         } else {
             /* Default - Temp Failure */
-            prot_printf(pout, "452 4.2.2 Over quota SESSIONID=<%s>\r\n", session_id());
+            code = LMTP_MAILBOX_FULL;
         }
         break;
 
     case IMAP_MAILBOX_BADFORMAT:
     case IMAP_MAILBOX_NOTSUPPORTED:
-        prot_printf(pout, "451 4.2.0 Mailbox has an invalid format\r\n");
+        code = LMTP_MAILBOX_ERROR;
         break;
 
     case IMAP_MAILBOX_MOVED:
-        prot_printf(pout, "451 4.2.1 Mailbox Moved\r\n");
-        break;
-
     case IMAP_MAILBOX_RESERVED:
-        prot_printf(pout, "451 4.2.1 Mailbox Reserved\r\n");
-        break;
-
     case IMAP_MAILBOX_DISABLED:
-        prot_printf(pout,
-                    "450 4.2.1 Mailbox disabled, not accepting messages\r\n");
+        code = LMTP_MAILBOX_DISABLED;
         break;
 
     case IMAP_MESSAGE_CONTAINSNULL:
-        prot_printf(pout, "554 5.6.0 Message contains NUL characters\r\n");
-        break;
-
     case IMAP_MESSAGE_CONTAINSNL:
-        prot_printf(pout, "554 5.6.0 Message contains bare newlines\r\n");
-        break;
-
     case IMAP_MESSAGE_CONTAINS8BIT:
-        prot_printf(pout, "554 5.6.0 Message contains non-ASCII characters in headers\r\n");
-        break;
-
     case IMAP_MESSAGE_BADHEADER:
-        prot_printf(pout, "554 5.6.0 Message contains invalid header\r\n");
-        break;
-
     case IMAP_MESSAGE_NOBLANKLINE:
-        prot_printf(pout,
-                    "554 5.6.0 Message has no header/body separator\r\n");
+        code = LMTP_MESSAGE_INVALID;
         break;
 
     case IMAP_MAILBOX_NONEXISTENT:
         /* XXX Might have been moved to other server */
         if (LMTP_LONG_ERROR_MSGS) {
-            prot_printf(pout,
-"550-Mailbox unknown.  Either there is no mailbox associated with this\r\n"
-"550-name or you do not have authorization to see it.\r\n"
-"550 5.1.1 User unknown\r\n");
-        } else {
-            prot_printf(pout, "550 5.1.1 User unknown\r\n");
+            prot_puts(pout, error_message(LMTP_USER_UNKNOWN_LONG));
         }
+        code = LMTP_USER_UNKNOWN;
         break;
 
     case IMAP_PROTOCOL_BAD_PARAMETERS:
-        prot_printf(pout, "501 5.5.4 Syntax error in parameters\r\n");
+        code = LMTP_PROTOCOL_ERROR;
         break;
 
+    case IMAP_IOERROR:
+    case IMAP_AGAIN:
     case MUPDATE_BADPARAM:
     default:
         /* Some error we're not expecting. */
-        prot_printf(pout, "451 4.3.0 Unexpected internal error: %s\r\n",
-                    error_message(r));
+        code = LMTP_SYSTEM_ERROR;
         break;
     }
+
+    prot_printf(pout, error_message(code), error_message(r), session_id());
+    prot_puts(pout, "\r\n");
 }
 
 /* ----- this section defines functions on message_data_t.
@@ -316,6 +291,7 @@ static void msg_free(message_data_t *m)
     if (m->rcpt) {
         for (i = 0; i < m->rcpt_num; i++) {
             mbname_free(&m->rcpt[i]->mbname);
+            strarray_free(m->rcpt[i]->resp);
             free(m->rcpt[i]);
         }
         free(m->rcpt);
@@ -371,10 +347,13 @@ int msg_getrcpt_ignorequota(message_data_t *m, int rcpt_num)
 
 /* set a recipient status; 'r' should be an IMAP error code that will be
    translated into an LMTP status code */
-void msg_setrcpt_status(message_data_t *m, int rcpt_num, int r)
+void msg_setrcpt_status(message_data_t *m, int rcpt_num, int r, strarray_t *resp)
 {
     assert(0 <= rcpt_num && rcpt_num < m->rcpt_num);
-    m->rcpt[rcpt_num]->status = r;
+    if (!m->rcpt[rcpt_num]->status) {
+        m->rcpt[rcpt_num]->status = r;
+        m->rcpt[rcpt_num]->resp = resp;
+    }
 }
 
 void *msg_getrock(message_data_t *m)
@@ -504,7 +483,7 @@ static char *parseaddr(char *s)
                 if (*p & 128 && !lmtp_strict_rfc2821) {
                     /* this prevents us from becoming a backscatter
                        source if our MTA allows 8bit in local-part
-                       of adresses. */
+                       of addresses. */
                     *p = 'X';
                 }
                 if (*p <= ' ' || (*p & 128) ||
@@ -609,7 +588,7 @@ static int savemsg(struct clientdata *cd,
     int nrcpts = m->rcpt_num;
     time_t now = time(NULL);
     static unsigned msgid_count = 0;
-    char datestr[RFC822_DATETIME_MAX+1], tls_info[250] = "";
+    char datestr[RFC5322_DATETIME_MAX+1], tls_info[250] = "";
     const char *skipheaders[] = {
         "Return-Path",  /* need to remove (we add our own) */
         NULL
@@ -653,10 +632,10 @@ static int savemsg(struct clientdata *cd,
     }
 
     /* add a received header */
-    time_to_rfc822(now, datestr, sizeof(datestr));
+    time_to_rfc5322(now, datestr, sizeof(datestr));
     addlen = 8 + strlen(cd->lhlo_param) + strlen(cd->clienthost);
     if (m->authuser) addlen += 28 + strlen(m->authuser) + 5; /* +5 for ssf */
-    addlen += 25 + strlen(config_servername) + strlen(cyrus_version());
+    addlen += 25 + strlen(config_servername) + strlen(CYRUS_VERSION);
 #ifdef HAVE_SSL
     if (cd->tls_conn) {
         addlen += 3 + tls_get_info(cd->tls_conn, tls_info, sizeof(tls_info));
@@ -680,7 +659,7 @@ static int savemsg(struct clientdata *cd,
     /* We are always atleast "with LMTPA" -- no unauth delivery */
     p += sprintf(p, " by %s", config_servername);
     if (config_serverinfo == IMAP_ENUM_SERVERINFO_ON) {
-        p += sprintf(p, " (Cyrus %s)", cyrus_version());
+        p += sprintf(p, " (Cyrus %s)", CYRUS_VERSION);
     }
     p += sprintf(p, " with LMTP%s%s",
                  cd->starttls_done ? "S" : "",
@@ -695,12 +674,14 @@ static int savemsg(struct clientdata *cd,
     fold[nfold++] = p;
     p += sprintf(p, " %s", datestr);
 
-    fprintf(f, "Received: ");
+    struct buf rbuf = BUF_INITIALIZER;
+    buf_setcstr(&rbuf, "Received: ");
     for (i = 0, p = addbody; i < nfold; p = fold[i], i++) {
-        fprintf(f, "%.*s\r\n\t", (int) (fold[i] - p), p);
+        buf_printf(&rbuf, "%.*s\r\n\t", (int) (fold[i] - p), p);
     }
-    fprintf(f, "%s\r\n", p);
-    spool_cache_header(xstrdup("Received"), addbody, m->hdrcache);
+    buf_printf(&rbuf, "%s\r\n", p);
+    fputs(buf_cstring(&rbuf), f);
+    spool_append_header_raw(xstrdup("Received"), addbody, buf_release(&rbuf), m->hdrcache);
 
     char *sid = xstrdup(session_id());
     fprintf(f, "X-Cyrus-Session-Id: %s\r\n", sid);
@@ -760,6 +741,9 @@ static int savemsg(struct clientdata *cd,
         clean_retpath(m->return_path);
     }
 
+    /* get offset of message body */
+    m->body_offset = ftell(f);
+
     r |= spool_copy_msg(cd->pin, f);
     if (r) {
         fclose(f);
@@ -768,7 +752,7 @@ static int savemsg(struct clientdata *cd,
             func->removespool(m);
         }
         while (nrcpts--) {
-            send_lmtp_error(cd->pout, r);
+            send_lmtp_error(cd->pout, r, NULL);
         }
         return r;
     }
@@ -877,7 +861,7 @@ static int process_recipient(char *addr,
         return IMAP_MAILBOX_NONEXISTENT;
     }
 
-    address_data_t *ret = (address_data_t *) xmalloc(sizeof(address_data_t));
+    address_data_t *ret = (address_data_t *) xzmalloc(sizeof(address_data_t));
     ret->mbname = mbname;
     ret->ignorequota = ignorequota;
     msg->rcpt[msg->rcpt_num] = ret;
@@ -919,19 +903,10 @@ static int reset_saslconn(sasl_conn_t **conn)
 
     sasl_dispose(conn);
     /* do initialization typical of service_main */
-    ret = sasl_server_new("lmtp", config_servername,
-                         NULL, NULL, NULL,
-                         NULL, 0, conn);
-    if(ret != SASL_OK) return ret;
-
-    if(saslprops.ipremoteport)
-       ret = sasl_setprop(*conn, SASL_IPREMOTEPORT,
-                          saslprops.ipremoteport);
-    if(ret != SASL_OK) return ret;
-
-    if(saslprops.iplocalport)
-       ret = sasl_setprop(*conn, SASL_IPLOCALPORT,
-                          saslprops.iplocalport);
+    ret = sasl_server_new("lmtp", config_servername, NULL,
+                          buf_cstringnull_ifempty(&saslprops.iplocalport),
+                          buf_cstringnull_ifempty(&saslprops.ipremoteport),
+                          NULL, 0, conn);
     if(ret != SASL_OK) return ret;
 
     secprops = mysasl_secprops(SASL_SEC_NOANONYMOUS);
@@ -941,14 +916,9 @@ static int reset_saslconn(sasl_conn_t **conn)
 
     /* If we have TLS/SSL info, set it */
     if(saslprops.ssf) {
-       ret = sasl_setprop(*conn, SASL_SSF_EXTERNAL, &saslprops.ssf);
+        ret = saslprops_set_tls(&saslprops, *conn);
     }
     if(ret != SASL_OK) return ret;
-
-    if(saslprops.authid) {
-       ret = sasl_setprop(*conn, SASL_AUTH_EXTERNAL, saslprops.authid);
-       if(ret != SASL_OK) return ret;
-    }
     /* End TLS/SSL Info */
 
     return SASL_OK;
@@ -967,9 +937,6 @@ void lmtpmode(struct lmtp_func *func,
     struct clientdata cd;
 
     const char *localip, *remoteip;
-
-    sasl_ssf_t ssf;
-    char *auth_id;
 
     sasl_security_properties_t *secprops = NULL;
 
@@ -993,20 +960,17 @@ void lmtpmode(struct lmtp_func *func,
     msg_new(&msg, func->namespace);
 
     /* don't leak old connections */
-    if(saslprops.iplocalport) {
-        free(saslprops.iplocalport);
-        saslprops.iplocalport = NULL;
-    }
-    if(saslprops.ipremoteport) {
-        free(saslprops.ipremoteport);
-        saslprops.ipremoteport = NULL;
-    }
+    saslprops_reset(&saslprops);
 
     /* determine who we're talking to */
     cd.clienthost = get_clienthost(fd, &localip, &remoteip);
     if (!strcmp(cd.clienthost, UNIX_SOCKET)) {
         /* we're not connected to a internet socket! */
         func->preauth = 1;
+    }
+    else if (localip && remoteip) {
+        buf_setcstr(&saslprops.ipremoteport, remoteip);
+        buf_setcstr(&saslprops.iplocalport, localip);
     }
 
     syslog(LOG_DEBUG, "connection from %s%s",
@@ -1015,10 +979,12 @@ void lmtpmode(struct lmtp_func *func,
 
     /* Setup SASL to go.  We need to do this *after* we decide if
      *  we are preauthed or not. */
-    if (sasl_server_new("lmtp", config_servername, NULL, NULL,
-                        NULL, (func->preauth ? localauth_override_cb : NULL),
+    if (sasl_server_new("lmtp", config_servername, NULL,
+                        buf_cstringnull_ifempty(&saslprops.iplocalport),
+                        buf_cstringnull_ifempty(&saslprops.ipremoteport),
+                        (func->preauth ? localauth_override_cb : NULL),
                         0, &cd.conn) != SASL_OK) {
-        fatal("SASL failed initializing: sasl_server_new()", EC_TEMPFAIL);
+        fatal("SASL failed initializing: sasl_server_new()", EX_TEMPFAIL);
     }
 
     /* set my allowable security properties */
@@ -1027,25 +993,22 @@ void lmtpmode(struct lmtp_func *func,
     sasl_setprop(cd.conn, SASL_SEC_PROPS, secprops);
 
     if (func->preauth) {
+        const char *auth_id = "postman";
+
         cd.authenticated = EXTERNAL_AUTHED;     /* we'll allow commands,
                                                    but we still accept
                                                    the AUTH command */
-        ssf = 2;
-        auth_id = "postman";
-        if (sasl_setprop(cd.conn, SASL_SSF_EXTERNAL, &ssf) != SASL_OK)
-            fatal("Failed to set SASL property", EC_TEMPFAIL);
-        if (sasl_setprop(cd.conn, SASL_AUTH_EXTERNAL, auth_id) != SASL_OK)
-            fatal("Failed to set SASL property", EC_TEMPFAIL);
+        saslprops.ssf = 2;
+        buf_setcstr(&saslprops.authid, auth_id);
+        if (saslprops_set_tls(&saslprops, cd.conn) != SASL_OK)
+            fatal("saslprops_set_tls() failed: preauth",EX_TEMPFAIL);
 
         deliver_logfd = telemetry_log(auth_id, pin, pout, 0);
-    } else {
-        if(localip) sasl_setprop(cd.conn, SASL_IPLOCALPORT,  &localip );
-        if(remoteip) sasl_setprop(cd.conn, SASL_IPREMOTEPORT, &remoteip);
     }
 
     prot_printf(pout, "220 %s", config_servername);
     if (config_serverinfo == IMAP_ENUM_SERVERINFO_ON) {
-        prot_printf(pout, " Cyrus LMTP %s", cyrus_version());
+        prot_printf(pout, " Cyrus LMTP %s", CYRUS_VERSION);
     }
     prot_printf(pout, " server ready\r\n");
 
@@ -1117,6 +1080,7 @@ void lmtpmode(struct lmtp_func *func,
 
               if (r) {
                   const char *errorstring = NULL;
+                  const char *userid = "-notset-";
 
                   switch (r) {
                   case IMAP_SASL_CANCEL:
@@ -1137,9 +1101,13 @@ void lmtpmode(struct lmtp_func *func,
                           continue;
                       }
                       else {
-                          syslog(LOG_ERR, "badlogin: %s %s %s",
-                                 cd.clienthost, mech, sasl_errdetail(cd.conn));
+                          if (r != SASL_NOUSER)
+                              sasl_getprop(cd.conn, SASL_USERNAME, (const void **) &userid);
 
+                          syslog(LOG_ERR, "badlogin: %s %s (%s) [%s]",
+                                 cd.clienthost, mech, userid, sasl_errdetail(cd.conn));
+
+                          prometheus_increment(CYRUS_IMAP_AUTHENTICATE_TOTAL_RESULT_NO);
                           snmp_increment_args(AUTHENTICATION_NO, 1,
                                               VARIABLE_AUTH, hash_simple(mech),
                                               VARIABLE_LISTEND);
@@ -1174,6 +1142,8 @@ void lmtpmode(struct lmtp_func *func,
               deliver_logfd = telemetry_log(user, pin, pout, 0);
 
               /* authenticated successfully! */
+
+              prometheus_increment(CYRUS_IMAP_AUTHENTICATE_TOTAL_RESULT_YES);
               snmp_increment_args(AUTHENTICATION_YES,1,
                                   VARIABLE_AUTH, hash_simple(mech),
                                   VARIABLE_LISTEND);
@@ -1215,6 +1185,10 @@ void lmtpmode(struct lmtp_func *func,
                     continue;
                 }
 
+                prometheus_increment(CYRUS_LMTP_RECEIVED_MESSAGES_TOTAL);
+                prometheus_apply_delta(CYRUS_LMTP_RECEIVED_BYTES_TOTAL, msg->size);
+                prometheus_apply_delta(CYRUS_LMTP_RECEIVED_RECIPIENTS_TOTAL, msg->rcpt_num);
+
                 snmp_increment(mtaReceivedMessages, 1);
                 snmp_increment(mtaReceivedVolume, roundToK(msg->size));
                 snmp_increment(mtaReceivedRecipients, msg->rcpt_num);
@@ -1223,8 +1197,12 @@ void lmtpmode(struct lmtp_func *func,
                 func->deliver(msg, msg->authuser, msg->authstate, msg->ns);
                 for (j = 0; j < msg->rcpt_num; j++) {
                     if (!msg->rcpt[j]->status) delivered++;
-                    send_lmtp_error(pout, msg->rcpt[j]->status);
+                    send_lmtp_error(pout, msg->rcpt[j]->status,
+                                    msg->rcpt[j]->resp);
                 }
+
+                prometheus_increment(CYRUS_LMTP_TRANSMITTED_MESSAGES_TOTAL);
+                prometheus_apply_delta(CYRUS_LMTP_TRANSMITTED_BYTES_TOTAL, delivered * msg->size);
 
                 snmp_increment(mtaTransmittedMessages, delivered);
                 snmp_increment(mtaTransmittedVolume,
@@ -1296,7 +1274,7 @@ void lmtpmode(struct lmtp_func *func,
                 }
                 tmp = buf+10+strlen(msg->return_path);
 
-                /* is any other whitespace allow seperating? */
+                /* is any other whitespace allow separating? */
                 while (*tmp == ' ') {
                     tmp++;
                     switch (*tmp) {
@@ -1448,7 +1426,7 @@ void lmtpmode(struct lmtp_func *func,
                                       msg);
                 if (rcpt) free(rcpt); /* malloc'd in parseaddr() */
                 if (r) {
-                    send_lmtp_error(pout, r);
+                    send_lmtp_error(pout, r, NULL);
                     continue;
                 }
                 msg->rcpt_num++;
@@ -1473,16 +1451,9 @@ void lmtpmode(struct lmtp_func *func,
 #ifdef HAVE_SSL
             if (!strcasecmp(buf, "starttls") && tls_enabled() &&
                 !func->preauth) { /* don't need TLS for preauth'd connect */
-                int *layerp;
-                sasl_ssf_t ssf;
-                char *auth_id;
 
                 /* XXX  discard any input pipelined after STARTTLS */
                 prot_flush(pin);
-
-                /* SASL and openssl have different ideas
-                   about whether ssf is signed */
-                layerp = (int *) &ssf;
 
                 if (cd.starttls_done == 1) {
                     prot_printf(pout, "454 4.3.3 %s\r\n",
@@ -1515,8 +1486,7 @@ void lmtpmode(struct lmtp_func *func,
                 r=tls_start_servertls(0, /* read */
                                       1, /* write */
                                       360, /* 6 minutes */
-                                      layerp,
-                                      &auth_id,
+                                      &saslprops,
                                       &(cd.tls_conn));
 
                 /* if error */
@@ -1527,22 +1497,11 @@ void lmtpmode(struct lmtp_func *func,
                 }
 
                 /* tell SASL about the negotiated layer */
-                r=sasl_setprop(cd.conn, SASL_SSF_EXTERNAL, &ssf);
-                if (r != SASL_OK)
-                    fatal("sasl_setprop(SASL_SSF_EXTERNAL) failed: STARTTLS",
-                          EC_TEMPFAIL);
-                saslprops.ssf = ssf;
-
-                r=sasl_setprop(cd.conn, SASL_AUTH_EXTERNAL, auth_id);
-                if (r != SASL_OK)
-                    fatal("sasl_setprop(SASL_AUTH_EXTERNAL) failed: STARTTLS",
-                          EC_TEMPFAIL);
-                if(saslprops.authid) {
-                    free(saslprops.authid);
-                    saslprops.authid = NULL;
+                r = saslprops_set_tls(&saslprops, cd.conn);
+                if (r != SASL_OK) {
+                    fatal("saslprops_set_tls() failed: STARTTLS", EX_TEMPFAIL);
                 }
-                if(auth_id) {
-                    saslprops.authid = xstrdup(auth_id);
+                if (buf_len(&saslprops.authid)) {
                     cd.authenticated = TLSCERT_AUTHED;
                 }
 
@@ -1580,6 +1539,7 @@ void lmtpmode(struct lmtp_func *func,
 
     /* security */
     if (cd.conn) sasl_dispose(&cd.conn);
+    saslprops_reset(&saslprops);
 
     cd.starttls_done = 0;
 #ifdef HAVE_SSL
@@ -1682,15 +1642,23 @@ static int ask_code(const char *s)
    if a read failed, '*code == 400', a temporary failure.
 
    returns an IMAP error code. */
-static int getlastresp(char *buf, int len, int *code, struct protstream *pin)
+static int getlastresp(char *buf, int len, int *code, struct protstream *pin,
+                       strarray_t **sa)
 {
+    *code = 0;
+
     do {
         if (!prot_fgets(buf, len, pin)) {
             *code = 400;
             return IMAP_SERVER_UNAVAILABLE;
         }
+
+        if (!*code) *code = ask_code(buf);
+        if (sa && (*code == 550)) {
+            if (!*sa) *sa = strarray_new();
+            strarray_append(*sa, buf);
+        }
     } while (ISCONT(buf));
-    *code = ask_code(buf);
 
     return 0;
 }
@@ -1767,7 +1735,7 @@ int lmtp_runtxn(struct backend *conn, struct lmtp_txn *txn)
 
     /* rset */
     prot_printf(conn->out, "RSET\r\n");
-    r = getlastresp(buf, sizeof(buf)-1, &code, conn->in);
+    r = getlastresp(buf, sizeof(buf)-1, &code, conn->in, NULL);
     if (!ISGOOD(code)) {
         goto failall;
     }
@@ -1790,7 +1758,7 @@ int lmtp_runtxn(struct backend *conn, struct lmtp_txn *txn)
                     txn->auth && txn->auth[0] ? txn->auth : "<>");
     }
     prot_printf(conn->out, "\r\n");
-    r = getlastresp(buf, sizeof(buf)-1, &code, conn->in);
+    r = getlastresp(buf, sizeof(buf)-1, &code, conn->in, NULL);
     if (!ISGOOD(code)) {
         goto failall;
     }
@@ -1803,7 +1771,7 @@ int lmtp_runtxn(struct backend *conn, struct lmtp_txn *txn)
             prot_printf(conn->out, " IGNOREQUOTA");
         }
         prot_printf(conn->out, "\r\n");
-        r = getlastresp(buf, sizeof(buf)-1, &code, conn->in);
+        r = getlastresp(buf, sizeof(buf)-1, &code, conn->in, NULL);
         if (r) {
             goto failall;
         }
@@ -1816,7 +1784,7 @@ int lmtp_runtxn(struct backend *conn, struct lmtp_txn *txn)
         } else if (PERMFAIL(code)) {
             if(txn->tempfail_unknown_mailbox &&
                txn->rcpt[j].r == IMAP_MAILBOX_NONEXISTENT) {
-                /* If there is a nonexistant error, we have been told
+                /* If there is a nonexistent error, we have been told
                  * to mask it (e.g. proxy got out-of-date mupdate data) */
                 txn->rcpt[j].result = RCPT_TEMPFAIL;
                 txn->rcpt[j].r = IMAP_AGAIN;
@@ -1836,7 +1804,7 @@ int lmtp_runtxn(struct backend *conn, struct lmtp_txn *txn)
 
     /* data */
     prot_printf(conn->out, "DATA\r\n");
-    r = getlastresp(buf, sizeof(buf)-1, &code, conn->in);
+    r = getlastresp(buf, sizeof(buf)-1, &code, conn->in, NULL);
     if (r) {
         goto failall;
     }
@@ -1854,7 +1822,8 @@ int lmtp_runtxn(struct backend *conn, struct lmtp_txn *txn)
     for (j = 0; j < txn->rcpt_num; j++) {
         if (txn->rcpt[j].result == RCPT_GOOD) {
             /* expecting a status code for this recipient */
-            r = getlastresp(buf, sizeof(buf)-1, &code, conn->in);
+            r = getlastresp(buf, sizeof(buf)-1, &code, conn->in,
+                            &txn->rcpt[j].resp);
             if (r) {
                 /* technically, some recipients might've succeeded here,
                    but we'll be paranoid */

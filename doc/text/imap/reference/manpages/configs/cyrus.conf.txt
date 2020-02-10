@@ -107,7 +107,7 @@ on certain Internet/UNIX sockets.
    listed in "/etc/services").
 
    If *host* is missing, 0.0.0.0 (all interfaces) is assumed.  Use
-   localhost or 127.0.0.1 to restict access, i.e. when a proxy on the
+   localhost or 127.0.0.1 to restrict access, i.e. when a proxy on the
    same host is front-ending Cyrus.
 
    Note that on most systems UNIX socket paths are limited to around
@@ -181,8 +181,9 @@ DAEMON
 ------
 
 This section lists long running daemons to start before any
-**SERVICES** are spawned.  They will be shutdown when master(8) is
-exiting.
+**SERVICES** are spawned.  master(8)  will ensure that these processes
+are running, restarting any process which dies or forks. All listed
+processes will be shutdown when master(8) is exiting.
 
    **cmd=**<no default>
 
@@ -232,6 +233,6 @@ separate access control rules.
 See Also
 ========
 
-master(8), imapd(8), pop3d(8), lmtpd(8), timsieved(8), idled(8),
-notifyd(8), ctl_cyrusdb(8), ctl_deliver(8), tls_prune(8),
+master(8), imapd(8), pop3d(8), lmtpd(8), smmapd(8), timsieved(8),
+idled(8), notifyd(8), ctl_cyrusdb(8), ctl_deliver(8), tls_prune(8),
 *hosts_access(5)*

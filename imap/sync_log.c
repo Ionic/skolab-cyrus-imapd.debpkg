@@ -1,4 +1,4 @@
-/* sync_log.c -- Cyrus synchonization logging functions
+/* sync_log.c -- Cyrus synchronization logging functions
  *
  * Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
  *
@@ -54,11 +54,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <errno.h>
 
 #include "assert.h"
-#include "exitcodes.h"
 #include "sync_log.h"
 #include "global.h"
 #include "cyr_lock.h"
@@ -75,11 +75,23 @@ static int sync_log_suppressed = 0;
 static strarray_t *channels = NULL;
 static strarray_t *unsuppressable = NULL;
 
+static int sync_log_initialized = 0;
+
+static void done_cb(void *rock __attribute__((unused))) {
+    sync_log_done();
+}
+
+static void init_internal() {
+    if (!sync_log_initialized) {
+        sync_log_init();
+        cyrus_modules_add(done_cb, NULL);
+    }
+}
+
 EXPORTED void sync_log_init(void)
 {
     const char *conf;
     int i;
-
 
     /* sync_log_init() may be called more than once */
     if (channels) strarray_free(channels);
@@ -102,6 +114,8 @@ EXPORTED void sync_log_init(void)
     conf = config_getstring(IMAPOPT_SYNC_LOG_UNSUPPRESSABLE_CHANNELS);
     if (conf)
         unsuppressable = strarray_split(conf, " ", 0);
+
+    sync_log_initialized = 1;
 }
 
 EXPORTED void sync_log_suppress(void)
@@ -116,6 +130,8 @@ EXPORTED void sync_log_done(void)
 
     strarray_free(unsuppressable);
     unsuppressable = NULL;
+
+    sync_log_initialized = 0;
 }
 
 static char *sync_log_fname(const char *channel)
@@ -218,7 +234,7 @@ static const char *sync_quote_name(const char *name)
     for (src = 0; name[src]; src++) {
         c = name[src];
         if ((c == '\r') || (c == '\n'))
-            fatal("Illegal line break in folder name", EC_IOERR);
+            fatal("Illegal line break in folder name", EX_IOERR);
 
         /* quoteable characters */
         if ((c == '\\') || (c == '\"') || (c == '{') || (c == '}')) {
@@ -234,7 +250,7 @@ static const char *sync_quote_name(const char *name)
         buf[dst++] = c;
 
         if (dst > MAX_MAILBOX_BUFFER)
-            fatal("word too long", EC_IOERR);
+            fatal("word too long", EX_IOERR);
     }
 
 end:
@@ -293,6 +309,8 @@ EXPORTED void sync_log(const char *fmt, ...)
     const char *val;
     int i;
 
+    init_internal();
+
     if (!channels) return;
 
     va_start(ap, fmt);
@@ -310,6 +328,8 @@ EXPORTED void sync_log_channel(const char *channel, const char *fmt, ...)
 {
     va_list ap;
     const char *val;
+
+    init_internal();
 
     va_start(ap, fmt);
     val = va_format(fmt, ap);
@@ -457,8 +477,7 @@ EXPORTED int sync_log_reader_begin(sync_log_reader_t *slr)
                "Reprocessing sync log file %s", slr->work_file);
     }
     else if (!slr->log_file) {
-        syslog(LOG_ERR, "Failed to stat %s: %m",
-               slr->log_file);
+        syslog(LOG_ERR, "No sync log filename");
         return IMAP_IOERROR;
     }
     else {

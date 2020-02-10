@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
+ * Copyright (c) 1994-2017 Carnegie Mellon University.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -44,14 +44,15 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#include <libgen.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <string.h>
 
 /* cyrus includes */
 #include "assert.h"
-#include "exitcodes.h"
 #include "global.h"
 #include "index.h"
 #include "imapurl.h"
@@ -65,11 +66,12 @@
 #include "imap/imap_err.h"
 
 static int verbose = 0;
+static const char *progname = NULL;
 
 static int dump_me(struct findall_data *data, void *rock);
 static void print_seq(const char *tag, const char *attrib,
                       unsigned *seq, int n);
-static int usage(const char *name);
+static int usage(void);
 
 struct incremental_record {
     unsigned incruid;
@@ -82,6 +84,8 @@ int main(int argc, char *argv[])
     char *alt_config = NULL;
     struct incremental_record irec;
 
+    progname = basename(argv[0]);
+
     while ((option = getopt(argc, argv, "vC:")) != EOF) {
         switch (option) {
         case 'v':
@@ -93,18 +97,16 @@ int main(int argc, char *argv[])
             break;
 
         default:
-            usage(argv[0]);
+            usage();
             break;
         }
     }
 
     if (optind == argc) {
-        usage(argv[0]);
+        usage();
     }
 
     cyrus_init(alt_config, "dump", 0, CONFIG_NEED_PARTITION_DATA);
-    mboxlist_init(0);
-    mboxlist_open(NULL);
 
     search_attr_init();
 
@@ -118,19 +120,23 @@ int main(int argc, char *argv[])
 
     strarray_free(array);
 
-    mboxlist_close();
-    mboxlist_done();
-
     cyrus_done();
 
     return 0;
 }
 
-static int usage(const char *name)
+static int usage(void)
 {
-    fprintf(stderr, "usage: %s [-v] [mboxpattern ...]\n", name);
+    fprintf(stderr, "Usage: %s [OPTIONS] {mailboxes}\n", progname);
+    fprintf(stderr, "Dumps out a basic copy of mailbox data to stdout.\n");
+    fprintf(stderr, "\n");
 
-    exit(EC_USAGE);
+    fprintf(stderr, "-C <config-file>         use <config-file> instead of config from imapd.conf\n");
+    fprintf(stderr, "-v                       enable verbose output\n");
+
+    fprintf(stderr, "\n");
+
+    exit(EX_USAGE);
 }
 
 static void generate_boundary(char *boundary, size_t size)
@@ -164,7 +170,8 @@ static int dump_me(struct findall_data *data, void *rock)
     unsigned msgno;
 
     /* don't want partial matches */
-    if (!data || !data->mbname) return 0;
+    if (!data) return 0;
+    if (!data->is_exactmatch) return 0;
 
     const char *name = mbname_intname(data->mbname);
 

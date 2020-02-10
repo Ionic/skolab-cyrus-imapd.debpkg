@@ -1,6 +1,6 @@
-/* search_result.h -- search result data structure
+/* search_query.h -- search query routines
  *
- * Copyright (c) 1994-2012 Carnegie Mellon University.  All rights reserved.
+ * Copyright (c) 1994-2018 Carnegie Mellon University.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -65,8 +65,9 @@ struct search_folder {
     uint64_t last_modseq; /* of returned messages, not the folder */
     int id;
     bitvector_t uids;
-    bitvector_t unchecked_uids;
-    int unchecked_dirty;
+    bitvector_t found_uids;
+    int found_dirty;
+    hashu64_table partids; /* maps uid to starray_t* of part ids */
 };
 
 struct search_subquery {
@@ -92,6 +93,9 @@ struct search_query {
      * double-opening it.
      */
     struct index_state *state;
+
+    int (*checkfolder)(const char *mboxname, void *rock);
+    void *checkfolderrock;
     /*
      * Input parameters of the query.  Set these after
      * search_query_new() and before search_query_run().
@@ -104,6 +108,8 @@ struct search_query {
     int want_expunged;
     uint32_t want_mbtype;
     int verbose;
+    int ignore_timer;
+    int attachments_in_any;
 
     /*
      * A query comprises multiple sub-queries logically ORed together.
@@ -179,5 +185,9 @@ extern uint64_t search_folder_get_first_modseq(const search_folder_t *);
 extern uint64_t search_folder_get_last_modseq(const search_folder_t *);
 
 extern void search_build_query(search_builder_t *bx, search_expr_t *e);
+
+extern int search_is_mutable(struct sortcrit *sortcrit,
+                             struct searchargs *searchargs);
+
 
 #endif /* __CYRUS_SEARCH_RESULT_H__ */

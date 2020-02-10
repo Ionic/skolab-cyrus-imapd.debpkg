@@ -54,7 +54,21 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#ifndef STDIN_FILENO
+/* Standard file descriptors.  */
+#define	STDIN_FILENO	0	/* Standard input.  */
+#define	STDOUT_FILENO	1	/* Standard output.  */
+#define	STDERR_FILENO	2	/* Standard error output.  */
+#endif
+
 #include "xmalloc.h"
+
+/* version string printable in gdb tracking */
+extern const char CYRUS_VERSION[];
 
 #ifdef ENABLE_REGEX
 # ifdef HAVE_PCREPOSIX_H
@@ -68,6 +82,13 @@
 #  endif /* HAVE_RXPOSIX_H */
 # endif /* HAVE_PCREPOSIX_H */
 #endif /* ENABLE_REGEX */
+
+#ifdef HAVE_LIBUUID
+#include <uuid/uuid.h>
+#endif
+#ifndef UUID_STR_LEN
+#define UUID_STR_LEN  37
+#endif
 
 #define BIT32_MAX 4294967295U
 
@@ -85,6 +106,12 @@ typedef unsigned long long int bit64;
 typedef unsigned long long int modseq_t;
 #define MODSEQ_FMT "%llu"
 #define atomodseq_t(s) strtoull(s, NULL, 10)
+
+#if SIZEOF_LONG >= 8
+#define INT64_FMT "%ld"
+#else
+#define INT64_FMT "%lld"
+#endif
 
 #define Uisalnum(c) isalnum((int)((unsigned char)(c)))
 #define Uisalpha(c) isalpha((int)((unsigned char)(c)))
@@ -190,7 +217,8 @@ extern int cyrus_mkdir(const char *path, mode_t mode);
 enum {
     COPYFILE_NOLINK = (1<<0),
     COPYFILE_MKDIR  = (1<<1),
-    COPYFILE_RENAME = (1<<2)
+    COPYFILE_RENAME = (1<<2),
+    COPYFILE_KEEPTIME = (1<<3)
 };
 
 extern int cyrus_copyfile(const char *from, const char *to, int flags);
@@ -230,6 +258,7 @@ extern double timeval_get_double(const struct timeval *tv);
 extern void timeval_set_double(struct timeval *tv, double d);
 extern void timeval_add_double(struct timeval *tv, double delta);
 extern double timesub(const struct timeval *start, const struct timeval *end);
+extern int64_t now_ms(void);
 
 extern clock_t sclock(void);
 
@@ -251,6 +280,7 @@ struct buf {
 void _buf_ensure(struct buf *buf, size_t len);
 const char *buf_cstring(const struct buf *buf);
 const char *buf_cstringnull(const struct buf *buf);
+const char *buf_cstringnull_ifempty(const struct buf *buf);
 char *buf_release(struct buf *buf);
 char *buf_newcstring(struct buf *buf);
 char *buf_releasenull(struct buf *buf);
@@ -265,6 +295,7 @@ void buf_setmap(struct buf *buf, const char *base, size_t len);
 void buf_copy(struct buf *dst, const struct buf *src);
 void buf_append(struct buf *dst, const struct buf *src);
 void buf_appendcstr(struct buf *buf, const char *str);
+void buf_appendoverlap(struct buf *buf, const char *str);
 void buf_appendbit32(struct buf *buf, bit32 num);
 void buf_appendbit64(struct buf *buf, bit64 num);
 void buf_appendmap(struct buf *buf, const char *base, size_t len);
@@ -273,9 +304,10 @@ void buf_cowappendfree(struct buf *buf, char *base, unsigned int len);
 void buf_insert(struct buf *dst, unsigned int off, const struct buf *src);
 void buf_insertcstr(struct buf *buf, unsigned int off, const char *str);
 void buf_insertmap(struct buf *buf, unsigned int off, const char *base, int len);
-void buf_vprintf(struct buf *buf, const char *fmt, va_list args);
+void buf_vprintf(struct buf *buf, const char *fmt, va_list args)
+                __attribute__((format(printf, 2, 0)));
 void buf_printf(struct buf *buf, const char *fmt, ...)
-                __attribute__((format(printf,2,3)));
+                __attribute__((format(printf, 2, 3)));
 int buf_replace_all(struct buf *buf, const char *match,
                     const char *replace);
 int buf_replace_char(struct buf *buf, char match, char replace);
@@ -289,21 +321,22 @@ void buf_remove(struct buf *buf, unsigned int off, unsigned int len);
 int buf_cmp(const struct buf *, const struct buf *);
 int buf_findchar(const struct buf *, unsigned int off, int c);
 int buf_findline(const struct buf *buf, const char *line);
-void buf_init(struct buf *buf);
 void buf_init_ro(struct buf *buf, const char *base, size_t len);
 void buf_initm(struct buf *buf, char *base, int len);
 void buf_init_ro_cstr(struct buf *buf, const char *str);
-void buf_init_mmap(struct buf *buf, int onceonly, int fd,
+void buf_refresh_mmap(struct buf *buf, int onceonly, int fd,
                    const char *fname, size_t size, const char *mboxname);
 void buf_free(struct buf *buf);
 void buf_move(struct buf *dst, struct buf *src);
 const char *buf_lcase(struct buf *buf);
+const char *buf_ucase(struct buf *buf);
+const char *buf_tocrlf(struct buf *buf);
 void buf_trim(struct buf *buf);
 
 /*
  * Given a list of strings, terminated by (char *)NULL,
  * return a newly allocated string containing the
- * concatention of all the argument strings.  The
+ * concatenation of all the argument strings.  The
  * caller must free the returned string using free().
  *
  * This API idea based on glib's g_strconcat() which
@@ -317,6 +350,7 @@ char *strconcat(const char *s1, ...);
 #define BH_SEPARATOR(c)     (_BH_SEP|((c)&0x7f))
 #define _BH_GETSEP(flags)   (flags & _BH_SEP ? (char)(flags & 0x7f) : '\0')
 int bin_to_hex(const void *bin, size_t binlen, char *hex, int flags);
+int bin_to_lchex(const void *bin, size_t binlen, char *hex);
 int hex_to_bin(const char *hex, size_t hexlen, void *bin);
 
 /* use getpassphrase on machines which support it */
@@ -352,13 +386,13 @@ int buf_deflate(struct buf *buf, int compLevel, int scheme);
  * string is always NUL-terminated.  Yes, I know we have an
  * implementation of the BSD strlcpy() which has this semantic,
  * but that isn't a highly optimised libc or compiler provided
- * function like strncpy(), and we can trivially and eficiently
+ * function like strncpy(), and we can trivially and efficiently
  * add the NUL termination semantic on top of strncpy(). */
 #define xstrncpy(d, s, n) \
     do { \
         char *_d = (d); \
         size_t _n = (n); \
-        strncpy(_d, (s), _n); \
+        strncpy(_d, (s), _n-1); \
         _d[_n-1] = '\0'; \
     } while(0)
 

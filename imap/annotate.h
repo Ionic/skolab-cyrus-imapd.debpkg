@@ -79,6 +79,14 @@ struct entryattlist {
     struct entryattlist *next;
 };
 
+#define ANNOTATE_FLAG_DELETED (1<<0)
+
+struct annotate_metadata
+{
+    modseq_t modseq;
+    unsigned char flags; /* read-only */
+};
+
 typedef struct annotate_state annotate_state_t;
 typedef struct annotate_recalc_state annotate_recalc_state_t;
 
@@ -121,6 +129,7 @@ void clearentryatt(struct entryattlist **l, const char *entry,
 void dupentryatt(struct entryattlist **l,
                  const struct entryattlist *);
 size_t sizeentryatts(const struct entryattlist *);
+char *dumpentryatt(const struct entryattlist *l);
 void freeentryatts(struct entryattlist *l);
 
 /* initialize database structures */
@@ -136,13 +145,22 @@ void annotatemore_open(void);
 typedef int (*annotatemore_find_proc_t)(const char *mailbox,
                     uint32_t uid,
                     const char *entry, const char *userid,
-                    const struct buf *value, void *rock);
+                    const struct buf *value,
+                    const struct annotate_metadata *mdata,
+                    void *rock);
 
 /* For findall(), matches any non-zero uid */
 #define ANNOTATE_ANY_UID    ((unsigned int)~0)
+
+/* For findall() matches also tombstones */
+#define ANNOTATE_TOMBSTONES  (1<<0)
+
 /* 'proc'ess all annotations matching 'mailbox' and 'entry' */
-int annotatemore_findall(const char *mboxname, uint32_t uid, const char *entry,
-                         annotatemore_find_proc_t proc, void *rock);
+int annotatemore_findall(const char *mboxname, uint32_t uid,
+                         const char *entry,
+                         modseq_t since_modseq,
+                         annotatemore_find_proc_t proc, void *rock,
+                         int flags);
 
 /* fetch annotations and output results */
 typedef void (*annotate_fetch_cb_t)(const char *mboxname, /* internal */
@@ -157,7 +175,8 @@ int annotate_state_fetch(annotate_state_t *state,
 /* write a single annotation, avoiding all ACL checks and etc */
 int annotatemore_write(const char *mboxname, const char *entry,
                        const char *userid, const struct buf *value);
-int annotatemore_msg_write(const char *mboxname, uint32_t uid, const char *entry,
+/* same but write to shared if the user own the mailbox */
+int annotatemore_writemask(const char *mboxname, const char *entry,
                            const char *userid, const struct buf *value);
 /* flat out ignore modseq and quota and everything */
 int annotatemore_rawwrite(const char *mboxname, const char *entry,
@@ -187,6 +206,13 @@ int annotate_state_write(annotate_state_t *, const char *entry,
 /* same but write to shared if the user owns the mailbox */
 int annotate_state_writemask(annotate_state_t *, const char *entry,
                              const char *userid, const struct buf *value);
+/* same but call mailbox_annot_changed with the silent flag set */
+int annotate_state_writesilent(annotate_state_t *, const char *entry,
+                               const char *userid, const struct buf *value);
+/* same but set annotation metadata (flags field is ignored) */
+int annotate_state_writemdata(annotate_state_t *state, const char *entry,
+                              const char *userid, const struct buf *value,
+                              const struct annotate_metadata *mdata);
 
 /* rename the annotations for 'oldmboxname' to 'newmboxname'
  * if 'olduserid' is non-NULL then the private annotations
@@ -252,6 +278,7 @@ int annotate_getdb(const char *mboxname, annotate_db_t **dbp);
 void annotate_putdb(annotate_db_t **dbp);
 
 /* Maybe this isn't the right place - move later */
-int specialuse_validate(const char *userid, const char *src, struct buf *dest);
+int specialuse_validate(const char *mboxname, const char *userid,
+                        const char *src, struct buf *dest);
 
 #endif /* ANNOTATE_H */

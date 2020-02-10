@@ -52,6 +52,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/param.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <netdb.h>
 #include <sys/socket.h>
@@ -72,7 +73,6 @@
 #include "global.h"
 #include "tls.h"
 
-#include "exitcodes.h"
 #include "imapd.h"
 #include "mailbox.h"
 #include "mboxevent.h"
@@ -91,7 +91,6 @@
 /* generated headers are not necessarily in current directory */
 #include "imap/imap_err.h"
 
-#include "sync_log.h"
 #include "statuscache.h"
 
 #include "iostat.h"
@@ -216,13 +215,7 @@ extern int saslserver(sasl_conn_t *conn, const char *mech,
 /* Enable the resetting of a sasl_conn_t */
 static int reset_saslconn(sasl_conn_t **conn);
 
-static struct
-{
-    char *ipremoteport;
-    char *iplocalport;
-    sasl_ssf_t ssf;
-    char *authid;
-} saslprops = {NULL,NULL,0,NULL};
+static struct saslprops_t saslprops = SASLPROPS_INITIALIZER;
 
 static int popd_canon_user(sasl_conn_t *conn, void *context,
                            const char *user, unsigned ulen,
@@ -404,19 +397,7 @@ static void popd_reset(void)
     }
     popd_starttls_done = 0;
 
-    if(saslprops.iplocalport) {
-       free(saslprops.iplocalport);
-       saslprops.iplocalport = NULL;
-    }
-    if(saslprops.ipremoteport) {
-       free(saslprops.ipremoteport);
-       saslprops.ipremoteport = NULL;
-    }
-    if(saslprops.authid) {
-       free(saslprops.authid);
-       saslprops.authid = NULL;
-    }
-    saslprops.ssf = 0;
+    saslprops_reset(&saslprops);
 
     popd_exists = 0;
 }
@@ -432,7 +413,7 @@ int service_init(int argc __attribute__((unused)),
     int r;
     int opt;
 
-    if (geteuid() == 0) fatal("must run as the Cyrus user", EC_USAGE);
+    if (geteuid() == 0) fatal("must run as the Cyrus user", EX_USAGE);
     setproctitle_init(argc, argv, envp);
 
     /* set signal handlers */
@@ -442,33 +423,13 @@ int service_init(int argc __attribute__((unused)),
     /* load the SASL plugins */
     global_sasl_init(1, 1, mysasl_cb);
 
-    /* open the mboxlist, we'll need it for real work */
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-
-    /* open the quota db, we'll need it for expunge */
-    quotadb_init(0);
-    quotadb_open(NULL);
-
-    /* open the user deny db */
-    denydb_init(0);
-    denydb_open(0);
-
-    if (config_getswitch(IMAPOPT_STATUSCACHE)) {
-        /* open statuscache db to optimize handling an empty maildrop */
-        statuscache_open();
-    }
-
     /* setup for sending IMAP IDLE notifications */
     idle_init();
-
-    /* setup for mailbox event notifications */
-    mboxevent_init();
 
     /* Set namespace */
     if ((r = mboxname_init_namespace(&popd_namespace, 1)) != 0) {
         syslog(LOG_ERR, "%s", error_message(r));
-        fatal(error_message(r), EC_CONFIG);
+        fatal(error_message(r), EX_CONFIG);
     }
 
     mboxevent_setnamespace(&popd_namespace);
@@ -480,7 +441,7 @@ int service_init(int argc __attribute__((unused)),
             if (!tls_enabled()) {
                 syslog(LOG_ERR, "pop3s: required OpenSSL options not present");
                 fatal("pop3s: required OpenSSL options not present",
-                      EC_CONFIG);
+                      EX_CONFIG);
             }
             break;
 
@@ -521,8 +482,6 @@ int service_main(int argc __attribute__((unused)),
 
     signals_poll();
 
-    sync_log_init();
-
     popd_in = prot_new(0, 0);
     popd_out = prot_new(1, 1);
 
@@ -533,35 +492,34 @@ int service_main(int argc __attribute__((unused)),
     /* Find out name of client host */
     popd_clienthost = get_clienthost(0, &localip, &remoteip);
 
+    if (localip && remoteip) {
+        buf_setcstr(&saslprops.ipremoteport, remoteip);
+        buf_setcstr(&saslprops.iplocalport, localip);
+    }
+
     /* other params should be filled in */
-    if (sasl_server_new("pop", config_servername, NULL, NULL, NULL,
+    if (sasl_server_new("pop", config_servername, NULL,
+                        buf_cstringnull_ifempty(&saslprops.iplocalport),
+                        buf_cstringnull_ifempty(&saslprops.ipremoteport),
                         NULL, 0, &popd_saslconn) != SASL_OK)
-        fatal("SASL failed initializing: sasl_server_new()",EC_TEMPFAIL);
+        fatal("SASL failed initializing: sasl_server_new()",EX_TEMPFAIL);
 
     /* will always return something valid */
     secprops = mysasl_secprops(0);
     if (sasl_setprop(popd_saslconn, SASL_SEC_PROPS, secprops) != SASL_OK)
-        fatal("Failed to set SASL property", EC_TEMPFAIL);
+        fatal("Failed to set SASL property", EX_TEMPFAIL);
     if (sasl_setprop(popd_saslconn, SASL_SSF_EXTERNAL, &extprops_ssf) != SASL_OK)
-        fatal("Failed to set SASL property", EC_TEMPFAIL);
+        fatal("Failed to set SASL property", EX_TEMPFAIL);
 
     if (localip) {
         popd_haveaddr = 1;
-        sasl_setprop(popd_saslconn, SASL_IPLOCALPORT, localip);
-        saslprops.iplocalport = xstrdup(localip);
-    }
-
-    if (remoteip) {
-        sasl_setprop(popd_saslconn, SASL_IPREMOTEPORT, remoteip);
-        saslprops.ipremoteport = xstrdup(remoteip);
     }
 
     popd_tls_required = config_getswitch(IMAPOPT_TLS_REQUIRED);
 
     /* Set inactivity timer */
-    popd_timeout = config_getint(IMAPOPT_POPTIMEOUT);
-    if (popd_timeout < 10) popd_timeout = 10;
-    popd_timeout *= 60;
+    popd_timeout = config_getduration(IMAPOPT_POPTIMEOUT, 'm');
+    if (popd_timeout < 10 * 60) popd_timeout = 10 * 60;
     prot_settimeout(popd_in, popd_timeout);
     prot_setflushonread(popd_in, popd_out);
 
@@ -583,7 +541,7 @@ int service_main(int argc __attribute__((unused)),
     prot_printf(popd_out, "+OK");
     if (config_serverinfo) prot_printf(popd_out, " %s", config_servername);
     if (config_serverinfo == IMAP_ENUM_SERVERINFO_ON) {
-        prot_printf(popd_out, " Cyrus POP3 %s", cyrus_version());
+        prot_printf(popd_out, " Cyrus POP3 %s", CYRUS_VERSION);
     }
     prot_printf(popd_out, " server ready %s\r\n", popd_apop_chal);
 
@@ -593,7 +551,8 @@ int service_main(int argc __attribute__((unused)),
 
     /* send a Logout event notification */
     if ((mboxevent = mboxevent_new(EVENT_LOGOUT))) {
-        mboxevent_set_access(mboxevent, saslprops.iplocalport,
+        mboxevent_set_access(mboxevent,
+                             buf_cstringnull_ifempty(&saslprops.iplocalport),
                              NULL, popd_userid, NULL, 1);
 
         mboxevent_notify(&mboxevent);
@@ -629,7 +588,7 @@ static void usage(void)
 {
     prot_printf(popd_out, "-ERR usage: pop3d [-C <alt_config>] [-k] [-s]\r\n");
     prot_flush(popd_out);
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 /*
@@ -661,23 +620,10 @@ void shut_down(int code)
     syslog(LOG_NOTICE, "counts: retr=<%d> top=<%d> dele=<%d>",
                        count_retr, count_top, count_dele);
 
-    sync_log_done();
-
-    if (config_getswitch(IMAPOPT_STATUSCACHE)) {
-        statuscache_close();
-        statuscache_done();
-    }
-
-    mboxlist_close();
-    mboxlist_done();
-
-    quotadb_close();
-    quotadb_done();
-
-    denydb_close();
-    denydb_done();
-
     idle_done();
+
+    /* make sure we didn't leak */
+    assert(!open_mailboxes_exist());
 
     if (popd_in) {
         prot_NONBLOCK(popd_in);
@@ -699,6 +645,8 @@ void shut_down(int code)
 #ifdef HAVE_SSL
     tls_shutdown_serverengine();
 #endif
+
+    saslprops_free(&saslprops);
 
     cyrus_done();
 
@@ -784,7 +732,7 @@ void kpop(void)
     socklen_t len;
 
     if (!popd_haveaddr) {
-        fatal("Cannot get client's IP address", EC_OSERR);
+        fatal("Cannot get client's IP address", EX_OSERR);
     }
 
     srvtab = config_getstring(IMAPOPT_SRVTAB);
@@ -856,11 +804,12 @@ static int expunge_deleted(void)
         if (r) break;
 
         /* already expunged? skip */
-        if (record.system_flags & FLAG_EXPUNGED)
+        if (record.internal_flags & FLAG_INTERNAL_EXPUNGED)
             continue;
 
         /* mark expunged */
-        record.system_flags |= FLAG_DELETED | FLAG_EXPUNGED;
+        record.system_flags |= FLAG_DELETED;
+        record.internal_flags |= FLAG_INTERNAL_EXPUNGED;
         numexpunged++;
 
         /* store back to the mailbox */
@@ -948,7 +897,7 @@ static void cmdloop(void)
         if (p > inputbuf && p[-1] == '\n') *--p = '\0';
         if (p > inputbuf && p[-1] == '\r') *--p = '\0';
 
-        /* Parse into keword and argument */
+        /* Parse into keyword and argument */
         for (p = inputbuf; *p && !Uisspace(*p); p++);
         if (*p) {
             *p++ = '\0';
@@ -986,7 +935,7 @@ static void cmdloop(void)
         if (!strcmp(inputbuf, "quit")) {
             if (!arg) {
                 int pollpadding =config_getint(IMAPOPT_POPPOLLPADDING);
-                int minpollsec = config_getint(IMAPOPT_POPMINPOLL)*60;
+                int minpollsec = config_getduration(IMAPOPT_POPMINPOLL, 'm');
 
                 /* check preconditions! */
                 if (!popd_mailbox)
@@ -1279,12 +1228,6 @@ void uidl_msg(uint32_t msgno)
 static void cmd_starttls(int pop3s)
 {
     int result;
-    int *layerp;
-    sasl_ssf_t ssf;
-    char *auth_id;
-
-    /* SASL and openssl have different ideas about whether ssf is signed */
-    layerp = (int *) &ssf;
 
     if (popd_starttls_done == 1)
     {
@@ -1320,8 +1263,7 @@ static void cmd_starttls(int pop3s)
     result=tls_start_servertls(0, /* read */
                                1, /* write */
                                pop3s ? 180 : popd_timeout,
-                               layerp,
-                               &auth_id,
+                               &saslprops,
                                &tls_conn);
 
     /* if error */
@@ -1337,27 +1279,15 @@ static void cmd_starttls(int pop3s)
     }
 
     /* tell SASL about the negotiated layer */
-    result = sasl_setprop(popd_saslconn, SASL_SSF_EXTERNAL, &ssf);
-    if (result == SASL_OK) {
-        saslprops.ssf = ssf;
-
-        result = sasl_setprop(popd_saslconn, SASL_AUTH_EXTERNAL, auth_id);
-    }
+    result = saslprops_set_tls(&saslprops, popd_saslconn);
     if (result != SASL_OK) {
-        syslog(LOG_NOTICE, "sasl_setprop() failed: cmd_starttls()");
+        syslog(LOG_NOTICE, "saslprops_set_tls() failed: cmd_starttls()");
         if (pop3s == 0) {
-            fatal("sasl_setprop() failed: cmd_starttls()", EC_TEMPFAIL);
+            fatal("saslprops_set_tls() failed: cmd_starttls()", EX_TEMPFAIL);
         } else {
             shut_down(0);
         }
     }
-
-    if(saslprops.authid) {
-        free(saslprops.authid);
-        saslprops.authid = NULL;
-    }
-    if(auth_id)
-        saslprops.authid = xstrdup(auth_id);
 
     /* tell the prot layer about our new layers */
     prot_settls(popd_in, tls_conn);
@@ -1369,7 +1299,7 @@ static void cmd_starttls(int pop3s)
 #else
 static void cmd_starttls(int pop3s __attribute__((unused)))
 {
-    fatal("cmd_starttls() called, but no OpenSSL", EC_SOFTWARE);
+    fatal("cmd_starttls() called, but no OpenSSL", EX_SOFTWARE);
 }
 #endif /* HAVE_SSL */
 
@@ -1406,7 +1336,7 @@ static void cmd_apop(char *response)
                popd_clienthost, popd_apop_chal,
                sasl_errdetail(popd_saslconn));
 
-        failedloginpause = config_getint(IMAPOPT_FAILEDLOGINPAUSE);
+        failedloginpause = config_getduration(IMAPOPT_FAILEDLOGINPAUSE, 's');
         if (failedloginpause != 0) {
             sleep(failedloginpause);
         }
@@ -1477,7 +1407,7 @@ static void cmd_user(char *user)
              strlen(userbuf) + 6 >= MAX_MAILBOX_BUFFER) {
         prot_printf(popd_out, "-ERR [AUTH] Invalid user\r\n");
         syslog(LOG_NOTICE,
-               "badlogin: %s plaintext %s invalid user",
+               "badlogin: %s plaintext (%s) invalid user",
                popd_clienthost, beautify_string(user));
     }
     else {
@@ -1538,9 +1468,9 @@ static void cmd_pass(char *pass)
                             strlen(popd_userid),
                             pass,
                             strlen(pass))!=SASL_OK) {
-        syslog(LOG_NOTICE, "badlogin: %s plaintext %s %s",
+        syslog(LOG_NOTICE, "badlogin: %s plaintext (%s) [%s]",
                popd_clienthost, popd_userid, sasl_errdetail(popd_saslconn));
-        failedloginpause = config_getint(IMAPOPT_FAILEDLOGINPAUSE);
+        failedloginpause = config_getduration(IMAPOPT_FAILEDLOGINPAUSE, 's');
         if (failedloginpause != 0) {
             sleep(failedloginpause);
         }
@@ -1580,7 +1510,7 @@ static void cmd_pass(char *pass)
                popd_starttls_done ? "+TLS" : "", "User logged in", session_id());
 
         if ((!popd_starttls_done) &&
-            (plaintextloginpause = config_getint(IMAPOPT_PLAINTEXTLOGINPAUSE))
+            (plaintextloginpause = config_getduration(IMAPOPT_PLAINTEXTLOGINPAUSE, 's'))
              != 0) {
             sleep(plaintextloginpause);
         }
@@ -1600,8 +1530,8 @@ static void cmd_pass(char *pass)
  */
 static void cmd_capa(void)
 {
-    int minpoll = config_getint(IMAPOPT_POPMINPOLL) * 60;
-    int expire = config_getint(IMAPOPT_POPEXPIRETIME);
+    int minpoll = config_getduration(IMAPOPT_POPMINPOLL, 'm');
+    int expire = config_getduration(IMAPOPT_POPEXPIRETIME, 'd');
     int mechcount;
     const char *mechlist;
 
@@ -1623,6 +1553,7 @@ static void cmd_capa(void)
     if (expire < 0) {
         prot_printf(popd_out, "EXPIRE NEVER\r\n");
     } else {
+        expire /= (24 * 60 * 60);
         prot_printf(popd_out, "EXPIRE %d\r\n", expire);
     }
 
@@ -1642,7 +1573,7 @@ static void cmd_capa(void)
     if (popd_authstate || (config_serverinfo == IMAP_ENUM_SERVERINFO_ON)) {
         prot_printf(popd_out,
                     "IMPLEMENTATION Cyrus POP3 %s\r\n",
-                    cyrus_version());
+                    CYRUS_VERSION);
     }
 
     prot_printf(popd_out, ".\r\n");
@@ -1713,6 +1644,7 @@ static void cmd_auth(char *arg)
 
     if (r) {
         const char *errorstring = NULL;
+        const char *userid = "-notset-";
 
         switch (r) {
         case IMAP_SASL_CANCEL:
@@ -1729,15 +1661,19 @@ static void cmd_auth(char *arg)
         default:
             /* failed authentication */
             if (authtype) {
-                syslog(LOG_NOTICE, "badlogin: %s %s %s",
-                       popd_clienthost, authtype,
+                if (sasl_result != SASL_NOUSER)
+                    sasl_getprop(popd_saslconn, SASL_USERNAME,
+                                 (const void **) &userid);
+
+                syslog(LOG_NOTICE, "badlogin: %s %s (%s) [%s]",
+                       popd_clienthost, authtype, userid,
                        sasl_errstring(sasl_result, NULL, NULL));
             } else {
                 syslog(LOG_NOTICE, "badlogin: %s %s",
                        popd_clienthost, authtype);
             }
 
-            failedloginpause = config_getint(IMAPOPT_FAILEDLOGINPAUSE);
+            failedloginpause = config_getduration(IMAPOPT_FAILEDLOGINPAUSE, 's');
             if (failedloginpause != 0) {
                 sleep(failedloginpause);
             }
@@ -1794,10 +1730,10 @@ static void cmd_auth(char *arg)
            popd_userid, popd_subfolder ? popd_subfolder : "",
            authtype, popd_starttls_done ? "+TLS" : "", "User logged in", session_id());
 
-    sasl_getprop(popd_saslconn, SASL_SSF, &val);
-    saslprops.ssf = *((sasl_ssf_t *) val);
-
     if (!openinbox()) {
+        sasl_getprop(popd_saslconn, SASL_SSF, &val);
+        saslprops.ssf = *((sasl_ssf_t *) val);
+
         prot_setsasl(popd_in,  popd_saslconn);
         prot_setsasl(popd_out, popd_saslconn);
     }
@@ -1821,8 +1757,10 @@ int openinbox(void)
 
     /* send a Login event notification */
     if ((mboxevent = mboxevent_new(EVENT_LOGIN))) {
-        mboxevent_set_access(mboxevent, saslprops.iplocalport,
-                             saslprops.ipremoteport, popd_userid, NULL, 0);
+        mboxevent_set_access(mboxevent,
+                             buf_cstringnull_ifempty(&saslprops.iplocalport),
+                             buf_cstringnull_ifempty(&saslprops.ipremoteport),
+                             popd_userid, NULL, 0);
 
         mboxevent_notify(&mboxevent);
         mboxevent_free(&mboxevent);
@@ -1899,7 +1837,7 @@ int openinbox(void)
         }
     }
     else if (config_getswitch(IMAPOPT_STATUSCACHE) &&
-             !(r = statuscache_lookup(mbname_intname(mbname), popd_userid, STATUS_MESSAGES, &sdata)) &&
+             !(r = status_lookup_mbname(mbname, popd_userid, STATUS_MESSAGES, &sdata)) &&
              !sdata.messages) {
         /* local mailbox (empty) -- don't bother opening the mailbox */
         syslog(LOG_INFO, "optimized mode for empty maildrop: %s", popd_userid);
@@ -1938,13 +1876,14 @@ int openinbox(void)
             goto fail;
         }
 
-        if ((minpoll = config_getint(IMAPOPT_POPMINPOLL)) &&
-            popd_mailbox->i.pop3_last_login + 60*minpoll > popd_login_time) {
+        if ((minpoll = config_getduration(IMAPOPT_POPMINPOLL, 'm')) &&
+            popd_mailbox->i.pop3_last_login + minpoll > popd_login_time) {
             syslog(LOG_ERR, "%s: Logins must be at least %d minute%s apart",
-                        mbname_intname(mbname), minpoll, minpoll > 1 ? "s" : "");
+                        mbname_intname(mbname),
+                        minpoll / 60, minpoll / 60 > 1 ? "s" : "");
             prot_printf(popd_out,
                         "-ERR [LOGIN-DELAY] Logins must be at least %d minute%s apart\r\n",
-                        minpoll, minpoll > 1 ? "s" : "");
+                        minpoll / 60, minpoll / 60 > 1 ? "s" : "");
             mailbox_close(&popd_mailbox);
             goto fail;
         }
@@ -2106,20 +2045,12 @@ static int reset_saslconn(sasl_conn_t **conn)
 
     sasl_dispose(conn);
     /* do initialization typical of service_main */
-    ret = sasl_server_new("pop", config_servername,
-                         NULL, NULL, NULL,
+    ret = sasl_server_new("pop", config_servername, NULL,
+                          buf_cstringnull_ifempty(&saslprops.iplocalport),
+                          buf_cstringnull_ifempty(&saslprops.ipremoteport),
                          NULL, 0, conn);
     if(ret != SASL_OK) return ret;
 
-    if(saslprops.ipremoteport)
-       ret = sasl_setprop(*conn, SASL_IPREMOTEPORT,
-                          saslprops.ipremoteport);
-    if(ret != SASL_OK) return ret;
-
-    if(saslprops.iplocalport)
-       ret = sasl_setprop(*conn, SASL_IPLOCALPORT,
-                          saslprops.iplocalport);
-    if(ret != SASL_OK) return ret;
     secprops = mysasl_secprops(0);
     ret = sasl_setprop(*conn, SASL_SEC_PROPS, secprops);
     if(ret != SASL_OK) return ret;
@@ -2127,17 +2058,12 @@ static int reset_saslconn(sasl_conn_t **conn)
 
     /* If we have TLS/SSL info, set it */
     if(saslprops.ssf) {
-        ret = sasl_setprop(*conn, SASL_SSF_EXTERNAL, &saslprops.ssf);
+        ret = saslprops_set_tls(&saslprops, *conn);
     } else {
         ret = sasl_setprop(*conn, SASL_SSF_EXTERNAL, &extprops_ssf);
     }
 
     if(ret != SASL_OK) return ret;
-
-    if(saslprops.authid) {
-       ret = sasl_setprop(*conn, SASL_AUTH_EXTERNAL, saslprops.authid);
-       if(ret != SASL_OK) return ret;
-    }
     /* End TLS/SSL Info */
 
     return SASL_OK;
@@ -2204,7 +2130,7 @@ static int update_seen(void)
         record.recno = popd_map[msgno-1].recno;
         if (mailbox_reload_index_record(popd_mailbox, &record))
             continue;
-        if (record.system_flags & FLAG_EXPUNGED)
+        if (record.internal_flags & FLAG_INTERNAL_EXPUNGED)
             continue; /* already expunged */
         if (record.system_flags & FLAG_SEEN)
             continue; /* already seen */

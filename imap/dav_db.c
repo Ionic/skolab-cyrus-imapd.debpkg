@@ -70,6 +70,7 @@
     " resource TEXT NOT NULL,"                                          \
     " imap_uid INTEGER,"                                                \
     " modseq INTEGER,"                                                  \
+    " createdmodseq INTEGER,"                                           \
     " lock_token TEXT,"                                                 \
     " lock_owner TEXT,"                                                 \
     " lock_ownerid TEXT,"                                               \
@@ -93,6 +94,7 @@
     " resource TEXT NOT NULL,"                                          \
     " imap_uid INTEGER,"                                                \
     " modseq INTEGER,"                                                  \
+    " createdmodseq INTEGER,"                                           \
     " lock_token TEXT,"                                                 \
     " lock_owner TEXT,"                                                 \
     " lock_ownerid TEXT,"                                               \
@@ -115,6 +117,7 @@
     " pos INTEGER NOT NULL," /* for sorting */                          \
     " email TEXT NOT NULL COLLATE NOCASE,"                              \
     " ispref INTEGER NOT NULL DEFAULT 0,"                               \
+    " ispinned INTEGER NOT NULL DEFAULT 0,"                             \
     " FOREIGN KEY (objid) REFERENCES vcard_objs (rowid) ON DELETE CASCADE );" \
     "CREATE INDEX IF NOT EXISTS idx_vcard_email ON vcard_emails ( email COLLATE NOCASE );"
 
@@ -135,6 +138,7 @@
     " resource TEXT NOT NULL,"                                          \
     " imap_uid INTEGER,"                                                \
     " modseq INTEGER,"                                                  \
+    " createdmodseq INTEGER,"                                           \
     " lock_token TEXT,"                                                 \
     " lock_owner TEXT,"                                                 \
     " lock_ownerid TEXT,"                                               \
@@ -148,9 +152,25 @@
     " UNIQUE( mailbox, resource ) );"                                   \
     "CREATE INDEX IF NOT EXISTS idx_res_uid ON dav_objs ( res_uid );"
 
+#define CMD_CREATE_CALCACHE                                             \
+    "CREATE TABLE IF NOT EXISTS ical_jmapcache ("                       \
+    " rowid INTEGER NOT NULL,"                                          \
+    " userid TEXT NOT NULL,"                                            \
+    " jmapversion INTEGER NOT NULL,"                                    \
+    " jmapdata TEXT NOT NULL,"                                          \
+    " PRIMARY KEY (rowid, userid)"                                      \
+    " FOREIGN KEY (rowid) REFERENCES ical_objs (rowid) ON DELETE CASCADE );"
+
+#define CMD_CREATE_CARDCACHE                                            \
+    "CREATE TABLE IF NOT EXISTS vcard_jmapcache ("                      \
+    " rowid INTEGER NOT NULL PRIMARY KEY,"                              \
+    " jmapversion INTEGER NOT NULL,"                                    \
+    " jmapdata TEXT NOT NULL,"                                          \
+    " FOREIGN KEY (rowid) REFERENCES vcard_objs (rowid) ON DELETE CASCADE );"
+
 
 #define CMD_CREATE CMD_CREATE_CAL CMD_CREATE_CARD CMD_CREATE_EM CMD_CREATE_GR \
-                   CMD_CREATE_OBJS
+                   CMD_CREATE_OBJS CMD_CREATE_CALCACHE CMD_CREATE_CARDCACHE
 
 /* leaves these unused columns around, but that's life.  A dav_reconstruct
  * will fix them */
@@ -176,16 +196,33 @@
 
 #define CMD_DBUPGRADEv6 CMD_CREATE_OBJS
 
+#define CMD_DBUPGRADEv7                                         \
+    "ALTER TABLE ical_objs ADD COLUMN createdmodseq INTEGER;"   \
+    "UPDATE ical_objs SET createdmodseq = 0;"                   \
+    "ALTER TABLE vcard_objs ADD COLUMN createdmodseq INTEGER;"  \
+    "UPDATE vcard_objs SET createdmodseq = 0;"                  \
+    "ALTER TABLE dav_objs ADD COLUMN createdmodseq INTEGER;"    \
+    "UPDATE dav_objs SET createdmodseq = 0;"
+
+#define CMD_DBUPGRADEv8                                         \
+    "ALTER TABLE vcard_emails ADD COLUMN ispinned INTEGER NOT NULL DEFAULT 0;"
+
+#define CMD_DBUPGRADEv9 CMD_CREATE_CALCACHE CMD_CREATE_CARDCACHE
+
+
 struct sqldb_upgrade davdb_upgrade[] = {
   { 2, CMD_DBUPGRADEv2, NULL },
   { 3, CMD_DBUPGRADEv3, NULL },
   { 4, CMD_DBUPGRADEv4, NULL },
   { 5, CMD_DBUPGRADEv5, NULL },
   { 6, CMD_DBUPGRADEv6, NULL },
+  { 7, CMD_DBUPGRADEv7, NULL },
+  { 8, CMD_DBUPGRADEv8, NULL },
+  { 9, CMD_DBUPGRADEv9, NULL },
   { 0, NULL, NULL }
 };
 
-#define DB_VERSION 6
+#define DB_VERSION 9
 
 static int in_reconstruct = 0;
 
@@ -195,7 +232,8 @@ EXPORTED sqldb_t *dav_open_userid(const char *userid)
     struct buf fname = BUF_INITIALIZER;
     dav_getpath_byuserid(&fname, userid);
     if (in_reconstruct) buf_printf(&fname, ".NEW");
-    db = sqldb_open(buf_cstring(&fname), CMD_CREATE, DB_VERSION, davdb_upgrade);
+    db = sqldb_open(buf_cstring(&fname), CMD_CREATE, DB_VERSION, davdb_upgrade,
+                    config_getduration(IMAPOPT_DAV_LOCK_TIMEOUT, 's') * 1000);
     buf_free(&fname);
     return db;
 }
@@ -206,29 +244,87 @@ EXPORTED sqldb_t *dav_open_mailbox(struct mailbox *mailbox)
     struct buf fname = BUF_INITIALIZER;
     dav_getpath(&fname, mailbox);
     if (in_reconstruct) buf_printf(&fname, ".NEW");
-    db = sqldb_open(buf_cstring(&fname), CMD_CREATE, DB_VERSION, davdb_upgrade);
+    db = sqldb_open(buf_cstring(&fname), CMD_CREATE, DB_VERSION, davdb_upgrade,
+                    config_getduration(IMAPOPT_DAV_LOCK_TIMEOUT, 's') * 1000);
     buf_free(&fname);
     return db;
 }
 
+EXPORTED int dav_attach_userid(sqldb_t *db, const char *userid)
+{
+    struct buf fname = BUF_INITIALIZER;
+    dav_getpath_byuserid(&fname, userid);
+    int r = sqldb_attach(db, buf_cstring(&fname));
+    buf_free(&fname);
+    return r;
+}
+
+EXPORTED int dav_attach_mailbox(sqldb_t *db, struct mailbox *mailbox)
+{
+    struct buf fname = BUF_INITIALIZER;
+    dav_getpath(&fname, mailbox);
+    int r = sqldb_attach(db, buf_cstring(&fname));
+    buf_free(&fname);
+    return r;
+}
+
+
 /*
  * mboxlist_usermboxtree() callback function to create DAV DB entries for a mailbox
  */
-static int _dav_reconstruct_mb(const mbentry_t *mbentry, void *rock __attribute__((unused)))
+static int _dav_reconstruct_mb(const mbentry_t *mbentry,
+                               void *rock
+#ifndef WITH_JMAP
+                                          __attribute__((unused))
+#endif
+                              )
 {
+#ifdef WITH_JMAP
+    const char *userid = (const char *) rock;
+    struct buf attrib = BUF_INITIALIZER;
+#endif
+    int (*addproc)(struct mailbox *) = NULL;
     int r = 0;
 
     signals_poll();
 
+    switch (mbentry->mbtype) {
 #ifdef WITH_DAV
-    if (mbentry->mbtype & MBTYPES_DAV) {
+    case MBTYPE_CALENDAR:
+    case MBTYPE_COLLECTION:
+    case MBTYPE_ADDRESSBOOK:
+        addproc = &mailbox_add_dav;
+        break;
+#endif
+#ifdef WITH_JMAP
+    case MBTYPE_SUBMISSION:
+        addproc = &mailbox_add_email_alarms;
+        break;
+
+    case MBTYPE_EMAIL:
+        r = annotatemore_lookup(mbentry->name, "/specialuse", userid, &attrib);
+        if (!r && buf_len(&attrib)) {
+            strarray_t *specialuse =
+                strarray_split(buf_cstring(&attrib), NULL, 0);
+
+            if (strarray_find(specialuse, "\\Snoozed", 0) >= 0) {
+                addproc = &mailbox_add_email_alarms;
+            }
+            strarray_free(specialuse);
+        }
+        buf_free(&attrib);
+        break;
+#endif
+    }
+
+    if (addproc) {
         struct mailbox *mailbox = NULL;
         /* Open/lock header */
-        r = mailbox_open_irl(mbentry->name, &mailbox);
-        if (!r) r = mailbox_add_dav(mailbox);
+        r = mailbox_open_iwl(mbentry->name, &mailbox);
+        // needs to be writable to remove bogus lastalarm data
+        if (!r) r = addproc(mailbox);
         mailbox_close(&mailbox);
     }
-#endif
 
     return r;
 }
@@ -270,7 +366,8 @@ EXPORTED int dav_reconstruct_user(const char *userid, const char *audit_tool)
 
     sqldb_t *userdb = dav_open_userid(userid);
     sqldb_begin(userdb, "reconstruct");
-    int r = mboxlist_usermboxtree(userid, _dav_reconstruct_mb, NULL, 0);
+    int r = mboxlist_usermboxtree(userid, NULL,
+                                  _dav_reconstruct_mb, (void *) userid, 0);
     if (r)
         sqldb_rollback(userdb, "reconstruct");
     else

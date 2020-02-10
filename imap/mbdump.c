@@ -49,6 +49,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -62,7 +63,6 @@
 #ifdef WITH_DAV
 #include "dav_util.h"
 #endif
-#include "exitcodes.h"
 #include "global.h"
 #include "map.h"
 #include "mappedfile.h"
@@ -166,7 +166,7 @@ static void downgrade_record(const struct index_record *record, char *buf,
     for (n = 0; n < MAX_USER_FLAGS/32; n++) {
         *((bit32 *)(buf+OFFSET_USER_FLAGS+4*n)) = htonl(record->user_flags[n]);
     }
-    *((bit32 *)(buf+OFFSET_CONTENT_LINES)) = htonl(record->content_lines);
+    *((bit32 *)(buf+OFFSET_SAVEDATE)) = 0;
     *((bit32 *)(buf+OFFSET_CACHE_VERSION)) = htonl(record->cache_version);
     message_guid_export(&record->guid, buf+OFFSET_MESSAGE_GUID);
     *((bit64 *)(buf+UP_modseqbase)) = htonll(record->modseq);
@@ -238,7 +238,7 @@ static int dump_index(struct mailbox *mailbox, int oldversion,
         /* we have to make sure expunged records don't get the
          * file copied, or a reconstruct could bring them back
          * to life!  It we're not creating an expunged file... */
-        if (record->system_flags & FLAG_EXPUNGED) {
+        if (record->internal_flags & FLAG_INTERNAL_EXPUNGED) {
             if (oldversion < 9) seqset_add(expunged_seq, record->uid, 1);
             continue;
         }
@@ -274,7 +274,7 @@ static int dump_index(struct mailbox *mailbox, int oldversion,
         while ((msg = mailbox_iter_step(iter))) {
             const struct index_record *record = msg_record(msg);
             /* ignore non-expunged records */
-            if (!(record->system_flags & FLAG_EXPUNGED))
+            if (!(record->internal_flags & FLAG_INTERNAL_EXPUNGED))
                 continue;
             downgrade_record(record, rbuf, oldversion);
             n = retry_write(oldindex_fd, rbuf, record_size);
@@ -343,7 +343,9 @@ static int dump_annotations(const char *mailbox __attribute__((unused)),
                             uint32_t uid  __attribute__((unused)),
                             const char *entry,
                             const char *userid,
-                            const struct buf *value, void *rock)
+                            const struct buf *value,
+                            const struct annotate_metadata *mdata __attribute__((unused)),
+                            void *rock)
 {
     struct dump_annotation_rock *ctx = (struct dump_annotation_rock *)rock;
 
@@ -389,7 +391,7 @@ static int dump_file(int first, int sync,
         /* we need to check real file size since actual mmap size may be larger */
         if (stat(filename, &sbuf) == -1) {
             syslog(LOG_ERR, "IOERROR: stat on %s: %m", filename);
-            fatal("can't stat message file", EC_OSFILE);
+            fatal("can't stat message file", EX_OSFILE);
         }
         if ((unsigned long)sbuf.st_size > flen) {
            syslog(LOG_ERR, "IOERROR: size mismatch on %s", filename);
@@ -408,7 +410,7 @@ static int dump_file(int first, int sync,
 
         if (fstat(filefd, &sbuf) == -1) {
             syslog(LOG_ERR, "IOERROR: fstat on %s: %m", filename);
-            fatal("can't fstat message file", EC_OSFILE);
+            fatal("can't fstat message file", EX_OSFILE);
         }
 
         base = NULL;
@@ -607,8 +609,8 @@ EXPORTED int dump_mailbox(const char *tag, struct mailbox *mailbox, uint32_t uid
         struct dump_annotation_rock actx;
         actx.tag = tag;
         actx.pout = pout;
-        annotatemore_findall(mailbox->name, 0, "*", dump_annotations,
-                             (void *) &actx);
+        annotatemore_findall(mailbox->name, 0, "*", /*modseq*/0,
+                             dump_annotations, (void *) &actx, /*flags*/0);
     }
 
     /* Dump user files if this is an inbox */
@@ -647,7 +649,7 @@ EXPORTED int dump_mailbox(const char *tag, struct mailbox *mailbox, uint32_t uid
                 break;
             }
             default:
-                fatal("unknown user data file", EC_OSFILE);
+                fatal("unknown user data file", EX_OSFILE);
             }
 
             r = dump_file(0, !tag, pin, pout, fname, ftag, NULL, 0);
@@ -816,7 +818,7 @@ static int cleanup_seen_subfolders(const char *mbname)
     snprintf(buf, sizeof(buf), "%s.", mbname);
 
     r = seen_open(userid, SEEN_SILENT, &seendb);
-    if (!r) mboxlist_allmbox(buf, cleanup_seen_cb, seendb, /*incdel*/0);
+    if (!r) mboxlist_allmbox(buf, cleanup_seen_cb, seendb, /*flags*/0);
     seen_close(&seendb);
 
     free(userid);
@@ -828,7 +830,8 @@ EXPORTED int undump_mailbox(const char *mbname,
                    struct protstream *pin, struct protstream *pout,
                    struct auth_state *auth_state __attribute((unused)))
 {
-    struct buf file, data;
+    struct buf file = BUF_INITIALIZER;
+    struct buf data = BUF_INITIALIZER;
     int c;
     int r = 0;
     int curfile = -1;
@@ -846,9 +849,6 @@ EXPORTED int undump_mailbox(const char *mbname,
     quota_t newquotas[QUOTA_NUMRESOURCES];
     quota_t quotalimit = -1;
     annotate_state_t *astate = NULL;
-
-    memset(&file, 0, sizeof(file));
-    memset(&data, 0, sizeof(data));
 
     /* Set a Quota (may be -1 for "unlimited") */
     for (res = 0; res < QUOTA_NUMRESOURCES; res++) {
@@ -903,7 +903,7 @@ EXPORTED int undump_mailbox(const char *mbname,
         r = mboxlist_lookup(mbname, &mbentry, NULL);
         if (!r) r = mailbox_create(mbname, mbentry->mbtype,
                                    mbentry->partition, mbentry->acl,
-                                   mbentry->uniqueid, 0, 0, 0, &mailbox);
+                                   mbentry->uniqueid, 0, 0, 0, 0, &mailbox);
         mboxlist_entry_free(&mbentry);
     }
     if(r) goto done;
@@ -1062,7 +1062,7 @@ EXPORTED int undump_mailbox(const char *mbname,
             digit = c - '0';
             /* check for overflow */
             if (size > cutoff || (size == cutoff && digit > cutlim)) {
-                fatal("literal too big", EC_IOERR);
+                fatal("literal too big", EX_IOERR);
             }
             size = size*10 + digit;
         }
@@ -1265,7 +1265,7 @@ EXPORTED int undump_mailbox(const char *mbname,
             }
         }
         if (res < QUOTA_NUMRESOURCES) {
-            mboxlist_setquotas(mbname, newquotas, 0);
+            mboxlist_setquotas(mbname, newquotas, 0, 0);
         }
     }
 

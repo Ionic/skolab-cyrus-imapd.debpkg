@@ -4,38 +4,50 @@
 
 Interactive MUPDATE test program
 
+This is actually installed as a hard linked copy of imtest(1).
+
+It allows you to authenticate and send MUPDATE commands to the server.
+
 
 Synopsis
 ========
 
-   **mupdatetest** [ **-p** *port* ] [ **-m** *mechanism* ] [ **-a** *userid* ] [ **-u** *userid* ]
-       [ **-k** *num* ] [ **-l** *num* ] [ **-r** *realm* ] [ **-f** *file* ] [ **-n** *num* ]
-       [ **-q** ] [ **-c** ] [ **-i** ] [ **-v** ] [ **-w** *passwd* ] [ **-o** *option*=*value* ] *hostname*
+   **imtest** [ **-t** *keyfile* ] [ **-p** *port* ] [ **-m** *mechanism* ]
+       [ **-a** *userid* ] [ **-u** *userid* ] [ **-k** *num* ] [ **-l** *num* ]
+       [ **-r** *realm* ] [ **-f** *file* ] [ **-n** *num* ] [ **-s** ] [ **-q** ]
+       [ **-c** ] [ **-i** ] [ **-z** ] [ **-v** ] [ **-I** *file* ] [ **-x** *file* ]
+       [ **-X** *file* ] [ **-w** *passwd* ] [ **-o** *option*=*value* ] *hostname*
 
 
 Description
 ===========
 
-**mupdatetest** is a utility that allows you to authenticate to a
-MUPDATE server and interactively issue commands to it. Once
-authenticated you may issue any MUPDATE command by simply typing it
-in. It is capable of multiple SASL authentication mechanisms and
-handles encryption layers transparently. This utility is often used
-for testing the operation of a mupdate server. Note that you must be
-an admin in order to authenticate to an mupdate server.
+**imtest** is a utility that allows you to authenticate to a IMAP or
+IMSP server and interactively issue commands to it. Once authenticated
+you may issue any IMAP or IMSP command by simply typing it in. It is
+capable of multiple SASL authentication mechanisms and handles
+encryption layers transparently. This utility is often used for
+testing the operation of a imsp or imap server. Also those developing
+IMAP clients find it useful.
 
 
 Options
 =======
 
+-t  keyfile
+
+   Enable TLS.  *keyfile* contains the TLS public and private keys.
+   Specify **""** to negotiate a TLS encryption layer but not use TLS
+   authentication.
+
 -p  port
 
-   Port to connect to. If left off this defaults to **mupdate** as
+   Port to connect to. If left off this defaults to **imap** as
    defined in "/etc/services".
 
 -m  mechanism
 
-   Force **mupdatetest** to use *mechanism* for authentication. If not
+   Force **imtest** to use *mechanism* for authentication. If not
    specified the strongest authentication mechanism supported by the
    server is chosen.  Specify *login* to use the LOGIN command instead
    of AUTHENTICATE.
@@ -81,9 +93,13 @@ Options
    attempt to do SSL/TLS session reuse and/or fast reauth (e.g.
    DIGEST-MD5), if possible.
 
+-s
+
+   Enable SSL over chosen protocol.
+
 -q
 
-   Enable MUPDATE COMPRESSion (after authentication).
+   Enable IMAP COMPRESSion (after authentication).
 
 -c
 
@@ -96,9 +112,26 @@ Options
    Don't send an initial client response for SASL mechanisms, even if
    the protocol supports it.
 
+-I  file
+
+   Echo the PID of the running process into *file* (This can be useful
+   with -X).
+
 -v
 
    Verbose. Print out more information than usual.
+
+-z
+
+   Timing test.
+
+-x  file
+
+   Open the named socket for the interactive portion.
+
+-X  file
+
+   Like -x, only close all file descriptors & daemonize the process.
 
 -w passwd
 
@@ -115,5 +148,7 @@ Examples
 
 See Also
 ========
+
+imapd(8)
 
 mupdate(8)

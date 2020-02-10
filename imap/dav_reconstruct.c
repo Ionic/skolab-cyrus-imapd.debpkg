@@ -49,15 +49,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <time.h>
 
 #include <libical/ical.h>
 
 #include "annotate.h"
-#include "caldav_db.h"
-#include "carddav_db.h"
-#include "exitcodes.h"
 #include "global.h"
 #include "http_dav.h"
 #include "mailbox.h"
@@ -126,28 +124,15 @@ int main(int argc, char **argv)
     /* Set namespace -- force standard (internal) */
     if ((r = mboxname_init_namespace(&recon_namespace, 1)) != 0) {
         syslog(LOG_ERR, "%s", error_message(r));
-        fatal(error_message(r), EC_CONFIG);
+        fatal(error_message(r), EX_CONFIG);
     }
-
-    mboxlist_init(0);
-    mboxlist_open(NULL);
 
     signals_set_shutdown(&shut_down);
     signals_add_handlers(0);
+    sqldb_init();
 
-#ifdef HAVE_TZ_BY_REF
-    /* Use TZdist VTIMEZONEs if we have them */
-    if (config_getbitfield(IMAPOPT_HTTPMODULES) & IMAP_ENUM_HTTPMODULES_TZDIST) {
-        char buf[MAX_MAILBOX_PATH];
-        snprintf(buf, MAX_MAILBOX_PATH, "%s%s", config_dir, FNAME_ZONEINFODIR);
-        set_zone_directory(buf);
-        icaltimezone_set_tzid_prefix("");
-        icaltimezone_set_builtin_tzdata(1);
-    }
-#endif
-
-    caldav_init();
-    carddav_init();
+    /* Initialize libical */
+    ical_support_init();
 
     if (allusers) {
         mboxlist_alluser(do_user, (void *)audit_tool);
@@ -161,12 +146,6 @@ int main(int argc, char **argv)
             do_user(argv[i], (void *)audit_tool);
     }
 
-    carddav_done();
-    caldav_done();
-
-    mboxlist_close();
-    mboxlist_done();
-
     exit(code);
 }
 
@@ -175,7 +154,7 @@ void usage(void)
 {
     fprintf(stderr,
             "usage: dav_reconstruct [-C <alt_config>] userid\n");
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 /*
@@ -188,6 +167,6 @@ void shut_down(int code)
 
     mboxlist_close();
     mboxlist_done();
-    caldav_done();
+    sqldb_done();
     exit(code);
 }

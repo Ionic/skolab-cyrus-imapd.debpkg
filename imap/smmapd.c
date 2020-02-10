@@ -81,18 +81,17 @@
 #endif
 #include <stdio.h>
 #include <string.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <signal.h>
 
 #include "acl.h"
 #include "append.h"
-#include "exitcodes.h"
 #include "global.h"
 #include "mboxlist.h"
 #include "mupdate-client.h"
 #include "proc.h"
 #include "quota.h"
-#include "sync_log.h"
 #include "util.h"
 #include "xmalloc.h"
 #include "xstrlcpy.h"
@@ -147,14 +146,6 @@ void shut_down(int code)
 
     smmapd_reset();
 
-    sync_log_done();
-
-    mboxlist_close();
-    mboxlist_done();
-
-    quotadb_close();
-    quotadb_done();
-
     cyrus_done();
     exit(code);
 }
@@ -181,7 +172,7 @@ int service_init(int argc, char **argv, char **envp)
 {
     int r;
 
-    if (geteuid() == 0) fatal("must run as the Cyrus user", EC_USAGE);
+    if (geteuid() == 0) fatal("must run as the Cyrus user", EX_USAGE);
 
     setproctitle_init(argc, argv, envp);
 
@@ -191,21 +182,10 @@ int service_init(int argc, char **argv, char **envp)
     BB = config_getstring(IMAPOPT_POSTUSER);
     forcedowncase = config_getswitch(IMAPOPT_LMTP_DOWNCASE_RCPT);
 
-    /* so we can do mboxlist operations */
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-
-    /* so we can check the quotas */
-    quotadb_init(0);
-    quotadb_open(NULL);
-
-    /* so we can log sync information on closing mailboxes */
-    sync_log_init();
-
     /* Set namespace */
     if ((r = mboxname_init_namespace(&map_namespace, 1)) != 0) {
         syslog(LOG_ERR, "%s", error_message(r));
-        fatal(error_message(r), EC_CONFIG);
+        fatal(error_message(r), EX_CONFIG);
     }
 
     return 0;
@@ -305,7 +285,7 @@ static int verify_user(const char *key, struct auth_state *authstate)
 
         /* proxy the request to the real backend server to
          * check the quota.  if this fails, just return 0
-         * (asuume under quota)
+         * (assume under quota)
          */
 
         syslog(LOG_ERR, "verify_user(%s) proxying to host %s",

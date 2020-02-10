@@ -44,6 +44,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <ctype.h>
 #include <sys/stat.h>
@@ -70,7 +71,6 @@
 #include "assert.h"
 #include "xmalloc.h"
 #include "global.h"
-#include "exitcodes.h"
 #include "util.h"
 #include "cyrusdb.h"
 
@@ -340,7 +340,7 @@ EXPORTED int duplicate_prune(int seconds, struct hash_table *expire_table)
 {
     struct prunerock prock;
 
-    if (seconds < 0) fatal("must specify positive number of seconds", EC_USAGE);
+    if (seconds < 0) fatal("must specify positive number of seconds", EX_USAGE);
 
     prock.count = prock.deletions = 0;
     prock.expmark = time(NULL) - seconds;

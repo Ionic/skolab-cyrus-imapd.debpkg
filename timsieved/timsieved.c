@@ -59,11 +59,11 @@
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <unistd.h>
 
 #include "auth.h"
-#include "exitcodes.h"
 #include "libconfig.h"
 #include "xmalloc.h"
 #include "imap/backend.h"
@@ -86,11 +86,7 @@ int sieved_tls_required = 0;
 sieve_interp_t *interp = NULL;
 static int build_sieve_interp(void);
 
-static struct
-{
-    char *ipremoteport;
-    char *iplocalport;
-} saslprops = {NULL,NULL};
+static struct saslprops_t saslprops = SASLPROPS_INITIALIZER;
 
 sasl_conn_t *sieved_saslconn; /* the sasl connection context */
 
@@ -133,10 +129,6 @@ void shut_down(int code)
         free(backend);
     }
 
-    /* close mailboxes */
-    mboxlist_close();
-    mboxlist_done();
-
     /* cleanup */
     if (sieved_out) {
         prot_flush(sieved_out);
@@ -149,6 +141,8 @@ void shut_down(int code)
 #ifdef HAVE_SSL
     tls_shutdown_serverengine();
 #endif
+
+    saslprops_free(&saslprops);
 
     cyrus_done();
 
@@ -182,7 +176,7 @@ static void cmdloop(void)
             return;
         }
 
-        ret = parser(sieved_out, sieved_in);
+        ret = parser(sieved_out, sieved_in, &saslprops);
     }
 
     sync_log_done();
@@ -204,7 +198,7 @@ EXPORTED void fatal(const char *s, int code)
     prot_printf(sieved_out, "NO Fatal error: %s\r\n", s);
     prot_flush(sieved_out);
 
-    shut_down(EC_TEMPFAIL);
+    shut_down(EX_TEMPFAIL);
 }
 
 static struct sasl_callback mysasl_cb[] = {
@@ -221,8 +215,6 @@ EXPORTED int service_init(int argc __attribute__((unused)),
     global_sasl_init(1, 1, mysasl_cb);
 
     /* open mailboxes */
-    mboxlist_init(0);
-    mboxlist_open(NULL);
 
     if (build_sieve_interp() != TIMSIEVE_OK) shut_down(EX_SOFTWARE);
 
@@ -248,9 +240,8 @@ EXPORTED int service_main(int argc __attribute__((unused)),
     sieved_in = prot_new(0, 0);
     sieved_out = prot_new(1, 1);
 
-    sieved_timeout = config_getint(IMAPOPT_TIMEOUT);
-    if (sieved_timeout < 10) sieved_timeout = 10;
-    sieved_timeout *= 60;
+    sieved_timeout = config_getduration(IMAPOPT_TIMEOUT, 'm');
+    if (sieved_timeout < 10 * 60) sieved_timeout = 10 * 60;
     prot_settimeout(sieved_in, sieved_timeout);
     prot_setflushonread(sieved_in, sieved_out);
 
@@ -261,20 +252,17 @@ EXPORTED int service_main(int argc __attribute__((unused)),
     /* Find out name of client host */
     sieved_clienthost = get_clienthost(0, &localip, &remoteip);
 
+    if (localip && remoteip) {
+        buf_setcstr(&saslprops.ipremoteport, remoteip);
+        buf_setcstr(&saslprops.iplocalport, localip);
+    }
+
     /* other params should be filled in */
     if (sasl_server_new(SIEVE_SERVICE_NAME, config_servername, NULL,
-                        NULL, NULL, NULL, SASL_SUCCESS_DATA,
-                        &sieved_saslconn) != SASL_OK)
+                        buf_cstringnull_ifempty(&saslprops.iplocalport),
+                        buf_cstringnull_ifempty(&saslprops.ipremoteport),
+                        NULL, SASL_SUCCESS_DATA, &sieved_saslconn) != SASL_OK)
         fatal("SASL failed initializing: sasl_server_new()", -1);
-
-    if (remoteip) {
-        sasl_setprop(sieved_saslconn, SASL_IPREMOTEPORT, remoteip);
-        saslprops.ipremoteport = xstrdup(remoteip);
-    }
-    if (localip) {
-        sasl_setprop(sieved_saslconn, SASL_IPLOCALPORT, localip);
-        saslprops.iplocalport = xstrdup(localip);
-    }
 
     /* will always return something valid */
     secprops = mysasl_secprops(0);
@@ -288,30 +276,21 @@ EXPORTED int service_main(int argc __attribute__((unused)),
     cmdloop();
 
     /* never reaches */
-    exit(EC_SOFTWARE);
+    exit(EX_SOFTWARE);
 }
 
 /* Reset the given sasl_conn_t to a sane state */
-int reset_saslconn(sasl_conn_t **conn, sasl_ssf_t ssf, char *authid)
+int reset_saslconn(sasl_conn_t **conn)
 {
     int ret = 0;
     sasl_security_properties_t *secprops = NULL;
 
     sasl_dispose(conn);
     /* do initialization typical of service_main */
-    ret = sasl_server_new(SIEVE_SERVICE_NAME, config_servername,
-                          NULL, NULL, NULL,
+    ret = sasl_server_new(SIEVE_SERVICE_NAME, config_servername, NULL,
+                          buf_cstringnull_ifempty(&saslprops.iplocalport),
+                          buf_cstringnull_ifempty(&saslprops.ipremoteport),
                           NULL, SASL_SUCCESS_DATA, conn);
-    if(ret != SASL_OK) return ret;
-
-    if(saslprops.ipremoteport)
-        ret = sasl_setprop(*conn, SASL_IPREMOTEPORT,
-                           saslprops.ipremoteport);
-    if(ret != SASL_OK) return ret;
-
-    if(saslprops.iplocalport)
-        ret = sasl_setprop(*conn, SASL_IPLOCALPORT,
-                           saslprops.iplocalport);
     if(ret != SASL_OK) return ret;
 
     secprops = mysasl_secprops(0);
@@ -321,13 +300,8 @@ int reset_saslconn(sasl_conn_t **conn, sasl_ssf_t ssf, char *authid)
     /* end of service_main initialization excepting SSF */
 
     /* If we have TLS/SSL info, set it */
-    if(ssf) {
-        ret = sasl_setprop(*conn, SASL_SSF_EXTERNAL, &ssf);
-        if(ret != SASL_OK) return ret;
-    }
-
-    if(authid) {
-        ret = sasl_setprop(*conn, SASL_AUTH_EXTERNAL, authid);
+    if(saslprops.ssf) {
+        ret = saslprops_set_tls(&saslprops, *conn);
         if(ret != SASL_OK) return ret;
     }
     /* End TLS/SSL Info */
@@ -380,6 +354,12 @@ static sieve_vacation_t timsieved_vacation_cbs = {
     (sieve_callback *) &timsieved_generic_cb,   /* send_response() */
 };
 
+static sieve_duplicate_t timsieved_duplicate_cbs = {
+    0,                                          /* max expiration */
+    (sieve_callback *) &timsieved_generic_cb,   /* check() */
+    (sieve_callback *) &timsieved_generic_cb,   /* track() */
+};
+
 static int timsieved_notify_cb(void *ac __attribute__((unused)),
                                void *interp_context __attribute__((unused)),
                                void *script_context __attribute__((unused)),
@@ -411,15 +391,26 @@ static int build_sieve_interp(void)
     sieve_register_discard(interp, (sieve_callback *) &timsieved_generic_cb);
     sieve_register_reject(interp, (sieve_callback *) &timsieved_generic_cb);
     sieve_register_fileinto(interp, (sieve_callback *) &timsieved_generic_cb);
+#ifdef HAVE_JANSSON
+    sieve_register_snooze(interp, (sieve_callback *) &timsieved_generic_cb);
+#endif
+#ifdef WITH_JMAP
+    sieve_register_jmapquery(interp, (sieve_jmapquery *) &timsieved_generic_cb);
+#endif
     sieve_register_keep(interp, (sieve_callback *) &timsieved_generic_cb);
     sieve_register_imapflags(interp, NULL);
     sieve_register_size(interp, (sieve_get_size *) &timsieved_generic_cb);
     sieve_register_mailboxexists(interp, (sieve_get_mailboxexists *) &timsieved_generic_cb);
+    sieve_register_mailboxidexists(interp, (sieve_get_mailboxidexists *) &timsieved_generic_cb);
     sieve_register_metadata(interp, (sieve_get_metadata *) &timsieved_generic_cb);
     sieve_register_header(interp, (sieve_get_header *) &timsieved_generic_cb);
+    sieve_register_addheader(interp, (sieve_add_header *) &timsieved_generic_cb);
+    sieve_register_deleteheader(interp, (sieve_delete_header *) &timsieved_generic_cb);
     sieve_register_envelope(interp, (sieve_get_envelope *) &timsieved_generic_cb);
+    sieve_register_environment(interp, (sieve_get_environment *) &timsieved_generic_cb);
     sieve_register_body(interp, (sieve_get_body *) &timsieved_generic_cb);
     sieve_register_include(interp, (sieve_get_include *) &timsieved_generic_cb);
+    sieve_register_logger(interp, (sieve_logger *) &timsieved_generic_cb);
 
     res = sieve_register_vacation(interp, &timsieved_vacation_cbs);
     if (res != SIEVE_OK) {
@@ -427,7 +418,13 @@ static int build_sieve_interp(void)
         return TIMSIEVE_FAIL;
     }
 
-    sieve_register_notify(interp, &timsieved_notify_cb);
+    res = sieve_register_duplicate(interp, &timsieved_duplicate_cbs);
+    if (res != SIEVE_OK) {
+        syslog(LOG_ERR, "sieve_register_duplicate() returns %d\n", res);
+        return TIMSIEVE_FAIL;
+    }
+
+    sieve_register_notify(interp, &timsieved_notify_cb, NULL);
     sieve_register_parse_error(interp, &timsieved_parse_error_cb);
 
     return TIMSIEVE_OK;

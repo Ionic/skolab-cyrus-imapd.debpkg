@@ -40,10 +40,10 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <sysexits.h>
 #include <syslog.h>
 #include <config.h>
 #include "ptloader.h"
-#include "exitcodes.h"
 #include "util.h"
 #include "assert.h"
 
@@ -454,14 +454,13 @@ static void myinit(void)
 
     ptsm = xmalloc(sizeof(t_ptsm));
     if (ptsm == NULL) {
-        fatal("xmalloc() failed", EC_CONFIG);
+        fatal("xmalloc() failed", EX_CONFIG);
     }
 
-    ptsm->uri = (config_getstring(IMAPOPT_LDAP_URI) ?
-        config_getstring(IMAPOPT_LDAP_URI) : config_getstring(IMAPOPT_LDAP_SERVERS));
+    ptsm->uri = config_getstring(IMAPOPT_LDAP_URI);
 
     ptsm->version = (config_getint(IMAPOPT_LDAP_VERSION) == 2 ? LDAP_VERSION2 : LDAP_VERSION3);
-    ptsm->timeout.tv_sec = config_getint(IMAPOPT_LDAP_TIMEOUT);
+    ptsm->timeout.tv_sec = config_getduration(IMAPOPT_LDAP_TIMEOUT, 's');
     ptsm->timeout.tv_usec = 0;
     ptsm->restart = config_getswitch(IMAPOPT_LDAP_RESTART);
 
@@ -479,7 +478,7 @@ static void myinit(void)
 
     ptsm->referrals = config_getswitch(IMAPOPT_LDAP_REFERRALS);
     ptsm->size_limit = config_getint(IMAPOPT_LDAP_SIZE_LIMIT);
-    ptsm->time_limit = config_getint(IMAPOPT_LDAP_TIME_LIMIT);
+    ptsm->time_limit = config_getduration(IMAPOPT_LDAP_TIME_LIMIT, 's');
 
     p = config_getstring(IMAPOPT_LDAP_SCOPE);
 
@@ -493,21 +492,11 @@ static void myinit(void)
 
     ptsm->bind_dn = config_getstring(IMAPOPT_LDAP_BIND_DN);
     ptsm->sasl = config_getswitch(IMAPOPT_LDAP_SASL);
-    ptsm->id = (config_getstring(IMAPOPT_LDAP_ID) ?
-        config_getstring(IMAPOPT_LDAP_ID) : config_getstring(IMAPOPT_LDAP_SASL_AUTHC));
-
-    ptsm->authz = (config_getstring(IMAPOPT_LDAP_AUTHZ) ?
-        config_getstring(IMAPOPT_LDAP_AUTHZ) : config_getstring(IMAPOPT_LDAP_SASL_AUTHZ));
-
-    ptsm->mech = (config_getstring(IMAPOPT_LDAP_MECH) ?
-        config_getstring(IMAPOPT_LDAP_MECH) : config_getstring(IMAPOPT_LDAP_SASL_MECH));
-
-    ptsm->realm = (config_getstring(IMAPOPT_LDAP_REALM) ?
-        config_getstring(IMAPOPT_LDAP_REALM) : config_getstring(IMAPOPT_LDAP_SASL_REALM));
-
-    ptsm->password = (config_getstring(IMAPOPT_LDAP_PASSWORD) ?
-        config_getstring(IMAPOPT_LDAP_PASSWORD) : config_getstring(IMAPOPT_LDAP_SASL_PASSWORD));
-
+    ptsm->id = config_getstring(IMAPOPT_LDAP_ID);
+    ptsm->authz = config_getstring(IMAPOPT_LDAP_AUTHZ);
+    ptsm->mech = config_getstring(IMAPOPT_LDAP_MECH);
+    ptsm->realm = config_getstring(IMAPOPT_LDAP_REALM);
+    ptsm->password = config_getstring(IMAPOPT_LDAP_PASSWORD);
     ptsm->start_tls = config_getswitch(IMAPOPT_LDAP_START_TLS);
     ptsm->tls_check_peer = config_getswitch(IMAPOPT_LDAP_VERIFY_PEER);
     ptsm->tls_cacert_file = config_getstring(IMAPOPT_LDAP_CA_FILE);
@@ -723,7 +712,7 @@ static int ptsmodule_tokenize_domains(
  *   %%   = %
  *   %u   = user
  *   %U   = user part of %u
- *   %d   = domain part of %u if available, othwise same as %r
+ *   %d   = domain part of %u if available, otherwise same as %R
  *   %R   = prepend '@' to domain
  *   %1-9 = domain tokens (%1 = tld, %2 = domain when %d = domain.tld)
  *   %D   = user DN
@@ -937,7 +926,13 @@ static int ptsmodule_get_dn(
         if (ptsm->domain_base_dn && ptsm->domain_base_dn[0] != '\0' && (strrchr(canon_id, '@') == NULL)) {
             syslog(LOG_DEBUG, "collecting all domains from %s", ptsm->domain_base_dn);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+            /* Format string comes from imapd.conf.  Not ideal, but it's what
+             * we've got...
+             */
             snprintf(domain_filter, sizeof(domain_filter), ptsm->domain_filter, "*");
+#pragma GCC diagnostic pop
 
             syslog(LOG_DEBUG, "Domain filter: %s", domain_filter);
 
@@ -1000,7 +995,13 @@ static int ptsmodule_get_dn(
             /* Strip the first character which is a '@' */
             domain = domain+1;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+            /* Format string comes from imapd.conf.  Not ideal, but it's what
+             * we've got...
+             */
             snprintf(domain_filter, sizeof(domain_filter), ptsm->domain_filter, domain);
+#pragma GCC diagnostic pop
 
             syslog(LOG_DEBUG, "Domain filter: %s", domain_filter);
 
@@ -1438,7 +1439,13 @@ static int ptsmodule_make_authstate_group(
 
         syslog(LOG_DEBUG, "(groups) Input domain would be %s", domain);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+            /* Format string comes from imapd.conf.  Not ideal, but it's what
+             * we've got...
+             */
         snprintf(domain_filter, sizeof(domain_filter), ptsm->domain_filter, domain);
+#pragma GCC diagnostic pop
 
         syslog(LOG_DEBUG, "(groups) Domain filter: %s", domain_filter);
 
@@ -1586,7 +1593,7 @@ retry:;
 
 static void myinit(void)
 {
-    fatal("PTS module (ldap) not compiled in", EC_CONFIG);
+    fatal("PTS module (ldap) not compiled in", EX_CONFIG);
 }
 
 static struct auth_state *myauthstate(
@@ -1595,7 +1602,7 @@ static struct auth_state *myauthstate(
     const char **reply __attribute__((unused)),
     int *dsize __attribute__((unused)))
 {
-    fatal("PTS module (ldap) not compiled in", EC_CONFIG);
+    fatal("PTS module (ldap) not compiled in", EX_CONFIG);
 }
 
 #endif /* HAVE_LDAP */

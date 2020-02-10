@@ -53,6 +53,7 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/un.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <netdb.h>
 #include <sys/socket.h>
@@ -65,7 +66,6 @@
 #include <sasl/saslutil.h>
 
 #include "backend.h"
-#include "exitcodes.h"
 #include "global.h"
 #include "iptostring.h"
 #include "nonblock.h"
@@ -329,8 +329,8 @@ static int parse_capability(struct backend *s, const char *str)
 
     } else {
         /*
-         * IMAP style: one humungous line with a list of atoms
-         * of the form NAME or NAME=PARAM, preceeded by the atom
+         * IMAP style: one humongous line with a list of atoms
+         * of the form NAME or NAME=PARAM, preceded by the atom
          * CAPABILITY, and either surrounded by [] or being an
          * untagged response like "* CAPABILITY ...atoms... CRLF"
          */
@@ -394,7 +394,7 @@ static int ask_capability(struct backend *s, int dobanner, int automatic)
     struct protstream *pout = s->out, *pin = s->in;
     const struct protocol_t *prot = s->prot;
     int matches = 0;
-    char str[4096];
+    char str[2047];
     const char *resp;
 
     if (prot->type != TYPE_STD) return 0;
@@ -763,7 +763,7 @@ static int backend_login(struct backend *ret, const char *userid,
 {
     int r = 0;
     int ask = 1; /* should we explicitly ask for capabilities? */
-    char buf[2048];
+    char buf[2047];
     struct protocol_t *prot = ret->prot;
 
     if (prot->type != TYPE_STD) return -1;
@@ -786,7 +786,7 @@ static int backend_login(struct backend *ret, const char *userid,
             }
         } while (strncasecmp(buf, prot->u.std.banner.resp,
                              strlen(prot->u.std.banner.resp)));
-        xstrncpy(ret->banner, buf, 2048);
+        xstrncpy(ret->banner, buf, sizeof(ret->banner));
     }
 
     if (ask) {
@@ -930,6 +930,55 @@ static int backend_client_bind(const int sock, const struct addrinfo *dest)
     return r;
 }
 
+EXPORTED struct backend *backend_connect_pipe(int infd, int outfd,
+                                              struct protocol_t *prot,
+                                              int do_tls, int logfd)
+
+{
+    struct backend *ret = xzmalloc(sizeof(struct backend));
+    int r;
+
+    ret->in = prot_new(infd, 0);
+    ret->out = prot_new(outfd, 1);
+    ret->sock = -1;
+    prot_settimeout(ret->in, config_getduration(IMAPOPT_CLIENT_TIMEOUT, 's'));
+    prot_setflushonread(ret->in, ret->out);
+    ret->prot = prot;
+
+    /* use literal+ to send literals */
+    prot_setisclient(ret->in, 1);
+    prot_setisclient(ret->out, 1);
+
+    /* Start TLS if required */
+    if (do_tls) {
+        r = backend_starttls(ret, NULL, NULL, NULL);
+        if (r) goto error;
+    }
+
+    /* Login to the server. Not really, but let's handshake. */
+    if (prot->type == TYPE_SPEC)
+        r = prot->u.spec.login(ret, NULL, NULL, NULL, /*noauth*/1);
+    else
+        r = backend_login(ret, NULL, NULL, NULL, /*noauth*/1);
+
+    if (r) goto error;
+
+    /* Set up logging */
+    if (logfd >= 0) {
+        prot_setlog(ret->in, logfd);
+        prot_setlog(ret->out, logfd);
+    }
+    else prot_settimeout(ret->in, 0);
+
+    return ret;
+
+error:
+    backend_disconnect(ret);
+    ret->sock = -1;
+    free(ret);
+    return NULL;
+}
+
 EXPORTED struct backend *backend_connect(struct backend *ret_backend, const char *server,
                                 struct protocol_t *prot, const char *userid,
                                 sasl_callback_t *cb, const char **auth_status,
@@ -1037,7 +1086,7 @@ EXPORTED struct backend *backend_connect(struct backend *ret_backend, const char
             int n;
             fd_set wfds, rfds;
             time_t now = time(NULL);
-            time_t timeout = now + config_getint(IMAPOPT_CLIENT_TIMEOUT);
+            time_t timeout = now + config_getduration(IMAPOPT_CLIENT_TIMEOUT, 's');
             struct timeval waitfor;
 
             /* select() socket for writing until we succeed, fail, or timeout */
@@ -1090,7 +1139,7 @@ EXPORTED struct backend *backend_connect(struct backend *ret_backend, const char
     ret->in = prot_new(sock, 0);
     ret->out = prot_new(sock, 1);
     ret->sock = sock;
-    prot_settimeout(ret->in, config_getint(IMAPOPT_CLIENT_TIMEOUT));
+    prot_settimeout(ret->in, config_getduration(IMAPOPT_CLIENT_TIMEOUT, 's'));
     prot_setflushonread(ret->in, ret->out);
     ret->prot = prot;
 
@@ -1161,7 +1210,7 @@ EXPORTED int backend_ping(struct backend *s, const char *userid)
 
 EXPORTED void backend_disconnect(struct backend *s)
 {
-    if (!s || s->sock == -1) return;
+    if (!s) return;
 
     if (!prot_error(s->in)) {
        if (s->prot->type == TYPE_SPEC) s->prot->u.spec.logout(s);
@@ -1205,7 +1254,7 @@ EXPORTED void backend_disconnect(struct backend *s)
 #endif /* HAVE_SSL */
 
     /* close/free socket & prot layer */
-    cyrus_close_sock(s->sock);
+    if (s->sock != -1) cyrus_close_sock(s->sock);
     s->sock = -1;
 
     prot_free(s->in);

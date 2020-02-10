@@ -39,11 +39,11 @@
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-#include <ctype.h>
-#include <syslog.h>
 #include <config.h>
+#include <ctype.h>
+#include <sysexits.h>
+#include <syslog.h>
 #include "ptloader.h"
-#include "exitcodes.h"
 #include "util.h"
 #include "xmalloc.h"
 
@@ -445,7 +445,7 @@ static void myinit(void)
     int r = pr_Initialize (1L, AFSCONF_CLIENTNAME, config_getstring(IMAPOPT_AFSPTS_MYCELL));
     if (r) {
         syslog(LOG_DEBUG, "pr_Initialize failed: %d", r);
-        fatal("pr_initialize failed", EC_TEMPFAIL);
+        fatal("pr_initialize failed", EX_TEMPFAIL);
     }
 
     localrealms = config_getstring(IMAPOPT_AFSPTS_LOCALREALMS);
@@ -484,7 +484,7 @@ static struct auth_state *myauthstate(const char *identifier,
         rc = pr_Initialize (1L, AFSCONF_CLIENTNAME, config_getstring(IMAPOPT_AFSPTS_MYCELL));
         if (rc) {
             syslog(LOG_DEBUG, "pr_Initialize failed: %d", rc);
-            fatal("pr_Initialize failed", EC_TEMPFAIL);
+            fatal("pr_Initialize failed", EX_TEMPFAIL);
         }
         /* Okay, rerun it now */
         rc = pr_ListMembers(canon_id_tmp, &groups);
@@ -507,9 +507,10 @@ static struct auth_state *myauthstate(const char *identifier,
        authentication problem, and cache only for a minute.
        Should negative cache time be configurable? */
     if (rc == PRPERM) {
-        newstate->mark = time(0) + 60 -
-            (config_getint(IMAPOPT_PTSCACHE_TIMEOUT) > 60)?
-            config_getint(IMAPOPT_PTSCACHE_TIMEOUT) : 60;
+        int ptscache_timeout = config_getduration(IMAPOPT_PTSCACHE_TIMEOUT, 's');
+        if (ptscache_timeout < 60)
+            ptscache_timeout = 60;
+        newstate->mark = time(0) + 60 - ptscache_timeout;
     } else
         newstate->mark = time(0);
 
@@ -535,7 +536,7 @@ static struct auth_state *myauthstate(const char *identifier,
 
 static void myinit(void)
 {
-        fatal("PTS module (afskrb) not compiled in", EC_CONFIG);
+        fatal("PTS module (afskrb) not compiled in", EX_CONFIG);
 }
 
 static struct auth_state *myauthstate(
@@ -544,7 +545,7 @@ static struct auth_state *myauthstate(
     const char **reply __attribute__((unused)),
     int *dsize __attribute__((unused)))
 {
-        fatal("PTS module (afskrb) not compiled in", EC_CONFIG);
+        fatal("PTS module (afskrb) not compiled in", EX_CONFIG);
         return NULL;
 }
 

@@ -49,6 +49,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -56,18 +57,21 @@
 #ifdef USE_HTTPD
 /* For iCalendar indexing */
 #include <libical/ical.h>
+#include "vcard_support.h"
 #endif
 
 #include "acl.h"
 #include "annotate.h"
 #include "append.h"
 #include "assert.h"
+#include "backend.h"
 #include "charset.h"
 #include "conversations.h"
 #include "dlist.h"
-#include "exitcodes.h"
 #include "hash.h"
 #include "hashu64.h"
+#include "http_client.h"
+#include "jmap_util.h"
 #include "global.h"
 #include "times.h"
 #include "imapd.h"
@@ -75,6 +79,7 @@
 #include "mailbox.h"
 #include "map.h"
 #include "message.h"
+#include "msgrecord.h"
 #include "parseaddr.h"
 #include "search_engines.h"
 #include "search_query.h"
@@ -99,7 +104,7 @@ EXPORTED unsigned client_capa;
 /* Forward declarations */
 static void index_refresh_locked(struct index_state *state);
 static void index_tellexists(struct index_state *state);
-static int index_lock(struct index_state *state);
+static int index_lock(struct index_state *state, int readonly);
 static void index_unlock(struct index_state *state);
 
 struct index_modified_flags {
@@ -143,10 +148,11 @@ static int index_copysetup(struct index_state *state, uint32_t msgno,
                            struct copyargs *copyargs);
 static int index_storeflag(struct index_state *state,
                            struct index_modified_flags *modified_flags,
-                           uint32_t msgno, struct index_record *record,
+                           uint32_t msgno, msgrecord_t *msgrec,
                            struct storeargs *storeargs);
 static int index_store_annotation(struct index_state *state, uint32_t msgno,
-                           struct storeargs *storeargs);
+                           msgrecord_t *mrw, struct storeargs *storeargs,
+                           int *dirty);
 static int index_fetchreply(struct index_state *state, uint32_t msgno,
                             const struct fetchargs *fetchargs);
 static void index_printflags(struct index_state *state, uint32_t msgno,
@@ -160,7 +166,6 @@ static void index_get_ids(MsgData *msgdata,
 
 static int index_sort_compare(MsgData *md1, MsgData *md2,
                               const struct sortcrit *call_data);
-static int index_sort_compare_qsort(const void *v1, const void *v2);
 
 static void *index_thread_getnext(Thread *thread);
 static void index_thread_setnext(Thread *thread, Thread *next);
@@ -207,21 +212,16 @@ EXPORTED int index_reload_record(struct index_state *state,
     else {
         record->recno = im->recno;
         record->uid = im->uid;
-        r = mailbox_reload_index_record(state->mailbox, record);
+        r = mailbox_reload_index_record_dirty(state->mailbox, record);
     }
     /* NOTE: we have released the cyrus.index lock at this point, but are
      * still holding the mailbox name relock.  This means nobody can rewrite
      * the file under us - so the offsets are still guaranteed to be correct,
      * and all the immutable fields are unchanged.  That said, we can get a
      * read of a partially updated record which contains an invalid checksum
-     * due to incomplete concurrent changes to mutable fields.
-     *
-     * That's OK in just this case, because we're about to overwrite all the
-     * parsed mutable fields with the clean values we cached back when we had
-     * a cyrus.index lock and got a complete read. */
-    if (r == IMAP_MAILBOX_CHECKSUM) r = 0;
-
-    /* but other errors are still bad */
+     * due to incomplete concurrent changes to mutable fields.  That's why we
+     * used the _dirty API which ignores checksums.
+     * but other errors are still bad */
     if (r) return r;
 
     /* better be! */
@@ -230,6 +230,7 @@ EXPORTED int index_reload_record(struct index_state *state,
     /* restore mutable fields */
     record->modseq = im->modseq;
     record->system_flags = im->system_flags;
+    record->internal_flags = im->internal_flags;
     record->cache_offset = im->cache_offset;
     for (i = 0; i < MAX_USER_FLAGS/32; i++)
         record->user_flags[i] = im->user_flags[i];
@@ -239,20 +240,23 @@ EXPORTED int index_reload_record(struct index_state *state,
 
 static int index_rewrite_record(struct index_state *state,
                                 uint32_t msgno,
-                                struct index_record *record)
+                                struct index_record *record,
+                                int silent)
 {
     struct index_map *im = &state->map[msgno-1];
     int i;
-    int r;
 
     assert(record->uid == im->uid);
 
-    r = mailbox_rewrite_index_record(state->mailbox, record);
-    if (r) return r;
+    if (!silent) {
+        int r = mailbox_rewrite_index_record(state->mailbox, record);
+        if (r) return r;
+    }
 
     /* update tracking of mutable fields */
     im->modseq = record->modseq;
     im->system_flags = record->system_flags;
+    im->internal_flags = record->internal_flags;
     im->cache_offset = record->cache_offset;
     for (i = 0; i < MAX_USER_FLAGS/32; i++)
         im->user_flags[i] = record->user_flags[i];
@@ -264,6 +268,7 @@ EXPORTED void index_release(struct index_state *state)
 {
     if (!state) return;
 
+    message_unref(&state->m);
     if (state->mailbox) {
         mailbox_close(&state->mailbox);
         state->mailbox = NULL; /* should be done by close anyway */
@@ -283,12 +288,12 @@ EXPORTED void index_close(struct index_state **stateptr)
 
     index_release(state);
 
-    free(state->map);
-    free(state->mboxname);
-    free(state->userid);
+    xfree(state->map);
+    xfree(state->mboxname);
+    xfree(state->userid);
     for (i = 0; i < MAX_USER_FLAGS; i++)
-        free(state->flagname[i]);
-    free(state);
+        xfree(state->flagname[i]);
+    xfree(state);
 
     *stateptr = NULL;
 }
@@ -325,7 +330,7 @@ EXPORTED int index_open_mailbox(struct mailbox *mailbox, struct index_init *init
     }
 
     if (state->mailbox->mbtype & MBTYPES_NONIMAP) {
-        if (state->want_dav && (state->mailbox->mbtype & MBTYPES_DAV)) {
+        if (state->want_dav) {
             /* User logged in using imapmagicplus token "dav" */
         }
         else if (state->mailbox->mbtype == state->want_mbtype) {
@@ -351,9 +356,9 @@ EXPORTED int index_open_mailbox(struct mailbox *mailbox, struct index_init *init
     return 0;
 
 fail:
-    free(state->mboxname);
-    free(state->userid);
-    free(state);
+    xfree(state->mboxname);
+    xfree(state->userid);
+    xfree(state);
     return r;
 }
 
@@ -389,7 +394,7 @@ EXPORTED int index_expunge(struct index_state *state, char *sequence,
     struct mboxevent *mboxevent = NULL;
     modseq_t oldmodseq;
 
-    r = index_lock(state);
+    r = index_lock(state, /*readonly*/0);
     if (r) return r;
 
     /* XXX - check if not mailbox->i.deleted count and need_deleted */
@@ -400,7 +405,7 @@ EXPORTED int index_expunge(struct index_state *state, char *sequence,
     for (msgno = 1; msgno <= state->exists; msgno++) {
         im = &state->map[msgno-1];
 
-        if (im->system_flags & FLAG_EXPUNGED)
+        if (im->internal_flags & FLAG_INTERNAL_EXPUNGED)
             continue; /* already expunged */
 
         if (need_deleted && !(im->system_flags & FLAG_DELETED))
@@ -427,11 +432,12 @@ EXPORTED int index_expunge(struct index_state *state, char *sequence,
         }
 
         /* set the flags */
-        record.system_flags |= FLAG_DELETED | FLAG_EXPUNGED;
+        record.system_flags |= FLAG_DELETED;
+        record.internal_flags |= FLAG_INTERNAL_EXPUNGED;
         numexpunged++;
         state->num_expunged++;
 
-        r = index_rewrite_record(state, msgno, &record);
+        r = index_rewrite_record(state, msgno, &record, /*silent*/0);
         if (r) break;
 
         /* avoid telling again (equivalent to STORE FLAGS.SILENT) */
@@ -516,9 +522,12 @@ static int index_writeseen(struct index_state *state)
     if (state->examining)
         return 0;
 
+    /* always dirty the mailbox, we may just be updating recent counts which doesn't bump the
+     * modseq because Recent is all sorts of evil */
+    mailbox_index_dirty(mailbox);
+
     /* already handled! Just update the header fields */
     if (state->internalseen) {
-        mailbox_index_dirty(mailbox);
         mailbox->i.recenttime = time(0);
         if (mailbox->i.recentuid < state->last_uid)
             mailbox->i.recentuid = state->last_uid;
@@ -628,16 +637,9 @@ static void index_refresh_locked(struct index_state *state)
      * last time plus however many new records might be unEXPUNGEd on the
      * end */
 
+    need_records = state->want_expunged ? mailbox->i.num_records : mailbox->i.exists;
     if (state->last_uid) {
         need_records = state->exists + (mailbox->i.last_uid - state->last_uid);
-    }
-    else if (state->want_expunged) {
-        /* could need the lot! */
-        need_records = mailbox->i.num_records;
-    }
-    else {
-        /* init case */
-        need_records = mailbox->i.exists;
     }
 
     /* make sure we have space */
@@ -658,7 +660,7 @@ static void index_refresh_locked(struct index_state *state)
             /* NOTE: this same logic is repeated below for messages
              * past the end of recno (repack removing the trailing
              * records).  Make sure to keep them in sync */
-            if (!(im->system_flags & FLAG_EXPUNGED)) {
+            if (!(im->internal_flags & FLAG_INTERNAL_EXPUNGED)) {
                 /* we don't even know the modseq of when it was wiped,
                  * but we can be sure it's since the last given highestmodseq,
                  * so simulate the lowest possible value.  This is fine for
@@ -673,7 +675,8 @@ static void index_refresh_locked(struct index_state *state)
             /* simulate expunged flag so we get an EXPUNGE response and
              * tell about unlinked so we don't get IO errors trying to
              * find the file */
-            im->system_flags |= FLAG_EXPUNGED | FLAG_UNLINKED;
+            im->internal_flags |= FLAG_INTERNAL_EXPUNGED |
+                FLAG_INTERNAL_UNLINKED;
             im = &state->map[msgno++];
 
             /* this one is expunged */
@@ -685,7 +688,7 @@ static void index_refresh_locked(struct index_state *state)
          * get its own msgno */
         if (!state->want_expunged
             && (msgno > state->exists || record->uid < im->uid)
-            && (record->system_flags & FLAG_EXPUNGED))
+            && (record->internal_flags & FLAG_INTERNAL_EXPUNGED))
             continue;
 
         /* make sure our UID map is consistent */
@@ -693,6 +696,7 @@ static void index_refresh_locked(struct index_state *state)
             assert(im->uid == record->uid);
         }
         else {
+            memset(im, 0, sizeof(struct index_map));
             im->uid = record->uid;
         }
 
@@ -700,12 +704,19 @@ static void index_refresh_locked(struct index_state *state)
         im->recno = record->recno;
         im->modseq = record->modseq;
         im->system_flags = record->system_flags;
+        im->internal_flags = record->internal_flags;
         im->cache_offset = record->cache_offset;
         for (i = 0; i < MAX_USER_FLAGS/32; i++)
             im->user_flags[i] = record->user_flags[i];
 
+        /* re-calculate seen flags */
+        if (state->internalseen)
+            im->isseen = (im->system_flags & FLAG_SEEN) ? 1 : 0;
+        else
+            im->isseen = seqset_ismember(seenlist, im->uid) ? 1 : 0;
+
         /* for expunged records, just track the modseq */
-        if (im->system_flags & FLAG_EXPUNGED) {
+        if (im->internal_flags & FLAG_INTERNAL_EXPUNGED) {
             num_expunged++;
             /* http://www.rfc-editor.org/errata_search.php?rfc=5162
              * Errata ID: 1809 - if there are expunged records we
@@ -715,12 +726,6 @@ static void index_refresh_locked(struct index_state *state)
                 delayed_modseq = im->modseq - 1;
         }
         else {
-            /* re-calculate seen flags */
-            if (state->internalseen)
-                im->isseen = (im->system_flags & FLAG_SEEN) ? 1 : 0;
-            else
-                im->isseen = seqset_ismember(seenlist, im->uid) ? 1 : 0;
-
             if (msgno > state->exists) {
                 /* don't auto-tell new records */
                 im->told_modseq = im->modseq;
@@ -746,15 +751,15 @@ static void index_refresh_locked(struct index_state *state)
             }
         }
 
-        msgno++;
-
         /* make sure we don't overflow the memory we mapped */
         if (msgno > state->mapsize) {
             char buf[2048];
             sprintf(buf, "Exists wrong %u %u %u %u", msgno,
                     state->mapsize, mailbox->i.exists, mailbox->i.num_records);
-            fatal(buf, EC_IOERR);
+            fatal(buf, EX_IOERR);
         }
+
+        msgno++;
     }
     mailbox_iter_done(&iter);
 
@@ -766,12 +771,12 @@ static void index_refresh_locked(struct index_state *state)
         /* this is the same logic as the block above in the main loop,
          * see comments up there, and make sure the blocks are kept
          * in sync! */
-        if (!(im->system_flags & FLAG_EXPUNGED))
+        if (!(im->internal_flags & FLAG_INTERNAL_EXPUNGED))
             im->modseq = state->highestmodseq + 1;
         if (!delayed_modseq || im->modseq < delayed_modseq)
             delayed_modseq = im->modseq - 1;
         im->recno = 0;
-        im->system_flags |= FLAG_EXPUNGED | FLAG_UNLINKED;
+        im->internal_flags |= FLAG_INTERNAL_EXPUNGED | FLAG_INTERNAL_UNLINKED;
         im = &state->map[msgno++];
         num_expunged++;
     }
@@ -865,7 +870,9 @@ EXPORTED int index_check(struct index_state *state, int usinguid, int printuid)
 
     if (!state) return 0;
 
-    r = index_lock(state);
+    /* we don't write any records in here, but we want to write the recentuid if
+     * there were new emails delivered... */
+    r = index_lock(state, /*readonly*/0);
 
     /* Check for deleted mailbox  */
     if (r == IMAP_MAILBOX_NONEXISTENT) {
@@ -875,7 +882,7 @@ EXPORTED int index_check(struct index_state *state, int usinguid, int printuid)
                    "Mailbox %s has been (re)moved out from under client",
                    state->mboxname);
             mailbox_close(&state->mailbox);
-            fatal("Mailbox has been (re)moved", EC_IOERR);
+            fatal("Mailbox has been (re)moved", EX_IOERR);
         }
 
         if (state->exists && (client_capa & CAPA_QRESYNC)) {
@@ -946,7 +953,7 @@ struct seqset *index_vanished(struct index_state *state,
         struct mailbox_iter *iter = mailbox_iter_init(mailbox, params->modseq, 0);
         while ((msg = mailbox_iter_step(iter))) {
             const struct index_record *record = msg_record(msg);
-            if (!(record->system_flags & FLAG_EXPUNGED))
+            if (!(record->internal_flags & FLAG_INTERNAL_EXPUNGED))
                 continue;
             if (!params->sequence || seqset_ismember(seq, record->uid))
                 seqset_add(outlist, record->uid, 1);
@@ -1046,7 +1053,7 @@ static int _fetch_setseen(struct index_state *state,
         record.system_flags |= FLAG_SEEN;
 
     /* need to bump modseq anyway, so always rewrite it */
-    r = index_rewrite_record(state, msgno, &record);
+    r = index_rewrite_record(state, msgno, &record, /*silent*/0);
     if (r) return r;
 
     mboxevent_extract_record(mboxevent, state->mailbox, &record);
@@ -1155,7 +1162,7 @@ EXPORTED int index_fetch(struct index_state *state,
     int r;
     struct mboxevent *mboxevent = NULL;
 
-    r = index_lock(state);
+    r = index_lock(state, /*readonly*/0);  // can't be readonly because of FETCH_SETSEEN
     if (r) return r;
 
     seq = _parse_sequence(state, sequence, usinguid);
@@ -1241,7 +1248,7 @@ EXPORTED int index_store(struct index_state *state, char *sequence,
         return IMAP_PERMISSION_DENIED;
     }
 
-    r = index_lock(state);
+    r = index_lock(state, /*readonly*/0);
     if (r) return r;
 
     mailbox = state->mailbox;
@@ -1262,7 +1269,7 @@ EXPORTED int index_store(struct index_state *state, char *sequence,
             continue;
 
         /* if it's expunged already, skip it now */
-        if ((im->system_flags & FLAG_EXPUNGED))
+        if ((im->internal_flags & FLAG_INTERNAL_EXPUNGED))
             continue;
 
         /* if it's changed already, skip it now */
@@ -1278,16 +1285,28 @@ EXPORTED int index_store(struct index_state *state, char *sequence,
             continue;
         }
 
+        /* TODO(rsto): we need to keep index_reload_record here until we
+         * can make sure that the index map doesn't contain uncommitted
+         * changes for this msgno. See the comments in index_reload_record
+         * on how it releases the cyrus.index lock in the middle of action */
         r = index_reload_record(state, msgno, &record);
         if (r) goto out;
+
+        msgrecord_t *msgrec = msgrecord_from_index_record(state->mailbox, &record);
 
         switch (storeargs->operation) {
         case STORE_ADD_FLAGS:
         case STORE_REMOVE_FLAGS:
         case STORE_REPLACE_FLAGS:
-            r = index_storeflag(state, &modified_flags, msgno, &record, storeargs);
-            if (r)
-                break;
+            r = index_storeflag(state, &modified_flags, msgno, msgrec, storeargs);
+            if (r) goto doneloop;
+
+            // nothing to do?
+            if (!(modified_flags.added_flags | modified_flags.removed_flags))
+                goto doneloop;
+
+            r = msgrecord_rewrite(msgrec);
+            if (r) goto doneloop;
 
             if (modified_flags.added_flags) {
                 if (flagsset == NULL)
@@ -1296,7 +1315,7 @@ EXPORTED int index_store(struct index_state *state, char *sequence,
                 mboxevent_add_flags(flagsset, mailbox->flagname,
                                     modified_flags.added_system_flags,
                                     modified_flags.added_user_flags);
-                mboxevent_extract_record(flagsset, mailbox, &record);
+                mboxevent_extract_msgrecord(flagsset, msgrec);
             }
             if (modified_flags.removed_flags) {
                 if (flagsclear == NULL)
@@ -1305,21 +1324,43 @@ EXPORTED int index_store(struct index_state *state, char *sequence,
                 mboxevent_add_flags(flagsclear, mailbox->flagname,
                                     modified_flags.removed_system_flags,
                                     modified_flags.removed_user_flags);
-                mboxevent_extract_record(flagsclear, mailbox, &record);
+                mboxevent_extract_msgrecord(flagsclear, msgrec);
             }
-
             break;
 
-        case STORE_ANNOTATION:
-            r = index_store_annotation(state, msgno, storeargs);
+        case STORE_ANNOTATION: {
+            int dirty = 0;
+            r = index_store_annotation(state, msgno, msgrec, storeargs, &dirty);
+            if (r) goto doneloop;
+            if (!dirty) goto doneloop;
+
+            // rewrite message
+            r = msgrecord_rewrite(msgrec);
+            if (r) goto doneloop;
+
+            // XXX mboxevents?
+
             break;
+        }
 
         default:
             r = IMAP_INTERNAL;
             break;
         }
+        if (r) goto doneloop;
+
+        /* msgrecord_rewrite already took care of rewriting the index_record,
+         * but we want to stay up to date of the changes in the index_map.
+         * Pass the silent flag to index_rewrite_record. */
+        r = msgrecord_get_index_record(msgrec, &record);
+        if (r) goto doneloop;
+        r = index_rewrite_record(state, msgno, &record, /*silent*/1);
+
+doneloop:
+        msgrecord_unref(&msgrec);
         if (r) goto out;
     }
+
 
     /* let mboxevent_notify split FlagsSet into MessageRead, MessageTrash
      * and FlagsSet events */
@@ -1387,6 +1428,7 @@ EXPORTED int index_run_annotator(struct index_state *state,
     struct index_map *im;
     uint32_t msgno;
     struct appendstate as;
+    msgrecord_t *msgrec = NULL;
     int r = 0;
 
     /* We do the acl check here rather than in append_setup_mbox()
@@ -1398,7 +1440,7 @@ EXPORTED int index_run_annotator(struct index_state *state,
     if (!config_getstring(IMAPOPT_ANNOTATION_CALLOUT))
         return 0;
 
-    r = index_lock(state);
+    r = index_lock(state, /*readonly*/0);
     if (r) return r;
 
     r = append_setup_mbox(&as, state->mailbox,
@@ -1417,22 +1459,32 @@ EXPORTED int index_run_annotator(struct index_state *state,
             continue;
 
         /* if it's expunged already, skip it now */
-        if ((im->system_flags & FLAG_EXPUNGED))
+        if ((im->internal_flags & FLAG_INTERNAL_EXPUNGED))
             continue;
 
         r = index_reload_record(state, msgno, &record);
         if (r) goto out;
 
-        r = append_run_annotator(&as, &record);
+        msgrec = msgrecord_from_index_record(state->mailbox, &record);
+
+        r = append_run_annotator(&as, msgrec);
         if (r) goto out;
 
-        r = index_rewrite_record(state, msgno, &record);
+        /* msgrecord_rewrite already took care of rewriting the index_record,
+         * but we want to stay up to date of the changes in the index_map.
+         * Pass the silent flag to index_rewrite_record. */
+        r = msgrecord_get_index_record(msgrec, &record);
         if (r) goto out;
+        r = index_rewrite_record(state, msgno, &record, /*silent*/1);
+        if (r) goto out;
+
+        msgrecord_unref(&msgrec);
     }
 
 out:
     seqset_free(seq);
 
+    if (msgrec) msgrecord_unref(&msgrec);
     if (!r) {
         r = append_commit(&as);
     }
@@ -1475,13 +1527,6 @@ EXPORTED int index_warmup(struct mboxlist_entry *mbentry,
         fname = mboxname_metapath(mbentry->partition, mbentry->name, mbentry->uniqueid, META_ANNOTATIONS, 0);
         r = warmup_file(fname, 0, 0);
         if (r) goto out;
-    }
-    if (warmup_flags & WARMUP_FOLDERSTATUS) {
-        if (config_getswitch(IMAPOPT_STATUSCACHE)) {
-            fname = tofree2 = statuscache_filename();
-            r = warmup_file(fname, 0, 0);
-            if (r) goto out;
-        }
     }
     if (warmup_flags & WARMUP_SEARCH) {
         userid = mboxname_to_userid(mbentry->name);
@@ -1632,7 +1677,7 @@ EXPORTED int index_scan(struct index_state *state, const char *contents)
     listcount = index_prefilter_messages(msgno_list, state, &searchargs);
 
     for (listindex = 0; !n && listindex < listcount; listindex++) {
-        if (cmd_cancelled())
+        if (!(listindex % 128) && cmd_cancelled(/*insearch*/1))
             break;
         struct buf buf = BUF_INITIALIZER;
         struct index_record record;
@@ -1654,19 +1699,6 @@ EXPORTED int index_scan(struct index_state *state, const char *contents)
     free(msgno_list);
 
     return n;
-}
-
-EXPORTED message_t *index_get_message(struct index_state *state, uint32_t msgno)
-{
-    struct index_map *im = &state->map[msgno-1];
-    struct index_record record;
-    uint32_t indexflags = 0;
-    if (im->isseen) indexflags |= MESSAGE_SEEN;
-    if (im->isrecent) indexflags |= MESSAGE_RECENT;
-    if (index_reload_record(state, msgno, &record))
-        return NULL;
-    return message_new_from_index(state->mailbox, &record,
-                                  msgno, indexflags);
 }
 
 EXPORTED uint32_t index_getuid(struct index_state *state, uint32_t msgno)
@@ -1699,12 +1731,12 @@ out:
     return n;
 }
 
-static int index_lock(struct index_state *state)
+static int index_lock(struct index_state *state, int readonly)
 {
     int r;
 
     if (state->mailbox) {
-        if (state->examining) {
+        if (state->examining || readonly) {
             r = mailbox_lock_index(state->mailbox, LOCK_SHARED);
             if (r) return r;
         }
@@ -1714,7 +1746,7 @@ static int index_lock(struct index_state *state)
         }
     }
     else {
-        if (state->examining) {
+        if (state->examining || readonly) {
             r = mailbox_open_irl(state->mboxname, &state->mailbox);
             if (r) return r;
         }
@@ -1740,15 +1772,11 @@ static int index_lock(struct index_state *state)
 
 EXPORTED int index_status(struct index_state *state, struct statusdata *sdata)
 {
-    int items = STATUS_MESSAGES | STATUS_UIDNEXT | STATUS_UIDVALIDITY |
-                STATUS_HIGHESTMODSEQ | STATUS_RECENT | STATUS_UNSEEN;
-    int r;
-
-    r = index_lock(state);
+    int r = index_lock(state, /*readonly*/1);
     if (r) return r;
 
-    statuscache_fill(sdata, state->userid, state->mailbox, items,
-                     state->numrecent, state->numunseen);
+    status_fill_mailbox(state->mailbox, sdata);
+    status_fill_seen(state->userid, sdata, state->numrecent, state->numunseen);
 
     index_unlock(state);
     return 0;
@@ -1758,7 +1786,7 @@ EXPORTED int index_refresh(struct index_state *state)
 {
     int r;
 
-    r = index_lock(state);  /* calls index_refresh_locked */
+    r = index_lock(state, /*readonly*/1);  /* calls index_refresh_locked */
     if (r) return r;
     index_unlock(state);
     return 0;
@@ -1766,14 +1794,23 @@ EXPORTED int index_refresh(struct index_state *state)
 
 static void index_unlock(struct index_state *state)
 {
-    /* XXX - errors */
-
-    index_writeseen(state);
+    // only update seen if we've got a writelocked mailbox
+    if (mailbox_index_islocked(state->mailbox, 1))
+        index_writeseen(state);  // XXX: errors?
 
     /* grab the latest modseq */
     state->highestmodseq = state->mailbox->i.highestmodseq;
 
-    mailbox_unlock_index(state->mailbox, NULL);
+    if (state->mailbox->i.dirty) {
+        struct statusdata sdata = STATUSDATA_INIT;
+        status_fill_mailbox(state->mailbox, &sdata);
+        // we zero out recent data for everyone else
+        status_fill_seen(state->userid, &sdata, /*recent*/0, state->numunseen);
+        mailbox_unlock_index(state->mailbox, &sdata);
+    }
+    else {
+        mailbox_unlock_index(state->mailbox, NULL);
+    }
 }
 
 /*
@@ -1966,46 +2003,6 @@ out:
     return nmsg;
 }
 
-static int is_mutable_sort(struct sortcrit *sortcrit)
-{
-    int i;
-
-    if (!sortcrit) return 0;
-
-    for (i = 0; sortcrit[i].key; i++) {
-        switch (sortcrit[i].key) {
-            /* these are the mutable fields */
-            case SORT_ANNOTATION:
-            case SORT_MODSEQ:
-            case SORT_HASFLAG:
-            case SORT_CONVMODSEQ:
-            case SORT_CONVEXISTS:
-            case SORT_CONVSIZE:
-            case SORT_HASCONVFLAG:
-                return 1;
-            default:
-                break;
-        }
-    }
-
-    return 0;
-}
-
-/* This function will return a TRUE value if anything in the
- * sort or search criteria returns a MUTABLE ordering, i.e.
- * the user can take actions which will change the order in
- * which the results are returned.  For example, the base
- * case of UID sort and all messages is NOT mutable */
-static int is_mutable_ordering(struct sortcrit *sortcrit,
-                               struct searchargs *searchargs)
-{
-    if (is_mutable_sort(sortcrit))
-        return 1;
-    if (search_expr_is_mutable(searchargs->root))
-        return 1;
-    return 0;
-}
-
 #define UNPREDICTABLE       (-1)
 static int search_predict_total(struct index_state *state,
                                 struct conversations_state *cstate,
@@ -2020,8 +2017,8 @@ static int search_predict_total(struct index_state *state,
         conversation_getstatus(cstate, index_mboxname(state), &convstatus);
         /* always grab xconvmodseq, so we report a growing
          * highestmodseq to all callers */
-        if (xconvmodseqp) *xconvmodseqp = convstatus.modseq;
-        exists = convstatus.exists;
+        if (xconvmodseqp) *xconvmodseqp = convstatus.threadmodseq;
+        exists = convstatus.threadexists;
     }
     else {
         if (xconvmodseqp) *xconvmodseqp = state->highestmodseq;
@@ -2046,12 +2043,12 @@ static int search_predict_total(struct index_state *state,
 
     case SEC_CONVSEEN:
         assert(conversations);
-        assert(convstatus.exists >= convstatus.unseen);
-        return convstatus.exists - convstatus.unseen;
+        assert(convstatus.threadexists >= convstatus.threadunseen);
+        return convstatus.threadexists - convstatus.threadunseen;
 
     case SEC_CONVSEEN|SEC_NOT:
         assert(conversations);
-        return convstatus.unseen;
+        return convstatus.threadunseen;
 
     default:
         return UNPREDICTABLE;
@@ -2132,7 +2129,7 @@ EXPORTED int index_convsort(struct index_state *state,
         struct index_map *im = &state->map[msg->msgno-1];
 
         /* can happen if we didn't "tellchanges" yet */
-        if (im->system_flags & FLAG_EXPUNGED)
+        if (im->internal_flags & FLAG_INTERNAL_EXPUNGED)
             continue;
 
         /* run the search program against all messages */
@@ -2379,7 +2376,7 @@ EXPORTED int index_convmultisort(struct index_state *state,
 
     xstats_add(SEARCH_RESULT, results.count);
     if (results.count) {
-        /* The untagged reponse would be XCONVMULTISORT but
+        /* The untagged response would be XCONVMULTISORT but
          * Mail::IMAPTalk has an undocumented hack whereby any untagged
          * response matching /sort/i is assumed to be a sequence of
          * numeric uids.  Meh. */
@@ -2510,8 +2507,9 @@ EXPORTED int index_snippets(struct index_state *state,
             mailbox = state->mailbox;
         }
         else {
-            r = mailbox_open_iwl(snippetargs->mboxname, &mailbox);
+            r = mailbox_open_irl(snippetargs->mboxname, &mailbox);
             if (r) goto out;
+            mailbox_unlock_index(mailbox, NULL);
         }
 
         if (snippetargs->uidvalidity &&
@@ -2525,15 +2523,17 @@ EXPORTED int index_snippets(struct index_state *state,
         for (i = 0 ; i < snippetargs->uids.count ; i++) {
             uint32_t uid = snippetargs->uids.data[i];
             struct index_record record;
-            message_t *msg;
 
-            /* This UID didn't appear in the old index file */
+            /* It's OK to do a dirty read, because we only care about
+             * the UID of the message */
             r = mailbox_find_index_record(mailbox, uid, &record);
+            if (r == IMAP_MAILBOX_CHECKSUM) r = 0;
             if (r) continue;
 
-            msg = message_new_from_record(mailbox, &record);
-            index_getsearchtext(msg, rx, /*snippet*/1);
-            message_unref(&msg);
+            if (state->m) message_set_from_record(mailbox, &record, state->m);
+            else state->m = message_new_from_record(mailbox, &record);
+
+            index_getsearchtext(state->m, NULL, rx, /*snippet*/1);
         }
 
         r = rx->end_mailbox(rx, mailbox);
@@ -2585,7 +2585,7 @@ EXPORTED int index_convupdates(struct index_state *state,
     ptrarray_t changed = PTRARRAY_INITIALIZER;
     int total = 0;
     struct conversations_state *cstate = NULL;
-    int search_is_mutable = is_mutable_ordering(sortcrit, searchargs);
+    int is_mutable = search_is_mutable(sortcrit, searchargs);
     int r = 0;
 
     assert(windowargs);
@@ -2638,7 +2638,7 @@ EXPORTED int index_convupdates(struct index_state *state,
         int in_search = 0;
 
         in_search = index_search_evaluate(state, searchargs->root, msg->msgno);
-        is_deleted = !!(im->system_flags & FLAG_EXPUNGED);
+        is_deleted = !!(im->internal_flags & FLAG_INTERNAL_EXPUNGED);
         is_new = (im->uid >= windowargs->uidnext);
         was_deleted = is_deleted && (im->modseq <= windowargs->modseq);
 
@@ -2664,7 +2664,7 @@ EXPORTED int index_convupdates(struct index_state *state,
          * searches, possible an old exemplar? */
         if (!is_new &&
             !was_deleted &&
-            (in_search || (search_is_mutable && is_changed)) &&
+            (in_search || (is_mutable && is_changed)) &&
             (!windowargs->conversations || !hashu64_lookup(msg->cid, &old_seen_cids))) {
             was_old_exemplar = 1;
             if (windowargs->conversations)
@@ -2679,7 +2679,7 @@ EXPORTED int index_convupdates(struct index_state *state,
         } else if (was_old_exemplar && is_new_exemplar) {
             if (is_changed) {
                 ptrarray_push(&changed, msg);
-                if (search_is_mutable) {
+                if (is_mutable) {
                     /* is the search is mutable, we're in a whole world of
                      * uncertainty about the client's state, so we just
                      * report the exemplar in all three lists and let the
@@ -2694,7 +2694,7 @@ EXPORTED int index_convupdates(struct index_state *state,
         /* if this is the last message the client cares about ('upto')
          * then we can break early...unless its a mutable search or
          * we need to keep going to calculate an accurate total */
-        if (!search_is_mutable &&
+        if (!is_mutable &&
             !upto_pos &&
             msg->uid == windowargs->upto) {
             if (total != UNPREDICTABLE)
@@ -2859,6 +2859,7 @@ index_copy(struct index_state *state,
     struct mailbox *destmailbox = NULL;
     struct index_map *im;
     int is_same_user;
+    ptrarray_t *msgrecs = ptrarray_new();
 
     *copyuidp = NULL;
 
@@ -2897,6 +2898,10 @@ index_copy(struct index_state *state,
     r = mailbox_open_iwl(name, &destmailbox);
     if (r) goto done;
 
+    /* make sure copying into this mailbox is enabled */
+    r = insert_into_mailbox_allowed(destmailbox);
+    if (r) goto done;
+
     /* not moving or different quota root - need to check quota */
     if (!ismove || strcmpsafe(srcmailbox->quotaroot, destmailbox->quotaroot)) {
         for (i = 0; i < copyargs.nummsg; i++)
@@ -2913,8 +2918,11 @@ index_copy(struct index_state *state,
 
     docopyuid = (appendstate.myrights & ACL_READ);
 
-    r = append_copy(srcmailbox, &appendstate, copyargs.nummsg,
-                    copyargs.records, nolink, is_same_user);
+    for (i = 0; i < copyargs.nummsg; i++) {
+        msgrecord_t *mr = msgrecord_from_index_record(srcmailbox, &copyargs.records[i]);
+        ptrarray_append(msgrecs, mr);
+    }
+    r = append_copy(srcmailbox, &appendstate, msgrecs, nolink, is_same_user);
     if (r) {
         append_abort(&appendstate);
         goto done;
@@ -2966,6 +2974,11 @@ index_copy(struct index_state *state,
 done:
     free(copyargs.records);
     mailbox_close(&destmailbox);
+    for (i = 0; i < msgrecs->count; i++) {
+        msgrecord_t *mr = ptrarray_nth(msgrecs, i);
+        msgrecord_unref(&mr);
+    }
+    ptrarray_free(msgrecs);
 
     return r;
 }
@@ -3071,7 +3084,7 @@ EXPORTED int index_copy_remote(struct index_state *state, char *sequence,
 /*
  * Returns the msgno of the message with UID 'uid'.
  * If no message with UID 'uid', returns the message with
- * the higest UID not greater than 'uid'.
+ * the highest UID not greater than 'uid'.
  */
 EXPORTED uint32_t index_finduid(struct index_state *state, uint32_t uid)
 {
@@ -3656,13 +3669,16 @@ static void index_tellexpunge(struct index_state *state)
     struct index_map *im;
     unsigned exists = state->exists;
 
+    // if we want expunged, we can't tell them!
+    if (state->want_expunged) return;
+
     vanishedlist = seqset_init(0, SEQ_SPARSE);
 
     for (oldmsgno = 1; oldmsgno <= exists; oldmsgno++) {
         im = &state->map[oldmsgno-1];
 
         /* inform about expunges */
-        if (im->system_flags & FLAG_EXPUNGED) {
+        if (im->internal_flags & FLAG_INTERNAL_EXPUNGED) {
             state->exists--;
             state->num_expunged--;
             /* they never knew about this one, skip */
@@ -3692,7 +3708,7 @@ static void index_tellexpunge(struct index_state *state)
     seqset_free(vanishedlist);
 
     /* highestmodseq can now come forward to real-time */
-    state->highestmodseq = state->mailbox->i.highestmodseq;
+    state->delayed_modseq = 0;
 }
 
 static void index_tellexists(struct index_state *state)
@@ -3793,6 +3809,126 @@ static int index_fetchannotations(struct index_state *state,
     return r;
 }
 
+struct fetch_mailbox_rock {
+    struct index_state *state;
+    int sep;
+    int wantname;
+    const struct fetchargs *fetchargs;
+};
+
+static int fetch_mailbox_cb(const conv_guidrec_t *rec, void *rock)
+{
+    static const int needrights = ACL_READ|ACL_LOOKUP;
+    struct fetch_mailbox_rock *fmb_rock = (struct fetch_mailbox_rock *) rock;
+    mbentry_t *mbentry = NULL;
+    int myrights = 0;
+    struct mailbox *mailbox = NULL;
+    msgrecord_t *msgrecord = NULL;
+    char *extname = NULL;
+    int r = 0;
+
+    assert(fmb_rock->state != NULL);
+    assert(fmb_rock->fetchargs != NULL);
+
+    /* convdb has flags: skip if flag deleted or flag internal expunged */
+    if (rec->version >= 1) {
+        if ((rec->system_flags & FLAG_DELETED)
+            || (rec->internal_flags & FLAG_INTERNAL_EXPUNGED))
+            goto done;
+    }
+
+    /* make sure we have appropriate rights */
+    r = mboxlist_lookup(rec->mboxname, &mbentry, NULL);
+    if (r) goto done;
+    myrights = cyrus_acl_myrights(fmb_rock->state->authstate, mbentry->acl);
+    if ((myrights & needrights) != needrights)
+        goto done;
+
+    /* convdb does not have flags: grab them from message record */
+    if (rec->version == 0) {
+        uint32_t system_flags, internal_flags;
+
+        r = mailbox_open_irl(rec->mboxname, &mailbox);
+        if (r) goto done;
+
+        r = msgrecord_find(mailbox, rec->uid, &msgrecord);
+        if (r) goto done;
+
+        r = msgrecord_get_systemflags(msgrecord, &system_flags);
+        if (!r) r = msgrecord_get_internalflags(msgrecord, &internal_flags);
+        if (r) goto done;
+
+        if ((system_flags & FLAG_DELETED)
+            || (internal_flags & FLAG_INTERNAL_EXPUNGED))
+            goto done;
+    }
+
+    if (fmb_rock->wantname) {
+        extname = mboxname_to_external(rec->mboxname,
+                                       fmb_rock->fetchargs->namespace,
+                                       fmb_rock->fetchargs->userid);
+    }
+
+    if (fmb_rock->sep)
+        prot_putc(fmb_rock->sep, fmb_rock->state->out);
+    prot_printf(fmb_rock->state->out, "%s",
+                fmb_rock->wantname ? extname : mbentry->uniqueid);
+    fmb_rock->sep = ' ';
+
+done:
+    if (extname) free(extname);
+    if (msgrecord) msgrecord_unref(&msgrecord);
+    if (mailbox) mailbox_close(&mailbox);
+    if (mbentry) mboxlist_entry_free(&mbentry);
+    return r;
+}
+
+/*
+ * Helper function to send FETCH data for the MAILBOXES
+ * fetch item.
+ */
+static int index_fetchmailboxes(struct index_state *state,
+                                uint32_t msgno,
+                                const struct fetchargs *fetchargs)
+{
+    struct fetch_mailbox_rock rock = { state, 0, /*wantname*/ 1, fetchargs};
+    struct index_record record;
+    int r;
+
+    if (!fetchargs->convstate) return 0;
+
+    r = index_reload_record(state, msgno, &record);
+    if (r) return r;
+
+    return conversations_guid_foreach(fetchargs->convstate,
+                                      message_guid_encode(&record.guid),
+                                      &fetch_mailbox_cb,
+                                      &rock);
+}
+
+/*
+ * Helper function to send FETCH data for the MAILBOXIDS
+ * fetch item.
+ */
+static int index_fetchmailboxids(struct index_state *state,
+                                 uint32_t msgno,
+                                 const struct fetchargs *fetchargs)
+{
+    struct fetch_mailbox_rock rock = { state, 0, /*wantname*/ 0, fetchargs};
+    struct index_record record;
+    int r;
+
+    if (!fetchargs->convstate) return 0;
+
+    r = index_reload_record(state, msgno, &record);
+    if (r) return r;
+
+    return conversations_guid_foreach(fetchargs->convstate,
+                                      message_guid_encode(&record.guid),
+                                      &fetch_mailbox_cb,
+                                      &rock);
+}
+
 /*
  * Helper function to send * FETCH (FLAGS data.
  * Does not send the terminating close paren or CRLF.
@@ -3826,6 +3962,10 @@ static void index_fetchflags(struct index_state *state,
     }
     if (im->system_flags & FLAG_DELETED) {
         prot_printf(state->out, "%c\\Deleted", sepchar);
+        sepchar = ' ';
+    }
+    if (state->want_expunged && (im->internal_flags & FLAG_INTERNAL_EXPUNGED)) {
+        prot_printf(state->out, "%c\\Expunged", sepchar);
         sepchar = ' ';
     }
     if (im->isseen) {
@@ -3970,6 +4110,18 @@ static int index_fetchreply(struct index_state *state, uint32_t msgno,
                     sepchar, datebuf);
         sepchar = ' ';
     }
+
+    if (fetchitems & FETCH_LASTUPDATED) {
+        time_t msgdate = record.last_updated;
+        char datebuf[RFC3501_DATETIME_MAX+1];
+
+        time_to_rfc3501(msgdate, datebuf, sizeof(datebuf));
+
+        prot_printf(state->out, "%cLASTUPDATED \"%s\"",
+                    sepchar, datebuf);
+        sepchar = ' ';
+    }
+
     if (fetchitems & FETCH_MODSEQ || (ischanged && (client_capa & CAPA_CONDSTORE))) {
         prot_printf(state->out, "%cMODSEQ (" MODSEQ_FMT ")",
                     sepchar, record.modseq);
@@ -3984,6 +4136,26 @@ static int index_fetchreply(struct index_state *state, uint32_t msgno,
         prot_printf(state->out, "%cANNOTATION (", sepchar);
         r = index_fetchannotations(state, msgno, fetchargs);
         r = 0;
+        prot_printf(state->out, ")");
+        sepchar = ' ';
+    }
+    if (fetchitems & FETCH_PREVIEW) {
+        prot_printf(state->out, "%cPREVIEW (FUZZY ", sepchar);
+        const char *annot = config_getstring(IMAPOPT_JMAP_PREVIEW_ANNOT);
+        if (annot && !strncmp(annot, "/shared/", 8)) {
+            struct buf previewbuf = BUF_INITIALIZER;
+            annotatemore_msg_lookup(mailbox->name, record.uid, annot+7,
+                                    /*userid*/"", &previewbuf);
+            if (buf_len(&previewbuf) > 256)
+                buf_truncate(&previewbuf, 256); // XXX - utf8 chars
+            prot_printastring(state->out, buf_cstring(&previewbuf));
+            buf_free(&previewbuf);
+        }
+        else {
+            prot_printf(state->out, "NIL");
+        }
+
+
         prot_printf(state->out, ")");
         sepchar = ' ';
     }
@@ -4008,6 +4180,14 @@ static int index_fetchreply(struct index_state *state, uint32_t msgno,
         prot_printf(state->out, "%cRFC822.SHA1 %s", sepchar, message_guid_encode(&tmpguid));
         sepchar = ' ';
     }
+    if (fetchitems & FETCH_EMAILID) {
+        char emailid[26];
+        emailid[0] = 'M';
+        memcpy(emailid+1, message_guid_encode(&record.guid), 24);
+        emailid[25] = '\0';
+        prot_printf(state->out, "%cEMAILID (%s)", sepchar, emailid);
+        sepchar = ' ';
+    }
     if ((fetchitems & FETCH_CID) &&
         config_getswitch(IMAPOPT_CONVERSATIONS)) {
         struct buf buf = BUF_INITIALIZER;
@@ -4016,6 +4196,54 @@ static int index_fetchreply(struct index_state *state, uint32_t msgno,
         else
             buf_printf(&buf, CONV_FMT, record.cid);
         prot_printf(state->out, "%cCID %s", sepchar, buf_cstring(&buf));
+        buf_free(&buf);
+        sepchar = ' ';
+    }
+    if ((fetchitems & FETCH_THREADID)) {
+        char threadid[18];
+        if (!record.cid) {
+            threadid[0] = 'N';
+            threadid[1] = 'I';
+            threadid[2] = 'L';
+            threadid[3] = '\0';
+        }
+        else {
+            threadid[0] = 'T';
+            memcpy(threadid+1, conversation_id_encode(record.cid), 16);
+            threadid[17] = '\0';
+        }
+
+        prot_printf(state->out, "%cTHREADID (%s)", sepchar, threadid);
+        sepchar = ' ';
+    }
+    if (fetchitems & FETCH_SAVEDATE) {
+        time_t msgdate = record.savedate;
+        char datebuf[RFC3501_DATETIME_MAX+1];
+
+        // handle internaldate
+        if (!msgdate) msgdate = record.internaldate;
+
+        time_to_rfc3501(msgdate, datebuf, sizeof(datebuf));
+
+        prot_printf(state->out, "%cSAVEDATE \"%s\"",
+                    sepchar, datebuf);
+        sepchar = ' ';
+    }
+    if (fetchitems & FETCH_CREATEDMODSEQ) {
+        prot_printf(state->out, "%cCREATEDMODSEQ (" MODSEQ_FMT ")",
+                    sepchar, record.createdmodseq);
+        sepchar = ' ';
+    }
+
+    if ((fetchitems & FETCH_BASECID) &&
+        config_getswitch(IMAPOPT_CONVERSATIONS)) {
+        mailbox_read_basecid(mailbox, &record);
+        struct buf buf = BUF_INITIALIZER;
+        if (!record.basecid)
+            buf_appendcstr(&buf, "NIL");
+        else
+            buf_printf(&buf, CONV_FMT, record.basecid);
+        prot_printf(state->out, "%cBASECID %s", sepchar, buf_cstring(&buf));
         buf_free(&buf);
         sepchar = ' ';
     }
@@ -4031,6 +4259,22 @@ static int index_fetchreply(struct index_state *state, uint32_t msgno,
         prot_printf(state->out, "%cUIDVALIDITY %u", sepchar,
                     state->mailbox->i.uidvalidity);
         sepchar = ' ';
+    }
+    if (config_getswitch(IMAPOPT_CONVERSATIONS)) {
+        if (fetchitems & FETCH_MAILBOXES) {
+            prot_printf(state->out, "%cMAILBOXES (", sepchar);
+            r = index_fetchmailboxes(state, msgno, fetchargs);
+            r = 0;
+            prot_printf(state->out, ")");
+            sepchar = ' ';
+        }
+        if (fetchitems & FETCH_MAILBOXIDS) {
+            prot_printf(state->out, "%cMAILBOXIDS (", sepchar);
+            r = index_fetchmailboxids(state, msgno, fetchargs);
+            r = 0;
+            prot_printf(state->out, ")");
+            sepchar = ' ';
+        }
     }
     if (fetchitems & FETCH_ENVELOPE) {
         if (!mailbox_cacherecord(mailbox, &record)) {
@@ -4243,7 +4487,7 @@ EXPORTED int index_urlfetch(struct index_state *state, uint32_t msgno,
     struct body *top = NULL, *body = NULL;
     size_t section_offset, section_size;
 
-    r = index_lock(state);
+    r = index_lock(state, /*readonly*/1); // XXX: do we need to stay locked for this entire function?
     if (r) return r;
 
     struct mailbox *mailbox = state->mailbox;
@@ -4444,7 +4688,7 @@ EXPORTED int index_urlfetch(struct index_state *state, uint32_t msgno,
  */
 static int index_storeflag(struct index_state *state,
                            struct index_modified_flags *modified_flags,
-                           uint32_t msgno, struct index_record *record,
+                           uint32_t msgno, msgrecord_t *msgrec,
                            struct storeargs *storeargs)
 {
     uint32_t old, new, keep;
@@ -4476,8 +4720,21 @@ static int index_storeflag(struct index_state *state,
         }
     }
 
-    keep = record->system_flags & FLAGS_INTERNAL;
-    old = record->system_flags & FLAGS_SYSTEM;
+    uint32_t system_flags;
+    uint32_t internal_flags;
+    uint32_t user_flags[MAX_USER_FLAGS/32];
+
+    r = msgrecord_get_systemflags(msgrec, &system_flags);
+    if (r) return r;
+
+    r = msgrecord_get_internalflags(msgrec, &internal_flags);
+    if (r) return r;
+
+    r = msgrecord_get_userflags(msgrec, user_flags);
+    if (r) return r;
+
+    keep = internal_flags;
+    old = system_flags & FLAGS_SYSTEM;
     new = storeargs->system_flags & FLAGS_SYSTEM;
 
     /* all other updates happen directly to the record */
@@ -4486,39 +4743,39 @@ static int index_storeflag(struct index_state *state,
             /* ACL_DELETE handled in index_store() */
             if ((old & FLAG_DELETED) != (new & FLAG_DELETED)) {
                 dirty++;
-                record->system_flags = (old & ~FLAG_DELETED) | (new & FLAG_DELETED);
+                system_flags = (old & ~FLAG_DELETED) | (new & FLAG_DELETED);
             }
         }
         else {
             if (!(state->myrights & ACL_DELETEMSG)) {
                 if ((old & ~FLAG_DELETED) != (new & ~FLAG_DELETED)) {
                     dirty++;
-                    record->system_flags = (old & FLAG_DELETED) | (new & ~FLAG_DELETED);
+                    system_flags = (old & FLAG_DELETED) | (new & ~FLAG_DELETED);
                 }
             }
             else {
                 if (old != new) {
                     dirty++;
-                    record->system_flags = new;
+                    system_flags = new;
                 }
             }
             for (i = 0; i < (MAX_USER_FLAGS/32); i++) {
-                if (record->user_flags[i] != storeargs->user_flags[i]) {
+                if (user_flags[i] != storeargs->user_flags[i]) {
                     uint32_t changed;
                     dirty++;
 
-                    changed = ~record->user_flags[i] & storeargs->user_flags[i];
+                    changed = ~user_flags[i] & storeargs->user_flags[i];
                     if (changed) {
                         modified_flags->added_user_flags[i] = changed;
                         modified_flags->added_flags++;
                     }
 
-                    changed = record->user_flags[i] & ~storeargs->user_flags[i];
+                    changed = user_flags[i] & ~storeargs->user_flags[i];
                     if (changed) {
                         modified_flags->removed_user_flags[i] = changed;
                         modified_flags->removed_flags++;
                     }
-                    record->user_flags[i] = storeargs->user_flags[i];
+                    user_flags[i] = storeargs->user_flags[i];
                 }
             }
         }
@@ -4528,13 +4785,13 @@ static int index_storeflag(struct index_state *state,
 
         if (~old & new) {
             dirty++;
-            record->system_flags = old | new;
+            system_flags = old | new;
         }
         for (i = 0; i < (MAX_USER_FLAGS/32); i++) {
-            added = ~record->user_flags[i] & storeargs->user_flags[i];
+            added = ~user_flags[i] & storeargs->user_flags[i];
             if (added) {
                 dirty++;
-                record->user_flags[i] |= storeargs->user_flags[i];
+                user_flags[i] |= storeargs->user_flags[i];
 
                 modified_flags->added_user_flags[i] = added;
                 modified_flags->added_flags++;
@@ -4546,13 +4803,13 @@ static int index_storeflag(struct index_state *state,
 
         if (old & new) {
             dirty++;
-            record->system_flags &= ~storeargs->system_flags;
+            system_flags &= ~storeargs->system_flags;
         }
         for (i = 0; i < (MAX_USER_FLAGS/32); i++) {
-            removed = record->user_flags[i] & storeargs->user_flags[i];
+            removed = user_flags[i] & storeargs->user_flags[i];
             if (removed) {
                 dirty++;
-                record->user_flags[i] &= ~storeargs->user_flags[i];
+                user_flags[i] &= ~storeargs->user_flags[i];
 
                 modified_flags->removed_user_flags[i] = removed;
                 modified_flags->removed_flags++;
@@ -4578,21 +4835,25 @@ static int index_storeflag(struct index_state *state,
     if (state->internalseen) {
         /* copy the seen flag from the index */
         if (im->isseen)
-            record->system_flags |= FLAG_SEEN;
+            system_flags |= FLAG_SEEN;
         else
-            record->system_flags &= ~FLAG_SEEN;
+            system_flags &= ~FLAG_SEEN;
     }
     /* add back the internal tracking flags */
-    record->system_flags |= keep;
+    system_flags |= keep;
 
-    modified_flags->added_system_flags = ~old & record->system_flags & FLAGS_SYSTEM;
+    modified_flags->added_system_flags = ~old & system_flags & FLAGS_SYSTEM;
     if (modified_flags->added_system_flags)
         modified_flags->added_flags++;
-    modified_flags->removed_system_flags = old & ~record->system_flags & FLAGS_SYSTEM;
+    modified_flags->removed_system_flags = old & ~system_flags & FLAGS_SYSTEM;
     if (modified_flags->removed_system_flags)
         modified_flags->removed_flags++;
 
-    r = index_rewrite_record(state, msgno, record);
+    r = msgrecord_set_systemflags(msgrec, system_flags);
+    if (r) return r;
+    r = msgrecord_set_internalflags(msgrec, internal_flags);
+    if (r) return r;
+    r = msgrecord_set_userflags(msgrec, user_flags);
     if (r) return r;
 
     /* if it's silent and unchanged, update the seen value, but
@@ -4611,31 +4872,36 @@ static int index_storeflag(struct index_state *state,
  */
 static int index_store_annotation(struct index_state *state,
                                   uint32_t msgno,
-                                  struct storeargs *storeargs)
+                                  msgrecord_t *msgrec,
+                                  struct storeargs *storeargs,
+                                  int *dirty)
 {
     modseq_t oldmodseq;
-    struct index_record record;
-    annotate_state_t *astate = NULL;
+    struct index_record *record;
     struct index_map *im = &state->map[msgno-1];
     int r;
 
-    r = index_reload_record(state, msgno, &record);
+    r = msgrecord_get_index_record_rw(msgrec, &record);
     if (r) goto out;
 
-    oldmodseq = record.modseq;
-
-    r = mailbox_get_annotate_state(state->mailbox, record.uid, &astate);
+    r = index_reload_record(state, msgno, record);
     if (r) goto out;
-    annotate_state_set_auth(astate, storeargs->isadmin,
-                            storeargs->userid, storeargs->authstate);
-    r = annotate_state_store(astate, storeargs->entryatts);
+
+    oldmodseq = record->modseq;
+
+    r = msgrecord_annot_set_auth(msgrec, storeargs->isadmin, storeargs->userid,
+                                 storeargs->authstate);
+    if (r) goto out;
+
+    r = msgrecord_annot_writeall(msgrec, storeargs->entryatts);
     if (r) goto out;
 
     /* It would be nice if the annotate layer told us whether it
      * actually made a change to the database, but it doesn't, so
      * we have to assume the message is dirty */
+    *dirty = 1;
 
-    r = index_rewrite_record(state, msgno, &record);
+    r = index_rewrite_record(state, msgno, record, /*silent*/1);
     if (r) goto out;
 
     /* if it's silent and unchanged, update the seen value */
@@ -4655,39 +4921,56 @@ EXPORTED int index_search_evaluate(struct index_state *state,
                                    uint32_t msgno)
 {
     struct index_map *im = &state->map[msgno-1];
-    int r;
-    message_t *m;
     struct index_record record;
 
-    r = index_reload_record(state, msgno, &record);
-    if (r) return r;
+    int always = search_expr_always_same(e);
+    if (always < 0) return 0;
+    if (always > 0) return 1;
+
+    // failure to load is an error!
+    int r = index_reload_record(state, msgno, &record);
+    if (r) return 0;
 
     xstats_inc(SEARCH_EVALUATE);
 
-    m = message_new_from_index(state->mailbox, &record, msgno,
-                               (im->isrecent ? MESSAGE_RECENT : 0) |
-                               (im->isseen ? MESSAGE_SEEN : 0));
-    r = search_expr_evaluate(m, e);
-    message_unref(&m);
+    int flags = (im->isrecent ? MESSAGE_RECENT : 0)
+              | (im->isseen ? MESSAGE_SEEN : 0);
+    if (state->m) message_set_from_index(state->mailbox, &record, msgno, flags, state->m);
+    else state->m = message_new_from_index(state->mailbox, &record, msgno, flags);
+    int match = search_expr_evaluate(state->m, e);
 
-    return r;
+    return match;
 }
+
+struct extractor_ctx {
+    struct backend *be;
+    struct protstream *clientin;
+    unsigned failed;
+};
 
 struct getsearchtext_rock
 {
     search_text_receiver_t *receiver;
     int indexed_headers;
     int charset_flags;
+    const strarray_t *partids;
+    int snippet_iteration; /* 0..no snippet, 1..first run, 2..second run */
+    struct extractor_ctx *ext;
 };
 
 static void stuff_part(search_text_receiver_t *receiver,
-                       int part, const struct buf *buf)
+                       int part,
+                       const struct message_guid *content_guid,
+                       const struct buf *buf)
 {
+    // don't try to index a zero length part
+    if (!buf_len(buf)) return;
+
     if (part == SEARCH_PART_HEADERS &&
         !config_getswitch(IMAPOPT_SEARCH_INDEX_HEADERS))
         return;
 
-    receiver->begin_part(receiver, part);
+    receiver->begin_part(receiver, part, content_guid);
     receiver->append_text(receiver, buf);
     receiver->end_part(receiver, part);
 }
@@ -4698,94 +4981,33 @@ static void extract_cb(const struct buf *text, void *rock)
     str->receiver->append_text(str->receiver, text);
 }
 
-static int getsearchtext_cb(int isbody, charset_t charset, int encoding,
-                            const char *type, const char *subtype,
-                            const struct param *type_params __attribute__((unused)),
-                            const char *disposition,
-                            const struct param *disposition_params,
-                            struct buf *data,
-                            void *rock)
-{
-    struct getsearchtext_rock *str = (struct getsearchtext_rock *)rock;
-    char *q;
-    struct buf text = BUF_INITIALIZER;
-
-    if (!isbody) {
-        if (!str->indexed_headers) {
-            /* Only index the headers of the top message */
-            q = charset_decode_mimeheader(buf_cstring(data), str->charset_flags);
-            buf_init_ro_cstr(&text, q);
-            stuff_part(str->receiver, SEARCH_PART_HEADERS, &text);
-            free(q);
-            buf_free(&text);
-            str->indexed_headers = 1;
-        }
-
-        /* Index attachment file names */
-        const struct param *param;
-        if (disposition && !strcmp(disposition, "ATTACHMENT")) {
-            /* Look for "Content-Disposition: attachment;filename=" header */
-            for (param = disposition_params; param; param = param->next) {
-                if (strcmp(param->attribute, "FILENAME"))
-                    continue;
-                buf_init_ro_cstr(&text, param->value);
-                stuff_part(str->receiver, SEARCH_PART_ATTACHMENTNAME, &text);
-                buf_free(&text);
-            }
-        }
-        for(param = type_params; param; param = param->next) {
-            /* Look for "Content-Type: foo;name=" header */
-            if (strcmp(param->attribute, "NAME"))
-                continue;
-            buf_init_ro_cstr(&text, param->value);
-            stuff_part(str->receiver, SEARCH_PART_ATTACHMENTNAME, &text);
-            buf_free(&text);
-        }
-    }
-    else if (buf_len(data) > 50 && !memcmp(data->s, "-----BEGIN PGP MESSAGE-----", 27)) {
-        /* PGP encrypted body part - we don't want to index this,
-         * it's a ton of random base64 noise */
-    }
-    else if (!strcmp(type, "TEXT")) {
-        /* body-like */
-        str->receiver->begin_part(str->receiver, SEARCH_PART_BODY);
-        charset_extract(extract_cb, str, data, charset, encoding, subtype,
-                        str->charset_flags);
-        str->receiver->end_part(str->receiver, SEARCH_PART_BODY);
-    }
-
-    return 0;
-}
-
-static void append_alnum(struct buf *buf, const char *ss)
-{
-    const unsigned char *s = (const unsigned char *)ss;
-
-    for ( ; *s ; ++s) {
-        if (Uisalnum(*s))
-            buf_putc(buf, *s);
-    }
-}
-
 #ifdef USE_HTTPD
-static int index_icalmessage(message_t *msg, struct getsearchtext_rock *str)
+static int extract_icalbuf(struct buf *raw, charset_t charset, int encoding,
+                           const struct message_guid *content_guid,
+                           struct getsearchtext_rock *str)
 {
     icalcomponent *comp = NULL, *ical = NULL;
-    struct buf buf = BUF_INITIALIZER;
     const char *s;
-    int r, enc = 0;
+    int r = 0;
+    struct buf buf = BUF_INITIALIZER;
 
     /* Parse the message into an iCalendar object */
-    r = message_get_encoding(msg, &enc);
-    if (r) return r;
-    r = message_get_field(msg, "rawbody", MESSAGE_RAW, &buf);
-    if (r) return r;
-    ical = icalparser_parse_string(buf_cstring(&buf));
+    const struct buf *icalbuf = NULL;
+    if (encoding || strcasecmp(charset_name(charset), "utf-8")) {
+        char *tmp = charset_to_utf8(buf_cstring(raw), buf_len(raw), charset, encoding);
+        if (!tmp) return 0; /* could be a bogus header - ignore */
+        buf_initm(&buf, tmp, strlen(tmp));
+        icalbuf = &buf;
+    }
+    else {
+        icalbuf = raw;
+    }
+    ical = icalparser_parse_string(buf_cstring(icalbuf));
+    buf_reset(&buf);
     if (!ical) {
         r = IMAP_INTERNAL;
         goto done;
     }
-    buf_reset(&buf);
 
     for (comp = icalcomponent_get_first_real_component(ical);
          comp;
@@ -4798,8 +5020,8 @@ static int index_icalmessage(message_t *msg, struct getsearchtext_rock *str)
         if ((s = icalcomponent_get_description(comp))) {
             buf_setcstr(&buf, s);
             charset_t utf8 = charset_lookupname("utf-8");
-            str->receiver->begin_part(str->receiver, SEARCH_PART_BODY);
-            charset_extract(extract_cb, str, &buf, utf8, enc, "calendar",
+            str->receiver->begin_part(str->receiver, SEARCH_PART_BODY, content_guid);
+            charset_extract(extract_cb, str, &buf, utf8, 0, "calendar",
                             str->charset_flags);
             str->receiver->end_part(str->receiver, SEARCH_PART_BODY);
             charset_free(&utf8);
@@ -4810,7 +5032,7 @@ static int index_icalmessage(message_t *msg, struct getsearchtext_rock *str)
         if ((prop = icalcomponent_get_first_property(comp, ICAL_SUMMARY_PROPERTY))) {
             if ((s = icalproperty_get_summary(prop))) {
                 buf_setcstr(&buf, s);
-                stuff_part(str->receiver, SEARCH_PART_SUBJECT, &buf);
+                stuff_part(str->receiver, SEARCH_PART_SUBJECT, NULL, &buf);
                 buf_reset(&buf);
             }
         }
@@ -4827,7 +5049,7 @@ static int index_icalmessage(message_t *msg, struct getsearchtext_rock *str)
                 } else {
                     buf_setcstr(&buf, s);
                 }
-                stuff_part(str->receiver, SEARCH_PART_FROM, &buf);
+                stuff_part(str->receiver, SEARCH_PART_FROM, NULL, &buf);
                 buf_reset(&buf);
             }
         }
@@ -4852,7 +5074,7 @@ static int index_icalmessage(message_t *msg, struct getsearchtext_rock *str)
             }
         }
         if (buf.len) {
-            stuff_part(str->receiver, SEARCH_PART_TO, &buf);
+            stuff_part(str->receiver, SEARCH_PART_TO, NULL, &buf);
             buf_reset(&buf);
         }
 
@@ -4860,23 +5082,627 @@ static int index_icalmessage(message_t *msg, struct getsearchtext_rock *str)
         if ((prop = icalcomponent_get_first_property(comp, ICAL_LOCATION_PROPERTY))) {
             if ((s = icalproperty_get_location(prop))) {
                 buf_setcstr(&buf, s);
-                stuff_part(str->receiver, SEARCH_PART_LOCATION, &buf);
+                stuff_part(str->receiver, SEARCH_PART_LOCATION, content_guid, &buf);
                 buf_reset(&buf);
             }
         }
     }
 
 done:
-    buf_free(&buf);
     if (ical) icalcomponent_free(ical);
+    buf_free(&buf);
     return r;
 }
+
+static void _add_vcard_singlval(struct vparse_card *card, const char *key, struct buf *buf)
+{
+    struct vparse_entry *entry;
+    for (entry = card->properties; entry; entry = entry->next) {
+        if (strcasecmp(entry->name, key)) continue;
+        const char *val = entry->v.value;
+        if (val && val[0]) {
+            if (buf_len(buf)) buf_putc(buf, ' ');
+            buf_appendcstr(buf, val);
+        }
+    }
+}
+
+static void _add_vcard_multival(struct vparse_card *card, const char *key, struct buf *buf)
+{
+    struct vparse_entry *entry;
+    for (entry = card->properties; entry; entry = entry->next) {
+        if (strcasecmp(entry->name, key)) continue;
+        const strarray_t *sa = entry->v.values;
+        int i;
+        for (i = 0; i < strarray_size(sa); i++) {
+            const char *val = strarray_nth(sa, i);
+            if (val && val[0]) {
+                if (buf_len(buf)) buf_putc(buf, ' ');
+                buf_appendcstr(buf, val);
+            }
+        }
+    }
+}
+
+static int extract_vcardbuf(struct buf *raw, charset_t charset, int encoding,
+                            const struct message_guid *content_guid,
+                            struct getsearchtext_rock *str)
+{
+    struct vparse_card *vcard = NULL;
+    int r = 0;
+    struct buf buf = BUF_INITIALIZER;
+
+    /* Parse the message into a vcard object */
+    const struct buf *vcardbuf = NULL;
+    if (encoding || strcasecmp(charset_name(charset), "utf-8")) {
+        char *tmp = charset_to_utf8(buf_cstring(raw), buf_len(raw), charset, encoding);
+        if (!tmp) return 0; /* could be a bogus header - ignore */
+        buf_initm(&buf, tmp, strlen(tmp));
+        vcardbuf = &buf;
+    }
+    else {
+        vcardbuf = raw;
+    }
+
+    vcard = vcard_parse_string(buf_cstring(vcardbuf), /*repair*/1);
+    if (!vcard || !vcard->objects) {
+        r = IMAP_INTERNAL;
+        goto done;
+    }
+
+    buf_reset(&buf);
+
+    // these are all the things that we think might be interesting
+    _add_vcard_singlval(vcard->objects, "fn", &buf);
+    _add_vcard_singlval(vcard->objects, "email", &buf);
+    _add_vcard_singlval(vcard->objects, "tel", &buf);
+    _add_vcard_singlval(vcard->objects, "url", &buf);
+    _add_vcard_singlval(vcard->objects, "impp", &buf);
+    _add_vcard_singlval(vcard->objects, "x-social-profile", &buf);
+    _add_vcard_singlval(vcard->objects, "x-fm-online-other", &buf);
+    _add_vcard_singlval(vcard->objects, "nickname", &buf);
+    _add_vcard_singlval(vcard->objects, "note", &buf);
+
+    _add_vcard_multival(vcard->objects, "n", &buf);
+    _add_vcard_multival(vcard->objects, "org", &buf);
+    _add_vcard_multival(vcard->objects, "adr", &buf);
+
+    if (buf.len) {
+        charset_t utf8 = charset_lookupname("utf-8");
+        str->receiver->begin_part(str->receiver, SEARCH_PART_BODY, content_guid);
+        charset_extract(extract_cb, str, &buf, utf8, 0, "vcard",
+                        str->charset_flags);
+        str->receiver->end_part(str->receiver, SEARCH_PART_BODY);
+        charset_free(&utf8);
+        buf_reset(&buf);
+    }
+
+done:
+    if (vcard) vparse_free_card(vcard);
+    buf_free(&buf);
+    return r;
+}
+
 #endif /* USE_HTTPD */
 
-EXPORTED int index_getsearchtext(message_t *msg,
+
+#define IDLE_TIMEOUT (5 * 60)  /* 5 min */
+
+struct backend_ctx {
+    char *path;
+    int timeout;
+};
+
+static int login(struct backend *s __attribute__((unused)),
+                 const char *userid __attribute__((unused)),
+                 sasl_callback_t *cb __attribute__((unused)),
+                 const char **status __attribute__((unused)),
+                 int noauth __attribute__((unused)))
+{
+    return 0;
+}
+
+static int ping(struct backend *s,
+                const char *userid __attribute__((unused)))
+{
+    struct backend_ctx *ctx = (struct backend_ctx *) s->context;
+    size_t hostlen = strcspn(s->hostname, "/");
+    hdrcache_t resp_hdrs = NULL;
+    struct body_t resp_body;
+    unsigned statuscode = 0;
+    const char *errstr;
+    int r = 0;
+
+    prot_printf(s->out,
+                "HEAD %s %s\r\n"
+                "Host: %.*s\r\n"
+                "User-Agent: Cyrus/%s\r\n"
+                "Connection: Keep-Alive\r\n"
+                "Keep-Alive: timeout=%u\r\n"
+                "Accept: text/plain\r\n"
+                "\r\n",
+                ctx->path, HTTP_VERSION,
+                (int) hostlen, s->hostname, CYRUS_VERSION, ctx->timeout);
+    prot_flush(s->out);
+
+    /* Read response(s) from backend until final response or error */
+    do {
+        resp_body.flags = BODY_DISCARD;
+        r = http_read_response(s, METH_HEAD, &statuscode,
+                               &resp_hdrs, &resp_body, &errstr);
+        if (r) {
+            break;
+        }
+    } while (statuscode < 200);
+
+    if (r) {
+        syslog(LOG_DEBUG, "extractor_ping: HEAD %s: failed (%s): %s",
+               ctx->path, error_message(r), errstr);
+    }
+    else {
+        syslog(LOG_DEBUG, "extractor_ping: HEAD %s: got status %u",
+               ctx->path, statuscode);
+    }
+
+    if (resp_hdrs) spool_free_hdrcache(resp_hdrs);
+
+    return r;
+}
+
+static int logout(struct backend *s __attribute__((unused)))
+{
+    return 0;
+}
+
+static void extractor_disconnect(struct backend *be)
+{
+    syslog(LOG_DEBUG, "extractor_disconnect(%p)", be);
+
+    if (!be || (be->sock == -1)) {
+        /* already disconnected */
+        return;
+    }
+
+    /* need to logout of server */
+    backend_disconnect(be);
+
+    /* remove the timeout */
+    if (be->timeout) prot_removewaitevent(be->clientin, be->timeout);
+    be->timeout = NULL;
+    be->clientin = NULL;
+}
+
+static struct prot_waitevent *
+extractor_timeout(struct protstream *s __attribute__((unused)),
+                  struct prot_waitevent *ev __attribute__((unused)),
+                  void *rock)
+{
+    struct backend *be = (struct backend *) rock;
+
+    syslog(LOG_DEBUG, "extractor_timeout(%p)", be);
+
+    /* too long since we last used the extractor - disconnect */
+    extractor_disconnect(be);
+
+    return NULL;
+}
+
+static struct protocol_t http =
+{ "http", "HTTP", TYPE_SPEC, { .spec = { &login, &ping, &logout } } };
+
+static int extractor_connect(const char *exturl, struct extractor_ctx *ext)
+{
+    struct backend *be;
+    struct backend_ctx *ctx = NULL;
+    struct buf buf = BUF_INITIALIZER;
+    const char *hostname;
+    char path[256];
+    time_t now = time(NULL);
+    int r = 0;
+
+    syslog(LOG_DEBUG, "extractor_connect(%s)", exturl);
+
+    if (!ext || ext->failed > 1) return IMAP_INTERNAL;
+
+    be = ext->be;
+    if (be) {
+        ctx = be->context;
+        hostname = be->hostname;
+    }
+    else {
+        char scheme[6], server[100], *p;
+        unsigned https, port;
+
+        /* Parse URL (cheesy parser without having to use libxml2) */
+        int n = sscanf(exturl, "%5[^:]://%99[^/]%255[^\n]",
+                       scheme, server, path);
+        if (n != 3 ||
+            strncmp(lcase(scheme), "http", 4) || (scheme[4] && scheme[4] != 's')) {
+            syslog(LOG_ERR,
+                   "extract_attachment: unexpected non-HTTP URL %s", exturl);
+            return IMAP_INTERNAL;
+        }
+
+        /* Normalize URL parts */
+        https = (scheme[4] == 's');
+        if (*(p = path + strlen(path) - 1) == '/') *p = '\0';
+        if ((p = strrchr(server, ':'))) {
+            *p++ = '\0';
+            port = atoi(p);
+        }
+        else port = https ? 443 : 80;
+
+        /* Build servername, port, and options */
+        buf_printf(&buf, "%s:%u%s/noauth", server, port, https ? "/tls" : "");
+        hostname = buf_cstring(&buf);
+    }
+
+    if (be && (be->sock != -1)) {
+        syslog(LOG_DEBUG, "extractor_connect: ping existing connection");
+
+        /* ping the extractor */
+        if (ping(be, NULL)) extractor_disconnect(be);
+    }
+
+    if (!be || (be->sock == -1)) {
+        /* Connect to extractor service */
+        syslog(LOG_DEBUG, "extractor_connect: %sconnect to %s",
+               be ? "re" : "", hostname);
+
+        be = ext->be = backend_connect(be, hostname,
+                                       &http, NULL, NULL, NULL, -1);
+
+        if (!be) {
+            syslog(LOG_ERR, "extract_connect: failed to connect to %s",
+                   hostname);
+            ext->failed++;
+            r = IMAP_IOERROR;
+        }
+        else if (!ctx) {
+            ctx = be->context = xzmalloc(sizeof(struct backend_ctx));
+            ctx->path = xstrdup(path);
+
+            if (ext->clientin) {
+                /* add a default timeout */
+                be->clientin = ext->clientin;
+                be->timeout = prot_addwaitevent(ext->clientin,
+                                                now + IDLE_TIMEOUT,
+                                                extractor_timeout, be);
+            }
+        }
+    }
+
+    if (be->timeout && ctx->timeout) be->timeout->mark = now + ctx->timeout;
+
+    buf_free(&buf);
+
+    return r;
+}
+
+
+static int extract_attachment(const char *type, const char *subtype,
+                              const struct param *type_params,
+                              const struct buf *data, int encoding,
+                              const struct message_guid *content_guid,
+                              struct getsearchtext_rock *str)
+{
+    struct extractor_ctx *ext = str->ext;
+    struct backend *be;
+    struct backend_ctx *ctx;
+    struct buf buf = BUF_INITIALIZER;
+    hdrcache_t hdrs = NULL;
+    struct body_t body = { 0, 0, 0, 0, 0, BUF_INITIALIZER };
+    const char *guidstr, *errstr = NULL;
+    size_t hostlen;
+    int r = 0;
+
+    if (!ext) return 0;
+
+    be = ext->be;
+    ctx = (struct backend_ctx *) be->context;
+    hostlen = strcspn(be->hostname, "/");
+
+    if (message_guid_isnull(content_guid)) {
+        syslog(LOG_DEBUG, "extract_attachment: ignoring null guid for %s/%s",
+                type ? type : "<null>", subtype ? subtype : "<null>");
+        return 0;
+    }
+
+    /* Fetch previously extracted text */
+    unsigned statuscode = 0;
+    guidstr = message_guid_encode(content_guid);
+    prot_printf(be->out,
+                "GET %s/%s %s\r\n"
+                "Host: %.*s\r\n"
+                "User-Agent: Cyrus/%s\r\n"
+                "Connection: Keep-Alive\r\n"
+                "Keep-Alive: timeout=%u\r\n"
+                "Accept: text/plain\r\n"
+                "\r\n",
+                ctx->path, guidstr, HTTP_VERSION,
+                (int) hostlen, be->hostname, CYRUS_VERSION,
+                ctx->timeout ? ctx->timeout : IDLE_TIMEOUT);
+    prot_flush(be->out);
+
+    /* Read GET response */
+    do {
+        r = http_read_response(be, METH_GET,
+                               &statuscode, &hdrs, &body, &errstr);
+        if (r) {
+            syslog(LOG_ERR,
+                   "extract_attachment: failed to read response for GET %s/%s",
+                   ctx->path, guidstr);
+            r = IMAP_IOERROR;
+            goto done;
+        }
+    } while (statuscode < 200);
+
+    syslog(LOG_DEBUG, "extract_attachment: GET %s/%s: got status %u",
+           ctx->path, guidstr, statuscode);
+
+    /* Abide by server's timeout, if any */
+    if (!ctx->timeout) {
+        const char **hdr, *p;
+
+        if ((hdr = spool_getheader(hdrs, "Keep-Alive")) &&
+            (p = strstr(hdr[0], "timeout="))) {
+            ctx->timeout = atoi(p+8);
+        }
+        else ctx->timeout = IDLE_TIMEOUT;
+
+        if (be->timeout) be->timeout->mark = time(NULL) + ctx->timeout;
+    }
+
+    if (statuscode == 404) {
+        /* Decode data */
+        struct buf decbuf = BUF_INITIALIZER;
+        if (encoding) {
+            if (charset_decode(&decbuf, buf_base(data), buf_len(data), encoding)) {
+                syslog(LOG_ERR, "extract_attachment: failed to decode data");
+                r = IMAP_IOERROR;
+                goto done;
+            }
+            data = &decbuf;
+        }
+
+        /* Build list of Content-Type parameters */
+        const struct param *param = type_params;
+        while (param && param->attribute) {
+            buf_putc(&buf, ';');
+            buf_appendcstr(&buf, param->attribute);
+            if (param->value) {
+                buf_putc(&buf, '=');
+                buf_appendcstr(&buf, param->value);
+            }
+            param = param->next;
+        }
+
+        /* Send attachment to service for text extraction */
+        prot_printf(be->out,
+                    "PUT %s/%s %s\r\n"
+                    "Host: %.*s\r\n"
+                    "User-Agent: Cyrus/%s\r\n"
+                    "Connection: Keep-Alive\r\n"
+                    "Keep-Alive: timeout=%u\r\n"
+                    "Accept: text/plain\r\n"
+                    "Content-Type: %s/%s%s\r\n"
+                    "Content-Length: %ld\r\n"
+                    "\r\n",
+                    ctx->path, guidstr, HTTP_VERSION,
+                    (int) hostlen, be->hostname, CYRUS_VERSION, ctx->timeout,
+                    type, subtype, buf_cstring(&buf), buf_len(data));
+        prot_putbuf(be->out, (struct buf *) data);
+        prot_flush(be->out);
+        buf_free(&decbuf);
+
+        /* Read PUT response */
+        body.flags = 0;
+        do {
+            r = http_read_response(be, METH_PUT,
+                                   &statuscode, &hdrs, &body, &errstr);
+            if (r) {
+                syslog(LOG_ERR,
+                       "extract_attachment: failed to read response for PUT %s/%s",
+                       ctx->path, guidstr);
+                r = IMAP_IOERROR;
+                goto done;
+            }
+        } while (statuscode < 200);
+
+        syslog(LOG_DEBUG, "extract_attachment: PUT %s/%s: got status %u",
+               ctx->path, guidstr, statuscode);
+    }
+
+    if (statuscode >= 400 && statuscode <= 499) {
+        /* indexer can't extract this for some reason, never try again */
+        goto done;
+    }
+    if (statuscode != 200 && statuscode != 201) {
+        /* any other status code is an error */
+        r = IMAP_IOERROR;
+        goto done;
+    }
+
+    /* Append extracted text */
+    if (buf_len(&body.payload)) {
+        str->receiver->begin_part(str->receiver, SEARCH_PART_ATTACHMENTBODY, content_guid);
+        str->receiver->append_text(str->receiver, &body.payload);
+        str->receiver->end_part(str->receiver, SEARCH_PART_ATTACHMENTBODY);
+    }
+
+done:
+    spool_free_hdrcache(hdrs);
+    buf_free(&body.payload);
+    buf_free(&buf);
+    return r;
+}
+
+static struct extractor_ctx *index_text_extractor = NULL;
+
+EXPORTED void index_text_extractor_init(struct protstream *clientin)
+{
+    syslog(LOG_DEBUG, "extractor_init(%p)", clientin);
+
+    index_text_extractor = xzmalloc(sizeof(struct extractor_ctx));
+    index_text_extractor->clientin = clientin;
+}
+
+EXPORTED void index_text_extractor_destroy(void)
+{
+    struct extractor_ctx *ext = index_text_extractor;
+
+    syslog(LOG_DEBUG, "extractor_destroy(%p)", ext);
+
+    if (!ext) return;
+
+    if (ext->be) {
+        struct backend *be = ext->be;
+
+        extractor_disconnect(be);
+        free(((struct backend_ctx *) be->context)->path);
+        free(be->context);
+        free(be);
+    }
+    free(ext);
+
+    index_text_extractor = NULL;
+}
+
+
+static int getsearchtext_cb(int isbody, charset_t charset, int encoding,
+                            const char *type, const char *subtype,
+                            const struct param *type_params __attribute__((unused)),
+                            const char *disposition,
+                            const struct param *disposition_params,
+                            const struct message_guid *content_guid,
+                            const char *part,
+                            struct buf *data,
+                            void *rock)
+{
+    struct getsearchtext_rock *str = (struct getsearchtext_rock *)rock;
+    char *q;
+    struct buf text = BUF_INITIALIZER;
+    int r = 0;
+
+    if (isbody && part && str->partids && strarray_find(str->partids, part, 0) < 0) {
+        /* Skip part */
+        return 0;
+    }
+
+    if (!isbody) {
+
+        if (str->snippet_iteration >= 2) goto done;
+
+        if (!str->indexed_headers) {
+            /* Only index the headers of the top message */
+            q = charset_decode_mimeheader(buf_cstring(data), str->charset_flags);
+            buf_init_ro_cstr(&text, q);
+            stuff_part(str->receiver, SEARCH_PART_HEADERS, NULL, &text);
+            free(q);
+            buf_free(&text);
+            str->indexed_headers = 1;
+        }
+
+        /* Index attachment file names */
+        const struct param *param;
+        if (disposition && !strcmp(disposition, "ATTACHMENT")) {
+            /* Look for "Content-Disposition: attachment;filename=" header */
+            for (param = disposition_params; param; param = param->next) {
+                if (!strcmp(param->attribute, "FILENAME")) {
+                    char *tmp = charset_decode_mimeheader(param->value, charset_flags);
+                    buf_init_ro_cstr(&text, tmp);
+                    stuff_part(str->receiver, SEARCH_PART_ATTACHMENTNAME, NULL, &text);
+                    buf_free(&text);
+                    free(tmp);
+                }
+                else if (!strcmp(param->attribute, "FILENAME*")) {
+                    char *xval = charset_parse_mimexvalue(param->value, NULL);
+                    if (!xval) xval = xstrdup(param->value);
+                    if (xval) {
+                        char *tmp = charset_decode_mimeheader(xval, charset_flags|CHARSET_MIME_UTF8);
+                        buf_init_ro_cstr(&text, tmp);
+                        stuff_part(str->receiver, SEARCH_PART_ATTACHMENTNAME, NULL, &text);
+                        buf_free(&text);
+                        free(tmp);
+                        free(xval);
+                    }
+                }
+            }
+        }
+        for(param = type_params; param; param = param->next) {
+            /* Look for "Content-Type: foo;name=" header */
+            if (strcmp(param->attribute, "NAME"))
+                continue;
+            char *tmp = charset_decode_mimeheader(param->value, charset_flags);
+            buf_init_ro_cstr(&text, tmp);
+            stuff_part(str->receiver, SEARCH_PART_ATTACHMENTNAME, NULL, &text);
+            buf_free(&text);
+            free(tmp);
+        }
+    }
+    else if (buf_len(data) > 50 && !memcmp(data->s, "-----BEGIN PGP MESSAGE-----", 27)) {
+        /* PGP encrypted body part - we don't want to index this,
+         * it's a ton of random base64 noise */
+    }
+    else if (isbody && !strcmp(type, "TEXT")) {
+
+        if (str->snippet_iteration >= 2) goto done;
+
+        if (!strcmp(subtype, "CALENDAR")) {
+#ifdef USE_HTTPD
+            extract_icalbuf(data, charset, encoding, content_guid, str);
+#endif /* USE_HTTPD */
+        }
+        else if (!strcmp(subtype, "VCARD")) {
+#ifdef USE_HTTPD
+            extract_vcardbuf(data, charset, encoding, content_guid, str);
+#endif /* USE_HTTPD */
+        }
+        else {
+            /* body-like */
+            str->receiver->begin_part(str->receiver, SEARCH_PART_BODY, content_guid);
+            charset_extract(extract_cb, str, data, charset, encoding, subtype,
+                            str->charset_flags);
+            str->receiver->end_part(str->receiver, SEARCH_PART_BODY);
+        }
+    }
+    else if (isbody && !strcmp(type, "APPLICATION")) {
+
+        /* Ignore attachments in first snippet generation pass */
+        if (str->snippet_iteration == 1) goto done;
+
+        /* Only generate snippets from named attachmend parts */
+        if (str->snippet_iteration >= 2 && !str->partids) goto done;
+
+        r = extract_attachment(type, subtype, type_params, data, encoding,
+                               content_guid, str);
+        if (r) {
+            syslog(LOG_ERR, "index: can't extract text from attachment: %s",
+                    error_message(r));
+            goto done;
+        }
+    }
+
+done:
+    return r;
+}
+
+static void append_alnum(struct buf *buf, const char *ss)
+{
+    const unsigned char *s = (const unsigned char *)ss;
+
+    for ( ; *s ; ++s) {
+        if (Uisalnum(*s))
+            buf_putc(buf, *s);
+    }
+}
+
+EXPORTED int index_getsearchtext(message_t *msg, const strarray_t *partids,
                                  search_text_receiver_t *receiver,
                                  int snippet)
 {
+    const char *exturl =
+        config_getstring(IMAPOPT_SEARCH_ATTACHMENT_EXTRACTOR_URL);
     struct getsearchtext_rock str;
     struct buf buf = BUF_INITIALIZER;
     int format = MESSAGE_SEARCH;
@@ -4895,45 +5721,70 @@ EXPORTED int index_getsearchtext(message_t *msg,
     r = receiver->begin_message(receiver, msg);
     if (r) return r;
 
+    memset(&str, 0, sizeof(struct getsearchtext_rock));
     str.receiver = receiver;
     str.indexed_headers = 0;
     str.charset_flags = charset_flags;
+    str.partids = partids;
+    str.snippet_iteration = 0;
+    if (exturl) {
+        str.ext = index_text_extractor;
+        r = extractor_connect(exturl, str.ext);
+        if (r) return r;
+    }
+
+    /* Search receiver can override text conversion */
+    if (receiver->index_charset_flags) {
+        str.charset_flags = receiver->index_charset_flags(str.charset_flags);
+    }
 
     if (snippet) {
-        str.charset_flags |= CHARSET_SNIPPET;
+        str.charset_flags |= CHARSET_KEEPCASE;
         format = MESSAGE_SNIPPET;
     }
 
-#ifdef USE_HTTPD
     /* Choose index scheme for Content=Type */
     if (!strcasecmp(type, "TEXT") && !strcasecmp(subtype, "CALENDAR")) {
+#ifdef USE_HTTPD
         /* An iCalendar entry. */
-        index_icalmessage(msg, &str);
+        struct buf buf = BUF_INITIALIZER;
+        int encoding = 0;
+        const char *charset_id = NULL;
+        charset_t charset = CHARSET_UNKNOWN_CHARSET;
+        const struct body *body = NULL;
+
+        r = message_get_field(msg, "rawbody", MESSAGE_RAW, &buf);
+        if (!r) r = message_get_cachebody(msg, &body);
+        if (!r) r = message_get_encoding(msg, &encoding);
+        if (!r) r = message_get_charset_id(msg, &charset_id);
+        if (!r) charset = charset_lookupname(charset_id);
+        if (charset != CHARSET_UNKNOWN_CHARSET)
+            r = extract_icalbuf(&buf, charset, encoding, &body->content_guid, &str);
+        charset_free(&charset);
+        buf_free(&buf);
+#endif
     }
     else {
-#endif
-        /* A regular message */
-        message_foreach_section(msg, getsearchtext_cb, &str);
-
         if (!message_get_field(msg, "From", format, &buf))
-            stuff_part(receiver, SEARCH_PART_FROM, &buf);
+            stuff_part(receiver, SEARCH_PART_FROM, NULL, &buf);
 
         if (!message_get_field(msg, "To", format, &buf))
-            stuff_part(receiver, SEARCH_PART_TO, &buf);
+            stuff_part(receiver, SEARCH_PART_TO, NULL, &buf);
 
         if (!message_get_field(msg, "Cc", format, &buf))
-            stuff_part(receiver, SEARCH_PART_CC, &buf);
+            stuff_part(receiver, SEARCH_PART_CC, NULL, &buf);
 
         if (!message_get_field(msg, "Bcc", format, &buf))
-            stuff_part(receiver, SEARCH_PART_BCC, &buf);
+            stuff_part(receiver, SEARCH_PART_BCC, NULL, &buf);
 
         if (!message_get_field(msg, "Subject", format, &buf))
-            stuff_part(receiver, SEARCH_PART_SUBJECT, &buf);
+            stuff_part(receiver, SEARCH_PART_SUBJECT, NULL, &buf);
 
         if (!message_get_field(msg, "List-Id", format, &buf))
-            stuff_part(receiver, SEARCH_PART_LISTID, &buf);
+            stuff_part(receiver, SEARCH_PART_LISTID, NULL, &buf);
+
         if (!message_get_field(msg, "Mailing-List", format, &buf))
-            stuff_part(receiver, SEARCH_PART_LISTID, &buf);
+            stuff_part(receiver, SEARCH_PART_LISTID, NULL, &buf);
 
         if (!message_get_leaf_types(msg, &types) && types.count) {
             /* We add three search terms: the type, subtype, and a combined
@@ -4942,7 +5793,7 @@ EXPORTED int index_getsearchtext(message_t *msg,
              * example if the original message has "application/x-pdf" then
              * we index "APPLICATION" "XPDF" "APPLICATION_XPDF".  */
 
-            receiver->begin_part(receiver, SEARCH_PART_TYPE);
+            receiver->begin_part(receiver, SEARCH_PART_TYPE, NULL);
             for (i = 0 ; i < types.count ; i+= 2) {
                 buf_reset(&buf);
 
@@ -4963,11 +5814,26 @@ EXPORTED int index_getsearchtext(message_t *msg,
             }
             receiver->end_part(receiver, SEARCH_PART_TYPE);
         }
-#ifdef USE_HTTPD
+
+        /* A regular message. Generate snippets in two passes. */
+        str.snippet_iteration = snippet ? 1 : 0;
+        r = message_foreach_section(msg, getsearchtext_cb, &str);
+        if (snippet) {
+            if (receiver->flush) {
+                r = receiver->flush(receiver);
+            }
+            if (!r) {
+                str.snippet_iteration = 2;
+                r = message_foreach_section(msg, getsearchtext_cb, &str);
+            }
+            if (r == IMAP_OK_COMPLETED) r = 0;
+        }
+        if (r) goto done;
     }
-#endif
 
     r = receiver->end_message(receiver);
+
+done:
     buf_free(&buf);
     strarray_fini(&types);
 
@@ -5000,6 +5866,11 @@ static int index_copysetup(struct index_state *state, uint32_t msgno,
     else
         copyargs->records[copyargs->nummsg].system_flags &= ~FLAG_SEEN;
 
+    if (state->want_expunged && (im->internal_flags & FLAG_INTERNAL_EXPUNGED)) {
+        copyargs->records[copyargs->nummsg].system_flags &= ~FLAG_DELETED;
+        copyargs->records[copyargs->nummsg].internal_flags &= ~FLAG_INTERNAL_EXPUNGED;
+    }
+
     copyargs->nummsg++;
 
     return 0;
@@ -5025,7 +5896,7 @@ MsgData **index_msgdata_load(struct index_state *state,
     struct mailbox *mailbox = state->mailbox;
     struct index_record record;
     struct conversations_state *cstate = NULL;
-    conversation_t *conv = NULL;
+    conversation_t conv = CONVERSATION_INIT;
 
     if (!n) return NULL;
 
@@ -5050,6 +5921,7 @@ MsgData **index_msgdata_load(struct index_state *state,
         cur->uid = record.uid;
         cur->cid = record.cid;
         cur->system_flags = record.system_flags;
+        cur->internal_flags = record.internal_flags;
         message_guid_copy(&cur->guid, &record.guid);
         if (found_anchor && record.uid == anchor)
             *found_anchor = 1;
@@ -5059,7 +5931,6 @@ MsgData **index_msgdata_load(struct index_state *state,
 
         did_cache = did_env = did_conv = 0;
         tmpenv = NULL;
-        conv = NULL; /* XXX: use a hash to avoid re-reading? */
 
         for (j = 0; sortcrit[j].key; j++) {
             label = sortcrit[j].key;
@@ -5100,9 +5971,8 @@ MsgData **index_msgdata_load(struct index_state *state,
                 label == SORT_CONVEXISTS || label == SORT_CONVSIZE) && !did_conv) {
                 if (!cstate) cstate = conversations_get_mbox(index_mboxname(state));
                 assert(cstate);
-                if (conversation_load(cstate, record.cid, &conv))
+                if (conversation_load_advanced(cstate, record.cid, &conv, /*flags*/0))
                     continue;
-                if (!conv) conv = conversation_new(cstate);
                 did_conv++;
             }
 
@@ -5121,6 +5991,9 @@ MsgData **index_msgdata_load(struct index_state *state,
                 break;
             case SORT_MODSEQ:
                 /* already copied above */
+                break;
+            case SORT_CREATEDMODSEQ:
+                cur->createdmodseq = record.createdmodseq;
                 break;
             case SORT_SIZE:
                 cur->size = record.size;
@@ -5148,6 +6021,42 @@ MsgData **index_msgdata_load(struct index_state *state,
                 strarray_appendm(&cur->annot, buf_release(&value));
                 break;
             }
+            case SORT_SAVEDATE:
+                if (!strcmpnull(mailbox->uniqueid, sortcrit[j].args.mailbox.id)) {
+                    cur->savedate = record.savedate;
+                }
+                else {
+                    /* If not in mailboxId, we use receivedAt */
+                    cur->internaldate = record.internaldate;
+                }
+                break;
+            case SORT_SNOOZEDUNTIL:
+#ifdef WITH_JMAP
+                if ((record.internal_flags & FLAG_INTERNAL_SNOOZED) &&
+                    !strcmpnull(mailbox->uniqueid, sortcrit[j].args.mailbox.id)) {
+                    /* SAVEDATE == snoozed#until */
+                    cur->savedate = record.savedate;
+
+                    if (!cur->savedate) {
+                        /* Try fetching snoozed#until directly */
+                        json_t *snoozed =
+                            jmap_fetch_snoozed(mailbox->name, record.uid);
+
+                        if (snoozed) {
+                            time_from_iso8601(
+                                json_string_value(json_object_get(snoozed,
+                                                                  "until")),
+                                &cur->savedate);
+                            json_decref(snoozed);
+                        }
+                    }
+                }
+#endif
+                if (!cur->savedate) {
+                    /* If not snoozed in mailboxId, we use receivedAt */
+                    cur->internaldate = record.internaldate;
+                }
+                break;
             case LOAD_IDS:
                 index_get_ids(cur, envtokens, cacheitem_base(&record, CACHE_HEADERS),
                                               cacheitem_size(&record, CACHE_HEADERS));
@@ -5174,20 +6083,22 @@ MsgData **index_msgdata_load(struct index_state *state,
             }
             case SORT_HASCONVFLAG: {
                 const char *name = sortcrit[j].args.flag.name;
-                int idx = strarray_find_case(cstate->counted_flags, name, 0);
+                int idx = -1;
+                if (cstate->counted_flags)
+                    idx = strarray_find_case(cstate->counted_flags, name, 0);
                 /* flag exists in the conversation at all */
-                if (idx >= 0 && conv->counts[idx] > 0 && j < 31)
-                    cur->hasconvflag |= (1<<j);
+                if (idx >= 0 && conv.counts[idx] > 0 && j < 31)
+                    cur->hasflag |= (1<<j);
                 break;
             }
             case SORT_CONVEXISTS:
-                cur->convexists = conv->exists;
+                cur->convexists = conv.exists;
                 break;
             case SORT_CONVSIZE:
-                cur->convsize = conv->size;
+                cur->convsize = conv.size;
                 break;
             case SORT_CONVMODSEQ:
-                cur->convmodseq = conv->modseq;
+                cur->convmodseq = conv.modseq;
                 break;
             case SORT_RELEVANCY:
                 /* for now all messages have relevancy=100 */
@@ -5196,7 +6107,7 @@ MsgData **index_msgdata_load(struct index_state *state,
         }
 
         free(tmpenv);
-        conversation_free(conv);
+        conversation_fini(&conv);
     }
 
     return ptrs;
@@ -5482,8 +6393,15 @@ void index_get_ids(MsgData *msgdata, char *envtokens[], const char *headers,
 /*
  * Function for comparing two integers.
  */
+#ifdef HAVE_DECLARE_OPTIMIZE
+static inline int numcmp(modseq_t n1, modseq_t n2)
+    __attribute__((pure, always_inline, optimize("-O3")));
+#endif
 static int numcmp(modseq_t n1, modseq_t n2)
 {
+    if (n1 < n2) return -1;
+    if (n1 > n2) return 1;
+    return 0;
     return ((n1 < n2) ? -1 : (n1 > n2) ? 1 : 0);
 }
 
@@ -5515,6 +6433,13 @@ static int index_sort_compare(MsgData *md1, MsgData *md2,
             ret = numcmp(d1, d2);
             break;
         }
+        case SORT_SNOOZEDUNTIL:
+        case SORT_SAVEDATE: {
+            time_t d1 = md1->savedate ? md1->savedate : md1->internaldate;
+            time_t d2 = md2->savedate ? md2->savedate : md2->internaldate;
+            ret = numcmp(d1, d2);
+            break;
+        }
         case SORT_FROM:
             ret = strcmpsafe(md1->from, md2->from);
             break;
@@ -5533,6 +6458,9 @@ static int index_sort_compare(MsgData *md1, MsgData *md2,
             break;
         case SORT_MODSEQ:
             ret = numcmp(md1->modseq, md2->modseq);
+            break;
+        case SORT_CREATEDMODSEQ:
+            ret = numcmp(md1->createdmodseq, md2->createdmodseq);
             break;
         case SORT_DISPLAYFROM:
             ret = strcmpsafe(md1->displayfrom, md2->displayfrom);
@@ -5556,14 +6484,10 @@ static int index_sort_compare(MsgData *md1, MsgData *md2,
             ret = numcmp(md1->spamscore, md2->spamscore);
             break;
         case SORT_HASFLAG:
+        case SORT_HASCONVFLAG:
             if (i < 31)
                 ret = numcmp(md1->hasflag & (1<<i),
                              md2->hasflag & (1<<i));
-            break;
-        case SORT_HASCONVFLAG:
-            if (i < 31)
-                ret = numcmp(md1->hasconvflag & (1<<i),
-                             md2->hasconvflag & (1<<i));
             break;
         case SORT_FOLDER:
             if (md1->folder && md2->folder)
@@ -5578,10 +6502,72 @@ static int index_sort_compare(MsgData *md1, MsgData *md2,
         }
     } while (!ret && sortcrit[i++].key != SORT_SEQUENCE);
 
+    // must be multi-folder with the same UID!  tiebreaker is GUID
+    if (!ret) return message_guid_cmp(&md1->guid, &md2->guid);
+
     return (reverse ? -ret : ret);
 }
 
-static int index_sort_compare_qsort(const void *v1, const void *v2)
+static int sortcrit_is_uid(const struct sortcrit *sortcrit)
+{
+    if ((sortcrit->flags & SORT_REVERSE)) return 0;
+    if (!(sortcrit->key == SORT_SEQUENCE)) return 0;
+    return 1;
+}
+
+static int sortcrit_is_reverse_uid(const struct sortcrit *sortcrit)
+{
+    if (!(sortcrit->flags & SORT_REVERSE)) return 0;
+    if (!(sortcrit->key == SORT_SEQUENCE)) return 0;
+    return 1;
+}
+
+static int sortcrit_is_modseq(const struct sortcrit *sortcrit)
+{
+    if ((sortcrit->flags & SORT_REVERSE)) return 0;
+    if (!(sortcrit->key == SORT_MODSEQ)) return 0;
+    sortcrit++;
+    if ((sortcrit->flags & SORT_REVERSE)) return 0;
+    if (!(sortcrit->key == SORT_SEQUENCE)) return 0;
+    return 1;
+}
+
+static int sortcrit_is_arrival(const struct sortcrit *sortcrit)
+{
+    if ((sortcrit->flags & SORT_REVERSE)) return 0;
+    if (!(sortcrit->key == SORT_ARRIVAL)) return 0;
+    sortcrit++;
+    if ((sortcrit->flags & SORT_REVERSE)) return 0;
+    if (!(sortcrit->key == SORT_SEQUENCE)) return 0;
+    return 1;
+}
+
+static int sortcrit_is_reverse_arrival(const struct sortcrit *sortcrit)
+{
+    if (!(sortcrit->flags & SORT_REVERSE)) return 0;
+    if (!(sortcrit->key == SORT_ARRIVAL)) return 0;
+    sortcrit++;
+    if ((sortcrit->flags & SORT_REVERSE)) return 0;
+    if (!(sortcrit->key == SORT_SEQUENCE)) return 0;
+    return 1;
+}
+
+static int sortcrit_is_reverse_flagged(const struct sortcrit *sortcrit)
+{
+    if (!(sortcrit->flags & SORT_REVERSE)) return 0;
+    // both HASFLAG and HASCONVFLAG have the same representation internally
+    if (!(sortcrit->key == SORT_HASFLAG ||
+          sortcrit->key == SORT_HASCONVFLAG)) return 0;
+    sortcrit++;
+    if (!(sortcrit->flags & SORT_REVERSE)) return 0;
+    if (!(sortcrit->key == SORT_ARRIVAL)) return 0;
+    sortcrit++;
+    if ((sortcrit->flags & SORT_REVERSE)) return 0;
+    if (!(sortcrit->key == SORT_SEQUENCE)) return 0;
+    return 1;
+}
+
+static int index_sort_compare_generic_qsort(const void *v1, const void *v2)
 {
     MsgData *md1 = *(MsgData **)v1;
     MsgData *md2 = *(MsgData **)v2;
@@ -5589,10 +6575,153 @@ static int index_sort_compare_qsort(const void *v1, const void *v2)
     return index_sort_compare(md1, md2, the_sortcrit);
 }
 
+#ifdef HAVE_DECLARE_OPTIMIZE
+static inline int index_sort_compare_uid(const void *v1, const void *v2)
+    __attribute__((pure, always_inline, optimize("-O3")));
+#endif
+static int index_sort_compare_uid(const void *v1, const void *v2)
+{
+    MsgData *md1 = *(MsgData **)v1;
+    MsgData *md2 = *(MsgData **)v2;
+    int ret;
+
+    ret = md1->uid - md2->uid;
+    if (ret) return ret;
+
+    return message_guid_cmp(&md1->guid, &md2->guid);
+}
+
+#ifdef HAVE_DECLARE_OPTIMIZE
+static inline int index_sort_compare_reverse_uid(const void *v1, const void *v2)
+    __attribute__((pure, always_inline, optimize("-O3")));
+#endif
+static int index_sort_compare_reverse_uid(const void *v1, const void *v2)
+{
+    MsgData *md1 = *(MsgData **)v1;
+    MsgData *md2 = *(MsgData **)v2;
+    int ret;
+
+    ret = md2->uid - md1->uid;
+    if (ret) return ret;
+
+    return message_guid_cmp(&md1->guid, &md2->guid);
+}
+
+#ifdef HAVE_DECLARE_OPTIMIZE
+static inline int index_sort_compare_modseq(const void *v1, const void *v2)
+    __attribute__((pure, always_inline, optimize("-O3")));
+#endif
+static int index_sort_compare_modseq(const void *v1, const void *v2)
+{
+    MsgData *md1 = *(MsgData **)v1;
+    MsgData *md2 = *(MsgData **)v2;
+    int ret;
+
+    ret = md1->modseq - md2->modseq;
+    if (ret) return ret;
+
+    ret = md1->uid - md2->uid;
+    if (ret) return ret;
+
+    return message_guid_cmp(&md1->guid, &md2->guid);
+}
+
+#ifdef HAVE_DECLARE_OPTIMIZE
+static inline int index_sort_compare_arrival(const void *v1, const void *v2)
+    __attribute__((pure, always_inline, optimize("-O3")));
+#endif
+static int index_sort_compare_arrival(const void *v1, const void *v2)
+{
+    MsgData *md1 = *(MsgData **)v1;
+    MsgData *md2 = *(MsgData **)v2;
+    int ret;
+
+    ret = md1->internaldate - md2->internaldate;
+    if (ret) return ret;
+
+    ret = md1->createdmodseq - md2->createdmodseq;
+    if (ret) return ret;
+
+    ret = md1->uid - md2->uid;
+    if (ret) return ret;
+
+    return message_guid_cmp(&md1->guid, &md2->guid);
+}
+
+#ifdef HAVE_DECLARE_OPTIMIZE
+static inline int index_sort_compare_reverse_arrival(const void *v1, const void *v2)
+    __attribute__((pure, always_inline, optimize("-O3")));
+#endif
+static int index_sort_compare_reverse_arrival(const void *v1, const void *v2)
+{
+    MsgData *md1 = *(MsgData **)v1;
+    MsgData *md2 = *(MsgData **)v2;
+    int ret;
+
+    ret = md2->internaldate - md1->internaldate;
+    if (ret) return ret;
+
+    ret = md2->createdmodseq - md1->createdmodseq;
+    if (ret) return ret;
+
+    ret = md1->uid - md2->uid;
+    if (ret) return ret;
+
+    return message_guid_cmp(&md1->guid, &md2->guid);
+}
+
+#ifdef HAVE_DECLARE_OPTIMIZE
+static inline int index_sort_compare_reverse_flagged(const void *v1, const void *v2)
+    __attribute__((pure, always_inline, optimize("-O3")));
+#endif
+static int index_sort_compare_reverse_flagged(const void *v1, const void *v2)
+{
+    MsgData *md1 = *(MsgData **)v1;
+    MsgData *md2 = *(MsgData **)v2;
+    int ret;
+
+    ret = md2->hasflag - md1->hasflag;
+    if (ret) return ret;
+
+    ret = md2->internaldate - md1->internaldate;
+    if (ret) return ret;
+
+    ret = md2->createdmodseq - md1->createdmodseq;
+    if (ret) return ret;
+
+    ret = md1->uid - md2->uid;
+    if (ret) return ret;
+
+    return message_guid_cmp(&md1->guid, &md2->guid);
+}
+
 void index_msgdata_sort(MsgData **msgdata, int n, const struct sortcrit *sortcrit)
 {
-    the_sortcrit = (struct sortcrit *)sortcrit;
-    qsort(msgdata, n, sizeof(MsgData *), index_sort_compare_qsort);
+    if (sortcrit_is_uid(sortcrit)) {
+        qsort(msgdata, n, sizeof(MsgData *), index_sort_compare_uid);
+    }
+    else if (sortcrit_is_reverse_uid(sortcrit)) {
+        qsort(msgdata, n, sizeof(MsgData *), index_sort_compare_reverse_uid);
+    }
+    else if (sortcrit_is_modseq(sortcrit)) {
+        qsort(msgdata, n, sizeof(MsgData *), index_sort_compare_modseq);
+    }
+    else if (sortcrit_is_arrival(sortcrit)) {
+        qsort(msgdata, n, sizeof(MsgData *), index_sort_compare_arrival);
+    }
+    else if (sortcrit_is_reverse_arrival(sortcrit)) {
+        qsort(msgdata, n, sizeof(MsgData *), index_sort_compare_reverse_arrival);
+    }
+    else if (sortcrit_is_reverse_flagged(sortcrit)) {
+        qsort(msgdata, n, sizeof(MsgData *), index_sort_compare_reverse_flagged);
+    }
+    else {
+        char *tmp = sortcrit_as_string(sortcrit);
+        syslog(LOG_DEBUG, "GENERICSORT: %s", tmp);
+        free(tmp);
+        the_sortcrit = (struct sortcrit *)sortcrit;
+        qsort(msgdata, n, sizeof(MsgData *), index_sort_compare_generic_qsort);
+    }
 }
 
 /*
@@ -5609,15 +6738,15 @@ void index_msgdata_free(MsgData **msgdata, unsigned int n)
 
         if (!md) continue;
 
-        free(md->cc);
-        free(md->from);
-        free(md->to);
-        free(md->displayfrom);
-        free(md->displayto);
-        free(md->xsubj);
-        free(md->msgid);
-        free(md->listid);
-        free(md->contenttype);
+        xfree(md->cc);
+        xfree(md->from);
+        xfree(md->to);
+        xfree(md->displayfrom);
+        xfree(md->displayto);
+        xfree(md->xsubj);
+        xfree(md->msgid);
+        xfree(md->listid);
+        xfree(md->contenttype);
         strarray_fini(&md->ref);
         strarray_fini(&md->annot);
     }
@@ -5870,7 +6999,7 @@ static int thread_is_descendent(Thread *parent, Thread *child)
     if (parent == child)
         return 1;
 
-    /* search each child's decendents */
+    /* search each child's descendents */
     for (kid = parent->child; kid; kid = kid->next) {
         if (thread_is_descendent(kid, child))
             return 1;
@@ -6719,11 +7848,24 @@ EXPORTED extern unsigned long index_getlines(struct index_state *state,
                                              uint32_t msgno)
 {
     struct index_record record;
+    struct body *body = NULL;
+    unsigned long lines = 0;
 
     if (index_reload_record(state, msgno, &record))
         return 0;
 
-    return record.content_lines;
+    if (mailbox_cacherecord(state->mailbox, &record))
+        return 0;
+
+    message_read_bodystructure(&record, &body);
+    if (!body) return 0;
+
+    lines = body->content_lines;
+
+    message_free_body(body);
+    free(body);
+
+    return lines;
 }
 
 EXPORTED const char *index_mboxname(const struct index_state *state)
@@ -6798,10 +7940,11 @@ EXPORTED char *sortcrit_as_string(const struct sortcrit *sortcrit)
         "SIZE", "SUBJECT", "TO", "ANNOTATION",
         "MODSEQ", "UID", "HASFLAG", "CONVMODSEQ",
         "CONVEXISTS", "CONVSIZE", "HASCONVFLAG",
-        "FOLDER", "RELEVANCY"
+        "FOLDER", "RELEVANCY", "SPAMSCORE", "GUID",
+        "EMAILID", "THREADID", "SAVEDATE", "SNOOZEDUNTIL"
     };
 
-    for ( ; sortcrit->key ; sortcrit++) {
+    do {
         if (b.len)
             buf_putc(&b, ' ');
         if (sortcrit->flags & SORT_REVERSE)
@@ -6820,7 +7963,9 @@ EXPORTED char *sortcrit_as_string(const struct sortcrit *sortcrit)
                             "value.priv" : "value.shared");
             break;
         }
-    }
+        sortcrit++;
+    } while (sortcrit->key);
+
     return buf_release(&b);
 }
 
@@ -6838,8 +7983,43 @@ EXPORTED void freesortcrit(struct sortcrit *s)
             free(s[i].args.annot.entry);
             free(s[i].args.annot.userid);
             break;
+        case SORT_HASFLAG:
+        case SORT_HASCONVFLAG:
+            free(s[i].args.flag.name);
+            break;
+        case SORT_SAVEDATE:
+        case SORT_SNOOZEDUNTIL:
+            free(s[i].args.mailbox.id);
+            break;
         }
         i++;
     } while (s[i].key != SORT_SEQUENCE);
     free(s);
+}
+
+EXPORTED int insert_into_mailbox_allowed(struct mailbox *mailbox)
+{
+    int r = 0;
+
+    /* prohibit inserting into \Snoozed mailbox */
+    if (mailbox->i.options & OPT_IMAP_HAS_ALARMS) {
+        struct buf attrib = BUF_INITIALIZER;
+        char *userid = mboxname_to_userid(mailbox->name);
+
+        r = annotatemore_lookup(mailbox->name, "/specialuse", userid, &attrib);
+        free(userid);
+
+        if (!r && buf_len(&attrib)) {
+            strarray_t *specialuse =
+                strarray_split(buf_cstring(&attrib), NULL, 0);
+
+            if (strarray_find(specialuse, "\\Snoozed", 0) >= 0) {
+                r = IMAP_MAILBOX_NOTSUPPORTED;
+            }
+            strarray_free(specialuse);
+        }
+        buf_free(&attrib);
+    }
+
+    return r;
 }

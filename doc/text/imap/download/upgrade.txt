@@ -347,7 +347,7 @@ Note: If you've disable your system startup scripts, as recommended
 ==================================
 
 Warning: Versions of 3.0 prior to 3.0.11 contained a bug (Issue
-  #2389) that could lead to loss of seen state/flags during
+  #2839) that could lead to loss of seen state/flags during
   *reconstruct* for some messages that already existed prior to Cyrus
   2.3.  The 3.0.11 release notes contain the specifics.Consider
   upgrading to 3.0.11 rather than an earlier release.
@@ -361,7 +361,7 @@ hours, possibly days.
    reconstruct -V max
 
 New configuration: if turning on conversations, you need to create
-conversations.db for each user.:
+conversations.db for each user. (This is required for jmap).:
 
    ctl_conversationsdb -b -r
 
@@ -382,6 +382,8 @@ format changes.:
 3.0 comes with many lovely new features. Consider which ones you want
 to enable. Here are some which may interest you. Check the 3.0 release
 notes for the full list.
+
+* JMAP
 
 * Backups
 

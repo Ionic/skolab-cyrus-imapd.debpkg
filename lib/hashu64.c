@@ -62,7 +62,7 @@ EXPORTED hashu64_table *construct_hashu64_table(hashu64_table *table, size_t siz
           table->table = xmalloc(sizeof(bucketu64 *) * size);
       }
 
-      /* Allocate the table and initilize it */
+      /* Allocate the table and initialize it */
       memset(table->table, 0, sizeof(bucketu64 *) * size);
 
       return table;
@@ -209,7 +209,7 @@ EXPORTED void *hashu64_del(uint64_t key, hashu64_table *table)
                   data = ptr -> data;
                   last -> next = ptr -> next;
                   if(!table->pool) {
-                      free(ptr);
+                      xfree(ptr);
                   }
                   return data;
               }
@@ -227,7 +227,7 @@ EXPORTED void *hashu64_del(uint64_t key, hashu64_table *table)
                   data = ptr->data;
                   (table->table)[val] = ptr->next;
                   if(!table->pool) {
-                      free(ptr);
+                      xfree(ptr);
                   }
                   return data;
               }
@@ -271,7 +271,7 @@ EXPORTED void free_hashu64_table(hashu64_table *table, void (*func)(void *))
                   if (func)
                       func(temp->data);
                   if(!table->pool) {
-                      free(temp);
+                      xfree(temp);
                   }
               }
           }
@@ -282,7 +282,7 @@ EXPORTED void free_hashu64_table(hashu64_table *table, void (*func)(void *))
           free_mpool(table->pool);
           table->pool = NULL;
       } else {
-          free(table->table);
+          xfree(table->table);
       }
       table->table = NULL;
       table->size = 0;
@@ -313,5 +313,19 @@ EXPORTED void hashu64_enumerate(hashu64_table *table,
                   }
             }
       }
+}
+
+EXPORTED size_t hashu64_count(hashu64_table *table)
+{
+    size_t count = 0;
+    unsigned i;
+
+    for (i = 0; i < table->size; i++) {
+        bucketu64 *temp;
+        for (temp = (table->table)[i]; temp; temp = temp->next)
+             count++;
+    }
+
+    return count;
 }
 

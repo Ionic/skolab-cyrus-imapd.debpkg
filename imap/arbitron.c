@@ -49,13 +49,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
 
 #include "global.h"
-#include "exitcodes.h"
 #include "hash.h"
 #include "mailbox.h"
 #include "mpool.h"
@@ -185,13 +185,10 @@ int main(int argc,char **argv)
     /* Init Cyrus Backend Foo */
     cyrus_init(alt_config, "arbitron", 0, 0);
 
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-
     /* Set namespace -- force standard (internal) */
     if ((r = mboxname_init_namespace(&arb_namespace, 1)) != 0) {
         syslog(LOG_ERR, "%s", error_message(r));
-        fatal(error_message(r), EC_CONFIG);
+        fatal(error_message(r), EX_CONFIG);
     }
 
     if (optind != argc) strlcpy(pattern, argv[optind], sizeof(pattern));
@@ -227,8 +224,6 @@ int main(int argc,char **argv)
     free_hash_table(&mailbox_table, NULL);
     free_hash_table(&mboxname_table, NULL);
     free_mpool(arb_pool);
-    mboxlist_close();
-    mboxlist_done();
 
     cyrus_done();
 
@@ -241,12 +236,13 @@ static void usage(void)
             "usage: arbitron [-o] [-u] [-l] [-C alt_config] "
             "[-d days | -D mmddyyy[:mmddyyyy]]\n"
             "                [-p months] [mboxpattern]\n");
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 static int do_mailbox(struct findall_data *data, void *rock __attribute__((unused)))
 {
     if (!data) return 0;
+    if (!data->is_exactmatch) return 0;
     int r;
     struct mailbox *mailbox = NULL;
     const char *name = mbname_intname(data->mbname);
@@ -272,8 +268,8 @@ static int do_mailbox(struct findall_data *data, void *rock __attribute__((unuse
 
 static void run_users(void)
 {
-    char prefix[MAX_MAILBOX_PATH+1],path[MAX_MAILBOX_PATH+1],
-        file[MAX_MAILBOX_PATH+1];
+    char prefix[MAX_MAILBOX_PATH+1],path[2*MAX_MAILBOX_PATH+1],
+        file[3*MAX_MAILBOX_PATH+1];
     DIR *dirp, *dirq;
     struct dirent *dirent1, *dirent2;
 
@@ -281,7 +277,7 @@ static void run_users(void)
 
     dirp = opendir(prefix);
     if(!dirp) {
-        fatal("can't open user directory", EC_SOFTWARE);
+        fatal("can't open user directory", EX_SOFTWARE);
     }
 
     while((dirent1 = readdir(dirp)) != NULL) {

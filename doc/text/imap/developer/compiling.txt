@@ -109,6 +109,9 @@ Developers only
 |                      |                 |                 |       | interpreter, found by "which":  "./configure  |
 |                      |                 |                 |       | --with- perl" is not honoured.                |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
+| python(GitPython)    |                 |                 |       | Python library needed for building the        |
+|                      |                 |                 |       | documentation                                 |
++----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | python(Sphinx)       |                 |                 |       | Python library needed for building the        |
 |                      |                 |                 |       | documentation                                 |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
@@ -158,20 +161,6 @@ Alternate database formats
 |                      |                 |                 | chec  |                                               |
 |                      |                 |                 | k"?   |                                               |
 +======================+=================+=================+=======+===============================================+
-| lmdb                 | lmdb-dev        | lmdb            | no    | Lightning Memory-Mapped Database Manager      |
-|                      |                 |                 |       | (LMDB) backend for Cyrus IMAP databases.      |
-|                      |                 |                 |       | LMDB requires database environments to be set |
-|                      |                 |                 |       | to a (user-configurable) maximum size. The    |
-|                      |                 |                 |       | Cyrus backend uses 512MB as default size.     |
-|                      |                 |                 |       | Cyrus installations may override this by      |
-|                      |                 |                 |       | setting the environment variable              |
-|                      |                 |                 |       | CYRUSDB_LMDB_MAXSIZE. The value of this       |
-|                      |                 |                 |       | variable must be an integer, optionally       |
-|                      |                 |                 |       | followed (without space) by 'mb' or 'gb' to   |
-|                      |                 |                 |       | define the maximum size in bytes, megabytes   |
-|                      |                 |                 |       | or gigabytes. The size should be a multiple   |
-|                      |                 |                 |       | of the OS page size.                          |
-+----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | mysql or mariadb     | libmysqlclient- | mysql-devel or  | no    | MariaDB or MySQL development headers, to      |
 |                      | dev or          | mariadb-devel   |       | allow Cyrus IMAP to use it as the backend for |
 |                      | libmariadb-dev  |                 |       | its databases.  Configure option: "--with-    |
@@ -183,8 +172,8 @@ Alternate database formats
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 
 
-CalDAV and/or CardDAV
-~~~~~~~~~~~~~~~~~~~~~
+CalDAV, CardDAV, or JMAP
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | Package              | Debian          | RedHat          | Requ  | Notes                                         |
@@ -194,14 +183,9 @@ CalDAV and/or CardDAV
 |                      |                 |                 | chec  |                                               |
 |                      |                 |                 | k"?   |                                               |
 +======================+=================+=================+=======+===============================================+
-| libical              | libical-dev     | libical-devel   | no    | libical >= 0.48 required for scheduling       |
-|                      |                 |                 |       | support. **Note:** Linux distributions        |
-|                      |                 |                 |       | Enterprise Linux 6 and Debian Squeeze are     |
-|                      |                 |                 |       | known to ship outdated **libical** packages   |
-|                      |                 |                 |       | versions 0.43 and 0.44 respectively. The      |
-|                      |                 |                 |       | platforms will not support scheduling.        |
+| libical              | libical-dev     | libical-devel   | no    | version 3.0.0 or higher                       |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| libxml               | libxml2-dev     | libxml2-devel   |       | no                                            |
+| libxml               | libxml2-dev     | libxml2-devel   | no    |                                               |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 
 
@@ -238,9 +222,14 @@ Other
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | perl(Term::ReadLine) |                 |                 |       | Perl library needed by cyradm                 |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
+| libsrs2              |                 |                 |       | Sender Rewriting Scheme for lmtp, used on     |
+|                      |                 |                 |       | Sieve redirect                                |
++----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | zlib                 | zlib1g-dev      | zlib-devel      | no    | Compression support for httpd                 |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | libbrotli            |                 |                 |       | Brotli compression support for httpd          |
++----------------------+-----------------+-----------------+-------+-----------------------------------------------+
+| wslay                |                 |                 |       | WebSockets support in httpd                   |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | nghttp2              | libnghttp2-dev  | libnghttp2-dev  | no    | HTTP/2 support for httpd                      |
 |                      |                 | el              |       |                                               |
@@ -259,7 +248,7 @@ Compile Cyrus
 =============
 
 There are additional compile and installation steps if you are using
-Xapian for searching.
+Xapian for searching, or if you are using jmap.
 
 
 Default build: mail only
@@ -291,10 +280,10 @@ via configure.
 Sieve is enabled by default.
 
 
-CalDAV and CardDAV
-~~~~~~~~~~~~~~~~~~
+CalDAV, CardDAV, JMAP
+~~~~~~~~~~~~~~~~~~~~~
 
-   "./configure --enable-http --enable-calalarmd"
+   "./configure --enable-http --enable-calalarmd --enable-jmap"
 
 
 Murder

@@ -58,6 +58,8 @@
 #include "http_caldav_sched.h"
 #include "http_dav.h"
 #include "http_proxy.h"
+#include "jmap_ical.h"
+#include "jmap_util.h"
 #include "notify.h"
 #include "crc32.h"
 #include "smtpclient.h"
@@ -75,99 +77,70 @@ static const char *get_organizer(icalcomponent *comp);
 static int partstat_changed(icalcomponent *oldcomp,
                             icalcomponent *newcomp, const char *attendee);
 
-int caladdress_lookup(const char *addr,
-                      struct caldav_sched_param *param, const char *myuserid)
+int caladdress_lookup(const char *addr, struct caldav_sched_param *param,
+                      const strarray_t *schedule_addresses)
 {
-    const char *userid = addr, *p;
-    int islocal = 1, found = 1;
-    size_t len;
-    char *testuser = NULL;
+    const char *userid = addr;
+    int i;
 
     if (!addr) return HTTP_NOT_FOUND;
 
-    if (myuserid) {
-        const char *annotname =
-            DAV_ANNOT_NS "<" XML_NS_CALDAV ">calendar-user-address-set";
-        char *mailboxname = caldav_mboxname(myuserid, NULL);
-        struct buf mybuf = BUF_INITIALIZER;
-        int r = annotatemore_lookupmask(mailboxname, annotname,
-                                        myuserid, &mybuf);
-
-        if (!r && mybuf.len) {
-            if (!strncasecmp(buf_cstring(&mybuf), "mailto:", 7))
-                testuser = xstrdup(buf_cstring(&mybuf) + 7);
-            else
-                testuser = buf_release(&mybuf);
-        }
-        else if (strchr(myuserid, '@') || !httpd_extradomain) {
-            testuser = xstrdup(myuserid);
-        }
-        else {
-            testuser = strconcat(myuserid, "@", httpd_extradomain, (char *)NULL);
-        }
-
-        free(mailboxname);
-        buf_free(&mybuf);
-    }
-
     if (!strncasecmp(userid, "mailto:", 7)) userid += 7;
+
+    char *addresses = schedule_addresses ? strarray_join(schedule_addresses, ",") : xstrdup("NULL");
+    syslog(LOG_DEBUG,
+           "caladdress_lookup(userid: '%s', schedule_addresses: '%s')",
+           userid, addresses);
+    free(addresses);
 
     memset(param, 0, sizeof(struct caldav_sched_param));
 
-    if (testuser && !strcasecmp(userid, testuser)) {
-        param->isyou = 1;
-        param->userid = testuser;
-        return 0; // myself is always local
+    param->userid = xstrdup(userid);
+
+    if (schedule_addresses) {
+        for (i = 0; i < strarray_size(schedule_addresses); i++) {
+            const char *item = strarray_nth(schedule_addresses, i);
+            if (!strncasecmp(item, "mailto:", 7)) item += 7;
+            if (strcasecmp(item, userid)) continue;
+            // found one!
+            param->isyou = 1;
+            return 0; // myself is always local
+        }
     }
-    free(testuser);
-    len = strlen(userid);
+
+    // does this user have an inbox on this machine?
 
     /* XXX  Do LDAP/DB/socket lookup to see if user is local */
     /* XXX  Hack until real lookup stuff is written */
-    if ((p = strchr(userid, '@')) && *++p) {
+    int islocal = 0;
+
+    const char *at = strchr(userid, '@');
+    if (at) {
         struct strlist *domains = cua_domains;
-
-        for (; domains && strcmp(p, domains->s); domains = domains->next);
-
-        if (!domains) islocal = 0;
-        else if (!config_virtdomains) len = p - userid - 1;
+        for (; domains && strcmp(at+1, domains->s); domains = domains->next);
+        if (domains) islocal = 1;
     }
 
     if (islocal) {
-        /* User is in a local domain */
-        int r;
-        const char *mboxname = NULL;
         mbentry_t *mbentry = NULL;
-        mbname_t *mbname = NULL;
-
-        if (!found) return HTTP_NOT_FOUND;
-        else param->userid = xstrndup(userid, len); /* freed by sched_param_free */
-
         /* Lookup user's cal-home-set to see if its on this server */
-
-        mbname = mbname_from_userid(param->userid);
+        mbname_t *mbname = mbname_from_userid(userid);
         mbname_push_boxes(mbname, config_getstring(IMAPOPT_CALENDARPREFIX));
-        mboxname = mbname_intname(mbname);
-
-        r = http_mlookup(mboxname, &mbentry, NULL);
+        int r = http_mlookup(mbname_intname(mbname), &mbentry, NULL);
         mbname_free(&mbname);
 
         if (!r) {
-            param->server = xstrdupnull(mbentry->server); /* freed by sched_param_free */
+            param->server = xstrdupnull(mbentry->server); /* freed by sched_param_fini */
             mboxlist_entry_free(&mbentry);
             if (param->server) param->flags |= SCHEDTYPE_ISCHEDULE;
             return 0;
         }
-        /* Fall through and try remote */
     }
 
     /* User is outside of our domain(s) -
        Do remote scheduling (default = iMIP) */
-    if (param->userid) free(param->userid);
-    param->userid = xstrdupnull(userid); /* freed by sched_param_free */
     param->flags |= SCHEDTYPE_REMOTE;
 
-#ifdef WITH_DKIM
     /* Do iSchedule DNS SRV lookup */
 
     /* XXX  If success, set server, port,
@@ -185,13 +158,11 @@ int caladdress_lookup(const char *addr,
         param->flags |= SCHEDTYPE_ISCHEDULE;
     }
     else if (!strcmp(p, "bedework.org")) {
-        param->server = xstrdrup("www.bedework.org");
+        param->server = xstrdup("www.bedework.org");
         param->port = 80;
         param->flags |= SCHEDTYPE_ISCHEDULE;
     }
 #endif /* IOPTEST */
-
-#endif /* WITH_DKIM */
 
     return 0;
 }
@@ -220,7 +191,7 @@ static void add_address(struct address_t **recipients, icalproperty *prop,
     param = icalproperty_get_first_parameter(prop, ICAL_CN_PARAMETER);
     if (param) {
         new->name = icalparameter_get_cn(param);
-        new->qpname = charset_encode_mimeheader(new->name, 0);
+        new->qpname = charset_encode_mimeheader(new->name, 0, 0);
     }
     param = icalproperty_get_first_parameter(prop, ICAL_ROLE_PARAMETER);
     if (param)
@@ -250,7 +221,7 @@ static void HTMLencode(struct buf *output, const char *input)
 #define HTML_ROW        "<tr><td><b>%s</b></td><td>%s</td></tr>\r\n"
 
 /* Send an iMIP request for attendees in 'ical' */
-static int imip_send_sendmail(icalcomponent *ical,
+static int imip_send_sendmail(icalcomponent *ical, const char *sender,
                               const char *recipient, int is_update)
 {
     int r;
@@ -259,24 +230,16 @@ static int imip_send_sendmail(icalcomponent *ical,
     icalproperty_method meth;
     icalcomponent_kind kind;
     const char *uid, *summary, *location, *descrip, *status;
-    const char *argv[7], *msg_type, *filename;
+    const char *msg_type, *filename;
     struct address_t *recipients = NULL, *originator = NULL, *recip;
     struct icaltimetype start, end;
-    char *cp, when[2*RFC822_DATETIME_MAX+4], datestr[RFC822_DATETIME_MAX+1];
+    char *cp, when[2*RFC5322_DATETIME_MAX+4], datestr[RFC5322_DATETIME_MAX+1];
     char boundary[100], *mimebody, *ical_str;
     size_t outlen;
-    struct buf plainbuf = BUF_INITIALIZER, tmpbuf = BUF_INITIALIZER;
-    FILE *sm;
-    pid_t sm_pid, p = getpid();
+    struct buf plainbuf = BUF_INITIALIZER, tmpbuf = BUF_INITIALIZER, msgbuf = BUF_INITIALIZER;
+    pid_t p = getpid();
     time_t t = time(NULL);
     static unsigned send_count = 0;
-    const char *day_of_week[] = {
-        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
-    };
-    const char *month_of_year[] = {
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    };
 
     meth = icalcomponent_get_method(ical);
     comp = icalcomponent_get_first_real_component(ical);
@@ -321,23 +284,6 @@ static int imip_send_sendmail(icalcomponent *ical,
         }
     }
 
-    argv[0] = "sendmail";
-    argv[1] = "-f";
-    argv[2] = originator->addr;
-    argv[3] = "-t";             /* get recipients from body */
-    argv[4] = "-N";             /* notify on failure or delay */
-    argv[5] = "failure,delay";
-    argv[6] = NULL;
-
-    sm_pid = open_sendmail(argv, &sm);
-
-    if (sm == NULL) {
-        syslog(LOG_ERR,
-               "imip_send_sendmail(%s): failed to fork sendmail", recipient);
-        r = HTTP_UNAVAILABLE;
-        goto done;
-    }
-
     /* Get other useful properties/values */
     summary = icalcomponent_get_summary(comp);
     location = icalcomponent_get_location(comp);
@@ -352,8 +298,8 @@ static int imip_send_sendmail(icalcomponent *ical,
 
     cp = when;
     cp += sprintf(cp, "%s, %02u %s %04u",
-                  day_of_week[icaltime_day_of_week(start)-1],
-                  start.day, month_of_year[start.month-1], start.year);
+                  wday[icaltime_day_of_week(start)-1],
+                  start.day, monthname[start.month-1], start.year);
     if (!icaltime_is_date(start)) {
         cp += sprintf(cp, " %02u:%02u", start.hour, start.minute);
         if (start.second) cp += sprintf(cp, ":%02u", start.second);
@@ -366,8 +312,8 @@ static int imip_send_sendmail(icalcomponent *ical,
         cp += 2;
         if (icaltime_compare_date_only(end, start)) {
             cp += sprintf(cp, " %s, %02u %s %04u",
-                          day_of_week[icaltime_day_of_week(end)-1],
-                          end.day, month_of_year[end.month-1], end.year);
+                          wday[icaltime_day_of_week(end)-1],
+                          end.day, monthname[end.month-1], end.year);
         }
         if (!icaltime_is_date(end)) {
             cp += sprintf(cp, " %02u:%02u", end.hour, end.minute);
@@ -377,61 +323,61 @@ static int imip_send_sendmail(icalcomponent *ical,
     }
 
     /* Create multipart/mixed + multipart/alternative iMIP message */
-    fprintf(sm, "From: %s <%s>\r\n",
-            originator->qpname ? originator->qpname : "", originator->addr);
+    buf_printf(&msgbuf, "From: %s <%s>\r\n",
+            originator->qpname ? originator->qpname : "", sender);
 
     for (recip = recipients; recip; recip = recip->next) {
-        if (strcmp(recip->addr, originator->addr) &&
+        if (strcmp(recip->addr, sender) &&
             (!recipient || !strcasecmp(recip->addr, recipient))) {
-            fprintf(sm, "To: %s <%s>\r\n",
+            buf_printf(&msgbuf, "To: %s <%s>\r\n",
                     recip->qpname ? recip->qpname : "", recip->addr);
         }
     }
 
-    fprintf(sm, "Subject: %s: ", filename);
+    buf_printf(&msgbuf, "Subject: %s: ", filename);
     if (summary) {
-        char *mimehdr = charset_encode_mimeheader(summary, 0);
-        fputs(mimehdr, sm);
+        char *mimehdr = charset_encode_mimeheader(summary, 0, 0);
+        buf_appendcstr(&msgbuf, mimehdr);
         free(mimehdr);
     }
     else {
-        fputs(icalcomponent_kind_to_string(kind), sm);
+        buf_appendcstr(&msgbuf, icalcomponent_kind_to_string(kind));
     }
-    fputs("\r\n", sm);
+    buf_appendcstr(&msgbuf, "\r\n");
 
-    time_to_rfc822(t, datestr, sizeof(datestr));
-    fprintf(sm, "Date: %s\r\n", datestr);
+    time_to_rfc5322(t, datestr, sizeof(datestr));
+    buf_printf(&msgbuf, "Date: %s\r\n", datestr);
 
-    fprintf(sm, "Message-ID: <cyrus-caldav-%u-%ld-%u@%s>\r\n",
+    buf_printf(&msgbuf, "Message-ID: <cyrus-caldav-%u-%ld-%u@%s>\r\n",
             p, t, send_count++, config_servername);
 
     /* Create multipart boundary */
     snprintf(boundary, sizeof(boundary), "%s=_%ld=_%ld=_%ld",
              config_servername, (long) p, (long) t, (long) rand());
 
-    fprintf(sm, "Content-Type: multipart/mixed;"
+    buf_printf(&msgbuf, "Content-Type: multipart/mixed;"
             "\r\n\tboundary=\"%s_M\"\r\n", boundary);
 
-    fprintf(sm, "iMIP-Content-ID: <%s@%s>\r\n", uid, config_servername);
+    buf_printf(&msgbuf, "iMIP-Content-ID: <%s@%s>\r\n", uid, config_servername);
 
-    fputs("Auto-Submitted: auto-generated\r\n", sm);
-    fputs("MIME-Version: 1.0\r\n", sm);
-    fputs("\r\n", sm);
+    buf_appendcstr(&msgbuf, "Auto-Submitted: auto-generated\r\n");
+    buf_appendcstr(&msgbuf, "MIME-Version: 1.0\r\n");
+    buf_appendcstr(&msgbuf, "\r\n");
 
     /* preamble */
-    fputs("This is a message with multiple parts in MIME format.\r\n", sm);
+    buf_appendcstr(&msgbuf, "This is a message with multiple parts in MIME format.\r\n");
 
     /* multipart/alternative */
-    fprintf(sm, "\r\n--%s_M\r\n", boundary);
+    buf_printf(&msgbuf, "\r\n--%s_M\r\n", boundary);
 
-    fprintf(sm, "Content-Type: multipart/alternative;"
+    buf_printf(&msgbuf, "Content-Type: multipart/alternative;"
             "\r\n\tboundary=\"%s_A\"\r\n", boundary);
 
     /* plain text part */
-    fprintf(sm, "\r\n--%s_A\r\n", boundary);
+    buf_printf(&msgbuf, "\r\n--%s_A\r\n", boundary);
 
-    fputs("Content-Type: text/plain; charset=utf-8\r\n", sm);
-    fputs("Content-Disposition: inline\r\n", sm);
+    buf_appendcstr(&msgbuf, "Content-Type: text/plain; charset=utf-8\r\n");
+    buf_appendcstr(&msgbuf, "Content-Disposition: inline\r\n");
 
     buf_printf(&plainbuf, "You have received %s from %s <%s>\r\n\r\n", msg_type,
                originator->name ? originator->name : "", originator->addr);
@@ -470,25 +416,25 @@ static int imip_send_sendmail(icalcomponent *ical,
     }
 
     mimebody = charset_qpencode_mimebody(buf_base(&plainbuf),
-                                         buf_len(&plainbuf), &outlen);
+                                         buf_len(&plainbuf), 0, &outlen);
 
     if (outlen > buf_len(&plainbuf)) {
-        fputs("Content-Transfer-Encoding: quoted-printable\r\n", sm);
+        buf_appendcstr(&msgbuf, "Content-Transfer-Encoding: quoted-printable\r\n");
     }
-    fputs("\r\n", sm);
+    buf_appendcstr(&msgbuf, "\r\n");
 
-    fwrite(mimebody, outlen, 1, sm);
+    buf_appendmap(&msgbuf, mimebody, outlen);
     free(mimebody);
     buf_free(&plainbuf);
 
     /* HTML part */
-    fprintf(sm, "\r\n--%s_A\r\n", boundary);
+    buf_printf(&msgbuf, "\r\n--%s_A\r\n", boundary);
 
-    fprintf(sm, "Content-Type: text/html; charset=utf-8\r\n");
-    fputs("Content-Disposition: inline\r\n", sm);
-    fputs("\r\n", sm);
+    buf_printf(&msgbuf, "Content-Type: text/html; charset=utf-8\r\n");
+    buf_appendcstr(&msgbuf, "Content-Disposition: inline\r\n");
+    buf_appendcstr(&msgbuf, "\r\n");
 
-    fputs(HTML_DOCTYPE "\r\n<html><head><title></title></head><body>\r\n", sm);
+    buf_appendcstr(&msgbuf, HTML_DOCTYPE "\r\n<html><head><title></title></head><body>\r\n");
 
     if (originator->name) {
         HTMLencode(&tmpbuf, originator->name);
@@ -496,28 +442,28 @@ static int imip_send_sendmail(icalcomponent *ical,
     }
     else originator->name = originator->addr;
 
-    fprintf(sm, "<b>You have received %s from"
+    buf_printf(&msgbuf, "<b>You have received %s from"
             " <a href=\"mailto:%s\">%s</a></b><p>\r\n",
             msg_type, originator->addr, originator->name);
 
-    fputs("<table border cellpadding=5>\r\n", sm);
+    buf_appendcstr(&msgbuf, "<table border cellpadding=5>\r\n");
     if (summary) {
         HTMLencode(&tmpbuf, summary);
-        fprintf(sm, HTML_ROW, "Summary", buf_cstring(&tmpbuf));
+        buf_printf(&msgbuf, HTML_ROW, "Summary", buf_cstring(&tmpbuf));
     }
     if (location) {
         HTMLencode(&tmpbuf, location);
-        fprintf(sm, HTML_ROW, "Location", buf_cstring(&tmpbuf));
+        buf_printf(&msgbuf, HTML_ROW, "Location", buf_cstring(&tmpbuf));
     }
-    fprintf(sm, HTML_ROW, "When", when);
+    buf_printf(&msgbuf, HTML_ROW, "When", when);
     if (meth == ICAL_METHOD_REPLY) {
         if (originator->partstat)
-            fprintf(sm, HTML_ROW, "RSVP", originator->partstat);
+            buf_printf(&msgbuf, HTML_ROW, "RSVP", originator->partstat);
     }
     else {
-        if (status) fprintf(sm, HTML_ROW, "Status", status);
+        if (status) buf_printf(&msgbuf, HTML_ROW, "Status", status);
 
-        fputs("<tr><td><b>Attendees</b></td>", sm);
+        buf_appendcstr(&msgbuf, "<tr><td><b>Attendees</b></td>");
         for (cp = "<td>", recip = recipients; recip; recip = recip->next) {
             if (recip->name) {
                 HTMLencode(&tmpbuf, recip->name);
@@ -525,74 +471,100 @@ static int imip_send_sendmail(icalcomponent *ical,
             }
             else recip->name = recip->addr;
 
-            fprintf(sm, "%s&#8226; <a href=\"mailto:%s\">%s</a>",
+            buf_printf(&msgbuf, "%s&#8226; <a href=\"mailto:%s\">%s</a>",
                     cp, recip->addr, recip->name);
-            if (recip->role) fprintf(sm, " <i>(%s)</i>", recip->role);
+            if (recip->role) buf_printf(&msgbuf, " <i>(%s)</i>", recip->role);
 
             cp = "\n  <br>";
         }
-        fputs("</td></tr>\r\n", sm);
+        buf_appendcstr(&msgbuf, "</td></tr>\r\n");
 
         if (descrip) {
             HTMLencode(&tmpbuf, descrip);
-            fprintf(sm, HTML_ROW, "Description", buf_cstring(&tmpbuf));
+            buf_printf(&msgbuf, HTML_ROW, "Description", buf_cstring(&tmpbuf));
         }
     }
-    fprintf(sm, "</table></body></html>\r\n");
+    buf_printf(&msgbuf, "</table></body></html>\r\n");
 
     /* iCalendar part */
-    fprintf(sm, "\r\n--%s_A\r\n", boundary);
+    buf_printf(&msgbuf, "\r\n--%s_A\r\n", boundary);
 
-    fprintf(sm, "Content-Type: text/calendar; charset=utf-8");
-    fprintf(sm, "; method=%s; component=%s \r\n",
+    buf_printf(&msgbuf, "Content-Type: text/calendar; charset=utf-8");
+    buf_printf(&msgbuf, "; method=%s; component=%s \r\n",
             icalproperty_method_to_string(meth),
             icalcomponent_kind_to_string(kind));
 
-    fprintf(sm, "Content-ID: <%s@%s>\r\n", uid, config_servername);
+    buf_printf(&msgbuf, "Content-ID: <%s@%s>\r\n", uid, config_servername);
 
     ical_str = icalcomponent_as_ical_string(ical);
-    mimebody = charset_qpencode_mimebody(ical_str, strlen(ical_str), &outlen);
+    mimebody = charset_qpencode_mimebody(ical_str, strlen(ical_str), 0, &outlen);
 
     if (outlen > strlen(ical_str)) {
-        fputs("Content-Transfer-Encoding: quoted-printable\r\n", sm);
+        buf_appendcstr(&msgbuf, "Content-Transfer-Encoding: quoted-printable\r\n");
     }
-    fputs("\r\n", sm);
+    buf_appendcstr(&msgbuf, "\r\n");
 
-    fwrite(mimebody, outlen, 1, sm);
+    buf_appendmap(&msgbuf, mimebody, outlen);
     free(mimebody);
 
     /* end boundary (alternative) */
-    fprintf(sm, "\r\n--%s_A--\r\n", boundary);
-
+    buf_printf(&msgbuf, "\r\n--%s_A--\r\n", boundary);
 
     /* application/ics part */
-    fprintf(sm, "\r\n--%s_M\r\n", boundary);
+    buf_printf(&msgbuf, "\r\n--%s_M\r\n", boundary);
 
-    fprintf(sm,
+    buf_printf(&msgbuf,
             "Content-Type: application/ics; charset=utf-8; name=\"%s.ics\"\r\n",
             filename);
-    fprintf(sm, "Content-Disposition: attachment; filename=\"%s.ics\"\r\n",
+    buf_printf(&msgbuf, "Content-Disposition: attachment; filename=\"%s.ics\"\r\n",
             filename);
-    fputs("Content-Transfer-Encoding: base64\r\n", sm);
-    fputs("\r\n", sm);
+    buf_appendcstr(&msgbuf, "Content-Transfer-Encoding: base64\r\n");
+    buf_appendcstr(&msgbuf, "\r\n");
 
-    charset_encode_mimebody(NULL, strlen(ical_str), NULL, &outlen, NULL);
+    charset_encode_mimebody(NULL, strlen(ical_str), NULL, &outlen,
+                            NULL, 1 /* wrap */);
     buf_ensure(&tmpbuf, outlen);
     charset_encode_mimebody(ical_str, strlen(ical_str),
-                            (char *) buf_base(&tmpbuf), &outlen, NULL);
-    fwrite(buf_base(&tmpbuf), outlen, 1, sm);
+                            (char *) buf_base(&tmpbuf), &outlen,
+                            NULL, 1 /* wrap */);
+    buf_appendmap(&msgbuf, buf_base(&tmpbuf), outlen);
 
     /* end boundary (mixed) and epilogue */
-    fprintf(sm, "\r\n--%s_M--\r\n\r\nEnd of MIME multipart body.\r\n", boundary);
+    buf_printf(&msgbuf, "\r\n--%s_M--\r\n\r\nEnd of MIME multipart body.\r\n", boundary);
 
-    fclose(sm);
+    /* Open SMTP connection */
+    smtpclient_t *sm = NULL;
+    r = smtpclient_open(&sm);
+    if (r) {
+        syslog(LOG_ERR,
+               "imip_send_sendmail(%s): failed to open SMTP client", recipient);
+        r = HTTP_UNAVAILABLE;
+        goto done;
+    }
+    smtpclient_set_auth(sm, httpd_userid);
+    smtpclient_set_notify(sm, "FAILURE,DELAY");
 
-    while (waitpid(sm_pid, &r, 0) < 0);
+    /* Set SMTP envelope */
+    smtp_envelope_t sm_env = SMTP_ENVELOPE_INITIALIZER;
+    smtp_envelope_set_from(&sm_env, originator->addr);
+    for (recip = recipients; recip; recip = recip->next) {
+        if (strcmp(recip->addr, originator->addr) &&
+            (!recipient || !strcasecmp(recip->addr, recipient))) {
+            smtp_envelope_add_rcpt(&sm_env, recip->addr);
+        }
+    }
 
+    /* Send message */
+    r = smtpclient_send(sm, &sm_env, &msgbuf);
     syslog(LOG_INFO,
-           "imip_send_sendmail(%s): %s", recipient, sendmail_errstr(r));
+           "imip_send_sendmail(%s): %s", recipient, error_message(r));
+    smtp_envelope_fini(&sm_env);
+
+    int r2 = smtpclient_close(&sm);
+    if (!r) r = r2;
 
   done:
+    buf_free(&msgbuf);
     buf_free(&tmpbuf);
     free(originator->qpname);
     free(originator);
@@ -608,21 +580,57 @@ static int imip_send_sendmail(icalcomponent *ical,
 
 
 /* Send an iMIP request for attendees in 'ical' */
-static int imip_send(icalcomponent *ical, const char *recipient, unsigned is_update)
+static int imip_send(struct sched_data *sched_data,
+                     const char *sender, const char *recipient)
 {
     const char *notifier = config_getstring(IMAPOPT_IMIPNOTIFIER);
 
     syslog(LOG_DEBUG, "imip_send(%s)", recipient);
 
     /* if no notifier, fall back to sendmail */
-    if (!notifier) return imip_send_sendmail(ical, recipient, is_update);
+    if (!notifier) {
+        return imip_send_sendmail(sched_data->itip,
+                                  sender, recipient, sched_data->is_update);
+    }
 
-    const char *ical_str = icalcomponent_as_ical_string(ical);
-    json_t *val = json_pack("{s:s s:s s:b}",
+    const char *ical_str = icalcomponent_as_ical_string(sched_data->itip);
+    json_t *jsevent, *patch;
+
+#ifdef WITH_JMAP
+    if (sched_data->oldical) {
+        jsevent = jmapical_tojmap(sched_data->oldical, NULL);
+
+        if (sched_data->newical) {
+            /* Updated event */
+            json_t *new_jsevent = jmapical_tojmap(sched_data->newical, NULL);
+
+            patch = jmap_patchobject_create(jsevent, new_jsevent);
+            json_decref(new_jsevent);
+        }
+        else {
+            /* Canceled event */
+            patch = json_null();
+        }
+    }
+    else {
+        /* New event */
+        jsevent = json_null();
+        patch = jmapical_tojmap(sched_data->newical, NULL);
+    }
+#else
+    jsevent = json_null();
+    patch = json_null();
+#endif
+
+    json_t *val = json_pack("{s:s s:s s:s s:o s:o s:b}",
                             "recipient", recipient,
+                            "sender", sender,
                             "ical", ical_str,
-                            "is_update", is_update);
+                            "jsevent", jsevent,
+                            "patch", patch,
+                            "is_update", sched_data->is_update);
     char *serial = json_dumps(val, JSON_COMPACT);
+    // XXX: should we be replacing httpd_userid with sender?
     notify(notifier, "IMIP", NULL, httpd_userid, NULL, 0, NULL, serial, NULL);
     free(serial);
     json_decref(val);
@@ -668,6 +676,9 @@ static void busytime_query_remote(const char *server __attribute__((unused)),
     xmlNodePtr resp;
     const char *status = NULL;
     int r;
+
+    syslog(LOG_DEBUG, "busytime_query_remote(server: '%s', flags: 0x%x)",
+           server, remote->flags);
 
     comp = icalcomponent_get_first_real_component(rrock->ical);
 
@@ -739,7 +750,7 @@ static void busytime_query_remote(const char *server __attribute__((unused)),
         }
     }
 
-    /* Report request-status (if necesary)
+    /* Report request-status (if necessary)
      * Remove the attendees from the iTIP request and hash bucket
      */
     for (list = remote->props; list; list = list->next) {
@@ -760,18 +771,13 @@ static void busytime_query_remote(const char *server __attribute__((unused)),
 }
 
 
-static void free_sched_param_props(void *data)
+static void sched_param_cleanup(void *data)
 {
-    struct caldav_sched_param *sched_param = (struct caldav_sched_param *) data;
+    struct caldav_sched_param *sparam = (struct caldav_sched_param *) data;
 
-    if (sched_param) {
-        struct proplist *prop, *next;
-
-        for (prop = sched_param->props; prop; prop = next) {
-            next = prop->next;
-            free(prop);
-        }
-        free(sched_param);
+    if (sparam) {
+        sched_param_fini(sparam);
+        free(sparam);
     }
 }
 
@@ -784,7 +790,6 @@ int sched_busytime_query(struct transaction_t *txn,
     int ret = 0;
     static const char *calendarprefix = NULL;
     icalcomponent *comp;
-    char mailboxname[MAX_MAILBOX_BUFFER];
     icalproperty *prop = NULL, *next;
     const char *uid = NULL, *organizer = NULL;
     struct caldav_sched_param sparam;
@@ -807,7 +812,7 @@ int sched_busytime_query(struct transaction_t *txn,
     organizer = icalproperty_get_organizer(prop);
 
     /* XXX  Do we need to do more checks here? */
-    if (caladdress_lookup(organizer, &sparam, httpd_userid) ||
+    if (caladdress_lookup(organizer, &sparam, NULL) ||
         (sparam.flags & SCHEDTYPE_REMOTE))
         org_authstate = auth_newstate("anonymous");
     else
@@ -861,7 +866,7 @@ int sched_busytime_query(struct transaction_t *txn,
 
         /* Is attendee remote or local? */
         attendee = icalproperty_get_attendee(prop);
-        r = caladdress_lookup(attendee, &sparam, httpd_userid);
+        r = caladdress_lookup(attendee, &sparam, NULL);
 
         /* Don't allow scheduling of remote users via an iSchedule request */
         if ((sparam.flags & SCHEDTYPE_REMOTE) &&
@@ -910,6 +915,8 @@ int sched_busytime_query(struct transaction_t *txn,
             xmlNodePtr resp;
             const char *userid = sparam.userid;
             icalcomponent *busy = NULL;
+            mbentry_t *mbentry = NULL;
+            const char *status = REQSTAT_NOUSER;
 
             resp =
                 xml_add_schedresponse(root,
@@ -917,30 +924,32 @@ int sched_busytime_query(struct transaction_t *txn,
                                       ns[NS_DAV] : NULL,
                                       BAD_CAST attendee, NULL);
 
-            /* XXX - BROKEN WITH DOMAIN SPLIT, POS */
             /* Check ACL of ORGANIZER on attendee's Scheduling Inbox */
-            snprintf(mailboxname, sizeof(mailboxname),
-                     "user.%s.%s.Inbox", userid, calendarprefix);
+            char *inboxname = caldav_mboxname(userid, SCHED_INBOX);
 
-            r = mboxlist_lookup(mailboxname, NULL, NULL);
+            r = mboxlist_lookup(inboxname, &mbentry, NULL);
             if (r) {
                 syslog(LOG_INFO, "mboxlist_lookup(%s) failed: %s",
-                       mailboxname, error_message(r));
-                xmlNewChild(resp, NULL, BAD_CAST "request-status",
-                            BAD_CAST REQSTAT_REJECTED);
+                       inboxname, error_message(r));
+                status = REQSTAT_REJECTED;
+            }
+            else if (!(httpd_myrights(org_authstate, mbentry) & DACL_SCHEDFB)) {
+                status = REQSTAT_NOPRIVS;
             }
             else {
                 /* Start query at attendee's calendar-home-set */
-                snprintf(mailboxname, sizeof(mailboxname),
-                         "user.%s.%s", userid, calendarprefix);
+                char *mboxname = caldav_mboxname(userid, NULL);
 
                 fctx.davdb = NULL;
                 fctx.req_tgt->collection = NULL;
                 calfilter.freebusy.len = 0;
-                busy = busytime_query_local(txn, &fctx, mailboxname,
+                busy = busytime_query_local(txn, &fctx, mboxname,
                                             ICAL_METHOD_REPLY, uid,
                                             organizer, attendee);
+                free(mboxname);
             }
+            mboxlist_entry_free(&mbentry);
+            free(inboxname);
 
             if (busy) {
                 xmlNodePtr cdata;
@@ -977,7 +986,7 @@ int sched_busytime_query(struct transaction_t *txn,
             }
             else {
                 xmlNewChild(resp, NULL, BAD_CAST "request-status",
-                            BAD_CAST REQSTAT_NOUSER);
+                            BAD_CAST status);
             }
 
             icalproperty_free(prop);
@@ -990,7 +999,7 @@ int sched_busytime_query(struct transaction_t *txn,
         struct remote_rock rrock = { txn, ical, root, ns };
         hash_enumerate(&remote_table, busytime_query_remote, &rrock);
     }
-    free_hash_table(&remote_table, free_sched_param_props);
+    free_hash_table(&remote_table, sched_param_cleanup);
 
     /* Output the XML response */
     if (!ret) xml_response(HTTP_OK, txn, root->doc);
@@ -1017,7 +1026,7 @@ int sched_busytime_query(struct transaction_t *txn,
 #define SCHEDSTAT_REJECTED      "5.3"
 
 /* Deliver scheduling object to a remote recipient */
-static void sched_deliver_remote(const char *recipient,
+static void sched_deliver_remote(const char *sender, const char *recipient,
                                  struct caldav_sched_param *sparam,
                                  struct sched_data *sched_data)
 {
@@ -1080,7 +1089,7 @@ static void sched_deliver_remote(const char *recipient,
         }
     }
     else {
-        r = imip_send(sched_data->itip, recipient, sched_data->is_update);
+        r = imip_send(sched_data, sender, recipient);
         if (!r) {
             sched_data->status =
                 sched_data->ischedule ? REQSTAT_SENT : SCHEDSTAT_SENT;
@@ -1093,7 +1102,6 @@ static void sched_deliver_remote(const char *recipient,
 }
 
 
-#ifdef HAVE_VPOLL
 /*
  * deliver_merge_reply() helper function
  *
@@ -1129,7 +1137,7 @@ static void deliver_merge_vpoll_reply(icalcomponent *ical, icalcomponent *reply)
     }
 
     /* XXX  Actually need to compare POLL-ITEM-IDs */
-    icalcomponent_add_component(ical, icalcomponent_new_clone(new_ballot));
+    icalcomponent_add_component(ical, icalcomponent_clone(new_ballot));
 }
 
 
@@ -1191,7 +1199,7 @@ static int deliver_merge_pollstatus(icalcomponent *ical, icalcomponent *request)
          vvoter =
              icalcomponent_get_next_component(newpoll, ICAL_VVOTER_COMPONENT)) {
 
-        icalcomponent_add_component(oldpoll, icalcomponent_new_clone(vvoter));
+        icalcomponent_add_component(oldpoll, icalcomponent_clone(vvoter));
     }
 
     return deliver_inbox;
@@ -1225,7 +1233,7 @@ static void sched_pollstatus(const char *organizer,
 
     /* Copy over any CALSCALE property */
     prop = icalcomponent_get_first_property(ical, ICAL_CALSCALE_PROPERTY);
-    if (prop) icalcomponent_add_property(itip, icalproperty_new_clone(prop));
+    if (prop) icalcomponent_add_property(itip, icalproperty_clone(prop));
 
     /* Process each VPOLL in resource */
     for (comp = icalcomponent_get_first_component(ical, ICAL_VPOLL_COMPONENT);
@@ -1236,10 +1244,10 @@ static void sched_pollstatus(const char *organizer,
         struct strlist *voters = NULL;
 
         /* Make a working copy of the iTIP */
-        stat = icalcomponent_new_clone(itip);
+        stat = icalcomponent_clone(itip);
 
         /* Make a working copy of the VPOLL and add to pollstatus */
-        poll = icalcomponent_new_clone(comp);
+        poll = icalcomponent_clone(comp);
         icalcomponent_add_component(stat, poll);
 
         /* Process each sub-component of VPOLL */
@@ -1278,7 +1286,7 @@ static void sched_pollstatus(const char *organizer,
             struct strlist *next = voters->next;
 
             sched_data.itip = stat;
-            sched_deliver(voters->s, &sched_data, authstate);
+            sched_deliver(organizer, voters->s, &sched_data, authstate);
 
             free(voters->s);
             free(voters);
@@ -1291,34 +1299,6 @@ static void sched_pollstatus(const char *organizer,
     icalcomponent_free(itip);
     auth_freestate(authstate);
 }
-#else  /* HAVE_VPOLL */
-static void
-deliver_merge_vpoll_reply(icalcomponent *ical __attribute__((unused)),
-                          icalcomponent *reply __attribute__((unused)))
-{
-    return;
-}
-
-static void sched_vpoll_reply(icalcomponent *poll __attribute__((unused)))
-{
-    return;
-}
-
-static int
-deliver_merge_pollstatus(icalcomponent *ical __attribute__((unused)),
-                         icalcomponent *request __attribute__((unused)))
-{
-    return 0;
-}
-
-static void sched_pollstatus(const char *organizer __attribute__((unused)),
-                             struct caldav_sched_param *sparam __attribute__((unused)),
-                             icalcomponent *ical __attribute__((unused)),
-                             const char *voter __attribute__((unused)))
-{
-    return;
-}
-#endif  /* HAVE_VPOLL */
 
 /* annoying copypaste from libical because it's not exposed */
 static struct icaltimetype _get_datetime(icalcomponent *comp, icalproperty *prop)
@@ -1357,7 +1337,7 @@ static icalcomponent *master_to_recurrence(icalcomponent *master, icalproperty *
     icalproperty *endprop = NULL;
     icalproperty *startprop = NULL;
 
-    icalcomponent *comp = icalcomponent_new_clone(master);
+    icalcomponent *comp = icalcomponent_clone(master);
 
     for (prop = icalcomponent_get_first_property(comp, ICAL_ANY_PROPERTY);
          prop; prop = next) {
@@ -1387,7 +1367,7 @@ static icalcomponent *master_to_recurrence(icalcomponent *master, icalproperty *
     }
 
     /* Add RECURRENCE-ID */
-    icalcomponent_add_property(comp, icalproperty_new_clone(recurid));
+    icalcomponent_add_property(comp, icalproperty_clone(recurid));
 
     /* calculate a new dtend based on recurid */
     struct icaltimetype start = _get_datetime(master, startprop);
@@ -1466,7 +1446,7 @@ static const char *deliver_merge_reply(icalcomponent *ical,
             prop =
                 icalcomponent_get_first_property(itip, ICAL_DTSTART_PROPERTY);
             if (prop)
-                icalcomponent_add_property(comp, icalproperty_new_clone(prop));
+                icalcomponent_add_property(comp, icalproperty_clone(prop));
 
             prop =
                 icalcomponent_get_first_property(comp, ICAL_DTEND_PROPERTY);
@@ -1477,7 +1457,7 @@ static const char *deliver_merge_reply(icalcomponent *ical,
             prop =
                 icalcomponent_get_first_property(itip, ICAL_DTEND_PROPERTY);
             if (prop)
-                icalcomponent_add_property(comp, icalproperty_new_clone(prop));
+                icalcomponent_add_property(comp, icalproperty_clone(prop));
 
             prop =
                 icalcomponent_get_first_property(comp, ICAL_SEQUENCE_PROPERTY);
@@ -1488,7 +1468,7 @@ static const char *deliver_merge_reply(icalcomponent *ical,
             prop =
                 icalcomponent_get_first_property(itip, ICAL_SEQUENCE_PROPERTY);
             if (prop)
-                icalcomponent_add_property(comp, icalproperty_new_clone(prop));
+                icalcomponent_add_property(comp, icalproperty_clone(prop));
 
             icalcomponent_add_component(ical, comp);
         }
@@ -1515,7 +1495,7 @@ static const char *deliver_merge_reply(icalcomponent *ical,
         if (!prop) {
             /* Attendee added themselves to this recurrence */
             assert(icalproperty_isa(prop) != ICAL_VOTER_PROPERTY);
-            prop = icalproperty_new_clone(att);
+            prop = icalproperty_clone(att);
             icalcomponent_add_property(comp, prop);
         }
 
@@ -1566,6 +1546,7 @@ static int deliver_merge_request(const char *attendee,
              icalcomponent_get_next_component(ical, ICAL_VTIMEZONE_COMPONENT)) {
         prop = icalcomponent_get_first_property(comp, ICAL_TZID_PROPERTY);
         tzid = icalproperty_get_tzid(prop);
+        if (!tzid) continue;
 
         hash_insert(tzid, comp, &comp_table);
     }
@@ -1579,6 +1560,7 @@ static int deliver_merge_request(const char *attendee,
         /* Lookup this TZID in the hash table */
         prop = icalcomponent_get_first_property(itip, ICAL_TZID_PROPERTY);
         tzid = icalproperty_get_tzid(prop);
+        if (!tzid) continue;
 
         comp = hash_lookup(tzid, &comp_table);
         if (comp) {
@@ -1588,7 +1570,7 @@ static int deliver_merge_request(const char *attendee,
         }
 
         /* Add new/modified component from iTIP request */
-        icalcomponent_add_component(ical, icalcomponent_new_clone(itip));
+        icalcomponent_add_component(ical, icalcomponent_clone(itip));
     }
 
     free_hash_table(&comp_table, NULL);
@@ -1613,7 +1595,7 @@ static int deliver_merge_request(const char *attendee,
     itip = icalcomponent_get_first_real_component(request);
     if (kind == ICAL_NO_COMPONENT) kind = icalcomponent_isa(itip);
     for (; itip; itip = icalcomponent_get_next_component(request, kind)) {
-        icalcomponent *new_comp = icalcomponent_new_clone(itip);
+        icalcomponent *new_comp = icalcomponent_clone(itip);
 
         /* Lookup this comp in the hash table */
         prop =
@@ -1639,20 +1621,20 @@ static int deliver_merge_request(const char *attendee,
                 icalcomponent_get_first_property(comp, ICAL_COMPLETED_PROPERTY);
             if (prop) {
                 icalcomponent_add_property(new_comp,
-                                           icalproperty_new_clone(prop));
+                                           icalproperty_clone(prop));
             }
             prop =
                 icalcomponent_get_first_property(comp,
                                                  ICAL_PERCENTCOMPLETE_PROPERTY);
             if (prop) {
                 icalcomponent_add_property(new_comp,
-                                           icalproperty_new_clone(prop));
+                                           icalproperty_clone(prop));
             }
             prop =
                 icalcomponent_get_first_property(comp, ICAL_TRANSP_PROPERTY);
             if (prop) {
                 icalcomponent_add_property(new_comp,
-                                           icalproperty_new_clone(prop));
+                                           icalproperty_clone(prop));
             }
 
             /* Copy over any ORGANIZER;SCHEDULE-STATUS */
@@ -1661,7 +1643,7 @@ static int deliver_merge_request(const char *attendee,
                 icalcomponent_get_first_property(comp, ICAL_ORGANIZER_PROPERTY);
             param = icalproperty_get_schedulestatus_parameter(prop);
             if (param) {
-                param = icalparameter_new_clone(param);
+                param = icalparameter_clone(param);
                 prop =
                     icalcomponent_get_first_property(new_comp,
                                                      ICAL_ORGANIZER_PROPERTY);
@@ -1716,7 +1698,7 @@ static int deliver_merge_request(const char *attendee,
 
 
 /* Deliver scheduling object to local recipient */
-static void sched_deliver_local(const char *recipient,
+static void sched_deliver_local(const char *sender, const char *recipient,
                                 struct caldav_sched_param *sparam,
                                 struct sched_data *sched_data,
                                 struct auth_state *authstate)
@@ -1724,8 +1706,7 @@ static void sched_deliver_local(const char *recipient,
     int r = 0, rights, reqd_privs, deliver_inbox = 1;
     const char *userid = sparam->userid, *attendee = NULL;
     static struct buf resource = BUF_INITIALIZER;
-    static unsigned sched_count = 0;
-    const char *mailboxname = NULL;
+    char *mailboxname = NULL;
     mbentry_t *mbentry = NULL;
     struct mailbox *mailbox = NULL, *inbox = NULL;
     struct caldav_db *caldavdb = NULL;
@@ -1737,7 +1718,7 @@ static void sched_deliver_local(const char *recipient,
     icalproperty *prop;
     struct transaction_t txn;
 
-    syslog(LOG_DEBUG, "sched_deliver_local(%s, %X)", recipient, sparam->flags);
+    syslog(LOG_DEBUG, "sched_deliver_local(%s, %s, %X)", sender, recipient, sparam->flags);
 
     /* Start with an empty (clean) transaction */
     memset(&txn, 0, sizeof(struct transaction_t));
@@ -1773,6 +1754,7 @@ static void sched_deliver_local(const char *recipient,
             sched_data->ischedule ? REQSTAT_TEMPFAIL : SCHEDSTAT_TEMPFAIL;
         goto done;
     }
+    free(mailboxname);
 
     /* Get METHOD of the iTIP message */
     method = icalcomponent_get_method(sched_data->itip);
@@ -1789,7 +1771,7 @@ static void sched_deliver_local(const char *recipient,
                       icalcomponent_get_uid(sched_data->itip), &cdata);
 
     if (cdata->dav.mailbox) {
-        mailboxname = cdata->dav.mailbox;
+        mailboxname = xstrdup(cdata->dav.mailbox);
         buf_setcstr(&resource, cdata->dav.resource);
     }
     else if (sched_data->is_reply) {
@@ -1818,19 +1800,19 @@ static void sched_deliver_local(const char *recipient,
         /* Copy over VERSION property */
         prop = icalcomponent_get_first_property(sched_data->itip,
                                                 ICAL_VERSION_PROPERTY);
-        icalcomponent_add_property(ical, icalproperty_new_clone(prop));
+        icalcomponent_add_property(ical, icalproperty_clone(prop));
 
         /* Copy over PRODID property */
         prop = icalcomponent_get_first_property(sched_data->itip,
                                                 ICAL_PRODID_PROPERTY);
-        icalcomponent_add_property(ical, icalproperty_new_clone(prop));
+        icalcomponent_add_property(ical, icalproperty_clone(prop));
 
         /* Copy over any CALSCALE property */
         prop = icalcomponent_get_first_property(sched_data->itip,
                                                 ICAL_CALSCALE_PROPERTY);
         if (prop) {
             icalcomponent_add_property(ical,
-                                       icalproperty_new_clone(prop));
+                                       icalproperty_clone(prop));
         }
     }
 
@@ -1845,11 +1827,8 @@ static void sched_deliver_local(const char *recipient,
     }
 
     if (cdata->dav.imap_uid) {
-        struct index_record record;
-
         /* Load message containing the resource and parse iCal data */
-        r = mailbox_find_index_record(mailbox, cdata->dav.imap_uid, &record);
-        ical = record_to_ical(mailbox, &record, NULL);
+        ical = caldav_record_to_ical(mailbox, cdata, NULL, NULL);
 
         for (comp = icalcomponent_get_first_component(sched_data->itip,
                                                       ICAL_ANY_COMPONENT);
@@ -1875,11 +1854,9 @@ static void sched_deliver_local(const char *recipient,
             case ICAL_VAVAILABILITY_COMPONENT:
                 if (cdata->comp_type != CAL_COMP_VAVAILABILITY) reject = 1;
                 break;
-#ifdef HAVE_VPOLL
             case ICAL_VPOLL_COMPONENT:
                 if (cdata->comp_type != CAL_COMP_VPOLL) reject = 1;
                 break;
-#endif
             default:
                 break;
             }
@@ -1950,9 +1927,12 @@ static void sched_deliver_local(const char *recipient,
     if (!txn.req_hdrs) r = HTTP_SERVER_ERROR;
 
     /* Store the (updated) object in the recipients's calendar */
+    strarray_t recipient_addresses = STRARRAY_INITIALIZER;
+    strarray_append(&recipient_addresses, recipient);
     if (!r) r = caldav_store_resource(&txn, ical, mailbox,
-                                      buf_cstring(&resource), caldavdb, NEW_STAG,
-                                      recipient);
+                                      buf_cstring(&resource), cdata->dav.createdmodseq,
+                                      caldavdb, NEW_STAG, recipient, &recipient_addresses);
+    strarray_fini(&recipient_addresses);
 
     if (r == HTTP_CREATED || r == HTTP_NO_CONTENT) {
         sched_data->status =
@@ -1970,13 +1950,11 @@ static void sched_deliver_local(const char *recipient,
     if (deliver_inbox) {
         /* Create a name for the new iTIP message resource */
         buf_reset(&resource);
-        buf_printf(&resource, "%x-%d-%ld-%u.ics",
-                   strhash(icalcomponent_get_uid(sched_data->itip)), getpid(),
-                   time(0), sched_count++);
+        buf_printf(&resource, "%s.ics", makeuuid());
 
         /* Store the message in the recipient's Inbox */
         r = caldav_store_resource(&txn, sched_data->itip, inbox,
-                                  buf_cstring(&resource), caldavdb, 0, NULL);
+                                  buf_cstring(&resource), 0, caldavdb, 0, NULL, NULL);
         /* XXX  What do we do if storing to Inbox fails? */
     }
 
@@ -1987,7 +1965,7 @@ static void sched_deliver_local(const char *recipient,
         if (icalcomponent_isa(comp) == ICAL_VPOLL_COMPONENT)
             sched_pollstatus(recipient, sparam, ical, attendee);
         else
-            sched_request(userid, userid, NULL, ical); // oldical?
+            sched_request(userid, NULL, recipient, NULL, ical); // oldical?
     }
 
   done:
@@ -1997,11 +1975,12 @@ static void sched_deliver_local(const char *recipient,
     if (caldavdb) caldav_close(caldavdb);
     spool_free_hdrcache(txn.req_hdrs);
     buf_free(&txn.buf);
+    free(mailboxname);
 }
 
 
 /* Deliver scheduling object to recipient's Inbox */
-void sched_deliver(const char *recipient, void *data, void *rock)
+void sched_deliver(const char *sender, const char *recipient, void *data, void *rock)
 {
     struct sched_data *sched_data = (struct sched_data *) data;
     struct auth_state *authstate = (struct auth_state *) rock;
@@ -2009,6 +1988,8 @@ void sched_deliver(const char *recipient, void *data, void *rock)
     int islegal;
 
     syslog(LOG_DEBUG, "sched_deliver(%s)", recipient);
+
+    memset(&sparam, 0, sizeof(struct caldav_sched_param));
 
     /* Check SCHEDULE-FORCE-SEND value */
     switch (sched_data->force_send) {
@@ -2034,26 +2015,33 @@ void sched_deliver(const char *recipient, void *data, void *rock)
         return;
     }
 
-    if (caladdress_lookup(recipient, &sparam, httpd_userid)) {
+    if (caladdress_lookup(recipient, &sparam, sched_data->schedule_addresses)) {
         sched_data->status =
             sched_data->ischedule ? REQSTAT_NOUSER : SCHEDSTAT_NOUSER;
         /* Unknown user */
-        return;
+        goto done;
     }
 
     /* don't schedule to yourself */
-    if (sparam.isyou) return;
+    if (sparam.isyou) goto done;
 
     if (sparam.flags) {
         /* Remote recipient */
-        sched_deliver_remote(recipient, &sparam, sched_data);
+        syslog(LOG_NOTICE, "%s scheduling delivery to %s",
+               (sparam.flags & SCHEDTYPE_ISCHEDULE) ? "iSchedule" : "iMIP",
+               recipient);
+
+        sched_deliver_remote(sender, recipient, &sparam, sched_data);
     }
     else {
         /* Local recipient */
-        sched_deliver_local(recipient, &sparam, sched_data, authstate);
+        syslog(LOG_NOTICE, "CalDAV scheduling delivery to %s", recipient);
+
+        sched_deliver_local(sender, recipient, &sparam, sched_data, authstate);
     }
 
-    sched_param_free(&sparam);
+done:
+    sched_param_fini(&sparam);
 }
 
 /*
@@ -2119,6 +2107,12 @@ static unsigned propcmp(icalcomponent *oldical, icalcomponent *newical,
 
     if (!oldprop) return (newprop != NULL);
     else if (!newprop) return 1;
+    else if (kind == ICAL_DURATION_PROPERTY) {
+        struct icaldurationtype olddur = icalproperty_get_duration(oldprop);
+        struct icaldurationtype newdur = icalproperty_get_duration(newprop);
+
+        return (icaldurationtype_as_int(olddur) != icaldurationtype_as_int(newdur));
+    }
     else if ((kind == ICAL_RDATE_PROPERTY) || (kind == ICAL_EXDATE_PROPERTY)) {
         const char *str;
         uint32_t old_crc = 0, new_crc = 0;
@@ -2293,6 +2287,8 @@ static int check_changes_any(icalcomponent *old,
         is_changed = 1;
     else if (propcmp(old, comp, ICAL_DESCRIPTION_PROPERTY))
         is_changed = 1;
+    else if (propcmp(old, comp, ICAL_POLLWINNER_PROPERTY))
+        is_changed = 1;
     else if (partstat_changed(old, comp, get_organizer(comp)))
         is_changed = 1;
 
@@ -2335,7 +2331,7 @@ icalcomponent *make_itip(icalproperty_method method, icalcomponent *ical)
     icalproperty *prop =
         icalcomponent_get_first_property(ical, ICAL_CALSCALE_PROPERTY);
     if (prop) {
-        icalcomponent_add_property(req, icalproperty_new_clone(prop));
+        icalcomponent_add_property(req, icalproperty_clone(prop));
     }
 
     /* Copy over any VTIMEZONE components */
@@ -2343,7 +2339,7 @@ icalcomponent *make_itip(icalproperty_method method, icalcomponent *ical)
     for (comp = icalcomponent_get_first_component(ical, ICAL_VTIMEZONE_COMPONENT);
          comp;
          comp = icalcomponent_get_next_component(ical, ICAL_VTIMEZONE_COMPONENT)) {
-         icalcomponent_add_component(req, icalcomponent_new_clone(comp));
+         icalcomponent_add_component(req, icalcomponent_clone(comp));
     }
 
     return req;
@@ -2363,11 +2359,11 @@ static void schedule_set_exdate(icalcomponent *master, icalcomponent *this)
     /* Copy any parameters from RECURRENCE-ID to EXDATE */
     param = icalproperty_get_first_parameter(recurid, ICAL_TZID_PARAMETER);
     if (param) {
-        icalproperty_add_parameter(exdate, icalparameter_new_clone(param));
+        icalproperty_add_parameter(exdate, icalparameter_clone(param));
     }
     param = icalproperty_get_first_parameter(recurid, ICAL_VALUE_PARAMETER);
     if (param) {
-        icalproperty_add_parameter(exdate, icalparameter_new_clone(param));
+        icalproperty_add_parameter(exdate, icalparameter_clone(param));
     }
 
     /* XXX  Need to handle RANGE parameter */
@@ -2410,16 +2406,57 @@ static void update_attendee_status(icalcomponent *ical, strarray_t *onrecurids,
     }
 }
 
-static void schedule_full_cancel(const char *attendee, icalcomponent *mastercomp,
+static icaltimetype get_historical_cutoff()
+{
+    int age = config_getduration(IMAPOPT_CALDAV_HISTORICAL_AGE, 'd');
+    icaltimetype cutoff;
+
+    if (age < 0) return icaltime_null_time();
+
+    /* Set cutoff to current time -age days */
+    cutoff = icaltime_current_time_with_zone(icaltimezone_get_utc_timezone());
+    icaltime_adjust(&cutoff, 0, 0, 0, -age);
+
+    return cutoff;
+}
+
+static int icalcomponent_is_historical(icalcomponent *comp, icaltimetype cutoff)
+{
+    if (icaltime_is_null_time(cutoff)) return 0;
+
+    icalcomponent_kind kind = icalcomponent_isa(comp);
+    struct icalperiodtype span;
+
+    if (icalcomponent_get_first_property(comp, ICAL_RECURRENCEID_PROPERTY)) {
+         /* span is just the span of the override */
+        span = icalcomponent_get_utc_timespan(comp, kind, NULL);
+    }
+    else {
+        /* span is entire span of the master */
+        icalcomponent *ical = icalcomponent_new_vcalendar();
+
+        icalcomponent_add_component(ical, icalcomponent_clone(comp));
+        span = icalrecurrenceset_get_utc_timespan(ical, kind, NULL, NULL, NULL, NULL);
+        icalcomponent_free(ical);
+    }
+
+    return (icaltime_compare(span.end, cutoff) < 0);
+}
+
+static void schedule_full_cancel(const strarray_t *schedule_addresses,
+                                 const char *organizer, const char *attendee,
+                                 icalcomponent *mastercomp, icaltimetype h_cutoff,
                                  icalcomponent *oldical, icalcomponent *newical)
 {
     /* we need to send a cancel for all recurrences with this attendee,
        and add exdates to the master for all without this attendee */
     icalcomponent *itip = make_itip(ICAL_METHOD_CANCEL, oldical);
 
-    icalcomponent *mastercopy = icalcomponent_new_clone(mastercomp);
+    icalcomponent *mastercopy = icalcomponent_clone(mastercomp);
     clean_component(mastercopy);
     icalcomponent_add_component(itip, mastercopy);
+
+    int do_send = !icalcomponent_is_historical(mastercopy, h_cutoff);
 
     icalcomponent *comp = icalcomponent_get_first_real_component(oldical);
     icalcomponent_kind kind = icalcomponent_isa(comp);
@@ -2440,20 +2477,27 @@ static void schedule_full_cancel(const char *attendee, icalcomponent *mastercomp
             find_attended_component(newical, recurid, attendee);
         if (newcomp) continue; /* will be scheduled separately */
 
-        icalcomponent *copy = icalcomponent_new_clone(comp);
+        icalcomponent *copy = icalcomponent_clone(comp);
         clean_component(copy);
         icalcomponent_add_component(itip, copy);
+
+        if (!do_send && !icalcomponent_is_historical(copy, h_cutoff))
+            do_send = 1;
     }
 
-    struct sched_data sched =
-        { 0, 0, 0, itip, ICAL_SCHEDULEFORCESEND_NONE, NULL };
-    sched_deliver(attendee, &sched, httpd_authstate);
+    if (do_send) {
+        struct sched_data sched =
+            { 0, 0, 0, itip, oldical, newical, ICAL_SCHEDULEFORCESEND_NONE, schedule_addresses, NULL };
+        sched_deliver(organizer, attendee, &sched, httpd_authstate);
+    }
 
     icalcomponent_free(itip);
 }
 
 /* we've already tested that master does NOT contain this attendee */
-static void schedule_sub_cancels(const char *attendee,
+static void schedule_sub_cancels(const strarray_t *schedule_addresses,
+                                 const char *organizer, const char *attendee,
+                                 icaltimetype h_cutoff,
                                  icalcomponent *oldical, icalcomponent *newical)
 {
     if (!oldical) return;
@@ -2481,17 +2525,18 @@ static void schedule_sub_cancels(const char *attendee,
         if (find_attended_component(newical, recurid, attendee))
             continue;
 
-        icalcomponent *copy = icalcomponent_new_clone(comp);
+        icalcomponent *copy = icalcomponent_clone(comp);
         clean_component(copy);
         icalcomponent_add_component(itip, copy);
 
-        do_send = 1;
+        if (!do_send && !icalcomponent_is_historical(copy, h_cutoff))
+            do_send = 1;
     }
 
     if (do_send) {
         struct sched_data sched =
-            { 0, 0, 0, itip, ICAL_SCHEDULEFORCESEND_NONE, NULL };
-        sched_deliver(attendee, &sched, httpd_authstate);
+            { 0, 0, 0, itip, oldical, newical, ICAL_SCHEDULEFORCESEND_NONE, schedule_addresses, NULL };
+        sched_deliver(organizer, attendee, &sched, httpd_authstate);
 
     }
 
@@ -2509,7 +2554,9 @@ icalparameter_scheduleforcesend get_forcesend(icalproperty *prop)
 
 /* we've already tested that master does NOT contain this attendee or that
  * master doesn't need to be scheduled */
-static void schedule_sub_updates(const char *attendee,
+static void schedule_sub_updates(const strarray_t *schedule_addresses,
+                                 const char *organizer, const char *attendee,
+                                 icaltimetype h_cutoff,
                                  icalcomponent *oldical, icalcomponent *newical)
 {
     if (!newical) return;
@@ -2554,7 +2601,7 @@ static void schedule_sub_updates(const char *attendee,
             }
         }
 
-        icalcomponent *copy = icalcomponent_new_clone(comp);
+        icalcomponent *copy = icalcomponent_clone(comp);
         clean_component(copy);
 
         if (find_attendee(oldcomp, attendee))
@@ -2564,14 +2611,16 @@ static void schedule_sub_updates(const char *attendee,
 
         strarray_add(&recurids, recurid);
 
-        do_send = 1;
+        if (!do_send && !icalcomponent_is_historical(copy, h_cutoff))
+            do_send = 1;
 
         if (freeme) icalcomponent_free(freeme);
     }
 
     if (do_send) {
-        struct sched_data sched = { 0, 0, is_update, itip, force_send, NULL };
-        sched_deliver(attendee, &sched, httpd_authstate);
+        struct sched_data sched =
+            { 0, 0, is_update, itip, oldical, newical, force_send, schedule_addresses, NULL };
+        sched_deliver(organizer, attendee, &sched, httpd_authstate);
         update_attendee_status(newical, &recurids, attendee, sched.status);
     }
 
@@ -2580,13 +2629,15 @@ static void schedule_sub_updates(const char *attendee,
 }
 
 /* we've already tested that master does contain this attendee */
-static void schedule_full_update(const char *attendee, icalcomponent *mastercomp,
+static void schedule_full_update(const strarray_t *schedule_addresses,
+                                 const char *organizer, const char *attendee,
+                                 icalcomponent *mastercomp, icaltimetype h_cutoff,
                                  icalcomponent *oldical, icalcomponent *newical)
 {
     /* create an itip for the complete event */
     icalcomponent *itip = make_itip(ICAL_METHOD_REQUEST, newical);
 
-    icalcomponent *mastercopy = icalcomponent_new_clone(mastercomp);
+    icalcomponent *mastercopy = icalcomponent_clone(mastercomp);
     clean_component(mastercopy);
     icalcomponent_add_component(itip, mastercopy);
 
@@ -2596,8 +2647,13 @@ static void schedule_full_update(const char *attendee, icalcomponent *mastercomp
     icalcomponent *oldmaster = find_attended_component(oldical, "", attendee);
     if (check_changes(oldmaster, mastercopy, attendee)) {
         /* we only force the send if the top level event has changed */
-        do_send = 1;
-        if (oldmaster) is_update = 1;
+        if (!icalcomponent_is_historical(mastercopy, h_cutoff)) do_send = 1;
+
+        if (oldmaster) {
+            is_update = 1;
+            if (!do_send && !icalcomponent_is_historical(oldmaster, h_cutoff))
+                do_send = 1;
+        }
     }
 
     icalproperty *masteratt = find_attendee(mastercomp, attendee);
@@ -2632,12 +2688,14 @@ static void schedule_full_update(const char *attendee, icalcomponent *mastercomp
             schedule_set_exdate(mastercopy, comp);
 
             /* different from last time? */
-            if (!oldcomp || has_old) do_send = 1;
-
+            if ((!oldcomp || has_old) &&
+                !do_send && !icalcomponent_is_historical(comp, h_cutoff)) {
+                do_send = 1;
+            }
             continue;
         }
 
-        icalcomponent *copy = icalcomponent_new_clone(comp);
+        icalcomponent *copy = icalcomponent_clone(comp);
 
         /* we don't care if it's changed, just using this for the
          * side effect changes to RSVP */
@@ -2648,14 +2706,15 @@ static void schedule_full_update(const char *attendee, icalcomponent *mastercomp
     }
 
     if (do_send) {
-        struct sched_data sched = { 0, 0, is_update, itip, force_send, NULL };
-        sched_deliver(attendee, &sched, httpd_authstate);
+        struct sched_data sched =
+            { 0, 0, is_update, itip, oldical, newical, force_send, schedule_addresses, NULL };
+        sched_deliver(organizer, attendee, &sched, httpd_authstate);
 
         update_attendee_status(newical, NULL, attendee, sched.status);
     }
     else {
         /* just look for sub updates */
-        schedule_sub_updates(attendee, oldical, newical);
+        schedule_sub_updates(schedule_addresses, organizer, attendee, h_cutoff, oldical, newical);
     }
 
     icalcomponent_free(itip);
@@ -2663,43 +2722,43 @@ static void schedule_full_update(const char *attendee, icalcomponent *mastercomp
 
 /* sched_request() helper
  * handles scheduling for a single attendee */
-static void schedule_one_attendee(const char *attendee,
+static void schedule_one_attendee(const strarray_t *schedule_addresses,
+                                  const char *organizer, const char *attendee,
+                                  icaltimetype h_cutoff,
                                   icalcomponent *oldical, icalcomponent *newical)
 {
     /* case: this attendee is attending the master event */
     icalcomponent *mastercomp;
     if ((mastercomp = find_attended_component(newical, "", attendee))) {
-        schedule_full_update(attendee, mastercomp, oldical, newical);
+        schedule_full_update(schedule_addresses, organizer, attendee,
+                             mastercomp, h_cutoff, oldical, newical);
         return;
     }
 
     /* otherwise we need to cancel for each sub event and then we'll still
      * send the updates if any */
     if ((mastercomp = find_attended_component(oldical, "", attendee))) {
-        schedule_full_cancel(attendee, mastercomp, oldical, newical);
+        schedule_full_cancel(schedule_addresses, organizer, attendee, mastercomp, h_cutoff, oldical, newical);
     }
     else {
-        schedule_sub_cancels(attendee, oldical, newical);
+        schedule_sub_cancels(schedule_addresses, organizer, attendee, h_cutoff, oldical, newical);
     }
 
-    schedule_sub_updates(attendee, oldical, newical);
+    schedule_sub_updates(schedule_addresses, organizer, attendee, h_cutoff, oldical, newical);
 }
 
 
 /* Create and deliver an organizer scheduling request */
-void sched_request(const char *userid, const char *organizer,
+void sched_request(const char *asuserid, const strarray_t *schedule_addresses,
+                   const char *organizer,
                    icalcomponent *oldical, icalcomponent *newical)
 {
-    int r;
-
-    int rights = 0;
-    mbentry_t *mbentry = NULL;
     /* Check ACL of auth'd user on userid's Scheduling Outbox */
-    char *outboxname = caldav_mboxname(userid, SCHED_OUTBOX);
+    int rights = 0;
 
-    syslog(LOG_DEBUG, "sched_request(%s)", organizer);
-
-    r = mboxlist_lookup(outboxname, &mbentry, NULL);
+    mbentry_t *mbentry = NULL;
+    char *outboxname = caldav_mboxname(asuserid, SCHED_OUTBOX);
+    int r = mboxlist_lookup(outboxname, &mbentry, NULL);
     if (r) {
         syslog(LOG_INFO, "mboxlist_lookup(%s) failed: %s",
                outboxname, error_message(r));
@@ -2720,15 +2779,19 @@ void sched_request(const char *userid, const char *organizer,
         return;
     }
 
-    /* ok, permissions are checked, let's figure out who the attendees are */
+    /* ok, let's figure out who the attendees are */
     strarray_t attendees = STRARRAY_INITIALIZER;
     add_attendees(oldical, organizer, &attendees);
     add_attendees(newical, organizer, &attendees);
 
+    icaltimetype h_cutoff = get_historical_cutoff();
+
     int i;
     for (i = 0; i < strarray_size(&attendees); i++) {
         const char *attendee = strarray_nth(&attendees, i);
-        schedule_one_attendee(attendee, oldical, newical);
+        syslog(LOG_NOTICE, "iTIP scheduling request from %s to %s",
+               organizer, attendee);
+        schedule_one_attendee(schedule_addresses, organizer, attendee, h_cutoff, oldical, newical);
     }
 
     strarray_fini(&attendees);
@@ -2858,10 +2921,12 @@ static icalparameter_partstat get_partstat(icalcomponent *comp,
 static int partstat_changed(icalcomponent *oldcomp,
                             icalcomponent *newcomp, const char *attendee)
 {
+    if (!attendee) return 1; // something weird is going on, treat it as a change
     return (get_partstat(oldcomp, attendee) != get_partstat(newcomp, attendee));
 }
 
 static void schedule_sub_declines(const char *attendee,
+                                  icaltimetype h_cutoff,
                                   icalcomponent *oldical, icalcomponent *newical,
                                   struct reply_data *reply)
 {
@@ -2894,7 +2959,7 @@ static void schedule_sub_declines(const char *attendee,
         if (newcomp) continue;
 
         /* we need to send an update for this recurrence */
-        icalcomponent *copy = icalcomponent_new_clone(comp);
+        icalcomponent *copy = icalcomponent_clone(comp);
         trim_attendees(copy, attendee);
         if (kind == ICAL_VPOLL_COMPONENT) sched_vpoll_reply(copy);
         clean_component(copy);
@@ -2902,12 +2967,14 @@ static void schedule_sub_declines(const char *attendee,
 
         icalcomponent_add_component(reply->itip, copy);
 
-        reply->do_send = 1;
+        if (!reply->do_send && !icalcomponent_is_historical(comp, h_cutoff))
+            reply->do_send = 1;
     }
 }
 
 /* we've already tested that master does NOT contain this attendee */
 static void schedule_sub_replies(const char *attendee,
+                                 icaltimetype h_cutoff,
                                  icalcomponent *oldical, icalcomponent *newical,
                                  struct reply_data *reply)
 {
@@ -2951,7 +3018,7 @@ static void schedule_sub_replies(const char *attendee,
         reply->organizer = organizer;
 
         /* we need to send an update for this recurrence */
-        icalcomponent *copy = icalcomponent_new_clone(comp);
+        icalcomponent *copy = icalcomponent_clone(comp);
         trim_attendees(copy, attendee);
         if (kind == ICAL_VPOLL_COMPONENT) sched_vpoll_reply(copy);
         clean_component(copy);
@@ -2963,11 +3030,13 @@ static void schedule_sub_replies(const char *attendee,
             strarray_add(reply->didparts, recurid);
         }
 
-        reply->do_send = 1;
+        if (!reply->do_send && !icalcomponent_is_historical(comp, h_cutoff))
+            reply->do_send = 1;
     }
 }
 
 static void schedule_full_decline(const char *attendee,
+                                  icaltimetype h_cutoff,
                                   icalcomponent *oldical, icalcomponent *newical __attribute__((unused)),
                                   struct reply_data *reply)
 {
@@ -2986,7 +3055,7 @@ static void schedule_full_decline(const char *attendee,
         get_forcesend(icalcomponent_get_first_property(mastercomp,
                                                        ICAL_ORGANIZER_PROPERTY));
 
-    icalcomponent *mastercopy = icalcomponent_new_clone(mastercomp);
+    icalcomponent *mastercopy = icalcomponent_clone(mastercomp);
     trim_attendees(mastercopy, attendee);
     if (icalcomponent_isa(mastercomp) == ICAL_VPOLL_COMPONENT) sched_vpoll_reply(mastercopy);
     clean_component(mastercopy);
@@ -2994,24 +3063,32 @@ static void schedule_full_decline(const char *attendee,
 
     icalcomponent_add_component(reply->itip, mastercopy);
 
-    reply->do_send = 1;
+    if (!reply->do_send && !icalcomponent_is_historical(mastercomp, h_cutoff))
+        reply->do_send = 1;
+
     /* force ALL sub parts to be added */
     reply->master_send = 1;
 }
 
 /* we've already tested that master contains this attendee */
 static void schedule_full_reply(const char *attendee,
+                                icaltimetype h_cutoff,
                                 icalcomponent *oldical, icalcomponent *newical,
                                 struct reply_data *reply)
 {
     icalcomponent *mastercomp = find_attended_component(newical, "", attendee);
+    icalcomponent_kind kind;
+    int add_master = 0;
+
     if (!mastercomp) {
-        schedule_full_decline(attendee, oldical, newical, reply);
+        schedule_full_decline(attendee, h_cutoff, oldical, newical, reply);
         return;
     }
 
     reply->organizer = get_organizer(mastercomp);
     if (!reply->organizer) return;
+
+    kind = icalcomponent_isa(mastercomp);
 
     reply->force_send =
         get_forcesend(icalcomponent_get_first_property(mastercomp,
@@ -3021,52 +3098,60 @@ static void schedule_full_reply(const char *attendee,
 
     /* it's forced */
     if (reply->force_send != ICAL_SCHEDULEFORCESEND_NONE)
-        reply->do_send = 1;
+        add_master = 1;
 
-    /* or it's different */
-    icalcomponent *oldmaster = find_attended_component(oldical, "", attendee);
-    if (partstat_changed(oldmaster, mastercomp, attendee))
-        reply->do_send = 1;
+    /* or it's a VPOLL */
+    else if (kind == ICAL_VPOLL_COMPONENT)
+        add_master = 1;
 
-    /* or it includes new EXDATEs */
-    icalproperty *prop =
-        icalcomponent_get_first_property(mastercomp, ICAL_EXDATE_PROPERTY);
-    for (; prop; prop = icalcomponent_get_next_property(mastercomp,
-                                                        ICAL_EXDATE_PROPERTY)) {
-        struct icaltimetype exdate = icalproperty_get_exdate(prop);
-        if (!has_exdate(oldmaster, exdate))
-            reply->do_send = 1;
+    else {
+        /* or it's different */
+        icalcomponent *oldmaster = find_attended_component(oldical, "", attendee);
+        if (partstat_changed(oldmaster, mastercomp, attendee))
+            add_master = 1;
+
+        /* or it includes new EXDATEs */
+        else {
+            icalproperty *prop =
+                icalcomponent_get_first_property(mastercomp, ICAL_EXDATE_PROPERTY);
+            for (; prop; prop = icalcomponent_get_next_property(mastercomp,
+                                                                ICAL_EXDATE_PROPERTY)) {
+                struct icaltimetype exdate = icalproperty_get_exdate(prop);
+                if (!has_exdate(oldmaster, exdate))
+                    add_master = 1;
+            }
+        }
     }
 
-    if (reply->do_send) {
+    if (add_master) {
         if (!reply->itip) reply->itip = make_itip(ICAL_METHOD_REPLY, newical);
 
         /* add the master */
-        icalcomponent *mastercopy = icalcomponent_new_clone(mastercomp);
+        icalcomponent *mastercopy = icalcomponent_clone(mastercomp);
         trim_attendees(mastercopy, attendee);
-        if (icalcomponent_isa(mastercomp) == ICAL_VPOLL_COMPONENT) sched_vpoll_reply(mastercopy);
+        if (kind == ICAL_VPOLL_COMPONENT) sched_vpoll_reply(mastercopy);
         clean_component(mastercopy);
         icalcomponent_add_component(reply->itip, mastercopy);
 
         /* force ALL sub parts to be added */
         reply->master_send = 1;
+
+        /* master includes "recent" occurrence(s) - send it */
+        if (!icalcomponent_is_historical(mastercopy, h_cutoff))
+            reply->do_send = 1;
     }
 }
 
 /* Create and deliver an attendee scheduling reply */
-void sched_reply(const char *userid, const char *attendee,
+void sched_reply(const char *onuserid, const strarray_t *schedule_addresses,
                  icalcomponent *oldical, icalcomponent *newical)
 {
-    int r;
-
-    syslog(LOG_DEBUG, "sched_reply(%s)", attendee);
-
     /* Check ACL of auth'd user on userid's Scheduling Outbox */
-    char *outboxname = caldav_mboxname(userid, SCHED_OUTBOX);
-
     int rights = 0;
+
     mbentry_t *mbentry = NULL;
-    r = mboxlist_lookup(outboxname, &mbentry, NULL);
+    char *outboxname = caldav_mboxname(onuserid, SCHED_OUTBOX);
+    int r = mboxlist_lookup(outboxname, &mbentry, NULL);
     if (r) {
         syslog(LOG_INFO, "mboxlist_lookup(%s) failed: %s",
                outboxname, error_message(r));
@@ -3080,34 +3165,49 @@ void sched_reply(const char *userid, const char *attendee,
     if (!(rights & DACL_REPLY)) {
         /* DAV:need-privileges */
         syslog(LOG_DEBUG, "No scheduling send ACL for user %s on Outbox %s",
-               httpd_userid, attendee);
+               httpd_userid, onuserid);
         update_organizer_status(newical, NULL, SCHEDSTAT_NOPRIVS);
         return;
     }
 
     /* otherwise we need to decline for each sub event and then we'll still
      * send the accepts if any */
-    struct reply_data reply = { NULL, NULL, NULL, 0, 0, ICAL_SCHEDULEFORCESEND_NONE };
+    icaltimetype h_cutoff = get_historical_cutoff();
 
-    schedule_full_reply(attendee, oldical, newical, &reply);
-    schedule_sub_replies(attendee, oldical, newical, &reply);
-    schedule_sub_declines(attendee, oldical, newical, &reply);
+    int i;
+    for (i = 0; i < strarray_size(schedule_addresses); i++) {
+        const char *attendee = strarray_nth(schedule_addresses, i);
+        struct reply_data reply = { NULL, NULL, NULL, 0, 0, ICAL_SCHEDULEFORCESEND_NONE };
+        if (!strncasecmp(attendee, "mailto:", 7)) attendee += 7;
 
-    if (reply.do_send) {
-        struct sched_data sched = { 0, 1, 0, reply.itip, reply.force_send, NULL };
-        sched_deliver(reply.organizer, &sched, httpd_authstate);
-        update_organizer_status(newical, reply.didparts, sched.status);
+        schedule_full_reply(attendee, h_cutoff, oldical, newical, &reply);
+        schedule_sub_replies(attendee, h_cutoff, oldical, newical, &reply);
+        schedule_sub_declines(attendee, h_cutoff, oldical, newical, &reply);
+
+        if (reply.do_send) {
+            struct sched_data sched =
+                { 0, 1, 0, reply.itip, oldical, newical, reply.force_send, schedule_addresses, NULL };
+            syslog(LOG_NOTICE, "iTIP scheduling reply from %s to %s",
+                   attendee, reply.organizer ? reply.organizer : "<unknown>");
+            sched_deliver(attendee, reply.organizer, &sched, httpd_authstate);
+            update_organizer_status(newical, reply.didparts, sched.status);
+        }
+
+        if (reply.didparts) strarray_free(reply.didparts);
+        if (reply.itip) icalcomponent_free(reply.itip);
     }
-
-    if (reply.didparts) strarray_free(reply.didparts);
-    if (reply.itip) icalcomponent_free(reply.itip);
 }
 
-void sched_param_free(struct caldav_sched_param *sparam) {
-    if (sparam->userid) free(sparam->userid);
-    if (sparam->server) free(sparam->server);
-    if (sparam->props) {
-        free_sched_param_props(sparam->props);
+void sched_param_fini(struct caldav_sched_param *sparam)
+{
+    free(sparam->userid);
+    free(sparam->server);
+
+    struct proplist *prop, *next;
+    for (prop = sparam->props; prop; prop = next) {
+        next = prop->next;
+        free(prop);
     }
+
     memset(sparam, 0, sizeof(struct caldav_sched_param));
 }

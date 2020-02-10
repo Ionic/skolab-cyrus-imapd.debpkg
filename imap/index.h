@@ -96,11 +96,12 @@ struct index_init {
 struct index_map {
     modseq_t modseq;
     modseq_t told_modseq;
+    uint64_t cache_offset;
+    uint32_t user_flags[MAX_USER_FLAGS/32];
     uint32_t uid;
     uint32_t recno;
     uint32_t system_flags;
-    uint32_t cache_offset;
-    uint32_t user_flags[MAX_USER_FLAGS/32];
+    uint32_t internal_flags;
     unsigned int isseen:1;
     unsigned int isrecent:1;
 };
@@ -135,6 +136,7 @@ struct index_state {
     uint32_t want_mbtype;
     int want_expunged;
     unsigned num_expunged;
+    message_t *m;
 };
 
 struct copyargs {
@@ -154,17 +156,19 @@ typedef struct msgdata {
     time_t sentdate;            /* sent date & time of message
                                    from Date: header (adjusted by time zone) */
     time_t internaldate;        /* internaldate */
+    time_t savedate;            /* savedate */
     size_t size;                /* message size */
     modseq_t modseq;            /* modseq of record*/
+    modseq_t createdmodseq;     /* createdmodseq of record*/
     bit32 hasflag;              /* hasflag values (up to 32 of them) */
     struct message_guid guid;   /* message guid */
     uint32_t system_flags;      /* system flags */
+    uint32_t internal_flags;    /* internal flags */
 
     /* items from the conversations database */
     modseq_t convmodseq;        /* modseq of conversation */
     uint32_t convexists;        /* exists count of conversation */
     uint32_t convsize;          /* total size of messages in conversation */
-    bit32 hasconvflag;          /* hasconvflag values (up to 32 of them) */
 
     uint32_t spamscore;         /* x-spam-score header */
 
@@ -180,6 +184,8 @@ typedef struct msgdata {
     char *xsubj;                /* extracted subject text */
     unsigned xsubj_hash;        /* hash of extracted subject text */
     int is_refwd;               /* is message a reply or forward? */
+
+    /* items from the annotations database */
     strarray_t annot;           /* array of annotation attribute values
                                    (stored in order of sortcrit) */
 } MsgData;
@@ -218,8 +224,7 @@ enum index_warmup_flags
     WARMUP_INDEX            = (1<<0),
     WARMUP_CONVERSATIONS    = (1<<1),
     WARMUP_ANNOTATIONS      = (1<<2),
-    WARMUP_FOLDERSTATUS     = (1<<3),
-    WARMUP_SEARCH           = (1<<4),
+    WARMUP_SEARCH           = (1<<3),
     WARMUP_ALL              = (~WARMUP_SEARCH)
 };
 
@@ -300,7 +305,6 @@ extern int index_urlfetch(struct index_state *state, uint32_t msgno,
                           unsigned long start_octet, unsigned long octet_count,
                           struct protstream *pout, unsigned long *size);
 extern char *index_get_msgid(struct index_state *state, uint32_t msgno);
-extern struct message *index_get_message(struct index_state *state, uint32_t msgno);
 extern struct nntp_overview *index_overview(struct index_state *state,
                                             uint32_t msgno);
 extern char *index_getheader(struct index_state *state, uint32_t msgno,
@@ -330,7 +334,7 @@ extern int index_search_evaluate(struct index_state *state, const search_expr_t 
 extern int index_expunge(struct index_state *state, char *uidsequence,
                          int need_deleted);
 
-extern int index_getsearchtext(struct message *msg,
+extern int index_getsearchtext(struct message *msg, const strarray_t *partids,
                                struct search_text_receiver *receiver,
                                int snippet);
 
@@ -345,5 +349,9 @@ extern int index_reload_record(struct index_state *state,
                                uint32_t msgno,
                                struct index_record *record);
 
+extern void index_text_extractor_init(struct protstream *clientin);
+extern void index_text_extractor_destroy(void);
+
+extern int insert_into_mailbox_allowed(struct mailbox *mailbox);
 
 #endif /* INDEX_H */

@@ -77,12 +77,15 @@ union search_value {
     uint64_t u;
     char *s;
     struct searchannot *annot;
+    strarray_t *list;
+    void *rock;
 };
 
 /* search_attr.flags */
 enum {
     SEA_MUTABLE =       (1<<0),
     SEA_FUZZABLE =      (1<<1),
+    SEA_ISLIST =        (1<<2),
 };
 
 typedef struct search_attr search_attr_t;
@@ -127,6 +130,7 @@ enum {
 extern search_expr_t *search_expr_new(search_expr_t *parent,
                                       enum search_op);
 extern void search_expr_append(search_expr_t *parent, search_expr_t *child);
+extern void search_expr_detach(search_expr_t *parent, search_expr_t *child);
 extern void search_expr_free(search_expr_t *);
 extern search_expr_t *search_expr_duplicate(const search_expr_t *e);
 extern int search_expr_apply(search_expr_t *e,
@@ -136,6 +140,7 @@ extern char *search_expr_serialise(const search_expr_t *);
 extern search_expr_t *search_expr_unserialise(const char *s);
 extern int search_expr_normalise(search_expr_t **);
 extern void search_expr_internalise(struct index_state *, search_expr_t *);
+extern int search_expr_always_same(const search_expr_t *);
 extern int search_expr_evaluate(message_t *m, const search_expr_t *);
 extern int search_expr_uses_attr(const search_expr_t *, const char *);
 extern int search_expr_is_mutable(const search_expr_t *);
@@ -148,9 +153,19 @@ extern void search_expr_split_by_folder_and_index(search_expr_t *e,
                                                    void *rock),
                                         void *rock);
 
+enum search_cost {
+    SEARCH_COST_NONE = 0,
+    SEARCH_COST_INDEX,
+    SEARCH_COST_CONV,
+    SEARCH_COST_ANNOT,
+    SEARCH_COST_CACHE,
+    SEARCH_COST_BODY
+};
+
 extern void search_attr_init(void);
 extern const search_attr_t *search_attr_find(const char *);
 extern const search_attr_t *search_attr_find_field(const char *field);
 extern int search_attr_is_fuzzable(const search_attr_t *);
+extern enum search_cost search_attr_cost(const search_attr_t *);
 
 #endif

@@ -49,6 +49,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -72,7 +73,6 @@
 #endif
 
 #include "assert.h"
-#include "exitcodes.h"
 #include "index.h"
 #include "global.h"
 #include "mailbox.h"
@@ -147,11 +147,8 @@ int main(int argc, char **argv)
     /* Set namespace -- force standard (internal) */
     if ((r = mboxname_init_namespace(&mbexamine_namespace, 1)) != 0) {
         syslog(LOG_ERR, "%s", error_message(r));
-        fatal(error_message(r), EC_CONFIG);
+        fatal(error_message(r), EX_CONFIG);
     }
-
-    mboxlist_init(0);
-    mboxlist_open(NULL);
 
     signals_set_shutdown(&shut_down);
     signals_add_handlers(0);
@@ -165,8 +162,7 @@ int main(int argc, char **argv)
         mboxlist_findall(&mbexamine_namespace, argv[i], 1, 0, 0, cb, NULL);
     }
 
-    mboxlist_close();
-    mboxlist_done();
+    cyrus_done();
 
     exit(0);
 }
@@ -178,7 +174,7 @@ static void usage(void)
             "       mbexamine [-C <alt_config>] [-u uid] mailbox...\n"
             "       mbexamine [-C <alt_config>] -q mailbox...\n"
             "       mbexamine [-C <alt_config>] -c mailbox...\n");
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 static void print_rec(const char *name, const struct buf *citem)
@@ -198,7 +194,8 @@ static int do_examine(struct findall_data *data, void *rock __attribute__((unuse
     int j;
 
     /* don't want partial matches */
-    if (!data || !data->mbname) return 0;
+    if (!data) return 0;
+    if (!data->is_exactmatch) return 0;
 
     signals_poll();
 
@@ -253,6 +250,9 @@ static int do_examine(struct findall_data *data, void *rock __attribute__((unuse
         if (mailbox->i.options & OPT_IMAP_DUPDELIVER) {
             printf(" IMAP_DUPDELIVER");
         }
+        if (mailbox->i.options & OPT_IMAP_HAS_ALARMS) {
+            printf(" IMAP_HAS_ALARMS");
+        }
     }
     printf("\n");
     printf("  Last POP3 Login: (%ld) %s", mailbox->i.pop3_last_login,
@@ -276,14 +276,13 @@ static int do_examine(struct findall_data *data, void *rock __attribute__((unuse
             flag = 1;
         }
 
-        printf("%06u> UID:%08u   INT_DATE:%lu SENTDATE:%lu SIZE:%-6u\n",
+        printf("%06u> UID:%08u"
+               "   INT_DATE:%lu SENTDATE:%lu SAVEDATE:%lu SIZE:%-6u\n",
                msgno, record->uid, record->internaldate,
-               record->sentdate, record->size);
+               record->sentdate, record->savedate, record->size);
         printf("      > HDRSIZE:%-6u LASTUPD :%lu SYSFLAGS:%08X",
                record->header_size, record->last_updated,
                record->system_flags);
-        if (mailbox->i.minor_version >= 5)
-            printf("   LINES:%-6u\n", record->content_lines);
 
         if (mailbox->i.minor_version >= 6)
             printf("      > CACHEVER:%-2u", record->cache_version);
@@ -302,19 +301,26 @@ static int do_examine(struct findall_data *data, void *rock __attribute__((unuse
 
         printf("\n");
 
-    	printf("      > SYSTEMFLAGS:");
-    	if (record->system_flags & FLAG_EXPUNGED) printf(" FLAG_EXPUNGED");
-    	if (record->system_flags & FLAG_UNLINKED) printf(" FLAG_UNLINKED");
-    	if (record->system_flags & FLAG_ARCHIVED) printf(" FLAG_ARCHIVED");
-    	if (record->system_flags & FLAG_NEEDS_CLEANUP) printf(" FLAG_NEEDS_CLEANUP");
+        printf("      > INTERNALFLAGS:");
+        if (record->internal_flags & FLAG_INTERNAL_EXPUNGED)
+            printf(" FLAG_INTERNAL_EXPUNGED");
+        if (record->internal_flags & FLAG_INTERNAL_UNLINKED)
+            printf(" FLAG_INTERNAL_UNLINKED");
+        if (record->internal_flags & FLAG_INTERNAL_ARCHIVED)
+            printf(" FLAG_INTERNAL_ARCHIVED");
+        if (record->internal_flags & FLAG_INTERNAL_NEEDS_CLEANUP)
+            printf(" FLAG_INTERNAL_NEEDS_CLEANUP");
+        if (record->internal_flags & FLAG_INTERNAL_SNOOZED)
+            printf(" FLAG_INTERNAL_SNOOZED");
 
-    	if (record->system_flags & FLAG_SEEN) printf(" FLAG_SEEN");
-    	if (record->system_flags & FLAG_DRAFT) printf(" FLAG_DRAFT");
-    	if (record->system_flags & FLAG_DELETED) printf(" FLAG_DELETED");
-    	if (record->system_flags & FLAG_FLAGGED) printf(" FLAG_FLAGGED");
-    	if (record->system_flags & FLAG_ANSWERED) printf(" FLAG_ANSWERED");
+        printf("      > SYSTEMFLAGS:");
+        if (record->system_flags & FLAG_SEEN) printf(" FLAG_SEEN");
+        if (record->system_flags & FLAG_DRAFT) printf(" FLAG_DRAFT");
+        if (record->system_flags & FLAG_DELETED) printf(" FLAG_DELETED");
+        if (record->system_flags & FLAG_FLAGGED) printf(" FLAG_FLAGGED");
+        if (record->system_flags & FLAG_ANSWERED) printf(" FLAG_ANSWERED");
 
-    	printf("\n");
+        printf("\n");
 
         printf("      > USERFLAGS:");
         for (j=(MAX_USER_FLAGS/32)-1; j>=0; j--) {
@@ -360,7 +366,8 @@ static int do_quota(struct findall_data *data, void *rock __attribute__((unused)
     struct stat sbuf;
 
     /* don't want partial matches */
-    if (!data || !data->mbname) return 0;
+    if (!data) return 0;
+    if (!data->is_exactmatch) return 0;
 
     signals_poll();
 
@@ -430,7 +437,8 @@ static int do_compare(struct findall_data *data, void *rock __attribute__((unuse
     uint32_t *uids = NULL, nalloc, count = 0, msgno;
 
     /* don't want partial matches */
-    if (!data || !data->mbname) return 0;
+    if (!data) return 0;
+    if (!data->is_exactmatch) return 0;
 
     signals_poll();
 
@@ -496,7 +504,7 @@ static int do_compare(struct findall_data *data, void *rock __attribute__((unuse
         do {
             struct index_record fs_record = { .uid = 0 };
             const struct buf *citem, empty_buf = BUF_INITIALIZER;
-            char sent[RFC822_DATETIME_MAX+1] = "";
+            char sent[RFC5322_DATETIME_MAX+1] = "";
 
             if (msgno < count) {
                 char fname[100];
@@ -537,11 +545,11 @@ static int do_compare(struct findall_data *data, void *rock __attribute__((unuse
                 printf("\t%-50u", fs_record.size);
             printf("\n");
 
-            if (record) time_to_rfc822(record->sentdate, sent, sizeof(sent));
+            if (record) time_to_rfc5322(record->sentdate, sent, sizeof(sent));
             printf("   Date: %-50s", sent);
 
             if (fs_record.uid && !message_guid_isnull(&fs_record.guid)) {
-                time_to_rfc822(fs_record.sentdate, sent, sizeof(sent));
+                time_to_rfc5322(fs_record.sentdate, sent, sizeof(sent));
                 printf("\t%-50s", sent);
             }
             printf("\n");
