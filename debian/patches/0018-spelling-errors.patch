@@ -1,170 +1,305 @@
 Description: spelling errors
 Author: Xavier Guimard <yadd@debian.org>
-Forwarded: <no|not-needed|url proving that it has been forwarded>
-Last-Update: 2019-12-16
+Forwarded: https://github.com/cyrusimap/cyrus-imapd/issues/2989
+Last-Update: 2020-02-10
 
---- a/doc/html/_sources/imap/download/release-notes/2.0/2.0.x.txt
-+++ b/doc/html/_sources/imap/download/release-notes/2.0/2.0.x.txt
-@@ -6,7 +6,7 @@
+--- a/doc/examples/imapd_conf/imapd.conf.sample
++++ b/doc/examples/imapd_conf/imapd.conf.sample
+@@ -2199,7 +2199,7 @@
+ #    When set, the Cyrus NNTP server will add the header(s) specified in
+ #    the newsaddheaders option to each incoming usenet article.
+ #    The added header(s) will contain email delivery addresses
+-#    corresponding to each relevent newsgroup.  If not set, no headers
++#    corresponding to each relevant newsgroup.  If not set, no headers
+ #    are added to usenet articles. 
+ #newspostuser: <none>
  
- *   migrated to SASLv2 (Rob Siemborski)
- *   altnamespace: it is now possible to display user mailboxes as siblings to the INBOX at the top-level (Ken Murchison)
--*   unixhierarchysep: it is now possible possible to use slash as the hierarchy seperator, instead of a period. (Ken Murchison, inspired by David Fuchs, dfuchs@uniserve.com)
-+*   unixhierarchysep: it is now possible possible to use slash as the hierarchy separator, instead of a period. (Ken Murchison, inspired by David Fuchs, dfuchs@uniserve.com)
- *   SSL/TLS session caching (Ken Murchison)
- *   support for IMAP CHILDREN & LISTEXT extensions (Ken Murchison, work in progress)
- *   check recipient quota & ACL at time of RCPT TO: in lmtpd (Ken Murchison)
---- a/doc/html/_sources/imap/reference/manpages/systemcommands/cyradm.txt
-+++ b/doc/html/_sources/imap/reference/manpages/systemcommands/cyradm.txt
-@@ -211,8 +211,8 @@
-  
-  Note that in the above example, the \ ``unixhierarchysep``\  setting in
-  imapd.conf is set to \ ``0``\ . When using the UNIX
-- hierarchy seperator, the \ ``/``\  (forward slash) character would be
-- used as the hierarchy seperator, and the example would look as
-+ hierarchy separator, the \ ``/``\  (forward slash) character would be
-+ used as the hierarchy separator, and the example would look as
-  follows:
-  
+--- a/doc/html/_sources/imap/reference/manpages/configs/imapd.conf.txt
++++ b/doc/html/_sources/imap/reference/manpages/configs/imapd.conf.txt
+@@ -3189,7 +3189,7 @@
+         When set, the Cyrus NNTP server will add the header(s) specified in
+         the **newsaddheaders** option to each incoming usenet article.
+         The added header(s) will contain email delivery addresses
+-        corresponding to each relevent newsgroup.  If not set, no headers
++        corresponding to each relevant newsgroup.  If not set, no headers
+         are added to usenet articles. 
  
---- a/doc/html/imap/download/release-notes/2.0/2.0.x.html
-+++ b/doc/html/imap/download/release-notes/2.0/2.0.x.html
-@@ -772,7 +772,7 @@
- <ul class="simple">
- <li>migrated to SASLv2 (Rob Siemborski)</li>
- <li>altnamespace: it is now possible to display user mailboxes as siblings to the INBOX at the top-level (Ken Murchison)</li>
--<li>unixhierarchysep: it is now possible possible to use slash as the hierarchy seperator, instead of a period. (Ken Murchison, inspired by David Fuchs, <a class="reference external" href="mailto:dfuchs&#37;&#52;&#48;uniserve&#46;com">dfuchs<span>&#64;</span>uniserve<span>&#46;</span>com</a>)</li>
-+<li>unixhierarchysep: it is now possible possible to use slash as the hierarchy separator, instead of a period. (Ken Murchison, inspired by David Fuchs, <a class="reference external" href="mailto:dfuchs&#37;&#52;&#48;uniserve&#46;com">dfuchs<span>&#64;</span>uniserve<span>&#46;</span>com</a>)</li>
- <li>SSL/TLS session caching (Ken Murchison)</li>
- <li>support for IMAP CHILDREN &amp; LISTEXT extensions (Ken Murchison, work in progress)</li>
- <li>check recipient quota &amp; ACL at time of RCPT TO: in lmtpd (Ken Murchison)</li>
---- a/doc/html/imap/reference/manpages/systemcommands/cyradm.html
-+++ b/doc/html/imap/reference/manpages/systemcommands/cyradm.html
-@@ -878,8 +878,8 @@
- </div>
- <p>Note that in the above example, the <code class="docutils literal"><span class="pre">unixhierarchysep</span></code> setting in
- imapd.conf is set to <code class="docutils literal"><span class="pre">0</span></code>. When using the UNIX
--hierarchy seperator, the <code class="docutils literal"><span class="pre">/</span></code> (forward slash) character would be
--used as the hierarchy seperator, and the example would look as
-+hierarchy separator, the <code class="docutils literal"><span class="pre">/</span></code> (forward slash) character would be
-+used as the hierarchy separator, and the example would look as
- follows:</p>
+     .. endblob newspostuser
+--- a/doc/html/_sources/imap/reference/manpages/systemcommands/deliver.txt
++++ b/doc/html/_sources/imap/reference/manpages/systemcommands/deliver.txt
+@@ -41,7 +41,7 @@
+ 
+ .. option:: -d
+ 
+-    Ignored for compatability with **/bin/mail**.
++    Ignored for compatibility with **/bin/mail**.
+ 
+ .. option:: -r  address
+ 
+--- a/doc/html/_sources/imap/reference/manpages/systemcommands/fud.txt
++++ b/doc/html/_sources/imap/reference/manpages/systemcommands/fud.txt
+@@ -118,7 +118,7 @@
+ 0 is not a standard IMAP ACL bit.
+ 
+ **fud** is an experimental interface meant to provide information to
+-build a finger-like service around.  Eventually it should be superceded
++build a finger-like service around.  Eventually it should be superseded
+ by a more standards-based protocol.
+ 
+ 
+--- a/doc/html/_sources/imap/reference/manpages/systemcommands/master.txt
++++ b/doc/html/_sources/imap/reference/manpages/systemcommands/master.txt
+@@ -56,7 +56,7 @@
+ 
+ .. option:: -j  janitor full-sweeps per second
+ 
+-    Sets the amount of times per second the janitor should sweep the
++    Sets the number of times per second the janitor should sweep the
+     entire child table.  Leave it at the default of 1 unless you have a
+     really high fork rate (and you have not increased the child hash
+     table size when you compiled Cyrus from its default of 10000
+--- a/doc/html/imap/reference/manpages/configs/imapd.conf.html
++++ b/doc/html/imap/reference/manpages/configs/imapd.conf.html
+@@ -2410,7 +2410,7 @@
+ <p>When set, the Cyrus NNTP server will add the header(s) specified in
+ the <strong>newsaddheaders</strong> option to each incoming usenet article.
+ The added header(s) will contain email delivery addresses
+-corresponding to each relevent newsgroup.  If not set, no headers
++corresponding to each relevant newsgroup.  If not set, no headers
+ are added to usenet articles.</p>
  </div></blockquote>
- <p>Example Usage with <code class="docutils literal"><span class="pre">unixhierarchysep:</span> <span class="pre">1</span></code></p>
---- a/doc/legacy/changes.html
-+++ b/doc/legacy/changes.html
-@@ -1797,7 +1797,7 @@
- siblings to the INBOX at the top-level (Ken Murchison)</li>
+ <p><code class="docutils literal"><span class="pre">newsprefix:</span></code> &lt;none&gt;</p>
+--- a/doc/html/imap/reference/manpages/systemcommands/deliver.html
++++ b/doc/html/imap/reference/manpages/systemcommands/deliver.html
+@@ -814,7 +814,7 @@
+ <dl class="option">
+ <dt id="cmdoption-deliver-d">
+ <code class="descname">-d</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-deliver-d" title="Permalink to this definition">¶</a></dt>
+-<dd><p>Ignored for compatability with <strong>/bin/mail</strong>.</p>
++<dd><p>Ignored for compatibility with <strong>/bin/mail</strong>.</p>
+ </dd></dl>
  
- <li>unixhierarchysep: it is now possible possible to use slash as
--the hierarchy seperator, instead of a period. (Ken Murchison,
-+the hierarchy separator, instead of a period. (Ken Murchison,
- inspired by David Fuchs, <tt>dfuchs@uniserve.com</tt>)</li>
+ <dl class="option">
+--- a/doc/html/imap/reference/manpages/systemcommands/fud.html
++++ b/doc/html/imap/reference/manpages/systemcommands/fud.html
+@@ -887,7 +887,7 @@
+ 0 (zero) right on the mailbox in question.  This is only a &#8220;bug&#8221; because
+ 0 is not a standard IMAP ACL bit.</p>
+ <p><strong>fud</strong> is an experimental interface meant to provide information to
+-build a finger-like service around.  Eventually it should be superceded
++build a finger-like service around.  Eventually it should be superseded
+ by a more standards-based protocol.</p>
+ </div>
+ <div class="section" id="see-also">
+--- a/doc/html/imap/reference/manpages/systemcommands/master.html
++++ b/doc/html/imap/reference/manpages/systemcommands/master.html
+@@ -833,7 +833,7 @@
+ <dl class="option">
+ <dt id="cmdoption-master-j">
+ <code class="descname">-j</code><code class="descclassname">  janitor full-sweeps per second</code><a class="headerlink" href="#cmdoption-master-j" title="Permalink to this definition">¶</a></dt>
+-<dd><p>Sets the amount of times per second the janitor should sweep the
++<dd><p>Sets the number of times per second the janitor should sweep the
+ entire child table.  Leave it at the default of 1 unless you have a
+ really high fork rate (and you have not increased the child hash
+ table size when you compiled Cyrus from its default of 10000
+@@ -995,4 +995,4 @@
  
- <li>SSL/TLS session caching (Ken Murchison)</li>
---- a/doc/legacy/overview.html
-+++ b/doc/legacy/overview.html
+ 
+ </body>
+-</html>
+\ No newline at end of file
++</html>
+--- a/doc/legacy/install-upgrade.html
++++ b/doc/legacy/install-upgrade.html
+@@ -706,7 +706,7 @@
+ 
+ <li>cyrus.seen conversion. The cyrus.seen file will be automatically
+ upgraded as users read mail.  After some time, you might want to
+-delete the cyrus.seen file in each mailbox; it is superceded by the
++delete the cyrus.seen file in each mailbox; it is superseded by the
+ user/joe.seen file.
+ 
+ <li>cyrus.index conversion.  The cyrus.index file will be
+--- a/doc/text/imap/reference/manpages/configs/imapd.conf.txt
++++ b/doc/text/imap/reference/manpages/configs/imapd.conf.txt
+@@ -2007,7 +2007,7 @@
+       When set, the Cyrus NNTP server will add the header(s) specified
+       in the **newsaddheaders** option to each incoming usenet
+       article. The added header(s) will contain email delivery
+-      addresses corresponding to each relevent newsgroup.  If not set,
++      addresses corresponding to each relevant newsgroup.  If not set,
+       no headers are added to usenet articles.
+ 
+    "newsprefix:" <none>
+--- a/doc/text/imap/reference/manpages/systemcommands/deliver.txt
++++ b/doc/text/imap/reference/manpages/systemcommands/deliver.txt
+@@ -34,7 +34,7 @@
+ 
+ -d
+ 
+-   Ignored for compatability with **/bin/mail**.
++   Ignored for compatibility with **/bin/mail**.
+ 
+ -r  address
+ 
+--- a/doc/text/imap/reference/manpages/systemcommands/fud.txt
++++ b/doc/text/imap/reference/manpages/systemcommands/fud.txt
+@@ -114,7 +114,7 @@
+ 
+ **fud** is an experimental interface meant to provide information to
+ build a finger-like service around.  Eventually it should be
+-superceded by a more standards-based protocol.
++superseded by a more standards-based protocol.
+ 
+ 
+ See Also
+--- a/doc/text/imap/reference/manpages/systemcommands/master.txt
++++ b/doc/text/imap/reference/manpages/systemcommands/master.txt
+@@ -50,7 +50,7 @@
+ 
+ -j  janitor full-sweeps per second
+ 
+-   Sets the amount of times per second the janitor should sweep the
++   Sets the number of times per second the janitor should sweep the
+    entire child table.  Leave it at the default of 1 unless you have a
+    really high fork rate (and you have not increased the child hash
+    table size when you compiled Cyrus from its default of 10000
+--- a/docsrc/imap/reference/manpages/configs/imapd.conf.rst
++++ b/docsrc/imap/reference/manpages/configs/imapd.conf.rst
+@@ -3189,7 +3189,7 @@
+         When set, the Cyrus NNTP server will add the header(s) specified in
+         the **newsaddheaders** option to each incoming usenet article.
+         The added header(s) will contain email delivery addresses
+-        corresponding to each relevent newsgroup.  If not set, no headers
++        corresponding to each relevant newsgroup.  If not set, no headers
+         are added to usenet articles. 
+ 
+     .. endblob newspostuser
+--- a/docsrc/imap/reference/manpages/systemcommands/deliver.rst
++++ b/docsrc/imap/reference/manpages/systemcommands/deliver.rst
+@@ -41,7 +41,7 @@
+ 
+ .. option:: -d
+ 
+-    Ignored for compatability with **/bin/mail**.
++    Ignored for compatibility with **/bin/mail**.
+ 
+ .. option:: -r  address
+ 
+--- a/docsrc/imap/reference/manpages/systemcommands/fud.rst
++++ b/docsrc/imap/reference/manpages/systemcommands/fud.rst
+@@ -118,7 +118,7 @@
+ 0 is not a standard IMAP ACL bit.
+ 
+ **fud** is an experimental interface meant to provide information to
+-build a finger-like service around.  Eventually it should be superceded
++build a finger-like service around.  Eventually it should be superseded
+ by a more standards-based protocol.
+ 
+ 
+--- a/docsrc/imap/reference/manpages/systemcommands/master.rst
++++ b/docsrc/imap/reference/manpages/systemcommands/master.rst
+@@ -56,7 +56,7 @@
+ 
+ .. option:: -j  janitor full-sweeps per second
+ 
+-    Sets the amount of times per second the janitor should sweep the
++    Sets the number of times per second the janitor should sweep the
+     entire child table.  Leave it at the default of 1 unless you have a
+     really high fork rate (and you have not increased the child hash
+     table size when you compiled Cyrus from its default of 10000
+--- a/imap/conversations.c
++++ b/imap/conversations.c
+@@ -2426,7 +2426,7 @@
+ 
+     /* calculate the changes */
+     if (old) {
+-        /* decrease any relevent counts */
++        /* decrease any relevant counts */
+         if (!(old->internal_flags & FLAG_INTERNAL_EXPUNGED) &&
+             !(old->system_flags & FLAG_DELETED)) {
+             delta_exists--;
+--- a/lib/imapoptions
++++ b/lib/imapoptions
+@@ -1678,7 +1678,7 @@
+    When set, the Cyrus NNTP server will add the header(s) specified in
+    the \fBnewsaddheaders\fR option to each incoming usenet article.
+    The added header(s) will contain email delivery addresses
+-   corresponding to each relevent newsgroup.  If not set, no headers
++   corresponding to each relevant newsgroup.  If not set, no headers
+    are added to usenet articles. */
+ 
+ { "newsprefix", NULL, STRING, "2.3.17" }
+--- a/man/deliver.8
++++ b/man/deliver.8
+@@ -55,7 +55,7 @@
+ .INDENT 0.0
+ .TP
+ .B \-d
+-Ignored for compatability with \fB/bin/mail\fP\&.
++Ignored for compatibility with \fB/bin/mail\fP\&.
+ .UNINDENT
+ .INDENT 0.0
+ .TP
+--- a/man/fud.8
++++ b/man/fud.8
 @@ -130,7 +130,7 @@
- allowed to subscribe to mailboxes.  Only users without dots in their
- userid are permitted to have an <TT>INBOX</TT>.  (A user with a dot in
- their userid would be able to login but would not be able to receive mail.
--Note that when using the unix hierarchy seperator, this is not the case, and
-+Note that when using the unix hierarchy separator, this is not the case, and
- any user may have a dot in their userid.)
+ 0 is not a standard IMAP ACL bit.
+ .sp
+ \fBfud\fP is an experimental interface meant to provide information to
+-build a finger\-like service around.  Eventually it should be superceded
++build a finger\-like service around.  Eventually it should be superseded
+ by a more standards\-based protocol.
+ .SH SEE ALSO
+ .sp
+--- a/man/imapd.conf.5
++++ b/man/imapd.conf.5
+@@ -2822,7 +2822,7 @@
+ When set, the Cyrus NNTP server will add the header(s) specified in
+ the \fBnewsaddheaders\fP option to each incoming usenet article.
+ The added header(s) will contain email delivery addresses
+-corresponding to each relevent newsgroup.  If not set, no headers
++corresponding to each relevant newsgroup.  If not set, no headers
+ are added to usenet articles.
+ .UNINDENT
+ .UNINDENT
+--- a/man/master.8
++++ b/man/master.8
+@@ -74,7 +74,7 @@
+ .INDENT 0.0
+ .TP
+ .B \-j  janitor full\-sweeps per second
+-Sets the amount of times per second the janitor should sweep the
++Sets the number of times per second the janitor should sweep the
+ entire child table.  Leave it at the default of 1 unless you have a
+ really high fork rate (and you have not increased the child hash
+ table size when you compiled Cyrus from its default of 10000
+--- a/perl/imap/IMAP.pm
++++ b/perl/imap/IMAP.pm
+@@ -219,7 +219,7 @@
+   $opts{-authz} = "" if (!defined($opts{-authz}));
+   $rc = 0;
  
- <p>When an administrator deletes a user's <TT>INBOX</TT>, all of the
---- a/doc/text/imap/download/release-notes/2.0/2.0.x.txt
-+++ b/doc/text/imap/download/release-notes/2.0/2.0.x.txt
-@@ -10,7 +10,7 @@
-   siblings to the INBOX at the top-level (Ken Murchison)
+-  # Fetch all relevent capabilities
++  # Fetch all relevant capabilities
+   $self->addcallback({-trigger => 'CAPABILITY',
+                       -callback => sub {my %a = @_;
+                                         map {
+@@ -263,7 +263,7 @@
  
- * unixhierarchysep: it is now possible possible to use slash as the
--  hierarchy seperator, instead of a period. (Ken Murchison, inspired
-+  hierarchy separator, instead of a period. (Ken Murchison, inspired
-   by David Fuchs, dfuchs@uniserve.com)
+       $self->_starttls($opts{-tlskey}, $opts{-tlskey}, $opts{-cafile}, $opts{-capath});
  
- * SSL/TLS session caching (Ken Murchison)
---- a/doc/text/imap/reference/manpages/systemcommands/cyradm.txt
-+++ b/doc/text/imap/reference/manpages/systemcommands/cyradm.txt
-@@ -149,9 +149,9 @@
-       john lrswipkxtecda
+-      # Refetch all relevent capabilities
++      # Refetch all relevant capabilities
+       ($starttls, $logindisabled, $availmechs) = (0, 0, "");
+       $self->send(undef, undef, 'CAPABILITY');
+       $opts{-mechanism} = $availmechs if ($opts{-mechanism} eq '');
+@@ -285,7 +285,7 @@
+   if (!$rc && $logindisabled) {
+     $self->_starttls('', '', $opts{-cafile}, $opts{-capath}) || return undef;
  
-    Note that in the above example, the "unixhierarchysep" setting in
--   imapd.conf is set to "0". When using the UNIX hierarchy seperator,
-+   imapd.conf is set to "0". When using the UNIX hierarchy separator,
-    the "/" (forward slash) character would be used as the hierarchy
--   seperator, and the example would look as follows:
-+   separator, and the example would look as follows:
+-    # Refetch all relevent capabilities
++    # Refetch all relevant capabilities
+     ($starttls, $logindisabled, $availmechs) = (0, 0, "");
+     $self->send(undef, undef, 'CAPABILITY');
  
- Example Usage with "unixhierarchysep: 1"
- 
---- a/docsrc/imap/download/release-notes/2.0/2.0.x.rst
-+++ b/docsrc/imap/download/release-notes/2.0/2.0.x.rst
-@@ -6,7 +6,7 @@
- 
- *   migrated to SASLv2 (Rob Siemborski)
- *   altnamespace: it is now possible to display user mailboxes as siblings to the INBOX at the top-level (Ken Murchison)
--*   unixhierarchysep: it is now possible possible to use slash as the hierarchy seperator, instead of a period. (Ken Murchison, inspired by David Fuchs, dfuchs@uniserve.com)
-+*   unixhierarchysep: it is now possible possible to use slash as the hierarchy separator, instead of a period. (Ken Murchison, inspired by David Fuchs, dfuchs@uniserve.com)
- *   SSL/TLS session caching (Ken Murchison)
- *   support for IMAP CHILDREN & LISTEXT extensions (Ken Murchison, work in progress)
- *   check recipient quota & ACL at time of RCPT TO: in lmtpd (Ken Murchison)
---- a/docsrc/imap/reference/manpages/systemcommands/cyradm.rst
-+++ b/docsrc/imap/reference/manpages/systemcommands/cyradm.rst
-@@ -211,8 +211,8 @@
-  
-  Note that in the above example, the \ ``unixhierarchysep``\  setting in
-  imapd.conf is set to \ ``0``\ . When using the UNIX
-- hierarchy seperator, the \ ``/``\  (forward slash) character would be
-- used as the hierarchy seperator, and the example would look as
-+ hierarchy separator, the \ ``/``\  (forward slash) character would be
-+ used as the hierarchy separator, and the example would look as
-  follows:
-  
- 
---- a/imap/spool.c
-+++ b/imap/spool.c
-@@ -202,7 +202,7 @@
-                 if (c == '\r' && peek == '\n') {
-                     c = prot_getc(fin);
-                 } else {
--                    c = peek; /* single newline seperator */
-+                    c = peek; /* single newline separator */
-                 }
-                 if (c != ' ' && c != '\t') {
-                     /* this is the end of the header */
---- a/perl/imap/IMAP/Shell.pm
-+++ b/perl/imap/IMAP/Shell.pm
-@@ -1857,8 +1857,8 @@
- 
- Note that in the above example, the C<unixhierarchysep> setting in
- imapd.conf is set to C<0>. When using the UNIX
--hierarchy seperator, the C</> (forward slash) character would be
--used as the hierarchy seperator, and the example would look as
-+hierarchy separator, the C</> (forward slash) character would be
-+used as the hierarchy separator, and the example would look as
- follows:
- 
- =item Example Usage with C<unixhierarchysep: 1>
---- a/perl/sieve/managesieve/managesieve.xs
-+++ b/perl/sieve/managesieve/managesieve.xs
-@@ -296,7 +296,7 @@
-            check if SASL mech list changed */
-         if (detect_mitm(obj, mechlist)) {
-             globalerr = "possible MITM attack: "
--                "list of available SASL mechamisms changed";
-+                "list of available SASL mechanisms changed";
-             free(ret);
-             free(mechlist);
-             XSRETURN_UNDEF;
---- a/sieve/test.c
-+++ b/sieve/test.c
-@@ -160,7 +160,7 @@
-                 if (c == '\r' && peek == '\n') {
-                     c = getc(f);
-                 } else {
--                    c = peek; /* single newline seperator */
-+                    c = peek; /* single newline separator */
-                 }
-                 if (c != ' ' && c != '\t') {
-                     /* this is the end of the header */

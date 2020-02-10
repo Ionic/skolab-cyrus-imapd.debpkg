@@ -1,7 +1,8 @@
-From: Debian Cyrus Team
- <pkg-cyrus-imapd-debian-devel@lists.alioth.debian.org>
-Date: Tue, 4 Aug 2015 10:38:04 +0200
-Subject: Disable runpath checking
+Description: Disable runpath checking
+Author: Debian Cyrus Team <pkg-cyrus-imapd-debian-devel@lists.alioth.debian.org>
+Forwarded: no
+Reviewed-By: Xavier Guimard <yadd@debian.org
+Last-Update: 2020-02-10
 
 @DPATCH@
 ---
@@ -10,7 +11,7 @@ Subject: Disable runpath checking
 
 --- a/configure.ac
 +++ b/configure.ac
-@@ -174,9 +174,6 @@
+@@ -181,9 +181,6 @@
    AC_MSG_ERROR(The Cyrus IMAPD requires support for long long int)
  fi
  

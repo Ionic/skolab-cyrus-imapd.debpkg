@@ -1,12 +1,8 @@
-From: Debian Cyrus Team <team+cyrus@tracker.debian.org>
-Date: Sat, 2 Mar 2019 14:04:58 +0000
-Subject: cert-update
-
----
- cunit/cacert.pem |  82 ++++++++----------------------------
- cunit/cert.pem   | 124 +++++++++++++++++++++++++++++++++----------------------
- cunit/key.pem    |  43 ++++++++++++-------
- 3 files changed, 120 insertions(+), 129 deletions(-)
+Description: cert-update
+Author: Debian Cyrus Team <team+cyrus@tracker.debian.org>
+Forwarded: no
+Reviewed-By: Xavier Guimard <yadd@debian.org
+Last-Update: 2020-02-10
 
 --- a/cunit/cacert.pem
 +++ b/cunit/cacert.pem
