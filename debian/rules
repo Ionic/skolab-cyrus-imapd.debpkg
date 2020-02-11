@@ -81,6 +81,8 @@ override_dh_auto_configure:
 	 --enable-unit-tests \
 	 --enable-gssapi="/usr" \
 	 --with-cyrus-user=cyrus --with-cyrus-group=mail \
+	 --with-pgsql \
+	 --with-pgsql-incdir=/usr/include/postgresql \
 	 --with-lock=fcntl \
 	 --with-ldap \
 	 --with-krb \
