@@ -114,7 +114,7 @@ because 0 is not a standard IMAP ACL bit.
 
 **fud** is an experimental interface meant to provide information to
 build a finger-like service around.  Eventually it should be
-superceded by a more standards-based protocol.
+superseded by a more standards-based protocol.
 
 
 See Also

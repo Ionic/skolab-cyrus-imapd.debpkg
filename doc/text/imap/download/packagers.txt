@@ -117,7 +117,7 @@ New default settings
 ~~~~~~~~~~~~~~~~~~~~
 
 With the introduction of version 3.0, the defaults for some settings
-have changed.  Please consult Upgrading to 3.0 for details.
+have changed.  Please consult Upgrading to 3.2 for details.
 
 
 New features
