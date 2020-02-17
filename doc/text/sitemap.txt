@@ -471,7 +471,7 @@ Sitemap
 
         * Troubleshooting
 
-      * Upgrading to 3.0
+      * Upgrading to 3.2
 
         * 1. Preparation
 
@@ -485,7 +485,7 @@ Sitemap
 
           * Do What As Who?
 
-        * 2. Install new 3.0 Cyrus
+        * 2. Install new 3.2 Cyrus
 
         * 3. Shut down existing Cyrus
 
@@ -495,7 +495,7 @@ Sitemap
 
         * 6. Upgrade specific items
 
-        * 7. Start new 3.0 Cyrus and verify
+        * 7. Start new 3.2 Cyrus and verify
 
         * 8. Reconstruct databases and cache
 
