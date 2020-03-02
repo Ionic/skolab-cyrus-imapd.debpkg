@@ -209,7 +209,8 @@ int mboxlist_createsync(const char *name, int mbtype, const char *partition,
                         const char *userid, const struct auth_state *auth_state,
                         int options, unsigned uidvalidity,
                         modseq_t createdmodseq,
-                        modseq_t highestmodseq, const char *acl,
+                        modseq_t highestmodseq,
+                        modseq_t foldermodseq, const char *acl,
                         const char *uniqueid, int local_only,
                         int keep_intermediaries,
                         struct mailbox **mboxptr);
@@ -235,6 +236,13 @@ int mboxlist_deletemailbox(const char *name, int isadmin, const char *userid,
                            struct mboxevent *mboxevent,
                            int checkacl,
                            int local_only, int force, int keep_intermediaries);
+/* same but with silent */
+int mboxlist_deletemailbox_full(const char *name, int isadmin, const char *userid,
+                           const struct auth_state *auth_state,
+                           struct mboxevent *mboxevent,
+                           int checkacl,
+                           int local_only, int force,
+                           int keep_intermediaries, int silent);
 /* same but wrap with a namespacelock */
 int mboxlist_deletemailboxlock(const char *name, int isadmin, const char *userid,
                            const struct auth_state *auth_state,
@@ -267,11 +275,13 @@ int mboxlist_setacl(const struct namespace *namespace, const char *name,
                     const char *userid, const struct auth_state *auth_state);
 
 /* Change all ACLs on mailbox */
-int mboxlist_sync_setacls(const char *name, const char *acl);
+int mboxlist_updateacl_raw(const char *name, const char *acl);
+int mboxlist_sync_setacls(const char *name, const char *acl, modseq_t foldermodseq);
+int mboxlist_update_foldermodseq(const char *name, modseq_t foldermodseq);
 
 int mboxlist_set_racls(int enabled);
 
-modseq_t mboxlist_foldermodseq_dirty(struct mailbox *mailbox);
+int mboxlist_cleanup_deletedentries(const mbentry_t *mbentry, time_t mark);
 
 struct findall_data {
     const char *extname;

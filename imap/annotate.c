@@ -1759,6 +1759,21 @@ static void annotation_get_synccrcs(annotate_state_t *state,
     buf_free(&value);
 }
 
+static void annotation_get_foldermodseq(annotate_state_t *state,
+                                        struct annotate_entry_list *entry)
+{
+    struct buf value = BUF_INITIALIZER;
+
+    assert(state);
+    annotate_state_need_mbentry(state);
+    assert(state->mbentry);
+
+    buf_printf(&value, "%llu", state->mbentry->foldermodseq);
+    output_entryatt(state, entry->name, "", &value);
+
+    buf_free(&value);
+}
+
 static void annotation_get_usermodseq(annotate_state_t *state,
                                       struct annotate_entry_list *entry)
 {
@@ -2118,6 +2133,15 @@ static const annotate_entrydesc_t mailbox_builtin_entries[] =
         annotation_get_mailboxopt,
         /*set*/NULL,
         (void *)OPT_IMAP_HAS_ALARMS
+    },{
+        IMAP_ANNOT_NS "foldermodseq",
+        ATTRIB_TYPE_UINT,
+        BACKEND_ONLY,
+        ATTRIB_VALUE_SHARED,
+        0,
+        annotation_get_foldermodseq,
+        /*set*/NULL,
+        NULL
     },{
         IMAP_ANNOT_NS "lastupdate",
         ATTRIB_TYPE_STRING,
@@ -3213,8 +3237,9 @@ static int annotation_set_mailboxopt(annotate_state_t *state,
     if (mailbox->i.options != newopts) {
         if (!maywrite) return IMAP_PERMISSION_DENIED;
         mailbox_index_dirty(mailbox);
+        mailbox_modseq_dirty(mailbox);
         mailbox->i.options = newopts;
-        mboxlist_foldermodseq_dirty(mailbox);
+        mboxlist_update_foldermodseq(mailbox->name, mailbox->i.highestmodseq);
     }
 
     return 0;
@@ -3242,8 +3267,10 @@ static int annotation_set_pop3showafter(annotate_state_t *state,
 
     if (date != mailbox->i.pop3_show_after) {
         if (!maywrite) return IMAP_PERMISSION_DENIED;
-        mailbox->i.pop3_show_after = date;
         mailbox_index_dirty(mailbox);
+        mailbox_modseq_dirty(mailbox);
+        mailbox->i.pop3_show_after = date;
+        mboxlist_update_foldermodseq(mailbox->name, mailbox->i.highestmodseq);
     }
 
     return 0;
