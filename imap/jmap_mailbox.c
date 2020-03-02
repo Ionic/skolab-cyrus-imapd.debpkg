@@ -2205,7 +2205,8 @@ static void _mbox_create(jmap_req_t *req, struct mboxset_args *args,
             req->userid, req->authstate,
             options, 0 /* uidvalidity */,
             0 /* createdmodseq */,
-            0 /* highestmodseq */, NULL /* acl */,
+            0 /* highestmodseq */,
+            0 /* foldermodseq */, NULL /* acl */,
             NULL /* uniqueid */, 0 /* local_only */,
             1, /* keep_intermediaries */
             args->shareWith ? &mailbox : NULL);
@@ -2600,8 +2601,9 @@ static void _mbox_update(jmap_req_t *req, struct mboxset_args *args,
             /* only mark dirty if there's been a change */
             if (mbox->i.options != newopts) {
                 mailbox_index_dirty(mbox);
+                mailbox_modseq_dirty(mbox);
                 mbox->i.options = newopts;
-                mboxlist_foldermodseq_dirty(mbox);
+                mboxlist_update_foldermodseq(mbox->name, mbox->i.highestmodseq);
             }
         }
         jmap_closembox(req, &mbox);

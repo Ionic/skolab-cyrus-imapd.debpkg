@@ -548,6 +548,7 @@ struct sync_folder *sync_folder_list_add(struct sync_folder_list *l,
                                          struct sync_annot_list *annots,
                                          modseq_t xconvmodseq,
                                          modseq_t raclmodseq,
+                                         modseq_t foldermodseq,
                                          int ispartial)
 {
     struct sync_folder *result = xzmalloc(sizeof(struct sync_folder));
@@ -579,6 +580,7 @@ struct sync_folder *sync_folder_list_add(struct sync_folder_list *l,
     result->annots = annots; /* NOTE: not a copy! */
     result->xconvmodseq = xconvmodseq;
     result->raclmodseq = raclmodseq;
+    result->foldermodseq = foldermodseq;
     result->ispartial = ispartial;
 
     result->mark     = 0;
@@ -1993,6 +1995,9 @@ static int sync_prepare_dlists(struct mailbox *mailbox,
     if (mailbox->i.createdmodseq)
         dlist_setnum64(kl, "CREATEDMODSEQ", mailbox->i.createdmodseq);
 
+    if (mailbox->foldermodseq)
+        dlist_setnum64(kl, "FOLDERMODSEQ", mailbox->foldermodseq);
+
     /* always send mailbox annotations */
     r = read_annotations(mailbox, NULL, &annots, 0, 0);
     if (r) goto done;
@@ -2643,6 +2648,7 @@ int sync_apply_mailbox(struct dlist *kin,
     time_t pop3_last_login;
     time_t pop3_show_after = 0; /* optional */
     uint32_t uidvalidity;
+    modseq_t foldermodseq = 0;
     const char *acl;
     const char *options_str;
     struct synccrcs synccrcs = { 0, 0 };
@@ -2724,6 +2730,7 @@ int sync_apply_mailbox(struct dlist *kin,
     dlist_getdate(kin, "POP3_SHOW_AFTER", &pop3_show_after);
     dlist_getnum64(kin, "XCONVMODSEQ", &xconvmodseq);
     dlist_getnum64(kin, "RACLMODSEQ", &raclmodseq);
+    dlist_getnum64(kin, "FOLDERMODSEQ", &foldermodseq);
 
     /* Get the CRCs */
     dlist_getnum32(kin, "SYNC_CRC", &synccrcs.basic);
@@ -2757,7 +2764,7 @@ int sync_apply_mailbox(struct dlist *kin,
                 r = mboxlist_createsync(mboxname, mbtype, partition,
                                             sstate->userid, sstate->authstate,
                                             options, uidvalidity, createdmodseq,
-                                            highestmodseq, acl,
+                                            highestmodseq, foldermodseq, acl,
                                             uniqueid, sstate->local_only, 0, &mailbox);
             }
             /* set a highestmodseq of 0 so ALL changes are future
@@ -2907,11 +2914,9 @@ int sync_apply_mailbox(struct dlist *kin,
     mailbox->silentchanges = 1;
 
     /* always take the ACL from the master, it's not versioned */
-    if (strcmp(mailbox->acl, acl)) {
-        mailbox_set_acl(mailbox, acl, 0);
-        r = mboxlist_sync_setacls(mboxname, acl);
-        if (r) goto done;
-    }
+    r = mboxlist_sync_setacls(mboxname, acl, foldermodseq ? foldermodseq : highestmodseq);
+    if (!r) r = mailbox_set_acl(mailbox, acl);
+    if (r) goto done;
 
     /* take all mailbox (not message) annotations - aka metadata,
      * they're not versioned either */
@@ -3276,10 +3281,17 @@ int sync_apply_unmailbox(struct dlist *kin, struct sync_state *sstate)
 {
     const char *mboxname = kin->sval;
 
+    struct mboxlock *namespacelock = mboxname_usernamespacelock(mboxname);
+
     /* Delete with admin privileges */
-    return mboxlist_deletemailboxlock(mboxname, sstate->userisadmin,
-                                  sstate->userid, sstate->authstate,
-                                  NULL, 0, sstate->local_only, 1, 0);
+    int r = mboxlist_deletemailbox_full(mboxname, sstate->userisadmin,
+                                        sstate->userid, sstate->authstate,
+                                        NULL, 0, sstate->local_only, 1, 0,
+                                        /*silent*/1);
+
+    mboxname_release(&namespacelock);
+
+    return r;
 }
 
 int sync_apply_rename(struct dlist *kin, struct sync_state *sstate)
@@ -3766,6 +3778,7 @@ int sync_restore_mailbox(struct dlist *kin,
     struct dlist *ka = NULL;
     modseq_t xconvmodseq = 0;
     modseq_t createdmodseq = 0;
+    modseq_t foldermodseq = 0;
 
     /* derived fields */
     uint32_t options = 0;
@@ -3825,6 +3838,7 @@ int sync_restore_mailbox(struct dlist *kin,
         dlist_getnum64(kin, "HIGHESTMODSEQ", &highestmodseq);
         dlist_getnum32(kin, "UIDVALIDITY", &uidvalidity);
         dlist_getnum64(kin, "CREATEDMODSEQ", &createdmodseq);
+        dlist_getnum64(kin, "FOLDERMODSEQ", &foldermodseq);
 
         /* if any of these three weren't set, disregard the others too */
         if (!uniqueid || !highestmodseq || !uidvalidity) {
@@ -3841,7 +3855,7 @@ int sync_restore_mailbox(struct dlist *kin,
             r = mboxlist_createsync(mboxname, mbtype, partition,
                                     sstate->userid, sstate->authstate,
                                     options, uidvalidity, createdmodseq,
-                                    highestmodseq, acl,
+                                    highestmodseq, foldermodseq, acl,
                                     uniqueid, sstate->local_only, 0, &mailbox);
             syslog(LOG_DEBUG, "%s: mboxlist_createsync %s: %s",
                 __func__, mboxname, error_message(r));
@@ -4142,7 +4156,7 @@ static int find_reserve_all(struct sync_name_list *mboxname_list,
                              mailbox->i.recentuid, mailbox->i.recenttime,
                              mailbox->i.pop3_last_login,
                              mailbox->i.pop3_show_after, NULL, xconvmodseq,
-                             raclmodseq, ispartial);
+                             raclmodseq, mailbox->foldermodseq, ispartial);
 
 
         part_list = sync_reserve_partlist(reserve_list, topart ? topart : mailbox->part);
@@ -4365,6 +4379,7 @@ int sync_response_parse(struct protstream *sync_in, const char *cmd,
             struct sync_annot_list *annots = NULL;
             modseq_t xconvmodseq = 0;
             modseq_t raclmodseq = 0;
+            modseq_t foldermodseq = 0;
 
             if (!folder_list) goto parse_err;
             if (!dlist_getatom(kl, "UNIQUEID", &uniqueid)) goto parse_err;
@@ -4385,6 +4400,7 @@ int sync_response_parse(struct protstream *sync_in, const char *cmd,
             dlist_getnum32(kl, "SYNC_CRC_ANNOT", &synccrcs.annot);
             dlist_getnum64(kl, "XCONVMODSEQ", &xconvmodseq);
             dlist_getnum64(kl, "RACLMODSEQ", &raclmodseq);
+            dlist_getnum64(kl, "FOLDERMODSEQ", &foldermodseq);
 
             if (dlist_getlist(kl, "ANNOTATIONS", &al))
                 decode_annotations(al, &annots, NULL, NULL);
@@ -4399,7 +4415,8 @@ int sync_response_parse(struct protstream *sync_in, const char *cmd,
                                  recentuid, recenttime,
                                  pop3_last_login,
                                  pop3_show_after, annots,
-                                 xconvmodseq, raclmodseq, /*ispartial*/0);
+                                 xconvmodseq, raclmodseq,
+                                 foldermodseq, /*ispartial*/0);
         }
         else
             goto parse_err;
@@ -5219,6 +5236,7 @@ static int mailbox_full_update(struct sync_folder *local,
     struct dlist *kaction = NULL;
     struct dlist *kexpunge = NULL;
     modseq_t highestmodseq;
+    modseq_t foldermodseq = 0;
     uint32_t uidvalidity;
     uint32_t last_uid;
     struct sync_annot_list *mannots = NULL;
@@ -5278,6 +5296,7 @@ static int mailbox_full_update(struct sync_folder *local,
 
     /* optional */
     dlist_getnum64(kl, "XCONVMODSEQ", &xconvmodseq);
+    dlist_getnum64(kl, "FOLDERMODSEQ", &foldermodseq);
 
     /* we'll be updating it! */
     if (local->mailbox) {
@@ -5333,6 +5352,13 @@ static int mailbox_full_update(struct sync_folder *local,
      * inside update_xconvmodseq */
     if (mailbox_has_conversations(mailbox)) {
         r = mailbox_update_xconvmodseq(mailbox, xconvmodseq, /* force */0);
+        if (r) goto done;
+    }
+
+    if (foldermodseq) {
+        // by writing the same ACL with the updated foldermodseq, this will bounce it
+        // if needed
+        r = mboxlist_sync_setacls(mailbox->name, mailbox->acl, foldermodseq);
         if (r) goto done;
     }
 
@@ -5430,6 +5456,7 @@ static int is_unchanged(struct mailbox *mailbox, struct sync_folder *remote)
     if (remote->pop3_last_login != mailbox->i.pop3_last_login) return 0;
     if (remote->pop3_show_after != mailbox->i.pop3_show_after) return 0;
     if (remote->options != options) return 0;
+    if (remote->foldermodseq && remote->foldermodseq != mailbox->foldermodseq) return 0;
     if (strcmp(remote->acl, mailbox->acl)) return 0;
 
     if (config_getswitch(IMAPOPT_REVERSEACLS)) {
@@ -5550,6 +5577,12 @@ static int update_mailbox_once(struct sync_folder *local,
     /* bump the raclmodseq if it's higher on the replica */
     if (remote && remote->raclmodseq) {
         mboxname_setraclmodseq(mailbox->name, remote->raclmodseq);
+    }
+
+    /* bump the foldermodseq if it's higher on the replica */
+    if (remote && remote->foldermodseq > mailbox->foldermodseq) {
+        mboxlist_sync_setacls(mailbox->name, mailbox->acl, remote->foldermodseq);
+        mailbox->foldermodseq = remote->foldermodseq;
     }
 
     /* nothing changed - nothing to send */
@@ -5861,6 +5894,7 @@ static int do_folders(struct sync_name_list *mboxname_list, const char *topart,
                           mboxlist_mbtype_to_string(mbentry->mbtype));
             dlist_setnum64(kl, "HIGHESTMODSEQ", mbentry->foldermodseq);
             dlist_setnum64(kl, "CREATEDMODSEQ", mbentry->createdmodseq);
+            dlist_setnum64(kl, "FOLDERMODSEQ", mbentry->foldermodseq);
 
             sync_send_apply(kl, sync_be->out);
             r = sync_parse_response("MAILBOX", sync_be->in, NULL);

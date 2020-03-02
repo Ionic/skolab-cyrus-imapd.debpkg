@@ -1002,6 +1002,7 @@ static int mailbox_open_advanced(const char *name,
      * we will just use what we were passed */
     mailbox->acl = xstrdup(mbentry->acl);
     mailbox->mbtype = mbentry->mbtype;
+    mailbox->foldermodseq = mbentry->foldermodseq;
 
     mboxlist_entry_free(&mbentry);
 
@@ -1330,18 +1331,13 @@ done:
 }
 
 /* set a new ACL - only dirty if changed */
-EXPORTED int mailbox_set_acl(struct mailbox *mailbox, const char *acl,
-                    int dirty_modseq)
+EXPORTED int mailbox_set_acl(struct mailbox *mailbox, const char *acl)
 {
-    if (mailbox->acl) {
-        if (!strcmp(mailbox->acl, acl))
-            return 0; /* no change */
-        free(mailbox->acl);
-    }
+    if (!strcmpsafe(mailbox->acl, acl))
+        return 0; /* no change */
+    free(mailbox->acl);
     mailbox->acl = xstrdup(acl);
     mailbox->header_dirty = 1;
-    if (dirty_modseq)
-        mailbox_modseq_dirty(mailbox);
     return 0;
 }
 
@@ -2589,7 +2585,8 @@ HIDDEN int mailbox_commit_quota(struct mailbox *mailbox)
 
     assert(mailbox_index_islocked(mailbox, 1));
 
-    quota_update_useds(mailbox->quotaroot, quota_usage, mailbox->name);
+    quota_update_useds(mailbox->quotaroot, quota_usage,
+                       mailbox->name, mailbox->silentchanges);
     /* XXX - fail upon issue?  It's tempting */
 
     return 0;
@@ -3001,9 +2998,10 @@ EXPORTED void mailbox_annot_changed(struct mailbox *mailbox,
     }
 
     if (!silent) {
-        /* we are dirtying index and modseq */
-        mailbox_index_dirty(mailbox);
-        mboxlist_foldermodseq_dirty(mailbox);
+        /* we are dirtying modseq for any annotation change */
+        mailbox_modseq_dirty(mailbox);
+        /* and we're dirtying foldermodseq if it's a mailbox level annotation */
+        if (!uid) mboxlist_update_foldermodseq(mailbox->name, mailbox->i.highestmodseq);
     }
     /* we always dirty the quota */
     mailbox_quota_dirty(mailbox);
@@ -5031,6 +5029,8 @@ EXPORTED int mailbox_create(const char *name,
     mailbox->acl = xstrdup(acl);
     mailbox->mbtype = mbtype;
     mailbox->uniqueid = xstrdup(uniqueid);
+    // if we've been given a highestmodseq, we don't update it
+    if (highestmodseq) mailbox->silentchanges = 1;
 
     hasquota = quota_findroot(quotaroot, sizeof(quotaroot), name);
 
@@ -5677,12 +5677,14 @@ HIDDEN int mailbox_rename_copy(struct mailbox *oldmailbox,
     if (!uidvalidity)
         uidvalidity = mboxname_nextuidvalidity(newname, oldmailbox->i.uidvalidity);
 
+    modseq_t highestmodseq = silent ? oldmailbox->i.highestmodseq : 0;
+
     /* Create new mailbox */
     r = mailbox_create(newname, oldmailbox->mbtype, newpartition,
                        oldmailbox->acl, (userid ? NULL : oldmailbox->uniqueid),
                        oldmailbox->i.options, uidvalidity,
                        oldmailbox->i.createdmodseq,
-                       oldmailbox->i.highestmodseq, &newmailbox);
+                       highestmodseq, &newmailbox);
 
     if (r) return r;
 
@@ -6175,7 +6177,7 @@ static int mailbox_reconstruct_acl(struct mailbox *mailbox, int flags)
             r = mboxlist_lookup(mailbox->name, &mbentry, NULL);
             if (!r) {
                 if ((flags & RECONSTRUCT_PREFER_MBOXLIST) && mbentry->acl) {
-                    mailbox_set_acl(mailbox, mbentry->acl, /*dirty_modseq*/0);
+                    mailbox_set_acl(mailbox, mbentry->acl);
                 }
                 else {
                     free(mbentry->acl);

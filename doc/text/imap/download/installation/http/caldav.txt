@@ -202,9 +202,10 @@ zoneinfo config
 
    "zoneinfo_db:" twoskip
 
-      The cyrusdb backend to use for zoneinfo.
-
-      Allowed values: *flat*, *skiplist*, *twoskip*, *zeroskip*
+      The cyrusdb backend to use for zoneinfo.  This database is used
+      by the "tzdist" *http_modules*, and is managed by
+      **ctl_zoneinfo(8)**. Allowed values: *flat*, *skiplist*,
+      *twoskip*, *zeroskip*
 
 This module stores time zone data in the "zoneinfo/" subdirectory of
 the Cyrus configuration directory (as specified by the

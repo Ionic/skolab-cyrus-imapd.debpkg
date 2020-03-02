@@ -16,7 +16,7 @@ in 5 minutes.
 The first place to start with a new installation of Cyrus IMAP is with
 your OS distribution of choice and their packaging, where available.
 If there is no Cyrus IMAP 3.0 package available yet from your distro,
-download the latest stable package : version 3.2.0-beta2.
+download the latest stable package : version 3.2.0-beta3.
 
 We only provide limited options for reference packages, so use a
 supported distribution whenever possible.  At this time the only
