@@ -1,3 +1,9 @@
+cyrus-imapd (3.2.0~beta3-1) experimental; urgency=medium
+
+  * New upstream version 3.2.0~beta3
+
+ -- Xavier Guimard <yadd@debian.org>  Mon, 02 Mar 2020 06:10:47 +0100
+
 cyrus-imapd (3.2.0~beta2-1) experimental; urgency=medium
 
   * debian/watch: add uversionmangle to use ~ in beta releases
