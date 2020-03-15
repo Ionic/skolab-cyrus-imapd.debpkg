@@ -2,6 +2,7 @@ cyrus-imapd (3.0.13-3) unstable; urgency=medium
 
   * Remove sphynx from autopkgtest dependencies
   * Declare compliance with policy 4.5.0
+  * debian/watch: add uversionmangle to use ~ in beta releases
 
  -- Xavier Guimard <yadd@debian.org>  Sun, 15 Mar 2020 10:01:24 +0100
 
