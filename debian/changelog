@@ -27,6 +27,13 @@ cyrus-imapd (3.2.0~beta1-1) experimental; urgency=medium
 
  -- Xavier Guimard <yadd@debian.org>  Mon, 10 Feb 2020 12:08:11 +0100
 
+cyrus-imapd (3.0.13-3) unstable; urgency=medium
+
+  * Remove sphynx from autopkgtest dependencies
+  * Declare compliance with policy 4.5.0
+
+ -- Xavier Guimard <yadd@debian.org>  Sun, 15 Mar 2020 10:01:24 +0100
+
 cyrus-imapd (3.0.13-2) unstable; urgency=medium
 
   * Add BACKUP type to cyrus-upgrade-db (Closes: #930764)
