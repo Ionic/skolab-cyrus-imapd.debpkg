@@ -1,9 +1,9 @@
-cyrus-imapd (3.0.13-4) UNRELEASED; urgency=medium
+cyrus-imapd (3.0.13-4) unstable; urgency=medium
 
   [ Anthony Prades ]
-  * Remove unneeded python dependency from autopkgtest files
+  * Remove unneeded python dependency from autopkgtest files; Closes: #947295
 
- -- Xavier Guimard <yadd@debian.org>  Wed, 18 Mar 2020 11:35:22 +0100
+ -- Sandro Tosi <morph@debian.org>  Wed, 08 Apr 2020 13:02:45 -0400
 
 cyrus-imapd (3.0.13-3) unstable; urgency=medium
 
