@@ -1,3 +1,11 @@
+cyrus-imapd (3.0.13-5) unstable; urgency=medium
+
+  [ Dimitri John Ledkov ]
+  * Make autopkgtest slightly more realiable on armhf/arm64 by avoding
+    downloading unicode-data over squid.internal proxy (Closes: #956441)
+
+ -- Xavier Guimard <yadd@debian.org>  Sat, 11 Apr 2020 13:48:02 +0200
+
 cyrus-imapd (3.0.13-4) unstable; urgency=medium
 
   [ Anthony Prades ]
