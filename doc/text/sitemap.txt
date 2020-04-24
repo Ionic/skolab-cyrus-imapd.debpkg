@@ -1950,8 +1950,6 @@ Sitemap
 
           * OpenSSL Version Mismatches
 
-          * Libical v1.0.1 or v2.0
-
         * Common Feature Requests
 
           * Does the Cyrus Murder support High Availability
@@ -2154,6 +2152,8 @@ Sitemap
 
             * Prerequisites
 
+            * Order of operations
+
             * Release notes
 
             * Pre-release testing
@@ -2162,7 +2162,11 @@ Sitemap
 
             * Version tagging
 
-            * Releasing
+            * Inter-version website consistency
+
+            * Uploading
+
+            * Tell the world
 
           * Releasing new builds of ancient Cyrus IMAP versions
 
@@ -2178,7 +2182,7 @@ Sitemap
 
             * Building the release
 
-            * Releasing
+            * Finishing up
 
       * Cyrus.Works
 

@@ -566,8 +566,8 @@ am__imap_libcyrus_imap_la_SOURCES_DIST = imap/annotate.c \
 	imap/saslclient.h imap/saslserver.c imap/search_engines.c \
 	imap/search_engines.h imap/search_expr.c imap/search_expr.h \
 	imap/search_query.c imap/search_query.h imap/search_part.h \
-	imap/seen.h imap/seen_db.c imap/sequence.c imap/sequence.h \
-	imap/setproctitle.c imap/spool.c imap/spool.h \
+	imap/search_sort.h imap/seen.h imap/seen_db.c imap/sequence.c \
+	imap/sequence.h imap/setproctitle.c imap/spool.c imap/spool.h \
 	imap/statuscache.h imap/statuscache_db.c imap/sync_log.c \
 	imap/sync_log.h imap/telemetry.c imap/telemetry.h imap/tls.c \
 	imap/tls.h imap/tls_th-lock.c imap/tls_th-lock.h imap/user.c \
@@ -2619,8 +2619,8 @@ imap_libcyrus_imap_la_SOURCES = imap/annotate.c imap/annotate.h \
 	imap/saslclient.h imap/saslserver.c imap/search_engines.c \
 	imap/search_engines.h imap/search_expr.c imap/search_expr.h \
 	imap/search_query.c imap/search_query.h imap/search_part.h \
-	imap/seen.h imap/seen_db.c imap/sequence.c imap/sequence.h \
-	imap/setproctitle.c imap/spool.c imap/spool.h \
+	imap/search_sort.h imap/seen.h imap/seen_db.c imap/sequence.c \
+	imap/sequence.h imap/setproctitle.c imap/spool.c imap/spool.h \
 	imap/statuscache.h imap/statuscache_db.c imap/sync_log.c \
 	imap/sync_log.h imap/telemetry.c imap/telemetry.h imap/tls.c \
 	imap/tls.h imap/tls_th-lock.c imap/tls_th-lock.h imap/user.c \

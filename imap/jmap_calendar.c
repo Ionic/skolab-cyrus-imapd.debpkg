@@ -1056,7 +1056,7 @@ static int jmap_calendar_set(struct jmap_req *req)
             json_array_append_new(invalid, json_string("name"));
         }
 
-        jmap_readprop(arg, "color", 1,  invalid, "s", &color);
+        jmap_readprop(arg, "color", 0,  invalid, "s", &color);
 
         pe = jmap_readprop(arg, "sortOrder", 0,  invalid, "i", &sortOrder);
         if (pe > 0 && sortOrder < 0) {
@@ -2641,7 +2641,7 @@ static int setcalendarevents_create(jmap_req_t *req,
             json_object_set_new(event, "updated", json_string(datestr));
         }
     }
-    ical = jmapical_toical(event, invalid);
+    ical = jmapical_toical(event, NULL, invalid);
 
     // check that participantId is either not present or is a valid participant
     json_t *jparticipantId = json_object_get(event, "participantId");
@@ -2702,6 +2702,24 @@ static int setcalendarevents_create(jmap_req_t *req,
     char *xhref = jmap_xhref(mbox->name, resource);
     json_object_set_new(create, "x-href", json_string(xhref));
     free(xhref);
+
+    if (jmap_is_using(req, JMAP_CALENDARS_EXTENSION)) {
+        struct caldav_data *cdata = NULL;
+        r = caldav_lookup_uid(db, uid, &cdata);
+        if (!r) {
+            struct buf blobid = BUF_INITIALIZER;
+            if (_encode_calendarevent_blobid(cdata, req->userid, &blobid)) {
+                json_object_set_new(create, "blobId",
+                        json_string(buf_cstring(&blobid)));
+            }
+            buf_reset(&blobid);
+            if (_encode_calendarevent_blobid(cdata, NULL, &blobid)) {
+                json_object_set_new(create, "debugBlobId",
+                        json_string(buf_cstring(&blobid)));
+            }
+            buf_free(&blobid);
+        }
+    }
 
 done:
     if (mbox) jmap_closembox(req, &mbox);
@@ -3051,7 +3069,7 @@ static int setcalendarevents_apply_patch(json_t *event_patch,
     json_decref(jdiff);
 
     /* Convert to iCalendar */
-    *newical = jmapical_toical(new_event, invalid);
+    *newical = jmapical_toical(new_event, oldical, invalid);
 
 done:
     json_decref(new_event);

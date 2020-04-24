@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Releasing Cyrus IMAP &mdash; Cyrus IMAP 3.2.0-beta3 documentation</title>
+  <title>Releasing Cyrus IMAP &mdash; Cyrus IMAP 3.2.0-rc1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.0-beta3 documentation" href="../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.0-rc1 documentation" href="../../index.html"/>
         <link rel="up" title="IMAP Developer Guide" href="../developer.html"/>
         <link rel="next" title="Releasing new builds of ancient Cyrus IMAP versions" href="ancient-releasing.html"/>
         <link rel="prev" title="imclient library" href="libraries/imclient.html"/> 
@@ -545,7 +545,6 @@
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/install-linkerwarnings.html#libical-v1-0-1-or-v2-0">Libical v1.0.1 or v2.0</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/faq.html#common-feature-requests">Common Feature Requests</a><ul>
@@ -766,7 +765,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html">Docs v3.2.0-beta3</a> &raquo;</li>
+      <li><a href="../../index.html">Docs v3.2.0-rc1</a> &raquo;</li>
       
           <li><a href="../../developers.html">Developers</a> &raquo;</li>
       
@@ -792,11 +791,14 @@
 <ul class="simple">
 <li><a class="reference internal" href="#releasing-cyrus-imap" id="id1">Releasing Cyrus IMAP</a><ul>
 <li><a class="reference internal" href="#prerequisites" id="id2">Prerequisites</a></li>
-<li><a class="reference internal" href="#release-notes" id="id3">Release notes</a></li>
-<li><a class="reference internal" href="#pre-release-testing" id="id4">Pre-release testing</a></li>
-<li><a class="reference internal" href="#linking-up-release-notes" id="id5">Linking up release notes</a></li>
-<li><a class="reference internal" href="#version-tagging" id="id6">Version tagging</a></li>
-<li><a class="reference internal" href="#releasing" id="id7">Releasing</a></li>
+<li><a class="reference internal" href="#order-of-operations" id="id3">Order of operations</a></li>
+<li><a class="reference internal" href="#release-notes" id="id4">Release notes</a></li>
+<li><a class="reference internal" href="#pre-release-testing" id="id5">Pre-release testing</a></li>
+<li><a class="reference internal" href="#linking-up-release-notes" id="id6">Linking up release notes</a></li>
+<li><a class="reference internal" href="#version-tagging" id="id7">Version tagging</a></li>
+<li><a class="reference internal" href="#inter-version-website-consistency" id="id8">Inter-version website consistency</a></li>
+<li><a class="reference internal" href="#uploading" id="id9">Uploading</a></li>
+<li><a class="reference internal" href="#tell-the-world" id="id10">Tell the world</a></li>
 </ul>
 </li>
 </ul>
@@ -812,13 +814,24 @@ off the top of her head how to create one of these, so for now just read the
 manual like she did. :)</p>
 <p>Once you have a GPG key, it&#8217;s helpful to upload your public key to
 <a class="reference external" href="http://pgp.mit.edu">the MIT key-server</a></p>
-<p>You also need a shell account on www.cyrusimap.org and ftp.cyrusimap.org,
-with SSH key authentication.  You need to be in the &#8220;admin&#8221; group on each,
-and also the &#8220;cyrupload&#8221; group on the latter.</p>
 <p>And you need permission to send to the cyrus-announce mailing list.</p>
 </div>
+<div class="section" id="order-of-operations">
+<h2><a class="toc-backref" href="#id3">Order of operations</a><a class="headerlink" href="#order-of-operations" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes you&#8217;re releasing several new versions all at once(ish), for example
+maybe there&#8217;s been a security fix that affected 2.4, 2.5 and 3.0.</p>
+<p>Github&#8217;s release page will put a &#8220;Latest Release&#8221; graphic on the release with
+the newest tag (by timestamp, I think).  This means that, if you&#8217;re doing new
+releases for several different versions, you want to do the oldest one first,
+and only do the release for the current-stable branch last.</p>
+<p>If you start at the current stable branch and then work your way backwards
+through the older ones, you&#8217;ll get Github saying &#8220;2.5.15 is the Latest
+Release&#8221; even though 3.0.13 was also just released... so, even though
+releasing the current-stable fix feels more urgent, suck it up and get the
+older-branch ones out first.</p>
+</div>
 <div class="section" id="release-notes">
-<h2><a class="toc-backref" href="#id3">Release notes</a><a class="headerlink" href="#release-notes" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id4">Release notes</a><a class="headerlink" href="#release-notes" title="Permalink to this headline">¶</a></h2>
 <p>Write up the release notes, and add them to the appropriate location under
 <code class="docutils literal"><span class="pre">docsrc/imap/download/release-notes/</span></code>.  They will not yet be linked up.</p>
 <p>Commit and push your changes, and then wait for cyrusimap.org to rebuild
@@ -829,7 +842,7 @@ version in the address bar to load up the new one.  Confirm that they are
 correct and complete.</p>
 </div>
 <div class="section" id="pre-release-testing">
-<h2><a class="toc-backref" href="#id4">Pre-release testing</a><a class="headerlink" href="#pre-release-testing" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id5">Pre-release testing</a><a class="headerlink" href="#pre-release-testing" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
 <li>Ensure your git repository is clean, using something like <code class="docutils literal"><span class="pre">git</span> <span class="pre">clean</span> <span class="pre">-xfd</span></code>.
 Note that this command will destroy any uncommitted work you might have,
@@ -839,7 +852,7 @@ so make sure your ducks are in line before proceeding.</li>
 need any other options at this stage).</li>
 <li>Run <code class="docutils literal"><span class="pre">make</span> <span class="pre">distcheck</span></code>.  This will generate a distribution tarball, and
 test it in various ways.  It takes about 10-15 mins to run, depending on
-your hardware.  If this command fails, you are not ready to release &#8211;
+your hardware.  If this command fails*, you are not ready to release &#8211;
 fix the problems, get them tested and committed, then restart the
 pre-release testing.</li>
 <li><code class="docutils literal"><span class="pre">make</span> <span class="pre">distcheck</span></code> can only test so much (it doesn&#8217;t know about cunit or
@@ -859,9 +872,25 @@ testing.</li>
 </ol>
 </li>
 </ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><code class="docutils literal"><span class="pre">make</span> <span class="pre">distcheck</span></code> doesn&#8217;t work on the 2.5 branch.  For 2.5, just use
+<code class="docutils literal"><span class="pre">make</span> <span class="pre">dist</span></code> instead.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Realistically, there&#8217;s usually some set of expected Cassandane failures
+from each Cyrus branch, especially for 2.5.  If you&#8217;re doing releases
+regularly, you&#8217;ve probably got a good gut feel for which failures are a
+problem and which ones are just &#8220;that old thing&#8221;.  If you don&#8217;t do
+releases regularly, try to pull in someone who does for guidance about
+which failures are ignorable, and which should be a source of stress.</p>
+<p class="last">If in doubt, try building and testing the previous release from the same
+series, and compare the test results.</p>
+</div>
 </div>
 <div class="section" id="linking-up-release-notes">
-<h2><a class="toc-backref" href="#id5">Linking up release notes</a><a class="headerlink" href="#linking-up-release-notes" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id6">Linking up release notes</a><a class="headerlink" href="#linking-up-release-notes" title="Permalink to this headline">¶</a></h2>
 <p>The linkage of release notes is handled in <code class="docutils literal"><span class="pre">docsrc/conf.py</span></code>.  There&#8217;s a bunch
 of places it needs to be updated.  We should iterate these in detail at some
 point, but for now the easiest thing to do is look for lines containing the
@@ -874,10 +903,10 @@ gives her 50 minutes to finish the rest of the release process without the
 website updating before the downloads are available.</p>
 </div>
 <div class="section" id="version-tagging">
-<h2><a class="toc-backref" href="#id6">Version tagging</a><a class="headerlink" href="#version-tagging" title="Permalink to this headline">¶</a></h2>
-<p>Note: it is absolutely critical that your local commits have been pushed
-upstream at this point.  If they are not, and if anybody else pushes in the
-meantime, you will end up with a mess.</p>
+<h2><a class="toc-backref" href="#id7">Version tagging</a><a class="headerlink" href="#version-tagging" title="Permalink to this headline">¶</a></h2>
+<p>Note: it is absolutely critical that your repository is clean and your local
+commits have been pushed upstream at this point.  If they are not, and if
+anybody else pushes in the meantime, you will end up with a mess.</p>
 <ol class="arabic">
 <li><p class="first">Ensure your repository is clean again: <code class="docutils literal"><span class="pre">git</span> <span class="pre">clean</span> <span class="pre">-xfd</span></code></p>
 </li>
@@ -915,16 +944,64 @@ remote is named &#8220;ci&#8221;).</p>
 </li>
 </ol>
 </div>
-<div class="section" id="releasing">
-<h2><a class="toc-backref" href="#id7">Releasing</a><a class="headerlink" href="#releasing" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="inter-version-website-consistency">
+<h2><a class="toc-backref" href="#id8">Inter-version website consistency</a><a class="headerlink" href="#inter-version-website-consistency" title="Permalink to this headline">¶</a></h2>
+<p>The website is built from an amalgamation of documentation from:</p>
+<ul>
+<li><p class="first">The current stable cyrus-imapd branch (top level)</p>
+</li>
+<li><p class="first">The current master cyrus-imapd branch (<code class="docutils literal"><span class="pre">/dev</span></code> hierarchy)</p>
+</li>
+<li><p class="first">Each of the following cyrus-imapd branches (<code class="docutils literal"><span class="pre">/x.y</span></code> hierarchies)</p>
+<blockquote>
+<div><ul class="simple">
+<li>cyrus-imapd-2.5</li>
+<li>cyrus-imapd-3.0</li>
+<li>cyrus-imapd-3.2</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">The current master cyrus-sasl branch (<code class="docutils literal"><span class="pre">/sasl</span></code> hierarchy)</p>
+</li>
+</ul>
+<p>When making a cyrus-imapd release, you need to add the new release notes
+file to each relevant cyrus-imapd branch.  You also need to check and
+update the contents of <code class="docutils literal"><span class="pre">docsrc/conf.py</span></code> on each branch AND the cyrus-sasl
+repository.</p>
+<p>Sometimes you can just cherry-pick the commits around, but note that the
+2.5 website stores release notes files in a different path, so if you
+bother to copy release notes back to this branch, a naive cherry-pick will
+not put them in the right place!</p>
+<p>This step often gets forgotten, so if you actually follow it, and notice
+some missing versions, just go ahead and add them while you&#8217;re there.</p>
+</div>
+<div class="section" id="uploading">
+<h2><a class="toc-backref" href="#id9">Uploading</a><a class="headerlink" href="#uploading" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This section does NOT apply to releases from the master branch.  We
+do not publish release tarballs for those.  People running master code
+are expected to use a git checkout.</p>
+</div>
+<p>Time to upload the release tarball and signature file!</p>
 <ol class="arabic simple">
-<li>Upload the tarball and signature to www: <code class="docutils literal"><span class="pre">scp</span> <span class="pre">cyrus-imapd-*.tar.gz</span> <span class="pre">cyrus-imapd-*.tar.gz.sig</span>
-<span class="pre">www.cyrusimap.org:/var/www/html/releases/</span></code></li>
-<li>Upload them to ftp too: <code class="docutils literal"><span class="pre">scp</span> <span class="pre">cyrus-imapd-*.tar.gz</span> <span class="pre">cyrus-imapd-*.tar.gz.sig</span>
-<span class="pre">ftp.cyrusimap.org:/srv/ftp/cyrus-imapd/</span></code></li>
-<li>SSH into both www and ftp, and move older releases to the old versions
-directory.  You want only the two most recent tarball+sig pairs for each
-major series.</li>
+<li>Navigate to <a class="reference external" href="https://github.com/cyrusimap/cyrus-imapd/releases">https://github.com/cyrusimap/cyrus-imapd/releases</a></li>
+<li>The tag you pushed earlier will now be available as a release, but it will
+have very little information about it</li>
+<li>Click on the tag name</li>
+<li>Click &#8220;Edit tag&#8221; on the right</li>
+<li><em>Leave every field on the page as it is (probably blank!), except</em>:</li>
+<li>Use the &#8220;Attach binaries by dropping them here or selecting them&#8221; widget
+to upload the tarball and signature files</li>
+<li>If this is an alpha/beta/rc release, click the &#8220;This is a pre-release&#8221;
+checkbox</li>
+<li>Click &#8220;Save&#8221;.  The commit message from the tag annotation will be used
+as the release description.</li>
+</ol>
+</div>
+<div class="section" id="tell-the-world">
+<h2><a class="toc-backref" href="#id10">Tell the world</a><a class="headerlink" href="#tell-the-world" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
 <li>Update the topic in the #cyrus IRC channel.</li>
 <li>Send an announcement to the info-cyrus and cyrus-announce lists.</li>
 </ol>
@@ -949,7 +1026,7 @@ major series.</li>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on May 21 2018
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Mar 06 2020
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -969,7 +1046,7 @@ major series.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'3.2.0-beta3',
+            VERSION:'3.2.0-rc1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

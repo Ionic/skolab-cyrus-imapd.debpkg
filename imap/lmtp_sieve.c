@@ -198,7 +198,14 @@ static int getmailboxidexists(void *sc, const char *extname)
     script_data_t *sd = (script_data_t *)sc;
     const char *userid = mbname_userid(sd->mbname);
     char *intname = mboxlist_find_uniqueid(extname, userid, sd->authstate);
-    int exists = intname ? 1 : 0;
+    int exists = 0;
+
+    if (intname &&
+        !mboxname_isdeletedmailbox(intname, NULL) &&
+        !mboxname_isnonimapmailbox(intname, 0)) {
+        exists = 1;
+    }
+
     free(intname);
     return exists;
 }
@@ -1092,7 +1099,7 @@ static int sieve_fileinto(void *ac,
     int ret = IMAP_MAILBOX_NONEXISTENT;
 
     const char *userid = mbname_userid(sd->mbname);
-    char *intname;
+    char *intname = NULL;
 
     if (sd->edited_header) {
         mdata = setup_special_delivery(mdata);
@@ -1102,8 +1109,14 @@ static int sieve_fileinto(void *ac,
 
     if (fc->mailboxid) {
         intname = mboxlist_find_uniqueid(fc->mailboxid, userid, sd->authstate);
+        if (intname &&
+            (mboxname_isdeletedmailbox(intname, NULL) ||
+             mboxname_isnonimapmailbox(intname, 0))) {
+            free(intname);
+            intname = NULL;
+        }
     }
-    else {
+    if (!intname) {
         if (fc->specialuse) {
             intname = mboxname_from_external(fc->specialuse, sd->ns, userid);
             ret = mboxlist_lookup(intname, NULL, NULL);
@@ -1206,10 +1219,7 @@ static int sieve_snooze(void *ac,
     }
 
     char *intname = mboxlist_find_specialuse("\\Snoozed", userid);
-    ret = mboxlist_lookup(intname, NULL, NULL);
-
-    // didn't resolve a name, this will always fail
-    if (ret) goto done;
+    if (!intname) goto done;
 
     /* Determine until time */
     time_t now = time(NULL), until;

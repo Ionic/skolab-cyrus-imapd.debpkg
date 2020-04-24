@@ -12,22 +12,18 @@ extern int charset_debug;
 
 static void test_lookupname(void)
 {
-    charset_t cs, cs2;
+    charset_t cs;
 
     /* us-ascii must exist */
     cs = charset_lookupname("us-ascii");
     CU_ASSERT_PTR_NOT_NULL(cs);
+    charset_free(&cs);
 
     /* names are case-insensitive */
-    cs2 = charset_lookupname("US-ASCII");
-    CU_ASSERT_PTR_NOT_NULL(cs2);
-    CU_ASSERT_STRING_EQUAL(charset_name(cs), charset_name(cs2));
-    charset_free(&cs2);
-
-    cs2 = charset_lookupname("Us-AsCiI");
-    CU_ASSERT_PTR_NOT_NULL(cs2);
-    CU_ASSERT_STRING_EQUAL(charset_name(cs), charset_name(cs2));
-    charset_free(&cs2);
+    cs = charset_lookupname("US-ASCII");
+    CU_ASSERT_PTR_NOT_NULL(cs);
+    CU_ASSERT_STRING_EQUAL("us-ascii", charset_canon_name(cs));
+    CU_ASSERT_STRING_EQUAL("US-ASCII", charset_alias_name(cs));
     charset_free(&cs);
 
     /* some others must also exist */
@@ -41,6 +37,8 @@ static void test_lookupname(void)
 
     cs = charset_lookupname("iso-8859-1");
     CU_ASSERT_PTR_NOT_NULL(cs);
+    CU_ASSERT_STRING_EQUAL("windows-1252", charset_canon_name(cs));
+    CU_ASSERT_STRING_EQUAL("iso-8859-1", charset_alias_name(cs));
     charset_free(&cs);
 
     /*
@@ -49,20 +47,22 @@ static void test_lookupname(void)
      */
     cs = charset_lookupname("windows-1252");
     CU_ASSERT_PTR_NOT_NULL(cs);
-    CU_ASSERT_STRING_EQUAL(charset_name(cs), "windows-1252");
+    CU_ASSERT_STRING_EQUAL("windows-1252", charset_canon_name(cs));
+    CU_ASSERT_STRING_EQUAL("windows-1252", charset_alias_name(cs));
     charset_free(&cs);
 
     cs = charset_lookupname("1252");
     CU_ASSERT_PTR_NOT_NULL(cs);
-    CU_ASSERT_STRING_EQUAL(charset_name(cs), "windows-1252");
+    CU_ASSERT_STRING_EQUAL("windows-1252", charset_canon_name(cs));
+    CU_ASSERT_STRING_EQUAL("1252", charset_alias_name(cs));
     charset_free(&cs);
 
-    /* But still use the ICU name if there's no good alias for it */
+    /* But still use the ICU name if there's no Cyrus canon name */
     cs = charset_lookupname("ebcdic-ar");
     CU_ASSERT_PTR_NOT_NULL(cs);
-    CU_ASSERT_STRING_EQUAL(charset_name(cs), "ibm-16804_X110-1999");
+    CU_ASSERT_STRING_EQUAL("ibm-16804_X110-1999", charset_canon_name(cs));
+    CU_ASSERT_STRING_EQUAL("ebcdic-ar", charset_alias_name(cs));
     charset_free(&cs);
-
 }
 
 static void test_to_utf8(void)
@@ -217,6 +217,43 @@ static void test_misc_charsets(void)
     TESTCASE("koi8-u", "\xA4\xA6\xA7\xAD\xB4\xB6\xB7\xBD",
                        "\xD1\x94\xD1\x96\xD1\x97\xD2\x91"
                        "\xD0\x84\xD0\x86\xD0\x87\xD2\x90");
+
+    /* iso-8859-1 aliased to windows-1252. */
+    /* They differ in the range 0x80 to 0x9f, where iso-8859-1
+       has control chars that are mostly useless for emails.
+       windows-1252 encoding has visible characters in that range. */
+    TESTCASE("iso-8859-1", "\x80", "\xe2\x82\xac"); // Euro sign
+    TESTCASE("iso-8859-1", "\x81", "\xc2\x81"); // Unassigned
+    TESTCASE("iso-8859-1", "\x82", "\xe2\x80\x9a"); // Single Low-9 Quotation Mark
+    TESTCASE("iso-8859-1", "\x83", "\xc6\x92"); // Latin Small Letter F With Hook
+    TESTCASE("iso-8859-1", "\x84", "\xe2\x80\x9e"); // Double Low-9 Quotation Mark
+    TESTCASE("iso-8859-1", "\x85", "\xe2\x80\xa6"); // Horizontal Ellipsis
+    TESTCASE("iso-8859-1", "\x86", "\xe2\x80\xa0"); // Dagger
+    TESTCASE("iso-8859-1", "\x87", "\xe2\x80\xa1"); // Double Dagger
+    TESTCASE("iso-8859-1", "\x88", "\xcb\x86"); // Modifier Letter Circumflex Accent
+    TESTCASE("iso-8859-1", "\x89", "\xe2\x80\xb0"); // Per Mille Sign
+    TESTCASE("iso-8859-1", "\x8a", "\xc5\xa0"); // Latin Capital Letter S With Caron
+    TESTCASE("iso-8859-1", "\x8b", "\xe2\x80\xb9"); // Single Left-Pointing Angle Quotation Mark
+    TESTCASE("iso-8859-1", "\x8c", "\xc5\x92"); // Latin Capital Ligature OE
+    TESTCASE("iso-8859-1", "\x8d", "\xc2\x8d"); // Unassigned
+    TESTCASE("iso-8859-1", "\x8e", "\xc5\xbd"); // Latin Capital Letter Z With Caron
+    TESTCASE("iso-8859-1", "\x8f", "\xc2\x8f"); // Unassigned
+    TESTCASE("iso-8859-1", "\x90", "\xc2\x90"); // Unassigned
+    TESTCASE("iso-8859-1", "\x91", "\xe2\x80\x98"); // Left Single Quotation Mark
+    TESTCASE("iso-8859-1", "\x92", "\xe2\x80\x99"); // Right Single Quotation Mark
+    TESTCASE("iso-8859-1", "\x93", "\xe2\x80\x9c"); // Left Double Quotation Mark
+    TESTCASE("iso-8859-1", "\x94", "\xe2\x80\x9d"); // Right Double Quotation Mark
+    TESTCASE("iso-8859-1", "\x95", "\xe2\x80\xa2"); // Bullet
+    TESTCASE("iso-8859-1", "\x96", "\xe2\x80\x93"); // En Dash
+    TESTCASE("iso-8859-1", "\x97", "\xe2\x80\x94"); // Em Dash
+    TESTCASE("iso-8859-1", "\x98", "\xcb\x9c"); // Small Tilde
+    TESTCASE("iso-8859-1", "\x99", "\xe2\x84\xa2"); // Trade Mark Sign
+    TESTCASE("iso-8859-1", "\x9a", "\xc5\xa1"); // Latin Small Letter S With Caron
+    TESTCASE("iso-8859-1", "\x9b", "\xe2\x80\xba"); // Single Right-Pointing Angle Quotation Mark
+    TESTCASE("iso-8859-1", "\x9c", "\xc5\x93"); // Latin Small Ligature OE
+    TESTCASE("iso-8859-1", "\x9d", "\xc2\x9d"); // Unassigned
+    TESTCASE("iso-8859-1", "\x9e", "\xc5\xbe"); // Latin Small Letter Z With Caron
+    TESTCASE("iso-8859-1", "\x9f", "\xc5\xb8"); // Latin Capital Letter Y With Diaeresis
 
 #undef TESTCASE
 }
