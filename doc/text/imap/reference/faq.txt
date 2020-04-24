@@ -20,8 +20,6 @@ Installation Problems
 
 * OpenSSL Version Mismatches
 
-* Libical v1.0.1 or v2.0
-
 
 Common Feature Requests
 =======================

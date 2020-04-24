@@ -16,14 +16,6 @@ Download from GitHub:
      imapd/releases/download/cyrus- imapd-3.2.0-beta2/cyrus-
      imapd-3.2.0-beta2.tar.gz.sig
 
-Download via HTTPS:
-
-   * https://www.cyrusimap.org/releases/cyrus-
-     imapd-3.2.0-beta2.tar.gz
-
-   * https://www.cyrusimap.org/releases/cyrus-
-     imapd-3.2.0-beta2.tar.gz.sig
-
 
 Major changes since the 3.0.x series
 ====================================
