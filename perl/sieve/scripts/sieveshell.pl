@@ -1,8 +1,6 @@
-#! /bin/sh
-exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
-#!perl -w
+#!/usr/bin/perl
 #
-# Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
+# Copyright (c) 1994-2020 Carnegie Mellon University.  All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -41,6 +39,9 @@ exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
 # AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
 # OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
+
+use strict;
+use warnings;
 
 use Cyrus::SIEVE::managesieve;
 use Getopt::Long;
@@ -323,12 +324,13 @@ B<deactivate> deactivate all scripts.
 
 =item B<-u> I<user>, B<--user>=I<user>
 
-The authorization name to request; by default, derived from the
-authentication credentials.
+The user whose mailboxes you want to work on. If not specified, it uses the same
+as -a.
 
 =item B<-a> I<authname>, B<--authname>=I<authname>
 
-The user to use for authentication (defaults to current user).
+The user to use for authentication. If not specified, it defaults to the
+current login user.
 
 =item B<-r> I<realm>, B<--realm>=I<realm>
 
@@ -344,8 +346,7 @@ exit when done.
 =head1 REFERENCES
 
 [MANAGESIEVE] Martin, T.; "A Protocol for Remotely Managing Sieve
-Scripts", draft-ietf-managesieve-03.txt, Mirapoint, Inc.; May 2001,
-work in progress.
+Scripts", RFC 5804; May 2001
 
 =head1 AUTHOR
 

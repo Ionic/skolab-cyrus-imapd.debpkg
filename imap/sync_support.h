@@ -59,25 +59,9 @@ extern struct protocol_t csync_protocol;
 #define SYNC_MESSAGE_LIST_HASH_SIZE      (65536)
 #define SYNC_MESSAGE_LIST_MAX_OPEN_FILES (64)
 
-void sync_printdate(struct protstream *out, time_t time);
-time_t sync_parsedate(const char *s);
-int sync_getflags(struct dlist *kl,
-                  struct mailbox *mailbox,
-                  struct index_record *record);
-
-void sync_print_flags(struct dlist *kl,
-                      struct mailbox *mailbox,
-                      const struct index_record *record);
-
 const char *sync_get_config(const char *channel, const char *val);
-int sync_get_intconfig(const char *channel, const char *val);
+int sync_get_durationconfig(const char *channel, const char *val, int defunit);
 int sync_get_switchconfig(const char *channel, const char *val);
-
-char *sync_encode_options(int options);
-int sync_parse_options(const char *source);
-
-char *sync_encode_type(int type);
-int sync_parse_type(const char *source);
 
 /* ====================================================================== */
 
@@ -162,6 +146,8 @@ struct sync_folder {
     time_t pop3_show_after;
     struct sync_annot_list *annots;
     modseq_t xconvmodseq;
+    modseq_t raclmodseq;
+    modseq_t foldermodseq;
     int ispartial;
     struct quota quota;
     int   mark;
@@ -190,6 +176,8 @@ struct sync_folder *sync_folder_list_add(struct sync_folder_list *l,
                                          time_t pop3_show_after,
                                          struct sync_annot_list *annot,
                                          modseq_t xconvmodseq,
+                                         modseq_t raclmodseq,
+                                         modseq_t foldermodseq,
                                          int ispartial);
 
 struct sync_folder *sync_folder_lookup(struct sync_folder_list *l,
@@ -364,6 +352,7 @@ struct sync_annot {
     char *userid;
     struct buf value;
     int mark;
+    modseq_t modseq;
 };
 
 struct sync_annot_list {
@@ -376,7 +365,8 @@ struct sync_annot_list *sync_annot_list_create(void);
 
 void sync_annot_list_add(struct sync_annot_list *l,
                          const char *entry, const char *userid,
-                         const struct buf *value);
+                         const struct buf *value,
+                         modseq_t modseq);
 
 void sync_annot_list_free(struct sync_annot_list **lp);
 
@@ -428,20 +418,9 @@ int sync_append_copyfile(struct mailbox *mailbox,
 
 int read_annotations(const struct mailbox *,
                      const struct index_record *,
-                     struct sync_annot_list **);
-void encode_annotations(struct dlist *parent,
-                        const struct index_record *record,
-                        const struct sync_annot_list *);
-int decode_annotations(/*const*/struct dlist *,
-                       struct sync_annot_list **,
-                       struct index_record *);
-int apply_annotations(struct mailbox *mailbox,
-                      const struct index_record *record,
-                      const struct sync_annot_list *local_annots,
-                      const struct sync_annot_list *remote_annots,
-                      int local_wins);
-int diff_annotations(const struct sync_annot_list *local_annots,
-                     const struct sync_annot_list *remote_annots);
+                     struct sync_annot_list **,
+                     modseq_t since_modseq,
+                     int flags);
 
 /* ====================================================================== */
 

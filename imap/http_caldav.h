@@ -46,14 +46,23 @@
 
 /* Create the calendar home, default calendars and scheduling
  * boxes for userid, if they don't already exist. */
+extern unsigned long config_types_to_caldav_types(void);
 extern int caldav_create_defaultcalendars(const char *userid);
 
 extern int caldav_store_resource(struct transaction_t *txn, icalcomponent *ical,
                                  struct mailbox *mailbox, const char *resource,
+                                 modseq_t createdmodseq,
                                  struct caldav_db *caldavdb, unsigned flags,
-                                 const char *schedule_userid);
+                                 const char *userid, const strarray_t *schedule_addresses);
 
-/* defined in http_tzdist.c */
-extern void icalcomponent_add_required_timezones(icalcomponent *ical);
+extern icalcomponent *caldav_record_to_ical(struct mailbox *mailbox,
+                                            const struct caldav_data *cdata,
+                                            const char *userid,
+                                            strarray_t *schedule_addresses);
+
+extern int caldav_is_personalized(struct mailbox *mailbox,
+                                  const struct caldav_data *cdata,
+                                  const char *userid,
+                                  struct buf *userdata);
 
 #endif /* HTTP_CALDAV_H */

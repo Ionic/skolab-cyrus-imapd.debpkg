@@ -18,6 +18,8 @@ Getting Started
 
 * Developer Test Environment
 
+* JMAP support
+
 
 System files and Databases
 ==========================
@@ -38,6 +40,8 @@ Releasing
 
   * Prerequisites
 
+  * Order of operations
+
   * Release notes
 
   * Pre-release testing
@@ -46,7 +50,11 @@ Releasing
 
   * Version tagging
 
-  * Releasing
+  * Inter-version website consistency
+
+  * Uploading
+
+  * Tell the world
 
 * Releasing new builds of ancient Cyrus IMAP versions
 
@@ -62,4 +70,4 @@ Releasing
 
   * Building the release
 
-  * Releasing
+  * Finishing up

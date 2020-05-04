@@ -58,10 +58,9 @@ enum cyrusdb_ret {
     CYRUSDB_NOTFOUND = -5,
     CYRUSDB_LOCKED = -6,
     CYRUSDB_NOTIMPLEMENTED = -7,
-    CYRUSDB_FULL = -8
+    CYRUSDB_FULL = -8,
+    CYRUSDB_READONLY = -9
 };
-
-#define cyrusdb_strerror(c) ("cyrusdb error")
 
 enum cyrusdb_initflags {
     CYRUSDB_RECOVER = 0x01
@@ -75,7 +74,8 @@ enum cyrusdb_openflags {
     CYRUSDB_CREATE    = 0x01,    /* Create the database if not existant */
     CYRUSDB_MBOXSORT  = 0x02,    /* Use mailbox sort order ('.' sorts 1st) */
     CYRUSDB_CONVERT   = 0x04,    /* Convert to the named format if not already */
-    CYRUSDB_NOCOMPACT = 0x08     /* Don't run any database compaction routines */
+    CYRUSDB_NOCOMPACT = 0x08,    /* Don't run any database compaction routines */
+    CYRUSDB_SHARED    = 0x10     /* Open in shared lock mode */
 };
 
 typedef int foreach_p(void *rock,
@@ -90,6 +90,7 @@ typedef int cyrusdb_archiver(const strarray_t *fnames,
                              const char *dirname);
 
 struct dbengine;
+
 
 struct cyrusdb_backend {
     const char *name;
@@ -312,5 +313,7 @@ int cyrusdb_generic_sync(void);
 int cyrusdb_generic_archive(const strarray_t *fnames, const char *dirname);
 int cyrusdb_generic_noarchive(const strarray_t *fnames, const char *dirname);
 int cyrusdb_generic_unlink(const char *fname, int flags);
+
+extern const char *cyrusdb_strerror(int r);
 
 #endif /* INCLUDED_CYRUSDB_H */

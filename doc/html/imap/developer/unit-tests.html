@@ -1,0 +1,1401 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Unit Tests &mdash; Cyrus IMAP 3.2.0-rc1 documentation</title>
+  
+
+  
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../../_static/cyrus.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.0-rc1 documentation" href="../../index.html"/>
+        <link rel="up" title="Developers" href="../../developers.html"/>
+        <link rel="next" title="Support/Community" href="../../support.html"/>
+        <link rel="prev" title="Cyrus IMAP Server: var directory structure" href="guidance/var_directory_structure.html"/> 
+
+  
+  
+  
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+
+  
+
+<div class="pageheader">
+  <ul>
+    <li><a href="../../index.html">Home</a></li>
+    <li><a href="../../download.html">Download</a></li>
+    <li><a href="../../contribute.html">Contribute</a></li>
+    <li><a href="../../support.html">Support</a></li>
+    <li><a href="http://www.cyrusimap.org/sasl">Cyrus SASL</a></li>
+  </ul>
+  <div>
+    <a href="../../index.html">
+      <img src="../../_static/logo.gif" alt="CYRUS" />
+    </a>
+  </div>
+</div>
+<div style="clear: both;"></div>
+
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+ 
+          <a href="../../index.html">
+ 
+
+  
+          
+          <img src="../../_static/logo.gif"  />
+     
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <p class="caption"><span class="caption-text">Cyrus IMAP</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../download.html">Download</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../download/getcyrus.html">Get Cyrus</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../download/getcyrus.html#distribution-package">Distribution Package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../download/installation/distributions/centos.html">CentOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../download/installation/distributions/debian.html">Debian</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../download/installation/distributions/fedora.html">Fedora</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../download/installation/distributions/opensuse.html">openSUSE</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../download/installation/distributions/rhel.html">Red Hat Enterprise Linux</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../download/installation/distributions/ubuntu.html">Ubuntu</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../download/getcyrus.html#build-and-install-yourself">Build and Install Yourself</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../download/getcyrus.html#use-a-release-packaged-tarball">Use a release packaged tarball</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../download/getcyrus.html#use-the-source-from-git">Use the source from Git</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../download/getcyrus.html#external-tools">External Tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../download/getcyrus.html#licensing">Licensing</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../download/release-notes/index.html">Release Notes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../download/release-notes/index.html#stable-version">Stable Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../download/release-notes/index.html#development-version">Development Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../download/release-notes/index.html#supported-product-series">Supported Product Series</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../download/release-notes/index.html#series-3-2">Series 3.2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../download/release-notes/index.html#series-3-0">Series 3.0</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../download/release-notes/index.html#series-2-5">Series 2.5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../download/release-notes/index.html#series-2-4">Series 2.4</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../download/release-notes/index.html#older-versions">Older Versions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../download/release-notes/index.html#series-1">Series 1</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../download/release-notes/index.html#series-2-2-0-2-3">Series 2: 2.0 - 2.3</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../download/packagers.html">Notes for Packagers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../download/packagers.html#binary-naming">Binary naming</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../download/packagers.html#sample-configuration-files">Sample configuration files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../download/packagers.html#predefined-configurations">Predefined configurations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../download/packagers.html#the-configuration-file-for-master-cyrus-conf">The configuration file for master: cyrus.conf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../quickstart/introduction.html">Introduction to Cyrus IMAP</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../quickstart/introduction.html#what-is-imap">What is IMAP?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#quick-install">Quick install</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#install-cyrus-reference-packages">1. Install Cyrus reference packages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#use-apt-get-install-f-to-complete-installation">2. Use &#8220;apt-get install -f&#8221; to complete installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setup-the-cyrus-mail-user-and-group">3. Setup the cyrus:mail user and group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setting-up-authentication-with-sasl">4. Setting up authentication with SASL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setup-mail-delivery-from-your-mta">5. Setup mail delivery from your MTA</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../quickstart.html#install-sendmail">Install Sendmail</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../quickstart.html#sendmail-communication">Sendmail communication</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../quickstart.html#install-postfix">Install Postfix</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#protocol-ports">6. Protocol ports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#configuring-cyrus">7. Configuring Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#launch-cyrus">8. Launch Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#feature-overview">Feature overview</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../concepts/features.html">Features</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/features.html#security-and-authentication">Security and Authentication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/authentication-kerberos.html">Kerberos Authentication</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/authentication-ldap.html">LDAP Authentication</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/authentication-sql.html">SQL Authentication</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/access-control.html">Access Control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/sealed-system.html">Sealed System Design</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/features.html#mailbox-management">Mailbox Management</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/automatic-creation-of-mailboxes.html">Automatic Creation of Mailboxes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/namespaces.html">Mailbox Namespaces</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/virtual-domains.html">Virtual Domains</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/mailbox-annotations.html">Mailbox Annotations (METADATA)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/mailbox-distribution.html">Mailbox Distribution</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/features.html#message-management">Message Management</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/delayed-delete.html">Delayed Delete</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/delayed-expunge.html">Delayed Expunge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/message-annotations.html">Message Annotations (METADATA)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/duplicate-message-delivery-suppression.html">Duplicate Message Delivery Suppression</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/shared-seen-state.html">Shared Seen State</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/server-side-filtering.html">Server Side Filtering (Sieve)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/event-notifications.html">Event Notifications</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/features.html#calendar-and-contact-dav-collection-management">Calendar and Contact (DAV) Collection Management</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/caldav-collections.html">CalDAV Collections</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/dav-components.html">DAV Components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/dav-collection-mgmt.html">DAV Collection Management</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/carddav.html">CardDAV Support</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/features.html#storage">Storage</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/mail-spool-partitions.html">Mail Spool Partitions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/mailbox-metadata-partitions.html">Mailbox Metadata Partitions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/archiving.html">Archiving</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/quota.html">Quota</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/single-instance-store.html">Single-Instance Store</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/features.html#load-management">Load Management</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/features/server-aggregation.html">Cyrus IMAP Murder (Server Aggregation)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../concepts/overview_and_concepts.html">Concepts</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#access-control-lists">Access Control Lists</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#working-with-acls">Working with ACLs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#sample-acl">Sample ACL</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#access-rights">Access Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#anonymous-login">Anonymous Login</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#plaintext-authentication">Plaintext Authentication</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#kerberos-logins">Kerberos Logins</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#shared-secrets-logins">Shared Secrets Logins</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#quotas">Quotas</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#working-with-quotas">Working with Quotas</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#monitor-and-repair">Monitor and Repair</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#supported-quota-types">Supported Quota Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#news">News</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#pop3-server">POP3 Server</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#the-syslog-facility">The syslog facility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#mail-directory-recovery">Mail Directory Recovery</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#reconstructing-mailbox-directories">Reconstructing Mailbox Directories</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#reconstructing-the-mailboxes-file">Reconstructing the Mailboxes File</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#reconstructing-quota-roots">Reconstructing Quota Roots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#removing-quota-roots">Removing Quota Roots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#subscriptions">Subscriptions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#configuration-directory">Configuration Directory</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#log-directory">Log Directory</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#proc-directory">Proc Directory</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#message-delivery">Message Delivery</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#local-mail-transfer-protocol-lmtp">Local Mail Transfer Protocol (lmtp)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#single-instance-store">Single Instance Store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#duplicate-delivery-suppression">Duplicate Delivery Suppression</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#sieve-a-mail-filtering-language">Sieve, a Mail Filtering Language</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#cyrus-murder-the-imap-aggregator">Cyrus Murder, the IMAP Aggregator</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../setup.html">Setup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="compiling.html">Compiling</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="compiling.html#setting-up-dependencies">Setting up dependencies</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="compiling.html#required-build-dependencies">Required Build Dependencies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="compiling.html#optional-build-dependencies">Optional Build Dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="compiling.html#compile-cyrus">Compile Cyrus</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="compiling.html#default-build-mail-only">Default build: mail only</a></li>
+<li class="toctree-l4"><a class="reference internal" href="compiling.html#optional-dependencies">Optional dependencies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="compiling.html#compile">Compile</a></li>
+<li class="toctree-l4"><a class="reference internal" href="compiling.html#check">Check</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../installing.html">Installing Cyrus</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../installing.html#install-cyrus">Install Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../installing.html#optional-components">Optional Components</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../download/installation/manage-dav.html">HTTP modules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../download/installation/virus.html">Virus Scanner</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../installing.html#setting-up-syslog">Setting up syslog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../installing.html#create-cyrus-environment">Create Cyrus environment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../installing.html#set-up-the-cyrus-mail-user-and-group">Set up the cyrus:mail user and group</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../installing.html#authentication-with-sasl">Authentication with SASL</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../installing.html#mail-delivery-from-your-mta">Mail delivery from your MTA</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../installing.html#protocol-ports">Protocol ports</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../installing.html#cyrus-config-files">Cyrus config files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../installing.html#optional-setting-up-ssl-certificates">Optional: Setting up SSL certificates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../installing.html#prepare-ephemeral-run-time-storage-directories">Prepare ephemeral (run-time) storage directories</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../installing.html#launch-cyrus">Launch Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../installing.html#send-a-test-email">Send a test email</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../installing.html#checking-carddav-and-carddav">Checking CardDAV and CardDAV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../installing.html#troubleshooting">Troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../download/upgrade.html">Upgrading to 3.2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#preparation">1. Preparation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../download/upgrade.html#installation-from-tarball">Installation from tarball</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../download/upgrade.html#how-are-you-planning-on-upgrading">How are you planning on upgrading?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../download/upgrade.html#do-what-as-who">Do What As Who?</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#install-new-3-2-cyrus">2. Install new 3.2 Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#shut-down-existing-cyrus">3. Shut down existing Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#backup-and-copy-existing-data">4. Backup and Copy existing data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#copy-config-files-and-update">5. Copy config files and update</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#upgrade-specific-items">6. Upgrade specific items</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#start-new-3-2-cyrus-and-verify">7. Start new 3.2 Cyrus and verify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#reconstruct-databases-and-cache">8. Reconstruct databases and cache</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#do-you-want-any-new-features">9. Do you want any new features?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#upgrade-complete">10. Upgrade complete</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#special-note-for-murder-configurations">Special note for Murder configurations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../concepts/deployment.html">Configuration Guide</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/deployment/deployment_scenarios.html">Deployment Scenarios</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/deployment_scenarios.html#single-server-deployments">Single Server Deployments</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/deployment_scenarios.html#multi-server-deployments">Multi Server Deployments</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/deployment/deployment_scenarios.html#cyrus-murder-server-aggregation">Cyrus Murder: Server aggregation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/deployment_scenarios.html#the-discrete-murder">The Discrete Murder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/deployment_scenarios.html#the-unified-murder">The Unified Murder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/deployment_scenarios.html#the-shared-murder">The Shared Murder</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/deployment/deployment_scenarios.html#cyrus-replication">Cyrus Replication</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/deployment/deployment_scenarios.html#hosted-environments">Hosted Environments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/deployment/databases.html">Databases</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/databases.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/databases.html#file-list">File list</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/databases.html#storage-types">Storage types</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html">Mailbox Creation Distribution</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#selection-mode">Selection Mode</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/deployment/known_protocol_limitations.html">Known Protocol Limitations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/known_protocol_limitations.html#pop3-and-mailbox-locking">POP3 and Mailbox Locking</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/known_protocol_limitations.html#cyrus-imap-pop3-implementation">Cyrus IMAP POP3 Implementation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/deployment/authentication_and_authorization.html">Authentication and Authorization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/authentication_and_authorization.html#client-authentication">Client Authentication</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/authentication_and_authorization.html#users-and-mailboxes">Users and Mailboxes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/deployment/performance_recommendations.html">Performance Recommendations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/performance_recommendations.html#databases-on-temporary-filesystems">Databases on Temporary Filesystems</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/performance_recommendations.html#certificates">Certificates</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/deployment/storage.html">Storage Considerations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/storage.html#general-notes-on-storage">General Notes on Storage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/storage.html#redundancy">Redundancy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/storage.html#availability">Availability</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/storage.html#performance">Performance</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/storage.html#scalability">Scalability</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/storage.html#capacity">Capacity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/storage.html#cost">Cost</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../concepts/deployment/supported-platforms.html">Supported Platforms and System Requirements</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/supported-platforms.html#building-cyrus-imap">Building Cyrus IMAP</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/supported-platforms.html#required-software-components">Required Software Components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/supported-platforms.html#recommended-software-components">Recommended Software Components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/supported-platforms.html#recommended-software-components-enabled-by-default">Recommended Software Components Enabled by Default</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../operations.html">Operations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../reference/manpages/commands.html">Man pages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/manpages/commands.html#configuration-files">(5) Configuration Files</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/configs/cyrus.conf.html"><strong>cyrus.conf</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/configs/imapd.conf.html"><strong>imapd.conf</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/configs/krb.equiv.html"><strong>krb.equiv</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/manpages/commands.html#system-commands">(8) System Commands</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/arbitron.html"><strong>arbitron</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/backupd.html"><strong>backupd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/chk_cyrus.html"><strong>chk_cyrus</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/ctl_backups.html"><strong>ctl_backups</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/ctl_conversationsdb.html"><strong>ctl_conversationsdb</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/ctl_cyrusdb.html"><strong>ctl_cyrusdb</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/ctl_deliver.html"><strong>ctl_deliver</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/ctl_mboxlist.html"><strong>ctl_mboxlist</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/ctl_zoneinfo.html"><strong>ctl_zoneinfo</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/cvt_cyrusdb.html"><strong>cvt_cyrusdb</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/cvt_xlist_specialuse.html"><strong>cvt_xlist_specialuse</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/cyr_backup.html"><strong>cyr_backup</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/cyr_buildinfo.html"><strong>cyr_buildinfo</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/cyr_dbtool.html"><strong>cyr_dbtool</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/cyr_deny.html"><strong>cyr_deny</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/cyr_df.html"><strong>cyr_df</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/cyr_expire.html"><strong>cyr_expire</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/cyr_info.html"><strong>cyr_info</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/cyr_sequence.html"><strong>cyr_sequence</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/cyr_synclog.html"><strong>cyr_synclog</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/cyr_userseen.html"><strong>cyr_userseen</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/cyr_virusscan.html"><strong>cyr_virusscan</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/cyradm.html"><strong>cyradm</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/cyrdump.html"><strong>cyrdump</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/deliver.html"><strong>deliver</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/fetchnews.html"><strong>fetchnews</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/fud.html"><strong>fud</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/httpd.html"><strong>httpd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/idled.html"><strong>idled</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/imapd.html"><strong>imapd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/ipurge.html"><strong>ipurge</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/lmtpd.html"><strong>lmtpd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/lmtpproxyd.html"><strong>lmtpproxyd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/masssievec.html"><strong>masssievec</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/master.html"><strong>master</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/mbexamine.html"><strong>mbexamine</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/mbpath.html"><strong>mbpath</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/mbtool.html"><strong>mbtool</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/mkimap.html"><strong>mkimap</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/mknewsgroups.html"><strong>mknewsgroups</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/mupdate.html"><strong>mupdate</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/nntpd.html"><strong>nntpd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/notifyd.html"><strong>notifyd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/pop3d.html"><strong>pop3d</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/pop3proxyd.html"><strong>pop3proxyd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/proxyd.html"><strong>proxyd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/ptdump.html"><strong>ptdump</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/ptexpire.html"><strong>ptexpire</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/ptloader.html"><strong>ptloader</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/quota.html"><strong>quota</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/reconstruct.html"><strong>reconstruct</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/rehash.html"><strong>rehash</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/restore.html"><strong>restore</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/sievec.html"><strong>sievec</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/sieved.html"><strong>sieved</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/smmapd.html"><strong>smmapd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/squatter.html"><strong>squatter</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/sync_client.html"><strong>sync_client</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/sync_reset.html"><strong>sync_reset</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/sync_server.html"><strong>sync_server</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/timsieved.html"><strong>timsieved</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/tls_prune.html"><strong>tls_prune</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/translatesieve.html"><strong>translatesieve</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/unexpunge.html"><strong>unexpunge</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/manpages/commands.html#user-commands">(1) User Commands</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/usercommands/arbitronsort.pl.html"><strong>arbitronsort.pl</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/usercommands/dav_reconstruct.html"><strong>dav_reconstruct</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/usercommands/httptest.html"><strong>httptest</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/usercommands/imtest.html"><strong>imtest</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/usercommands/installsieve.html"><strong>installsieve</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/usercommands/lmtptest.html"><strong>lmtptest</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/usercommands/mupdatetest.html"><strong>mupdatetest</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/usercommands/nntptest.html"><strong>nntptest</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/usercommands/pop3test.html"><strong>pop3test</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/usercommands/sieveshell.html"><strong>sieveshell</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/usercommands/sivtest.html"><strong>sivtest</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/usercommands/smtptest.html"><strong>smtptest</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/usercommands/synctest.html"><strong>synctest</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/admin.html">Administrator Guide</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/admin.html#architecture">Architecture</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reference/architecture.html">System Architecture</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/admin.html#management">Management</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reference/admin/locations.html">File &amp; Directory Locations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/admin/ports-sockets.html">Ports and Sockets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/admin/access-control.html">Access Control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/admin/quotas.html">Quotas</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/admin/sieve.html">Cyrus Sieve</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/admin/backups.html">Cyrus Backups</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/admin/nntp.html">Cyrus NNTP</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/admin/protlayer.html">Cyrus Prot Layer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/admin/sop.html">Standard Operating Procedures</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/admin/eventsource.html">Cyrus Event Source</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/admin/monitoring.html">Monitoring</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/admin/config-mailboxdistribution.html">Mailbox Distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/admin/murder/murder.html">Cyrus Murder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/admin/nginx-proxy.html">HOWTO: Using an NGINX IMAP Proxy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/admin/tweaking.html">Tweaking Cyrus IMAP</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/faq.html">Frequently Asked Questions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../reference/faq.html#features">Features</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/feature-database-backend.html">Which database backend should I use for which databases?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/feature-duplicate-delivery.html">Duplicate Delivery Suppression</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/faq.html#installation-problems">Installation Problems</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/faq.html#common-feature-requests">Common Feature Requests</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/r-murder-ha.html">Does the Cyrus Murder support High Availability configurations?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/r-pop3-logging.html">Can I configure pop3d to log amount and size of messages fetched by user?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/r-publicssharedfolders.html">How can I make CyrusSieve work with public shared folders?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/r-subfolders.html">Can I have subfolders not appear under INBOX?</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/faq.html#common-operational-questions">Common Operational Questions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-acls.html">How do I view ACLs on a mailbox?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-annotations.html">What annotations are available?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-coredump.html">How to enable core dumps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-mailbox-doesnotexist.html">Cyrus delivers claims that the mailbox does not exist</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-mixedcase.html">Why is mail being rejected with No Mailbox found due to MiXed CaSe incoming e-mail?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-otherdatabases.html">Can I use MySQL (or another SQL database) as the primary mail store?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-pop3slow.html">Why do POP3 connections take so long, but once the connection is established all is well?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-reconstruct.html">Why does reconstruct -m not work?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../developers.html">Developers</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../contribute.html">We need your help</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html">Contribute docs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#documentation-tools">Documentation Tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#building-the-files">Building the files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#submitting-updates">Submitting updates</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="documentation.html#using-github-pull-requests">Using GitHub pull requests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="documentation.html#patches-through-the-mailing-list">Patches through the mailing list</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#special-tags">Special Tags</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="documentation.html#rfc">rfc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="documentation.html#cyrusman">cyrusman</a></li>
+<li class="toctree-l4"><a class="reference internal" href="documentation.html#imap-current-stable-version">imap_current_stable_version</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#conventions-man-pages">Conventions: Man Pages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="documentation.html#synopsis">Synopsis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="documentation.html#examples">Examples</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../developer.html">Contribute code and tests</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../developer.html#getting-started">Getting Started</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="process.html">Development Process</a></li>
+<li class="toctree-l4"><a class="reference internal" href="overview.html">Overview of Cyrus development environment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="github-guide.html">GitHub guide</a></li>
+<li class="toctree-l4"><a class="reference internal" href="compiling.html">Compiling</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../installing.html">Installing Cyrus</a></li>
+<li class="toctree-l4"><a class="reference internal" href="developer-testing.html">Developer Test Environment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="jmap.html">JMAP support</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../developer.html#system-files-and-databases">System files and Databases</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="namespaces.html">Namespaces: a developer view</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../developer.html#resources">Resources</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="libraries.html">Developer Libraries</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../developer.html#releasing">Releasing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="releasing.html">Releasing Cyrus IMAP</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ancient-releasing.html">Releasing new builds of ancient Cyrus IMAP versions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cyrusworks.html">Cyrus.Works</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cyrusworks.html#about-cyrus-works">About Cyrus Works</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cyrusworks.html#how-it-works">How it works</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../developers.html#cyrus-internals">Cyrus Internals</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="API.html">Cyrus APIs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="API/cyrusdb.html">CyrusDB API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="API/cyrusdb2.html">cyrusdb API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="API/index-api.html">Index API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="API/mailbox-api.html">Mailbox API</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="thoughts.html">Thoughts &amp; Notes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="thoughts/backup.html">Notes for backup implementation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="thoughts/bytecode.html">Cyrus IMAP Server: Sieve Bytecode</a></li>
+<li class="toctree-l4"><a class="reference internal" href="thoughts/caldav_scheduling_flowchart.html">Cyrus CalDAV Scheduling Flowchart</a></li>
+<li class="toctree-l4"><a class="reference internal" href="thoughts/improved_mboxlist_sort.html">Enabling improved_mboxlist_sort</a></li>
+<li class="toctree-l4"><a class="reference internal" href="thoughts/notes.html">Cyrus IMAP Server: Notes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="thoughts/prot-events.html">Cyrus IMAP Server: Prot Events</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="guidance.html">Guidance for Developers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="guidance/hacking.html">Cyrus IMAP Server: Hacking</a></li>
+<li class="toctree-l4"><a class="reference internal" href="guidance/internationalization.html">Cyrus IMAP Server: Internationalization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="guidance/locking.html">Cyrus IMAP Server: Locking</a></li>
+<li class="toctree-l4"><a class="reference internal" href="guidance/mailbox-format.html">Cyrus IMAP Server: Mailbox File Formats</a></li>
+<li class="toctree-l4"><a class="reference internal" href="guidance/namelocks.html">Cyrus IMAP Server: Namelocks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="guidance/prot.html">Cyrus IMAP Server: prot layer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="guidance/replication_examples.html">Cyrus IMAP Server: Replication Examples</a></li>
+<li class="toctree-l4"><a class="reference internal" href="guidance/replication_protocol.html">Cyrus IMAP Server: Replication Protocol v2.4+</a></li>
+<li class="toctree-l4"><a class="reference internal" href="guidance/special_chars.html">Cyrus IMAP Server: Special Characters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="guidance/var_directory_structure.html">Cyrus IMAP Server: var directory structure</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../developers.html#unit-tests">Unit Tests</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Unit Tests</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#table-of-contents">Table of Contents</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#introduction">1. Introduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#what-is-a-unit-test">2. What Is A Unit Test?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#running-the-tests">3. Running The Tests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#debugging-a-test">3.6 Debugging A Test</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#adding-your-own-tests">4. Adding Your Own Tests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#where-to-put-your-tests">4.1 Where To Put Your Tests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#adding-a-new-suite">4.1 Adding A New Suite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#adding-a-test-to-a-suite">4.2 Adding A Test To A Suite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#suite-setup-and-teardown">4.3 Suite Setup And Teardown</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../support.html">Support/Community</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../support/feedback-bugs.html">Found a bug?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../support/feedback-mailing-lists.html">Mailing lists</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../support/feedback-mailing-lists.html#archives">Archives</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../support/feedback-irc.html">IRC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../support/feedback-meetings.html">Weekly meetings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview/about_cyrus.html">About</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../overview/what_is_cyrus.html#what-is-cyrus">What is Cyrus</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../overview/what_is_cyrus.html#what-is-imap">What is IMAP?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../overview/what_is_cyrus.html#imap-version-4-imap4">IMAP Version 4 (IMAP4)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../overview/what_is_cyrus.html#mime">Mime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../overview/what_is_cyrus.html#smtp">SMTP</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview/who_is_cyrus.html">Who Is Cyrus</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../overview/who_is_cyrus.html#core-contributors">Core Contributors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../overview/who_is_cyrus.html#individual-contributors-and-past-contributors">Individual contributors and past contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview/cyrus_roadmap.html">Cyrus Roadmap</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../overview/cyrus_roadmap.html#high-level-roadmap">High Level Roadmap</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview/cyrus_history.html">Cyrus History</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../overview/cyrus_bylaws.html">Cyrus Bylaws</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../overview/cyrus_bylaws.html#i-the-cyrus-governance-board">I. The Cyrus Governance Board</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../overview/cyrus_bylaws.html#ii-the-cyrus-core-developers-group">II. The Cyrus Core Developers Group</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../overview/cyrus_bylaws.html#iii-the-release-engineer">III. The Release Engineer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../overview/cyrus_bylaws.html#iv-the-cyrus-roadmap">IV. The Cyrus Roadmap</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../overview/cyrus_bylaws.html#v-development-process">V. Development Process</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../overview/cyrus_bylaws.html#vi-changes-to-the-bylaws">VI. Changes to the Bylaws</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Cyrus SASL</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="http://www.cyrusimap.org/sasl">Cyrus SASL</a></li>
+</ul>
+
+          
+        
+      </div>
+        
+<div class="buildstatus">
+    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.2: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.2"></a>
+</div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">Cyrus IMAP</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html">Docs v3.2.0-rc1</a> &raquo;</li>
+      
+          <li><a href="../../developers.html">Developers</a> &raquo;</li>
+      
+    <li>Unit Tests</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.2/docsrc/imap/developer/unit-tests.rst" class="fa fa-github"> Edit on GitHub</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <span class="target" id="imap-developer-unit-tests"></span><div class="section" id="unit-tests">
+<h1>Unit Tests<a class="headerlink" href="#unit-tests" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="table-of-contents">
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="#introduction">1. Introduction</a></li>
+<li><a class="reference external" href="#what-is-a-unit-test">2. What Is A Unit Test?</a></li>
+<li><a class="reference external" href="#running-the-tests">3. Running The Tests</a><ul>
+<li><a class="reference external" href="#setting-up-the-machine">3.1. Setting Up The Machine</a></li>
+<li><a class="reference external" href="#configure-scripts">3.2 Configure Script</a></li>
+<li><a class="reference external" href="#running-the-tests">3.3 Make</a></li>
+<li><a class="reference external" href="#using-valgrind">3.4 Using Valgrind</a></li>
+<li><a class="reference external" href="#the-tests-are-failing">3.5 The Tests Are Failing</a></li>
+<li><a class="reference external" href="#debugging-a-test">3.6 Debugging A Test</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#adding-your-own-tests">4. Adding Your Own Tests</a><ul>
+<li><a class="reference external" href="#where-to-put-your-tests">4.1 Where To Put Your Tests</a></li>
+<li><a class="reference external" href="#adding-a-new-suite">4.1 Adding A New Suite</a></li>
+<li><a class="reference external" href="#adding-a-test-to-a-suite">4.2 Adding A Test To A Suite</a></li>
+<li><a class="reference external" href="#suite-init-and-cleanup">4.3 Suite Init And Cleanup</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h2>1. Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Recently, a set of regression unit tests has been added to Cyrus. This
+document explains the purpose implementation of those unit tests, and
+gives an example of how to add more unit tests (because there are never
+enough unit tests!).</p>
+</div>
+<div class="section" id="what-is-a-unit-test">
+<h2>2. What Is A Unit Test?<a class="headerlink" href="#what-is-a-unit-test" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference external" href="http://en.wikipedia.org/wiki/Unit_test">definition on Wikipedia</a>
+sheds some light:</p>
+<blockquote>
+<div>...<strong>unit testing</strong> is a method by which individual units of
+source code are tested to determine if they are fit for use. A unit
+is the smallest testable part of an application.</div></blockquote>
+<p>In other words, unit testing is about verifying that small pieces of
+code, like individual functions, modules, or classes, work in isolation.
+It is <strong>not</strong> about testing the system as a whole.</p>
+<p>The tests implemented here are also <strong>regression tests</strong>, which in
+<a class="reference external" href="http://en.wikipedia.org/wiki/Regression_testing">Wikipedia&#8217;s words</a>
+means:</p>
+<blockquote>
+<div><strong>Regression testing</strong> is any type of software testing that seeks to
+uncover software errors after changes to the program (e.g. bugfixes
+or new functionality) have been made, by retesting the program. The
+intent of regression testing is to assure that a change, such as a
+bugfix, did not introduce new bugs.</div></blockquote>
+<p>In other words, the tests are designed to be easy to run and to work out
+fully automatically whether they have passed or failed, so that they can
+be run usefully by people who didn&#8217;t write them.</p>
+</div>
+<div class="section" id="running-the-tests">
+<h2>3. Running The Tests<a class="headerlink" href="#running-the-tests" title="Permalink to this headline">¶</a></h2>
+<p>This section takes you through the process of running Cyrus&#8217; unit tests.</p>
+<div class="section" id="setting-up-the-machine">
+<h3>3.1. Setting Up The Machine<a class="headerlink" href="#setting-up-the-machine" title="Permalink to this headline">¶</a></h3>
+<p>Cyrus&#8217; unit tests are all located in a new directory,
+<code class="docutils literal"><span class="pre">cyrus-imapd/cunit/</span></code>. They&#8217;re written in C, like the remainder of
+Cyrus, and use the <a class="reference external" href="http://cunit.sourceforge.net/">CUnit library from
+SourceForge</a>, with some home grown
+wrappers and other improvements to make our lives easier.</p>
+<p>Your first step is step is to ensure that the CUnit library (including
+the headers) is installed. Some modern operating systems already have
+CUnit, for example on Ubuntu you can just do:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">me</span><span class="nd">@ubuntu</span><span class="o">&gt;</span> <span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">libcunit1</span><span class="o">-</span><span class="n">dev</span>
+</pre></div>
+</div>
+<p>Alternately, you can download the CUnit source, build it and install it.
+It&#8217;s not a complicated or difficult library, this shouldn&#8217;t take long.
+When you&#8217;ve done, install it in <code class="docutils literal"><span class="pre">/usr/include</span></code> and <code class="docutils literal"><span class="pre">/usr/lib</span></code>.</p>
+</div>
+<div class="section" id="configure-script">
+<h3>3.2 Configure Script<a class="headerlink" href="#configure-script" title="Permalink to this headline">¶</a></h3>
+<p>Because of the dependency on the CUnit library, the tests are disabled
+by default; this means you need enable them with an option to the
+<code class="docutils literal"><span class="pre">configure</span></code> script:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">me</span><span class="nd">@mybox</span><span class="o">&gt;</span> <span class="o">./</span><span class="n">configure</span> <span class="o">--</span><span class="n">enable</span><span class="o">-</span><span class="n">unit</span><span class="o">-</span><span class="n">tests</span>
+<span class="o">...</span>
+<span class="n">checking</span> <span class="k">for</span> <span class="n">CU</span>\<span class="n">_initialize</span>\<span class="n">_registry</span> <span class="ow">in</span> <span class="o">-</span><span class="n">lcunit</span><span class="o">...</span> <span class="n">yes</span>
+<span class="n">checking</span> <span class="n">CUnit</span><span class="o">/</span><span class="n">CUnit</span><span class="o">.</span><span class="n">h</span> <span class="n">usability</span><span class="o">...</span> <span class="n">yes</span>
+<span class="n">checking</span> <span class="n">CUnit</span><span class="o">/</span><span class="n">CUnit</span><span class="o">.</span><span class="n">h</span> <span class="n">presence</span><span class="o">...</span> <span class="n">yes</span>
+<span class="n">checking</span> <span class="k">for</span> <span class="n">CUnit</span><span class="o">/</span><span class="n">CUnit</span><span class="o">.</span><span class="n">h</span><span class="o">...</span> <span class="n">yes</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="make">
+<h3>3.3 Make<a class="headerlink" href="#make" title="Permalink to this headline">¶</a></h3>
+<p>First you need to build Cyrus itself, using the traditional <code class="docutils literal"><span class="pre">all:</span></code>
+target.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">me</span><span class="nd">@mybox</span><span class="o">&gt;</span> <span class="n">make</span> <span class="nb">all</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>Then, use the new <code class="docutils literal"><span class="pre">check:</span></code> target to build and run the unit tests.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>me@mybox&gt; make check
+ cd . &amp;&amp; /bin/bash /home/me/cyrus-imapd/missing --run automake-1.11 --foreign Makefile
+ cd . &amp;&amp; /bin/bash ./config.status Makefile depfiles (a)
+config.status: creating Makefile
+config.status: executing depfiles commands
+...
+make[3]: Entering directory \`/home/me/cyrus-imapd&#39;
+make[3]: \`sieve/test&#39; is up to date.
+cunit/cunit.pl --project cunit/default.cunit --generate-wrapper cunit/mboxname.testc (b)
+gcc -DHAVE\_CONFIG\_H ... -c -o cunit/mboxname.o cunit/mboxname.testc-cunit.c
+rm -f cunit/mboxname.testc-cunit.c
+/bin/bash ./libtool --tag=CC --mode=link gcc -fPIC -g -O2 -o
+cunit/unit cunit/unit.o ... lib/libcyrus\_min.la ... (c)
+...
+Running unit tests (d)
+
+    CUnit - A Unit testing framework for C - Version 2.1-0
+    http://cunit.sourceforge.net/
+
+...
+Suite: mboxname (e)
+  Test: dir\_hash\_c ... passed
+  Test: to\_parts ... passed
+  Test: to\_userid ... passed
+  Test: to\_usermbox ... passed
+...
+--Run Summary: Type      Total     Ran  Passed  Failed (f)
+               suites       34      34     n/a       0
+               tests       323     323     323       0
+               asserts 1079745 1079745 1079745       0
+make[1]: Leaving directory `/home/me/cyrus-imapd/cunit&#39;
+</pre></div>
+</div>
+<p>Let&#8217;s take a closer look at what&#8217;s happening here.</p>
+<ol class="loweralpha simple">
+<li>The <code class="docutils literal"><span class="pre">check:</span></code> target causes automake to re-run itself. This is
+normal automake behaviour. Note that the older build system used to
+run make recursively in sub-directories, the newer automake-based
+system builds everything from the top directory.</li>
+<li>The <code class="docutils literal"><span class="pre">cunit/</span></code> directory contains a number of C source files
+(called, for reasons too complicated to explain here,
+<em>whatever</em>.testc) with test code in them. For each of those, a small
+wrapper C source file is generated and then compiled into an object
+file.</li>
+<li>Finally, all the compiled object files are linked into an
+executable, with a <code class="docutils literal"><span class="pre">main()</span></code> routine from <code class="docutils literal"><span class="pre">unit.c</span></code>, and a number
+of libraries and object files from other parts of the Cyrus tree.</li>
+<li>The resulting executable is then run.</li>
+<li>The test executable runs all the built tests one by one, telling us
+which ones passed and which ones failed as it runs them. You can
+also run it manually with the name of a test as an argument, and it
+will run only the named test.</li>
+<li>At the end, the text executable prints a summary of how many tests
+it ran and how many passed and failed. The key thing to look at here
+is the rightmost column, it should be all zero.</li>
+</ol>
+</div>
+<div class="section" id="using-valgrind">
+<h3>3.4 Using Valgrind<a class="headerlink" href="#using-valgrind" title="Permalink to this headline">¶</a></h3>
+<p>Some failure modes are subtle, and cannot be detected in the C code
+itself; this is where <a class="reference external" href="http://valgrind.org/">the Valgrind program</a>
+comes in very handy. It detects buffer overruns and memory leaks and
+various other kinds of subtle errors.</p>
+<p>To run the unit tests with Valgrind, use the new <code class="docutils literal"><span class="pre">valgrind:</span></code> target.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>me@mybox&gt; make valgrind
+...
+valgrind --tool=memcheck --leak-check=full ./unit -v (a)
+==2999== Memcheck, a memory error detector
+==2999== Copyright (C) 2002-2010, and GNU GPL&#39;d, by Julian Seward et al.
+==2999== Using Valgrind-3.6.0.SVN-Debian and LibVEX; [...]
+==2999== Command: ./unit -v
+==2999==
+...
+--Run Summary: Type      Total     Ran  Passed  Failed   (b)
+               suites        9       9     n/a       0
+               tests        51      51      50       1
+               asserts     474     474     473       1
+...
+==2999== HEAP SUMMARY:   (c)
+==2999==     in use at exit: 4,489 bytes in 134 blocks
+==2999==   total heap usage: 715 allocs, 581 frees, 352,763 bytes allocated
+==2999==
+==2999== 4 bytes in 1 blocks are definitely lost in loss record 3 of 50
+==2999==    at 0x4C2815C: malloc (vg_replace_malloc.c:236)
+==2999==    by 0x44A0CA: xmalloc (xmalloc.c:57)
+==2999==    by 0x4399D8: strconcat (util.c:631)
+==2999==    by 0x40C059: test_uncast_null (strconcat.c:51)
+==2999==    by 0x61B32A9: ??? (in /usr/lib/libcunit.so.1.0.1)
+==2999==    by 0x61B36ED: ??? (in /usr/lib/libcunit.so.1.0.1)
+==2999==    by 0x61B3827: CU_run_all_tests (in /usr/lib/libcunit.so.1.0.1)
+==2999==    by 0x4066CC: run_tests (unit.c:144)
+==2999==    by 0x406806: main (unit.c:283)
+==2999==
+...
+</pre></div>
+</div>
+<p>Here&#8217;s an explanation of what&#8217;s happening in the example.</p>
+<ol class="loweralpha simple">
+<li>The test executable is run as before, but using the <code class="docutils literal"><span class="pre">valgrind</span></code>
+program. The first thing we see is Valgrind&#8217;s banner message.</li>
+<li>The test executable proceeds as normal and eventually emits it&#8217;s run
+summary, then exits.</li>
+<li>After the test executable exits, Valgrind checks for memory leaks
+and prints both a summary of all leaks and a stack trace showing
+where each block of leaked memory was allocated.</li>
+</ol>
+<p>I&#8217;d just like to say that I love Valgrind and I think it&#8217;s immensely
+useful. I would have made running the tests under Valgrind the only
+option for the <code class="docutils literal"><span class="pre">check:</span></code> target, except that Valgrind is not available
+on all of Cyrus&#8217; supported platforms.</p>
+</div>
+<div class="section" id="the-tests-are-failing">
+<h3>3.5 The Tests Are Failing<a class="headerlink" href="#the-tests-are-failing" title="Permalink to this headline">¶</a></h3>
+<p>So you&#8217;ve noticed that some of the tests are failing. Let me make the
+guiding principle of unit testing as clear as possible: <strong>THE UNIT TESTS
+SHOULD NOT FAIL</strong>. All of the tests are designed to pass all the time,
+in everyone&#8217;s environment. The unit tests are run automatically every
+twelve hours on the Cyrus <a class="reference external" href="http://ci.cyrusimap.org/">Continuous Integration
+server</a>, and a failing test fails the whole
+build and makes people unhappy.</p>
+<p>There are a few rules which you should follow to help us all get the
+most benefit out of unit testing</p>
+<ul class="simple">
+<li>If you see a test failing, investigate it.</li>
+<li>If you can&#8217;t investigate, complain on the mailing list or raise a bug
+so that somebody else can investigate.</li>
+<li>When writing tests, write them to work in all environments and all
+combinations of <code class="docutils literal"><span class="pre">configure</span></code> script options. It&#8217;s ok to have a test
+which is empty in some circumstances; it&#8217;s not ok to have a test that
+fails.</li>
+<li>When adding code, write new tests for the new code.</li>
+<li>When modifying code, write new tests for the new behaviour.</li>
+<li>When looking at old code, also take a look at the <a class="reference external" href="http://ci.cyrusimap.org/job/cyrus-imapd-master/887/cobertura/">coverage
+report</a>
+and consider writing tests for the existing code.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="debugging-a-test">
+<h2>3.6 Debugging A Test<a class="headerlink" href="#debugging-a-test" title="Permalink to this headline">¶</a></h2>
+<p>With the new Cyrus build system, the file <code class="docutils literal"><span class="pre">cunit/unit</span></code> is no longer an
+executable, it&#8217;s a shell script which sets up some environment variables
+before running the real executable which is hidden away. This makes
+debugging a failing test somewhat challenging. The solution is:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">me</span><span class="nd">@mybox</span><span class="o">&gt;</span> <span class="p">(</span> <span class="n">cd</span> <span class="n">cunit</span> <span class="p">;</span> <span class="n">libtool</span> <span class="o">--</span><span class="n">mode</span><span class="o">=</span><span class="n">execute</span> <span class="n">gdb</span> <span class="o">--</span><span class="n">args</span> <span class="n">unit</span> <span class="o">-</span><span class="n">t</span> <span class="n">crc32</span> <span class="p">)</span>
+<span class="o">...</span>
+<span class="n">Reading</span> <span class="n">symbols</span> <span class="kn">from</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">me</span><span class="o">/</span><span class="n">cyrus</span><span class="o">-</span><span class="n">imapd</span><span class="o">/</span><span class="n">cunit</span><span class="o">/.</span><span class="n">libs</span><span class="o">/</span><span class="n">lt</span><span class="o">-</span><span class="n">unit</span><span class="o">...</span><span class="n">done</span><span class="o">.</span>
+<span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="nb">list</span> <span class="n">crc32</span><span class="o">.</span><span class="n">testc</span><span class="p">:</span><span class="mi">1</span>
+<span class="mi">1</span>       <span class="o">/*</span> <span class="n">Unit</span> <span class="n">test</span> <span class="k">for</span> <span class="n">lib</span><span class="o">/</span><span class="n">crc32</span><span class="o">.</span><span class="n">c</span> <span class="o">*/</span>
+<span class="mi">2</span>       <span class="c1">#include &quot;cunit/cyrunit.h&quot;</span>
+<span class="mi">3</span>       <span class="c1">#include &quot;crc32.h&quot;</span>
+<span class="o">...</span>
+<span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="k">break</span> <span class="n">test_map</span>
+<span class="n">Breakpoint</span> <span class="mi">1</span> <span class="n">at</span> <span class="mh">0x44a2f8</span><span class="p">:</span> <span class="n">file</span> <span class="o">./</span><span class="n">cunit</span><span class="o">/</span><span class="n">crc32</span><span class="o">.</span><span class="n">testc</span><span class="p">,</span> <span class="n">line</span> <span class="mf">11.</span>
+<span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="n">run</span>
+<span class="n">Starting</span> <span class="n">program</span><span class="p">:</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">me</span><span class="o">/</span><span class="n">cyrus</span><span class="o">-</span><span class="n">imapd</span><span class="o">/</span><span class="n">cunit</span><span class="o">/.</span><span class="n">libs</span><span class="o">/</span><span class="n">lt</span><span class="o">-</span><span class="n">unit</span> <span class="o">-</span><span class="n">t</span> <span class="o">-</span><span class="n">v</span> <span class="n">crc32</span>
+<span class="p">[</span><span class="n">Thread</span> <span class="n">debugging</span> <span class="n">using</span> <span class="n">libthread_db</span> <span class="n">enabled</span><span class="p">]</span>
+
+    <span class="n">CUnit</span> <span class="o">-</span> <span class="n">A</span> <span class="n">Unit</span> <span class="n">testing</span> <span class="n">framework</span> <span class="k">for</span> <span class="n">C</span> <span class="o">-</span> <span class="n">Version</span> <span class="mf">2.1</span><span class="o">-</span><span class="mi">0</span>
+    <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">cunit</span><span class="o">.</span><span class="n">sourceforge</span><span class="o">.</span><span class="n">net</span><span class="o">/</span>
+
+<span class="n">Suite</span><span class="p">:</span> <span class="n">crc32</span>
+  <span class="n">Test</span><span class="p">:</span> <span class="nb">map</span> <span class="o">...</span>
+<span class="n">Breakpoint</span> <span class="mi">1</span><span class="p">,</span> <span class="n">test_map</span> <span class="p">()</span> <span class="n">at</span> <span class="o">./</span><span class="n">cunit</span><span class="o">/</span><span class="n">crc32</span><span class="o">.</span><span class="n">testc</span><span class="p">:</span><span class="mi">11</span>
+<span class="mi">11</span>          <span class="n">c</span> <span class="o">=</span> <span class="n">crc32_map</span><span class="p">(</span><span class="n">TEXT</span><span class="p">,</span> <span class="n">sizeof</span><span class="p">(</span><span class="n">TEXT</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+<span class="p">(</span><span class="n">gdb</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note the <strong>-t</strong> option. This turns off test timeouts, which is very
+useful for manual debugging.</p>
+</div>
+<div class="section" id="adding-your-own-tests">
+<h2>4. Adding Your Own Tests<a class="headerlink" href="#adding-your-own-tests" title="Permalink to this headline">¶</a></h2>
+<p>Adding your own tests is quite simple. Here&#8217;s how.</p>
+</div>
+<div class="section" id="where-to-put-your-tests">
+<h2>4.1 Where To Put Your Tests<a class="headerlink" href="#where-to-put-your-tests" title="Permalink to this headline">¶</a></h2>
+<p>The unit test code in Cyrus is contained in a set of C source files in
+the <code class="docutils literal"><span class="pre">cunit</span></code> directory. For reasons too complex to go into here, these
+are named <em>whatever</em>.testc instead of the more usual <em>whatever</em>.c. If
+you look closely, you will see that each of those C source files maps to
+a &#8220;Suite&#8221; in CUnit parlance. For example, <code class="docutils literal"><span class="pre">cunit/glob.testc</span></code> is listed
+as the Suite &#8220;glob&#8221; in CUnit&#8217;s runtime output.</p>
+<p>Typically, each Suite tests a single module or a related set of
+functions; for example, <code class="docutils literal"><span class="pre">cunit/glob.testc</span></code> contains tests for the glob
+module in <code class="docutils literal"><span class="pre">lib/glob.c</span></code>.</p>
+<p>So, if you want to add a new test for a module which already has some
+existing tests, the sensible thing to do is to <a class="reference external" href="#adding-a-test-to-a-suite">add a new test to the
+existing suite</a>. Otherwise, you&#8217;ll need to
+<a class="reference external" href="#adding-a-new-suite">add a new Suite</a>.</p>
+</div>
+<div class="section" id="adding-a-new-suite">
+<h2>4.1 Adding A New Suite<a class="headerlink" href="#adding-a-new-suite" title="Permalink to this headline">¶</a></h2>
+<p>Each Suite is a single C source file in the <code class="docutils literal"><span class="pre">cunit/</span></code> directory. Your
+first step is to create a new C source file. For this example, you&#8217;ll
+create a new Suite to test the CRC32 routines which live in
+<code class="docutils literal"><span class="pre">lib/crc32.c</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">me</span><span class="nd">@mybox</span><span class="o">&gt;</span> <span class="n">vi</span> <span class="n">cunit</span><span class="o">/</span><span class="n">crc32</span><span class="o">.</span><span class="n">testc</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>The file should contain something like this.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">/*</span> <span class="n">Unit</span> <span class="n">test</span> <span class="k">for</span> <span class="n">lib</span><span class="o">/</span><span class="n">crc32</span><span class="o">.</span><span class="n">c</span> <span class="o">*/</span>
+<span class="c1">#include &quot;cunit/cyrunit.h&quot;  (a)</span>
+<span class="c1">#include &quot;crc32.h&quot;  (b)</span>
+
+<span class="n">static</span> <span class="n">void</span> <span class="n">test_map</span><span class="p">(</span><span class="n">void</span><span class="p">)</span>  <span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">static</span> <span class="n">const</span> <span class="n">char</span> <span class="n">TEXT</span><span class="p">[]</span> <span class="o">=</span> <span class="s2">&quot;lorem ipsum&quot;</span><span class="p">;</span>  <span class="p">(</span><span class="n">d</span><span class="p">)</span>
+    <span class="n">static</span> <span class="n">uint32_t</span> <span class="n">CRC32</span> <span class="o">=</span> <span class="mh">0x0</span><span class="p">;</span>
+    <span class="n">uint32_t</span> <span class="n">c</span><span class="p">;</span>  <span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="n">c</span> <span class="o">=</span> <span class="n">crc32_map</span><span class="p">(</span><span class="n">TEXT</span><span class="p">,</span> <span class="n">sizeof</span><span class="p">(</span><span class="n">TEXT</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>  <span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">CU_ASSERT_EQUAL</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">CRC32</span><span class="p">);</span>  <span class="p">(</span><span class="n">g</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Here&#8217;s an explanation of what all these bits are for.</p>
+<ol class="loweralpha simple">
+<li>You need to include the header <code class="docutils literal"><span class="pre">&quot;cunit/cyrunit.h&quot;</span></code>, which is a thin
+Cyrus wrapper around the CUnit&#8217;s library&#8217;s header,
+<code class="docutils literal"><span class="pre">&lt;CUnit/CUnit.h&gt;</span></code> with some extra conveniences.</li>
+<li>You should also include any headers you need for declarations of the
+functions which you&#8217;ll be testing. Note that the Cyrus <code class="docutils literal"><span class="pre">lib/</span></code> and
+<code class="docutils literal"><span class="pre">imap/</span></code> directories are already in the include path, so any header
+in there can be included without the directory prefix, e.g.
+<code class="docutils literal"><span class="pre">&quot;crc32.h&quot;</span></code> for <code class="docutils literal"><span class="pre">lib/crc32.h</span></code>.</li>
+<li>You need to have at least one function which looks like this: it
+takes no arguments, returns void, and is named <code class="docutils literal"><span class="pre">test_whatever</span></code>. It
+may be <code class="docutils literal"><span class="pre">static</span></code> or <code class="docutils literal"><span class="pre">extern</span></code>, but I recommend <code class="docutils literal"><span class="pre">static</span></code>.
+Functions with this signature are automatically discovered in the
+source code by the Cyrus unit test infrastructure, so all you have
+to do is write the function. Later, a CUnit test named &#8220;whatever&#8221;
+will be created automatically for your <code class="docutils literal"><span class="pre">test_whatever</span></code> function.</li>
+<li>Here&#8217;s a good place to define the test inputs and expected outputs.
+Note that for this example you have no idea of the actual correct
+output. The right thing to do there is to manually calculate the
+expected result from first principles, or to use a different piece
+of software which you believe to be working. For this example, let&#8217;s
+just use a known incorrect value and see what happens.</li>
+<li>Here&#8217;s a good place for local variables you need during the test.</li>
+<li>Call the function under test (<code class="docutils literal"><span class="pre">crc32_map()</span></code> in this example) with
+known inputs, and capture the results in a local variable <code class="docutils literal"><span class="pre">c</span></code>.</li>
+<li>Compare the actual result in <code class="docutils literal"><span class="pre">c</span></code> with the expected result in
+<code class="docutils literal"><span class="pre">CRC32</span></code>. The <code class="docutils literal"><span class="pre">CU_ASSERT_EQUAL()</span></code> macro checks that it&#8217;s two
+arguments are equal (using an integer comparison), and if they&#8217;re
+different it prints a message and records a failure. Note that
+unlike the libc <code class="docutils literal"><span class="pre">assert()</span></code> macro, control will continue even if
+the assert fails. The CUnit library provides a whole family of
+similar macros, see <a class="reference external" href="http://cunit.sourceforge.net/doc/writing_tests.html#assertions">the online CUnit
+documentation</a>
+for more details.</li>
+</ol>
+<p>Now you need to tell the Cyrus build system about your new Suite.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">me</span><span class="nd">@mybox</span><span class="o">&gt;</span> <span class="n">vi</span> <span class="n">Makefile</span><span class="o">.</span><span class="n">am</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>You need to add the filename of your new test to the definition of the
+<code class="docutils literal"><span class="pre">cunit_TESTS</span></code> variable.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">cunit_TESTS</span> <span class="o">=</span> \
+    <span class="n">cunit</span><span class="o">/</span><span class="n">aaa</span><span class="o">-</span><span class="n">db</span><span class="o">.</span><span class="n">testc</span> \
+    <span class="n">cunit</span><span class="o">/</span><span class="n">annotate</span><span class="o">.</span><span class="n">testc</span> \
+    <span class="n">cunit</span><span class="o">/</span><span class="n">backend</span><span class="o">.</span><span class="n">testc</span> \
+    <span class="n">cunit</span><span class="o">/</span><span class="n">binhex</span><span class="o">.</span><span class="n">testc</span> \
+    <span class="n">cunit</span><span class="o">/</span><span class="n">bitvector</span><span class="o">.</span><span class="n">testc</span> \
+    <span class="n">cunit</span><span class="o">/</span><span class="n">buf</span><span class="o">.</span><span class="n">testc</span> \
+    <span class="n">cunit</span><span class="o">/</span><span class="n">byteorder64</span><span class="o">.</span><span class="n">testc</span> \
+    <span class="n">cunit</span><span class="o">/</span><span class="n">charset</span><span class="o">.</span><span class="n">testc</span> \
+    <span class="n">cunit</span><span class="o">/</span><span class="n">crc32</span><span class="o">.</span><span class="n">testc</span> \
+    <span class="n">cunit</span><span class="o">/</span><span class="n">dlist</span><span class="o">.</span><span class="n">testc</span> \
+    <span class="n">cunit</span><span class="o">/</span><span class="n">duplicate</span><span class="o">.</span><span class="n">testc</span> \
+</pre></div>
+</div>
+<p>At this point you should be able to just rebuild and rerun using <strong>make
+check</strong>. You can also just rebuild without rerunning by using the
+command <strong>make cunit/unit</strong>.</p>
+<p>Note that sometimes this doesn&#8217;t quite work right, and you may be able
+to work around this problem using the command <strong>rm
+cunit/default.cunit</strong>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">me</span><span class="nd">@mybox</span><span class="o">&gt;</span> <span class="n">make</span> <span class="n">check</span>
+<span class="o">...</span>
+<span class="o">../</span><span class="n">cunit</span><span class="o">/</span><span class="n">cunit</span><span class="o">.</span><span class="n">pl</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">--</span><span class="n">add</span><span class="o">-</span><span class="n">sources</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="n">crc32</span><span class="o">.</span><span class="n">testc</span>
+<span class="o">...</span>
+<span class="o">../</span><span class="n">cunit</span><span class="o">/</span><span class="n">cunit</span><span class="o">.</span><span class="n">pl</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">--</span><span class="n">generate</span><span class="o">-</span><span class="n">wrapper</span> <span class="n">crc32</span><span class="o">.</span><span class="n">testc</span>
+<span class="n">gcc</span> <span class="o">-</span><span class="n">c</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">-</span><span class="n">g</span> <span class="o">-</span><span class="n">O2</span> <span class="o">.</span><span class="n">cunit</span><span class="o">-</span><span class="n">crc32</span><span class="o">.</span><span class="n">c</span>
+<span class="n">gcc</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">-</span><span class="n">o</span> <span class="n">unit</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">.</span><span class="n">cunit</span><span class="o">-</span><span class="n">crc32</span><span class="o">.</span><span class="n">o</span> <span class="o">...</span>
+<span class="n">Running</span> <span class="n">unit</span> <span class="n">tests</span>
+
+    <span class="n">CUnit</span> <span class="o">-</span> <span class="n">A</span> <span class="n">Unit</span> <span class="n">testing</span> <span class="n">framework</span> <span class="k">for</span> <span class="n">C</span> <span class="o">-</span> <span class="n">Version</span> <span class="mf">2.1</span><span class="o">-</span><span class="mi">0</span>
+    <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">cunit</span><span class="o">.</span><span class="n">sourceforge</span><span class="o">.</span><span class="n">net</span><span class="o">/</span>
+
+<span class="o">...</span>
+<span class="n">Suite</span><span class="p">:</span> <span class="n">crc32</span>
+  <span class="n">Test</span><span class="p">:</span> <span class="nb">map</span> <span class="o">...</span> <span class="n">FAILED</span>
+    <span class="mf">1.</span> <span class="n">crc32</span><span class="o">.</span><span class="n">testc</span><span class="p">:</span><span class="mi">12</span>  <span class="o">-</span> <span class="n">CU_ASSERT_EQUAL</span><span class="p">(</span><span class="n">c</span><span class="o">=</span><span class="mi">1926722702</span><span class="p">,</span><span class="n">CRC32</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note how the test failure told us which in source file and at what line
+number the failure occurred, and what the actual and expected values
+were. Let&#8217;s go and fix that up now.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">static</span> <span class="n">const</span> <span class="n">char</span> <span class="n">TEXT</span><span class="p">[]</span> <span class="o">=</span> <span class="s2">&quot;lorem ipsum&quot;</span><span class="p">;</span>
+<span class="n">static</span> <span class="n">uint32</span>\<span class="n">_t</span> <span class="n">CRC32</span> <span class="o">=</span> <span class="mh">0x72d7748e</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Re-run <code class="docutils literal"><span class="pre">make</span> <span class="pre">check</span></code> and you&#8217;ll see your test being rebuilt and rerun,
+and this time passing.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">me</span><span class="nd">@mybox</span><span class="o">&gt;</span> <span class="n">make</span> <span class="n">check</span>
+<span class="o">...</span>
+<span class="o">../</span><span class="n">cunit</span><span class="o">/</span><span class="n">cunit</span><span class="o">.</span><span class="n">pl</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">--</span><span class="n">generate</span><span class="o">-</span><span class="n">wrapper</span> <span class="n">crc32</span><span class="o">.</span><span class="n">testc</span>
+<span class="n">gcc</span> <span class="o">-</span><span class="n">c</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">-</span><span class="n">g</span> <span class="o">-</span><span class="n">O2</span> <span class="o">.</span><span class="n">cunit</span><span class="o">-</span><span class="n">crc32</span><span class="o">.</span><span class="n">c</span>
+<span class="n">gcc</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">-</span><span class="n">o</span> <span class="n">unit</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">.</span><span class="n">cunit</span><span class="o">-</span><span class="n">crc32</span><span class="o">.</span><span class="n">o</span>
+<span class="o">...</span>
+<span class="n">Running</span> <span class="n">unit</span> <span class="n">tests</span>
+
+    <span class="n">CUnit</span> <span class="o">-</span> <span class="n">A</span> <span class="n">Unit</span> <span class="n">testing</span> <span class="n">framework</span> <span class="k">for</span> <span class="n">C</span> <span class="o">-</span> <span class="n">Version</span> <span class="mf">2.1</span><span class="o">-</span><span class="mi">0</span>
+    <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">cunit</span><span class="o">.</span><span class="n">sourceforge</span><span class="o">.</span><span class="n">net</span><span class="o">/</span>
+
+<span class="o">...</span>
+<span class="n">Suite</span><span class="p">:</span> <span class="n">crc32</span>
+  <span class="n">Test</span><span class="p">:</span> <span class="nb">map</span> <span class="o">...</span> <span class="n">passed</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="adding-a-test-to-a-suite">
+<h2>4.2 Adding A Test To A Suite<a class="headerlink" href="#adding-a-test-to-a-suite" title="Permalink to this headline">¶</a></h2>
+<p>Adding a new test to an existing test is easy: all you have to do is add
+a new function to an existing C source file in the <code class="docutils literal"><span class="pre">cunit/</span></code> directory.
+As an example, let&#8217;s add a test for the <code class="docutils literal"><span class="pre">crc_iovec()</span></code> function.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">me</span><span class="nd">@mybox</span><span class="o">&gt;</span> <span class="n">vi</span> <span class="n">cunit</span><span class="o">/</span><span class="n">crc32</span><span class="o">.</span><span class="n">testc</span>
+<span class="o">...</span>
+
+<span class="n">static</span> <span class="n">void</span> <span class="n">test_iovec</span><span class="p">(</span><span class="n">void</span><span class="p">)</span>  <span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">static</span> <span class="n">const</span> <span class="n">char</span> <span class="n">TEXT1</span><span class="p">[]</span> <span class="o">=</span> <span class="s2">&quot;lorem&quot;</span><span class="p">;</span>  <span class="p">(</span><span class="n">b</span><span class="p">)</span>
+    <span class="n">static</span> <span class="n">const</span> <span class="n">char</span> <span class="n">TEXT2</span><span class="p">[]</span> <span class="o">=</span> <span class="s2">&quot; ipsum&quot;</span><span class="p">;</span>
+    <span class="n">static</span> <span class="n">uint32_t</span> <span class="n">CRC32</span> <span class="o">=</span> <span class="mh">0x72d7748e</span><span class="p">;</span>
+    <span class="n">uint32_t</span> <span class="n">c</span><span class="p">;</span>  <span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="n">struct</span> <span class="n">iovec</span> <span class="n">iov</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+
+    <span class="n">memset</span><span class="p">(</span><span class="n">iov</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sizeof</span><span class="p">(</span><span class="n">iov</span><span class="p">));</span>  <span class="p">(</span><span class="n">d</span><span class="p">)</span>
+    <span class="n">iov</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">iov_base</span> <span class="o">=</span> <span class="n">TEXT1</span><span class="p">;</span>
+    <span class="n">iov</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">iov_len</span> <span class="o">=</span> <span class="n">sizeof</span><span class="p">(</span><span class="n">TEXT1</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="n">iov</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">iov_base</span> <span class="o">=</span> <span class="n">TEXT2</span><span class="p">;</span>
+    <span class="n">iov</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">iov_len</span> <span class="o">=</span> <span class="n">sizeof</span><span class="p">(</span><span class="n">TEXT2</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+
+    <span class="n">c</span> <span class="o">=</span> <span class="n">crc32_iovec</span><span class="p">(</span><span class="n">iov</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>  <span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="n">CU_ASSERT_EQUAL</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">CRC32</span><span class="p">);</span>  <span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Here&#8217;s an explanation of what all these bits are for.</p>
+<ol class="loweralpha simple">
+<li>Your new test function should look like this: it takes no arguments,
+returns void, and is named <code class="docutils literal"><span class="pre">test_whatever</span></code>. It may be <code class="docutils literal"><span class="pre">static</span></code>
+or <code class="docutils literal"><span class="pre">extern</span></code>, but I recommend <code class="docutils literal"><span class="pre">static</span></code>. Functions with this
+signature are automatically discovered in the source code by the
+Cyrus unit test infrastructure, so all you have to do is write the
+function. Later, a CUnit test named &#8220;whatever&#8221; will be created
+automatically for your <code class="docutils literal"><span class="pre">test_whatever</span></code> function. Note that the
+opening curly brace must be on the next line or the unit test
+infrastructure will not find the function.</li>
+<li>Here&#8217;s a good place to define the test inputs and expected outputs.</li>
+<li>Here&#8217;s a good place for local variables you need during the test.</li>
+<li>Here you set up the input conditions for the function under test.</li>
+<li>Call the function under test with your known inputs, and capture the
+results in a local variable, here <code class="docutils literal"><span class="pre">c</span></code>.</li>
+<li>Compare the actual result in <code class="docutils literal"><span class="pre">c</span></code> with the expected result in
+<code class="docutils literal"><span class="pre">CRC32</span></code>. The <code class="docutils literal"><span class="pre">CU_ASSERT_EQUAL()</span></code> macro checks that it&#8217;s two
+arguments are equal (using an integer comparison), and if they&#8217;re
+different it prints a message and records a failure. Note that
+unlike the libc <code class="docutils literal"><span class="pre">assert()</span></code> macro, control will continue even if
+the assert fails. The CUnit library provides a whole family of
+similar macros, see <a class="reference external" href="http://cunit.sourceforge.net/doc/writing_tests.html#assertions">the online CUnit
+documentation</a>
+for more details.</li>
+</ol>
+<p>Now run <code class="docutils literal"><span class="pre">make</span> <span class="pre">check</span></code> and you&#8217;ll see your test being built and run.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">me</span><span class="nd">@mybox</span><span class="o">&gt;</span> <span class="n">make</span> <span class="n">check</span>
+<span class="o">...</span>
+<span class="o">../</span><span class="n">cunit</span><span class="o">/</span><span class="n">cunit</span><span class="o">.</span><span class="n">pl</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">--</span><span class="n">generate</span><span class="o">-</span><span class="n">wrapper</span> <span class="n">crc32</span><span class="o">.</span><span class="n">testc</span>
+<span class="n">gcc</span> <span class="o">-</span><span class="n">c</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">-</span><span class="n">g</span> <span class="o">-</span><span class="n">O2</span> <span class="o">.</span><span class="n">cunit</span><span class="o">-</span><span class="n">crc32</span><span class="o">.</span><span class="n">c</span>
+<span class="n">gcc</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">-</span><span class="n">o</span> <span class="n">unit</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">.</span><span class="n">cunit</span><span class="o">-</span><span class="n">crc32</span><span class="o">.</span><span class="n">o</span>
+<span class="o">...</span>
+<span class="n">Running</span> <span class="n">unit</span> <span class="n">tests</span>
+
+
+     <span class="n">CUnit</span> <span class="o">-</span> <span class="n">A</span> <span class="n">Unit</span> <span class="n">testing</span> <span class="n">framework</span> <span class="k">for</span> <span class="n">C</span> <span class="o">-</span> <span class="n">Version</span> <span class="mf">2.1</span><span class="o">-</span><span class="mi">0</span>
+     <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">cunit</span><span class="o">.</span><span class="n">sourceforge</span><span class="o">.</span><span class="n">net</span><span class="o">/</span>
+
+<span class="o">...</span>
+<span class="n">Suite</span><span class="p">:</span> <span class="n">crc32</span>
+  <span class="n">Test</span><span class="p">:</span> <span class="nb">map</span> <span class="o">...</span> <span class="n">passed</span>
+  <span class="n">Test</span><span class="p">:</span> <span class="n">iovec</span> <span class="o">...</span> <span class="n">passed</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="suite-setup-and-teardown">
+<h2>4.3 Suite Setup And Teardown<a class="headerlink" href="#suite-setup-and-teardown" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes the behaviour of the functions under test depend on external
+influences such as environment variables, global variables, or the
+presence of certain files.</p>
+<p>These kinds of functions need special treatment to ensure that their
+behaviour is locked down during the running of your tests. Otherwise,
+all sorts of strange behaviour may confuse the results of the tests. For
+example, a test might succeed the first time it&#8217;s run in a given
+directory and fail the next time. Or a test might succeed when run by
+the author of the test but fail when run by another user.</p>
+<p>CUnit provides a special arrangement which helps you in such cases: the
+suite initialisation and cleanup functions. These are two functions that
+you write and which live in the suite source. They are called from CUnit
+respectively before any of the tests in the suite is run, and after all
+tests from that suite are run.</p>
+<p>Here&#8217;s how to use them. The suite setup function should set up any
+global state that the functions under test rely on, in such a way that
+their state is predictable and always the same no matter who runs the
+test or when or how many times. Similarly the suite teardown function
+should clean up any state which might possibly interfere with other test
+suites. Note that some suites will need an setup function but not
+necessarily a teardown function.</p>
+<p>Adding these functions is very easy: you just write functions of the
+appropriate signature (names, arguments and return type) and the Cyrus
+unit test infrastructure will automatically discover them and arrange
+for them to be called. The functions should look like (actual example
+taken from <code class="docutils literal"><span class="pre">cunit/mboxname.testc</span></code>) this:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">static</span> <span class="n">enum</span> <span class="n">enum_value</span> <span class="n">old_config_virtdomains</span><span class="p">;</span>
+
+<span class="n">static</span> <span class="nb">int</span> <span class="n">set_up</span><span class="p">(</span><span class="n">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">old_config_virtdomains</span> <span class="o">=</span> <span class="n">config_virtdomains</span><span class="p">;</span>
+    <span class="n">config_virtdomains</span> <span class="o">=</span> <span class="n">IMAP_ENUM_VIRTDOMAINS_ON</span><span class="p">;</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">static</span> <span class="nb">int</span> <span class="n">tear_down</span><span class="p">(</span><span class="n">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">config_virtdomains</span> <span class="o">=</span> <span class="n">old_config_virtdomains</span><span class="p">;</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The functions should return 0 on success, and non-zero on error. They
+must not call and <code class="docutils literal"><span class="pre">CU_*</span></code> functions or macros.</p>
+<p>Good luck and good testing!</p>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../../support.html" class="btn btn-neutral float-right" title="Support/Community" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="guidance/var_directory_structure.html" class="btn btn-neutral" title="Cyrus IMAP Server: var directory structure" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jul 15 2018
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'3.2.0-rc1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+<!--      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      }); -->
+  </script>
+  
+ 
+
+
+
+</body>
+</html>

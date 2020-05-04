@@ -169,20 +169,20 @@ static int scriptname_valid(const struct buf *name)
           return TIMSIEVE_FAIL;
   }
 
-  return TIMSIEVE_OK;
+  return lup < 1013 ? TIMSIEVE_OK : TIMSIEVE_FAIL;
 }
 
 int capabilities(struct protstream *conn, sasl_conn_t *saslconn,
                  int starttls_done, int authenticated, sasl_ssf_t sasl_ssf)
 {
     const char *sasllist;
-    int mechcount;
+    int mechcount, i;
 
     /* implementation */
     if (config_serverinfo == IMAP_ENUM_SERVERINFO_ON) {
         prot_printf(conn,
                     "\"IMPLEMENTATION\" \"Cyrus timsieved%s %s\"\r\n",
-                    config_mupdate_server ? " (Murder)" : "", cyrus_version());
+                    config_mupdate_server ? " (Murder)" : "", CYRUS_VERSION);
     } else if (config_serverinfo == IMAP_ENUM_SERVERINFO_MIN) {
         prot_printf(conn,
                     "\"IMPLEMENTATION\" \"Cyrus timsieved%s\"\r\n",
@@ -200,11 +200,16 @@ int capabilities(struct protstream *conn, sasl_conn_t *saslconn,
                       &sasllist,
                       NULL, &mechcount) == SASL_OK/* && mechcount > 0*/)
     {
-      prot_printf(conn,"%s",sasllist);
+        prot_printf(conn,"%s",sasllist);
     }
 
     /* Sieve capabilities */
-    prot_printf(conn,"\"SIEVE\" \"%s\"\r\n",sieve_listextensions(interp));
+    const strarray_t *extensions = sieve_listextensions(interp);
+    for (i = 0; i < strarray_size(extensions); i += 2) {
+        /* capability/value pairs */
+        prot_printf(conn,"\"%s\" \"%s\"\r\n",
+                    strarray_nth(extensions, i), strarray_nth(extensions, i+1));
+    }
 
     if (tls_enabled() && !starttls_done && !authenticated) {
         prot_puts(conn, "\"STARTTLS\"\r\n");
@@ -329,7 +334,7 @@ int putscript(struct protstream *conn, const struct buf *name,
   char path[1024], p2[1024];
   char bc_path[1024], bc_p2[1024];
   int maxscripts;
-  sieve_script_t *s;
+  sieve_script_t *s = NULL;
 
   result = scriptname_valid(name);
   if (result!=TIMSIEVE_OK)
@@ -399,6 +404,7 @@ int putscript(struct protstream *conn, const struct buf *name,
       } else {
           prot_printf(conn, "NO \"parse failed\"\r\n");
       }
+      sieve_script_free(&s);
       buf_free(&errors);
       fclose(stream);
       unlink(path);
@@ -412,7 +418,7 @@ int putscript(struct protstream *conn, const struct buf *name,
 
   if (!verify_only) {
       int fd;
-      bytecode_info_t *bc;
+      bytecode_info_t *bc = NULL;
 
       /* Now, generate the bytecode */
       if(sieve_generate_bytecode(&bc, s) == -1) {
@@ -743,7 +749,7 @@ int cmd_havespace(struct protstream *conn, const struct buf *sieve_name, unsigne
 {
     int result;
     int maxscripts;
-    unsigned long maxscriptsize;
+    extern unsigned long maxscriptsize;
 
     result = scriptname_valid(sieve_name);
     if (result!=TIMSIEVE_OK)
@@ -753,9 +759,6 @@ int cmd_havespace(struct protstream *conn, const struct buf *sieve_name, unsigne
     }
 
     /* see if the size of the script is too big */
-    maxscriptsize = config_getint(IMAPOPT_SIEVE_MAXSCRIPTSIZE);
-    maxscriptsize *= 1024;
-
     if (num > maxscriptsize)
     {
         prot_printf(conn,

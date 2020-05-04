@@ -36,6 +36,8 @@ Download
 
   * Supported Product Series
 
+    * Series 3.2
+
     * Series 3.0
 
     * Series 2.5
@@ -49,6 +51,8 @@ Download
     * Series 2: 2.0 - 2.3
 
 * Notes for Packagers
+
+  * Binary naming
 
   * Sample configuration files
 

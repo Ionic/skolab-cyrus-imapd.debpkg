@@ -77,6 +77,7 @@ Developers only
 
     Configure option: ``--with-perl``"
     `perl(Pod::POM::View::Restructured)`_,,,, "Perl library to generate man pages.  This has to be available to the system-wide perl interpreter, found by ``which``:  ``./configure --with-perl`` is not honoured."
+    `python(GitPython)`_,,,, "Python library needed for building the documentation"
     `python(Sphinx)`_,,,, "Python library needed for building the documentation"
     `valgrind`_, valgrind, valgrind, "no", "Performance and memory testing."
     `xxd`_,,,, "For rebuilding the _js.h files, for CalDAV and CardDAV support."
@@ -105,32 +106,23 @@ Alternate database formats
     :header: "Package", "Debian", "RedHat",  "Required for ``make check``?", "Notes"
     :widths: 20,15,15,5,45
 
-    `lmdb`_, lmdb-dev, lmdb, "no", "Lightning Memory-Mapped Database Manager (LMDB) backend for Cyrus IMAP
-    databases.     LMDB requires database environments to be set to a (user-configurable)
-    maximum size. The Cyrus backend uses 512MB as default size. Cyrus
-    installations may override this by setting the environment variable
-    CYRUSDB_LMDB_MAXSIZE. The value of this variable must be an integer,
-    optionally followed (without space) by 'mb' or 'gb' to define the
-    maximum size in bytes, megabytes or gigabytes. The size should be a
-    multiple of the OS page size. "
     `mysql`_ or `mariadb`_, libmysqlclient-dev or libmariadb-dev, mysql-devel or mariadb-devel, "no", "MariaDB or MySQL development headers, to allow Cyrus IMAP to use
     it as the backend for its databases.
 
     Configure option: ``--with-mysql``, ``--with-mysql-incdir``, ``--with-mysql-libdir``"
     `postgresql`_, postgresql-dev, postgresql-devel, "no"
 
-CalDAV and/or CardDAV
-#####################
+CalDAV, CardDAV, or JMAP
+########################
 
 .. csv-table::
     :header: "Package", "Debian", "RedHat",  "Required for ``make check``?", "Notes"
     :widths: 20,15,15,5,45
 
-    `libical`_, libical-dev, libical-devel, "no", "libical >= 0.48 required for scheduling support.
-    **Note:** Linux distributions Enterprise Linux 6 and Debian Squeeze are
-    known to ship outdated **libical** packages versions 0.43 and
-    0.44 respectively. The platforms will not support scheduling."
-    `libxml`_, libxml2-dev, libxml2-devel, "", "no"
+    `libchardet`_, libchardet-dev, libchardet-devel, "no", ""
+    `libical`_, libical-dev, libical-devel, "no", "version 3.0.0 or higher"
+    `libxml`_, libxml2-dev, libxml2-devel, "no", ""
+    `shapelib`_, shapelib, "", "no", "version 1.3.0 or higher"
 
 Other
 #####
@@ -152,8 +144,10 @@ Other
     `transfig`_, transfig, xx, "no", "also known as fig2dev"
     `pcre`_,,,, "PCRE 1 (or 8) - for regular expression matching"
     `perl(Term::ReadLine)`_,,,, "Perl library needed by cyradm"
+    `libsrs2`_,,,, "Sender Rewriting Scheme for lmtp, used on Sieve redirect "
     `zlib`_, zlib1g-dev, zlib-devel, "no", "Compression support for httpd"
     `libbrotli`_,,,, "Brotli compression support for httpd"
+    `wslay`_,,,, "WebSockets support in httpd"
     `nghttp2`_, libnghttp2-dev, libnghttp2-devel, "no", "HTTP/2 support for httpd"
 
 .. _ClamAV: https://www.clamav.net/
@@ -161,9 +155,9 @@ Other
 .. _Cyrus SASL Plain: :ref:`Cyrus SASL <cyrussasl:sasl-index>`
 .. _Cyrus SASL MD5: :ref:`Cyrus SASL <cyrussasl:sasl-index>`
 .. _sasl binaries: :ref:`Cyrus SASL <cyrussasl:sasl-index>`
-.. _lmdb: http://lmdb.tech/
 .. _Kerberos: http://web.mit.edu/kerberos/www/
 .. _libbrotli: https://github.com/google/brotli
+.. _libchardet: https://github.com/Joungkyun/libchardet
 .. _libical: https://github.com/libical/libical/
 .. _libxml: http://xmlsoft.org/
 .. _mysql: http://www.mysql.com
@@ -177,10 +171,14 @@ Other
 .. _perl(Pod::POM::View::Restructured): https://metacpan.org/pod/Pod::POM::View::Restructured
 .. _perl-devel: http://www.perl.org/
 .. _postgresql: http://www.postgresql.org/
+.. _python(GitPython): https://github.com/gitpython-developers/GitPython
 .. _python(Sphinx): https://www.sphinx-doc.org/
+.. _shapelib: http://shapelib.maptools.org
+.. _libsrs2: https://www.libsrs2.org/
 .. _tcp_wrappers: ftp://ftp.porcupine.org/pub/security/index.html
 .. _transfig: http://www.xfig.org/
 .. _valgrind: http://www.valgrind.org/
+.. _wslay: https://tatsuhiro-t.github.io/wslay/
 .. _zlib: http://zlib.net/
 .. _xxd: https://github.com/ConorOG/xxd/
 
@@ -197,7 +195,8 @@ Optionally install dependencies for :ref:`building the docs <contribute-docs>`.
 Compile Cyrus
 =============
 
-There are additional :ref:`compile and installation steps<imapinstall-xapian>` if you are using Xapian for searching.
+There are additional :ref:`compile and installation steps<imapinstall-xapian>` if you are using Xapian for searching,
+or if you are :ref:`using jmap <developer-jmap>`.
 
 Default build: mail only
 ------------------------
@@ -231,10 +230,10 @@ via configure.
 
 Sieve is enabled by default.
 
-CalDAV and CardDAV
-##################
+CalDAV, CardDAV, JMAP
+#####################
 
-    ``./configure --enable-http --enable-calalarmd``
+    ``./configure --enable-http --enable-calalarmd --enable-jmap``
 
 Murder
 ######

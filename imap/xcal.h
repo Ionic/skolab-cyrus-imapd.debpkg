@@ -50,11 +50,6 @@
 
 #include "util.h"
 
-#ifndef HAVE_VPOLL
-/* Allow us to compile without #ifdef HAVE_VPOLL everywhere */
-#define ICAL_POLLPROPERTIES_PROPERTY  ICAL_NO_PROPERTY
-#endif
-
 #define XML_NS_ICALENDAR        "urn:ietf:params:xml:ns:icalendar-2.0"
 
 extern const char *icalproperty_value_kind_as_string(icalproperty *prop);
@@ -74,7 +69,9 @@ icalrecur_add_rule(struct icalrecurrencetype **rt,
 
 extern struct buf *icalcomponent_as_xcal_string(icalcomponent* comp);
 extern icalcomponent *xcal_string_as_icalcomponent(const struct buf *buf);
-extern const char *begin_xcal(struct buf *buf);
+extern const char *begin_xcal(struct buf *buf, struct mailbox *mailbox,
+                              const char *prodid, const char *name,
+                              const char *desc, const char *color);
 extern void end_xcal(struct buf *buf);
 
 #endif /* XCAL_H */

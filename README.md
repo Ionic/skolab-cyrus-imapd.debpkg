@@ -1,7 +1,8 @@
-[![Build Status:master](https://api.travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=master)](https://travis-ci.org/cyrusimap/cyrus-imapd)
-[![Build Status:3.x](https://api.travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.0)](https://travis-ci.org/cyrusimap/cyrus-imapd)
+<sup>master: </sup>[![Build Status:master](https://api.travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=master)](https://travis-ci.org/cyrusimap/cyrus-imapd)
+<sup> stable(3.0): </sup>[![Build Status:3.x](https://api.travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.0)](https://travis-ci.org/cyrusimap/cyrus-imapd)
 [![IRC](https://img.shields.io/badge/IRC-%23cyrus-1e72ff.svg?style=flat)](http://webchat.freenode.net/?channels=cyrus)
 
+-----
 
 Welcome
 =======
@@ -44,7 +45,7 @@ How to get Cyrus
 
 Cyrus comes in three flavours: 
 
-1. Our release source tarballs from ftp://ftp.cyrusimap.org/cyrus-imapd/
+1. Our release source tarballs from https://github.com/cyrusimap/cyrus-imapd/releases
     * Recommended for most users.
     * These are packaged by the Cyrus team.
     * The docs are pre-built for you in doc/html.

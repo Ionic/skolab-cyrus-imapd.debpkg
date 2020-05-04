@@ -211,8 +211,8 @@ Example Usage
  
  Note that in the above example, the \ ``unixhierarchysep``\  setting in
  imapd.conf is set to \ ``0``\ . When using the UNIX
- hierarchy seperator, the \ ``/``\  (forward slash) character would be
- used as the hierarchy seperator, and the example would look as
+ hierarchy separator, the \ ``/``\  (forward slash) character would be
+ used as the hierarchy separator, and the example would look as
  follows:
  
 
@@ -318,6 +318,19 @@ Show help for \ ``command``\  or all commands.
 
 aliases: \ ``?``\ 
 
+.. _imap-reference-manpages-systemcommands-cyradm-getmetadata:
+
+
+getmetadata
+===========
+
+
+\ **getmetadata**\  [\ *mailbox*\ ]
+
+Display mailbox/server metadata
+
+aliases: \ ``getmd``\ 
+
 .. _imap-reference-manpages-systemcommands-cyradm-info:
 
 
@@ -327,7 +340,7 @@ info
 
 \ **info**\  [\ *mailbox*\ ]
 
-Display the mailbox/server metadata.
+Display the mailbox/server annotations.
 
 .. _imap-reference-manpages-systemcommands-cyradm-listaclmailbox:
 
@@ -647,6 +660,46 @@ The currently supported attributes are:
  them (unless overridden by a mailbox annotation).
  
 
+
+.. _imap-reference-manpages-systemcommands-cyradm-setmetadata:
+
+
+setmetadata
+===========
+
+
+\ **setmetadata**\  [--private] mailbox [\ *annotation*\ ] \ *value*\ 
+
+Set metadata on mailbox, where \ *annotation*\  is one of
+[comment|expire|news2mail|pop3showafter|sharedseen|sieve|specialuse|
+squat|/<explicit annotation>].
+
+Note that \ *value*\  with a leading backslash must be escaped with an
+additional backslash.  For example:
+
+
+
+.. code-block:: perl
+
+   setmetadata --private Spam specialuse "\\Junk"
+
+
+Note, too, that "private" annotations are private to the user currently
+authenticated as, not necessarily the owner of the mailbox.  To set
+annotations for another user you must authorize as that user.
+
+In addition to the use of optional flag \ **--private**\ , one may use a more
+explicit syntax, prefixing the annotation with '/shared/' or '/private/'
+as in this example:
+
+
+
+.. code-block:: perl
+
+   setmetadata Spam /private/specialuse "\\Junk"
+
+
+aliases: \ ``setmd``\ 
 
 .. _imap-reference-manpages-systemcommands-cyradm-setquota:
 

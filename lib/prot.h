@@ -166,6 +166,30 @@ extern int prot_getc(struct protstream *s);
 extern int prot_ungetc(int c, struct protstream *s);
 extern int prot_putc(int c, struct protstream *s);
 
+#define prot_peek(s) (prot_ungetc(prot_getc(s), s))
+
+/* prot_lookahead checks whether the next several buffered bytes match
+ * the string str (of length len).
+ *
+ * If there are enough buffered bytes available, and they match, then
+ * sep will be set to the first byte following str, and the return
+ * value will be equal to len+1.
+ *
+ * If there are not enough buffered bytes available, but those that
+ * are there match, then sep will remain unset, and the return value
+ * will be within 0 < x <= len, depending on how many matching bytes
+ * were available.
+ *
+ * If there is no match, sep will remain unset and the return value
+ * will be zero, regardless of how many bytes were available.
+ *
+ * The internal buffer will ONLY be filled if it is currently empty.
+ */
+extern size_t prot_lookahead(struct protstream *s,
+                             const char *str,
+                             size_t len,
+                             int *sep);
+
 /* The following two macros control the blocking nature of
  * the protstream.
  *
@@ -223,6 +247,9 @@ int prot_setisclient(struct protstream *s, int val);
 #ifdef HAVE_ZLIB
 /* Enable (de)compression for a given protstream */
 int prot_setcompress(struct protstream *s);
+
+/* Disable (de)compression for a given protstream */
+void prot_unsetcompress(struct protstream *s);
 #endif /* HAVE_ZLIB */
 
 /* Tell the protstream that the type of data is about to change. */
@@ -235,7 +262,7 @@ extern int prot_settimeout(struct protstream *s, int timeout);
 extern int prot_resettimeout(struct protstream *s);
 
 /* Connect two streams so that when you block on reading s, the layer
- * will automaticly flush flushs */
+ * will automatically flush flushs */
 extern int prot_setflushonread(struct protstream *s,
                                struct protstream *flushs);
 
@@ -262,13 +289,10 @@ extern int prot_flush(struct protstream *s);
 extern int prot_write(struct protstream *s, const char *buf, unsigned len);
 extern int prot_putbuf(struct protstream *s, struct buf *buf);
 extern int prot_puts(struct protstream *s, const char *str);
-extern int prot_vprintf(struct protstream *, const char *, va_list);
+extern int prot_vprintf(struct protstream *, const char *, va_list)
+    __attribute__((format(printf, 2, 0)));
 extern int prot_printf(struct protstream *, const char *, ...)
-#ifdef __GNUC__
-    __attribute__ ((format (printf, 2, 3)));
-#else
-    ;
-#endif
+    __attribute__((format(printf, 2, 3)));
 extern int prot_printliteral(struct protstream *out, const char *s,
                              size_t size);
 extern int prot_printstring(struct protstream *out, const char *s);

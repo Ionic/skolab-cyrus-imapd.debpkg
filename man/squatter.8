@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "SQUATTER" "8" "December 16, 2019" "3.0.13" "Cyrus IMAP"
+.TH "SQUATTER" "8" "April 20, 2020" "3.2.0" "Cyrus IMAP"
 .SH NAME
 squatter \- Cyrus IMAP documentation
 .
@@ -39,13 +39,12 @@ general:
 \fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [\fBmode\fP] [\fBoptions\fP] [\fBsource\fP]
 
 i.e.:
-\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-v\fP ] [ \fB\-a\fP ] [ \fB\-S\fP \fIseconds\fP ]
-\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-v\fP ] [ \fB\-a\fP ] [ \fB\-i\fP ] [ \fB\-N\fP \fIname\fP ] [ \fB\-S\fP \fIseconds\fP ] [ \fB\-r\fP ]  \fImailbox\fP\&...
-\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-v\fP ] [ \fB\-a\fP ] [ \fB\-i\fP ] [ \fB\-N\fP \fIname\fP ] [ \fB\-S\fP \fIseconds\fP ] [ \fB\-r\fP ]  \fB\-u\fP \fIuser\fP\&...
-\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-v\fP ] [ \fB\-a\fP ] \fB\-R\fP [ \fB\-n\fP \fIchannel\fP ] [ \fB\-d\fP ] [ \fB\-S\fP \fIseconds\fP ]
-\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-v\fP ] [ \fB\-a\fP ] \fB\-f\fP \fIsynclogfile\fP [ \fB\-S\fP \fIseconds\fP ]
-\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-v\fP ] \fB\-I\fP \fIfile\fP
-\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-v\fP ] \fB\-t\fP \fIsrctier(s)\fP\&... \fB\-z\fP \fIdesttier\fP [ \fB\-F\fP ] [ \fB\-T\fP \fIdir\fP ] [ \fB\-X\fP ] [ \fB\-o\fP ]  [ \fB\-S\fP \fIseconds\fP ] [ \fB\-u\fP \fIuser\fP\&... ]
+\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-v\fP ] [ \fB\-a\fP ] [ \fB\-S\fP \fIseconds\fP ] [ \fB\-Z\fP ]
+\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-v\fP ] [ \fB\-a\fP ] [ \fB\-i\fP ] [ \fB\-N\fP \fIname\fP ] [ \fB\-S\fP \fIseconds\fP ] [ \fB\-r\fP ] [ \fB\-Z\fP ] \fImailbox\fP\&...
+\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-v\fP ] [ \fB\-a\fP ] [ \fB\-i\fP ] [ \fB\-N\fP \fIname\fP ] [ \fB\-S\fP \fIseconds\fP ] [ \fB\-r\fP ] [ \fB\-Z\fP ] \fB\-u\fP \fIuser\fP\&...
+\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-v\fP ] [ \fB\-a\fP ] \fB\-R\fP [ \fB\-n\fP \fIchannel\fP ] [ \fB\-d\fP ] [ \fB\-S\fP \fIseconds\fP ] [ \fB\-Z\fP ]
+\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-v\fP ] [ \fB\-a\fP ] \fB\-f\fP \fIsynclogfile\fP [ \fB\-S\fP \fIseconds\fP ] [ \fB\-Z\fP ]
+\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-v\fP ] \fB\-t\fP \fIsrctier(s)\fP\&... \fB\-z\fP \fIdesttier\fP [ \fB\-F\fP ] [ \fB\-U\fP ] [ \fB\-T\fP \fIdir\fP ] [ \fB\-X\fP ] [ \fB\-o\fP ] [ \fB\-S\fP \fIseconds\fP ] [ \fB\-u\fP \fIuser\fP\&... ]
 .fi
 .SH DESCRIPTION
 .sp
@@ -68,7 +67,7 @@ The index is a unified index of all of the header and body text
 of each message in a given mailbox.  This index is used to significantly
 reduce IMAP SEARCH times on a mailbox.
 .sp
-\fBmode\fP is one of indexer, indexfrom (\-I), search, rolling, synclog or compact.
+\fBmode\fP is one of indexer, search, rolling, synclog, compact or audit.
 .sp
 By default, \fBsquatter\fP creates an index of ALL messages in the
 mailbox, not just those since the last time that it was run.  The
@@ -103,19 +102,26 @@ In the fifth synopsis, \fBsquatter\fP reads a single sync log file and
 performs incremental indexing on the mailbox(es) listed therein.  This
 is sometimes useful for cleaning up after problems with rolling mode.
 .sp
-In the sixth synopsis, \fBsquatter\fP reads \fIfile\fP containing \fImailbox\fP
-\fIuid\fP tuples and performs indexing on the specified messages.
-.sp
-In the seventh synopsis, \fBsquatter\fP will compact indices from
+In the sixth synopsis, \fBsquatter\fP will compact indices from
 \fIsrctier(s)\fP to \fIdesttier\fP, optionally reindexing (\fB\-X\fP) or filtering
-expunged records (\fB\-F\fP) in the process.  The optional \fB\-T\fP flag may
-be used to specify a directory to use for temporary files.  The \fB\-o\fP
-flag may be used to direct that a single index be copied, rather than
-compacted, from \fIsrctier\fP to \fIdesttier\fP\&.  The \fB\-u\fP flag may be used
-to restrict operation to the specified user(s).
+expunged records (\fB\-F\fP) in the process.  The optional \fB\-T\fP flag may be
+used to specify a directory to use for temporary files.  These files are
+eventually copied with \fIrsync \-a\fP and then removed by \fIrm\fP\&.
+\fIrsync\fP can increase the load average of the system, especially when the
+temporary directory is on \fItmpfs\fP\&.  To throttle \fIrsync\fP it is possible to
+modify the call in \fIimap/search_xapian.c\fP and pass \fI\-\e\-bwlimit=<number>\fP as further
+parameter.  The \fB\-o\fP flag may be used to direct that a single index be
+copied, rather than compacted, from \fIsrctier\fP to \fIdesttier\fP\&.  The \fB\-u\fP flag
+may be used to restrict operation to the specified user(s).
 .sp
-For all modes, the \fB\-S\fP option may be specified, causing squatter to
+For all modes, the \fB\-S\fP option may be specified, causing \fBsquatter\fP to
 pause \fIseconds\fP seconds after each mailbox, to smooth loads.
+.sp
+When using the Xapian engine the \fB\-Z\fP option may be specified, for
+the indexing modes.  This tells \fBsquatter\fP to consult the Xapian
+internally indexed GUIDs, rather than relying on what\(aqs stored in
+\fIcyrus.indexed.db\fP, allowing for recovery from broken
+\fIcyrus.indexed.db\fP at the sacrifice of efficiency.
 .sp
 \fBNOTE:\fP
 .INDENT 0.0
@@ -158,6 +164,12 @@ implicit value of \fI/vendor/cmu/cyrus\-imapd/squat\fP is "false".
 .UNINDENT
 .INDENT 0.0
 .TP
+.B \-A
+Missing documentation, starts audit mode.
+This feature is only available on the master branch.
+.UNINDENT
+.INDENT 0.0
+.TP
 .B \-d
 In rolling mode, don\(aqt background and do emit log messages on
 standard error.  Useful for debugging.
@@ -185,12 +197,6 @@ Display this usage information.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-I file
-Read from \fIfile\fP and index individual messages described by
-mailbox/uid tuples contained therein.
-.UNINDENT
-.INDENT 0.0
-.TP
 .B \-i
 Incremental updates where indexes already exist.
 .UNINDENT
@@ -215,6 +221,12 @@ This feature was introduced in version 3.0.
 In compact mode, if only one source database is selected, just copy
 it to the destination rather than compacting.
 This feature was introduced in version 3.0.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-P
+Missing documentation, reindex parts mode.
+This feature is only available on the master branch.
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -251,7 +263,7 @@ This feature was introduced in version 3.0.
 .INDENT 0.0
 .TP
 .B \-t srctier...
-In compact mode, the comma separated source tier(s) for the compacted
+In compact mode, the comma\-separated source tier(s) for the compacted
 indices.  At least one source tier must be specified in compact mode.
 Xapian only.
 This feature was introduced in version 3.0.
@@ -262,6 +274,13 @@ This feature was introduced in version 3.0.
 Extra options refer to usernames (e.g. \fI\%foo@bar.com\fP) rather than
 mailbox names.  Usernames are space\-separated.
 This feature was introduced in version 3.0.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-U
+In compact mode, only compact if re\-indexing.
+Xapian only.
+This feature is only available on the master branch.
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -287,6 +306,16 @@ In compact mode, the destination tier for the compacted indices.
 This must be specified in compact mode.
 Xapian only.
 This feature was introduced in version 3.0.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-Z
+When indexing messages, use the Xapian internal cyrusid rather than
+referencing the ranges of already indexed messages to know if a
+particular message is indexed.  Useful if the ranges get out of
+sync with the actual messages (e.g. if files on a tier are lost)
+Xapian only.
+This feature is only available on the master branch.
 .UNINDENT
 .SH EXAMPLES
 .sp
@@ -404,6 +433,6 @@ imapd.conf(5), cyrus.conf(5)
 .SH AUTHOR
 The Cyrus Team, Nic Bernstein (Onlight)
 .SH COPYRIGHT
-1993-2017, The Cyrus Team
+1993-2018, The Cyrus Team
 .\" Generated by docutils manpage writer.
 .

@@ -1,10 +1,8 @@
-From: Sven Mueller <debian@incase.de>
-Date: Tue, 4 Aug 2015 10:38:06 +0200
-Subject: Fix paths on Debian in tools/rehash
-
----
- tools/rehash | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Description: Fix paths on Debian in tools/rehash
+Author: Sven Mueller <debian@incase.de>
+Forwarded: no
+Reviewed-By: Xavier Guimard <yadd@debian.org
+Last-Update: 2020-02-10
 
 --- a/tools/rehash
 +++ b/tools/rehash

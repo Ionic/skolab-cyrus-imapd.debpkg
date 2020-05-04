@@ -1,6 +1,6 @@
 /* cyr_expire.c -- Program to expire deliver.db entries and messages
  *
- * Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
+ * Copyright (c) 1994-2017 Carnegie Mellon University.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -40,6 +40,14 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/*
+  NOTES:
+  * Precedence of configuration in `cyr_expire`:
+     Highest                       Lowest
+     |----------------------------------|
+     Annotation -> Command-line -> Config
+ */
+
 #include <config.h>
 
 #ifdef HAVE_UNISTD_H
@@ -50,14 +58,17 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <signal.h>
+#include <errno.h>
+#include <stdbool.h>
+#include <libgen.h>
 
 #include <sasl/sasl.h>
 
 #include "annotate.h"
 #include "duplicate.h"
-#include "exitcodes.h"
 #include "global.h"
 #include "hash.h"
 #include "libcyr_cfg.h"
@@ -71,33 +82,54 @@
 /* generated headers are not necessarily in current directory */
 #include "imap/imap_err.h"
 
+#define SECS_IN_A_MIN 60
+#define SECS_IN_AN_HR (60 * SECS_IN_A_MIN)
+#define SECS_IN_A_DAY (24 * SECS_IN_AN_HR)
+
 /* global state */
 static volatile sig_atomic_t sigquit = 0;
 static int verbose = 0;
-static int keep_flagged = 1;
+static const char *progname = NULL;
+static struct namespace expire_namespace; /* current namespace */
 
-/* current namespace */
-static struct namespace expire_namespace;
+/* command line arguments */
+struct arguments {
+    int archive_seconds;
+    int delete_seconds;
+    int expire_seconds;
+    int expunge_seconds;
 
-static void usage(void)
-{
-    fprintf(stderr,
-            "cyr_expire [-C <altconfig>] [-E <expire-duration>] [-D <delete-duration] [-X <expunge-duration>] [-p prefix] [-a] [-v] [-x]\n");
-    exit(-1);
-}
+    int do_cid_expire;
+
+    /* bools */
+    bool do_expunge;
+    bool do_userflags;
+    bool skip_annotate;
+
+    const char *altconfig;
+    const char *mbox_prefix;
+    const char *userid;
+};
+
+struct archive_rock {
+    time_t archive_mark;
+    unsigned long messages_archived;
+    bool skip_annotate;
+};
 
 struct expire_rock {
     struct hash_table table;
     time_t expire_mark;
     time_t expunge_mark;
+    time_t tombstone_mark;
     unsigned long mailboxes_seen;
     unsigned long messages_seen;
     unsigned long messages_expired;
     unsigned long messages_expunged;
-    int skip_annotate;
-    bit32 userflags[MAX_USER_FLAGS/32];
-    int do_userflags;
     unsigned long userflags_expunged;
+    bit32 userflags[MAX_USER_FLAGS/32];
+    bool do_userflags;
+    bool skip_annotate;
 };
 
 struct conversations_rock {
@@ -111,7 +143,106 @@ struct conversations_rock {
 struct delete_rock {
     time_t delete_mark;
     strarray_t to_delete;
+    bool skip_annotate;
 };
+
+/* The global context */
+struct cyr_expire_ctx {
+    struct arguments args;
+    struct archive_rock arock;
+    struct conversations_rock crock;
+    struct delete_rock drock;
+    struct expire_rock erock;
+};
+
+static const struct cyr_expire_ctx zero_ctx;
+
+static void sighandler(int sig);
+
+/* verbosep - a wrapper to print if the 'verbose' option is
+   turned on.
+ */
+__attribute__((format (printf, 1, 2)))
+static inline void verbosep(const char *fmt, ...)
+{
+    va_list params;
+
+    if (!verbose)
+        return;
+
+    va_start(params, fmt);
+    vfprintf(stderr, fmt, params);
+    va_end(params);
+    fputc('\n', stderr);
+}
+
+static void cyr_expire_init(const char *progname, struct cyr_expire_ctx *ctx)
+{
+    struct sigaction action;
+
+    /* Initialise signal handlers */
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = 0;
+    action.sa_handler = sighandler;
+    if (sigaction(SIGQUIT, &action, NULL) < 0)
+        fatal("unable to install signal handler for SIGQUIT", EX_TEMPFAIL);
+    if (sigaction(SIGINT, &action, NULL) < 0)
+        fatal("unable to install signal handler for SIGINT", EX_TEMPFAIL);
+    if (sigaction(SIGTERM, &action, NULL) < 0)
+        fatal("unable to install signal handler for SIGTERM", EX_TEMPFAIL);
+
+    construct_hash_table(&ctx->erock.table, 10000, 1);
+    strarray_init(&ctx->drock.to_delete);
+    construct_hash_table(&ctx->crock.seen, 100, 1);
+
+    cyrus_init(ctx->args.altconfig, progname, 0, 0);
+    global_sasl_init(1, 0, NULL);
+
+    ctx->erock.do_userflags = ctx->args.do_userflags;
+    /* TODO: Ideally all the functions should just use the skip_annotate from
+     *       args. But that would require a change in the callback signatures.
+     *       So retaining it as is for now.
+     */
+    ctx->arock.skip_annotate = ctx->args.skip_annotate;
+    ctx->erock.skip_annotate = ctx->args.skip_annotate;
+    ctx->drock.skip_annotate = ctx->args.skip_annotate;
+}
+
+static void cyr_expire_cleanup(struct cyr_expire_ctx *ctx)
+{
+    free_hash_table(&ctx->erock.table, free);
+    free_hash_table(&ctx->crock.seen, NULL);
+    strarray_fini(&ctx->drock.to_delete);
+
+    duplicate_done();
+    sasl_done();
+    cyrus_done();
+}
+
+static void usage(void)
+{
+    fprintf(stderr, "Usage: %s [OPTIONS] {mailbox|users}\n", progname);
+    fprintf(stderr, "Expire messages and duplicate delivery database entries.\n");
+    fprintf(stderr, "\n");
+
+    fprintf(stderr, "-a                       skip annotation lookup\n");
+    fprintf(stderr, "-c                       do not expire conversations\n");
+    fprintf(stderr, "-h                       print this help and exit\n");
+    fprintf(stderr, "-p <mailbox-prefix>      specify prefix for mailboxes\n");
+    fprintf(stderr, "-t                       remove user flags which are not used\n");
+    fprintf(stderr, "-u <user-id>             specify user id for mailbox lookup\n");
+    fprintf(stderr, "-v                       enable verbose output\n");
+    fprintf(stderr, "-x                       do not expunge messages\n");
+    fprintf(stderr, "-C <config-file>         use <config-file> instead of config from imapd.conf\n");
+    fprintf(stderr, "-A <archive-duration>    \n");
+    fprintf(stderr, "-D <delete-duration>     \n");
+    fprintf(stderr, "-E <expire-duration>     \n");
+    fprintf(stderr, "-X <expunge-duration>    \n");
+
+    fprintf(stderr, "\n");
+
+    exit(EX_USAGE);
+}
 
 /*
  * Parse a non-negative duration string as seconds.
@@ -126,7 +257,7 @@ static int parse_duration(const char *s, int *secondsp)
 {
     char *end = NULL;
     double val;
-    int multiplier = 86400; /* default is days */
+    int multiplier = SECS_IN_A_DAY; /* default is days */
 
     /* no negative or empty numbers please */
     if (!*s || *s == '-')
@@ -142,10 +273,10 @@ static int parse_duration(const char *s, int *secondsp)
             /* already the default */
             break;
         case 'h':
-            multiplier = 3600;
+            multiplier = SECS_IN_AN_HR;
             break;
         case 'm':
-            multiplier = 60;
+            multiplier = SECS_IN_A_MIN;
             break;
         case 's':
             multiplier = 1;
@@ -160,6 +291,48 @@ static int parse_duration(const char *s, int *secondsp)
     return 1;
 }
 
+/*
+ * Given an annotation, reads it, and converts it into 'seconds',
+ * using `parse_duration`.
+ *
+ * On Success: Returns 1
+ * On Failure: Returns 0
+ */
+static int get_annotation_value(const char *mboxname,
+                                const char *annot_entry,
+                                int *secondsp, bool iterate)
+{
+    struct buf attrib = BUF_INITIALIZER;
+    int ret = 0;
+    /* mboxname needs to be copied since `mboxname_make_parent`
+     * runs a strrchr() on it.
+     */
+    char *buf = xstrdup(mboxname);
+
+    /*
+     * Mailboxes inherit /vendo/cmu/cyrus-imapd/{expire, archive, delete},
+     * so we need to iterate all the way up to "" (server entry).
+     */
+    do {
+        buf_free(&attrib);
+        ret = annotatemore_lookup(buf, annot_entry, "", &attrib);
+        if (ret ||              /* error */
+            attrib.s)           /* found an entry */
+            break;
+    } while (mboxname_make_parent(buf) && iterate);
+
+    if (attrib.s && parse_duration(attrib.s, secondsp))
+        ret = 1;
+    else
+        ret = 0;
+
+    buf_free(&attrib);
+    free(buf);
+
+    syslog(LOG_DEBUG, "get_annotation_value: ret(%d):secondsp(%d)\n", ret, *secondsp);
+    return ret;
+}
+
 static int expunge_userflags(struct mailbox *mailbox, struct expire_rock *erock)
 {
     unsigned int i;
@@ -170,14 +343,69 @@ static int expunge_userflags(struct mailbox *mailbox, struct expire_rock *erock)
             continue;
         if (!mailbox->flagname[i])
             continue;
-        if (verbose)
-            fprintf(stderr, "Expunging userflag %u (%s) from %s\n",
-                    i, mailbox->flagname[i], mailbox->name);
+        verbosep("Expunging userflag %u (%s) from %s\n",
+                        i, mailbox->flagname[i], mailbox->name);
         r = mailbox_remove_user_flag(mailbox, i);
         if (r) return r;
         erock->userflags_expunged++;
     }
 
+    return 0;
+}
+
+/*
+ * mailbox_expunge() callback to *only* count userflags.
+ */
+static unsigned userflag_cb(struct mailbox *mailbox __attribute__((unused)),
+                            const struct index_record *record,
+                            void *rock)
+{
+    struct expire_rock *erock = (struct expire_rock *) rock;
+    unsigned int i;
+
+    /* record which user flags are set */
+    for (i = 0; i < (MAX_USER_FLAGS/32); i++)
+        erock->userflags[i] |= record->user_flags[i];
+
+    return 0;   /* always keep the message */
+}
+
+static int archive(const mbentry_t *mbentry, void *rock)
+{
+    struct archive_rock *arock = (struct archive_rock *) rock;
+    struct mailbox *mailbox = NULL;
+    int archive_seconds = -1;
+
+    if (sigquit)
+        return 1;
+
+    if (mbentry->mbtype & MBTYPE_DELETED)
+        goto done;
+
+    if (mbentry->mbtype & MBTYPE_REMOTE)
+        goto done;
+
+    if (mailbox_open_iwl(mbentry->name, &mailbox))
+        goto done;
+
+    /* check /vendor/cmu/cyrus-imapd/archive */
+    if (!arock->skip_annotate &&
+        get_annotation_value(mbentry->name, IMAP_ANNOT_NS "archive",
+                             &archive_seconds, false)) {
+        arock->archive_mark = archive_seconds ?
+            time(0) - archive_seconds : 0;
+    }
+
+    /* The default callback for mailbox_archive() is mailbox_should_archive()
+     * in imap/mailbox.c. This one takes the arock->archive_mark as the
+     * callback data.
+     */
+    mailbox_archive(mailbox, NULL, &arock->archive_mark, ITER_SKIP_EXPUNGED);
+
+done:
+    mailbox_close(&mailbox);
+
+    /* move on to the next mailbox regardless of errors */
     return 0;
 }
 
@@ -205,51 +433,6 @@ static unsigned expire_cb(struct mailbox *mailbox __attribute__((unused)),
 }
 
 /*
- * mailbox_expunge() callback to *only* count userflags.
- */
-static unsigned userflag_cb(struct mailbox *mailbox __attribute__((unused)),
-                            const struct index_record *record,
-                            void *rock)
-{
-    struct expire_rock *erock = (struct expire_rock *) rock;
-    unsigned int i;
-
-    /* record which user flags are set */
-    for (i = 0; i < (MAX_USER_FLAGS/32); i++)
-        erock->userflags[i] |= record->user_flags[i];
-
-    return 0;   /* always keep the message */
-}
-
-static int archive(const mbentry_t *mbentry, void *rock)
-{
-    struct mailbox *mailbox = NULL;
-
-    if (sigquit)
-        return 1;
-
-    if (mbentry->mbtype & MBTYPE_DELETED)
-        goto done;
-
-    if (mbentry->mbtype & MBTYPE_REMOTE)
-        goto done;
-
-    if (mailbox_open_iwl(mbentry->name, &mailbox))
-        goto done;
-
-    if (verbose)
-        fprintf(stderr, "archiving mailbox %s\n", mbentry->name);
-
-    mailbox_archive(mailbox, NULL, rock, ITER_SKIP_EXPUNGED);
-
-done:
-    mailbox_close(&mailbox);
-
-    /* move on to the next mailbox regardless of errors */
-    return 0;
-}
-
-/*
  * callback function to:
  * - expire messages from mailboxes,
  * - build a hash table of mailboxes in which we expired messages,
@@ -258,8 +441,6 @@ done:
 static int expire(const mbentry_t *mbentry, void *rock)
 {
     struct expire_rock *erock = (struct expire_rock *) rock;
-    char *buf;
-    struct buf attrib = BUF_INITIALIZER;
     int r;
     struct mailbox *mailbox = NULL;
     unsigned numexpunged = 0;
@@ -277,34 +458,13 @@ static int expire(const mbentry_t *mbentry, void *rock)
 
     /* clean up deleted entries after 7 days */
     if (mbentry->mbtype & MBTYPE_DELETED) {
-        if (time(0) - mbentry->mtime > 86400*7) {
-            if (verbose)
-                fprintf(stderr, "Removing stale tombstone for %s\n", mbentry->name);
+        if (mbentry->mtime < erock->tombstone_mark) {
+            verbosep("Removing stale tombstone for %s\n", mbentry->name);
             syslog(LOG_NOTICE, "Removing stale tombstone for %s", mbentry->name);
             mboxlist_delete(mbentry->name);
         }
         goto done;
     }
-
-    buf = xstrdup(mbentry->name);
-
-    /* see if we need to expire messages.
-     * since mailboxes inherit /vendor/cmu/cyrus-imapd/expire,
-     * we need to iterate all the way up to "" (server entry)
-     */
-    if (!erock->skip_annotate) {
-        do {
-            buf_free(&attrib);
-            r = annotatemore_lookup(buf, IMAP_ANNOT_NS "expire", "",
-                                    &attrib);
-
-            if (r ||                            /* error */
-                attrib.s)                       /* found an entry */
-                break;
-
-        } while (mboxname_make_parent(buf));
-    }
-    free(buf);
 
     memset(erock->userflags, 0, sizeof(erock->userflags));
 
@@ -316,20 +476,24 @@ static int expire(const mbentry_t *mbentry, void *rock)
         goto done;
     }
 
-    if (attrib.s && parse_duration(attrib.s, &expire_seconds)) {
+    /* see if we need to expire messages.
+     * since mailboxes inherit /vendor/cmu/cyrus-imapd/expire,
+     * we need to iterate all the way up to "" (server entry)
+     */
+    if (!erock->skip_annotate &&
+        get_annotation_value(mbentry->name, IMAP_ANNOT_NS "expire",
+                             &expire_seconds, true)) {
         /* add mailbox to table */
         erock->expire_mark = expire_seconds ?
-                             time(0) - expire_seconds : 0 /* never */ ;
+            time(0) - expire_seconds : 0 /* never */ ;
         hash_insert(mbentry->name,
                     xmemdup(&erock->expire_mark, sizeof(erock->expire_mark)),
                     &erock->table);
 
         if (expire_seconds) {
-            if (verbose) {
-                fprintf(stderr,
-                        "expiring messages in %s older than %0.2f days\n",
-                        mbentry->name, ((double)expire_seconds/86400));
-            }
+            verbosep("expiring messages in %s older than %0.2f days\n",
+                     mbentry->name,
+                     ((double)expire_seconds/SECS_IN_A_DAY));
 
             r = mailbox_expunge(mailbox, expire_cb, erock, NULL,
                                 EVENT_MESSAGE_EXPIRE);
@@ -338,7 +502,6 @@ static int expire(const mbentry_t *mbentry, void *rock)
             did_expunge = 1;
         }
     }
-    buf_free(&attrib);
 
     if (!did_expunge && erock->do_userflags) {
         r = mailbox_expunge(mailbox, userflag_cb, erock, NULL,
@@ -353,8 +516,7 @@ static int expire(const mbentry_t *mbentry, void *rock)
     if (erock->do_userflags)
         expunge_userflags(mailbox, erock);
 
-    if (verbose)
-        fprintf(stderr, "cleaning up expunged messages in %s\n", mbentry->name);
+    verbosep("cleaning up expunged messages in %s\n", mbentry->name);
 
     r = mailbox_expunge_cleanup(mailbox, erock->expunge_mark, &numexpunged);
 
@@ -376,6 +538,7 @@ static int delete(const mbentry_t *mbentry, void *rock)
 {
     struct delete_rock *drock = (struct delete_rock *) rock;
     time_t timestamp;
+    int delete_seconds = -1;
 
     if (sigquit)
         return 1;
@@ -390,11 +553,18 @@ static int delete(const mbentry_t *mbentry, void *rock)
     if (!mboxname_isdeletedmailbox(mbentry->name, &timestamp))
         goto done;
 
+    /* check /vendor/cmu/cyrus-imapd/delete */
+    if (!drock->skip_annotate &&
+        get_annotation_value(mbentry->name, IMAP_ANNOT_NS "delete",
+                             &delete_seconds, false)) {
+        drock->delete_mark = delete_seconds ?
+            time(0) - delete_seconds: 0;
+    }
+
     if ((timestamp == 0) || (timestamp > drock->delete_mark))
         goto done;
 
-    if (verbose)
-        fprintf(stderr, "Cleaning up %s\n", mbentry->name);
+    verbosep("Cleaning up %s\n", mbentry->name);
 
     /* Add this mailbox to list of mailboxes to delete */
     strarray_append(&drock->to_delete, mbentry->name);
@@ -430,10 +600,9 @@ static int expire_conversations(const mbentry_t *mbentry, void *rock)
     if (hash_lookup(filename, &crock->seen))
         goto done;
 
-    if (verbose)
-        fprintf(stderr, "Pruning conversations from db %s\n", filename);
+    verbosep("Pruning conversations from db %s\n", filename);
 
-    if (!conversations_open_path(filename, &state)) {
+    if (!conversations_open_mbox(mbentry->name, 0/*shared*/, &state)) {
         conversations_prune(state, crock->expire_mark, &nseen, &ndeleted);
         conversations_commit(&state);
     }
@@ -449,145 +618,275 @@ done:
     return 0;
 }
 
-static void sighandler (int sig __attribute((unused)))
+static void sighandler(int sig __attribute((unused)))
 {
     sigquit = 1;
     return;
 }
 
-int main(int argc, char *argv[])
+static int do_archive(struct cyr_expire_ctx *ctx)
+{
+    if (ctx->args.archive_seconds >= 0) {
+        syslog(LOG_DEBUG, ">> do_archive: archive_seconds(%d) >= 0\n",
+               ctx->args.archive_seconds);
+        ctx->arock.archive_mark = time(0) - ctx->args.archive_seconds;
+
+        if (ctx->args.userid)
+            mboxlist_usermboxtree(ctx->args.userid, NULL, archive,
+                                  &ctx->arock, MBOXTREE_DELETED);
+        else
+            mboxlist_allmbox(ctx->args.mbox_prefix, archive, &ctx->arock, 0);
+    }
+
+    return 0;
+}
+
+static int do_expunge(struct cyr_expire_ctx *ctx)
+{
+    if (ctx->args.do_expunge && (ctx->args.expunge_seconds >= 0 ||
+                                 ctx->args.expire_seconds ||
+                                 ctx->erock.do_userflags)) {
+        /* XXX: better way to determine a size for this table? */
+
+        /* expire messages from mailboxes,
+         * build a hash table of mailboxes in which we expired messages,
+         * and perform a cleanup of expunged messages
+         */
+        if (ctx->args.expunge_seconds < 0) {
+            ctx->erock.expunge_mark = 0;
+        } else {
+            ctx->erock.expunge_mark = time(0) - ctx->args.expunge_seconds;
+
+            verbosep("Expunging deleted messages in mailboxes older than %0.2f days\n",
+                           ((double)ctx->args.expunge_seconds/SECS_IN_A_DAY));
+        }
+
+        /* XXX _ a control for this too? */
+        ctx->erock.tombstone_mark = time(0) - SECS_IN_A_DAY*7;
+
+        if (ctx->args.userid)
+            mboxlist_usermboxtree(ctx->args.userid, NULL, expire,
+                                  &ctx->erock, MBOXTREE_DELETED|MBOXTREE_TOMBSTONES);
+        else
+            mboxlist_allmbox(ctx->args.mbox_prefix, expire, &ctx->erock,
+                             MBOXTREE_TOMBSTONES);
+
+        syslog(LOG_NOTICE, "Expired %lu and expunged %lu out of %lu "
+                            "messages from %lu mailboxes",
+                           ctx->erock.messages_expired,
+                           ctx->erock.messages_expunged,
+                           ctx->erock.messages_seen,
+                           ctx->erock.mailboxes_seen);
+        verbosep("\nExpired %lu and expunged %lu out of %lu "
+                       "messages from %lu mailboxes\n",
+                       ctx->erock.messages_expired,
+                       ctx->erock.messages_expunged,
+                       ctx->erock.messages_seen,
+                       ctx->erock.mailboxes_seen);
+
+        if (ctx->erock.do_userflags) {
+            syslog(LOG_NOTICE, "Expunged %lu user flags",
+                           ctx->erock.userflags_expunged);
+            verbosep("Expunged %lu user flags\n",
+                           ctx->erock.userflags_expunged);
+        }
+
+    }
+
+    return 0;
+}
+
+static int do_cid_expire(struct cyr_expire_ctx *ctx)
+{
+    if (ctx->args.do_cid_expire) {
+        int cid_expire_seconds;
+
+        cid_expire_seconds = config_getduration(IMAPOPT_CONVERSATIONS_EXPIRE_AFTER, 'd');
+        ctx->crock.expire_mark = time(0) - cid_expire_seconds;
+
+        verbosep("Removing conversation entries older than %0.2f days\n",
+                       (double)(cid_expire_seconds/SECS_IN_A_DAY));
+
+        if (ctx->args.userid)
+            mboxlist_usermboxtree(ctx->args.userid, NULL, expire_conversations,
+                                  &ctx->crock, MBOXTREE_DELETED);
+        else
+            mboxlist_allmbox(ctx->args.mbox_prefix, expire_conversations,
+                             &ctx->crock, 0);
+
+        syslog(LOG_NOTICE, "Expired %lu entries of %lu entries seen "
+                            "in %lu conversation databases",
+                            ctx->crock.msgids_expired,
+                            ctx->crock.msgids_seen,
+                            ctx->crock.databases_seen);
+        verbosep("Expired %lu entries of %lu entries seen "
+                       "in %lu conversation databases\n",
+                       ctx->crock.msgids_expired,
+                       ctx->crock.msgids_seen,
+                       ctx->crock.databases_seen);
+    }
+
+    return 0;
+}
+
+static int do_delete(struct cyr_expire_ctx *ctx)
+{
+    int ret = 0;
+
+    if ((ctx->args.delete_seconds >= 0) &&
+        mboxlist_delayed_delete_isenabled() &&
+        config_getstring(IMAPOPT_DELETEDPREFIX)) {
+        int count = 0;
+        int i;
+
+        verbosep("Removing deleted mailboxes older than %0.2f days\n",
+                 ((double)ctx->args.delete_seconds/SECS_IN_A_DAY));
+
+        ctx->drock.delete_mark = time(0) - ctx->args.delete_seconds;
+
+        if (ctx->args.userid)
+            mboxlist_usermboxtree(ctx->args.userid, NULL, delete,
+                                  &ctx->drock, MBOXTREE_DELETED);
+        else
+            mboxlist_allmbox(ctx->args.mbox_prefix, delete, &ctx->drock, 0);
+
+        for (i = 0 ; i < ctx->drock.to_delete.count ; i++) {
+            char *name = ctx->drock.to_delete.data[i];
+
+            if (sigquit)
+                return ret;         /* return from here, will quit in main. */
+
+            verbosep("Removing: %s\n", name);
+
+            ret = mboxlist_deletemailboxlock(name, 1, NULL, NULL, NULL, 0, 0, 0, 0);
+            /* XXX: Ignoring the return from mboxlist_deletemailbox() ??? */
+            count++;
+        }
+
+        verbosep("Removed %d deleted mailboxes\n", count);
+
+        syslog(LOG_NOTICE, "Removed %d deleted mailboxes", count);
+    }
+
+    return ret;
+}
+
+static int do_duplicate_prune(struct cyr_expire_ctx *ctx)
+{
+    int ret = 0;
+    if (ctx->args.expire_seconds > 0)
+        ret = duplicate_prune(ctx->args.expire_seconds, &ctx->erock.table);
+
+    return ret;
+}
+
+static int parse_args(int argc, char *argv[], struct arguments *args)
 {
     extern char *optarg;
-    int opt, r = 0;
-    int do_expunge = 1; /* gnb:TODO bool */
-    int expunge_seconds = -1;
-    int archive_seconds = -1;
-    int delete_seconds = -1;
-    int expire_seconds = 0;
-    int cid_expire_seconds;
-    int do_cid_expire = -1;
-    char *alt_config = NULL;
-    const char *find_prefix = NULL;
-    const char *do_user = NULL;
-    struct expire_rock erock;
-    struct delete_rock drock;
-    struct conversations_rock crock;
-    struct sigaction action;
+    int opt;
 
-    /* zero the expire_rock & delete_rock */
-    memset(&erock, 0, sizeof(erock));
-    construct_hash_table(&erock.table, 10000, 1);
-    memset(&drock, 0, sizeof(drock));
-    strarray_init(&drock.to_delete);
-    memset(&crock, 0, sizeof(crock));
-    construct_hash_table(&crock.seen, 100, 1);
+    args->archive_seconds = -1;
+    args->delete_seconds = -1;
+    args->expire_seconds = -1;
+    args->expunge_seconds = -1;
+    args->do_expunge = true;
+    args->do_cid_expire = -1;
 
-    while ((opt = getopt(argc, argv, "C:D:E:X:A:p:u:vaxtcFS:")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:D:E:X:A:p:u:vaxtch")) != EOF) {
         switch (opt) {
-        case 'C': /* alt config file */
-            alt_config = optarg;
+        case 'A':
+            if (!parse_duration(optarg, &args->archive_seconds)) usage();
             break;
 
-        case 'A':
-            if (archive_seconds >= 0) usage();
-            if (!parse_duration(optarg, &archive_seconds)) usage();
+        case 'C':
+            args->altconfig = optarg;
             break;
 
         case 'D':
-            if (delete_seconds >= 0) usage();
-            if (!parse_duration(optarg, &delete_seconds)) usage();
+            if (!parse_duration(optarg, &args->delete_seconds))
+                usage();
             break;
 
         case 'E':
-            if (expire_seconds > 0) usage();
-            if (!parse_duration(optarg, &expire_seconds)) usage();
+            if (!parse_duration(optarg, &args->expire_seconds))
+                usage();
             break;
 
         case 'X':
-            if (expunge_seconds >= 0) usage();
-            if (!parse_duration(optarg, &expunge_seconds)) usage();
+            if (!parse_duration(optarg, &args->expunge_seconds))
+                usage();
             break;
 
-        case 'F':
-            keep_flagged = 0;
+        case 'a':
+            args->skip_annotate = true;
+            break;
+
+        case 'c':
+            args->do_cid_expire = 0;
             break;
 
         case 'p':
-            find_prefix = optarg;
+            args->mbox_prefix = optarg;
+            break;
+
+        case 't':
+            args->do_userflags = true;
             break;
 
         case 'u':
-            do_user = optarg;
+            args->userid = optarg;
             break;
 
         case 'v':
             verbose++;
             break;
 
-        case 'a':
-            erock.skip_annotate = 1;
-            break;
-
         case 'x':
-            if (!do_expunge) usage();
-            do_expunge = 0;
+            args->do_expunge = false;
             break;
 
-        case 't':
-            erock.do_userflags = 1;
-            break;
-
-        case 'c':
-            if (!do_cid_expire) usage();
-            do_cid_expire = 0;
-            break;
-
+        case 'h':
         default:
             usage();
             break;
         }
     }
 
-    if (!expire_seconds &&
-        delete_seconds == -1 &&
-        expunge_seconds == -1 &&
-        archive_seconds == -1 &&
-        !erock.do_userflags)
+    if (args->archive_seconds == -1 &&
+        args->delete_seconds  == -1 &&
+        args->expire_seconds  == -1 &&
+        args->expunge_seconds == -1 &&
+        !args->do_userflags) {
+        /* TODO: Print a more useful error message here. */
+        fprintf(stderr, "Missing arguments.\n");
         usage();
+        return -EINVAL;
+    }
 
-    sigemptyset(&action.sa_mask);
-    action.sa_flags = 0;
-    action.sa_handler = sighandler;
-    if (sigaction(SIGQUIT, &action, NULL) < 0)
-        fatal("unable to install signal handler for SIGQUIT", EC_TEMPFAIL);
-    if (sigaction(SIGINT, &action, NULL) < 0)
-        fatal("unable to install signal handler for SIGINT", EC_TEMPFAIL);
-    if (sigaction(SIGTERM, &action, NULL) < 0)
-        fatal("unable to install signal handler for SIGTERM", EC_TEMPFAIL);
 
-    cyrus_init(alt_config, "cyr_expire", 0, 0);
-    global_sasl_init(1, 0, NULL);
+    return 0;
+}
 
-    if (do_cid_expire < 0)
-        do_cid_expire = config_getswitch(IMAPOPT_CONVERSATIONS);
+int main(int argc, char *argv[])
+{
+    int r = 0;
+    struct cyr_expire_ctx ctx = zero_ctx;
 
-    annotate_init(NULL, NULL);
-    annotatemore_open();
+    progname = basename(argv[0]);
 
-    mboxlist_init(0);
-    mboxlist_open(NULL);
+    if (parse_args(argc, argv, &ctx.args) != 0)
+        exit(EXIT_FAILURE);
 
-    /* open the quota db, we'll need it for expunge */
-    quotadb_init(0);
-    quotadb_open(NULL);
+    cyr_expire_init(progname, &ctx);
 
-    /* setup for mailbox event notifications */
-    mboxevent_init();
+    /* do_cid_expire defaults to whatever IMAP options are set */
+    if (ctx.args.do_cid_expire < 0)
+        ctx.args.do_cid_expire = config_getswitch(IMAPOPT_CONVERSATIONS);
 
     /* Set namespace -- force standard (internal) */
     if ((r = mboxname_init_namespace(&expire_namespace, 1)) != 0) {
         syslog(LOG_ERR, "%s", error_message(r));
-        fatal(error_message(r), EC_CONFIG);
+        fatal(error_message(r), EX_CONFIG);
     }
 
     mboxevent_setnamespace(&expire_namespace);
@@ -598,157 +897,30 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    if (archive_seconds >= 0) {
-        time_t archive_mark = time(0) - archive_seconds;
-        /* XXX - add syslog? */
-        if (do_user)
-            mboxlist_usermboxtree(do_user, archive, &archive_mark, MBOXTREE_DELETED);
-        else
-            mboxlist_allmbox(find_prefix, archive, &archive_mark, 0);
-    }
+    r = do_archive(&ctx);
 
-    if (do_expunge && (expunge_seconds >= 0 || expire_seconds || erock.do_userflags)) {
-        /* xxx better way to determine a size for this table? */
-
-        /* expire messages from mailboxes,
-         * build a hash table of mailboxes in which we expired messages,
-         * and perform a cleanup of expunged messages
-         */
-        if (expunge_seconds < 0) {
-            erock.expunge_mark = 0;
-        } else {
-            erock.expunge_mark = time(0) - expunge_seconds;
-
-            if (verbose) {
-                fprintf(stderr,
-                        "Expunging deleted messages in mailboxes older than %0.2f days\n",
-                        ((double)expunge_seconds/86400));
-            }
-        }
-
-        if (do_user)
-            mboxlist_usermboxtree(do_user, expire, &erock, MBOXTREE_DELETED);
-        else
-            mboxlist_allmbox(find_prefix, expire, &erock, 0);
-
-        syslog(LOG_NOTICE, "Expired %lu and expunged %lu out of %lu "
-                            "messages from %lu mailboxes",
-                           erock.messages_expired,
-                           erock.messages_expunged,
-                           erock.messages_seen,
-                           erock.mailboxes_seen);
-        if (erock.do_userflags)
-            syslog(LOG_NOTICE, "Expunged %lu user flags",
-                           erock.userflags_expunged);
-        if (verbose) {
-            fprintf(stderr, "\nExpired %lu and expunged %lu out of %lu "
-                            "messages from %lu mailboxes\n",
-                           erock.messages_expired,
-                           erock.messages_expunged,
-                           erock.messages_seen,
-                           erock.mailboxes_seen);
-            if (erock.do_userflags)
-                fprintf(stderr, "Expunged %lu user flags\n",
-                               erock.userflags_expunged);
-        }
-    }
-    if (sigquit) {
+    if (sigquit)
         goto finish;
-    }
 
-    if (do_cid_expire) {
-        cid_expire_seconds = config_getint(IMAPOPT_CONVERSATIONS_EXPIRE_DAYS) * 86400;
-        crock.expire_mark = time(0) - cid_expire_seconds;
+    r = do_expunge(&ctx);
 
-        if (verbose)
-            fprintf(stderr,
-                    "Removing conversation entries older than %0.2f days\n",
-                    (double)(cid_expire_seconds/86400));
-
-        if (do_user)
-            mboxlist_usermboxtree(do_user, expire_conversations, &crock, MBOXTREE_DELETED);
-        else
-            mboxlist_allmbox(find_prefix, expire_conversations, &crock, 0);
-
-        syslog(LOG_NOTICE, "Expired %lu entries of %lu entries seen "
-                            "in %lu conversation databases",
-                            crock.msgids_expired,
-                            crock.msgids_seen,
-                            crock.databases_seen);
-        if (verbose)
-            fprintf(stderr, "Expired %lu entries of %lu entries seen "
-                            "in %lu conversation databases\n",
-                            crock.msgids_expired,
-                            crock.msgids_seen,
-                            crock.databases_seen);
-    }
-
-    if (sigquit) {
+    if (sigquit)
         goto finish;
-    }
 
-    if ((delete_seconds >= 0) && mboxlist_delayed_delete_isenabled() &&
-        config_getstring(IMAPOPT_DELETEDPREFIX)) {
-        int count = 0;
-        int i;
+    r = do_cid_expire(&ctx);
 
-        if (verbose) {
-            fprintf(stderr,
-                    "Removing deleted mailboxes older than %0.2f days\n",
-                    ((double)delete_seconds/86400));
-        }
-
-        drock.delete_mark = time(0) - delete_seconds;
-
-        if (do_user)
-            mboxlist_usermboxtree(do_user, delete, &drock, MBOXTREE_DELETED);
-        else
-            mboxlist_allmbox(find_prefix, delete, &drock, 0);
-
-        for (i = 0 ; i < drock.to_delete.count ; i++) {
-            char *name = drock.to_delete.data[i];
-
-            if (sigquit) {
-                goto finish;
-            }
-            if (verbose) {
-                fprintf(stderr, "Removing: %s\n", name);
-            }
-            r = mboxlist_deletemailbox(name, 1, NULL, NULL, NULL, 0, 0, 0);
-            count++;
-        }
-
-        if (verbose) {
-            if (count != 1) {
-                fprintf(stderr, "Removed %d deleted mailboxes\n", count);
-            } else {
-                fprintf(stderr, "Removed 1 deleted mailbox\n");
-            }
-        }
-        syslog(LOG_NOTICE, "Removed %d deleted mailboxes", count);
-    }
-    if (sigquit) {
+    if (sigquit)
         goto finish;
-    }
+
+    r = do_delete(&ctx);
+
+    if (sigquit)
+        goto finish;
 
     /* purge deliver.db entries of expired messages */
-    if (expire_seconds > 0)
-        r = duplicate_prune(expire_seconds, &erock.table);
+    r = do_duplicate_prune(&ctx);
 
-finish:
-    free_hash_table(&erock.table, free);
-    free_hash_table(&crock.seen, NULL);
-    strarray_fini(&drock.to_delete);
-
-    quotadb_close();
-    quotadb_done();
-    mboxlist_close();
-    mboxlist_done();
-    annotatemore_close();
-    annotate_done();
-    duplicate_done();
-    sasl_done();
-    cyrus_done();
-
+ finish:
+    cyr_expire_cleanup(&ctx);
     exit(r);
 }

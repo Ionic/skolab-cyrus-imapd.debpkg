@@ -1,0 +1,63 @@
+
+Monitoring
+**********
+
+Cyrus IMAP supports monitoring using Prometheus.
+
+To use this functionality, Cyrus IMAP must have been built with the "
+--enable-http" configure option enabled.
+
+
+Setup
+=====
+
+   * Set the *prometheus_enabled* setting in imapd.conf(5) to "yes"
+
+   * Add the *prometheus* module to your *httpmodules* in
+     imapd.conf(5)
+
+   * Set the *prometheus_need_auth*, *prometheus_update_freq* and
+     *prometheus_stats_dir* settings in imapd.conf(5) to taste
+
+   * Add a job to run "promstatsd -c" to the START section of
+     cyrus.conf(5) (this cleans up the stats files from the previous
+     run)
+
+   * Add a job to run "promstatsd" to the DAEMON section of
+     cyrus.conf(5) (the actual daemon process)
+
+   * Configure your Prometheus server to scrape
+     http://yourserver.example.com/metrics
+
+
+Configuration options
+=====================
+
+      "prometheus_enabled:" 0
+
+         Whether tracking of service metrics for Prometheus is
+         enabled.
+
+      "prometheus_need_auth:" admin
+
+         Authentication level required to fetch Prometheus metrics.
+
+         Allowed values: *none*, *user*, *admin*
+
+      "prometheus_update_freq:" 10s
+
+         Frequency in at which promstatsd should re-collate its
+         statistics report.  The minimum value is 1 second, the
+         default is 10 seconds.
+
+         For backward compatibility, if no unit is specified, seconds
+         is assumed.
+
+      "prometheus_stats_dir:" <none>
+
+         Directory to use for gathering prometheus statistics.  If
+         specified, must be an absolute path.  If not specified, the
+         default path $configdirectory/stats/ will be used.  It may be
+         advantageous to locate this directory on ephemeral storage.
+
+Back to Administrator Guide

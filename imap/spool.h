@@ -45,20 +45,26 @@
 
 #include <stdio.h>
 #include "prot.h"
-#include "hash.h"
 
-typedef hash_table *hdrcache_t;
+typedef struct hdrcache_t *hdrcache_t;
 
 hdrcache_t spool_new_hdrcache(void);
-void spool_cache_header(char *name, char *body, hdrcache_t cache);
+void spool_prepend_header(char *name, char *body, hdrcache_t cache);
+void spool_prepend_header_raw(char *name, char *body, char *raw, hdrcache_t cache);
+void spool_append_header(char *name, char *body, hdrcache_t cache);
+void spool_append_header_raw(char *name, char *body, char *raw, hdrcache_t cache);
+#define spool_cache_header(n, b, c) spool_append_header(n, b, c)
 void spool_replace_header(char *name, char *newvalue, hdrcache_t cache);
+/* remove all instances of header 'name' */
 void spool_remove_header(char *name, hdrcache_t cache);
+/* remove nth instance of header 'name'.  1 = first, -1 = last */
+void spool_remove_header_instance(char *name, int n, hdrcache_t cache);
 int spool_fill_hdrcache(struct protstream *fin, FILE *fout, hdrcache_t cache,
                         const char **skipheaders);
 const char **spool_getheader(hdrcache_t cache, const char *phead);
 void spool_free_hdrcache(hdrcache_t cache);
 void spool_enum_hdrcache(hdrcache_t cache,
-                         void (*proc)(const char *, const char *, void *),
+                         void (*proc)(const char *, const char *, const char *, void *),
                          void *rock);
 int spool_copy_msg(struct protstream *fin, FILE *fout);
 

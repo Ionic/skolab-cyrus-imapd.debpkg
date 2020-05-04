@@ -59,6 +59,7 @@
 #include <syslog.h>
 
 #include "global.h"
+#include "acl.h"
 #include "annotate.h"
 #include "util.h"
 #include "user.h"
@@ -93,88 +94,167 @@ static const char *get_script_name(const char *filename)
         return p + 1;
 }
 
+enum SieveFileType {
+    SIEVE_TMP_1 = 0,
+    SIEVE_TMP_2,
+    SIEVE_BC_TMP,
+    SIEVE_SCRIPT,
+    SIEVE_BC_SCRIPT,
+    SIEVE_DEFAULT,
+    SIEVE_BC_LINK,
+    SIEVE_NUM_FILE_TYPES
+};
+static struct sieve_scripts_info {
+    enum SieveFileType stype;
+    char *ext;
+} sieve_names[] = {
+    {SIEVE_TMP_1, ".script.NEW"},
+    {SIEVE_TMP_2, ".NEW"},
+    {SIEVE_BC_TMP, ".bc.NEW"},
+    {SIEVE_SCRIPT, ".script"},
+    {SIEVE_BC_SCRIPT, ".bc"},
+    {SIEVE_DEFAULT, ""},
+    {SIEVE_BC_LINK, ".bc"}
+};
+
+struct sieve_scripts {
+    char tmpname1[MAX_FILENAME];
+    char tmpname2[MAX_FILENAME];
+    char bctmpname[MAX_FILENAME];
+    char scriptname[MAX_FILENAME];
+    char bcscriptname[MAX_FILENAME];
+    char defaultname[MAX_FILENAME];
+    char bclinkname[MAX_FILENAME];
+};
+
+/*
+ * Given the path to the sieve script directory `script_dir` and the sievename,
+ * generate filenames and return it in the `fnames` structure.
+ *
+ * On Success, returns 0, else returns 1
+ */
+static int setup_sieve_filenames(const char *script_dir, const char *sievename,
+                                 struct sieve_scripts *fnames)
+{
+    int r = 0, i;
+
+    for (i = 0; i < SIEVE_NUM_FILE_TYPES; i++) {
+        struct sieve_scripts_info *info = &sieve_names[i];
+        int ret = 0;
+        switch(info->stype) {
+            case SIEVE_TMP_1:
+                ret = snprintf(fnames->tmpname1, MAX_FILENAME, "%s/%s%s",
+                               script_dir, sievename, info->ext);
+                break;
+            case SIEVE_TMP_2:
+                ret = snprintf(fnames->tmpname2, MAX_FILENAME, "%s/%s%s",
+                               script_dir, sievename, info->ext);
+                break;
+            case SIEVE_BC_TMP:
+                ret = snprintf(fnames->bctmpname, MAX_FILENAME, "%s/%s%s",
+                               script_dir, sievename, info->ext);
+                break;
+            case SIEVE_SCRIPT:
+                ret = snprintf(fnames->scriptname, MAX_FILENAME, "%s/%s%s",
+                               script_dir, sievename, info->ext);
+                break;
+            case SIEVE_BC_SCRIPT:
+                ret = snprintf(fnames->bcscriptname, MAX_FILENAME, "%s/%s%s",
+                               script_dir, sievename, info->ext);
+                break;
+            case SIEVE_DEFAULT:
+                ret = snprintf(fnames->defaultname, MAX_FILENAME, "%s/%s%s",
+                               script_dir, "defaultbc", info->ext);
+                break;
+            case SIEVE_BC_LINK:
+                /*
+                  Note from ellie timoney:
+                  This is because a relative symlink target is relative to the
+                  location of the symlink, and since the defaultname symlink is
+                  being created in the appropriate directory, its target can't
+                  also specify the directory [otherwise you'd get like
+                  "user/f/foo/default" pointing to
+                  "[user/f/foo/]user/f/foo/somescript.bc" and things would fall
+                  apart :)]
+                 */
+                ret = snprintf(fnames->bclinkname, MAX_FILENAME, "%s%s",
+                               sievename, info->ext);
+                break;
+            default:
+                break;
+        }
+
+        if (ret < 0) {
+            r = 1;
+            break;
+        }
+    }
+
+    return r;
+}
+
 static int autocreate_sieve(const char *userid, const char *source_script)
 {
-    /* XXX - this is really ugly, but too much work to tidy up right now -- Bron */
     sieve_script_t *s = NULL;
     bytecode_info_t *bc = NULL;
     char *err = NULL;
-    FILE *in_stream, *out_fp;
-    int out_fd, in_fd, r, k;
+    FILE *in_stream = NULL, *out_fp;
+    int out_fd, in_fd, r, w;
     int do_compile = 0;
     const char *compiled_source_script = NULL;
     const char *sievename = get_script_name(source_script);
     const char *sieve_script_dir = NULL;
-    char sieve_script_name[MAX_FILENAME];
-    char sieve_bcscript_name[MAX_FILENAME];
-    char sieve_default[MAX_FILENAME];
-    char sieve_tmpname[MAX_FILENAME];
-    char sieve_bctmpname[MAX_FILENAME];
-    char sieve_bclink_name[MAX_FILENAME];
+    struct sieve_scripts script_names;
     char buf[4096];
     mode_t oldmask;
     struct stat statbuf;
 
-    /* We don't support using the homedirectory, like timsieved */
+    memset(&script_names, 0, sizeof(struct sieve_scripts));
+    /* We don't support using the home directory, like timsieved */
     if (config_getswitch(IMAPOPT_SIEVEUSEHOMEDIR)) {
-        syslog(LOG_WARNING,"autocreate_sieve: autocreate_sieve does not work with sieveusehomedir option in imapd.conf");
-        return 1;
+        syslog(LOG_ERR, "autocreate_sieve: does not work with sievehomeuserdir"
+               "option in imapd.conf");
+        goto failed_start;
     }
 
-    /* Check if sievedir is defined in imapd.conf */
-    if(!config_getstring(IMAPOPT_SIEVEDIR)) {
-        syslog(LOG_WARNING, "autocreate_sieve: sievedir option is not defined. Check imapd.conf");
-        return 1;
+    /* check if sievedir is defined in impad.conf */
+    if (!config_getstring(IMAPOPT_SIEVEDIR)) {
+        syslog(LOG_ERR, "autocreate_sieve: sievedir option is not defined in"
+               "imapd.conf");
+        goto failed_start;
     }
 
     /* Check if autocreate_sieve_compiledscript is defined in imapd.conf */
-    if(!(compiled_source_script = config_getstring(IMAPOPT_AUTOCREATE_SIEVE_SCRIPT_COMPILED))) {
-        syslog(LOG_WARNING, "autocreate_sieve: autocreate_sieve_compiledscript option is not defined. Compiling it");
+    compiled_source_script = config_getstring(IMAPOPT_AUTOCREATE_SIEVE_SCRIPT_COMPILED);
+    if (!compiled_source_script) {
+        syslog(LOG_WARNING, "autocreate_sieve: autocreate_sieve_compiledscript"
+               "option is not defined. Compiling it");
         do_compile = 1;
     }
 
-    if (!(sieve_script_dir = user_sieve_path(userid))) {
-        syslog(LOG_WARNING, "autocreate_sieve: unable to determine sieve directory for user %s", userid);
-        return 1;
+    sieve_script_dir = user_sieve_path(userid);
+    if (!sieve_script_dir) {
+        syslog(LOG_ERR, "autocreate_sieve: unable to determine sieve directory"
+               "for user %s", userid);
+        goto failed_start;
     }
 
-    if(snprintf(sieve_tmpname, MAX_FILENAME, "%s/%s.script.NEW",sieve_script_dir, sievename) >= MAX_FILENAME) {
-        syslog(LOG_WARNING, "autocreate_sieve: Invalid sieve path %s, %s, %s", sieve_script_dir, sievename, userid);
-        return 1;
-    }
-    if(snprintf(sieve_bctmpname, MAX_FILENAME, "%s/%s.bc.NEW",sieve_script_dir, sievename) >= MAX_FILENAME) {
-        syslog(LOG_WARNING, "autocreate_sieve: Invalid sieve path %s, %s, %s", sieve_script_dir, sievename, userid);
-        return 1;
-    }
-    if(snprintf(sieve_script_name, MAX_FILENAME, "%s/%s.script",sieve_script_dir, sievename) >= MAX_FILENAME) {
-        syslog(LOG_WARNING, "autocreate_sieve: Invalid sieve path %s, %s, %s", sieve_script_dir, sievename, userid);
-        return 1;
-    }
-    if(snprintf(sieve_bcscript_name, MAX_FILENAME, "%s/%s.bc",sieve_script_dir, sievename) >= MAX_FILENAME) {
-        syslog(LOG_WARNING, "autocreate_sieve: Invalid sieve path %s, %s, %s", sieve_script_dir, sievename, userid);
-        return 1;
-    }
-    if(snprintf(sieve_default, MAX_FILENAME, "%s/%s",sieve_script_dir,"defaultbc") >= MAX_FILENAME) {
-        syslog(LOG_WARNING, "autocreate_sieve: Invalid sieve path %s, %s, %s", sieve_script_dir, sievename, userid);
-        return 1;
-    }
-    /* XXX no directory? umm */
-    if(snprintf(sieve_bclink_name, MAX_FILENAME, "%s.bc", sievename) >= MAX_FILENAME) {
-        syslog(LOG_WARNING, "autocreate_sieve: Invalid sieve path %s, %s, %s", sieve_script_dir, sievename, userid);
-        return 1;
+    if (setup_sieve_filenames(sieve_script_dir, sievename, &script_names) != 0) {
+        syslog(LOG_ERR, "autocreate_sieve: Invalid sieve path %s, %s, %s",
+               sieve_script_dir, sievename, userid);
+        goto failed_start;
     }
 
-    /* Check if a default sieve filter alrady exists */
-    if(!stat(sieve_default,&statbuf)) {
-        syslog(LOG_WARNING,"autocreate_sieve: Default sieve script already exists");
-        return 1;
+    /* Check if a default sieve filter already exists */
+    if (!stat(script_names.defaultname, &statbuf)) {
+        syslog(LOG_ERR, "autocreate_sieve: Default sieve script already exists");
+        goto failed_start;
     }
 
-    /* Open the source script. if there is a problem with that exit */
-    in_stream = fopen(source_script, "r");
-    if(!in_stream) {
-        syslog(LOG_WARNING,"autocreate_sieve: Unable to open sieve script %s. Check permissions",source_script);
-        return 1;
+    if (access(source_script, R_OK)) {
+        syslog(LOG_ERR, "autocreate_sieve: No read access permission to %s."
+               "Check permissions", source_script);
+        goto failed_start;
     }
 
     /*
@@ -182,241 +262,240 @@ static int autocreate_sieve(const char *userid, const char *source_script)
      */
 
     /* Create the directory where the sieve scripts will reside */
-    r = cyrus_mkdir(sieve_bctmpname, 0755);
-    if(r == -1) {
-        /* If this fails we just leave */
-        fclose(in_stream);
-        return 1;
-    }
+    r = cyrus_mkdir(script_names.bctmpname, 0755);
+    if (r == -1)
+        goto failed_start;
 
     /*
-     * We open the file that will be used as the bc file. If this file exists, overwrite it
-     * since something bad has happened. We open the file here so that this error checking is
-     * done before we try to open the rest of the files to start copying etc.
+     * We open the file that will be used as the bc file. If this file exists,
+     * overwrite it since something bad has happened. We open the file here so
+     * that this error checking is done before we try to open the rest of the
+     * files to start copying etc.
      */
-    out_fd = open(sieve_bctmpname, O_CREAT|O_TRUNC|O_WRONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-    if(out_fd < 0) {
-        if(errno == EEXIST) {
-            syslog(LOG_WARNING,"autocreate_sieve: File %s already exists. Probably left over. Ignoring",sieve_bctmpname);
-        } else if (errno == EACCES) {
-            syslog(LOG_WARNING,"autocreate_sieve: No access to create file %s. Check permissions",sieve_bctmpname);
-            fclose(in_stream);
-            return 1;
-        } else {
-            syslog(LOG_WARNING,"autocreate_sieve: Unable to create %s: %m",sieve_bctmpname);
-            fclose(in_stream);
-            return 1;
-        }
+    out_fd = open(script_names.bctmpname,
+                  O_CREAT|O_TRUNC|O_WRONLY,
+                  S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+    if (out_fd < 0 && errno != EEXIST) {
+        syslog(LOG_ERR, "autocreate_sieve: Error opening file %s :%m\n",
+               script_names.bctmpname);
+        goto failed_start;
     }
 
-    if(!do_compile && compiled_source_script && (in_fd = open(compiled_source_script, O_RDONLY)) != -1) {
-        while((r = read(in_fd, buf, sizeof(buf))) > 0) {
-            if((k=write(out_fd, buf,r)) < 0) {
-                syslog(LOG_WARNING, "autocreate_sieve: Error writing to file %s: %m", sieve_bctmpname);
-                close(out_fd);
-                close(in_fd);
-                fclose(in_stream);
-                unlink(sieve_bctmpname);
-                return 1;
-           }
-        }
+    /* Read the compiled script file */
+    if (!do_compile && compiled_source_script) {
+        if ((in_fd = open(compiled_source_script, O_RDONLY)) != -1) {
+            do {
+                r = read(in_fd, buf, sizeof(buf));
+                w = write(out_fd, buf, r);
+                if ( w < 0 || w != r) {
+                    syslog(LOG_ERR, "autocreate_sieve: Error writing to file"
+                           "%s: %m", script_names.bctmpname);
+                    goto failed2;
+                }
+            } while (r > 0);
 
-        if(r == 0) { /* EOF */
-            xclose(out_fd);
-            xclose(in_fd);
-        } else if (r < 0) {
-            syslog(LOG_WARNING, "autocreate_sieve: Error reading compiled script file %s: %m. Will try to compile it",
-                           compiled_source_script);
-            xclose(in_fd);
-            do_compile = 1;
-            if(lseek(out_fd, 0, SEEK_SET)) {
-                syslog(LOG_WARNING, "autocreate_sieve: Major IO problem (lseek: %m). Aborting");
+            if (r == 0) {       /* EOF */
                 xclose(out_fd);
-                return 1;
-            }
-        }
-        xclose(in_fd);
+                xclose(in_fd);
+            } else if (r < 0) {
+                syslog(LOG_ERR, "autocreate_sieve: Error reading"
+                       "compiled script %s: %m\n", compiled_source_script);
+                xclose(in_fd);
+                do_compile = 1;
+                if (lseek(out_fd, 0, SEEK_SET)) {
+                    syslog(LOG_ERR, "autocreate_sieve: lseek failed with %s:%m",
+                           compiled_source_script);
+                    goto failed1;
+                } /* if (lseek()) */
+            } /* if (r < 0) */
+
+            xclose(in_fd);
+        } else
+            syslog(LOG_WARNING, "autocreate_sieve: Problem opening"
+                   "compiled script %s:%m", compiled_source_script);
     } else {
-        if(compiled_source_script)
-              syslog(LOG_WARNING,"autocreate_sieve: Problem opening compiled script file: %s. Compiling it", compiled_source_script);
         do_compile = 1;
-    }
+    } /* if (!do_compile && compiled_source_script) */
 
-
-    /* Because we failed to open a precompiled bc sieve script, we compile one */
-    if(do_compile) {
-       if(sieve_script_parse_only(in_stream,&err, &s) != SIEVE_OK) {
-            if(err && *err) {
-               syslog(LOG_WARNING,"autocreate_sieve: Error while parsing script %s.",err);
-               free(err);
-            } else
-                syslog(LOG_WARNING,"autocreate_sieve: Error while parsing script");
-
-            unlink(sieve_bctmpname);
-            fclose(in_stream);
-            close(out_fd);
-            return 1;
+    /*
+      We either failed to open a precompiled bc sieve script or
+      we need to compile on
+    */
+    if (do_compile) {
+        in_stream = fopen(source_script, "r");
+        if (!in_stream) {
+            syslog(LOG_ERR, "autocreate_sieve: Unable to open sieve script %s",
+                   source_script);
+            goto failed1;
         }
 
-        /* generate the bytecode */
-        if(sieve_generate_bytecode(&bc, s) == TIMSIEVE_FAIL) {
-            syslog(LOG_WARNING,"autocreate_sieve: problem compiling sieve script");
-            /* removing the copied script and cleaning up memory */
-            unlink(sieve_bctmpname);
-            sieve_script_free(&s);
-            fclose(in_stream);
-            close(out_fd);
-            return 1;
-        }
+        if (sieve_script_parse_only(in_stream, &err, &s) != SIEVE_OK) {
+            syslog(LOG_ERR, "autosieve_create: Error parsing script %s:%m.",
+                   source_script);
+            if (err && *err) {
+                syslog(LOG_ERR, "autosieve_create: %s.", err);
+                free(err);
+            }
+            goto failed2;
+        } /* if (sieve_script_parse_only()) */
 
-        if(sieve_emit_bytecode(out_fd, bc) == TIMSIEVE_FAIL) {
-            syslog(LOG_WARNING,"autocreate_sieve: problem emitting sieve script");
-            /* removing the copied script and cleaning up memory */
-            unlink(sieve_bctmpname);
+        /* Generate Bytecode */
+        if (sieve_generate_bytecode(&bc, s) == TIMSIEVE_FAIL) {
+            syslog(LOG_ERR, "autocreate_sieve: problem compiling sieve script.");
+            fclose(in_stream);
+            goto failed2;
+        } /* if (sieve_generate_bytecode()) */
+
+        if (sieve_emit_bytecode(out_fd, bc) == TIMSIEVE_FAIL) {
+            syslog(LOG_ERR, "autocreate_sieve: problem emitting sieve script.");
+            fclose(in_stream);
             sieve_free_bytecode(&bc);
             sieve_script_free(&s);
-            fclose(in_stream);
-            close(out_fd);
-            return 1;
-        }
+            goto failed2;
+        } /* if (sieve_emit_bytecode()) */
 
-        /* clean up the memory */
         sieve_free_bytecode(&bc);
         sieve_script_free(&s);
-    }
+    } /* if (do_compile) */
 
     xclose(out_fd);
     rewind(in_stream);
 
-    /* Copy the initial script */
+    /* Copy the source script */
     oldmask = umask(077);
-    if((out_fp = fopen(sieve_tmpname, "w")) == NULL) {
-        syslog(LOG_WARNING,"autocreate_sieve: Unable to open destination sieve script %s: %m", sieve_tmpname);
-        unlink(sieve_bctmpname);
-        umask(oldmask);
+
+    if ((out_fp = fopen(script_names.tmpname1, "w")) == NULL) {
+        syslog(LOG_ERR, "autocreate_sieve: Unable to open destination sieve"
+               "script %s: %m", script_names.tmpname1);
         fclose(in_stream);
-        return 1;
+        umask(oldmask);
+        goto failed2;
     }
     umask(oldmask);
 
-    while((r = fread(buf,sizeof(char), sizeof(buf), in_stream)) > 0) {
-        if( fwrite(buf,sizeof(char), r, out_fp) != (unsigned)r) {
-            syslog(LOG_WARNING,"autocreate_sieve: Problem writing to sieve script file %s: %m",sieve_tmpname);
+    while ((r = fread(buf, sizeof(char), sizeof(buf), in_stream)) > 0) {
+        if (fwrite(buf, sizeof(char), r, out_fp) != (unsigned)r) {
+            syslog(LOG_ERR, "autocreate_sieve: Problem writing to sieve script"
+                   "%s:%m", script_names.tmpname1);
             fclose(out_fp);
-            unlink(sieve_tmpname);
-            unlink(sieve_bctmpname);
             fclose(in_stream);
-            return 1;
+            goto failed3;
         }
     }
 
-    if(feof(in_stream)) {
-        fclose(out_fp);
-        fclose(in_stream);
-    } else { /* ferror */
-        fclose(out_fp);
-        unlink(sieve_tmpname);
-        unlink(sieve_bctmpname);
-        fclose(in_stream);
-        return 1;
-    }
+    r = feof(in_stream);
+    fclose(in_stream);
+    fclose(out_fp);
+
+    if (!r)                     /* error */
+        goto failed3;
+
 
     /* Renaming the necessary stuff */
-    if(rename(sieve_tmpname, sieve_script_name)) {
-        unlink(sieve_tmpname);
-        unlink(sieve_bctmpname);
-        return 1;
+    if (rename(script_names.tmpname1, script_names.scriptname)) {
+        syslog(LOG_ERR, "autocreate_sieve: rename %s -> %s failed: %m",
+               script_names.tmpname1, script_names.scriptname);
+        goto failed3;
     }
 
-    if(rename(sieve_bctmpname, sieve_bcscript_name)) {
-        unlink(sieve_bctmpname);
-        unlink(sieve_bcscript_name);
-        return 1;
+    if (rename(script_names.bctmpname, script_names.bcscriptname)) {
+        syslog(LOG_ERR, "autocreate_sieve: rename %s -> %s failed: %m",
+               script_names.bctmpname, script_names.bcscriptname);
+        unlink(script_names.bcscriptname);
+        goto failed2;
     }
 
     /* end now with the symlink */
-    if(symlink(sieve_bclink_name, sieve_default)) {
-        if(errno != EEXIST) {
-            syslog(LOG_WARNING, "autocreate_sieve: problem making the default link (symlink: %m).");
-            /* Lets delete the files */
-            unlink(sieve_script_name);
-            unlink(sieve_bcscript_name);
+    if (symlink(script_names.bclinkname, script_names.defaultname)) {
+        if (errno != EEXIST) {
+            syslog(LOG_WARNING, "autocreate_sieve: error the symlink-ing %m.");
+            unlink(script_names.scriptname);
+            unlink(script_names.bcscriptname);
         }
     }
 
     /*
-     * If everything has succeeded AND we have compiled the script AND we have requested
-     * to generate the global script so that it is not compiled each time then we create it.
+     * If everything has succeeded AND we have compiled the script AND we have
+     * requested to generate the global script so that it is not compiled each
+     * time then we create it.
      */
-    if(do_compile &&
-          config_getswitch(IMAPOPT_AUTOCREATE_SIEVE_SCRIPT_COMPILE)) {
+    if (do_compile &&
+        config_getswitch(IMAPOPT_AUTOCREATE_SIEVE_SCRIPT_COMPILE)) {
 
-        if(!compiled_source_script) {
-            syslog(LOG_WARNING, "autocreate_sieve: To save a compiled sieve script, autocreate_sieve_compiledscript must have been defined in imapd.conf");
-            return 0;
-        }
-
-        if(snprintf(sieve_tmpname, MAX_FILENAME, "%s.NEW", compiled_source_script) >= MAX_FILENAME)
-            return 0;
+        if (!compiled_source_script) {
+            syslog(LOG_WARNING, "autocreate_sieve: To save a compiled sieve"
+                   "script, autocreate_sieve_compiledscript must have been"
+                   "defined in imapd.conf");
+            goto success;
+        } /* if (!compiled_source_script) */
 
         /*
          * Copy everything from the newly created bc sieve sieve script.
          */
-        if((in_fd = open(sieve_bcscript_name, O_RDONLY))<0) {
-            return 0;
+        if ((in_fd = open(script_names.bcscriptname, O_RDONLY)) < 0) {
+            syslog(LOG_WARNING, "autocreate_sieve: Failed to open %s:%m.",
+                   script_names.bcscriptname);
+            goto success;
+        } /* if (open()) */
+
+        out_fd = open(script_names.tmpname2,
+                      O_CREAT|O_EXCL|O_WRONLY,
+                      S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+        if (out_fd < 0 && errno != EEXIST) {
+            syslog(LOG_ERR, "autocreate_sieve: Error opening file %s :%m\n",
+                   script_names.tmpname2);
+            xclose(in_fd);
+            goto success;
         }
 
-        if((out_fd = open(sieve_tmpname, O_CREAT|O_EXCL|O_WRONLY, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)) < 0) {
-            if(errno == EEXIST) {
-               /* Someone is already doing this so just bail out. */
-               syslog(LOG_WARNING, "autocreate_sieve: %s already exists. Some other instance processing it, or it is left over", sieve_tmpname);
-                close(in_fd);
-                return 0;
-            } else if (errno == EACCES) {
-                syslog(LOG_WARNING,"autocreate_sieve: No access to create file %s. Check permissions",sieve_tmpname);
-                close(in_fd);
-                return 0;
-            } else {
-                syslog(LOG_WARNING,"autocreate_sieve: Unable to create %s: %m",sieve_tmpname);
-                close(in_fd);
-                return 0;
-            }
-        }
-
-        while((r = read(in_fd, buf, sizeof(buf))) > 0) {
-            if((k = write(out_fd,buf,r)) < 0) {
-                syslog(LOG_WARNING, "autocreate_sieve: Error writing to file: %s: %m", sieve_tmpname);
-                close(out_fd);
-                close(in_fd);
-                unlink(sieve_tmpname);
-                return 0;
+        while ((r = read(in_fd, buf, sizeof(buf))) > 0) {
+            if ((w = write(out_fd,buf,r)) < 0) {
+                syslog(LOG_WARNING, "autocreate_sieve: Error writing to file:"
+                       "%s: %m", script_names.tmpname2);
+                xclose(out_fd);
+                xclose(in_fd);
+                unlink(script_names.tmpname2);
+                goto success;
            }
-        }
+        } /* while */
 
-        if(r == 0 ) { /*EOF */
+        if (r == 0) { /*EOF */
             xclose(out_fd);
             xclose(in_fd);
         } else if (r < 0) {
-                syslog(LOG_WARNING, "autocreate_sieve: Error reading file: %s: %m", sieve_bcscript_name);
+                syslog(LOG_WARNING, "autocreate_sieve: Error reading file:"
+                       "%s: %m", script_names.bcscriptname);
                 xclose(out_fd);
                 xclose(in_fd);
-                unlink(sieve_tmpname);
-                return 0;
+                unlink(script_names.tmpname2);
+                goto success;
+        } /* if else if */
+
+        /* rename the temporary created sieve script to its final name. */
+        if (rename(script_names.tmpname2, compiled_source_script)) {
+            if (errno != EEXIST) {
+                unlink(script_names.tmpname2);
+                unlink(compiled_source_script);
+            } /* if (errno) */
+            goto success;
         }
 
-        /* Rename the temporary created sieve script to its final name. */
-        if(rename(sieve_tmpname, compiled_source_script)) {
-            if(errno != EEXIST) {
-               unlink(sieve_tmpname);
-               unlink(compiled_source_script);
-        }
-            return 0;
-        }
-
-        syslog(LOG_NOTICE, "autocreate_sieve: Compiled sieve script was successfully saved in %s", compiled_source_script);
+        syslog(LOG_NOTICE, "autocreate_sieve: Compiled sieve script was"
+               "successfully saved in %s", compiled_source_script);
     }
 
+ success:
     return 0;
+
+ failed3:
+    unlink(script_names.tmpname1);
+ failed2:
+    unlink(script_names.bctmpname);
+    xclose(in_fd);
+ failed1:
+    xclose(out_fd);
+ failed_start:
+    return 1;
 }
 #endif /* USE_SIEVE */
 
@@ -438,6 +517,7 @@ struct changesub_rock_st {
 static int autochangesub(struct findall_data *data, void *rock)
 {
     if (!data) return 0;
+    if (!data->is_exactmatch) return 0;
     struct changesub_rock_st *crock = (struct changesub_rock_st *)rock;
     const char *userid = crock->userid;
     struct auth_state *auth_state = crock->auth_state;
@@ -490,7 +570,7 @@ static void autosubscribe_sharedfolders(struct namespace *namespace,
 
     /*
      * If subscribeallsharedfolders is set to yes in imapd.conf, then
-     * subscribe user to every shared folder one has the apropriate
+     * subscribe user to every shared folder one has the appropriate
      * permissions.
      */
     if (config_getswitch(IMAPOPT_AUTOCREATE_SUBSCRIBE_SHAREDFOLDERS_ALL)) {
@@ -559,8 +639,64 @@ static void autocreate_specialuse_cb(const char *key, const char *val, void *roc
     buf_free(&usebuf);
 }
 
-int autocreate_user(struct namespace *namespace,
-                    const char *userid)
+struct autocreate_acl_rock {
+    struct namespace *namespace;
+    const char *intname;
+    const char *shortname;
+    struct auth_state *auth_state;
+    const char *userid;
+};
+
+static void autocreate_acl_cb(const char *key, const char *val, void *rock)
+{
+    char *freeme = NULL, *folder, *identifier, *rights, *junk;
+    char *err = NULL;
+    struct autocreate_acl_rock *acl_rock = (struct autocreate_acl_rock *) rock;
+    int r;
+
+    if (strcmp(key, "autocreate_acl")) return;
+
+    freeme = xstrdup(val);
+    folder = strtok(freeme, " ");
+    identifier = strtok(NULL, " ");
+    rights = strtok(NULL, " ");
+    junk = strtok(NULL, " ");
+
+    if (strcmpnull(folder, acl_rock->shortname)) goto done;
+
+    if (!folder || !identifier || !rights || junk) {
+        syslog(LOG_WARNING, "autocreate: ignoring invalid autocreate_acl: %s",
+                            val);
+        goto done;
+    }
+
+    r = cyrus_acl_checkstr(rights, &err);
+    if (r) {
+        syslog(LOG_WARNING, "autocreate_acl %s: ignoring invalid rights string '%s': %s",
+                            acl_rock->shortname, rights, err);
+        goto done;
+    }
+
+    r = mboxlist_setacl(acl_rock->namespace,
+                        acl_rock->intname,
+                        identifier, rights,
+                        /* isadmin */ 1, acl_rock->userid,
+                        acl_rock->auth_state);
+
+    if (r) {
+        syslog(LOG_ERR, "autocreate_acl %s: unable to setacl for %s to %s: %s",
+                          acl_rock->shortname, identifier, rights,
+                          error_message(r));
+        goto done;
+    }
+
+done:
+    free(freeme);
+    free(err);
+    return;
+}
+
+int autocreate_user(struct namespace *namespace, const char *userid)
 {
     int r = IMAP_MAILBOX_NONEXISTENT; /* default error if we break early */
     int autocreatequota = config_getint(IMAPOPT_AUTOCREATE_QUOTA);
@@ -571,6 +707,7 @@ int autocreate_user(struct namespace *namespace,
     strarray_t *subscribe = NULL;
     int numcrt = 0;
     int numsub = 0;
+    struct mboxlock *namespacelock = user_namespacelock(userid);
 #ifdef USE_SIEVE
     const char *source_script;
 #endif
@@ -657,7 +794,7 @@ int autocreate_user(struct namespace *namespace,
         if (autocreatequotamessage)
             newquotas[QUOTA_MESSAGE] = autocreatequotamessage;
 
-        r = mboxlist_setquotas(inboxname, newquotas, 0);
+        r = mboxlist_setquotas(inboxname, newquotas, 0, 0);
         if (r) {
             syslog(LOG_ERR, "autocreateinbox: User %s, QUOTA failed. %s",
                    userid, error_message(r));
@@ -675,6 +812,8 @@ int autocreate_user(struct namespace *namespace,
         const char *name = strarray_nth(create, n);
         char *foldername = mboxname_user_mbox(userid, name);
         struct autocreate_specialuse_rock specialrock = { userid, foldername, name };
+        struct autocreate_acl_rock aclrock = { namespace, foldername, name,
+                                               auth_state, userid };
 
         r = mboxlist_createmailbox(foldername, /*mbtype*/0, /*partition*/NULL,
                                    /*isadmin*/1, userid, auth_state,
@@ -690,6 +829,7 @@ int autocreate_user(struct namespace *namespace,
             syslog(LOG_WARNING, "autocreateinbox: User %s, subfolder %s creation failed. %s",
                    userid, name, error_message(r));
             r = 0;
+            free(foldername);
             continue;
         }
 
@@ -709,6 +849,11 @@ int autocreate_user(struct namespace *namespace,
 
         /* set specialuse if requested */
         config_foreachoverflowstring(autocreate_specialuse_cb, &specialrock);
+
+        /* add additional acl's if requested */
+        config_foreachoverflowstring(autocreate_acl_cb, &aclrock);
+
+        free(foldername);
     }
 
     if (numcrt)
@@ -722,7 +867,7 @@ int autocreate_user(struct namespace *namespace,
 
 #ifdef USE_SIEVE
     /*
-     * Here the autocreate sieve script feature is iniated from.
+     * Here the autocreate sieve script feature is initiated from.
      */
     source_script = config_getstring(IMAPOPT_AUTOCREATE_SIEVE_SCRIPT);
 
@@ -735,6 +880,7 @@ int autocreate_user(struct namespace *namespace,
 #endif
 
  done:
+    mboxname_release(&namespacelock);
     free(inboxname);
     strarray_free(create);
     strarray_free(subscribe);

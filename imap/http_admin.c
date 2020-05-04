@@ -58,6 +58,8 @@
 #include <sys/statvfs.h>
 #include <sys/types.h>
 
+#include "lib/times.h"
+#include "cyr_qsort_r.h"
 #include "global.h"
 #include "httpd.h"
 #include "http_proxy.h"
@@ -91,7 +93,7 @@ static int action_conf(struct transaction_t *txn);
 
 /* Namespace for admin service */
 struct namespace_t namespace_admin = {
-    URL_NS_ADMIN, 1, "/admin", NULL,
+    URL_NS_ADMIN, 1, "admin", "/admin", NULL,
     http_allow_noauth_get, /*authschemes*/0,
     /*mbtype*/0,
     ALLOW_READ,
@@ -99,6 +101,7 @@ struct namespace_t namespace_admin = {
     {
         { NULL,                 NULL },                 /* ACL          */
         { NULL,                 NULL },                 /* BIND         */
+        { NULL,                 NULL },                 /* CONNECT      */
         { NULL,                 NULL },                 /* COPY         */
         { NULL,                 NULL },                 /* DELETE       */
         { &meth_get,            NULL },                 /* GET          */
@@ -461,7 +464,7 @@ static int add_procinfo(pid_t pid,
         unsigned long long starttime = 0;
         char state = 0, *s = NULL;
 
-        fscanf(f, "%d %ms %c " /* 1-3 */
+        int c = fscanf(f, "%d %ms %c " /* 1-3 */
                "%d %d %d %d %d %u " /* 4-9 */
                "%lu %lu %lu %lu %lu %lu " /* 10-15 */
                "%ld %ld %ld %ld %ld %ld " /* 16-21 */
@@ -475,55 +478,15 @@ static int add_procinfo(pid_t pid,
         free(s);
         fclose(f);
 
-        pinfo->state = state;
-        pinfo->vmsize = vmsize;
-        pinfo->start = starttime/sysconf(_SC_CLK_TCK);
+        if (c != EOF) {
+            pinfo->state = state;
+            pinfo->vmsize = vmsize;
+            pinfo->start = starttime/sysconf(_SC_CLK_TCK);
+        }
     }
 
     return 0;
 }
-
-#if defined(_GNU_SOURCE) && defined (__GLIBC__) && \
-	((__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >=0)))
-#define HAVE_GLIBC_QSORT_R
-#endif
-
-#if defined(__NEWLIB__) && \
-	((__NEWLIB__ > 2) || ((__NEWLIB__ == 2) && (__NEWLIB_MINOR__ >= 2)))
-#if defined(_GNU_SOURCE)
-#define HAVE_GLIBC_QSORT_R
-#else
-#define HAVE_BSD_QSORT_R
-#endif
-#endif
-
-#if !defined(HAVE_GLIBC_QSORT_R) && \
-	(defined(__FreeBSD__) || defined(__DragonFly__) || defined(__APPLE__))
-#define HAVE_BSD_QSORT_R
-#endif
-
-#ifdef HAVE_BSD_QSORT_R
-#define QSORT_R_COMPAR_ARGS(a,b,c) (c,a,b)
-#define cyr_qsort_r(base, nmemb, size, compar, thunk) qsort_r(base, nmemb, size, thunk, compar)
-#else
-#define QSORT_R_COMPAR_ARGS(a,b,c) (a,b,c)
-#  if defined(HAVE_GLIBC_QSORT_R)
-#define cyr_qsort_r(base, nmemb, size, compar, thunk) qsort_r(base, nmemb, size, compar, thunk)
-#  elif defined(__GNUC__)
-static void cyr_qsort_r(void *base, size_t nmemb, size_t size,
-                        int (*compar)(const void *, const void *, void *),
-                        void *thunk)
-{
-    int compar_func(const void *a, const void *b)
-    {
-        return compar(a, b, thunk);
-    }
-    qsort(base, nmemb, size, compar_func);
-}
-#  else
-#    error No qsort_r support
-#  endif
-#endif
 
 static int sort_procinfo QSORT_R_COMPAR_ARGS(
                          const void *pa, const void *pb,
@@ -702,10 +665,6 @@ static int action_proc(struct transaction_t *txn)
                 /* W */ " (paging)",
                 /* X */ "", /* Y */ "",
                 /* Z */ " (zombie)"
-            };
-            const char *monthname[] = {
-                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
             };
 
             buf_printf_markup(body, level, "<td>%c%s</td>", pinfo->state,
@@ -1258,7 +1217,7 @@ static int action_conf(struct transaction_t *txn)
         /* Add the overflow options */
         for (k = OVER_PARTITION; k >= OVER_UNKNOWN; k--) {
             if (crock.overflow[k].count) {
-                const char *colname;
+                const char *colname = "UNKNOWN";
 
                 switch (k) {
                 case OVER_UNKNOWN:

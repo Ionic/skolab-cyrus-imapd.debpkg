@@ -30,6 +30,23 @@ Latest development snapshot is |imap_development_release_notes|. Documentation a
 Supported Product Series
 ========================
 
+.. Hide the release notes for unstable series
+
+.. toctree::
+    :hidden:
+
+    3.1/index
+
+Series 3.2
+----------
+
+Documentation at :cyrus-3.2:`/`.
+
+.. toctree::
+    :maxdepth: 1
+
+    3.2/index
+
 Series 3.0
 ----------
 
@@ -37,7 +54,6 @@ Documentation at :cyrus-3.0:`/`.
 
 .. toctree::
     :maxdepth: 1
-    :glob:
 
     3.0/index
 
@@ -48,7 +64,6 @@ Documentation at :cyrus-2.5:`/`.
 
 .. toctree::
     :maxdepth: 1
-    :glob:
 
     2.5/index
 
@@ -57,7 +72,6 @@ Series 2.4
 
 .. toctree::
     :maxdepth: 1
-    :glob:
 
     2.4/index
     2.4-dav/index
@@ -71,7 +85,6 @@ Series 1
 
 .. toctree::
     :maxdepth: 1
-    :glob:
 
     1/1.x.x
 
@@ -80,7 +93,6 @@ Series 2: 2.0 - 2.3
 
 .. toctree::
     :maxdepth: 1
-    :glob:
 
     2.0/2.0.x
     2.1/2.1.x

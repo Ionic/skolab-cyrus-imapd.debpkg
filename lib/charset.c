@@ -54,6 +54,10 @@
 #include "htmlchar.h"
 #include "util.h"
 
+#include <unicode/ustring.h>
+#include <unicode/unorm2.h>
+#include <unicode/utf8.h>
+
 #define U_REPLACEMENT   0xfffd
 
 #define unicode_isvalid(c) \
@@ -154,15 +158,18 @@ struct striphtml_state {
     enum html_state stack[2];
 };
 
-#define CHARSET_ICUBUF_MAXSIZE 4096
-#define CHARSET_ICUBUF_MINSIZE 8
+#define CHARSET_ICUBUF_BUFFER_SIZE 4096
 
 struct charset_converter {
     /* An open ICU converter for ICU backed converters. Or NULL.  */
     UConverter *conv;
 
-    /* The charset name for this converter. Might differ from ICU name. */
-    char *name;
+    /* Cyrus-canonical charset name for this converter.
+     * Might differ from ICU name.*/
+    char *canon_name;
+
+    /* Alias name of as provided by caller in charset_lookupname */
+    char *alias_name;
 
     /* The numeric charset identifier for table converters. Or -1 */
     int num;
@@ -189,7 +196,7 @@ struct charset_converter {
 
 struct convert_rock;
 
-static void icu_reset(struct convert_rock *rock, size_t len, int to_uni);
+static void icu_reset(struct convert_rock *rock, int to_uni);
 static void icu_flush(struct convert_rock *rock);
 static void icu_free(struct convert_rock *rock);
 
@@ -244,7 +251,7 @@ static const char index_64[256] = {
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,62, XX,XX,XX,63,
-    52,53,54,55, 56,57,58,59, 60,61,XX,XX, XX,XX,XX,XX,
+    52,53,54,55, 56,57,58,59, 60,61,XX,XX, XX,64,XX,XX,
     XX, 0, 1, 2,  3, 4, 5, 6,  7, 8, 9,10, 11,12,13,14,
     15,16,17,18, 19,20,21,22, 23,24,25,XX, XX,XX,XX,XX,
     XX,26,27,28, 29,30,31,32, 33,34,35,36, 37,38,39,40,
@@ -262,13 +269,21 @@ static const char index_64[256] = {
 
 EXPORTED int encoding_lookupname(const char *s)
 {
+    if (!s) return ENCODING_NONE;
+
     switch (s[0]) {
     case '7':
         if (!strcasecmp(s, "7BIT"))
             return ENCODING_NONE;
+        // non-standard stuff seen in the wild
+        if (!strcasecmp(s, "7-BIT"))
+            return ENCODING_NONE;
         break;
     case '8':
         if (!strcasecmp(s, "8BIT"))
+            return ENCODING_NONE;
+        // non-standard stuff seen in the wild
+        if (!strcasecmp(s, "8-BIT"))
             return ENCODING_NONE;
         break;
     case 'B':
@@ -278,10 +293,22 @@ EXPORTED int encoding_lookupname(const char *s)
         if (!strcasecmp(s, "BINARY"))
             return ENCODING_NONE;
         break;
+    case 'N':
+        if (!strcasecmp(s, "NONE"))
+            return ENCODING_NONE;
+        break;
     case 'Q':
     case 'q':
         if (!strcasecmp(s, "QUOTED-PRINTABLE"))
             return ENCODING_QP;
+        break;
+    case 'u':
+    case 'U':
+        // this is rubbish, but it's been seen in the wild
+        if (!strcasecmp(s, "UTF-8"))
+            return ENCODING_NONE;
+        if (!strcasecmp(s, "UTF8"))
+            return ENCODING_NONE;
         break;
     }
     return ENCODING_UNKNOWN;
@@ -419,6 +446,13 @@ static void b64_2byte(struct convert_rock *rock, uint32_t c)
 
     /* could just be whitespace, ignore it */
     if (b == XX) return;
+
+    /* the padding character, reset state */
+    if (b == 64) {
+        s->codepoint = 0;
+        s->bytesleft = 0;
+        return;
+    }
 
     switch (s->bytesleft) {
     case 0:
@@ -637,7 +671,7 @@ static void byte2search(struct convert_rock *rock, uint32_t c)
         if (cur < i)
             s->starts[cur] = s->starts[i];
 
-        /* check that the substring is still maching */
+        /* check that the substring is still matching */
         if (b == s->substr[s->offset - s->starts[i]]) {
             if (s->offset - s->starts[i] == s->patlen - 1) {
                 /* we're there! */
@@ -1528,6 +1562,13 @@ static char *buffer_cstring(struct convert_rock *rock)
     return buf_release(buf);
 }
 
+static void buffer_trim(struct convert_rock *rock)
+{
+    struct buf *buf = (struct buf *)rock->state;
+
+    buf_trim(buf);
+}
+
 static inline int search_havematch(struct convert_rock *rock)
 {
     struct search_state *s = (struct search_state *)rock->state;
@@ -1560,18 +1601,15 @@ static void icu_flush(struct convert_rock *rock)
 static void icu_free(struct convert_rock *rock)
 {
     if (rock) {
-        if (rock->state) icu_reset(rock, 0 /*don't care*/, -1 /*don't care*/);
+        if (rock->state) icu_reset(rock, -1 /*don't care*/);
         free(rock);
     }
 }
 
-static void icu_reset(struct convert_rock *rock, size_t len, int to_uni)
+static void icu_reset(struct convert_rock *rock, int to_uni)
 {
     struct charset_converter *s = (struct charset_converter *)rock->state;
-    size_t buf_size = CHARSET_ICUBUF_MAXSIZE;
-
-    if (len && len < buf_size) buf_size = len;
-    if (buf_size < CHARSET_ICUBUF_MINSIZE) buf_size = CHARSET_ICUBUF_MINSIZE;
+    size_t buf_size = CHARSET_ICUBUF_BUFFER_SIZE;
 
     if (s->buf_size < buf_size) {
         s->buf = xrealloc(s->buf, buf_size * 2);
@@ -1624,16 +1662,14 @@ static void table_reset(struct convert_rock *rock, int to_uni)
 static void convert_switch(struct convert_rock *rock, charset_t to, int to_uni)
 {
     struct charset_converter *s = (struct charset_converter *) rock->state;
-    size_t buf_size = 0;
 
     /* make sure that the new state is sane */
     assert((to->conv == NULL) != (to->num == -1));
 
     /* flush any cached bytes in the ICU converter */
     if (s->conv) {
-        buf_size = s->buf_size;
         icu_flush(rock);
-        icu_reset(rock, 0 /*don't care*/, to_uni);
+        icu_reset(rock, to_uni);
     } else {
         table_reset(rock, to_uni);
     }
@@ -1641,7 +1677,7 @@ static void convert_switch(struct convert_rock *rock, charset_t to, int to_uni)
     /* how the new state in the pipeline */
     rock->state = to;
     if (to->conv) {
-        icu_reset(rock, buf_size, to_uni);
+        icu_reset(rock, to_uni);
     } else {
         table_reset(rock, to_uni);
     }
@@ -1734,7 +1770,7 @@ static struct convert_rock *canon_init(int flags, struct convert_rock *next)
     struct convert_rock *rock = xzmalloc(sizeof(struct convert_rock));
     struct canon_state *s = xzmalloc(sizeof(struct canon_state));
     s->flags = flags;
-    if ((flags & CHARSET_SNIPPET))
+    if ((flags & CHARSET_KEEPCASE))
         rock->f = uni2html;
     else
         rock->f = uni2searchform;
@@ -1745,7 +1781,6 @@ static struct convert_rock *canon_init(int flags, struct convert_rock *next)
 
 static struct convert_rock *convert_init(struct charset_converter *s,
                                          int to_uni,
-                                         size_t len,
                                          struct convert_rock *next)
 {
     struct convert_rock *rock;
@@ -1758,7 +1793,7 @@ static struct convert_rock *convert_init(struct charset_converter *s,
 
     /* Initialize rock based on the converter type */
     if (s->conv) {
-        icu_reset(rock, len, to_uni);
+        icu_reset(rock, to_uni);
     } else {
         table_reset(rock, to_uni);
     } 
@@ -1791,10 +1826,12 @@ static struct convert_rock *search_init(const char *substr, comp_pat *pat) {
     return rock;
 }
 
-static struct convert_rock *buffer_init(void)
+static struct convert_rock *buffer_init(size_t hint)
 {
     struct convert_rock *rock = xzmalloc(sizeof(struct convert_rock));
     struct buf *buf = xzmalloc(sizeof(struct buf));
+
+    if (hint) buf_ensure(buf, hint);
 
     rock->f = byte2buffer;
     rock->cleanup = buffer_free;
@@ -1835,7 +1872,7 @@ static char* convert_to_name(const char *to, charset_t charset,
     size_t n;
 
     /* determine the name of the source encoding */
-    from = charset_name(charset);
+    from = charset_canon_name(charset);
 
     /* allocate the target buffer */
     /* we preflight to compromise between memory and runtime efficiency */
@@ -1862,29 +1899,72 @@ static charset_t lookup_buf(const char *buf, size_t len)
     return cs;
 }
 
+/* RFC2047: In this case the set of characters that may be used in a “Q”-encoded
+  ‘encoded-word’ is restricted to: <upper and lower case ASCII
+  letters, decimal digits, "!", "*", "+", "-", "/", "=", and "_" */
+/* of course = and _ are not included in the set, because they themselves
+   need to be quoted it’s just saying they can be present in the Q wordi
+   itself, because they’re part of the quoting system */
+char QPMIMEPHRASESAFECHAR[256] = {
+/* control chars are unsafe */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* ASCII map... */
+/*     !  "  #  $  %  &  '  (  )  *  +  ,  -  .  /  */
+    0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1,
+/*  0  1  2  3  4  5  6  7  8  9  :  ;  <  =  >  ?  */
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
+/*  @  A  B  C  D  E  F  G  H  I  J  K  L  M  N  O  */
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+/*  P  Q  R  S  T  U  V  W  X  Y  Z  [ \\  ]  ^  _  */
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+/*  `  a  b  c  d  e  f  g  h  i  j  k  l  m  n  o  */
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+/*  p  q  r  s  t  u  v  w  x  y  z  {  |  }  ~ DEL */
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+/* all high bits are unsafe */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
 
 /* API */
+
+EXPORTED const char *charset_alias_name(charset_t cs) {
+    if (cs && cs->alias_name) {
+        return cs->alias_name;
+    }
+    return charset_canon_name(cs);
+}
 
 /*
  * Return the name of the given character set number, or "unknown" if
  * not known.
  */
-EXPORTED const char *charset_name(charset_t charset)
+EXPORTED const char *charset_canon_name(charset_t cs)
 {
-    const char *name;
+    if (!cs)
+            goto done;
 
-    if (charset->name)
-        return charset->name;
+    if (cs->canon_name)
+        return cs->canon_name;
 
-    if (charset->conv) {
+    if (cs->conv) {
         UErrorCode err = U_ZERO_ERROR;
-        name = ucnv_getName(charset->conv, &err);
+        const char *name = ucnv_getName(cs->conv, &err);
         if (U_SUCCESS(err))
             return name;
-    } else if (charset->num >= 0 && charset->num < chartables_num_charsets) {
-        return chartables_charset_table[charset->num].name;
+    } else if (cs->num >= 0 && cs->num < chartables_num_charsets) {
+        return chartables_charset_table[cs->num].name;
     }
 
+done:
     return "unknown";
 }
 
@@ -1895,49 +1975,61 @@ EXPORTED const char *charset_name(charset_t charset)
 EXPORTED charset_t charset_lookupname(const char *name)
 {
     int i;
-    struct charset_converter *s;
+    struct charset_converter *cs;
     UErrorCode err;
     UConverter *conv;
 
     /* create the converter */
-    s = xzmalloc(sizeof(struct charset_converter));
-    s->num = -1;
+    cs = xzmalloc(sizeof(struct charset_converter));
+    cs->num = -1;
 
     if (!name) {
-        s->num = 0; // us-ascii
-        return s;
+        cs->num = 0; // us-ascii
+        return cs;
     }
+    cs->alias_name = xstrdup(name);
 
-    /* translate to canonical name */
+    /* translate alias to canonical name */
     for (i = 0; charset_aliases[i].name; i++) {
-        if (!strcasecmp(name, charset_aliases[i].name) ||
-            !strcasecmp(name, charset_aliases[i].canon_name)) {
-            name = charset_aliases[i].canon_name;
-            s->name = xstrdup(name);
+        if (!strcasecmp(name, charset_aliases[i].name)) {
+            cs->canon_name = xstrdup(charset_aliases[i].canon_name);
             break;
+        }
+    }
+    if (!cs->canon_name) {
+        /* otherwise use canonical name, if defined */
+        for (i = 0; charset_aliases[i].name; i++) {
+            if (!strcasecmp(name, charset_aliases[i].canon_name)) {
+                cs->canon_name = xstrdup(charset_aliases[i].canon_name);
+                break;
+            }
         }
     }
 
     /* Is it a table based lookup, or UTF-8? */
-    for (i = 0; i < chartables_num_charsets; i++) {
-        if (!strcasecmp(name, chartables_charset_table[i].name)) {
-            if ((chartables_charset_table[i].table) || !strcmp(name, "utf-8")) {
-                s->num = i;
-                return s;
+    if (cs->canon_name) {
+        for (i = 0; i < chartables_num_charsets; i++) {
+            if (!strcasecmp(cs->canon_name, chartables_charset_table[i].name)) {
+                if ((chartables_charset_table[i].table) || !strcmp(cs->canon_name, "utf-8")) {
+                    cs->num = i;
+                    return cs;
+                }
             }
         }
     }
 
     /* Otherwise, let's see if we can fallback to ICU */
     err = U_ZERO_ERROR;
-    conv = ucnv_open(name, &err);
+    conv = ucnv_open(cs->canon_name ? cs->canon_name : name, &err);
     if (U_SUCCESS(err)) {
-        s->conv = conv;
-        return s;
+        cs->conv = conv;
+        return cs;
     }
 
     /* Still here? This means we don't know this charset name */
-    free(s);
+    free(cs->alias_name);
+    free(cs->canon_name);
+    free(cs);
     return CHARSET_UNKNOWN_CHARSET;
 }
 
@@ -1949,7 +2041,8 @@ EXPORTED void charset_free(charset_t *charsetp)
         if (s->conv) ucnv_close(s->conv);
         /* Free up memory. */
         if (s->buf) free(s->buf);
-        if (s->name) free(s->name);
+        free(s->alias_name);
+        free(s->canon_name);
         /* Release the converter */
         free(s);
         *charsetp = CHARSET_UNKNOWN_CHARSET;
@@ -1984,10 +2077,10 @@ EXPORTED char *charset_convert(const char *s, charset_t charset, int flags)
     utf8 = charset_lookupname("utf-8");
 
     /* set up the conversion path */
-    tobuffer = buffer_init();
-    input = convert_init(utf8, 0/*to_uni*/, 0, tobuffer);
+    tobuffer = buffer_init(0);
+    input = convert_init(utf8, 0/*to_uni*/, tobuffer);
     input = canon_init(flags, input);
-    input = convert_init(charset, 1/*to_uni*/, 0, input);
+    input = convert_init(charset, 1/*to_uni*/, input);
 
     /* do the conversion */
     convert_cat(input, s);
@@ -2012,7 +2105,7 @@ EXPORTED char *charset_to_imaputf7(const char *msg_base, size_t len, charset_t c
     /* Initialize character set mapping */
     if (charset == CHARSET_UNKNOWN_CHARSET) return 0;
 
-    /* check for trivial search */
+    /* check for trivial case */
     if (len == 0)
         return xstrdup("");
 
@@ -2022,9 +2115,9 @@ EXPORTED char *charset_to_imaputf7(const char *msg_base, size_t len, charset_t c
 
     /* set up the conversion path */
     imaputf7 = charset_lookupname("imap-mailbox-name");
-    tobuffer = buffer_init();
-    input = convert_init(imaputf7, 0/*to_uni*/, len, tobuffer);
-    input = convert_init(charset, 1/*to_uni*/, len, input);
+    tobuffer = buffer_init(len);
+    input = convert_init(imaputf7, 0/*to_uni*/, tobuffer);
+    input = convert_init(charset, 1/*to_uni*/, input);
 
     /* choose encoding extraction if needed */
     switch (encoding) {
@@ -2070,6 +2163,93 @@ EXPORTED char *charset_utf8_to_searchform(const char *s, int flags)
     return ret;
 }
 
+EXPORTED char *charset_utf8_normalize(const char *src)
+{
+    int32_t srclen = strlen(src);
+    UChar *uni = NULL;
+    int32_t unilen = 0;
+    UChar *nfc = NULL;
+    int32_t nfclen = 0;
+    char *ret = NULL;
+    int32_t retlen = 0;
+
+    /* Fast-path for ASCII.
+     * Unicode Standard Annex #15, section 1.3: "Text exclusively
+     * containing ASCII characters (U+0000..U+007F) is left
+     * unaffected by all of the Normalization Forms."
+     * See http://www.unicode.org/reports/tr15/#Description_Norm
+     * */
+    const char *p;
+    for (p = src; *p && isascii(*p); p++) {}
+    if (*p == '\0') {
+        return xstrdup(src);
+    }
+
+    /* Convert the UTF-8 string to UChar */
+    UErrorCode err = U_ZERO_ERROR;
+    u_strFromUTF8(uni, unilen, &unilen, src, srclen, &err);
+    if (U_FAILURE(err) && err != U_BUFFER_OVERFLOW_ERROR) {
+        goto done;
+    }
+    err = U_ZERO_ERROR;
+    unilen++;
+    uni = xzmalloc(unilen * sizeof(UChar));
+    u_strFromUTF8(uni, unilen, &unilen, src, srclen, &err);
+    if (U_FAILURE(err)) {
+        goto done;
+    }
+
+    /* Normalize the UChars to NFC */
+    err = U_ZERO_ERROR;
+    const UNormalizer2 *norm = unorm2_getNFCInstance(&err);
+    if (!norm || U_FAILURE(err)) {
+        goto done;
+    }
+    /* Quick-check if the Unicode string requires normalization.
+     * Skip normalization only if libicu is certain not to need
+     * to do anything. */
+    if (unorm2_quickCheck(norm, uni, unilen, &err) == UNORM_YES) {
+        nfc = uni;
+        nfclen = unilen;
+        uni = NULL;
+    }
+    else {
+        err = U_ZERO_ERROR;
+        nfclen = unorm2_normalize(norm, uni, unilen, nfc, 0, &err) + 1;
+        if (U_FAILURE(err) && err != U_BUFFER_OVERFLOW_ERROR) {
+            goto done;
+        }
+        err = U_ZERO_ERROR;
+        nfclen++;
+        nfc = xzmalloc(nfclen * sizeof(UChar));
+        unorm2_normalize(norm, uni, unilen, nfc, nfclen, &err);
+        if (U_FAILURE(err)) {
+            goto done;
+        }
+        free(uni);
+        uni = NULL;
+    }
+
+    /* Convert the NFC UChars back to UTF-8 */
+    err = U_ZERO_ERROR;
+    u_strToUTF8(ret, 0, &retlen, nfc, nfclen, &err);
+    if (U_FAILURE(err) && err != U_BUFFER_OVERFLOW_ERROR) {
+        goto done;
+    }
+    err = U_ZERO_ERROR;
+    retlen++;
+    ret = xzmalloc(retlen);
+    u_strToUTF8(ret, retlen, &retlen, nfc, nfclen, &err);
+    if (U_FAILURE(err) && err != U_BUFFER_OVERFLOW_ERROR) {
+        goto done;
+    }
+
+done:
+    free(uni);
+    free(nfc);
+    return ret;
+}
+
 /* Convert from a given charset and encoding into utf8 */
 EXPORTED char *charset_to_utf8(const char *msg_base, size_t len, charset_t charset, int encoding)
 {
@@ -2090,9 +2270,9 @@ EXPORTED char *charset_to_utf8(const char *msg_base, size_t len, charset_t chars
 
     /* set up the conversion path */
     utf8 = charset_lookupname("utf-8");
-    tobuffer = buffer_init();
-    input = convert_init(utf8, 0/*to_uni*/, len, tobuffer);
-    input = convert_init(charset, 1/*to_uni*/, len, input);
+    tobuffer = buffer_init(len);
+    input = convert_init(utf8, 0/*to_uni*/, tobuffer);
+    input = convert_init(charset, 1/*to_uni*/, input);
 
     /* choose encoding extraction if needed */
     switch (encoding) {
@@ -2139,7 +2319,7 @@ EXPORTED int charset_decode(struct buf *dst, const char *src, size_t len, int en
     }
 
     /* set up the conversion path */
-    input = buffer_init();
+    input = buffer_init(len);
     buffer_setbuf(input, dst);
 
     /* choose encoding extraction if needed */
@@ -2181,13 +2361,20 @@ static void mimeheader_cat(struct convert_rock *target, const char *s, int flags
 
     if (!s) return;
 
+    /* Keep track of the decoding pipeline before the current
+     * encoded-word. This allows to share decoding state for
+     * multi-octet characters that are broken across words. */
+    int lastenc = ENCODING_UNKNOWN;
+    charset_t lastcs = CHARSET_UNKNOWN_CHARSET;
+    struct convert_rock *extract = NULL;
+
     /* set up the conversion path */
     if (flags & CHARSET_MIME_UTF8) {
         defaultcs = charset_lookupname("utf-8");
     } else {
         defaultcs = charset_lookupname("us-ascii");
     }
-    input = convert_init(defaultcs, 1/*to_uni*/, 0, target);
+    input = convert_init(defaultcs, 1/*to_uni*/, target);
 
     /* note: we assume the caller of this function has already
      * determined that all newlines are followed by whitespace */
@@ -2197,15 +2384,28 @@ static void mimeheader_cat(struct convert_rock *target, const char *s, int flags
     while ((start = (const char*) strchr(start, '=')) != 0) {
         start++;
         if (*start != '?') continue;
-        encoding = (const char*) strchr(start+1, '?');
-        if (!encoding) continue;
-        endcharset =
-            (const char*) strchr(start+1, '*'); /* Language code delimiter */
-        if (!endcharset || endcharset > encoding) endcharset = encoding;
-        if (encoding[1] != 'b' && encoding[1] != 'B' &&
-            encoding[1] != 'q' && encoding[1] != 'Q') continue;
-        if (encoding[2] != '?') continue;
-        end = (const char*) strchr(encoding+3, '?');
+        endcharset = NULL;
+        for (p = start + 1; *p && *p != '=' && *p != '?'; ++p)
+            if ('*' == *p && !endcharset) endcharset = p;
+        if (*p != '?') {
+            start = p;
+            continue;
+        }
+        encoding = p;
+        if (!endcharset) endcharset = p;
+        if ((encoding[1] != 'b' && encoding[1] != 'B' &&
+             encoding[1] != 'q' && encoding[1] != 'Q')
+            || (encoding[2] != '?')) {
+            start = p;
+            continue;
+        }
+        for (p = encoding + 3; *p && *p != '?'; ++p)
+            if ('=' == *p && '?' == p[1] && '=' != p[2]) break;
+        if (*p != '?' || p[1] != '=') {
+            start = p;
+            continue;
+        }
+        end = p;
         if (!end || end[1] != '=') continue;
 
         /*
@@ -2222,6 +2422,13 @@ static void mimeheader_cat(struct convert_rock *target, const char *s, int flags
             len = start - s - 1;
             convert_switch(input, defaultcs, 1/*to_uni*/);
             convert_catn(unfold, s, len);
+
+            /* Reset decoder pipeline */
+            charset_free(&lastcs);
+            lastcs = CHARSET_UNKNOWN_CHARSET;
+            lastenc = ENCODING_UNKNOWN;
+            basic_free(extract);
+            extract = NULL;
         }
 
         /*
@@ -2229,16 +2436,38 @@ static void mimeheader_cat(struct convert_rock *target, const char *s, int flags
          */
         start++;
         cs = lookup_buf(start, endcharset-start);
+        int enc = encoding[1] == 'q' || encoding[1] == 'Q' ? ENCODING_QP : ENCODING_BASE64;
+
         if (cs == CHARSET_UNKNOWN_CHARSET) {
             /* Unrecognized charset, nothing will match here */
             convert_putc(input, U_REPLACEMENT); /* unknown character */
+            charset_free(&cs);
+            convert_switch(input, defaultcs, 1 /*to_uni*/);
+
+            /* Reset decoder pipeline */
+            charset_free(&lastcs);
+            lastcs = CHARSET_UNKNOWN_CHARSET;
+            lastenc = ENCODING_UNKNOWN;
+            basic_free(extract);
+            extract = NULL;
+        }
+        else if (!strcmp(charset_canon_name(cs), charset_canon_name(lastcs)) &&
+                  enc == lastenc && enc) {
+            /* Reuse the previous decoder */
+            charset_free(&cs);
+            p = encoding+3;
+            convert_catn(extract, p, end - p);
         }
         else {
-            struct convert_rock *extract;
+            /* Reset the previous decoder and start a new decoding pipeline */
             convert_switch(input, cs, 1/*to_uni*/);
-
+            charset_free(&lastcs);
+            lastcs = CHARSET_UNKNOWN_CHARSET;
+            lastenc = ENCODING_UNKNOWN;
+            basic_free(extract);
+            extract = NULL;
             /* choose decoder */
-            if (encoding[1] == 'q' || encoding[1] == 'Q') {
+            if (enc == ENCODING_QP) {
                 extract = qp_init(1, input);
             }
             else {
@@ -2247,11 +2476,9 @@ static void mimeheader_cat(struct convert_rock *target, const char *s, int flags
             /* convert */
             p = encoding+3;
             convert_catn(extract, p, end - p);
-            /* clean up */
-            basic_free(extract);
+            lastcs = cs;
+            lastenc = enc;
         }
-        convert_switch(input, defaultcs, 1 /*to_uni*/);
-        charset_free(&cs);
 
         /* Prepare for the next iteration */
         s = start = end+2;
@@ -2268,11 +2495,13 @@ static void mimeheader_cat(struct convert_rock *target, const char *s, int flags
     basic_free(unfold);
     convert_nfree(input, 1);
     charset_free(&defaultcs);
+    charset_free(&lastcs);
+    basic_free(extract);
 }
 
 /*
  * Decode MIME strings (per RFC 2047) in 's'.  Returns a newly allocated
- * string, contining 's' in canonical searching form, which must be
+ * string, containing 's' in canonical searching form, which must be
  * free()d by the caller.
  */
 EXPORTED char *charset_decode_mimeheader(const char *s, int flags)
@@ -2284,8 +2513,8 @@ EXPORTED char *charset_decode_mimeheader(const char *s, int flags)
     if (!s) return NULL;
 
     utf8 = charset_lookupname("utf-8");
-    tobuffer = buffer_init();
-    input = convert_init(utf8, 0/*to_uni*/, 0, tobuffer);
+    tobuffer = buffer_init(0);
+    input = convert_init(utf8, 0/*to_uni*/, tobuffer);
     input = canon_init(flags, input);
 
     mimeheader_cat(input, s, flags);
@@ -2300,7 +2529,7 @@ EXPORTED char *charset_decode_mimeheader(const char *s, int flags)
 
 /*
  * Unfold len bytes of string s into a new string, which must be freed()
- * by the caller. Unfolding removes any CRLF that is mmediately followed
+ * by the caller. Unfolding removes any CRLF that is immediately followed
  * by a tab or space character. If flags sets CHARSET_UNFOLD_SKIPWS, then
  * the whitespace character is also omitted.
  */
@@ -2311,7 +2540,7 @@ EXPORTED char *charset_unfold(const char *s, size_t len, int flags)
 
     if (!s) return NULL;
 
-    tobuffer = buffer_init();
+    tobuffer = buffer_init(len);
     input = unfold_init(flags&CHARSET_UNFOLD_SKIPWS, tobuffer);
 
     convert_catn(input, s, len);
@@ -2337,10 +2566,13 @@ EXPORTED char *charset_parse_mimeheader(const char *s, int flags)
     if (!s) return NULL;
 
     utf8 = charset_lookupname("utf-8");
-    tobuffer = buffer_init();
-    input = convert_init(utf8, 0/*to_uni*/, 0, tobuffer);
+    tobuffer = buffer_init(0);
+    input = convert_init(utf8, 0/*to_uni*/, tobuffer);
 
     mimeheader_cat(input, s, flags);
+
+    if (flags & CHARSET_TRIMWS)
+        buffer_trim(tobuffer);
 
     res = buffer_cstring(tobuffer);
 
@@ -2348,6 +2580,90 @@ EXPORTED char *charset_parse_mimeheader(const char *s, int flags)
     charset_free(&utf8);
 
     return res;
+}
+
+/* Decode extended MIME values (per RFC 2231). Returns a newly allocated UTF-8
+ * encoded string, containing the decoded string, which must be free()d by the
+ * caller.
+ *
+ * If lang is not NULL, sets the buffer contents to the 'language' * field as
+ * encoded in the MIME value.
+ *
+ * If s can't be decoded to an extended value as defined in RFC 2231, then
+ * return NULL. E.g. it does not attempt to decode the value as RFC 2047 MIME
+ * header, nor returns the value verbatim. */
+EXPORTED char *charset_parse_mimexvalue(const char *s, struct buf *lang)
+{
+    if (!s) return NULL;
+    const char *p, *q;
+    struct buf buf = BUF_INITIALIZER;
+    charset_t cs;
+    char *ret = NULL;
+
+    /* Determine charset */
+    p = s;
+    q = strchr(p, '\'');
+    if (!q) return NULL;
+
+    buf_setmap(&buf, p, q - p);
+    cs = charset_lookupname(buf_cstring(&buf));
+    if (cs == CHARSET_UNKNOWN_CHARSET) goto done;
+
+    /* Determine language */
+    p = q + 1;
+    q = strchr(p, '\'');
+    if (!q) goto done;
+    if (lang) {
+        buf_setmap(lang, p, q - p);
+    }
+
+    /* Decode octects */
+    buf_reset(&buf);
+    p = q + 1;
+    while (*p) {
+        if (*p == '%') {
+            char c;
+            if (*(p+1) == 0 || *(p+2) == 0)
+                goto done;
+            if (hex_to_bin(p+1, 2, &c) == -1)
+                goto done;
+            buf_appendmap(&buf, &c, 1);
+            p += 3;
+        } else {
+            buf_appendmap(&buf, p++, 1);
+        }
+    }
+    ret = charset_to_utf8(buf_base(&buf), buf_len(&buf), cs, 0);
+
+done:
+    charset_free(&cs);
+    buf_free(&buf);
+    return ret;
+}
+
+/* Encode UTF-8 encoded string s as extended MIME RFC 2231 value.
+ * If lang is non-NULL, set the extended value language property
+ * accordingly. The returned string must be free()d by caller. */
+EXPORTED char *charset_encode_mimexvalue(const char *s, const char *lang)
+{
+    const unsigned char *p;
+    struct buf buf = BUF_INITIALIZER;
+
+    if (!s) return NULL;
+
+    buf_printf(&buf, "utf-8'%s'", lang ? lang : "");
+    for (p = (const unsigned char*) s; *p; p++) {
+        if ((*p >= '0' && *p <= '9') ||
+            (*p >= 'a' && *p <= 'z') ||
+            (*p >= 'A' && *p <= 'Z') ||
+            (strchr("!#$&+-.^_`|~", *p))) {
+            // Safe attr char
+            buf_putc(&buf, *p);
+        }
+        else buf_printf(&buf, "%%%X%X", *p >> 4, *p & 0xf);
+    }
+
+    return buf_release(&buf);
 }
 
 EXPORTED int charset_search_mimeheader(const char *substr, comp_pat *pat,
@@ -2358,7 +2674,7 @@ EXPORTED int charset_search_mimeheader(const char *substr, comp_pat *pat,
     charset_t utf8 = charset_lookupname("utf-8");
 
     tosearch = search_init(substr, pat);
-    input = convert_init(utf8, 0/*to_uni*/, 0, tosearch);
+    input = convert_init(utf8, 0/*to_uni*/, tosearch);
     input = canon_init(flags, input);
 
     mimeheader_cat(input, s, flags);
@@ -2381,7 +2697,7 @@ EXPORTED comp_pat *charset_compilepat(const char *s)
 {
     struct comp_pat_s *pat = xzmalloc(sizeof(struct comp_pat_s));
     const char *p = s;
-    /* count occurances */
+    /* count occurrences */
     while (*p) {
         if (*p == *s) pat->max_start++;
         pat->patlen++;
@@ -2422,9 +2738,9 @@ EXPORTED int charset_searchstring(const char *substr, comp_pat *pat,
     tosearch = search_init(substr, pat);
 
     /* and the input stream */
-    input = convert_init(utf8to, 0/*to_uni*/, len, tosearch);
+    input = convert_init(utf8to, 0/*to_uni*/, tosearch);
     input = canon_init(flags, input);
-    input = convert_init(utf8from, 1/*to_uni*/, len, input);
+    input = convert_init(utf8from, 1/*to_uni*/, input);
 
     /* feed the handler */
     while (len-- > 0) {
@@ -2469,9 +2785,9 @@ EXPORTED int charset_searchfile(const char *substr, comp_pat *pat,
     /* set up the conversion path */
     utf8 = charset_lookupname("utf-8");
     tosearch = search_init(substr, pat);
-    input = convert_init(utf8, 0/*to_uni*/, len, tosearch);
+    input = convert_init(utf8, 0/*to_uni*/, tosearch);
     input = canon_init(flags, input);
-    input = convert_init(charset, 1/*to_uni*/, len, input);
+    input = convert_init(charset, 1/*to_uni*/, input);
 
     /* choose encoding extraction if needed */
     switch (encoding) {
@@ -2530,8 +2846,8 @@ EXPORTED int charset_extract(void (*cb)(const struct buf *, void *),
 
     /* set up the conversion path */
     utf8 = charset_lookupname("utf-8");
-    tobuffer = buffer_init();
-    input = convert_init(utf8, 0/*to_uni*/, 0, tobuffer);
+    tobuffer = buffer_init(buf_len(data));
+    input = convert_init(utf8, 0/*to_uni*/, tobuffer);
     input = canon_init(flags, input);
 
     if (!strcmpsafe(subtype, "HTML")) {
@@ -2543,10 +2859,12 @@ EXPORTED int charset_extract(void (*cb)(const struct buf *, void *),
         }
         /* this is text/html data, so we can make ourselves useful by
          * stripping html tags, css and js. */
-        input = striphtml_init(input);
+        if (!(flags & CHARSET_KEEPHTML)) {
+            input = striphtml_init(input);
+        }
     }
 
-    input = convert_init(charset, 1/*to_uni*/, 0, input);
+    input = convert_init(charset, 1/*to_uni*/, input);
 
     switch (encoding) {
     case ENCODING_NONE:
@@ -2618,12 +2936,12 @@ EXPORTED const char *charset_decode_mimebody(const char *msg_base, size_t len, i
         return msg_base;
 
     case ENCODING_QP:
-        tobuffer = buffer_init();
+        tobuffer = buffer_init(len);
         input = qp_init(0, tobuffer);
         break;
 
     case ENCODING_BASE64:
-        tobuffer = buffer_init();
+        tobuffer = buffer_init(len);
         input = b64_init(tobuffer);
         break;
 
@@ -2652,6 +2970,10 @@ EXPORTED const char *charset_decode_mimebody(const char *msg_base, size_t len, i
     return *decbuf;
 }
 
+/* Maximum octect length of base64 or QP-encoded text lines, excluding
+ * terminating CR LF and encoding-specific padding/footer. */
+#define ENCODED_MAX_LINE_LEN  72
+
 /*
  * Base64 encode the MIME body part (per RFC 2045) of 'len' bytes located at
  * 'msg_base'.  Encodes into 'retval' which must large enough to
@@ -2661,13 +2983,12 @@ EXPORTED const char *charset_decode_mimebody(const char *msg_base, size_t len, i
  * May be called with 'msg_base' as NULL to get the number of encoded
  * bytes for allocating 'retval' of the proper size.
  */
-#define BASE64_MAX_LINE_LEN  72
-
 static char base_64[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 EXPORTED char *charset_encode_mimebody(const char *msg_base, size_t len,
-    char *retval, size_t *outlen, int *outlines)
+                                       char *retval, size_t *outlen,
+                                       int *outlines, int wrap)
 {
     const unsigned char *s;
     unsigned char s0, s1, s2;
@@ -2675,10 +2996,13 @@ EXPORTED char *charset_encode_mimebody(const char *msg_base, size_t len,
     int b64_len, b64_lines, cnt;
 
     b64_len = ((len + 2) / 3) * 4;
-    b64_lines = (b64_len + BASE64_MAX_LINE_LEN - 1) / BASE64_MAX_LINE_LEN;
+    if (wrap) {
+        b64_lines = (b64_len + ENCODED_MAX_LINE_LEN - 1) / ENCODED_MAX_LINE_LEN;
 
-    /* account for CRLF added to each line */
-    b64_len += 2 * b64_lines;
+        /* account for CRLF added to each line */
+        b64_len += 2 * b64_lines;
+    }
+    else b64_lines = 1;
 
     if (outlen) *outlen = b64_len;
     if (outlines) *outlines = b64_lines;
@@ -2687,7 +3011,7 @@ EXPORTED char *charset_encode_mimebody(const char *msg_base, size_t len,
 
     for (s = (const unsigned char*) msg_base, d = retval, cnt = 0; len;
          s += 3, d += 4, cnt += 4) { /* process tuplets */
-        if (cnt == BASE64_MAX_LINE_LEN) {
+        if (wrap && cnt == ENCODED_MAX_LINE_LEN) {
             /* reset line len count, add CRLF */
             cnt = 0;
             *d++ = '\r';
@@ -2718,9 +3042,11 @@ EXPORTED char *charset_encode_mimebody(const char *msg_base, size_t len,
         }
     }
 
-    /* add final CRLF */
-    *d++ = '\r';
-    *d++ = '\n';
+    if (wrap) {
+        /* add final CRLF */
+        *d++ = '\r';
+        *d++ = '\n';
+    }
 
     return (b64_len ? retval : NULL);
 }
@@ -2733,27 +3059,40 @@ EXPORTED char *charset_encode_mimebody(const char *msg_base, size_t len,
  * Returns the number of encoded bytes in 'outlen'.
  */
 static char *qp_encode(const char *data, size_t len, int isheader,
-                       size_t *outlen)
+                       int force_quote, size_t *outlen)
 {
     struct buf buf = BUF_INITIALIZER;
     size_t n;
-    int need_quote = 0;
+    int need_quote = 0, need_fold = 0;
 
-    for (n = 0; n < len; n++) {
-        unsigned char this = data[n];
-        unsigned char next = (n < len - 1) ? data[n+1] : '\0';
+    if (!force_quote) {
+        size_t prev_lf = 0;
+        for (n = 0; n < len; n++) {
+            unsigned char this = data[n];
+            unsigned char next = (n < len - 1) ? data[n+1] : '\0';
 
-        if (QPSAFECHAR[this] || this == '=' || this == ' ' || this == '\t') {
-            /* per RFC 5322: printable ASCII (decimal 33 - 126), SP, HTAB */
-            continue;
+            if (QPSAFECHAR[this] || this == '=' || this == ' ' || this == '\t') {
+                /* per RFC 5322: printable ASCII (decimal 33 - 126), SP, HTAB */
+                /* but only if the line doesn't exceed the 76 octet limit */
+                if (n - prev_lf <= 74) continue;
+
+                if (isheader) {
+                    need_fold = 1;
+                    continue;
+                }
+            }
+            else if (!isheader && this == '\r' && next == '\n') {
+                /* line break (CRLF) */
+                n++;
+                prev_lf = n;
+                continue;
+            }
+            need_quote = 1;
+            break;
         }
-        else if (!isheader && this == '\r' && next == '\n') {
-            /* line break (CRLF) */
-            n++;
-            continue;
-        }
+    }
+    else {
         need_quote = 1;
-        break;
     }
 
     if (need_quote) {
@@ -2778,12 +3117,12 @@ static char *qp_encode(const char *data, size_t len, int isheader,
                 else if (this < 0xf0) needbytes = 6;
                 else if (this < 0xf8) needbytes = 9;
                 else needbytes = 0; // impossible UTF-8 encoding
-                if (cnt + needbytes >= BASE64_MAX_LINE_LEN) {
+                if (cnt + needbytes >= ENCODED_MAX_LINE_LEN) {
                     buf_appendcstr(&buf, "?=\r\n =?UTF-8?Q?");
                     cnt = 11;
                 }
             }
-            else if (cnt >= BASE64_MAX_LINE_LEN) {
+            else if (cnt >= ENCODED_MAX_LINE_LEN) {
                 /* add soft line break to body */
                 buf_appendcstr(&buf, "=\r\n");
                 cnt = 0;
@@ -2833,6 +3172,22 @@ static char *qp_encode(const char *data, size_t len, int isheader,
 
         if (isheader) buf_appendcstr(&buf, "?=");
     }
+    else if (need_fold) {
+        /* fold header every 78 characters (if possible) */
+        size_t i = 0, j = 0, last_wsp = 0;
+
+        while ((len - i > 78) && (j < len)) {
+            j += strcspn(data + j, " \t");
+
+            if (last_wsp && (j - i > 78)) {
+                buf_appendmap(&buf, data + i, last_wsp - i);
+                buf_appendcstr(&buf, "\r\n");
+                i = last_wsp;
+            }
+            last_wsp = j++;
+        }
+        buf_appendcstr(&buf, data + i);
+    }
     else {
         buf_setmap(&buf, data, len);
     }
@@ -2849,11 +3204,11 @@ static char *qp_encode(const char *data, size_t len, int isheader,
  * Returns the number of encoded bytes in 'outlen'.
  */
 EXPORTED char *charset_qpencode_mimebody(const char *msg_base, size_t len,
-                                         size_t *outlen)
+                                         int force_quote, size_t *outlen)
 {
     if (!msg_base) return NULL;
 
-    return qp_encode(msg_base, len, 0, outlen);
+    return qp_encode(msg_base, len, 0, force_quote, outlen);
 }
 
 
@@ -2861,12 +3216,155 @@ EXPORTED char *charset_qpencode_mimebody(const char *msg_base, size_t len,
  * located at 'header'.
  * Returns a buffer which the caller must free.
  */
-EXPORTED char *charset_encode_mimeheader(const char *header, size_t len)
+EXPORTED char *charset_encode_mimeheader(const char *header, size_t len, int force_quote)
 {
     if (!header) return NULL;
 
     if (!len) len = strlen(header);
 
-    return qp_encode(header, len, 1, NULL);
+    return qp_encode(header, len, 1, force_quote, NULL);
 }
 
+/*
+ * If 'isheader' is non-zero "Q" encode (per RFC 2047), otherwise
+ * quoted-printable encode (per RFC 2045), the 'data' of 'len' bytes.
+ * Returns a buffer which the caller must free.
+ * Returns the number of encoded bytes in 'outlen'.
+ */
+EXPORTED char *charset_encode_mimephrase(const char *data)
+{
+    struct buf buf = BUF_INITIALIZER;
+    size_t n;
+
+    buf_setcstr(&buf, "=?UTF-8?Q?");
+    int cnt = 10;
+
+    for (n = 0; data[n]; n++) {
+        unsigned char this = data[n];
+
+        /* RFC2047 forbids splitting multi-octet characters */
+        int needbytes;
+        if (this < 0x80) needbytes = 0;
+        else if (this < 0xc0) needbytes = 0; // UTF-8 continuation
+        else if (this < 0xe0) needbytes = 3;
+        else if (this < 0xf0) needbytes = 6;
+        else if (this < 0xf8) needbytes = 9;
+        else needbytes = 0; // impossible UTF-8 encoding
+        if (cnt + needbytes >= ENCODED_MAX_LINE_LEN) {
+            buf_appendcstr(&buf, "?=\r\n =?UTF-8?Q?");
+            cnt = 11;
+        }
+
+        if (QPMIMEPHRASESAFECHAR[this]) {
+            /* literal representation */
+            buf_putc(&buf, (char)this);
+            cnt++;
+        }
+        else if (this == ' ') {
+            /* per RFC 2047: represent SP in header as '_' for legibility */
+            buf_putc(&buf, '_');
+            cnt++;
+        }
+        else {
+            /* 8-bit representation */
+            buf_printf(&buf, "=%02X", this);
+            cnt += 3;
+        }
+    }
+
+    buf_appendcstr(&buf, "?=");
+
+    return buf_release(&buf);
+}
+
+static void extract_plain_cb(const struct buf *buf, void *rock)
+{
+    struct buf *dst = (struct buf*) rock;
+    const char *p;
+    int seenspace = 0;
+
+    /* Just merge multiple space into one. That's similar to
+     * charset_extract's MERGE_SPACE but since we don't want
+     * it to canonify the text into search form */
+    for (p = buf_base(buf); p < buf_base(buf) + buf_len(buf) && *p; p++) {
+        if (*p == ' ') {
+            if (seenspace) continue;
+            seenspace = 1;
+        } else {
+            seenspace = 0;
+        }
+        buf_appendmap(dst, p, 1);
+    }
+}
+
+EXPORTED char *charset_extract_plain(const char *html) {
+    struct buf src = BUF_INITIALIZER;
+    struct buf dst = BUF_INITIALIZER;
+    charset_t utf8 = charset_lookupname("utf8");
+    char *text;
+    char *tmp, *q;
+    const char *p;
+
+    /* Replace <br> and <p> with newlines */
+    q = tmp = xstrdup(html);
+    p = html;
+    while (*p) {
+        if (!strncmp(p, "<br>", 4) || !strncmp(p, "</p>", 4)) {
+            *q++ = '\n';
+            p += 4;
+        }
+        else if (!strncmp(p, "p>", 3)) {
+            p += 3;
+        } else {
+            *q++ = *p++;
+        }
+    }
+    *q = 0;
+
+    /* Strip html tags */
+    buf_init_ro(&src, tmp, q - tmp);
+    buf_setcstr(&dst, "");
+    charset_extract(&extract_plain_cb, &dst,
+            &src, utf8, ENCODING_NONE, "HTML", CHARSET_KEEPCASE);
+    buf_cstring(&dst);
+
+    /* Trim text */
+    buf_trim(&dst);
+    text = buf_releasenull(&dst);
+    if (!strlen(text)) {
+        free(text);
+        text = NULL;
+    }
+
+    buf_free(&src);
+    free(tmp);
+    charset_free(&utf8);
+
+    return text;
+}
+
+EXPORTED struct char_counts charset_count_validutf8(const char *data, size_t datalen)
+{
+
+    if (datalen > INT32_MAX) {
+        datalen = INT32_MAX;
+    }
+
+    struct char_counts counts = { 0, 0, 0 };
+    int32_t i = 0;
+    int32_t length = (int32_t) datalen;
+    const uint8_t *data8 = (const uint8_t *) data;
+
+    while (i < length) {
+        UChar32 c;
+        U8_NEXT(data8, i, length, c);
+        if (c == 0xfffd)
+            counts.replacement++;
+        else if (c >= 0)
+            counts.valid++;
+        else
+            counts.invalid++;
+    }
+
+    return counts;
+}

@@ -8,7 +8,7 @@ Man pages
 
 * **cyrus.conf**
 
-* imapd.conf
+* **imapd.conf**
 
 * **krb.equiv**
 

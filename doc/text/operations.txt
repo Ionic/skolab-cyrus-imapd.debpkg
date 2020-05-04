@@ -10,58 +10,6 @@ Operations
 
   * (1) User Commands
 
-* Tools & Utilities
-
-  * arbitron
-
-  * arbitronsort.pl
-
-  * chk_cyrus
-
-  * ctl_cyrusdb
-
-  * ctl_deliver
-
-  * ctl_mboxlist
-
-  * cvt_cyrusdb
-
-  * cvt_cyrusdb_all
-
-  * cyr_dbtool
-
-  * cyr_df
-
-  * cyrdump
-
-  * cyr_expire
-
-  * cyr_virusscan
-
-  * fetchnews
-
-  * cyr_sequence
-
-  * cyr_synclog
-
-  * cyr_userseen
-
-  * masssievec
-
-  * mbexamine
-
-  * mbpath
-
-  * mkimap
-
-  * mknewsgroups
-
-  * rehash
-
-  * translatesieve
-
-  * undohash
-
 * Administrator Guide
 
   * Architecture
@@ -79,5 +27,3 @@ Operations
   * Common Operational Questions
 
   * Common Interoperability Problems
-
-   manpages adminref sop othertasks

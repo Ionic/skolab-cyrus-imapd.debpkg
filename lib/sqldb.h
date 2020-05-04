@@ -65,6 +65,7 @@ struct sqldb {
     int version;
     int refcount;
     int writelock;
+    int attached;
     strarray_t trans;
     ptrarray_t stmts;
     struct sqldb *next;
@@ -84,8 +85,14 @@ int sqldb_init(void);
 /* done with all SQL operations for this process */
 int sqldb_done(void);
 
+#define SQLDB_DEFAULT_TIMEOUT  20000 /* 20 seconds is an eternity */
+
 sqldb_t *sqldb_open(const char *fname, const char *initsql,
-                   int version, const struct sqldb_upgrade *upgradesql);
+                   int version, const struct sqldb_upgrade *upgradesql,
+                   int timeout_ms);
+
+int sqldb_attach(sqldb_t *open, const char *fname);
+int sqldb_detach(sqldb_t *open);
 
 /* execute 'cmd' and process results with 'cb'
    'cmd' is prepared as 'stmt' with 'bval' as bound values */

@@ -51,10 +51,12 @@
 #define CHARSET_SKIPSPACE (1<<1)
 #define CHARSET_MERGESPACE (1<<2)
 #define CHARSET_SKIPHTML (1<<3)
-#define CHARSET_SNIPPET (1<<4)
+#define CHARSET_KEEPCASE (1<<4)
 #define CHARSET_UNFOLD_SKIPWS (1<<5)
 #define CHARSET_MIME_UTF8 (1<<6)
 #define CHARSET_ESCAPEHTML (1<<8)
+#define CHARSET_KEEPHTML (1<<9)
+#define CHARSET_TRIMWS (1<<10)
 
 #define CHARSET_UNKNOWN_CHARSET (NULL)
 
@@ -68,7 +70,7 @@ typedef int comp_pat;
  *
  * Caveats:
  * * Two instances for the same character encoding are not pointer-equal.
- *   Use string comparison of the charset_name to test for equality.
+ *   Use string comparison of the charset_canon_name to test for equality.
  * * Instances are not safe to use for two simultaneous conversions. It is safe
  *   (and recommended) to reuse an instance for consecutive conversions.
  */
@@ -81,14 +83,30 @@ extern const char *encoding_name(int);
 extern char *charset_convert(const char *s, charset_t charset, int flags);
 extern char *charset_decode_mimeheader(const char *s, int flags);
 extern char *charset_parse_mimeheader(const char *s, int flags);
+extern char *charset_parse_mimexvalue(const char *s, struct buf *language);
+extern char *charset_encode_mimexvalue(const char *s,const char *language);
 extern char *charset_utf8_to_searchform(const char *s, int flags);
 
+/* Normalize the zero-terminted UTF-8 string s to Unicode NFC
+ * normal form.
+ *
+ * Does not enforce CR LF line ending or omission of control
+ * characters as defined in RFC 5198.
+ *
+ * Also see http://www.unicode.org/reports/tr15/ and RFC 5198 */
+extern char *charset_utf8_normalize(const char *s);
 
 extern charset_t charset_lookupname(const char *name);
 extern charset_t charset_lookupnumid(int id);
 extern void charset_free(charset_t *charset);
 
-extern const char *charset_name(charset_t);
+/* Return the canonical charset name. */
+extern const char *charset_canon_name(charset_t);
+
+/* Returns the name as provided in lookupname, if any.
+ * Falls back to returning the canonical name. */
+extern const char *charset_alias_name(charset_t);
+
 extern comp_pat *charset_compilepat(const char *s);
 extern void charset_freepat(comp_pat *pat);
 extern int charset_searchstring(const char *substr, comp_pat *pat,
@@ -101,15 +119,16 @@ extern const char *charset_decode_mimebody(const char *msg_base, size_t len,
                                            size_t *outlen);
 extern char *charset_encode_mimebody(const char *msg_base, size_t len,
                                      char *retval, size_t *outlen,
-                                     int *outlines);
+                                     int *outlines, int wrap);
 extern char *charset_qpencode_mimebody(const char *msg_base, size_t len,
-                                       size_t *outlen);
+                                       int force_quote, size_t *outlen);
 extern char *charset_to_utf8(const char *msg_base, size_t len, charset_t charset, int encoding);
 extern char *charset_to_imaputf7(const char *msg_base, size_t len, charset_t charset, int encoding);
 
 extern int charset_search_mimeheader(const char *substr, comp_pat *pat, const char *s, int flags);
 
-extern char *charset_encode_mimeheader(const char *header, size_t len);
+extern char *charset_encode_mimeheader(const char *header, size_t len, int force_quote);
+extern char *charset_encode_mimephrase(const char *header);
 
 extern char *charset_unfold(const char *s, size_t len, int flags);
 
@@ -124,5 +143,19 @@ extern int charset_extract(void (*cb)(const struct buf *text, void *rock),
                            const struct buf *data,
                            charset_t charset, int encoding,
                            const char *subtype, int flags);
+
+/* Extract plain text from HTML, converting <p> and <br>
+ * to newlines and trimming space left by HTML-only lines. */
+EXPORTED char *charset_extract_plain(const char *html);
+
+struct char_counts {
+    size_t valid;
+    size_t replacement;
+    size_t invalid;
+};
+
+/* Count the number of valid, invalid and replacement UTF-8 characters
+ * in the first INT32_MAX bytes of data. */
+extern struct char_counts charset_count_validutf8(const char *data, size_t datalen);
 
 #endif /* INCLUDED_CHARSET_H */

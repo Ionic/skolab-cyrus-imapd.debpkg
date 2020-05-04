@@ -65,7 +65,8 @@ One per user:
 
 * Subscriptions (<userid>.sub)
 
-* Search Indexes (cyrus.squat, <userid>.xapianactive)
+* Search Indexes (cyrus.squat, <userid>.xapianactive,
+  cyrus.indexed.db)
 
 
 Mailbox List (mailboxes.db)
@@ -80,7 +81,7 @@ ACL on the mailbox. The format of each record is as follows:
 
    Data: <Type Number>SP<Partition>SP<ACL (space-separated userid/rights pairs)>
 
-File type can be: twoskip (default), flat, skiplist, sql, or lmdb.
+File type can be: twoskip (default), flat, skiplist, or sql.
 
 
 Annotations (annotations.db)
@@ -97,7 +98,7 @@ each record is as follows:
 
    Data: <Value Size (4 bytes)><Value>\0<Content-Type>\0<Timestamp (4 bytes)>
 
-File type can be: twoskip  (default), skiplist, or lmdb.
+File type can be: twoskip  (default) or skiplist.
 
 
 Quotas (quotas.db)
@@ -112,8 +113,8 @@ of the quota root. The format of each record is as follows:
 
    Data: <Usage (in bytes)>SP<Limit (in Kbytes)>
 
-File type can be: quotalegacy (default), flat, skiplist, sql, twoskip,
-or lmdb.
+File type can be: quotalegacy (default), flat, skiplist, sql, or
+twoskip.
 
 **Legacy Quotas**
 
@@ -146,7 +147,7 @@ timestamp of the record and the UID of the message within the mailbox
 
    Data: <Timestamp (4 bytes)><Message UID (4 bytes)>
 
-File type can be: twoskip (default), skiplist, sql, or lmdb.
+File type can be: twoskip (default), skiplist, or sql.
 
 
 TLS cache (tls_sessions.db)
@@ -163,7 +164,7 @@ record is as follows:
 
    Data: <Timestamp (4 bytes)><Session Data (multi-byte)>
 
-File type can be: twoskip (default), skiplist, sql, or lmdb.
+File type can be: twoskip (default), skiplist, or sql.
 
 
 PTS cache (ptscache.db)
@@ -178,7 +179,7 @@ the userid. The format of each record is as follows:
 
    Data: <Auth State (multi-byte)>
 
-File type can be: twoskip (default), skiplist, or lmdb.
+File type can be: twoskip (default) or skiplist.
 
 
 STATUS cache (statuscache.db)
@@ -199,7 +200,7 @@ record is as follows:
 
    Data: <Version>SP<Bitmask of Items>SP<Mtime of Index>SP<Inode of Index>SP<Size of Index>SP<- of Messages>SP<- of Recent Messages>SP<Next UID>SP<UID Validity>SP<- of Unseen Messages>SP<Highest Mod Sequence>
 
-File type can be: twoskip (default), skiplist, sql, or lmdb.
+File type can be: twoskip (default), skiplist, or sql.
 
 
 User Access (user_deny.db)
@@ -217,7 +218,7 @@ follows:
 
    Data: <Version>TAB<Deny List (comma-separated wildmat patterns)>TAB<Deny Message>
 
-File type can be: flat (default), skiplist, sql, twoskip, or lmdb.
+File type can be: flat (default), skiplist, sql, or twoskip.
 
 
 Backups (backups.db)
@@ -227,7 +228,7 @@ This database maps userids to the location of their backup files.  It
 only exists on Cyrus Backup servers (compiled with the *--enable-
 backup* configure option).
 
-File type can be: twoskip (default), skiplist, sql, twoskip, or lmdb.
+File type can be: twoskip (default), skiplist, sql, or twoskip.
 
 
 Conversations (<userid>.conversations)
@@ -239,13 +240,13 @@ which this message ID has been seen, and the timestamp when it was
 last seen.
 
 It also has a records for each conversation ID with details about
-which folders have that converations ID in them, and counts of
+which folders have that conversations ID in them, and counts of
 messages and flags.
 
 Finally there are records for each folder with the counts of
 conversations in that folder.
 
-File type can be: skiplist (default), sql, twoskip, or lmdb.
+File type can be: skiplist (default), sql, or twoskip.
 
 
 Counters (<userid>.counters)
@@ -262,14 +263,20 @@ News database (fetchnews.db)
 File format not selectable.
 
 
-Search Indexes (cyrus.squat, <userid>.xapianactive)
----------------------------------------------------
+Search Indexes (cyrus.squat, <userid>.xapianactive, cyrus.indexed.db)
+---------------------------------------------------------------------
 
-This is either cyrus.squat in each folder, or if you're using xapian a
-single <userid>.xapianactive file listing active databases by tier
+This is either cyrus.squat in each folder, or if you're using Xapian a
+single <userid>.xapianactive file listing active databases with tier
 name and number.
 
-File type can be: twoskip (default), flat, skiplist, or lmdb.
+cyrus.indexed.db is used by the Xapian search engine.  Its file type
+can be: twoskip (default), flat, skiplist, or "zeroskip" and is
+determined by *search_indexed_db* in imapd.conf(5).
+
+The xapianactive file contains a space separated list of tiers and
+databases within the tier.  The first element is the active
+tier/database, to which new entries are added by *squatter -R*.
 
 
 Zoneinfo db (zoneinfo.db)
@@ -286,7 +293,7 @@ format of each record is as follows:
 
    Data: <Version>SP<Record Type>SP<Timestamp>SP<Data Strings (TAB-separated)>
 
-File type can be: twoskip (default), flat, skiplist, or lmdb.
+File type can be: twoskip (default), flat, or skiplist.
 
 
 Seen State (<userid>.seen)
@@ -304,7 +311,7 @@ been read. The format of each record is as follows:
 
    Data: <Version>SP<Last Read Time>SP<Last Read UID>SP<Last Change Time>SP<List of Read UIDs>
 
-File type can be: twoskip (default), flat, skiplist, or lmdb.
+File type can be: twoskip (default), flat, or skiplist.
 
 
 Subscriptions (<userid>.sub)
@@ -319,7 +326,7 @@ record is follows:
 
    Data: None
 
-File type can be: flat (default), skiplist, twoskip, or lmdb.
+File type can be: flat (default), skiplist, or twoskip.
 
 
 Search Index DB List (<userid>.xapianactive)
@@ -341,7 +348,7 @@ each record is follows:
 
    Data: <Version (2 bytes)><Access Key (multi-byte)>
 
-File type can be: twoskip (default), skiplist, or lmdb.
+File type can be: twoskip (default) or skiplist.
 
 
 DAV Index (<userid>.dav)
@@ -436,17 +443,6 @@ Skiplist
 
 An implementation of the Skip List data structure. Deprecated in
 favour of Twoskip as it is not robust in the face of disk failure.
-
-
-lmdb
-----
-
-Lightning Memory-Mapped Database (lmdb) is a high-performance
-transactional key-value store.
-
-Fast while in memory, but slow when the database is loaded. Best for
-databases that are held open for a long time: Mailbox List
-(mailboxes.db)
 
 
 sql

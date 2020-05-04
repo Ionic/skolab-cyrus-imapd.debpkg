@@ -44,9 +44,9 @@
 #include <config.h>
 
 #include <string.h>
+#include <sysexits.h>
 #include <syslog.h>
 
-#include "exitcodes.h"
 #include "httpd.h"
 #include "http_dav.h"
 #include "http_proxy.h"
@@ -54,6 +54,7 @@
 #include "proxy.h"
 #include "spool.h"
 #include "tok.h"
+#include "user.h"
 #include "util.h"
 #include "webdav_db.h"
 #include "xstrlcpy.h"
@@ -65,12 +66,13 @@
 static struct webdav_db *auth_webdavdb = NULL;
 
 static void my_webdav_init(struct buf *serverinfo);
-static void my_webdav_auth(const char *userid);
+static int my_webdav_auth(const char *userid);
 static void my_webdav_reset(void);
 static void my_webdav_shutdown(void);
 
-static int webdav_parse_path(const char *path,
-                             struct request_target_t *tgt, const char **errstr);
+static unsigned long webdav_allow_cb(struct request_target_t *tgt);
+static int webdav_parse_path(const char *path, struct request_target_t *tgt,
+                             const char **resultstr);
 
 static int webdav_get(struct transaction_t *txn, struct mailbox *mailbox,
                       struct index_record *record, void *data, void **obj);
@@ -116,7 +118,7 @@ static const struct report_type_t webdav_reports[] = {
 
     /* WebDAV ACL (RFC 3744) REPORTs */
     { "acl-principal-prop-set", NS_DAV, "multistatus", &report_acl_prin_prop,
-      DACL_ADMIN, REPORT_NEED_MBOX | REPORT_DEPTH_ZERO },
+      DACL_ADMIN, REPORT_NEED_MBOX | REPORT_NEED_PROPS | REPORT_DEPTH_ZERO },
 
     /* WebDAV Sync (RFC 6578) REPORTs */
     { "sync-collection", NS_DAV, "multistatus", &report_sync_col,
@@ -133,52 +135,73 @@ static const struct prop_entry webdav_props[] = {
       PROP_ALLPROP | PROP_COLLECTION | PROP_RESOURCE,
       propfind_creationdate, NULL, NULL },
     { "displayname", NS_DAV,
-      PROP_ALLPROP | PROP_COLLECTION | PROP_RESOURCE,
-      propfind_fromdb, proppatch_todb, NULL },
-    { "getcontentlanguage", NS_DAV, PROP_ALLPROP | PROP_RESOURCE,
+      PROP_ALLPROP | PROP_COLLECTION | PROP_RESOURCE | PROP_PERUSER,
+      propfind_collectionname, proppatch_todb, NULL },
+    { "getcontentlanguage", NS_DAV,
+      PROP_ALLPROP | PROP_RESOURCE,
       propfind_fromhdr, NULL, "Content-Language" },
     { "getcontentlength", NS_DAV,
       PROP_ALLPROP | PROP_COLLECTION | PROP_RESOURCE,
       propfind_getlength, NULL, NULL },
-    { "getcontenttype", NS_DAV, PROP_ALLPROP | PROP_RESOURCE,
+    { "getcontenttype", NS_DAV,
+      PROP_ALLPROP | PROP_RESOURCE,
       propfind_fromhdr, NULL, "Content-Type" },
-    { "getetag", NS_DAV, PROP_ALLPROP | PROP_COLLECTION | PROP_RESOURCE,
+    { "getetag", NS_DAV,
+      PROP_ALLPROP | PROP_COLLECTION | PROP_RESOURCE,
       propfind_getetag, NULL, NULL },
     { "getlastmodified", NS_DAV,
       PROP_ALLPROP | PROP_COLLECTION | PROP_RESOURCE,
       propfind_getlastmod, NULL, NULL },
-    { "lockdiscovery", NS_DAV, PROP_ALLPROP | PROP_RESOURCE,
+    { "lockdiscovery", NS_DAV,
+      PROP_ALLPROP | PROP_RESOURCE,
       propfind_lockdisc, NULL, NULL },
     { "resourcetype", NS_DAV,
       PROP_ALLPROP | PROP_COLLECTION | PROP_RESOURCE,
       propfind_restype, proppatch_restype, "addressbook" },
-    { "supportedlock", NS_DAV, PROP_ALLPROP | PROP_RESOURCE,
+    { "supportedlock", NS_DAV,
+      PROP_ALLPROP | PROP_RESOURCE,
       propfind_suplock, NULL, NULL },
 
     /* WebDAV Versioning (RFC 3253) properties */
-    { "supported-report-set", NS_DAV, PROP_COLLECTION,
+    { "supported-report-set", NS_DAV,
+      PROP_COLLECTION,
       propfind_reportset, NULL, (void *) webdav_reports },
+    { "supported-method-set", NS_DAV,
+      PROP_COLLECTION | PROP_RESOURCE,
+      propfind_methodset, NULL, (void *) &webdav_allow_cb },
 
     /* WebDAV ACL (RFC 3744) properties */
-    { "owner", NS_DAV, PROP_COLLECTION | PROP_RESOURCE,
+    { "owner", NS_DAV,
+      PROP_COLLECTION | PROP_RESOURCE,
       propfind_owner, NULL, NULL },
-    { "group", NS_DAV, 0, NULL, NULL, NULL },
-    { "supported-privilege-set", NS_DAV, PROP_COLLECTION | PROP_RESOURCE,
+    { "group", NS_DAV,
+      PROP_COLLECTION | PROP_RESOURCE,
+      NULL, NULL, NULL },
+    { "supported-privilege-set", NS_DAV,
+      PROP_COLLECTION | PROP_RESOURCE | PROP_PRESCREEN,
       propfind_supprivset, NULL, NULL },
-    { "current-user-privilege-set", NS_DAV, PROP_COLLECTION | PROP_RESOURCE,
+    { "current-user-privilege-set", NS_DAV,
+      PROP_COLLECTION | PROP_RESOURCE | PROP_PRESCREEN,
       propfind_curprivset, NULL, NULL },
-    { "acl", NS_DAV, PROP_COLLECTION | PROP_RESOURCE,
+    { "acl", NS_DAV,
+      PROP_COLLECTION | PROP_RESOURCE | PROP_PRESCREEN,
       propfind_acl, NULL, NULL },
-    { "acl-restrictions", NS_DAV, PROP_COLLECTION | PROP_RESOURCE,
+    { "acl-restrictions", NS_DAV,
+      PROP_COLLECTION | PROP_RESOURCE,
       propfind_aclrestrict, NULL, NULL },
-    { "inherited-acl-set", NS_DAV, 0, NULL, NULL, NULL },
-    { "principal-collection-set", NS_DAV, PROP_COLLECTION | PROP_RESOURCE,
+    { "inherited-acl-set", NS_DAV,
+      PROP_COLLECTION | PROP_RESOURCE,
+      NULL, NULL, NULL },
+    { "principal-collection-set", NS_DAV,
+      PROP_COLLECTION | PROP_RESOURCE,
       propfind_princolset, NULL, NULL },
 
     /* WebDAV Quota (RFC 4331) properties */
-    { "quota-available-bytes", NS_DAV, PROP_COLLECTION,
+    { "quota-available-bytes", NS_DAV,
+      PROP_COLLECTION,
       propfind_quota, NULL, NULL },
-    { "quota-used-bytes", NS_DAV, PROP_COLLECTION,
+    { "quota-used-bytes", NS_DAV,
+      PROP_COLLECTION,
       propfind_quota, NULL, NULL },
 
     /* WebDAV Current Principal (RFC 5397) properties */
@@ -187,15 +210,18 @@ static const struct prop_entry webdav_props[] = {
       propfind_curprin, NULL, NULL },
 
     /* WebDAV POST (RFC 5995) properties */
-    { "add-member", NS_DAV, PROP_COLLECTION,
+    { "add-member", NS_DAV,
+      PROP_COLLECTION,
       NULL,  /* Until Apple Contacts is fixed */ NULL, NULL },
 
     /* WebDAV Sync (RFC 6578) properties */
-    { "sync-token", NS_DAV, PROP_COLLECTION,
+    { "sync-token", NS_DAV,
+      PROP_COLLECTION,
       propfind_sync_token, NULL, SYNC_TOKEN_URL_SCHEME },
 
     /* Apple Calendar Server properties */
-    { "getctag", NS_CS, PROP_ALLPROP | PROP_COLLECTION,
+    { "getctag", NS_CS,
+      PROP_ALLPROP | PROP_COLLECTION,
       propfind_sync_token, NULL, "" },
 
     { NULL, 0, 0, NULL, NULL, NULL }
@@ -204,6 +230,8 @@ static const struct prop_entry webdav_props[] = {
 struct meth_params webdav_params = {
     webdav_mime_types,
     &webdav_parse_path,
+    &dav_get_validators,
+    &dav_get_modseq,
     &dav_check_precond,
     { (db_open_proc_t) &webdav_open_mailbox,
       (db_close_proc_t) &webdav_close,
@@ -211,16 +239,18 @@ struct meth_params webdav_params = {
       (db_proc_t) &webdav_commit,
       (db_proc_t) &webdav_abort,
       (db_lookup_proc_t) &webdav_lookup_resource,
+      (db_imapuid_proc_t) &webdav_lookup_imapuid,
       (db_foreach_proc_t) &webdav_foreach,
+      (db_updates_proc_t) &webdav_get_updates,
       (db_write_proc_t) &webdav_write,
       (db_delete_proc_t) &webdav_delete },
     NULL,                                       /* No ACL extensions */
     { 0, &webdav_put },                         /* Allow duplicate UIDs */
     NULL,                                       /* No special DELETE handling */
     &webdav_get,
-    { 0, MBTYPE_COLLECTION },                   /* Allow any location */
+    { 0, MBTYPE_COLLECTION, NULL },             /* Allow any location */
     NULL,                                       /* No PATCH handling */
-    { POST_ADDMEMBER, NULL, NULL },             /* No special POST handling */
+    { POST_ADDMEMBER, NULL, { 0, NULL, NULL } },/* No special POST handling */
     { 0, &webdav_put },                         /* Allow any MIME type */
     { DAV_FINITE_DEPTH, webdav_props},
     webdav_reports
@@ -229,7 +259,7 @@ struct meth_params webdav_params = {
 
 /* Namespace for Webdav collections */
 struct namespace_t namespace_drive = {
-    URL_NS_DRIVE, 0, "/dav/drive", NULL,
+    URL_NS_DRIVE, 0, "drive", "/dav/drive", NULL,
     http_allow_noauth_get, /*authschemes*/0,
     MBTYPE_COLLECTION,
     (ALLOW_READ | ALLOW_POST | ALLOW_WRITE | ALLOW_DELETE |
@@ -239,6 +269,7 @@ struct namespace_t namespace_drive = {
     {
         { &meth_acl,            &webdav_params },      /* ACL          */
         { NULL,                 NULL },                /* BIND         */
+        { NULL,                 NULL },                /* CONNECT      */
         { &meth_copy_move,      &webdav_params },      /* COPY         */
         { &meth_delete,         &webdav_params },      /* DELETE       */
         { &meth_get_head,       &webdav_params },      /* GET          */
@@ -268,7 +299,7 @@ static void my_webdav_init(struct buf *serverinfo __attribute__((unused)))
     if (!namespace_drive.enabled) return;
 
     if (!config_getstring(IMAPOPT_DAVDRIVEPREFIX)) {
-        fatal("Required 'davdriveprefix' option is not set", EC_CONFIG);
+        fatal("Required 'davdriveprefix' option is not set", EX_CONFIG);
     }
 
     webdav_init();
@@ -277,30 +308,37 @@ static void my_webdav_init(struct buf *serverinfo __attribute__((unused)))
 }
 
 
-static void my_webdav_auth(const char *userid)
+static int my_webdav_auth(const char *userid)
 {
-    int r;
-
     if (httpd_userisadmin || httpd_userisanonymous ||
         global_authisa(httpd_authstate, IMAPOPT_PROXYSERVERS)) {
         /* admin, anonymous, or proxy from frontend - won't have DAV database */
-        return;
+        return 0;
     }
     else if (config_mupdate_server && !config_getstring(IMAPOPT_PROXYSERVERS)) {
         /* proxy-only server - won't have DAV databases */
+        return 0;
     }
     else {
         /* Open WebDAV DB for 'userid' */
         my_webdav_reset();
         auth_webdavdb = webdav_open_userid(userid);
-        if (!auth_webdavdb) fatal("Unable to open WebDAV DB", EC_IOERR);
+        if (!auth_webdavdb) {
+            syslog(LOG_ERR, "Unable to open WebDAV DB for userid: %s", userid);
+            return HTTP_UNAVAILABLE;
+        }
     }
 
     /* Auto-provision toplevel DAV drive collection for 'userid' */
     mbname_t *mbname = mbname_from_userid(userid);
     mbname_push_boxes(mbname, config_getstring(IMAPOPT_DAVDRIVEPREFIX));
-    r = mboxlist_lookup(mbname_intname(mbname), NULL, NULL);
+    int r = mboxlist_lookup(mbname_intname(mbname), NULL, NULL);
     if (r == IMAP_MAILBOX_NONEXISTENT) {
+        struct mboxlock *namespacelock = user_namespacelock(userid);
+        // did we lose the race?  Nothing to do!
+        r = mboxlist_lookup(mbname_intname(mbname), NULL, NULL);
+        if (r != IMAP_MAILBOX_NONEXISTENT) goto done;
+
         /* Find location of INBOX */
         char *inboxname = mboxname_user_mbox(userid, NULL);
         mbentry_t *mbentry = NULL;
@@ -312,13 +350,14 @@ static void my_webdav_auth(const char *userid)
             proxy_findserver(mbentry->server, &http_protocol, httpd_userid,
                              &backend_cached, NULL, NULL, httpd_in);
             mboxlist_entry_free(&mbentry);
+            mboxname_release(&namespacelock);
             goto done;
         }
         mboxlist_entry_free(&mbentry);
 
         if (!r) {
             r = mboxlist_createmailbox(mbname_intname(mbname), MBTYPE_COLLECTION,
-                                       NULL, 0,
+                                       NULL, httpd_userisadmin || httpd_userisproxyadmin,
                                        userid, httpd_authstate,
                                        0, 0, 0, 0, NULL);
             if (r) syslog(LOG_ERR, "IOERROR: failed to create %s (%s)",
@@ -328,10 +367,13 @@ static void my_webdav_auth(const char *userid)
             syslog(LOG_ERR, "could not autoprovision DAV drive for userid %s: %s",
                    userid, error_message(r));
         }
+
+        mboxname_release(&namespacelock);
     }
 
  done:
     mbname_free(&mbname);
+    return 0;
 }
 
 
@@ -349,14 +391,30 @@ static void my_webdav_shutdown(void)
 }
 
 
+/* Determine allowed methods in WebDAV namespace */
+static unsigned long webdav_allow_cb(struct request_target_t *tgt)
+{
+    unsigned long allow = tgt->namespace->allow;
+
+    if (!tgt->userid) {
+        allow &= ALLOW_READ_MASK;
+    }
+    else if (tgt->resource) {
+        allow &= ~(ALLOW_MKCOL | ALLOW_POST);
+    }
+
+    return allow;
+}
+
+
 /* Parse request-target path in WebDAV namespace
  *
  * For purposes of PROPFIND and REPORT, we never assign tgt->collection.
  * All collections are treated as though they are at the root so both
  * contained resources and collection are listed.
  */
-static int webdav_parse_path(const char *path,
-                             struct request_target_t *tgt, const char **errstr)
+static int webdav_parse_path(const char *path, struct request_target_t *tgt,
+                             const char **resultstr)
 {
     char *p, *last = NULL;
     size_t len, lastlen = 0;
@@ -376,7 +434,7 @@ static int webdav_parse_path(const char *path,
     if (strlen(p) < len ||
         strncmp(namespace_drive.prefix, p, len) ||
         (path[len] && path[len] != '/')) {
-        *errstr = "Namespace mismatch request target path";
+        *resultstr = "Namespace mismatch request target path";
         return HTTP_FORBIDDEN;
     }
 
@@ -481,7 +539,7 @@ static int webdav_parse_path(const char *path,
         if (r) {
             syslog(LOG_ERR, "mlookup(%s) failed: %s",
                    mboxname, error_message(r));
-            *errstr = error_message(r);
+            *resultstr = error_message(r);
             mbname_free(&mbname);
 
             switch (r) {
@@ -516,7 +574,7 @@ static int webdav_get(struct transaction_t *txn,
         assert(!buf_len(&txn->buf));
         buf_printf(&txn->buf, "%s/%s", wdata->type, wdata->subtype);
         txn->resp_body.type = buf_cstring(&txn->buf);
-        txn->resp_body.fname = wdata->filename;
+        txn->resp_body.dispo.fname = wdata->filename;
         return HTTP_CONTINUE;
     }
 
@@ -645,7 +703,7 @@ static int webdav_put(struct transaction_t *txn, void *obj,
 
     /* Store the resource */
     return dav_store_resource(txn, buf_base(buf), buf_len(buf),
-                              mailbox, oldrecord, NULL);
+                              mailbox, oldrecord, wdata->dav.createdmodseq, NULL);
 }
 
 

@@ -144,7 +144,11 @@ static sasl_callback_t callbacks[] = {
     }, {
         SASL_CB_PASS, NULL, NULL
     }, {
-      SASL_CB_GETOPT, (int (*)(void))&mysasl_config, NULL
+#if GCC_VERSION >= 80000
+        SASL_CB_GETOPT, (void*)&mysasl_config, NULL
+#else
+        SASL_CB_GETOPT, (int (*)(void))&mysasl_config, NULL
+#endif
     }, {
         SASL_CB_LIST_END, NULL, NULL
     }
@@ -167,7 +171,7 @@ struct capa_cmd_t {
     char *auth;         /* [OPTIONAL] AUTH (SASL) capability string */
     char *compress;     /* [OPTIONAL] COMPRESS capability string */
     void (*parse_mechlist)(struct buf *list, const char *str,
-                           struct protocol_t *prot, unsigned long *capabilties);
+                           struct protocol_t *prot, unsigned long *capabilities);
                         /* [OPTIONAL] parse capability string,
                            returns space-separated list of mechs */
 };
@@ -222,6 +226,7 @@ struct protocol_t {
                         /* [OPTIONAL] perform protocol-specific authentication;
                            based on rock, login_enabled, mech, mechlist */
     struct logout_cmd_t logout_cmd;
+    char *unauth_cmd;
 
     /* these 3 are used for maintaining connection state */
     void *(*init_conn)(void); /* generate a context (if needed). This context
@@ -239,8 +244,9 @@ struct protocol_t {
 };
 
 
-static void imtest_fatal(const char *msg, ...) __attribute__((noreturn));
-static void imtest_fatal(const char *msg, ...)
+static void
+__attribute__((noreturn, format(printf, 1, 2)))
+imtest_fatal(const char *msg, ...)
 {
     struct stat sbuf;
     if (output_socket && output_socket_opened &&
@@ -262,7 +268,7 @@ static void imtest_fatal(const char *msg, ...)
 /* libcyrus makes us define this */
 EXPORTED void fatal(const char *msg, int code __attribute__((unused)))
 {
-    imtest_fatal(msg);
+    imtest_fatal("%s", msg);
 }
 
 int mysasl_config(void *context __attribute__((unused)),
@@ -758,7 +764,7 @@ static void do_starttls(int ssl, char *keyfile, unsigned *ssf)
                 imtest_fatal("TLS negotiation failed!\n");
         }
 
-    /* TLS negotiation suceeded */
+    /* TLS negotiation succeeded */
     tls_sess = SSL_get_session(tls_conn); /* Save the session for reuse */
 
     /* tell SASL about the negotiated layer */
@@ -773,6 +779,27 @@ static void do_starttls(int ssl, char *keyfile, unsigned *ssf)
                         auth_id);
     if (result!=SASL_OK)
         imtest_fatal("Error setting SASL property (external auth_id)");
+
+#if (OPENSSL_VERSION_NUMBER >= 0x0090800fL)
+    static unsigned char finished[EVP_MAX_MD_SIZE];
+    static struct sasl_channel_binding cbinding;
+
+    if (SSL_session_reused(tls_conn)) {
+        cbinding.len = SSL_get_peer_finished(tls_conn,
+                                             finished, sizeof(finished));
+    }
+    else {
+        cbinding.len = SSL_get_finished(tls_conn, finished, sizeof(finished));
+    }
+
+    cbinding.name = "tls-unique";
+    cbinding.critical = 0;
+    cbinding.data = finished;
+
+    result = sasl_setprop(conn, SASL_CHANNEL_BINDING, &cbinding);
+    if (result!=SASL_OK)
+        imtest_fatal("Error setting SASL property (channel binding)");
+#endif /* (OPENSSL_VERSION_NUMBER >= 0x0090800fL) */
 
     prot_settls (pin,  tls_conn);
     prot_settls (pout, tls_conn);
@@ -825,6 +852,10 @@ static int init_sasl(char *service, char *serverFQDN, int minssf, int maxssf,
 
 
     /* client new connection */
+#if defined(SASL_NEED_HTTP) && defined(SASL_HTTP_REQUEST)
+    if (!strcasecmp(service, "HTTP")) flags |= SASL_NEED_HTTP;
+#endif
+
     saslresult=sasl_client_new(service,
                                serverFQDN,
                                localip,
@@ -1323,6 +1354,7 @@ static void interactive(struct protocol_t *protocol, char *filename)
     signal(SIGINT, sigint_handler);
 
     /* loop reading from network and from stdin as applicable */
+    int unauth = 0;
     while (1) {
         rset = read_set;
         wset = write_set;
@@ -1352,6 +1384,14 @@ static void interactive(struct protocol_t *protocol, char *filename)
                     count++;
                 }
                 prot_write(pout, buf, count);
+
+                if (protocol->unauth_cmd) {
+                    /* Check if unauthenticate command was sent */
+                    char *p = stristr(buf, protocol->unauth_cmd);
+
+                    if (p && !strcmp("\r\n", p + strlen(protocol->unauth_cmd)))
+                        unauth = 1;
+                }
             }
             prot_flush(pout);
         } else if (FD_ISSET(sock, &rset) && (FD_ISSET(fd_out, &wset))) {
@@ -1377,6 +1417,23 @@ static void interactive(struct protocol_t *protocol, char *filename)
                     /* use the stream API */
                     buf[count] = '\0';
                     printf("%s", buf);
+                }
+
+                if (unauth) {
+                    /* Reset auth and connection state (other than TLS) */
+                    sasl_dispose(&conn);
+                    if (init_sasl(protocol->service, NULL,
+                                  0, 128, 0) != IMTEST_OK) {
+                        imtest_fatal("SASL initialization");
+                    }
+                    unauth = 0;
+
+#ifdef HAVE_ZLIB
+                    prot_unsetcompress(pout);
+                    prot_unsetcompress(pin);
+#endif
+                    prot_unsetsasl(pout);
+                    prot_unsetsasl(pin);
                 }
             } while (haveinput(pin) > 0);
         } else if ((FD_ISSET(fd, &rset)) && (FD_ISSET(sock, &wset))
@@ -2357,14 +2414,24 @@ static int auth_http_sasl(const char *servername, const char *mechlist)
     int saslresult;
     const char *out = NULL;
     unsigned int outlen = 0;
-    char *in;
+    char *in, *sid = NULL;
     int inlen;
     const char *mechusing;
     char buf[BASE64_BUF_SIZE+1], *base64 = buf;
-    int initial_response = 1, do_base64 = 1;
+    int initial_response = 1, do_base64 = 1, use_params = 0;;
     imt_stat status;
     char *username;
     unsigned int userlen;
+
+#ifdef SASL_HTTP_REQUEST
+    /* Set HTTP request (REQUIRED) */
+    sasl_http_request_t httpreq = { "OPTIONS",      /* Method */
+                                    "*",            /* URI */
+                                    (u_char *) "",  /* Empty body */
+                                    0,              /* Zero-length body */
+                                    1 };            /* Persistent cxn? */
+    sasl_setprop(conn, SASL_HTTP_REQUEST, &httpreq);
+#endif
 
     interaction(SASL_CB_USER, NULL, "Username", &username, &userlen);
 
@@ -2386,6 +2453,9 @@ static int auth_http_sasl(const char *servername, const char *mechlist)
     }
     else if (!strcmp(mechusing, "GSS-SPNEGO")) {
         mechusing = "Negotiate";
+    }
+    else if (!strncmp(mechusing, "SCRAM-", 6)) {
+        use_params = 1;
     }
 
     do {
@@ -2420,6 +2490,14 @@ static int auth_http_sasl(const char *servername, const char *mechlist)
                 }
 
                 /* send response to server */
+                if (use_params) {
+                    if (sid) {
+                        printf("sid=%s,", sid);
+                        prot_printf(pout, "sid=%s,", sid);
+                    }
+                    printf("data=");
+                    prot_puts(pout, "data=");
+                }
                 printf("%.*s", outlen, out);
                 prot_write(pout, out, outlen);
             }
@@ -2465,7 +2543,60 @@ static int auth_http_sasl(const char *servername, const char *mechlist)
                     !strncmp(scheme, mechusing, len)) {
                     in = scheme + len;
                     while (strchr(" \t", *++in)); /* trim optional whitespace */
-                    inlen = strcspn(in, "\r\n");  /* end of challenge */
+
+                    if (use_params) {
+                        /* Parse parameters */
+                        const char *token = in;
+
+                        in = NULL;
+                        while (token && *token) {
+                            size_t tok_len, val_len;
+                            char *value;
+
+                            /* Trim leading and trailing BWS */
+                            while (strchr(", \t", *token)) token++;
+                            tok_len = strcspn(token, "= \t");
+
+                            /* Find value */
+                            value = strchr(token + tok_len, '=');
+                            if (!value) {
+                                printf("Missing value for '%.*s'"
+                                       " parameter in challenge\n",
+                                       (int) tok_len, token);
+                                return IMTEST_FAIL;
+                            }
+
+                            /* Trim leading and trailing BWS */
+                            while (strchr(" \t", *++value));
+                            val_len = strcspn(value, ", \t");
+
+                            /* Check known parameters */
+                            if (!strncmp("sid", token, tok_len)) {
+                                if (!sid) sid = xstrndup(value, val_len);
+                                else if (val_len != strlen(sid) ||
+                                         strncmp(sid, value, val_len)) {
+                                    printf("Incorrect session ID parameter\n");
+                                    return IMTEST_FAIL;
+                                }
+                            }
+                            else if (!strncmp("data", token, tok_len)) {
+                                in = value;
+                                inlen = val_len;
+                            }
+
+                            /* Find next token */
+                            token = strchr(value + val_len, ',');
+                        }
+                        if (!in) {
+                            printf("Missing 'data' parameter in challenge\n");
+                            return IMTEST_FAIL;
+                        }
+                    }
+                    else {
+                        /* token68 */
+                        inlen = strcspn(in, " \t\r\n");  /* end of challenge */
+                    }
+
                     in = xstrndup(in, inlen);
                 }
             }
@@ -2505,6 +2636,8 @@ static int auth_http_sasl(const char *servername, const char *mechlist)
         }
     } while (out);
 
+    free(sid);
+
     return (status == STAT_OK) ? IMTEST_OK : IMTEST_FAIL;
 }
 
@@ -2515,18 +2648,23 @@ static int http_do_auth(struct sasl_cmd_t *sasl_cmd __attribute__((unused)),
     int result = IMTEST_OK;
 
     if (mech) {
-        if (!strcasecmp(mech, "basic")) {
+        if (!strcasecmp(mech, "basic") || !strcasecmp(mech, "plain")) {
             if (!basic_enabled) {
                 printf("[Server did not advertise HTTP Basic]\n");
                 result = IMTEST_FAIL;
             } else {
                 result = auth_http_basic(servername);
             }
-        } else if (!mechlist || !stristr(mechlist, mech)) {
-            printf("[Server did not advertise HTTP %s]\n", ucase(mech));
-            result = IMTEST_FAIL;
         } else {
-            result = auth_http_sasl(servername, mech);
+            if (!strcasecmp(mech, "digest")) mech = "DIGEST-MD5";
+            else if (!strcasecmp(mech, "negotiate")) mech = "GSS-SPNEGO";
+
+            if (!mechlist || !stristr(mechlist, mech)) {
+                printf("[Server did not advertise HTTP %s]\n", ucase(mech));
+                result = IMTEST_FAIL;
+            } else {
+                result = auth_http_sasl(servername, mech);
+            }
         }
     } else {
         if (mechlist) {
@@ -2562,7 +2700,7 @@ static void usage(char *prog, char *prot)
     else if (!strcasecmp(prot, "nntp"))
         printf("             (\"user\" for AUTHINFO USER/PASS\n");
     else if (!strcasecmp(prot, "http"))
-        printf("             (\"basic\" for HTTP Basic\n");
+        printf("             (\"basic\", \"digest\", \"negotiate\", \"ntlm\")\n");
     printf("  -f file  : pipe file into connection after authentication\n");
     printf("  -r realm : realm\n");
 #ifdef HAVE_SSL
@@ -2585,7 +2723,7 @@ static void usage(char *prog, char *prot)
     printf("  -n       : number of auth attempts (default=1)\n");
     printf("  -I file  : output my PID to (file) (useful with -X)\n");
     printf("  -x file  : open the named socket for the interactive portion\n");
-    printf("  -X file  : same as -X, except close all file descriptors & dameonize\n");
+    printf("  -X file  : same as -X, except close all file descriptors & daemonize\n");
 
     exit(1);
 }
@@ -2600,7 +2738,7 @@ static struct protocol_t protocols[] = {
       { "A01 AUTHENTICATE", 0,  /* no init resp until SASL-IR advertised */
         0, "A01 OK", "A01 NO", "+ ", "*", NULL, 0 },
       { "Z01 COMPRESS DEFLATE", "Z01 OK", "Z01 NO" },
-      &imap_do_auth, { "Q01 LOGOUT", "Q01 " },
+      &imap_do_auth, { "Q01 LOGOUT", "Q01 " }, " UNAUTHENTICATE",
       &imap_init_conn, &generic_pipe, &imap_reset
     },
     { "pop3", "pop3s", "pop", 0,   /* USER unavailable until advertised */
@@ -2609,7 +2747,7 @@ static struct protocol_t protocols[] = {
       { "STLS", "+OK", "-ERR", 0 },
       { "AUTH", 255, 0, "+OK", "-ERR", "+ ", "*", NULL, 0 },
       { NULL, NULL, NULL, },
-      &pop3_do_auth, { "QUIT", "+OK" }, NULL, NULL, NULL
+      &pop3_do_auth, { "QUIT", "+OK" }, NULL, NULL, NULL, NULL
     },
     { "nntp", "nntps", "nntp", 0,  /* AUTHINFO USER unavail until advertised */
       { 0, "20", NULL },
@@ -2619,7 +2757,7 @@ static struct protocol_t protocols[] = {
       { "AUTHINFO SASL", 512, 0, "28", "48", "383 ", "*",
         &nntp_parse_success, 0 },
       { "COMPRESS DEFLATE", "206", "403", },
-      &nntp_do_auth, { "QUIT", "205" }, NULL, NULL, NULL
+      &nntp_do_auth, { "QUIT", "205" }, NULL, NULL, NULL, NULL
     },
     { "lmtp", NULL, "lmtp", 0,
       { 0, "220 ", NULL },
@@ -2627,7 +2765,7 @@ static struct protocol_t protocols[] = {
       { "STARTTLS", "220", "454", 0 },
       { "AUTH", 512, 0, "235", "5", "334 ", "*", NULL, 0 },
       { NULL, NULL, NULL, },
-      &xmtp_do_auth, { "QUIT", "221" },
+      &xmtp_do_auth, { "QUIT", "221" }, NULL,
       &xmtp_init_conn, &generic_pipe, &xmtp_reset
     },
     { "smtp", "smtps", "smtp", 0,
@@ -2636,7 +2774,7 @@ static struct protocol_t protocols[] = {
       { "STARTTLS", "220", "454", 0 },
       { "AUTH", 512, 0, "235", "5", "334 ", "*", NULL, 0 },
       { NULL, NULL, NULL, },
-      &xmtp_do_auth, { "QUIT", "221" },
+      &xmtp_do_auth, { "QUIT", "221" }, NULL,
       &xmtp_init_conn, &generic_pipe, &xmtp_reset
     },
     { "mupdate", NULL, "mupdate", 0,
@@ -2645,7 +2783,7 @@ static struct protocol_t protocols[] = {
       { "S01 STARTTLS", "S01 OK", "S01 NO", 1 },
       { "A01 AUTHENTICATE", USHRT_MAX, 1, "A01 OK", "A01 NO", "", "*", NULL, 0 },
       { "Z01 COMPRESS \"DEFLATE\"", "Z01 OK", "Z01 NO" },
-      NULL, { "Q01 LOGOUT", "Q01 " }, NULL, NULL, NULL
+      NULL, { "Q01 LOGOUT", "Q01 " }, NULL, NULL, NULL, NULL
     },
     { "sieve", NULL, SIEVE_SERVICE_NAME, 0,
       { 1, "OK", NULL },
@@ -2654,7 +2792,7 @@ static struct protocol_t protocols[] = {
       { "AUTHENTICATE", USHRT_MAX, 1, "OK", "NO", NULL, "*",
         &sieve_parse_success, 1 },
       { NULL, NULL, NULL, },
-      NULL, { "LOGOUT", "OK" }, NULL, NULL, NULL
+      NULL, { "LOGOUT", "OK" }, "UNAUTHENTICATE", NULL, NULL, NULL
     },
     { "csync", NULL, "csync", 0,
       { 1, "* OK", NULL },
@@ -2662,7 +2800,7 @@ static struct protocol_t protocols[] = {
       { "STARTTLS", "OK", "NO", 1 },
       { "AUTHENTICATE", USHRT_MAX, 0, "OK", "NO", "+ ", "*", NULL, 0 },
       { "COMPRESS DEFLATE", "OK", "NO" },
-      NULL, { "EXIT", "OK" }, NULL, NULL, NULL
+      NULL, { "EXIT", "OK" }, NULL, NULL, NULL, NULL
     },
     { "http", "https", "HTTP", 0,  /* Basic unavail until advertised */
       { 0, NULL, NULL },
@@ -2671,7 +2809,7 @@ static struct protocol_t protocols[] = {
       { HTTP_STARTTLS, HTTP_101, HTTP_5xx, 1 },
       { NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, 0 },
       { NULL, NULL, NULL, },
-      &http_do_auth, { NULL, NULL }, NULL, NULL, NULL
+      &http_do_auth, { NULL, NULL }, NULL, NULL, NULL, NULL
     },
     { NULL, NULL, NULL, 0,
       { 0, NULL, NULL },
@@ -2679,7 +2817,7 @@ static struct protocol_t protocols[] = {
       { NULL, NULL, NULL, 0 },
       { NULL, 0, 0, NULL, NULL, NULL, NULL, NULL, 0 },
       { NULL, NULL, NULL, },
-      NULL, { NULL, NULL }, NULL, NULL, NULL
+      NULL, { NULL, NULL }, NULL, NULL, NULL, NULL
     }
 };
 
@@ -2928,6 +3066,8 @@ int main(int argc, char **argv)
 
     conn = NULL;
     do {
+        unsigned flags = 0;
+
         if (conn) {
             /* send LOGOUT */
             logout(&protocol->logout_cmd, 1);
@@ -2954,9 +3094,11 @@ int main(int argc, char **argv)
                          servername, port);
         }
 
-        if (init_sasl(protocol->service, servername, minssf, maxssf,
-                      protocol->sasl_cmd.parse_success ?
-                      SASL_SUCCESS_DATA : 0) != IMTEST_OK) {
+        if (username && strcmpnull(authname, username)) flags += SASL_NEED_PROXY;
+        if (protocol->sasl_cmd.parse_success) flags += SASL_SUCCESS_DATA;
+
+        if (init_sasl(protocol->service, servername,
+                      minssf, maxssf, flags) != IMTEST_OK) {
             imtest_fatal("SASL initialization");
         }
 

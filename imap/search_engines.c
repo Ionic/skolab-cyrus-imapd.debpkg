@@ -62,9 +62,6 @@
 #ifdef USE_SQUAT
 extern const struct search_engine squat_search_engine;
 #endif
-#ifdef USE_SPHINX
-extern const struct search_engine sphinx_search_engine;
-#endif
 #ifdef USE_XAPIAN
 extern const struct search_engine xapian_search_engine;
 #endif
@@ -87,16 +84,12 @@ static const struct search_engine default_search_engine = {
     NULL
 };
 
-static const struct search_engine *engine(void)
+EXPORTED const struct search_engine *search_engine(void)
 {
     switch (config_getenum(IMAPOPT_SEARCH_ENGINE)) {
 #ifdef USE_XAPIAN
     case IMAP_ENUM_SEARCH_ENGINE_XAPIAN:
         return &xapian_search_engine;
-#endif
-#ifdef USE_SPHINX
-    case IMAP_ENUM_SEARCH_ENGINE_SPHINX:
-        return &sphinx_search_engine;
 #endif
 #ifdef USE_SQUAT
     case IMAP_ENUM_SEARCH_ENGINE_SQUAT:
@@ -116,29 +109,37 @@ EXPORTED const char *search_part_as_string(int part)
     static const char *names[SEARCH_NUM_PARTS] = {
         /* ANY */NULL, "FROM", "TO", "CC",
         "BCC", "SUBJECT", "LISTID", "TYPE",
-        "HEADERS", "BODY", "LOCATION", "ATTACHMENTNAME"
+        "HEADERS", "BODY", "LOCATION", "ATTACHMENTNAME",
+        "ATTACHMENTBODY"
     };
 
     return (part < 0 || part >= SEARCH_NUM_PARTS ? NULL : names[part]);
 }
 
+EXPORTED int search_part_is_body(int part)
+{
+    return part == SEARCH_PART_BODY ||
+           part == SEARCH_PART_LOCATION ||
+           part == SEARCH_PART_ATTACHMENTBODY;
+}
+
 
 EXPORTED search_builder_t *search_begin_search(struct mailbox *mailbox, int opts)
 {
-    const struct search_engine *se = engine();
+    const struct search_engine *se = search_engine();
     return (se->begin_search ?
             se->begin_search(mailbox, opts) : NULL);
 }
 
 EXPORTED void search_end_search(search_builder_t *bx)
 {
-    const struct search_engine *se = engine();
+    const struct search_engine *se = search_engine();
     if (se->end_search) se->end_search(bx);
 }
 
 EXPORTED search_text_receiver_t *search_begin_update(int verbose)
 {
-    const struct search_engine *se = engine();
+    const struct search_engine *se = search_engine();
     /* We don't fallback to the default search engine here
      * because the default behaviour is not to index anything */
     return (se->begin_update ? se->begin_update(verbose) : NULL);
@@ -146,7 +147,7 @@ EXPORTED search_text_receiver_t *search_begin_update(int verbose)
 
 static int search_batch_size(void)
 {
-    const struct search_engine *se = engine();
+    const struct search_engine *se = search_engine();
     return (se->flags & SEARCH_FLAG_CAN_BATCH ?
             config_getint(IMAPOPT_SEARCH_BATCHSIZE) : INT_MAX);
 }
@@ -182,7 +183,7 @@ static int flush_batch(search_text_receiver_t *rx,
 
     for (i = 0 ; i < batch->count ; i++) {
         message_t *msg = ptrarray_nth(batch, i);
-        if (!r) r = index_getsearchtext(msg, rx, 0);
+        if (!r) r = index_getsearchtext(msg, NULL, rx, 0);
         message_unref(&msg);
     }
     ptrarray_truncate(batch, 0);
@@ -211,7 +212,10 @@ EXPORTED int search_update_mailbox(search_text_receiver_t *rx,
     r = rx->begin_mailbox(rx, mailbox, flags);
     if (r) goto done;
 
-    struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_EXPUNGED);
+    /* we want to index EXPUNGED messages too, because otherwise when we check the
+     * ranges matching the GUID in conversations DB later, we might think we've
+     * indexed it when we actually haven't */
+    struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_UNLINKED);
     if (flags & SEARCH_UPDATE_INCREMENTAL) mailbox_iter_startuid(iter, rx->first_unindexed_uid(rx));
 
     while ((msg = mailbox_iter_step(iter))) {
@@ -246,7 +250,7 @@ EXPORTED int search_update_mailbox(search_text_receiver_t *rx,
 
 EXPORTED int search_end_update(search_text_receiver_t *rx)
 {
-    const struct search_engine *se = engine();
+    const struct search_engine *se = search_engine();
     /* We don't fallback to the default search engine here
      * because the default behaviour is not to index anything */
     return (se->end_update ? se->end_update(rx) : 0);
@@ -258,46 +262,34 @@ EXPORTED search_text_receiver_t *search_begin_snippets(void *internalised,
                                                        search_snippet_cb_t proc,
                                                        void *rock)
 {
-    const struct search_engine *se = engine();
+    const struct search_engine *se = search_engine();
     return (se->begin_snippets ? se->begin_snippets(internalised,
                                     verbose, markup, proc, rock) : NULL);
 }
 
 EXPORTED int search_end_snippets(search_text_receiver_t *rx)
 {
-    const struct search_engine *se = engine();
+    const struct search_engine *se = search_engine();
     return (se->end_snippets ? se->end_snippets(rx) : 0);
 }
 
 EXPORTED char *search_describe_internalised(void *internalised)
 {
-    const struct search_engine *se = engine();
+    const struct search_engine *se = search_engine();
     return (se->describe_internalised ?
             se->describe_internalised(internalised) : 0);
 }
 
 EXPORTED void search_free_internalised(void *internalised)
 {
-    const struct search_engine *se = engine();
+    const struct search_engine *se = search_engine();
     if (se->free_internalised) se->free_internalised(internalised);
-}
-
-EXPORTED int search_start_daemon(int verbose)
-{
-    const struct search_engine *se = engine();
-    return (se->start_daemon ? se->start_daemon(verbose) : 0);
-}
-
-EXPORTED int search_stop_daemon(int verbose)
-{
-    const struct search_engine *se = engine();
-    return (se->stop_daemon ? se->stop_daemon(verbose) : 0);
 }
 
 EXPORTED int search_list_files(const char *userid,
                                strarray_t *files)
 {
-    const struct search_engine *se = engine();
+    const struct search_engine *se = search_engine();
     return (se->list_files ? se->list_files(userid, files) : 0);
 }
 
@@ -307,14 +299,20 @@ EXPORTED int search_compact(const char *userid,
                             const char *desttier,
                             int flags)
 {
-    const struct search_engine *se = engine();
+    const struct search_engine *se = search_engine();
     return (se->compact ? se->compact(userid, tempdir, srctiers, desttier, flags) : 0);
 }
 
 EXPORTED int search_deluser(const char *userid)
 {
-    const struct search_engine *se = engine();
+    const struct search_engine *se = search_engine();
     return (se->deluser ? se->deluser(userid) : 0);
+}
+
+EXPORTED int search_check_config(char **errstr)
+{
+    const struct search_engine *se = search_engine();
+    return (se->check_config ? se->check_config(errstr) : 0);
 }
 
 const char *search_op_as_string(int op)

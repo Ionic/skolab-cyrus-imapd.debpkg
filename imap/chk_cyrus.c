@@ -45,6 +45,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sysexits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -55,7 +56,6 @@
 #include <unistd.h>
 #endif
 
-#include "exitcodes.h"
 #include "index.h"
 #include "global.h"
 #include "mboxlist.h"
@@ -74,6 +74,7 @@ static const char *check_part = NULL; /* partition we are checking */
 static int chkmbox(struct findall_data *data, void *rock __attribute__((unused)))
 {
     if (!data) return 0;
+    if (!data->is_exactmatch) return 0;
     int r;
     mbentry_t *mbentry = NULL;
     const char *name = mbname_intname(data->mbname);
@@ -84,7 +85,7 @@ static int chkmbox(struct findall_data *data, void *rock __attribute__((unused))
 
     if (r) {
         fprintf(stderr, "bad mailbox %s in chkmbox\n", name);
-        fatal("fatal error",EC_TEMPFAIL);
+        fatal("fatal error",EX_TEMPFAIL);
     }
 
     /* are we on the partition we are checking? */
@@ -120,7 +121,7 @@ int main(int argc, char **argv)
         case 'P':
             if(mailbox) {
                 usage();
-                exit(EC_USAGE);
+                exit(EX_USAGE);
             }
             check_part = optarg;
             break;
@@ -128,7 +129,7 @@ int main(int argc, char **argv)
         case 'M':
             if(check_part) {
                 usage();
-                exit(EC_USAGE);
+                exit(EX_USAGE);
             }
             mailbox = optarg;
             break;
@@ -140,9 +141,6 @@ int main(int argc, char **argv)
     }
 
     cyrus_init(alt_config, "chk_cyrus", 0, CONFIG_NEED_PARTITION_DATA);
-
-    mboxlist_init(0);
-    mboxlist_open(NULL);
 
     if(mailbox) {
         fprintf(stderr, "Examining mailbox: %s\n", mailbox);
@@ -156,9 +154,6 @@ int main(int argc, char **argv)
         mboxlist_findall(NULL, pattern, 1, NULL,
                          NULL, chkmbox, NULL);
     }
-
-    mboxlist_close();
-    mboxlist_done();
 
     cyrus_done();
 

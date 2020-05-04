@@ -123,7 +123,7 @@ Changes to the Cyrus IMAP Server since 2.2.5
 * Fix a bug in the proxy code where a backend connection might get
   closed twice
 
-* Improved consistency checking in chk_cyrus
+* Improved consistancy checking in chk_cyrus
 
 * Fix segfault in APPEND code
 
@@ -133,7 +133,7 @@ Changes to the Cyrus IMAP Server since 2.2.5
 
 * Fix a triggered assertation in service-thread services
 
-* Add a number of internal consistency checks to the skiplist code
+* Add a number of internal consistancy checks to the skiplist code
 
 * Allow mbpath to handle virtual domains
 
@@ -284,9 +284,9 @@ Changes to the Cyrus IMAP Server since 2.2.0
 
 Changes to the Cyrus IMAP Server since 2.1.x
 
-* There have been extensive performance and consistency changes to
+* There have been extensive performance and consistancy changes to
   the configuration subsystem. This will both ensure greater
-  consistency between the documentation and the code, as well as a
+  consistancy between the documentation and the code, as well as a
   more standard format for specifing service-specific configuration
   options in imapd.conf. Important changes are detailed here:
 

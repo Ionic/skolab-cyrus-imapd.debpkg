@@ -86,7 +86,7 @@
 *
 * xxx we need to offer a callback to do peer issuer certification.
 *     data that should be available for inspection:
-*       If the peer offered a certifcate _and_ the certificate could be
+*       If the peer offered a certificate _and_ the certificate could be
 *       verified successfully, part of the certificate data are available as:
 *       tls_peer_subject X509v3-oneline with the DN of the peer
 *       pfixlts_peer_CN extracted CommonName of the peer
@@ -270,12 +270,14 @@ static DH *get_dh1024(void)
     return NULL;
 }
 
-static DH *load_dh_param(const char *keyfile, const char *certfile)
+static DH *load_dh_param(const char *dhfile, const char *keyfile, const char *certfile)
 {
     DH *ret=NULL;
     BIO *bio = NULL;
 
-    if (keyfile) bio = BIO_new_file(keyfile, "r");
+    if (dhfile) bio = BIO_new_file(dhfile, "r");
+
+    if ((bio == NULL) && keyfile) bio = BIO_new_file(keyfile, "r");
 
     if ((bio == NULL) && certfile) bio = BIO_new_file(certfile,"r");
 
@@ -336,6 +338,8 @@ static int verify_callback(int ok, X509_STORE_CTX * ctx)
     case X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD:
         syslog(LOG_NOTICE, "cert has expired");
         break;
+    case X509_V_ERR_CERT_REVOKED:
+        syslog(LOG_NOTICE, "cert has been revoked");
     }
 
     return (ok);
@@ -449,36 +453,89 @@ static int tls_dump(const char *s, int len)
 static int set_cert_stuff(SSL_CTX * ctx,
                           const char *cert_file, const char *key_file)
 {
+    int err;
     if (cert_file != NULL) {
+        char *cf1 = xstrdup(cert_file), *kf1 = xstrdupnull(key_file);
+        char *cf2 = strchr(cf1, ','), *kf2 = NULL;
         /* SSL_CTX_use_certificate_chain_file() requires an empty error stack.
          * To make sure there is no error from previous op, we clear it here...
          */
         ERR_clear_error();
-        if (SSL_CTX_use_certificate_chain_file(ctx, cert_file) <= 0) {
-            syslog(LOG_ERR, "unable to get certificate from '%s'", cert_file);
-            return (0);
+        if (cf2) {
+            /* two comma-separated files provided in cert_file */
+            *cf2++ = '\0';
+            if (key_file && (kf2 = strchr(kf1, ',')))
+                /* two comma-separated files provided in key_file */
+                *kf2++ = '\0';
+        }
+        if (SSL_CTX_use_certificate_chain_file(ctx, cf1) <= 0) {
+            err = ERR_get_error();
+            syslog(LOG_ERR, "unable to get certificate from '%s': %s", cf1, ERR_reason_error_string(err));
+            free(cf1);
+            free(kf1);
+            return 0;
         }
         if (key_file == NULL)
-            key_file = cert_file;
-        if (SSL_CTX_use_PrivateKey_file(ctx, key_file,
+            kf1 = cf1;
+        if (SSL_CTX_use_PrivateKey_file(ctx, kf1,
                                         SSL_FILETYPE_PEM) <= 0) {
-            syslog(LOG_ERR, "unable to get private key from '%s'", key_file);
-            return (0);
+            err = ERR_get_error();
+            syslog(LOG_ERR, "unable to get private key from '%s': %s", kf1, ERR_reason_error_string(err));
+            if (kf1 != cf1) free(kf1);
+            free(cf1);
+            return 0;
         }
         /* Now we know that a key and cert have been set against
          * the SSL context */
         if (!SSL_CTX_check_private_key(ctx)) {
+            err = ERR_get_error();
             syslog(
                     LOG_ERR,
-                    "Private key '%s' does not match public key '%s'",
-                    cert_file,
-                    key_file
-                );
-
-            return (0);
+                    "Private key '%s' does not match public key '%s': %s",
+                    kf1, cf1, ERR_reason_error_string(err));
+            if (kf1 != cf1) free(kf1);
+            free(cf1);
+            return 0;
         }
+
+        if (cf2) {
+            /* Load second certificate */
+            if (SSL_CTX_use_certificate_chain_file(ctx, cf2) <= 0) {
+                err = ERR_get_error();
+                syslog(LOG_ERR, "unable to get certificate from '%s': %s", cf2, ERR_reason_error_string(err));
+                if (kf1 != cf1) free(kf1);
+                free(cf1);
+                return 0;
+            }
+            if (kf2 == NULL)
+                kf2 = cf2;
+            if (SSL_CTX_use_PrivateKey_file(ctx, kf2,
+                                            SSL_FILETYPE_PEM) <= 0) {
+                err = ERR_get_error();
+                syslog(LOG_ERR, "unable to get private key from '%s': %s", kf2, ERR_reason_error_string(err));
+                if (kf1 != cf1) free(kf1);
+                free(cf1);
+                return 0;
+            }
+            /* Now we know that a key and cert have been set against
+             * the SSL context */
+            if (!SSL_CTX_check_private_key(ctx)) {
+                err = ERR_get_error();
+                syslog(
+                        LOG_ERR,
+                        "Private key '%s' does not match public key '%s': %s",
+                        kf2, cf2, ERR_reason_error_string(err));
+                if (kf1 != cf1) free(kf1);
+                free(cf1);
+                return 0;
+            }
+
+       if (kf1 != cf1) free(kf1);
+       free(cf1);
+       }
     }
-    return (1);
+
+    return 1;
 }
 
 /*
@@ -693,7 +750,9 @@ EXPORTED int     tls_init_serverengine(const char *ident,
     const char   *client_ca_file;
     const char   *server_ca_file;
     const char   *server_cert_file;
+    const char   *server_dhparam_file;
     const char   *server_key_file;
+    const char   *crl_file_path;
     enum enum_value tls_client_certs;
     int server_cipher_order;
     int timeout;
@@ -835,6 +894,7 @@ EXPORTED int     tls_init_serverengine(const char *ident,
 
     server_ca_file = config_getstring(IMAPOPT_TLS_SERVER_CA_FILE);
     server_cert_file = config_getstring(IMAPOPT_TLS_SERVER_CERT);
+    server_dhparam_file = config_getstring(IMAPOPT_TLS_SERVER_DHPARAM);
     server_key_file = config_getstring(IMAPOPT_TLS_SERVER_KEY);
 
     if (config_debug) {
@@ -902,7 +962,7 @@ EXPORTED int     tls_init_serverengine(const char *ident,
 
 #if (OPENSSL_VERSION_NUMBER >= 0x0090800fL)
     /* Load DH params for DHE-* key exchanges */
-    dh_params = load_dh_param(server_key_file, server_cert_file);
+    dh_params = load_dh_param(server_dhparam_file, server_key_file, server_cert_file);
     SSL_CTX_set_tmp_dh(s_ctx, dh_params);
 #endif
 
@@ -952,6 +1012,29 @@ EXPORTED int     tls_init_serverengine(const char *ident,
         }
     }
 
+    /* Set CRL */
+    crl_file_path = config_getstring(IMAPOPT_TLS_CRL_FILE);
+    if (crl_file_path != NULL) {
+        X509_STORE *store = SSL_CTX_get_cert_store(s_ctx);
+        X509_CRL *crl;
+        BIO *crl_file = BIO_new_file(crl_file_path, "r");
+
+        if (crl_file) {
+            while ((crl = PEM_read_bio_X509_CRL(crl_file, NULL, NULL, NULL))) {
+                X509_STORE_add_crl(store, crl);
+                X509_CRL_free(crl);
+            }
+
+            X509_STORE_set_flags(store,
+                                 X509_V_FLAG_CRL_CHECK |
+                                 X509_V_FLAG_CRL_CHECK_ALL);
+        } else {
+            syslog(LOG_ERR, "Can't load CRL file %s.", crl_file_path);
+        }
+
+        BIO_free(crl_file);
+    } /* crl_file_path */
+
     SSL_CTX_set_verify(s_ctx, verify_flags, verify_callback);
 
 #if (OPENSSL_VERSION_NUMBER >= 0x0090806fL)
@@ -964,10 +1047,10 @@ EXPORTED int     tls_init_serverengine(const char *ident,
                                    SSL_SESS_CACHE_NO_AUTO_CLEAR |
                                    SSL_SESS_CACHE_NO_INTERNAL_LOOKUP);
 
-    /* Get the session timeout from the config file (in minutes) */
-    timeout = config_getint(IMAPOPT_TLS_SESSION_TIMEOUT);
+    /* Get the session timeout from the config file */
+    timeout = config_getduration(IMAPOPT_TLS_SESSION_TIMEOUT, 'm');
     if (timeout < 0) timeout = 0;
-    if (timeout > 1440) timeout = 1440; /* 24 hours max */
+    if (timeout > 24 * 60 * 60) timeout = 24 * 60 * 60; /* 24 hours max */
 
     /* A timeout of zero disables session caching */
     if (timeout) {
@@ -978,8 +1061,8 @@ EXPORTED int     tls_init_serverengine(const char *ident,
         /* Set the context for session reuse -- use the service ident */
         SSL_CTX_set_session_id_context(s_ctx, (void*) ident, strlen(ident));
 
-        /* Set the timeout for the internal/external cache (in seconds) */
-        SSL_CTX_set_timeout(s_ctx, timeout*60);
+        /* Set the timeout for the internal/external cache */
+        SSL_CTX_set_timeout(s_ctx, timeout);
 
         /* Set the callback functions for the external session cache */
         SSL_CTX_sess_set_new_cb(s_ctx, new_session_cb);
@@ -997,7 +1080,7 @@ EXPORTED int     tls_init_serverengine(const char *ident,
         r = cyrusdb_open(DB, fname, CYRUSDB_CREATE, &sessdb);
         if (r != 0) {
             syslog(LOG_ERR, "DBERROR: opening %s: %s",
-                   fname, cyrusdb_strerror(ret));
+                   fname, cyrusdb_strerror(r));
         }
         else
             sess_dbopen = 1;
@@ -1049,7 +1132,7 @@ static long bio_dump_cb(BIO * bio, int cmd, const char *argp, int argi,
   * on success.
   */
 EXPORTED int tls_start_servertls(int readfd, int writefd, int timeout,
-                        int *layerbits, char **authid, SSL **ret)
+                                 struct saslprops_t *saslprops, SSL **ret)
 {
     int     sts;
     unsigned int n;
@@ -1070,7 +1153,7 @@ EXPORTED int tls_start_servertls(int readfd, int writefd, int timeout,
     if (var_imapd_tls_loglevel >= 1)
         syslog(LOG_DEBUG, "setting up TLS connection");
 
-    if (authid) *authid = NULL;
+    saslprops_reset(saslprops);
 
     tls_conn = (SSL *) SSL_new(s_ctx);
     if (tls_conn == NULL) {
@@ -1220,9 +1303,9 @@ EXPORTED int tls_start_servertls(int readfd, int writefd, int timeout,
 
         /* xxx verify that we like the peer_issuer/issuer_CN */
 
-        if (authid != NULL) {
+        if (peer_CN[0]) {
             /* save the peer id for our caller */
-            *authid = peer_CN[0] ? xstrdup(peer_CN) : NULL;
+            buf_setcstr(&saslprops->authid, peer_CN);
         }
         X509_free(peer);
     }
@@ -1231,9 +1314,23 @@ EXPORTED int tls_start_servertls(int readfd, int writefd, int timeout,
     tls_cipher_name = SSL_CIPHER_get_name(cipher);
     tls_cipher_usebits = SSL_CIPHER_get_bits(cipher, &tls_cipher_algbits);
 
-    if (layerbits != NULL) {
-        *layerbits = tls_cipher_usebits;
+    saslprops->ssf = (sasl_ssf_t) tls_cipher_usebits;
+
+#if (OPENSSL_VERSION_NUMBER >= 0x0090800fL)
+    if (SSL_session_reused(tls_conn)) {
+        saslprops->cbinding.len = SSL_get_finished(tls_conn,
+                                                   saslprops->tls_finished,
+                                                   MAX_FINISHED_LEN);
     }
+    else {
+        saslprops->cbinding.len = SSL_get_peer_finished(tls_conn,
+                                                        saslprops->tls_finished,
+                                                        MAX_FINISHED_LEN);
+    }
+
+    saslprops->cbinding.name = "tls-unique";
+    saslprops->cbinding.data = saslprops->tls_finished;
+#endif /* (OPENSSL_VERSION_NUMBER >= 0x0090800fL) */
 
 #if OPENSSL_VERSION_NUMBER >= 0x10002000L
     SSL_get0_alpn_selected(tls_conn, &alpn, &alpn_len);
@@ -1244,8 +1341,8 @@ EXPORTED int tls_start_servertls(int readfd, int writefd, int timeout,
                tls_cipher_usebits, tls_cipher_algbits,
                SSL_session_reused(tls_conn) ? "reused" : "new");
 
-    if (authid && *authid) {
-        buf_printf(&log, "authenticated as %s", *authid);
+    if (buf_len(&saslprops->authid)) {
+        buf_printf(&log, "authenticated as %s", buf_cstring(&saslprops->authid));
     }
     else {
         buf_appendcstr(&log, "no authentication");

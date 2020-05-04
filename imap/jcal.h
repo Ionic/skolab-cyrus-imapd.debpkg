@@ -50,5 +50,7 @@
 
 extern struct buf *icalcomponent_as_jcal_string(icalcomponent* comp);
 extern icalcomponent *jcal_string_as_icalcomponent(const struct buf *);
-extern const char *begin_jcal(struct buf *buf);
+extern const char *begin_jcal(struct buf *buf, struct mailbox *mailbox,
+                              const char *prodid, const char *name,
+                              const char *desc, const char *color);
 extern void end_jcal(struct buf *buf);

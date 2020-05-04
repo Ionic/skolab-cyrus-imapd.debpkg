@@ -18,8 +18,10 @@ Cyrus annotations are based on a draft (http://tools.ietf.org/html
   checks for the corresponding mailbox. (Draft RFC)
 
 * **/comment** - Sets a comment or description associated with the
-  mailbox. (cyradm(8)) /motd - Sets a "message of the day". The
-  message gets displayed as an ALERT after authentication.
+  mailbox. (cyradm(8))
+
+* **/motd** - Sets a "message of the day". The message gets
+  displayed as an ALERT after authentication.
 
 * **/sort** - Defines the default sort criteria [I-D.ietf-imapext-
   sort] to use when first displaying the mailbox contents to the user,
@@ -36,23 +38,26 @@ Cyrus annotations are based on a draft (http://tools.ietf.org/html
 
 * **vendor/cmu/cyrus-imapd/duplicatedeliver** - Flag signalling that
   we're allowing duplicate delivery of messages to the mailbox,
-  overriding system-wide duplicate suppression.
-  (https://cyrusimap.org/docs/cyrus-imapd/2.5.7/internal/mailbox-
-  format.php)
+  overriding system-wide duplicate suppression. (Cyrus IMAP Server:
+  Mailbox File Formats)
 
 * **/vendor/cmu/cyrus-imapd/expire** - Sets the number of days after
   which messages will be expired from the mailbox. (cyradm(8))
+
+* **/vendor/cmu/cyrus-imapd/archive** - Sets the number of days
+  after which messages will be archived from the mailbox. (cyradm(8))
+
+* **/vendor/cmu/cyrus-imapd/delete** - Sets the number of days after
+  which messages will be deleted from the mailbox. (cyradm(8))
 
 * **/vendor/cmu/cyrus-imapd/freespace** - Undocumented.
 
 * **/vendor/cmu/cyrus-imapd/lastpop** - (time_t) of the last pop3
   login to this INBOX, used to enforce the "poptimeout" imapd.conf
-  option. (https://cyrusimap.org/docs/cyrus-imapd/2.5.7/internal
-  /mailbox-format.php)
+  option. (Cyrus IMAP Server: Mailbox File Formats)
 
 * **vendor/cmu/cyrus-imapd/lastupdate** - (time_t) of the last time
-  a message was appended (https://cyrusimap.org/docs/cyrus-
-  imapd/2.5.7/internal/mailbox-format.php)
+  a message was appended (Cyrus IMAP Server: Mailbox File Formats)
 
 * **/vendor/cmu/cyrus-imapd/news2mail** - Sets an email address to
   which messages injected into the server via NNTP will be sent.
@@ -62,8 +67,7 @@ Cyrus annotations are based on a draft (http://tools.ietf.org/html
 
 * **/vendor/cmu/cyrus-imapd/pop3newuidl** - Flag signalling that
   we're using "uidvalidity.uid" instead of just "uid" for the output
-  of the POP3 UIDL command. (https://cyrusimap.org/docs/cyrus-
-  imapd/2.5.7/internal/mailbox-format.php)
+  of the POP3 UIDL command. (Cyrus IMAP Server: Mailbox File Formats)
 
 * **/vendor/cmu/cyrus-imapd/serve** - Undocumented.
 
@@ -84,4 +88,4 @@ Cyrus annotations are based on a draft (http://tools.ietf.org/html
 * **/vendor/cmu/cyrus-imapd/size** - Undocumented.
 
 * **/vendor/cmu/cyrus-imapd/squat** - Indicates that the mailbox
-  should have a squat index created for it. (See squatter(8))
+  should be indexed. (See squatter(8))

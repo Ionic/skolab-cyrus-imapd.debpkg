@@ -110,7 +110,8 @@ static int _version_cb(void *rock, int ncol, char **vals, char **names __attribu
 
 /* Open DAV DB corresponding in file */
 EXPORTED sqldb_t *sqldb_open(const char *fname, const char *initsql,
-                             int version, const struct sqldb_upgrade *upgrade)
+                             int version, const struct sqldb_upgrade *upgrade,
+                             int timeout_ms)
 {
     int rc = SQLITE_OK;
     struct stat sbuf;
@@ -145,7 +146,7 @@ EXPORTED sqldb_t *sqldb_open(const char *fname, const char *initsql,
     sqlite3_extended_result_codes(open->db, 1);
     sqlite3_trace(open->db, _debug, open->fname);
 
-    sqlite3_busy_timeout(open->db, 20*1000); /* 20 seconds is an eternity */
+    sqlite3_busy_timeout(open->db, timeout_ms);
 
     rc = sqlite3_exec(open->db, "PRAGMA foreign_keys = ON;", NULL, NULL, NULL);
     if (rc != SQLITE_OK) {
@@ -167,9 +168,21 @@ EXPORTED sqldb_t *sqldb_open(const char *fname, const char *initsql,
         return NULL;
     }
 
+    /* https://sqlite.org/pragma.html#pragma_temp_store
+     * When temp_store is MEMORY (2) temporary tables and indices are
+     * kept in as if they were pure in-memory databases memory.
+     */
+    rc = sqlite3_exec(open->db, "PRAGMA temp_store = 2;", NULL, NULL, NULL);
+    if (rc != SQLITE_OK) {
+        syslog(LOG_ERR, "DBERROR: sqldb_open(%s) enable foreign_keys: %s",
+               open->fname, sqlite3_errmsg(open->db));
+        _free_open(open);
+        return NULL;
+    }
+
     rc = sqlite3_exec(open->db, "PRAGMA user_version;", _version_cb, &open->version, NULL);
     if (rc != SQLITE_OK) {
-        syslog(LOG_ERR, "sqldb_open(%s) get user_version: %s",
+        syslog(LOG_ERR, "DBERROR: sqldb_open(%s) get user_version: %s",
             open->fname, sqlite3_errmsg(open->db));
         _free_open(open);
         return NULL;
@@ -186,7 +199,7 @@ EXPORTED sqldb_t *sqldb_open(const char *fname, const char *initsql,
         return NULL;
     }
 
-    rc = sqlite3_exec(open->db, "BEGIN IMMEDIATE;", NULL, NULL, NULL);
+    rc = sqlite3_exec(open->db, "BEGIN EXCLUSIVE;", NULL, NULL, NULL);
     if (rc != SQLITE_OK) {
         syslog(LOG_ERR, "DBERROR: sqldb_open(%s) begin: %s",
                open->fname, sqlite3_errmsg(open->db));
@@ -340,7 +353,8 @@ EXPORTED int sqldb_exec(sqldb_t *open, const char *cmd, struct sqldb_bindval bva
     sqlite3_clear_bindings(stmt);
 
     if (!r && rc != SQLITE_DONE) {
-        syslog(LOG_ERR, "sqldb_exec() step: %s", sqlite3_errmsg(open->db));
+        syslog(LOG_ERR, "DBERROR: sqldb_exec() step: %s for (%s: %s)",
+               sqlite3_errmsg(open->db), open->fname, cmd);
         r = -1;
     }
 
@@ -358,7 +372,9 @@ static int _onecmd(sqldb_t *open, const char *cmd, const char *name)
 EXPORTED int sqldb_begin(sqldb_t *open, const char *name)
 {
     if (!name) name = "DUMMY";
-    int r = _onecmd(open, "SAVEPOINT", name);
+    int r = 0;
+    if (!open->writelock) r = sqldb_writelock(open);
+    if (!r) r = _onecmd(open, "SAVEPOINT", name);
     if (!r) strarray_push(&open->trans, name);
     return r;
 }
@@ -371,6 +387,7 @@ EXPORTED int sqldb_commit(sqldb_t *open, const char *name)
     int r = _onecmd(open, "RELEASE SAVEPOINT", prev);
     if (r) strarray_push(&open->trans, prev);
     free(prev);
+    if (!r && !open->trans.count) r = sqldb_writecommit(open);
     return r;
 }
 
@@ -381,6 +398,10 @@ EXPORTED int sqldb_rollback(sqldb_t *open, const char *name)
     if (name) assert(!strcmp(prev, name));
     int r = _onecmd(open, "ROLLBACK TO SAVEPOINT", prev);
     if (r) strarray_push(&open->trans, prev);
+    // it's still commit here even if we rolled back THIS savepoint,
+    // because other savepoints may have committed, so we want to
+    // commit the wrapping transaction
+    if (!r && !open->trans.count) r = sqldb_writecommit(open);
     free(prev);
     return r;
 }
@@ -450,4 +471,29 @@ EXPORTED int sqldb_close(sqldb_t **dbp)
     *dbp = NULL;
 
     return _free_open(open);
+}
+
+EXPORTED int sqldb_attach(sqldb_t *open, const char *fname)
+{
+    if (open->attached) return SQLITE_MISUSE;
+    struct sqldb_bindval bval[] = {
+        { ":fname",  SQLITE_TEXT, { .s = fname         } },
+        { NULL,      SQLITE_NULL, { .s = NULL          } } };
+
+    struct stat sbuf;
+    if (stat(fname, &sbuf)) return SQLITE_NOTFOUND;
+
+    int r = sqldb_exec(open, "ATTACH DATABASE :fname AS other;", bval, NULL, NULL);
+    if (r) return r;
+    open->attached = 1;
+    return 0;
+}
+
+EXPORTED int sqldb_detach(sqldb_t *open)
+{
+    if (!open->attached) return SQLITE_MISUSE;
+    int r = sqldb_exec(open, "DETACH DATABASE other;", NULL, NULL, NULL);
+    if (r) return r;
+    open->attached = 0;
+    return 0;
 }

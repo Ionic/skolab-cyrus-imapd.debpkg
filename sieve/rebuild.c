@@ -56,10 +56,11 @@
 #include "imap/mailbox.h"
 
 #include "sieve/bytecode.h"
+#include "sieve/bc_parse.h"
 #include "sieve/script.h"
 #include "sieve/sieve_interface.h"
 
-EXPORTED char *sieve_getbcfname(const char *script_fname)
+static char *sieve_getbcfname(const char *script_fname)
 {
     char tmp[MAX_MAILBOX_PATH + 1];
     char *ext;
@@ -81,7 +82,7 @@ EXPORTED char *sieve_getbcfname(const char *script_fname)
     return xstrdup(tmp);
 }
 
-EXPORTED char *sieve_getscriptfname(const char *bc_name)
+static char *sieve_getscriptfname(const char *bc_name)
 {
     char tmp[MAX_MAILBOX_PATH + 1];
     char *ext;
@@ -184,15 +185,15 @@ EXPORTED int sieve_rebuild(const char *script_fname, const char *bc_fname,
 
         r = fstat(script_fd, &script_stat);
         if (r) {
-            syslog(LOG_DEBUG, "%s: stat %s: %m", __func__, script_fname);
-            r = SIEVE_FAIL;
+            syslog(LOG_ERR, "IOERROR: fstat %s: %m", script_fname);
+            r = IMAP_IOERROR;
             goto done;
         }
 
         r = stat(bc_fname, &bc_stat);
         if (r && errno != ENOENT) {
-            syslog(LOG_DEBUG, "%s: stat %s: %m", __func__, bc_fname);
-            r = SIEVE_FAIL;
+            syslog(LOG_ERR, "IOERROR: stat %s: %m", bc_fname);
+            r = IMAP_IOERROR;
             goto done;
         }
 
@@ -200,11 +201,18 @@ EXPORTED int sieve_rebuild(const char *script_fname, const char *bc_fname,
             sieve_execute_t *exe = NULL;
             r = sieve_script_load(bc_fname, &exe);
 
-            if (!r && sieve_bytecode_version(exe->bc_cur) == BYTECODE_VERSION) {
-                syslog(LOG_DEBUG, "%s: %s is up to date\n", __func__, bc_fname);
-                r = SIEVE_OK;
-                sieve_script_unload(&exe);
-                goto done;
+            if (!r) {
+                int version;
+
+                bc_header_parse((bytecode_input_t *) exe->bc_cur->data,
+                                &version, NULL);
+                if (version == BYTECODE_VERSION) {
+                    syslog(LOG_DEBUG,
+                           "%s: %s is up to date\n", __func__, bc_fname);
+                    r = SIEVE_OK;
+                    sieve_script_unload(&exe);
+                    goto done;
+                }
             }
 
             sieve_script_unload(&exe);
@@ -213,14 +221,14 @@ EXPORTED int sieve_rebuild(const char *script_fname, const char *bc_fname,
 
     len = strlcpy(new_bc_fname, bc_fname, sizeof(new_bc_fname));
     if (len >= sizeof(new_bc_fname)) {
-        syslog(LOG_DEBUG, "%s: filename too long: %s", __func__, bc_fname);
-        r = SIEVE_FAIL;
+        syslog(LOG_ERR, "IOERROR: filename too long: %s", bc_fname);
+        r = IMAP_IOERROR;
         goto done;
     }
     len = strlcat(new_bc_fname, ".NEW", sizeof(new_bc_fname));
     if (len >= sizeof(new_bc_fname)) {
-        syslog(LOG_DEBUG, "%s: filename too long: %s", __func__, bc_fname);
-        r = SIEVE_FAIL;
+        syslog(LOG_ERR, "IOERROR: filename too long: %s", bc_fname);
+        r = IMAP_IOERROR;
         goto done;
     }
 
@@ -241,28 +249,28 @@ EXPORTED int sieve_rebuild(const char *script_fname, const char *bc_fname,
     script_file = fdopen(script_fd, "r");
     if (!script_file) {
         syslog(LOG_ERR, "IOERROR: unable to fdopen %s for reading: %m",
-                          script_fname);
+                        script_fname);
         r = IMAP_IOERROR;
         goto done;
     }
 
     r = sieve_script_parse_only(script_file, &parse_errors, &script);
     if (r != SIEVE_OK) {
-        syslog(LOG_DEBUG, "%s: %s parse failed: %s",
-                          __func__, script_fname, parse_errors);
+        syslog(LOG_ERR, "%s: %s parse failed: %s",
+                        __func__, script_fname, parse_errors);
         goto done;
     }
 
     if (sieve_generate_bytecode(&bc, script) == -1) {
-        syslog(LOG_DEBUG, "%s: %s bytecode generation failed: %s",
-                          __func__, script_fname, "unknown error");
+        syslog(LOG_ERR, "%s: %s bytecode generation failed: %s",
+                        __func__, script_fname, "unknown error");
         r = SIEVE_FAIL;
         goto done;
     }
 
     if (sieve_emit_bytecode(bc_fd, bc) == -1) {
-        syslog(LOG_DEBUG, "%s: unable to emit bytecode to %s: %s",
-                          __func__, bc_fname, "unknown error");
+        syslog(LOG_ERR, "%s: unable to emit bytecode to %s: %s",
+                        __func__, bc_fname, "unknown error");
         r = SIEVE_FAIL;
         goto done;
     }

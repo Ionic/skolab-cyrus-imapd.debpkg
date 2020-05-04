@@ -45,13 +45,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <string.h>
 #include <errno.h>
 
+#include "assert.h"
 #include "signals.h"
 #include "xmalloc.h"
-#include "exitcodes.h"
 #include "util.h"
 
 #ifndef _NSIG
@@ -91,18 +92,18 @@ EXPORTED void signals_add_handlers(int alarm)
 
     /* SIGALRM used as a syscall timeout, so we don't set SA_RESTART */
     if (alarm && sigaction(SIGALRM, &action, NULL) < 0) {
-        fatal("unable to install signal handler for SIGALRM", EC_TEMPFAIL);
+        fatal("unable to install signal handler for SIGALRM", EX_TEMPFAIL);
     }
 
     /* no restartable SIGQUIT thanks */
     if (sigaction(SIGQUIT, &action, NULL) < 0)
-        fatal("unable to install signal handler for SIGQUIT", EC_TEMPFAIL);
+        fatal("unable to install signal handler for SIGQUIT", EX_TEMPFAIL);
     if (sigaction(SIGINT, &action, NULL) < 0)
-        fatal("unable to install signal handler for SIGINT", EC_TEMPFAIL);
+        fatal("unable to install signal handler for SIGINT", EX_TEMPFAIL);
     if (sigaction(SIGTERM, &action, NULL) < 0)
-        fatal("unable to install signal handler for SIGTERM", EC_TEMPFAIL);
+        fatal("unable to install signal handler for SIGTERM", EX_TEMPFAIL);
     if (sigaction(SIGUSR2, &action, NULL) < 0)
-        fatal("unable to install signal handler for SIGUSR2", EC_TEMPFAIL);
+        fatal("unable to install signal handler for SIGUSR2", EX_TEMPFAIL);
 
     signals_reset_sighup_handler(1);
 }
@@ -124,7 +125,7 @@ EXPORTED void signals_reset_sighup_handler(int restartable)
     action.sa_flags |= SA_SIGINFO;
 
     if (sigaction(SIGHUP, &action, NULL) < 0)
-        fatal("unable to install signal handler for SIGHUP", EC_TEMPFAIL);
+        fatal("unable to install signal handler for SIGHUP", EX_TEMPFAIL);
 }
 
 static shutdownfn *shutdown_cb = NULL;
@@ -198,9 +199,9 @@ static int signals_poll_mask(sigset_t *oldmaskp)
             sigprocmask(SIG_SETMASK, oldmaskp, NULL);
         if (shutdown_cb) {
             signals_in_shutdown = 1;
-            shutdown_cb(EC_TEMPFAIL);
+            shutdown_cb(EX_TEMPFAIL);
         }
-        else exit(EC_TEMPFAIL);
+        else exit(EX_TEMPFAIL);
     }
     for (sig = 1 ; sig < _NSIG ; sig++) {
         if (sig == SIGUSR2) continue; /* only ever polled explicitly */
@@ -224,6 +225,11 @@ EXPORTED int signals_poll(void)
 EXPORTED int signals_select(int nfds, fd_set *rfds, fd_set *wfds,
                             fd_set *efds, struct timeval *tout)
 {
+    if (nfds > 0.9 * FD_SETSIZE) {
+        syslog(LOG_WARNING, "signals_select: nfds = %d/%d", nfds, FD_SETSIZE);
+        assert(nfds < FD_SETSIZE);
+    }
+
 #if HAVE_PSELECT
     /* pselect() closes the race between SIGCHLD arriving
     * and select() sleeping for up to 10 seconds. */

@@ -45,15 +45,15 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sysexits.h>
 #include <syslog.h>
 
 #include "map.h"
-#include "exitcodes.h"
 #include "xmalloc.h"
 
 #define SLOP (8*1024)
 
-EXPORTED const char *map_method_desc = "shared";
+EXPORTED const char map_method_desc[] = "shared";
 
 /*
  * Create/refresh mapping of file
@@ -70,7 +70,7 @@ EXPORTED void map_refresh(int fd, int onceonly, const char **base,
             syslog(LOG_ERR, "IOERROR: fstating %s file%s%s: %m", name,
                    mboxname ? " for " : "", mboxname ? mboxname : "");
             snprintf(buf, sizeof(buf), "failed to fstat %s file", name);
-            fatal(buf, EC_IOERR);
+            fatal(buf, EX_IOERR);
         }
         newlen = sbuf.st_size;
     }
@@ -96,7 +96,7 @@ EXPORTED void map_refresh(int fd, int onceonly, const char **base,
         syslog(LOG_ERR, "IOERROR: mapping %s file%s%s: %m", name,
                mboxname ? " for " : "", mboxname ? mboxname : "");
         snprintf(buf, sizeof(buf), "failed to mmap %s file", name);
-        fatal(buf, EC_IOERR);
+        fatal(buf, EX_IOERR);
     }
     *len = newlen;
 }

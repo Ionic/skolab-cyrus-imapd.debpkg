@@ -7,13 +7,6 @@ Quickstart Guide
   * What is IMAP?
 
 
-Coming Soon
-===========
-
-Note: The deb packages referenced below are not yet available.
-  Sorry!
-
-
 Quick install
 =============
 
@@ -23,7 +16,7 @@ in 5 minutes.
 The first place to start with a new installation of Cyrus IMAP is with
 your OS distribution of choice and their packaging, where available.
 If there is no Cyrus IMAP 3.0 package available yet from your distro,
-download the latest stable package : version 3.0.13.
+download the latest stable package : version 3.2.0-rc1.
 
 We only provide limited options for reference packages, so use a
 supported distribution whenever possible.  At this time the only
@@ -225,7 +218,14 @@ Note: Postfix supports a great many configurations for mail delivery
 1. Setup your recipient maps, thus defining for which recipients
    the "virtual" destination will be used:
 
-      postconf -e "virtual_recipient_maps=hash:/etc/postfix/virtual_recipient_domains,hash:/etc/postfix/virtual_recipients"
+      postconf -e "virtual_mailbox_domains=hash:/etc/postfix/virtual_recipient_domains"
+      postconf -e "virtual_mailbox_maps=hash:/etc/postfix/virtual_recipients"
+
+   or, if you have enabled smmapd you can automatically track
+   mailboxes with:
+
+      postconf -e "virtual_mailbox_domains=hash:/etc/postfix/virtual_recipient_domains"
+      postconf -e "virtual_mailbox_maps=socketmap:unix:/run/cyrus/socket/smmap"
 
 2. Optional: Set the concurrency and recipient limits for LMTP
    delivery to the "virtual" destination:
@@ -412,6 +412,8 @@ Cyrus Server configured components
 
    * calalarmd          : no
 
+   * jmap               : yes
+
    * objectstore        : no
 
    * backup             : no
@@ -452,12 +454,8 @@ Database support
 
    * sqlite            : yes
 
-   * lmdb              : no
-
 Search engine
    * squat             : yes
-
-   * sphinx            : no
 
    * xapian            : yes
 

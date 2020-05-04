@@ -45,6 +45,7 @@
 #endif
 
 #include <sys/types.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <sys/stat.h>
 #include <stdlib.h>
@@ -60,7 +61,6 @@
 #include "mboxlist.h"
 #include "xmalloc.h"
 #include "hash.h"
-#include "exitcodes.h"
 
 extern int optind;
 extern char *optarg;
@@ -282,24 +282,19 @@ int main(int argc, char **argv)
             break;
         default:
             fprintf(stderr, "invalid argument\n");
-            exit(EC_USAGE);
+            exit(EX_USAGE);
             break;
         }
     }
 
     cyrus_init(alt_config, "idled", 0, 0);
 
-    /* Set inactivity timer (convert from minutes to seconds) */
-    idle_timeout = config_getint(IMAPOPT_TIMEOUT);
-    if (idle_timeout < 30) idle_timeout = 30;
-    idle_timeout *= 60;
+    /* Set inactivity timer (minimum is 30 minutes) */
+    idle_timeout = config_getduration(IMAPOPT_TIMEOUT, 'm');
+    if (idle_timeout < 30 * 60) idle_timeout = 30 * 60;
 
     /* count the number of mailboxes */
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-    mboxlist_allmbox("", &mbox_count_cb, &nmbox, /*incdel*/0);
-    mboxlist_close();
-    mboxlist_done();
+    mboxlist_allmbox("", &mbox_count_cb, &nmbox, /*flags*/0);
 
     signals_set_shutdown(shut_down);
     signals_add_handlers(0);
@@ -338,8 +333,14 @@ int main(int argc, char **argv)
 
     for (;;) {
         int n;
+        int sig;
 
-        signals_poll();
+        sig = signals_poll();
+        if (sig == SIGHUP && getenv("CYRUS_ISDAEMON")) {
+            /* XXX maybe don't restart if we have clients? */
+            syslog(LOG_DEBUG, "received SIGHUP, shutting down gracefully\n");
+            shut_down(0);
+        }
 
         /* check for shutdown file */
         if (shutdown_file(NULL, 0)) {

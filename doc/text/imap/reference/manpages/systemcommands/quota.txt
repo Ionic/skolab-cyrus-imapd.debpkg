@@ -8,7 +8,7 @@ Report and optionally fix storage and message quota usage.
 Synopsis
 ========
 
-   **quota** [ **-C** *config-file* ] [ **-d** *domain* ] [ **-f** ] [ *mailbox-prefix*... ]
+   **quota** [ **-C** *config-file* ] [ **-d** *domain* ] [ **-f** ] [ **-u** ] [ *mailbox-spec*... ]
 
 
 Description
@@ -25,12 +25,16 @@ If an optional *domain* is specified with the **-d** option, the quota
 listing (and any inconsistency fixing) is performed only in that
 domain rather than all mailboxes.
 
-If one or more *mailbox-prefix* arguments are specified, the quota
-listing (and inconsistency fixing) is limited to quota roots with
-names that start with one of the given prefixes.
+If one or more *mailbox-spec* arguments are specified, these are
+interpreted as mailbox prefixes, and the quota listing (and
+inconsistency fixing) is limited to quota roots with names that start
+with one of the given prefixes. If the **-u** is provided, *mailbox-
+spec* arguments are instead interpreted as userids, and the quota
+listing (and inconsistency fixing) is limited to quota roots for only
+the specified users.
 
 Warning: Running **quota** with both the **-f** option and *mailbox-
-  prefix* arguments is not recommended.
+  spec* arguments is not recommended.
 
 **quota** reads its configuration options out of the imapd.conf(5)
 file unless specified otherwise by **-C**.
@@ -53,6 +57,12 @@ Options
    Fix any inconsistencies in the quota subsystem before generating a
    report.
 
+-n
+
+   Check for any inconsistencies in the quota subsystem but don't
+   actually fix them.  Use with **-f** and **-q** to only see what's
+   incorrect.
+
 -q
 
    Operate quietly. If **-f** is specified, then don't print the quota
@@ -62,10 +72,15 @@ Options
 
    Output the quota values as JSON for automated tooling support
 
-mailbox-prefix
+-u
 
-   Only report and/or fix quota in mailboxes starting with the
-   specified *mailbox-prefix*.
+   Interpret *mailbox-spec* arguments as userids.  The default is to
+   interpret them as mailbox prefixes
+
+mailbox-spec
+
+   Only report and/or fix quota in mailboxes matching the specified
+   *mailbox-spec* arguments.  See also **-u**.
 
 
 Examples

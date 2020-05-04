@@ -6,19 +6,14 @@ Important: This is a bug-fix release in the stable 2.5 series.Refer
   to the Cyrus IMAP 2.5.0 Release Notes for important information
   about the 2.5 series, including upgrading instructions.
 
-Download via HTTP:
+Download from GitHub:
 
-   * http://www.cyrusimap.org/releases/old/cyrus-imapd-2.5.4.tar.gz
-
-   * http://www.cyrusimap.org/releases/old/cyrus-
-     imapd-2.5.4.tar.gz.sig
-
-Download via FTP:
-
-   * ftp://ftp.cyrusimap.org/cyrus-imapd/OLD-VERSIONS/cyrus-
+   * https://github.com/cyrusimap/cyrus-
+     imapd/releases/download/cyrus- imapd-2.5.4/cyrus-
      imapd-2.5.4.tar.gz
 
-   * ftp://ftp.cyrusimap.org/cyrus-imapd/OLD-VERSIONS/cyrus-
+   * https://github.com/cyrusimap/cyrus-
+     imapd/releases/download/cyrus- imapd-2.5.4/cyrus-
      imapd-2.5.4.tar.gz.sig
 
 

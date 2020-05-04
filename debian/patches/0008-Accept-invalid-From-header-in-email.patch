@@ -1,37 +1,39 @@
-From: "Jeroen van Meeuwen (Kolab Systems)" <vanmeeuwen@kolabsys.com>
-Date: Tue, 3 Aug 2010 10:13:36 +0200
-Subject: Accept invalid From: header in email
-
-This stops Cyrus from ruining everything all by itself; Your MTA is
-the point where the validity of headers should be checked. For more
-information on such and so forth, see (amongst others):
-
+Description: Accept invalid From: header in email
+ This stops Cyrus from ruining everything all by itself; Your MTA is
+ the point where the validity of headers should be checked. For more
+ information on such and so forth, see (amongst others):
+ .
     http://www.postfix.org/header_checks.5.html
-
-If one chooses to allow slightly invalid headers in the MTA, then
-Cyrus should not raise problems.
----
- imap/message.c | 17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
+ .
+ If one chooses to allow slightly invalid headers in the MTA, then
+ Cyrus should not raise problems.
+Author: "Jeroen van Meeuwen (Kolab Systems)" <vanmeeuwen@kolabsys.com>
+Forwarded: no
+Reviewed-By: Xavier Guimard <yadd@debian.org>
+Last-Update: 2020-02-10
 
 --- a/imap/message.c
 +++ b/imap/message.c
-@@ -187,6 +187,8 @@
-     int reject8bit = config_getswitch(IMAPOPT_REJECT8BIT);
+@@ -190,6 +190,8 @@
      int munge8bit = config_getswitch(IMAPOPT_MUNGE8BIT);
      int inheader = 1, blankline = 1;
+     struct buf tmp = BUF_INITIALIZER;
 +    char is_from;
 +    static const char * from_header = "From ";
  
      while (size) {
          n = prot_read(from, buf, size > 4096 ? 4096 : size);
-@@ -263,9 +265,18 @@
-         /* Check for valid header name */
-         if (sawnl && buf[0] != ' ' && buf[0] != '\t') {
-             if (buf[0] == ':') return IMAP_MESSAGE_BADHEADER;
--      if (strstr(buf, "From ") != buf)
--            for (p = (unsigned char *)buf; *p != ':'; p++) {
--                if (*p <= ' ') return IMAP_MESSAGE_BADHEADER;
+@@ -305,13 +307,18 @@
+                 r = IMAP_MESSAGE_BADHEADER;
+                 goto done;
+             }
+-            if (strstr(buf, "From ") != buf) {
+-                for (p = (unsigned char *)buf; *p && *p != ':'; p++) {
+-                    if (*p <= ' ') {
+-                        r = IMAP_MESSAGE_BADHEADER;
+-                        goto done;
+-                    }
+-                }
 +	    p = (unsigned char *) buf;
 +	    if (*p == '>') p++;
 +	    is_from = (*p == from_header[0])?0:1;

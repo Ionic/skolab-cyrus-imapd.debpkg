@@ -115,7 +115,6 @@ typedef struct {
 
 static int init_write_buffer(SquatWriteBuffer* b, int buf_size, int fd)
 {
-    buf_init(&b->buf);
     buf_ensure(&b->buf, buf_size);
     b->fd = fd;
     b->total_output_bytes = 0;
@@ -419,7 +418,7 @@ int squat_index_add_existing(SquatIndex *index,
 
 /* ====================================================================== */
 
-/* Initally, before we see a document, there are no words for the document. */
+/* Initially, before we see a document, there are no words for the document. */
 static SquatWordTable *word_table_new(void)
 {
     SquatWordTable *ret =
@@ -442,7 +441,7 @@ SquatIndex *squat_index_init(int fd, const SquatOptions *options)
 
     squat_set_last_error(SQUAT_ERR_OK);
 
-    index = (SquatIndex *) xmalloc(sizeof(SquatIndex));
+    index = (SquatIndex *) xzmalloc(sizeof(SquatIndex));
 
     /* Copy processed options into the SquatIndex */
     if (options != NULL
@@ -478,7 +477,6 @@ SquatIndex *squat_index_init(int fd, const SquatOptions *options)
 
     /* Finish initializing the SquatIndex */
     for (i = 0; i < VECTOR_SIZE(index->index_buffers); i++) {
-        buf_init(&index->index_buffers[i].buf);
         index->index_buffers[i].fd = -1;
     }
 

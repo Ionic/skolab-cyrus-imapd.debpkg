@@ -49,14 +49,16 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <jansson.h>
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
+#include <sysexits.h>
 #include <unistd.h>
 
 #include "lib/cyrusdb.h"
-#include "lib/exitcodes.h"
 #include "lib/util.h"
+#include "lib/xmalloc.h"
 
 #include "imap/global.h"
 #include "imap/imap_err.h"
@@ -99,6 +101,7 @@ static void usage(void)
             "    -F                  # force (run command even if not needed)\n"
             "    -S                  # stop on error\n"
             "    -V                  # don't verify checksums (faster read-only ops)\n"
+            "    -j                  # output in JSON format\n"
             "    -v                  # verbose (repeat for more verbosity)\n"
             "    -w                  # wait for locks (don't skip locked backups)\n"
     );
@@ -128,7 +131,7 @@ static void usage(void)
             "    Modes -A, -D, -P not available for all commands\n" /* FIXME which */
     );
 
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 enum ctlbu_mode {
@@ -158,6 +161,7 @@ struct ctlbu_cmd_options {
     int list_stale;
     int force;
     int noverify;
+    int jsonout;
     const char *lock_exec_cmd;
     const char *domain;
 };
@@ -262,23 +266,42 @@ static enum ctlbu_cmd parse_cmd_string(const char *cmd)
 
 static void print_status(const char *cmd,
                          const char *userid, const char *fname,
+                         const struct ctlbu_cmd_options *options,
                          int r)
 {
-    printf("%s %s: ", cmd, userid ? userid : fname);
-    switch(r) {
+    char *status = NULL;
+    switch (r) {
         case 1:
-            puts("skipped");
+            status = xstrdup("skipped");
             break;
         case 0:
-            puts("ok");
+            status = xstrdup("ok");
             break;
         case IMAP_MAILBOX_LOCKED:
-            puts("locked");
+            status = xstrdup("locked");
             break;
         default:
-            printf("failed (%s)\n", error_message(r));
+            status = strconcat("failed (", error_message(r), ")", NULL);
             break;
     }
+
+    if (options->jsonout) {
+        json_t *out = json_object();
+        json_object_set_new(out, "command", json_string(cmd));
+        json_object_set_new(out, "userid", json_string(userid));
+        json_object_set_new(out, "fname", json_string(fname));
+        json_object_set_new(out, "status", json_string(status));
+
+        const size_t flags = JSON_INDENT(2) | JSON_PRESERVE_ORDER;
+        json_dumpf(out, stdout, flags);
+        puts("");
+        json_decref(out);
+    }
+    else {
+        printf("%s %s: %s\n", cmd, userid ? userid : fname, status);
+    }
+
+    free(status);
 }
 
 static int domain_filter(void *rock,
@@ -329,7 +352,7 @@ int main(int argc, char **argv)
     struct ctlbu_cmd_options options = {0};
     options.wait = BACKUP_OPEN_NONBLOCK;
 
-    while ((opt = getopt(argc, argv, ":AC:DFPSVcfmpst:x:uvw")) != EOF) {
+    while ((opt = getopt(argc, argv, ":AC:DFPSVcfjmpst:x:uvw")) != EOF) {
         switch (opt) {
         case 'A':
             if (options.mode != CTLBU_MODE_UNSPECIFIED) usage();
@@ -358,6 +381,10 @@ int main(int argc, char **argv)
         case 'c':
             options.create = BACKUP_OPEN_CREATE_EXCL;
             break;
+        case 'j':
+            if (options.verbose) usage();
+            options.jsonout = 1;
+            break;
         case 'f':
             if (options.mode != CTLBU_MODE_UNSPECIFIED) usage();
             options.mode = CTLBU_MODE_FILENAME;
@@ -383,6 +410,7 @@ int main(int argc, char **argv)
             options.mode = CTLBU_MODE_USERNAME;
             break;
         case 'v':
+            if (options.jsonout) usage();
             options.verbose ++;
             break;
         case 'x':
@@ -559,7 +587,7 @@ int main(int argc, char **argv)
 
     backup_cleanup_staging_path();
     cyrus_done();
-    exit(r || ctlbu_skips_fails ? EC_TEMPFAIL : EC_OK);
+    exit(r || ctlbu_skips_fails ? EX_TEMPFAIL : EX_OK);
 }
 
 static int cmd_compact_one(void *rock,
@@ -580,7 +608,7 @@ static int cmd_compact_one(void *rock,
     r = backup_compact(fname, options->wait, options->force,
                        options->verbose, stdout);
 
-    print_status("compact", userid, fname, r);
+    print_status("compact", userid, fname, options, r);
 
     if (userid) free(userid);
     if (fname) free(fname);
@@ -648,11 +676,25 @@ static int cmd_list_one(void *rock,
         data_stat_buf.st_size = -1;
     }
 
-    printf("%s\t" OFF_T_FMT "\t%s\t%s\n",
-           timestamp,
-           data_stat_buf.st_size,
-           userid ? userid : "[unknown]",
-           fname);
+    if (options->jsonout) {
+        json_t *out = json_object();
+        json_object_set_new(out, "timestamp", json_string(timestamp));
+        json_object_set_new(out, "compressed", json_integer(data_stat_buf.st_size));
+        json_object_set_new(out, "userid", json_string(userid));
+        json_object_set_new(out, "fname", json_string(fname));
+
+        const size_t flags = JSON_INDENT(2) | JSON_PRESERVE_ORDER;
+        json_dumpf(out, stdout, flags);
+        puts("");
+        json_decref(out);
+    }
+    else {
+        printf("%s\t" OFF_T_FMT "\t%s\t%s\n",
+               timestamp,
+               data_stat_buf.st_size,
+               userid ? userid : "[unknown]",
+               fname);
+    }
 
 done:
     if (latest_chunk) backup_chunk_free(&latest_chunk);
@@ -730,7 +772,7 @@ static int cmd_reindex_one(void *rock,
 
     r = backup_reindex(fname, options->wait, options->verbose, stdout);
 
-    print_status("reindex", userid, fname, r);
+    print_status("reindex", userid, fname, options, r);
 
     if (userid) free(userid);
     if (fname) free(fname);
@@ -784,12 +826,12 @@ static int cmd_stat_one(void *rock,
         if (r) goto done;
     }
 
-    const int retention_days = config_getint(IMAPOPT_BACKUP_RETENTION_DAYS);
-    if (retention_days > 0) {
-        since = time(0) - (retention_days * 24 * 60 * 60);
+    const int retention = config_getduration(IMAPOPT_BACKUP_RETENTION, 'd');
+    if (retention > 0) {
+        since = time(0) - retention;
     }
     else {
-        /* zero or negative retention days means "keep forever" */
+        /* zero or negative retention means "keep forever" */
         since = -1;
     }
 
@@ -829,15 +871,34 @@ static int cmd_stat_one(void *rock,
                  localtime(&latest_chunk->ts_end));
     }
 
-    printf("%s\t" OFF_T_FMT "\t" SIZE_T_FMT "\t" SIZE_T_FMT "\t%6.1f%%\t%6.1f%%\t%21s\t%s\n",
-           userid ? userid : fname,
-           data_stat.st_size,
-           uncompressed,
-           compactable,
-           cmp_ratio,
-           utl_ratio,
-           start_time,
-           end_time);
+    if (options->jsonout) {
+        json_t *out = json_object();
+        json_object_set_new(out, "userid", json_string(userid));
+        json_object_set_new(out, "fname", json_string(fname));
+        json_object_set_new(out, "compressed", json_integer(data_stat.st_size));
+        json_object_set_new(out, "uncompressed", json_integer(uncompressed));
+        json_object_set_new(out, "compactable", json_integer(compactable));
+        json_object_set_new(out, "compression_ratio", json_real(cmp_ratio));
+        json_object_set_new(out, "utilisation_ratio", json_real(utl_ratio));
+        json_object_set_new(out, "last_start_time", json_string(start_time));
+        json_object_set_new(out, "last_end_time", json_string(end_time));
+
+        const size_t flags = JSON_INDENT(2) | JSON_PRESERVE_ORDER;
+        json_dumpf(out, stdout, flags);
+        puts("");
+        json_decref(out);
+    }
+    else {
+        printf("%s\t" OFF_T_FMT "\t" SIZE_T_FMT "\t" SIZE_T_FMT "\t%6.1f%%\t%6.1f%%\t%21s\t%s\n",
+               userid ? userid : fname,
+               data_stat.st_size,
+               uncompressed,
+               compactable,
+               cmp_ratio,
+               utl_ratio,
+               start_time,
+               end_time);
+    }
 
 done:
     if (r) {
@@ -876,7 +937,7 @@ static int cmd_verify_one(void *rock,
     /* n.b. deliberately ignoring nonsensical noverify option here */
     if (!r) r = backup_verify(backup, BACKUP_VERIFY_FULL, options->verbose, stdout);
 
-    print_status("verify", userid, fname, r);
+    print_status("verify", userid, fname, options, r);
 
     if (backup) backup_close(&backup);
     if (userid) free(userid);
@@ -904,15 +965,17 @@ static int lock_run_pipe(const char *userid, const char *fname,
     if (r) {
         printf("NO failed (%s)\n", error_message(r));
         r = backup_close(&backup);
-        return EC_SOFTWARE; // FIXME would something else be more appropriate?
+        return EX_SOFTWARE; // FIXME would something else be more appropriate?
     }
 
     printf("OK locked\n");
 
     /* wait until stdin closes */
     char buf[PROT_BUFSIZE] = {0};
-    while (!feof(stdin))
-        fgets(buf, sizeof(buf), stdin);
+    while (!feof(stdin)) {
+        if (!fgets(buf, sizeof(buf), stdin))
+            break;
+    }
 
     r = backup_close(&backup);
     if (r) fprintf(stderr, "warning: backup_close() returned %i\n", r);
@@ -941,7 +1004,7 @@ static int lock_run_sqlite(const char *userid, const char *fname,
                 userid ? userid : fname,
                 error_message(r));
         r = backup_close(&backup);
-        return EC_SOFTWARE;
+        return EX_SOFTWARE;
     }
 
     index_fname = backup_get_index_fname(backup);
@@ -953,7 +1016,7 @@ static int lock_run_sqlite(const char *userid, const char *fname,
     switch (pid) {
     case -1:
         perror("fork");
-        r = EC_SOFTWARE;
+        r = EX_SOFTWARE;
         break;
 
     case 0:
@@ -962,7 +1025,7 @@ static int lock_run_sqlite(const char *userid, const char *fname,
         execlp("sqlite3", "sqlite3", index_fname, NULL);
         /* execlp never returns */
         perror("execlp sqlite3");
-        _exit(EC_SOFTWARE);
+        _exit(EX_SOFTWARE);
         break;
 
     default:
@@ -971,7 +1034,7 @@ static int lock_run_sqlite(const char *userid, const char *fname,
         if (WIFEXITED(status))
             r = WEXITSTATUS(status);
         else
-            r = EC_SOFTWARE;
+            r = EX_SOFTWARE;
         break;
     }
 
@@ -1002,7 +1065,7 @@ static int lock_run_exec(const char *userid, const char *fname,
                 userid ? userid : fname,
                 error_message(r));
         r = backup_close(&backup);
-        return EC_SOFTWARE;
+        return EX_SOFTWARE;
     }
 
     setenv(data_fname_env, fname, 1);
@@ -1014,11 +1077,11 @@ static int lock_run_exec(const char *userid, const char *fname,
     unsetenv(index_fname_env);
 
     if (r == -1)
-        r = EC_SOFTWARE;
+        r = EX_SOFTWARE;
     else if (WIFEXITED(r))
         r = WEXITSTATUS(r);
     else
-        r = EC_SOFTWARE;
+        r = EX_SOFTWARE;
 
     backup_close(&backup);
     return r;

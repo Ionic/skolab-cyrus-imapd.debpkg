@@ -68,7 +68,6 @@ override_dh_auto_configure:
 	 --libexecdir=/usr/lib/cyrus/bin \
 	 --bindir=/usr/lib/cyrus/bin \
 	 --sbindir=/usr/lib/cyrus/bin \
-	 --with-cyrus-prefix=/usr/lib/cyrus \
 	 --disable-silent-rules \
 	 --enable-autocreate \
 	 --enable-idled \
@@ -82,6 +81,8 @@ override_dh_auto_configure:
 	 --enable-unit-tests \
 	 --enable-gssapi="/usr" \
 	 --with-cyrus-user=cyrus --with-cyrus-group=mail \
+	 --with-pgsql \
+	 --with-pgsql-incdir=/usr/include/postgresql \
 	 --with-lock=fcntl \
 	 --with-ldap \
 	 --with-krb \
@@ -194,7 +195,7 @@ override_dh_auto_install:
 
 	# Install the stuff needed for upgrades
 	install -d -m 755 $(TMPPKG)/usr/lib/cyrus/upgrade
-	for i in convert-sieve.pl dohash rehash undohash translatesieve upgradesieve masssievec; do \
+	for i in rehash translatesieve masssievec; do \
 	  install -m 755 tools/$$i $(TMPPKG)/usr/lib/cyrus/upgrade ;\
 	done
 
@@ -234,4 +235,6 @@ override_dh_installsystemd:
 	dh_installsystemd --name=cyrus-imapd
 
 override_dh_missing:
-	dh_missing --fail-missing -X.la
+	# Temporarily accept missing manpages
+	#dh_missing --fail-missing -X.la
+	dh_missing --list-missing -X.la

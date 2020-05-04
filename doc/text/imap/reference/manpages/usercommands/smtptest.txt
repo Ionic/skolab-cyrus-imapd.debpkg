@@ -2,26 +2,33 @@
 **smtptest**
 ************
 
-Interactive SMTP test program
+Interactive SMTP test program.
+
+This is actually installed as a hard linked copy of imtest(1).
+
+It allows you to authenticate and send SMTP commands to the server.
 
 
 Synopsis
 ========
 
-   **smtptest** [ **-t** *keyfile* ] [ **-p** *port* ] [ **-m** *mechanism* ] [ **-a** *userid* ]
-       [ **-u** *userid* ] [ **-k** *num* ] [ **-l** *num* ] [ **-r** *realm* ] [ **-f** *file* ]
-       [ **-n** *num* ] [ **-s** ] [ **-c** ] [ **-i** ] [ **-v** ] [ **-w** *passwd* ] [ **-o** *option*=*value* ] *hostname*
+   **imtest** [ **-t** *keyfile* ] [ **-p** *port* ] [ **-m** *mechanism* ]
+       [ **-a** *userid* ] [ **-u** *userid* ] [ **-k** *num* ] [ **-l** *num* ]
+       [ **-r** *realm* ] [ **-f** *file* ] [ **-n** *num* ] [ **-s** ] [ **-q** ]
+       [ **-c** ] [ **-i** ] [ **-z** ] [ **-v** ] [ **-I** *file* ] [ **-x** *file* ]
+       [ **-X** *file* ] [ **-w** *passwd* ] [ **-o** *option*=*value* ] *hostname*
 
 
 Description
 ===========
 
-**smtptest** is a utility that allows you to authenticate to an SMTP
-server and interactively issue commands to it. Once authenticated you
-may issue any SMTP command by simply typing it in. It is capable of
-multiple SASL authentication mechanisms and handles encryption layers
-transparently. This utility is often used for testing the operation of
-an SMTP server. Also those developing SMTP clients find it useful.
+**imtest** is a utility that allows you to authenticate to a IMAP or
+IMSP server and interactively issue commands to it. Once authenticated
+you may issue any IMAP or IMSP command by simply typing it in. It is
+capable of multiple SASL authentication mechanisms and handles
+encryption layers transparently. This utility is often used for
+testing the operation of a imsp or imap server. Also those developing
+IMAP clients find it useful.
 
 
 Options
@@ -35,13 +42,13 @@ Options
 
 -p  port
 
-   Port to connect to. If left off this defaults to **smtp** as
+   Port to connect to. If left off this defaults to **imap** as
    defined in "/etc/services".
 
 -m  mechanism
 
-   Force **smtptest** to use *mechanism* for authentication. If not
-   specified, the strongest authentication mechanism supported by the
+   Force **imtest** to use *mechanism* for authentication. If not
+   specified the strongest authentication mechanism supported by the
    server is chosen.  Specify *login* to use the LOGIN command instead
    of AUTHENTICATE.
 
@@ -88,7 +95,11 @@ Options
 
 -s
 
-   Enable SMTP over SSL (smtps).
+   Enable SSL over chosen protocol.
+
+-q
+
+   Enable IMAP COMPRESSion (after authentication).
 
 -c
 
@@ -101,9 +112,26 @@ Options
    Don't send an initial client response for SASL mechanisms, even if
    the protocol supports it.
 
+-I  file
+
+   Echo the PID of the running process into *file* (This can be useful
+   with -X).
+
 -v
 
    Verbose. Print out more information than usual.
+
+-z
+
+   Timing test.
+
+-x  file
+
+   Open the named socket for the interactive portion.
+
+-X  file
+
+   Like -x, only close all file descriptors & daemonize the process.
 
 -w passwd
 
@@ -120,5 +148,7 @@ Examples
 
 See Also
 ========
+
+imapd(8)
 
 *sendmail(8)*

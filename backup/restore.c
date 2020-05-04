@@ -48,9 +48,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
+#include <sysexits.h>
 #include <unistd.h>
 
-#include "lib/exitcodes.h"
 
 #include "imap/global.h"
 #include "imap/imap_err.h"
@@ -103,7 +103,7 @@ static void usage(void)
             "    -u                  # specified backup interpreted as userid (default)\n"
     );
 
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 static void save_argv0(const char *s)
@@ -199,7 +199,7 @@ int main(int argc, char **argv)
     struct buf tagbuf = BUF_INITIALIZER;
     struct backend *backend = NULL;
     struct dlist *upload = NULL;
-    int opt, r;
+    int opt, r = 0;
 
     while ((opt = getopt(argc, argv, ":A:C:DF:LM:P:UXaf:m:nru:vw:xz")) != EOF) {
         switch (opt) {
@@ -519,7 +519,7 @@ done:
     backup_cleanup_staging_path();
     cyrus_done();
 
-    exit(r ? EC_TEMPFAIL : EC_OK);
+    exit(r ? EX_TEMPFAIL : EX_OK);
 }
 
 static struct backend *restore_connect(const char *servername,
@@ -582,7 +582,7 @@ static struct backend *restore_connect(const char *servername,
 
         if (sync_parse_response("COMPRESS", backend->in, NULL)) {
             if (options->require_compression)
-                fatal("Failed to enable compression, aborting", EC_SOFTWARE);
+                fatal("Failed to enable compression, aborting", EX_SOFTWARE);
             syslog(LOG_NOTICE, "Failed to enable compression, continuing uncompressed");
         }
         else {
@@ -591,7 +591,7 @@ static struct backend *restore_connect(const char *servername,
         }
     }
     else if (options->require_compression) {
-        fatal("Backend does not support compression, aborting", EC_SOFTWARE);
+        fatal("Backend does not support compression, aborting", EX_SOFTWARE);
     }
 #endif
 
@@ -602,7 +602,7 @@ static struct backend *restore_connect(const char *servername,
     }
 
     /* Set inactivity timer */
-    timeout = config_getint(IMAPOPT_SYNC_TIMEOUT);
+    timeout = config_getduration(IMAPOPT_SYNC_TIMEOUT, 's');
     if (timeout < 3) timeout = 3;
     prot_settimeout(backend->in, timeout);
 
@@ -668,7 +668,7 @@ static struct sync_folder_list *restore_make_reserve_folder_list(
             /* we only care about mboxname here */
             sync_folder_list_add(folder_list, NULL, iter->mboxname,
                                 0, NULL, NULL, 0, 0, 0, 0, synccrcs,
-                                0, 0, 0, 0, NULL, 0, 0);
+                                0, 0, 0, 0, NULL, 0, 0, 0, 0);
         }
 
         backup_mailbox_list_empty(mailboxes);
@@ -817,7 +817,7 @@ static int restore_add_mailbox(const struct backup_mailbox *mailbox,
         const struct synccrcs synccrcs = {0, 0};
         sync_folder_list_add(reserve_folder_list, NULL, clone->mboxname,
                              0, NULL, NULL, 0, 0, 0, 0, synccrcs,
-                             0, 0, 0, 0, NULL, 0, 0);
+                             0, 0, 0, 0, NULL, 0, 0, 0, 0);
     }
 
     /* populate mailbox list */
@@ -861,7 +861,7 @@ static int restore_add_message(const struct backup_message *message,
         const struct synccrcs synccrcs = {0, 0};
         sync_folder_list_add(reserve_folder_list, NULL, mailbox->mboxname,
                              0, NULL, NULL, 0, 0, 0, 0, synccrcs,
-                             0, 0, 0, 0, NULL, 0, 0);
+                             0, 0, 0, 0, NULL, 0, 0, 0, 0);
 
         /* add to mailbox list */
         my_mailbox_list_add(mailbox_list, mailbox);
@@ -940,14 +940,16 @@ static int restore_add_object(const char *object_name,
     }
     else if (strchr(object_name, '.')) {
         /* has a dot, might be an mboxname */
-        mbname_t *mbname = mbname_from_intname(object_name);
+        mbname_t *mbname = mbname_from_extname(object_name,
+                                               &restore_namespace, NULL);
         mailbox = backup_get_mailbox_by_name(backup, mbname,
                                              BACKUP_MAILBOX_ALL_RECORDS);
         mbname_free(&mbname);
     }
     else {
         /* not sure what it is, guess mboxname? */
-        mbname_t *mbname = mbname_from_intname(object_name);
+        mbname_t *mbname = mbname_from_extname(object_name,
+                                               &restore_namespace, NULL);
         mailbox = backup_get_mailbox_by_name(backup, mbname,
                                              BACKUP_MAILBOX_ALL_RECORDS);
         mbname_free(&mbname);

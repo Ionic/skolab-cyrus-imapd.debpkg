@@ -47,15 +47,17 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
 
+#include "assert.h"
+#include "bsearch.h"
 #include "cyrusdb.h"
 #include "util.h"
-#include "exitcodes.h"
 #include "libcyr_cfg.h"
 #include "xmalloc.h"
 #include "xstrlcpy.h"
@@ -67,7 +69,7 @@ extern struct cyrusdb_backend cyrusdb_skiplist;
 extern struct cyrusdb_backend cyrusdb_quotalegacy;
 extern struct cyrusdb_backend cyrusdb_sql;
 extern struct cyrusdb_backend cyrusdb_twoskip;
-extern struct cyrusdb_backend cyrusdb_lmdb;
+extern struct cyrusdb_backend cyrusdb_zeroskip;
 
 static struct cyrusdb_backend *_backends[] = {
     &cyrusdb_flat,
@@ -77,8 +79,8 @@ static struct cyrusdb_backend *_backends[] = {
     &cyrusdb_sql,
 #endif
     &cyrusdb_twoskip,
-#if defined HAVE_LMDB
-    &cyrusdb_lmdb,
+#if defined HAVE_ZEROSKIP
+    &cyrusdb_zeroskip,
 #endif
     NULL };
 
@@ -103,7 +105,7 @@ static struct cyrusdb_backend *cyrusdb_fromname(const char *name)
         char errbuf[1024];
         snprintf(errbuf, sizeof(errbuf),
                  "cyrusdb backend %s not supported", name);
-        fatal(errbuf, EC_CONFIG);
+        fatal(errbuf, EX_CONFIG);
     }
 
     return db;
@@ -118,6 +120,17 @@ static int _myopen(const char *backend, const char *fname,
 
     if (!backend) backend = DEFAULT_BACKEND; /* not used yet, later */
     db->backend = cyrusdb_fromname(backend);
+
+    /* Check if shared lock is requested */
+    if (flags & CYRUSDB_SHARED) {
+        assert(tid && *tid == NULL);
+        if (flags & CYRUSDB_CONVERT) {
+            syslog(LOG_ERR, "DBERROR: CONVERT and SHARED are mutually exclusive, "
+                    "won't open db %s (backend %s)", fname, backend);
+            r = CYRUSDB_INTERNAL;
+            goto done;
+        }
+    }
 
     /* This whole thing is a fricking critical section.  We don't have the API
      * in place for a safe rename of a locked database, so the choices are
@@ -324,6 +337,8 @@ EXPORTED int cyrusdb_compar(struct db *db,
                    const char *a, int alen,
                    const char *b, int blen)
 {
+    if (!db->backend->compar)
+        return bsearch_ncompare_raw(a, alen, b, blen);
     return db->backend->compar(db->engine, a, alen, b, blen);
 }
 
@@ -550,9 +565,6 @@ EXPORTED const char *cyrusdb_detect(const char *fname)
     if (!strncmp(buf, "\241\002\213\015twoskip file\0\0\0\0", 16))
         return "twoskip";
 
-    if (!strncmp(buf+16, "\xde\xc0\xef\xbe", 4))
-        return "lmdb";
-
     /* unable to detect SQLite databases or flat files explicitly here */
     return NULL;
 }
@@ -660,5 +672,62 @@ HIDDEN int cyrusdb_generic_unlink(const char *fname, int flags __attribute__((un
         unlink(fname);
     /* XXX - check that it exists unless FORCE flag? */
     return 0;
+}
+
+EXPORTED const char *cyrusdb_strerror(int r)
+{
+    const char *err = "unknown error";
+
+    switch (r) {
+    case CYRUSDB_OK:
+        err = "not an error";
+        break;
+
+    case CYRUSDB_DONE:
+        err = "done";
+        break;
+
+    case CYRUSDB_IOERROR:
+        err = "IO error";
+        break;
+
+    case CYRUSDB_AGAIN:
+        err = "again";
+        break;
+
+    case CYRUSDB_EXISTS:
+        err = "item exists";
+        break;
+
+    case CYRUSDB_INTERNAL:
+        err = "internal error";
+        break;
+
+    case CYRUSDB_NOTFOUND:
+        err = "item not found";
+        break;
+
+    case CYRUSDB_LOCKED:
+        err = "locked";
+        break;
+
+    case CYRUSDB_NOTIMPLEMENTED:
+        err = "action not implemented";
+        break;
+
+    case CYRUSDB_FULL:
+        err = "no space available";
+        break;
+
+    case CYRUSDB_READONLY:
+        err = "database is readonly";
+        break;
+
+    default:
+        err = "not a cyrusdb error";
+        break;
+    }
+
+    return err;
 }
 

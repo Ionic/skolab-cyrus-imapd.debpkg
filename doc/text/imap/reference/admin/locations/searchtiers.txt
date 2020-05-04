@@ -25,7 +25,7 @@ Specify the name of the default search tier using the
       This option MUST be specified for xapian search.
 
 
-Search Tier Partition location
+Search Tier Partition Location
 ==============================
 
 Each search tier to be used requires a partition location be specified

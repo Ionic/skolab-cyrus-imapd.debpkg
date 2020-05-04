@@ -5,10 +5,10 @@ What is Cyrus IMAP?
 Cyrus IMAP is an email, contacts and calendar server. Cyrus is free
 and open source.
 
-* This is the documentation for version 3.0.13 (stable) of Cyrus
-  IMAP: **stable** branch.
+* This is the documentation for version 3.2.0-rc1 of Cyrus IMAP:
+  **stable** branch.
 
-* The latest development version 3.1.8 is at
+* The latest development version 3.3.0-dev0 is at
   https://www.cyrusimap.org/dev/.
 
 
@@ -38,6 +38,8 @@ Features
 * Handles deliverability: SPF, DKIM, DMARC
 
 * Extensive authentication options, through Cyrus SASL
+
+* JMAP support
 
 * Long list of supported standards
 
@@ -78,6 +80,8 @@ Cyrus IMAP
 
   * Notes for Packagers
 
+    * Binary naming
+
     * Sample configuration files
 
     * Predefined configurations
@@ -89,8 +93,6 @@ Cyrus IMAP
   * Introduction to Cyrus IMAP
 
     * What is IMAP?
-
-  * Coming Soon
 
   * Quick install
 
@@ -182,11 +184,11 @@ Cyrus IMAP
 
     * Troubleshooting
 
-  * Upgrading to 3.0
+  * Upgrading to 3.2
 
     * 1. Preparation
 
-    * 2. Install new 3.0 Cyrus
+    * 2. Install new 3.2 Cyrus
 
     * 3. Shut down existing Cyrus
 
@@ -196,7 +198,7 @@ Cyrus IMAP
 
     * 6. Upgrade specific items
 
-    * 7. Start new 3.0 Cyrus and verify
+    * 7. Start new 3.2 Cyrus and verify
 
     * 8. Reconstruct databases and cache
 
@@ -239,58 +241,6 @@ Cyrus IMAP
     * (8) System Commands
 
     * (1) User Commands
-
-  * Tools & Utilities
-
-    * arbitron
-
-    * arbitronsort.pl
-
-    * chk_cyrus
-
-    * ctl_cyrusdb
-
-    * ctl_deliver
-
-    * ctl_mboxlist
-
-    * cvt_cyrusdb
-
-    * cvt_cyrusdb_all
-
-    * cyr_dbtool
-
-    * cyr_df
-
-    * cyrdump
-
-    * cyr_expire
-
-    * cyr_virusscan
-
-    * fetchnews
-
-    * cyr_sequence
-
-    * cyr_synclog
-
-    * cyr_userseen
-
-    * masssievec
-
-    * mbexamine
-
-    * mbpath
-
-    * mkimap
-
-    * mknewsgroups
-
-    * rehash
-
-    * translatesieve
-
-    * undohash
 
   * Administrator Guide
 
@@ -342,11 +292,19 @@ Cyrus IMAP
 
     * About Cyrus Works
 
-    * Testing
-
     * How it works
 
-    * Adding Rules
+  * Cyrus Internals
+
+    * Cyrus APIs
+
+    * Thoughts & Notes
+
+    * Guidance for Developers
+
+  * Unit Tests
+
+    * Unit Tests
 
 * Support/Community
 

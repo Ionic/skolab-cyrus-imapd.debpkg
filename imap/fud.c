@@ -48,6 +48,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -63,7 +64,6 @@
 #include "acl.h"
 #include "mboxlist.h"
 #include "global.h"
-#include "exitcodes.h"
 #include "mailbox.h"
 #include "map.h"
 #include "mboxname.h"
@@ -139,8 +139,6 @@ void shut_down(int code)
     in_shutdown = 1;
 
     seen_done();
-    mboxlist_close();
-    mboxlist_done();
     closelog();
     cyrus_done();
     exit(code);
@@ -153,14 +151,11 @@ void shut_down(int code)
  */
 int service_init(int argc, char **argv, char **envp)
 {
-    if (geteuid() == 0) fatal("must run as the Cyrus user", EC_USAGE);
+    if (geteuid() == 0) fatal("must run as the Cyrus user", EX_USAGE);
 
     setproctitle_init(argc, argv, envp);
 
     signals_set_shutdown(&shut_down);
-
-    mboxlist_init(0);
-    mboxlist_open(NULL);
 
     return 0;
 }
@@ -180,7 +175,7 @@ int service_main(int argc __attribute__((unused)),
     /* Set namespace */
     if ((r = mboxname_init_namespace(&fud_namespace, 1)) != 0) {
         syslog(LOG_ERR, "%s", error_message(r));
-        fatal(error_message(r), EC_CONFIG);
+        fatal(error_message(r), EX_CONFIG);
     }
 
     r = begin_handling();
@@ -223,7 +218,7 @@ static int do_proxy_request(const char *who, const char *name,
                             const char *backend_host,
                             struct sockaddr *sfrom, socklen_t sfromsiz)
 {
-    char tmpbuf[1024];
+    char tmpbuf[2048];
     int replysize;
     int r = 0;
     int csoc = -1;

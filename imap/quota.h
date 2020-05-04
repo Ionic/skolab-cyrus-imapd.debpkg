@@ -50,6 +50,7 @@
 #endif
 
 #include "cyrusdb.h"
+#include "util.h"
 #include <config.h>
 
 #define FNAME_QUOTADB "/quotas.db"
@@ -57,8 +58,6 @@
 /* Define the proper quota type, which is 64 bit and signed */
 typedef long long int quota_t;
 #define QUOTA_T_FMT      "%lld"
-
-extern struct db *qdb;
 
 enum quota_resource {
     QUOTA_STORAGE       =0,
@@ -83,6 +82,8 @@ struct quota {
     /* information for scanning */
     char *scanmbox;
     quota_t scanuseds[QUOTA_NUMRESOURCES];
+
+    modseq_t modseq;
 };
 
 /* special value to indicate no limit applies */
@@ -111,15 +112,16 @@ extern void quota_commit(struct txn **tid);
 
 extern void quota_abort(struct txn **tid);
 
-extern int quota_write(struct quota *quota, struct txn **tid);
+extern int quota_write(struct quota *quota, int silent, struct txn **tid);
 
 extern int quota_update_useds(const char *quotaroot,
                               const quota_t diff[QUOTA_NUMRESOURCES],
-                              const char *mboxname);
+                              const char *mboxname,
+                              int silent);
 extern int quota_check_useds(const char *quotaroot,
                              const quota_t diff[QUOTA_NUMRESOURCES]);
 
-extern int quota_deleteroot(const char *quotaroot);
+extern int quota_deleteroot(const char *quotaroot, int silent);
 
 extern int quota_findroot(char *ret, size_t retlen, const char *name);
 
@@ -128,6 +130,10 @@ extern int quota_foreach(const char *prefix, quotaproc_t *proc,
 
 /* open the quotas db */
 void quotadb_open(const char *fname);
+
+/* iterate all entries starting with prefix */
+extern int quotadb_foreach(const char *prefix, size_t prefixlen,
+                           foreach_p *p, foreach_cb *cb, void *rock);
 
 /* close the database */
 void quotadb_close(void);

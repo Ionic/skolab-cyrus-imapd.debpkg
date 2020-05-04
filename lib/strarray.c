@@ -60,11 +60,9 @@ EXPORTED void strarray_fini(strarray_t *sa)
     if (!sa)
         return;
     for (i = 0 ; i < sa->count ; i++) {
-        free(sa->data[i]);
-        sa->data[i] = NULL;
+        xzfree(sa->data[i]);
     }
-    free(sa->data);
-    sa->data = NULL;
+    xzfree(sa->data);
     sa->count = 0;
     sa->alloc = 0;
 }
@@ -91,7 +89,7 @@ static void ensure_alloc(strarray_t *sa, int newalloc)
         return;
     newalloc = ((newalloc + QUANTUM) / QUANTUM) * QUANTUM;
     sa->data = xrealloc(sa->data, sizeof(char *) * newalloc);
-    memset(sa->data+sa->alloc, 0, sizeof(char *) * (newalloc-sa->alloc));
+    memset(sa->data + sa->alloc, 0, sizeof(char *) * (newalloc - sa->alloc));
     sa->alloc = newalloc;
 }
 
@@ -128,7 +126,7 @@ static inline int adjust_index_rw(strarray_t *sa, int idx, int grow)
          * outside the current bounds, plus perhaps @grow */
         ensure_alloc(sa, idx+grow);
     } else if (idx < 0) {
-        /* adjust Perl-style negative indeces */
+        /* adjust Perl-style negative indices */
         idx += sa->count;
         if (idx >= 0 && grow)
             ensure_alloc(sa, sa->count+grow);
@@ -148,13 +146,13 @@ EXPORTED strarray_t *strarray_dup(const strarray_t *sa)
 
     strarray_truncate(new, sa->count);
     for (i = 0 ; i < sa->count ; i++)
-        new->data[i] = xstrdup(sa->data[i]);
+        new->data[i] = xstrdupnull(sa->data[i]);
     return new;
 }
 
 EXPORTED int strarray_append(strarray_t *sa, const char *s)
 {
-    return strarray_appendm(sa, xstrdup(s));
+    return strarray_appendm(sa, xstrdupnull(s));
 }
 
 EXPORTED void strarray_cat(strarray_t *dest, const strarray_t *src)
@@ -189,7 +187,7 @@ EXPORTED int strarray_appendm(strarray_t *sa, char *s)
 
 static void _strarray_set(strarray_t *sa, int idx, char *s)
 {
-    free(sa->data[idx]);
+    xfree(sa->data[idx]);
     sa->data[idx] = s;
     /* adjust the count if we just sparsely expanded the array */
     if (s && idx >= sa->count)
@@ -223,7 +221,7 @@ EXPORTED void strarray_insert(strarray_t *sa, int idx, const char *s)
 {
     if ((idx = adjust_index_rw(sa, idx, 1)) < 0)
         return;
-    _strarray_insert(sa, idx, xstrdup(s));
+    _strarray_insert(sa, idx, xstrdupnull(s));
 }
 
 EXPORTED void strarray_insertm(strarray_t *sa, int idx, char *s)
@@ -258,6 +256,14 @@ EXPORTED void strarray_remove_all(strarray_t *sa, const char *s)
     }
 }
 
+EXPORTED void strarray_subtract_complement(strarray_t *sa, const strarray_t *sb)
+{
+    int i;
+    for (i = 0; i < sb->count; i++)
+        strarray_remove_all(sa, strarray_nth(sb, i));
+}
+
+
 EXPORTED void strarray_remove_all_case(strarray_t *sa, const char *s)
 {
     int i = 0;
@@ -281,11 +287,22 @@ EXPORTED void strarray_truncate(strarray_t *sa, int newlen)
         ensure_alloc(sa, newlen);
     } else {
         for (i = newlen ; i < sa->count ; i++) {
-            free(sa->data[i]);
-            sa->data[i] = NULL;
+            xzfree(sa->data[i]);
         }
     }
     sa->count = newlen;
+}
+
+EXPORTED void strarray_swap(strarray_t *sa, int idxa, int idxb)
+{
+    if (idxa < 0 || idxa >= sa->count)
+        return;
+    if (idxb < 0 || idxb >= sa->count)
+        return;
+
+    char *tmp = sa->data[idxa];
+    sa->data[idxa] = sa->data[idxb];
+    sa->data[idxb] = tmp;
 }
 
 EXPORTED const char *strarray_nth(const strarray_t *sa, int idx)
@@ -381,6 +398,12 @@ EXPORTED char **strarray_takevf(strarray_t *sa)
     return d;
 }
 
+EXPORTED char **strarray_safetakevf(strarray_t *sa)
+{
+    ensure_alloc(sa, 1); // never return NULL
+    return strarray_takevf(sa);
+}
+
 EXPORTED void strarray_sort(strarray_t *sa, strarray_cmp_fn_t *cmp)
 {
     qsort(sa->data, sa->count, sizeof(char *), cmp);
@@ -419,8 +442,27 @@ EXPORTED int strarray_find_case(const strarray_t *sa, const char *match, int sta
     return strarray_findg(sa, match, starting, strcasecmpsafe);
 }
 
+EXPORTED int strarray_intersect(const strarray_t *sa, const strarray_t *sb)
+{
+    int i;
+    for (i = 0; i < sa->count; i++)
+        if (strarray_find(sb, strarray_nth(sa, i), 0) >= 0)
+            return 1;
+    return 0;
+}
+
+EXPORTED int strarray_intersect_case(const strarray_t *sa, const strarray_t *sb)
+{
+    int i;
+    for (i = 0; i < sa->count; i++)
+        if (strarray_find_case(sb, strarray_nth(sa, i), 0) >= 0)
+            return 1;
+    return 0;
+}
+
 EXPORTED int strarray_size(const strarray_t *sa)
 {
+    if (!sa) return 0;
     return sa->count;
 }
 
@@ -439,4 +481,17 @@ EXPORTED int strarray_cmp(const strarray_t *a, const strarray_t *b)
     }
 
     return 0;
+}
+
+EXPORTED void strarray_addfirst(strarray_t *sa, const char *s)
+{
+    strarray_remove_all(sa, s);
+    strarray_unshift(sa, s);
+
+}
+
+EXPORTED void strarray_addfirst_case(strarray_t *sa, const char *s)
+{
+    strarray_remove_all_case(sa, s);
+    strarray_unshift(sa, s);
 }

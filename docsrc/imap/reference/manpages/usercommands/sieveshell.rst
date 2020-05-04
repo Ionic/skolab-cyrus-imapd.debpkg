@@ -63,14 +63,15 @@ OPTIONS
 
 \ **-u**\  \ *user*\ , \ **--user**\ =\ *user*\ 
  
- The authorization name to request; by default, derived from the
- authentication credentials.
+ The user whose mailboxes you want to work on. If not specified, it uses the same
+ as -a.
  
 
 
 \ **-a**\  \ *authname*\ , \ **--authname**\ =\ *authname*\ 
  
- The user to use for authentication (defaults to current user).
+ The user to use for authentication. If not specified, it defaults to the
+ current login user.
  
 
 
@@ -94,8 +95,7 @@ REFERENCES
 
 
 [MANAGESIEVE] Martin, T.; "A Protocol for Remotely Managing Sieve
-Scripts", draft-ietf-managesieve-03.txt, Mirapoint, Inc.; May 2001,
-work in progress.
+Scripts", RFC 5804; May 2001
 
 
 ******

@@ -44,6 +44,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -58,7 +59,6 @@
 #endif
 
 #include "assert.h"
-#include "exitcodes.h"
 #include "imparse.h"
 #include "libcyr_cfg.h"
 #include "map.h"
@@ -68,7 +68,7 @@
 #include "util.h"
 #include "xmalloc.h"
 
-/* Transparant protgroup structure */
+/* Transparent protgroup structure */
 struct protgroup
 {
     size_t nalloced; /* Number of nodes in the group */
@@ -415,6 +415,21 @@ error:
            s->write ? "" : "de");
     free(zstrm);
     return EOF;
+}
+
+EXPORTED void prot_unsetcompress(struct protstream *s)
+{
+    if (s->zstrm) {
+        if (s->write) deflateEnd(s->zstrm);
+        else inflateEnd(s->zstrm);
+
+        free(s->zstrm);
+        s->zstrm = NULL;
+    }
+    if (s->zbuf) {
+        free(s->zbuf);
+        s->zbuf = NULL;
+    }
 }
 
 /* Table of incompressible file type signatures */
@@ -1146,7 +1161,7 @@ int prot_flush_internal(struct protstream *s, int force)
                     syslog(LOG_ERR, "write to protstream buffer failed: %s",
                            strerror(errno));
 
-                    fatal("write to big buffer failed", EC_OSFILE);
+                    fatal("write to big buffer failed", EX_OSFILE);
                 }
                 if (n > 0) {
                     ptr += n;
@@ -1157,7 +1172,7 @@ int prot_flush_internal(struct protstream *s, int force)
             /* We did a write to the bigbuffer, refresh the memory map */
             if (fstat(s->big_buffer, &sbuf) == -1) {
                 syslog(LOG_ERR, "IOERROR: fstating temp protlayer buffer: %m");
-                fatal("failed to fstat protlayer buffer", EC_IOERR);
+                fatal("failed to fstat protlayer buffer", EX_IOERR);
             }
 
             s->bigbuf_len = sbuf.st_size;
@@ -1166,7 +1181,7 @@ int prot_flush_internal(struct protstream *s, int force)
                         s->bigbuf_len, "temp protlayer buffer", NULL);
         }
 
-    } /* end of blocking/nonblocking if statment */
+    } /* end of blocking/nonblocking if statement */
 
     /* Reset the memory buffer -- should be done on EOF or on success. */
     s->ptr = s->buf;
@@ -1376,6 +1391,12 @@ EXPORTED int prot_printamap(struct protstream *out, const char *s, size_t n)
     int r;
 
     if (!s) return prot_printf(out, "NIL");
+
+    if (!n) {
+        prot_putc('"', out);
+        prot_putc('"', out);
+        return 2;
+    }
 
     if (imparse_isnatom(s, n) && (n != 3 || memcmp(s, "NIL", 3)))
         return prot_write(out, s, n);
@@ -1740,8 +1761,10 @@ EXPORTED struct protstream *protgroup_getelement(struct protgroup *group,
     return group->group[element];
 }
 
+#ifdef HAVE_DECLARE_OPTIMIZE
 EXPORTED inline int prot_getc(struct protstream *s)
     __attribute__((always_inline,optimize("-O3")));
+#endif
 EXPORTED inline int prot_getc(struct protstream *s)
 {
     assert(!s->write);
@@ -1756,21 +1779,51 @@ EXPORTED inline int prot_getc(struct protstream *s)
     return prot_fill(s);
 }
 
-EXPORTED int prot_ungetc(int c, struct protstream *s)
+EXPORTED size_t prot_lookahead(struct protstream *s,
+                               const char *str,
+                               size_t len,
+                               int *sep)
+{
+    assert(!s->write);
+    int short_match = 0;
+
+    if (prot_peek(s) == EOF) return 0;
+
+    if (len >= s->cnt) {
+        len = s->cnt;
+        short_match = 1;
+    }
+
+    if (0 == memcmp(str, s->ptr, len)) {
+        if (!short_match) {
+            *sep = (int) s->ptr[len];
+            return len + 1;
+        }
+        return len;
+    }
+
+    return 0;
+}
+
+#ifdef HAVE_DECLARE_OPTIMIZE
+EXPORTED inline int prot_ungetc(int c, struct protstream *s)
+    __attribute__((always_inline,optimize("-O3")));
+#endif
+EXPORTED inline int prot_ungetc(int c, struct protstream *s)
 {
     assert(!s->write);
 
     if (c == EOF) return EOF;
 
     if (!s->can_unget)
-        fatal("Can't unwind any more", EC_SOFTWARE);
+        fatal("Can't unwind any more", EX_SOFTWARE);
 
     s->cnt++;
     s->can_unget--;
     s->bytes_in--;
     s->ptr--;
     if (*s->ptr != c)
-        fatal("Trying to unput wrong character", EC_SOFTWARE);
+        fatal("Trying to unput wrong character", EX_SOFTWARE);
 
     return c;
 }

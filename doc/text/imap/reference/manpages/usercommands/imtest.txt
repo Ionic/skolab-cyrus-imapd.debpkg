@@ -2,7 +2,7 @@
 **imtest**
 **********
 
-Interactive IMAP test program
+Interactive IMAP test program.
 
 
 Synopsis
@@ -91,7 +91,7 @@ Options
 
 -s
 
-   Enable IMAP over SSL (imaps).
+   Enable SSL over chosen protocol.
 
 -q
 

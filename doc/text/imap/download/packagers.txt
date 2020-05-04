@@ -3,6 +3,16 @@ Notes for Packagers
 *******************
 
 
+Binary naming
+=============
+
+Prevent namespace clashes. We suggest renaming all binaries with
+"cyr_" at the front, including renaming the "ctl_*" to "cyr_".
+
+The Cyrus team are looking to fix this in the core bundle in upcoming
+releases so packagers have less to do.
+
+
 Sample configuration files
 ==========================
 
@@ -107,7 +117,7 @@ New default settings
 ~~~~~~~~~~~~~~~~~~~~
 
 With the introduction of version 3.0, the defaults for some settings
-have changed.  Please consult Upgrading to 3.0 for details.
+have changed.  Please consult Upgrading to 3.2 for details.
 
 
 New features
@@ -125,11 +135,27 @@ more details and other recent changes.
   * Server-side threading with reduced protocol chatter for mobile
     or other high-latency clients.
 
+  * Required for JMAP support.
+
   * See the "conversations" options in imapd.conf(5)
+
+* JMAP
+
+  * JSON Mail Access Protocol
+
+  * Follow-on successor to IMAP ("J comes after I") with a special
+    focus on mobile and other clients with high-latency or unreliable
+    connectivity.
+
+  * Includes Calendaring, Contacts, Conversations, message delivery.
+
+  * See "httpmodules" in imapd.conf(5)
 
 * Xapian
 
   * Higher quality full-text search support.
+
+  * Required for JMAP support.
 
   * See the "search_engine" option in imapd.conf(5) and
     "doc/README.xapian" in the source distribution.

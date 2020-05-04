@@ -51,6 +51,7 @@
 #include <ctype.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <errno.h>
 
@@ -75,7 +76,6 @@
 
 #include "strarray.h"
 #include "assert.h"
-#include "exitcodes.h"
 #include "global.h"
 #include "mailbox.h"
 #include "mboxlist.h"
@@ -136,15 +136,7 @@ struct conn {
 
     char clienthost[NI_MAXHOST*2+1];
 
-    struct
-    {
-        char *ipremoteport;
-        char ipremoteport_buf[60];
-        char *iplocalport;
-        char iplocalport_buf[60];
-        sasl_ssf_t ssf;
-        char *authid;
-    } saslprops;
+    struct saslprops_t saslprops;
 
     /* UPDATE command handling */
     const char *streaming; /* tag */
@@ -281,20 +273,16 @@ static struct conn *conn_new(int fd)
     strlcpy(C->clienthost, clienthost, sizeof(C->clienthost));
 
     if (localip && remoteip) {
-        strlcpy(C->saslprops.ipremoteport_buf, remoteip,
-                sizeof(C->saslprops.ipremoteport_buf));
-        C->saslprops.ipremoteport = C->saslprops.ipremoteport_buf;
-        strlcpy(C->saslprops.iplocalport_buf, remoteip,
-                sizeof(C->saslprops.iplocalport_buf));
-        C->saslprops.iplocalport = C->saslprops.iplocalport_buf;
+        buf_setcstr(&C->saslprops.ipremoteport, remoteip);
+        buf_setcstr(&C->saslprops.iplocalport, localip);
     }
     pthread_mutex_unlock(&clienthost_mutex); /* UNLOCK */
 
     /* create sasl connection */
     r = sasl_server_new("mupdate",
                         config_servername, NULL,
-                        C->saslprops.iplocalport,
-                        C->saslprops.ipremoteport,
+                        buf_cstringnull_ifempty(&C->saslprops.iplocalport),
+                        buf_cstringnull_ifempty(&C->saslprops.ipremoteport),
                         NULL, 0,
                         &C->saslconn);
     if (r != SASL_OK) {
@@ -309,13 +297,6 @@ static struct conn *conn_new(int fd)
 
     /* set my allowable security properties */
     sasl_setprop(C->saslconn, SASL_SEC_PROPS, mysasl_secprops(SASL_SEC_NOANONYMOUS));
-
-    /* Clear Buffers */
-    memset(&(C->tag), 0, sizeof(struct buf));
-    memset(&(C->cmd), 0, sizeof(struct buf));
-    memset(&(C->arg1), 0, sizeof(struct buf));
-    memset(&(C->arg2), 0, sizeof(struct buf));
-    memset(&(C->arg3), 0, sizeof(struct buf));
 
     return C;
 }
@@ -384,7 +365,7 @@ static void conn_free(struct conn *C)
 
     if (C->saslconn) sasl_dispose(&C->saslconn);
 
-    if (C->saslprops.authid) free(C->saslprops.authid);
+    saslprops_free(&C->saslprops);
 
     /* free struct bufs */
     buf_free(&(C->tag));
@@ -497,34 +478,34 @@ int service_init(int argc, char **argv,
     int opt, autoselect = 0;
     pthread_t t;
 
-    if (geteuid() == 0) fatal("must run as the Cyrus user", EC_USAGE);
+    if (geteuid() == 0) fatal("must run as the Cyrus user", EX_USAGE);
 
     /* Do minor configuration checking */
     workers_to_start = config_getint(IMAPOPT_MUPDATE_WORKERS_START);
 
     if (config_getint(IMAPOPT_MUPDATE_WORKERS_MAX) < config_getint(IMAPOPT_MUPDATE_WORKERS_MINSPARE)) {
         syslog(LOG_CRIT, "Maximum total worker threads is less than minimum spare worker threads");
-        return EC_SOFTWARE;
+        return EX_SOFTWARE;
     }
 
     if (workers_to_start < config_getint(IMAPOPT_MUPDATE_WORKERS_MINSPARE)) {
         syslog(LOG_CRIT, "Starting worker threads is less than minimum spare worker threads");
-        return EC_SOFTWARE;
+        return EX_SOFTWARE;
     }
 
     if (config_getint(IMAPOPT_MUPDATE_WORKERS_MAXSPARE) < workers_to_start) {
         syslog(LOG_CRIT, "Maximum spare worker threads is less than starting worker threads");
-        return EC_SOFTWARE;
+        return EX_SOFTWARE;
     }
 
     if (config_getint(IMAPOPT_MUPDATE_WORKERS_MINSPARE) > workers_to_start) {
         syslog(LOG_CRIT, "Minimum spare worker threads is greater than starting worker threads");
-        return EC_SOFTWARE;
+        return EX_SOFTWARE;
     }
 
     if (config_getint(IMAPOPT_MUPDATE_WORKERS_MAX) < workers_to_start) {
         syslog(LOG_CRIT, "Maximum total worker threads is less than starting worker threads");
-        return EC_SOFTWARE;
+        return EX_SOFTWARE;
     }
 
     /* set signal handlers */
@@ -556,12 +537,12 @@ int service_init(int argc, char **argv,
          * to the slave.  We can probably fix this by prepending
          * config_servername onto the entries before updating the slaves.
          */
-        fatal("cannot run mupdate master on a unified server", EC_USAGE);
+        fatal("cannot run mupdate master on a unified server", EX_USAGE);
     }
 
     if (pipe(conn_pipe) == -1) {
         syslog(LOG_ERR, "could not setup connection signaling pipe %m");
-        return EC_OSERR;
+        return EX_OSERR;
     }
 
     database_init();
@@ -578,7 +559,7 @@ int service_init(int argc, char **argv,
             pthread_detach(t);
         } else {
             syslog(LOG_ERR, "could not start client thread");
-            return EC_SOFTWARE;
+            return EX_SOFTWARE;
         }
 
         /* Wait until they sync the database */
@@ -594,7 +575,7 @@ int service_init(int argc, char **argv,
             pthread_detach(t);
         } else {
             syslog(LOG_ERR, "could not start placebo kick thread");
-            return EC_SOFTWARE;
+            return EX_SOFTWARE;
         }
 
         mupdate_ready();
@@ -607,7 +588,7 @@ int service_init(int argc, char **argv,
             pthread_detach(t);
         } else {
             syslog(LOG_ERR, "could not start client thread");
-            return EC_SOFTWARE;
+            return EX_SOFTWARE;
         }
     }
 
@@ -1031,7 +1012,7 @@ int service_main_fd(int fd,
 
         syslog(LOG_CRIT,
                "write to conn_pipe to signal new connection failed: %m");
-        return EC_TEMPFAIL;
+        return EX_TEMPFAIL;
     }
     return 0;
 }
@@ -1055,7 +1036,7 @@ static void dobanner(struct conn *c)
     if (!masterp) {
         if (!config_mupdate_server)
             fatal("mupdate server was not specified for slave",
-                  EC_TEMPFAIL);
+                  EX_TEMPFAIL);
 
         snprintf(slavebuf, sizeof(slavebuf), "mupdate://%s",
                  config_mupdate_server);
@@ -1079,7 +1060,7 @@ static void dobanner(struct conn *c)
     prot_printf(c->pout,
                 "* OK MUPDATE \"%s\" \"Cyrus IMAP\" \"%s\" \"%s\"\r\n",
                 config_servername,
-                cyrus_version(), masterp ? "(master)" : slavebuf);
+                CYRUS_VERSION, masterp ? "(master)" : slavebuf);
 
     prot_flush(c->pout);
 }
@@ -1199,7 +1180,7 @@ static void *thread_main(void *rock __attribute__((unused)))
         if (prot_select(protin, conn_pipe[0],
                        &protout, &connflag, NULL) == -1) {
             syslog(LOG_ERR, "prot_select() failed in thread_main: %m");
-            fatal("prot_select() failed in thread_main", EC_TEMPFAIL);
+            fatal("prot_select() failed in thread_main", EX_TEMPFAIL);
         }
 
         /* we've got work to do */
@@ -1238,7 +1219,7 @@ static void *thread_main(void *rock __attribute__((unused)))
             if (read(conn_pipe[0], &new_fd, sizeof(new_fd)) == -1) {
                 syslog(LOG_CRIT,
                        "read from conn_pipe for new connection failed: %m");
-                fatal("conn_pipe read failed", EC_TEMPFAIL);
+                fatal("conn_pipe read failed", EX_TEMPFAIL);
             }
         } else {
             new_fd = NO_NEW_CONNECTION;
@@ -1362,7 +1343,7 @@ static void *thread_main(void *rock __attribute__((unused)))
             if (write(conn_pipe[1], &NO_NEW_CONNECTION,
                      sizeof(NO_NEW_CONNECTION)) == -1) {
                 fatal("write to conn_pipe to signal docmd done failed",
-                      EC_TEMPFAIL);
+                      EX_TEMPFAIL);
             }
         }
 
@@ -1391,10 +1372,6 @@ static void *thread_main(void *rock __attribute__((unused)))
 static void database_init(void)
 {
     pthread_mutex_lock(&mailboxes_mutex); /* LOCK */
-
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-
     pthread_mutex_unlock(&mailboxes_mutex); /* UNLOCK */
 }
 
@@ -1508,6 +1485,7 @@ static void cmd_authenticate(struct conn *C,
 
     if (r) {
         const char *errorstring = NULL;
+        const char *userid = "-notset-";
 
         switch (r) {
         case IMAP_SASL_CANCEL:
@@ -1522,14 +1500,17 @@ static void cmd_authenticate(struct conn *C,
                         tag, errorstring ? errorstring : "");
             break;
         default:
-            failedloginpause = config_getint(IMAPOPT_FAILEDLOGINPAUSE);
+            failedloginpause = config_getduration(IMAPOPT_FAILEDLOGINPAUSE, 's');
             if (failedloginpause != 0) {
                 sleep(failedloginpause);
             }
 
-            syslog(LOG_ERR, "badlogin: %s %s %s",
+            if (r != SASL_NOUSER)
+                sasl_getprop(C->saslconn, SASL_USERNAME, (const void **) &userid);
+
+            syslog(LOG_ERR, "badlogin: %s %s (%s) [%s]",
                    C->clienthost,
-                   mech, sasl_errdetail(C->saslconn));
+                   mech, userid, sasl_errdetail(C->saslconn));
 
             prot_printf(C->pout, "%s NO \"%s\"\r\n", tag,
                         sasl_errstring((r == SASL_NOUSER ? SASL_BADAUTH : r),
@@ -1879,7 +1860,7 @@ static void cmd_list(struct conn *C, const char *tag, const char *host_prefix)
     if (C->list_prefix) C->list_prefix_len = strlen(C->list_prefix);
     else C->list_prefix_len = 0;
 
-    mboxlist_allmbox("", sendupdate, (void*)C, /*incdel*/0);
+    mboxlist_allmbox("", sendupdate, (void*)C, /*flags*/0);
 
     C->streaming = NULL;
     C->list_prefix = NULL;
@@ -1926,7 +1907,7 @@ static void cmd_startupdate(struct conn *C, const char *tag,
     C->streaming_hosts = partial;
 
     /* dump initial list */
-    mboxlist_allmbox("", sendupdate, (void*)C, /*incdel*/0);
+    mboxlist_allmbox("", sendupdate, (void*)C, /*flags*/0);
 
     pthread_mutex_unlock(&mailboxes_mutex); /* UNLOCK */
 
@@ -1978,13 +1959,6 @@ static void sendupdates(struct conn *C, int flushnow)
 static void cmd_starttls(struct conn *C, const char *tag)
 {
     int result;
-    int *layerp;
-
-    char *auth_id;
-    sasl_ssf_t ssf;
-
-    /* SASL and openssl have different ideas about whether ssf is signed */
-    layerp = (int *) &ssf;
 
     result=tls_init_serverengine("mupdate",
                                  5,        /* depth to verify */
@@ -2007,8 +1981,7 @@ static void cmd_starttls(struct conn *C, const char *tag)
     result=tls_start_servertls(C->pin->fd, /* read */
                                C->pout->fd, /* write */
                                180, /* 3 minutes */
-                               layerp,
-                               &auth_id,
+                               &C->saslprops,
                                &C->tlsconn);
 
     /* if error */
@@ -2021,22 +1994,10 @@ static void cmd_starttls(struct conn *C, const char *tag)
     }
 
     /* tell SASL about the negotiated layer */
-    result = sasl_setprop(C->saslconn, SASL_SSF_EXTERNAL, &ssf);
+    result = saslprops_set_tls(&C->saslprops, C->saslconn);
     if (result != SASL_OK) {
-        fatal("sasl_setprop() failed: cmd_starttls()", EC_TEMPFAIL);
+        fatal("saslprops_set_tls() failed: cmd_starttls()", EX_TEMPFAIL);
     }
-    C->saslprops.ssf = ssf;
-
-    result = sasl_setprop(C->saslconn, SASL_AUTH_EXTERNAL, auth_id);
-    if (result != SASL_OK) {
-        fatal("sasl_setprop() failed: cmd_starttls()", EC_TEMPFAIL);
-    }
-    if (C->saslprops.authid) {
-        free(C->saslprops.authid);
-        C->saslprops.authid = NULL;
-    }
-    if (auth_id)
-        C->saslprops.authid = xstrdup(auth_id);
 
     /* tell the prot layer about our new layers */
     prot_settls(C->pin, C->tlsconn);
@@ -2054,7 +2015,7 @@ void cmd_starttls(struct conn *C __attribute__((unused)),
                   const char *tag __attribute__((unused)))
 {
     fatal("cmd_starttls() executed, but starttls isn't implemented!",
-          EC_SOFTWARE);
+          EX_SOFTWARE);
 }
 #endif /* HAVE_SSL */
 
@@ -2098,7 +2059,7 @@ void cmd_compress(struct conn *C __attribute__((unused)),
                   const char *alg __attribute__((unused)))
 {
     fatal("cmd_compress() executed, but COMPRESS isn't implemented!",
-          EC_SOFTWARE);
+          EX_SOFTWARE);
 }
 #endif /* HAVE_ZLIB */
 
@@ -2120,19 +2081,10 @@ static int reset_saslconn(struct conn *c)
 
     sasl_dispose(&c->saslconn);
     /* do initialization typical of service_main */
-    ret = sasl_server_new("mupdate", config_servername,
-                         NULL, NULL, NULL,
-                         NULL, 0, &c->saslconn);
-    if (ret != SASL_OK) return ret;
-
-    if (c->saslprops.ipremoteport)
-       ret = sasl_setprop(c->saslconn, SASL_IPREMOTEPORT,
-                          c->saslprops.ipremoteport);
-    if (ret != SASL_OK) return ret;
-
-    if (c->saslprops.iplocalport)
-       ret = sasl_setprop(c->saslconn, SASL_IPLOCALPORT,
-                          c->saslprops.iplocalport);
+    ret = sasl_server_new("mupdate", config_servername, NULL,
+                          buf_cstringnull_ifempty(&c->saslprops.iplocalport),
+                          buf_cstringnull_ifempty(&c->saslprops.ipremoteport),
+                          NULL, 0, &c->saslconn);
     if (ret != SASL_OK) return ret;
 
     secprops = mysasl_secprops(SASL_SEC_NOANONYMOUS);
@@ -2142,14 +2094,9 @@ static int reset_saslconn(struct conn *c)
 
     /* If we have TLS/SSL info, set it */
     if (c->saslprops.ssf) {
-        ret = sasl_setprop(c->saslconn, SASL_SSF_EXTERNAL, &c->saslprops.ssf);
+        ret = saslprops_set_tls(&c->saslprops, c->saslconn);
     }
     if (ret != SASL_OK) return ret;
-
-    if (c->saslprops.authid) {
-        ret = sasl_setprop(c->saslconn, SASL_AUTH_EXTERNAL, c->saslprops.authid);
-        if (ret != SASL_OK) return ret;
-    }
     /* End TLS/SSL Info */
 
     return SASL_OK;
@@ -2406,13 +2353,13 @@ int mupdate_synchronize(struct mbent_queue *remote_boxes, struct mpool *pool)
 
     rock.boxes = &local_boxes;
 
-    mboxlist_allmbox("", sync_findall_cb, (void*)&rock, /*incdel*/0);
+    mboxlist_allmbox("", sync_findall_cb, (void*)&rock, /*flags*/0);
 
     /* Traverse both lists, compare the names */
     /* If they match, ensure that location and acl are correct, if so,
        move on, if not, fix them */
     /* If the local is before the next remote, delete it */
-    /* If the next remote is before theis local, insert it and try again */
+    /* If the next remote is before the local, insert it and try again */
     for(l = local_boxes.head, r = remote_boxes->head; l && r;
         l = local_boxes.head, r = remote_boxes->head)
     {
@@ -2559,7 +2506,7 @@ void mupdate_ready(void)
 
     if (ready_for_connections) {
         syslog(LOG_CRIT, "mupdate_ready called when already ready");
-        fatal("mupdate_ready called when already ready", EC_TEMPFAIL);
+        fatal("mupdate_ready called when already ready", EX_TEMPFAIL);
     }
 
     ready_for_connections = 1;

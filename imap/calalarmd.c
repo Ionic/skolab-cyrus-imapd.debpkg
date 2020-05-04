@@ -45,6 +45,7 @@
 #endif
 
 #include <sys/types.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <sys/stat.h>
 #include <stdlib.h>
@@ -57,7 +58,6 @@
 
 #include "global.h"
 #include "xmalloc.h"
-#include "exitcodes.h"
 #include "caldav_db.h"
 #include "caldav_alarm.h"
 
@@ -65,6 +65,8 @@ extern int optind;
 extern char *optarg;
 
 static int debugmode = 0;
+
+struct namespace calalarmd_namespace;
 
 EXPORTED void fatal(const char *msg, int err)
 {
@@ -80,12 +82,6 @@ EXPORTED void fatal(const char *msg, int err)
 static void shut_down(int ec) __attribute__((noreturn));
 static void shut_down(int ec)
 {
-    caldav_done();
-    annotatemore_close();
-    quotadb_close();
-    quotadb_done();
-    mboxlist_close();
-    mboxlist_done();
     cyrus_done();
     exit(ec);
 }
@@ -114,24 +110,15 @@ int main(int argc, char **argv)
             break;
         default:
             fprintf(stderr, "invalid argument\n");
-            exit(EC_USAGE);
+            exit(EX_USAGE);
             break;
         }
     }
 
     cyrus_init(alt_config, "calalarmd", 0, 0);
 
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-
-    quotadb_init(0);
-    quotadb_open(NULL);
-
-    annotatemore_open();
-
-    caldav_init();
-
-    mboxevent_init();
+    mboxname_init_namespace(&calalarmd_namespace, /*isadmin*/1);
+    mboxevent_setnamespace(&calalarmd_namespace);
 
     if (upgrade) {
         caldav_alarm_upgrade();
@@ -139,7 +126,7 @@ int main(int argc, char **argv)
     }
 
     if (runattime) {
-        caldav_alarm_process(runattime);
+        caldav_alarm_process(runattime, NULL);
         shut_down(0);
     }
 
@@ -166,17 +153,18 @@ int main(int argc, char **argv)
         struct timeval start, end;
         double totaltime;
         int tosleep;
+        time_t interval = 1;
 
         signals_poll();
 
         gettimeofday(&start, 0);
-        caldav_alarm_process(0);
+        caldav_alarm_process(0, &interval);
         gettimeofday(&end, 0);
 
         signals_poll();
 
         totaltime = timesub(&start, &end);
-        tosleep = 10 - (int) (totaltime + 0.5); /* round to nearest int */
+        tosleep = interval - (int) (totaltime + 0.5); /* round to nearest int */
         if (tosleep > 0)
             sleep(tosleep);
     }

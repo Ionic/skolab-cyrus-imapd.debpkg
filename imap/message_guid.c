@@ -63,7 +63,7 @@
  *   be stored on disk.
  *
  * Textual:
- *   Textual represenatation for Message GUID for passing over the wire
+ *   Textual representation for Message GUID for passing over the wire
  *   Currently BASE64 string + '\0'.
  *
  */
@@ -87,17 +87,6 @@ EXPORTED void message_guid_generate(struct message_guid *guid,
 
     guid->status = GUID_NONNULL;
     xsha1((const unsigned char *) msg_base, msg_len, guid->value);
-}
-
-EXPORTED void message_guid_permute32(struct message_guid *guid, uint32_t val)
-{
-    if (message_guid_isnull(guid))
-        return;
-
-    uint32_t base = ntohl(*((uint32_t *)(guid->value + MESSAGE_GUID_SIZE - 4)));
-
-    /* XOR in the 32 bits */
-    *((uint32_t *)(guid->value + MESSAGE_GUID_SIZE - 4)) = base ^ val;
 }
 
 /* message_guid_copy() ***************************************************
@@ -230,7 +219,7 @@ EXPORTED const char *message_guid_import(struct message_guid *guid,
 EXPORTED const char *message_guid_encode(const struct message_guid *guid)
 {
     static char text[2*MESSAGE_GUID_SIZE+1];
-    int r = bin_to_hex(&guid->value, MESSAGE_GUID_SIZE, text, BH_LOWER);
+    int r = bin_to_lchex(&guid->value, MESSAGE_GUID_SIZE, text);
     assert(r == 2*MESSAGE_GUID_SIZE);
     return text;
 }
