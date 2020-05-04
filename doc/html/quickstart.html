@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Quickstart Guide &mdash; Cyrus IMAP 3.2.0-rc1 documentation</title>
+  <title>Quickstart Guide &mdash; Cyrus IMAP 3.2.0 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.0-rc1 documentation" href="index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.0 documentation" href="index.html"/>
         <link rel="next" title="Introduction to Cyrus IMAP" href="imap/quickstart/introduction.html"/>
         <link rel="prev" title="Notes for Packagers" href="imap/download/packagers.html"/> 
 
@@ -132,12 +132,15 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/download/release-notes/index.html#series-3-2">Series 3.2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/download/release-notes/index.html#series-3-0">Series 3.0</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/download/release-notes/index.html#series-2-5">Series 2.5</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/download/release-notes/index.html#series-2-4">Series 2.4</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/release-notes/index.html#development-snapshots">Development snapshots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/release-notes/3.1/index.html">Cyrus IMAP 3.1 Tags</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="imap/download/release-notes/index.html#older-versions">Older Versions</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="imap/download/release-notes/index.html#series-1">Series 1</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/download/release-notes/index.html#series-2-2-0-2-3">Series 2: 2.0 - 2.3</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/download/release-notes/index.html#series-2-2-0-2-4">Series 2: 2.0 - 2.4</a></li>
 </ul>
 </li>
 </ul>
@@ -161,20 +164,18 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#quick-install">Quick install</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#install-cyrus-reference-packages">1. Install Cyrus reference packages</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#use-apt-get-install-f-to-complete-installation">2. Use &#8220;apt-get install -f&#8221; to complete installation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#setup-the-cyrus-mail-user-and-group">3. Setup the cyrus:mail user and group</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#setting-up-authentication-with-sasl">4. Setting up authentication with SASL</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#setup-mail-delivery-from-your-mta">5. Setup mail delivery from your MTA</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#install-cyrus-package-s">1. Install Cyrus package(s)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setup-the-cyrus-mail-user-and-group">2. Setup the cyrus:mail user and group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setting-up-authentication-with-sasl">3. Setting up authentication with SASL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setup-mail-delivery-from-your-mta">4. Setup mail delivery from your MTA</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#install-sendmail">Install Sendmail</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#sendmail-communication">Sendmail communication</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#install-postfix">Install Postfix</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#protocol-ports">6. Protocol ports</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#configuring-cyrus">7. Configuring Cyrus</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#launch-cyrus">8. Launch Cyrus</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#feature-overview">Feature overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#protocol-ports">5. Protocol ports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuring-cyrus">6. Configuring Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#launch-cyrus">7. Launch Cyrus</a></li>
 </ul>
 </li>
 </ul>
@@ -764,7 +765,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html">Docs v3.2.0-rc1</a> &raquo;</li>
+      <li><a href="index.html">Docs v3.2.0</a> &raquo;</li>
       
     <li>Quickstart Guide</li>
       <li class="wy-breadcrumbs-aside">
@@ -793,46 +794,19 @@
 <h2>Quick install<a class="headerlink" href="#quick-install" title="Permalink to this headline">¶</a></h2>
 <p>A quick guide to getting a basic installation of Cyrus up and running in 5 minutes.</p>
 <p>The first place to start with a new installation of Cyrus IMAP is with
-your OS distribution of choice and their packaging, where available.  If
-there is no Cyrus IMAP 3.0 package available yet from your distro,
-download the <a class="reference external" href="ftp://ftp.cyrusimap.org/cyrus-imapd/debs/">latest stable package</a> : version 3.2.0-rc1.</p>
-<p>We only provide limited options for reference packages, so use a
-supported distribution whenever possible.  At this time the only
-official Cyrus packages are for Debian Jessie (with backports enabled).</p>
-<p>Please download both the packages (*.deb) and the signature files.
-Installation is a two step process:</p>
-<div class="section" id="install-cyrus-reference-packages">
-<h3>1. Install Cyrus reference packages<a class="headerlink" href="#install-cyrus-reference-packages" title="Permalink to this headline">¶</a></h3>
-<p>First, invoke the <code class="docutils literal"><span class="pre">dpkg</span> <span class="pre">-i</span></code> command with the list of all packages:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>$ sudo dpkg -i \
-    cyrus-common_3.0.1-jessie_amd64.deb  \
-    cyrus-doc_3.0.1-jessie_all.deb  \
-    cyrus-imapd_3.0.1-jessie_amd64.deb  \
-    cyrus-pop3d_3.0.1-jessie_amd64.deb  \
-    cyrus-admin_3.0.1-jessie_all.deb  \
-    cyrus-murder_3.0.1-jessie_amd64.deb  \
-    cyrus-replication_3.0.1-jessie_amd64.deb  \
-    cyrus-nntpd_3.0.1-jessie_amd64.deb  \
-    cyrus-caldav_3.0.1-jessie_amd64.deb  \
-    cyrus-clients_3.0.1-jessie_amd64.deb  \
-    cyrus-dev_3.0.1-jessie_amd64.deb  \
-    libcyrus-imap-perl_3.0.1-jessie_amd64.deb
-</pre></div>
-</div>
-<p>That step will produce an error, as there will doubtless be unmet
-dependencies.  Not to worry, there&#8217;s a fix for that...</p>
-</div>
-<div class="section" id="use-apt-get-install-f-to-complete-installation">
-<h3>2. Use &#8220;apt-get install -f&#8221; to complete installation<a class="headerlink" href="#use-apt-get-install-f-to-complete-installation" title="Permalink to this headline">¶</a></h3>
-<p>Now invoke <code class="docutils literal"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">-f</span></code> to pull in the dependencies and
-complete the installation:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>$ sudo apt-get install -f
-</pre></div>
-</div>
-<p>The packaging should pull along all necessary support libraries, etc..</p>
+your OS distribution of choice and their packaging, where available.</p>
+<p>If there is no Cyrus IMAP 3.2.0 package available yet
+from your distro, download the official source tarball from <a class="reference external" href="https://github.com/cyrusimap/cyrus-imapd/releases">GitHub</a>.  The
+<a class="reference internal" href="imap/developer/compiling.html#compiling"><span class="std std-ref">Compiling</span></a> guide will help you get it built and installed.</p>
+<div class="section" id="install-cyrus-package-s">
+<h3>1. Install Cyrus package(s)<a class="headerlink" href="#install-cyrus-package-s" title="Permalink to this headline">¶</a></h3>
+<p>Install the Cyrus IMAP package(s), either from your distribution&#8217;s package
+manager, or from a release tarball.</p>
+<p>Your distribution might have split Cyrus IMAP into several packages.  Check
+their documentation if you&#8217;re not sure what you need.</p>
 </div>
 <div class="section" id="setup-the-cyrus-mail-user-and-group">
-<h3>3. Setup the cyrus:mail user and group<a class="headerlink" href="#setup-the-cyrus-mail-user-and-group" title="Permalink to this headline">¶</a></h3>
+<h3>2. Setup the cyrus:mail user and group<a class="headerlink" href="#setup-the-cyrus-mail-user-and-group" title="Permalink to this headline">¶</a></h3>
 <p>Now let&#8217;s create a <strong>special user account just for the Cyrus server</strong>
 to sandbox Cyrus: called <code class="docutils literal"><span class="pre">cyrus</span></code>. We&#8217;ll also create a <code class="docutils literal"><span class="pre">mail</span></code> group
 as well. This allows Cyrus to give other programs some permissions if
@@ -875,7 +849,7 @@ the PKI files.  On Debian/Ubuntu systems, for example, this group is
 </div>
 </div>
 <div class="section" id="setting-up-authentication-with-sasl">
-<h3>4. Setting up authentication with SASL<a class="headerlink" href="#setting-up-authentication-with-sasl" title="Permalink to this headline">¶</a></h3>
+<h3>3. Setting up authentication with SASL<a class="headerlink" href="#setting-up-authentication-with-sasl" title="Permalink to this headline">¶</a></h3>
 <p>Now, let&#8217;s set up <strong>SASL</strong>. This will allow you to connect to your
 local IMAP server and login, just like any IMAP user would before
 checking for new emails.</p>
@@ -914,7 +888,7 @@ the user exists and is set up correctly:</p>
 <p>You should get an <code class="docutils literal"><span class="pre">0:</span> <span class="pre">OK</span> <span class="pre">&quot;Success.&quot;</span></code> message.</p>
 </div>
 <div class="section" id="setup-mail-delivery-from-your-mta">
-<h3>5. Setup mail delivery from your MTA<a class="headerlink" href="#setup-mail-delivery-from-your-mta" title="Permalink to this headline">¶</a></h3>
+<h3>4. Setup mail delivery from your MTA<a class="headerlink" href="#setup-mail-delivery-from-your-mta" title="Permalink to this headline">¶</a></h3>
 <p>Your Cyrus IMAP server will want to receive the emails accepted by your
 SMTP server (ie Sendmail, Postfix, etc). In Cyrus, this happens via a
 protocol called LMTP, which is usually supported by your SMTP server.</p>
@@ -1008,7 +982,7 @@ version of this, where the socket patch matches what&#8217;s set in the
 </div>
 </div>
 <div class="section" id="protocol-ports">
-<h3>6. Protocol ports<a class="headerlink" href="#protocol-ports" title="Permalink to this headline">¶</a></h3>
+<h3>5. Protocol ports<a class="headerlink" href="#protocol-ports" title="Permalink to this headline">¶</a></h3>
 <p>The Cyrus IMAP server provides service interfaces via either TCP/IP
 ports or Unix domain sockets.  For the former, Cyrus requires that there
 are proper entries in the host&#8217;s <code class="docutils literal"><span class="pre">/etc/services</span></code> file.  The following
@@ -1031,7 +1005,7 @@ are required for any host using the listed services:</p>
 <p>Make sure that these lines are present or add them if they are missing.</p>
 </div>
 <div class="section" id="configuring-cyrus">
-<h3>7. Configuring Cyrus<a class="headerlink" href="#configuring-cyrus" title="Permalink to this headline">¶</a></h3>
+<h3>6. Configuring Cyrus<a class="headerlink" href="#configuring-cyrus" title="Permalink to this headline">¶</a></h3>
 <p>(Nearly there)</p>
 <p>Set up a simple directory structure for Cyrus to store emails, owned by
 the <code class="docutils literal"><span class="pre">cyrus</span></code> user and group <code class="docutils literal"><span class="pre">mail</span></code>:</p>
@@ -1141,82 +1115,14 @@ in a Murder or Replication environment.</p>
 </div>
 </div>
 <div class="section" id="launch-cyrus">
-<h3>8. Launch Cyrus<a class="headerlink" href="#launch-cyrus" title="Permalink to this headline">¶</a></h3>
-<p>If using our packages on Debian Jessie, you will have a SystemV
-compatible init script installed, with systemd support.  Start Cyrus
-with the following command:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">systemctl</span> <span class="n">start</span> <span class="n">cyrus</span><span class="o">-</span><span class="n">imapd</span>
-</pre></div>
-</div>
-<p>Tada!  You should now have a working Cyrus IMAP server.</p>
-</div>
-<div class="section" id="feature-overview">
-<h3>Feature overview<a class="headerlink" href="#feature-overview" title="Permalink to this headline">¶</a></h3>
-<p>The features (compile-time configuration options) supported in our
-reference packages are:</p>
-<dl class="docutils">
-<dt>Cyrus Server configured components</dt>
-<dd><ul class="first last simple">
-<li>event notification : yes</li>
-<li>gssapi             : /usr</li>
-<li>autocreate         : yes</li>
-<li>idled              : yes</li>
-<li>httpd              : yes</li>
-<li>kerberos V4        : no</li>
-<li>murder             : yes</li>
-<li>nntpd              : yes</li>
-<li>replication        : yes</li>
-<li>sieve              : yes</li>
-<li>calalarmd          : no</li>
-<li>jmap               : yes</li>
-<li>objectstore        : no</li>
-<li>backup             : no</li>
-</ul>
-</dd>
-<dt>External dependencies</dt>
-<dd><ul class="first last simple">
-<li>ldap              : yes</li>
-<li>openssl           : yes</li>
-<li>zlib              : yes</li>
-<li>pcre              : yes</li>
-<li>clamav            : yes</li>
-<li>snmp              : yes</li>
-<li>caringo           : no</li>
-<li>openio            : no</li>
-<li>nghttp2           : no</li>
-<li>brotli            : no</li>
-<li>xml2              : yes</li>
-<li>ical              : yes</li>
-<li>icu4c             : no</li>
-<li>shapelib          : no</li>
-</ul>
-</dd>
-<dt>Database support</dt>
-<dd><ul class="first last simple">
-<li>mysql             : no</li>
-<li>postgresql        : no</li>
-<li>sqlite            : yes</li>
-</ul>
-</dd>
-<dt>Search engine</dt>
-<dd><ul class="first last simple">
-<li>squat             : yes</li>
-<li>xapian            : yes</li>
-<li>xapian_flavor     : vanilla</li>
-</ul>
-</dd>
-<dt>Hardware support</dt>
-<dd><ul class="first last simple">
-<li>SSE4.2            : yes</li>
-</ul>
-</dd>
-<dt>Installation directories</dt>
-<dd><ul class="first last simple">
-<li>prefix            : /usr</li>
-<li>sysconfdir        : /etc</li>
-</ul>
-</dd>
-</dl>
+<h3>7. Launch Cyrus<a class="headerlink" href="#launch-cyrus" title="Permalink to this headline">¶</a></h3>
+<p>If using a distribution package, you probably now have an init script
+installed, that you can invoke with your system&#8217;s usual service control
+mechanism.</p>
+<p>If you built from source, you will need to write your own init script.
+The simplest one will simply start/stop the <a class="reference internal" href="imap/reference/manpages/systemcommands/master.html#std:cyrusman-master(8)">master(8)</a> binary,
+with suitable options, as root (master will drop root privileges itself
+as soon as it possibly can).</p>
 </div>
 </div>
 </div>
@@ -1239,7 +1145,7 @@ reference packages are:</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Aug 18 2017
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Apr 29 2020
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1259,7 +1165,7 @@ reference packages are:</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'3.2.0-rc1',
+            VERSION:'3.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

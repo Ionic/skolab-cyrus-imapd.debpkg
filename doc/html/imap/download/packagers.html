@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Notes for Packagers &mdash; Cyrus IMAP 3.2.0-rc1 documentation</title>
+  <title>Notes for Packagers &mdash; Cyrus IMAP 3.2.0 documentation</title>
   
 
   
@@ -37,10 +37,10 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.0-rc1 documentation" href="../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.0 documentation" href="../../index.html"/>
         <link rel="up" title="Download" href="../../download.html"/>
         <link rel="next" title="Quickstart Guide" href="../../quickstart.html"/>
-        <link rel="prev" title="Cyrus IMAP 2.3.20 Release Notes" href="release-notes/2.3/x/2.3.20.html"/> 
+        <link rel="prev" title="Cyrus IMAP 2.4.17-caldav-beta11 Release Notes" href="release-notes/2.4-dav/x/2.4.17-caldav-beta11.html"/> 
 
   
   
@@ -133,12 +133,15 @@
 <li class="toctree-l4"><a class="reference internal" href="release-notes/index.html#series-3-2">Series 3.2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="release-notes/index.html#series-3-0">Series 3.0</a></li>
 <li class="toctree-l4"><a class="reference internal" href="release-notes/index.html#series-2-5">Series 2.5</a></li>
-<li class="toctree-l4"><a class="reference internal" href="release-notes/index.html#series-2-4">Series 2.4</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="release-notes/index.html#development-snapshots">Development snapshots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="release-notes/3.1/index.html">Cyrus IMAP 3.1 Tags</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="release-notes/index.html#older-versions">Older Versions</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="release-notes/index.html#series-1">Series 1</a></li>
-<li class="toctree-l4"><a class="reference internal" href="release-notes/index.html#series-2-2-0-2-3">Series 2: 2.0 - 2.3</a></li>
+<li class="toctree-l4"><a class="reference internal" href="release-notes/index.html#series-2-2-0-2-4">Series 2: 2.0 - 2.4</a></li>
 </ul>
 </li>
 </ul>
@@ -162,20 +165,18 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#quick-install">Quick install</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#install-cyrus-reference-packages">1. Install Cyrus reference packages</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#use-apt-get-install-f-to-complete-installation">2. Use &#8220;apt-get install -f&#8221; to complete installation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setup-the-cyrus-mail-user-and-group">3. Setup the cyrus:mail user and group</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setting-up-authentication-with-sasl">4. Setting up authentication with SASL</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setup-mail-delivery-from-your-mta">5. Setup mail delivery from your MTA</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#install-cyrus-package-s">1. Install Cyrus package(s)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setup-the-cyrus-mail-user-and-group">2. Setup the cyrus:mail user and group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setting-up-authentication-with-sasl">3. Setting up authentication with SASL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setup-mail-delivery-from-your-mta">4. Setup mail delivery from your MTA</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../quickstart.html#install-sendmail">Install Sendmail</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../quickstart.html#sendmail-communication">Sendmail communication</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../quickstart.html#install-postfix">Install Postfix</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#protocol-ports">6. Protocol ports</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#configuring-cyrus">7. Configuring Cyrus</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#launch-cyrus">8. Launch Cyrus</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#feature-overview">Feature overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#protocol-ports">5. Protocol ports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#configuring-cyrus">6. Configuring Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#launch-cyrus">7. Launch Cyrus</a></li>
 </ul>
 </li>
 </ul>
@@ -765,7 +766,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html">Docs v3.2.0-rc1</a> &raquo;</li>
+      <li><a href="../../index.html">Docs v3.2.0</a> &raquo;</li>
       
           <li><a href="../../download.html">Download</a> &raquo;</li>
       
@@ -883,64 +884,29 @@ expected.</p>
 </div>
 <div class="section" id="new-default-settings">
 <h4>New default settings<a class="headerlink" href="#new-default-settings" title="Permalink to this headline">¶</a></h4>
-<p>With the introduction of version 3.0, the defaults for some settings
-have changed.  Please consult <a class="reference internal" href="upgrade.html#upgrade"><span class="std std-ref">Upgrading to 3.2</span></a> for details.</p>
+<p>A new stable series means the defaults for some settings may have changed.
+Please consult <a class="reference internal" href="upgrade.html#upgrade"><span class="std std-ref">Upgrading to 3.2</span></a> for details.</p>
 </div>
-<div class="section" id="new-features">
-<h4>New features<a class="headerlink" href="#new-features" title="Permalink to this headline">¶</a></h4>
-<p>There are several features either new to version 3.0, or newly improved.
-Some of these may be features which previously were not considered ripe
-for packaging, but merit new consideration.</p>
-<p>Please see the release notes <a class="reference internal" href="release-notes/3.0/x/3.0.0.html#relnotes-3-0-0-changes"><span class="std std-ref">Major changes since the 2.5.x series</span></a> for more
-details and other recent changes.</p>
-<ul class="simple">
-<li>Conversations<ul>
-<li>Server-side threading with reduced protocol chatter for mobile
-or other high-latency clients.</li>
-<li>Required for JMAP support.</li>
-<li>See the <code class="docutils literal"><span class="pre">conversations</span></code> options in <a class="reference internal" href="../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a></li>
-</ul>
-</li>
-<li>JMAP<ul>
-<li>JSON Mail Access Protocol</li>
-<li>Follow-on successor to IMAP (&#8220;J comes after I&#8221;) with a special
-focus on mobile and other clients with high-latency or
-unreliable connectivity.</li>
-<li>Includes Calendaring, Contacts, Conversations, message delivery.</li>
-<li>See <code class="docutils literal"><span class="pre">httpmodules</span></code> in <a class="reference internal" href="../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a></li>
-</ul>
-</li>
-<li>Xapian<ul>
-<li>Higher quality full-text search support.</li>
-<li>Required for JMAP support.</li>
-<li>See the <code class="docutils literal"><span class="pre">search_engine</span></code> option in <a class="reference internal" href="../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>
-and <code class="docutils literal"><span class="pre">doc/README.xapian</span></code> in the source distribution.</li>
-</ul>
-</li>
-<li>Archive partitions<ul>
-<li>Automatically migrate messages from posh, fast storage (think
-SSD) to cheap, slow storage (spinning rust).</li>
-<li>Requires addition of an archive partition for each data
-partition.</li>
-<li>See <code class="docutils literal"><span class="pre">archive_*</span></code> options in <a class="reference internal" href="../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a></li>
-</ul>
-</li>
-<li>Backup<ul>
-<li>Replication-based backup to dedicated instance with efficient,
-compact scheme.</li>
-<li>See <a class="reference internal" href="../reference/admin/backups.html#cyrus-backups"><span class="std std-ref">Cyrus Backups</span></a></li>
-</ul>
-</li>
-</ul>
-<p>Please consider enabling these features in the <a class="reference internal" href="../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>
-you ship  in your packages.</p>
+<div class="section" id="new-or-improved-features">
+<h4>New or improved features<a class="headerlink" href="#new-or-improved-features" title="Permalink to this headline">¶</a></h4>
+<p>A new stable series means new features, and improvements to existing features.
+Some of these may be features which previously were not considered ripe for
+packaging, but merit new consideration.</p>
+<p>Please see <a class="reference internal" href="release-notes/3.2/index.html#imap-release-notes-3-2"><span class="std std-ref">Cyrus IMAP 3.2 Releases</span></a> for details, and consider enabling
+these features in the <a class="reference internal" href="../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> you ship in your packages.</p>
 </div>
 </div>
 </div>
 <div class="section" id="services-in-etc-services">
 <h2>Services in <code class="docutils literal"><span class="pre">/etc/services</span></code><a class="headerlink" href="#services-in-etc-services" title="Permalink to this headline">¶</a></h2>
-<p>Listing named services through <code class="docutils literal"><span class="pre">/etc/services</span></code> aids in cross-system consistency and cross-platform interoperability. Furthermore, it enables administrators and users to refer to the service by name (for example in <code class="docutils literal"><span class="pre">/etc/cyrus.conf</span></code>, &#8216;listen=mupdate&#8217; can be specified instead of &#8216;listen=3905&#8217;).</p>
-<p>Some of the services Cyrus IMAP would like to see available through <code class="docutils literal"><span class="pre">/etc/services</span></code> have not been assigned an IANA port number, and few have configuration options.</p>
+<p>Listing named services through <code class="docutils literal"><span class="pre">/etc/services</span></code> aids in cross-system
+consistency and cross-platform interoperability. Furthermore, it enables
+administrators and users to refer to the service by name (for example in
+<code class="docutils literal"><span class="pre">/etc/cyrus.conf</span></code>, &#8216;listen=mupdate&#8217; can be specified instead of
+&#8216;listen=3905&#8217;).</p>
+<p>Some of the services Cyrus IMAP would like to see available through
+<code class="docutils literal"><span class="pre">/etc/services</span></code> have not been assigned an IANA port number, and few have
+configuration options.</p>
 <p>The Cyrus IMAP server provides service interfaces via either TCP/IP
 ports or Unix domain sockets.  For the former, Cyrus requires that there
 are proper entries in the host&#8217;s <code class="docutils literal"><span class="pre">/etc/services</span></code> file.  The following
@@ -973,7 +939,7 @@ are required for any host using the listed services:</p>
         <a href="../../quickstart.html" class="btn btn-neutral float-right" title="Quickstart Guide" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="release-notes/2.3/x/2.3.20.html" class="btn btn-neutral" title="Cyrus IMAP 2.3.20 Release Notes" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="release-notes/2.4-dav/x/2.4.17-caldav-beta11.html" class="btn btn-neutral" title="Cyrus IMAP 2.4.17-caldav-beta11 Release Notes" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -982,7 +948,7 @@ are required for any host using the listed services:</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Feb 27 2019
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Apr 29 2020
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1002,7 +968,7 @@ are required for any host using the listed services:</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'3.2.0-rc1',
+            VERSION:'3.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

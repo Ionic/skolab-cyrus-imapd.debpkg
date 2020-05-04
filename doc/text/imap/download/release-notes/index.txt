@@ -2,20 +2,21 @@
 Release Notes
 *************
 
-Cyrus has switched to an odd-even release cycle.
+Cyrus uses an odd-even release cycle.
 
 With our versioning system using "major.minor.micro" numbering, the
-minor number reveals whether a version is stable (even), or
+minor (middle) number reveals whether a version is stable (even), or
 development-only (odd).
 
-A 3.0.1 release is stable, but a 3.1.4 release is developmental only.
+A 3.**0**.1 release is stable, but a 3.**1**.4 release is
+developmental only.
 
 
 Stable Version
 ==============
 
 Latest stable version is . Documentation at
-https://www.cyrusimap.org/3.0/.
+https://www.cyrusimap.org/.
 
 
 Development Version
@@ -24,11 +25,11 @@ Development Version
 Latest development snapshot is . Documentation at
 https://www.cyrusimap.org/dev/.
 
-Warning: These are tagged snapshots of the master branch, and should
-  be considered for **testing purposes** and **bleeding-edge
-  features** only. We will try to tag these snapshots at coherent
-  development points, but there will generally be **large breaking
-  changes** occurring between releases in this series.
+Warning: Development versions are tagged snapshots of the master
+  branch, and should be considered for **testing purposes** and
+  **bleeding-edge features** only. We will try to tag these snapshots
+  at coherent development points, but there will generally be **large
+  breaking changes** occurring between releases in this series.
 
 
 Supported Product Series
@@ -59,12 +60,10 @@ Documentation at https://www.cyrusimap.org/2.5/.
 * Cyrus IMAP 2.5 Releases
 
 
-Series 2.4
-----------
+Development snapshots
+=====================
 
-* Cyrus IMAP 2.4 Releases
-
-* Cyrus IMAP 2.4-caldav Releases
+* Cyrus IMAP 3.1 Tags
 
 
 Older Versions
@@ -77,7 +76,7 @@ Series 1
 * Cyrus IMAP 1.x Release Notes
 
 
-Series 2: 2.0 - 2.3
+Series 2: 2.0 - 2.4
 -------------------
 
 * Cyrus IMAP 2.0.x Release Notes
@@ -87,3 +86,7 @@ Series 2: 2.0 - 2.3
 * Cyrus IMAP 2.2.x Release Notes
 
 * Cyrus IMAP 2.3 Releases
+
+* Cyrus IMAP 2.4 Releases
+
+* Cyrus IMAP 2.4-caldav Releases

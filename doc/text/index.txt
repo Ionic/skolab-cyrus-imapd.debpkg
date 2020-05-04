@@ -5,7 +5,7 @@ What is Cyrus IMAP?
 Cyrus IMAP is an email, contacts and calendar server. Cyrus is free
 and open source.
 
-* This is the documentation for version 3.2.0-rc1 of Cyrus IMAP:
+* This is the documentation for version 3.2.0 of Cyrus IMAP:
   **stable** branch.
 
 * The latest development version 3.3.0-dev0 is at
@@ -76,6 +76,8 @@ Cyrus IMAP
 
     * Supported Product Series
 
+    * Development snapshots
+
     * Older Versions
 
   * Notes for Packagers
@@ -96,23 +98,19 @@ Cyrus IMAP
 
   * Quick install
 
-    * 1. Install Cyrus reference packages
+    * 1. Install Cyrus package(s)
 
-    * 2. Use "apt-get install -f" to complete installation
+    * 2. Setup the cyrus:mail user and group
 
-    * 3. Setup the cyrus:mail user and group
+    * 3. Setting up authentication with SASL
 
-    * 4. Setting up authentication with SASL
+    * 4. Setup mail delivery from your MTA
 
-    * 5. Setup mail delivery from your MTA
+    * 5. Protocol ports
 
-    * 6. Protocol ports
+    * 6. Configuring Cyrus
 
-    * 7. Configuring Cyrus
-
-    * 8. Launch Cyrus
-
-    * Feature overview
+    * 7. Launch Cyrus
 
 * Overview
 
