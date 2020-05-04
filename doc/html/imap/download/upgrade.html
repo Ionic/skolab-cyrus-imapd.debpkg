@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Upgrading to 3.2 &mdash; Cyrus IMAP 3.2.0-rc1 documentation</title>
+  <title>Upgrading to 3.2 &mdash; Cyrus IMAP 3.2.0 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.0-rc1 documentation" href="../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.0 documentation" href="../../index.html"/>
         <link rel="up" title="Setup" href="../../setup.html"/>
         <link rel="next" title="Configuration Guide" href="../concepts/deployment.html"/>
         <link rel="prev" title="Virus Scanner" href="installation/virus.html"/> 
@@ -133,12 +133,15 @@
 <li class="toctree-l4"><a class="reference internal" href="release-notes/index.html#series-3-2">Series 3.2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="release-notes/index.html#series-3-0">Series 3.0</a></li>
 <li class="toctree-l4"><a class="reference internal" href="release-notes/index.html#series-2-5">Series 2.5</a></li>
-<li class="toctree-l4"><a class="reference internal" href="release-notes/index.html#series-2-4">Series 2.4</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="release-notes/index.html#development-snapshots">Development snapshots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="release-notes/3.1/index.html">Cyrus IMAP 3.1 Tags</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="release-notes/index.html#older-versions">Older Versions</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="release-notes/index.html#series-1">Series 1</a></li>
-<li class="toctree-l4"><a class="reference internal" href="release-notes/index.html#series-2-2-0-2-3">Series 2: 2.0 - 2.3</a></li>
+<li class="toctree-l4"><a class="reference internal" href="release-notes/index.html#series-2-2-0-2-4">Series 2: 2.0 - 2.4</a></li>
 </ul>
 </li>
 </ul>
@@ -162,20 +165,18 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#quick-install">Quick install</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#install-cyrus-reference-packages">1. Install Cyrus reference packages</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#use-apt-get-install-f-to-complete-installation">2. Use &#8220;apt-get install -f&#8221; to complete installation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setup-the-cyrus-mail-user-and-group">3. Setup the cyrus:mail user and group</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setting-up-authentication-with-sasl">4. Setting up authentication with SASL</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setup-mail-delivery-from-your-mta">5. Setup mail delivery from your MTA</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#install-cyrus-package-s">1. Install Cyrus package(s)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setup-the-cyrus-mail-user-and-group">2. Setup the cyrus:mail user and group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setting-up-authentication-with-sasl">3. Setting up authentication with SASL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setup-mail-delivery-from-your-mta">4. Setup mail delivery from your MTA</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../quickstart.html#install-sendmail">Install Sendmail</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../quickstart.html#sendmail-communication">Sendmail communication</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../quickstart.html#install-postfix">Install Postfix</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#protocol-ports">6. Protocol ports</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#configuring-cyrus">7. Configuring Cyrus</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#launch-cyrus">8. Launch Cyrus</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#feature-overview">Feature overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#protocol-ports">5. Protocol ports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#configuring-cyrus">6. Configuring Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#launch-cyrus">7. Launch Cyrus</a></li>
 </ul>
 </li>
 </ul>
@@ -765,7 +766,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html">Docs v3.2.0-rc1</a> &raquo;</li>
+      <li><a href="../../index.html">Docs v3.2.0</a> &raquo;</li>
       
           <li><a href="../../setup.html">Setup</a> &raquo;</li>
       
@@ -867,6 +868,24 @@ entirely while you install the new package.  If your old installation
 was using Berkeley DB format databases, you will need to convert or
 upgrade the databases <strong>before</strong> you upgrade.  Cyrus v3.2 does not
 support Berkeley DB at all.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>If you are upgrading from Cyrus version 2.5 or earlier,
+and your system is configured with the following combination
+in <a class="reference internal" href="../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>fulldirhash: yes
+hashimapspool: either yes or no
+unixhierarchysep: yes
+</pre></div>
+</div>
+<p>then you will not be able to upgrade-in-place.  This is due to
+a change in how directory hashes are calculated for users whose
+localpart contains a dot, which was introduced in 3.0.0.  After
+an in-place upgrade, Cyrus will not be able to find these users&#8217;
+metadata and/or mailboxes.</p>
+<p class="last">If you have this configuration, you will need to upgrade by
+replicating, not in place.</p>
+</div>
 </div>
 </div>
 <div class="section" id="do-what-as-who">
@@ -880,8 +899,8 @@ examples of them, so you&#8217;ll know that those commands <strong>must</strong>
 the <code class="docutils literal"><span class="pre">cyrus</span></code> user.</p>
 <p>Doing so in most systems is as simple as using either the <code class="docutils literal"><span class="pre">su</span></code> or
 <code class="docutils literal"><span class="pre">sudo</span></code> commands, like so:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">su</span> <span class="n">cyrus</span> <span class="o">-</span><span class="n">c</span> <span class="s2">&quot;/usr/local/bin/cyr_info conf-lint -C /etc/imapd.conf -M /etc/cyrus.conf&quot;</span>
-<span class="n">sudo</span> <span class="o">-</span><span class="n">u</span> <span class="n">cyrus</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">cyr_info</span> <span class="n">conf</span><span class="o">-</span><span class="n">lint</span> <span class="o">-</span><span class="n">C</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">imapd</span><span class="o">.</span><span class="n">conf</span> <span class="o">-</span><span class="n">M</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">cyrus</span><span class="o">.</span><span class="n">conf</span>
+<div class="highlight-none"><div class="highlight"><pre><span></span>su cyrus -c &quot;/usr/local/bin/cyr_info conf-lint -C /etc/imapd.conf -M /etc/cyrus.conf&quot;
+sudo -u cyrus /usr/local/bin/cyr_info conf-lint -C /etc/imapd.conf -M /etc/cyrus.conf
 </pre></div>
 </div>
 <p>In this document, however, there are also several command examples which
@@ -894,15 +913,15 @@ commands, such as <code class="docutils literal"><span class="pre">rsync</span><
 <h2><a class="toc-backref" href="#id7">2. Install new 3.2 Cyrus</a><a class="headerlink" href="#install-new-3-2-cyrus" title="Permalink to this headline">¶</a></h2>
 <p>Download the release <a class="reference internal" href="getcyrus.html#getcyrus"><span class="std std-ref">3.2 package tarball</span></a>.</p>
 <p>Fetch the libraries for your platform. The full list (including all optional packages) for Debian is:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">autoconf</span> <span class="n">automake</span> <span class="n">autotools</span><span class="o">-</span><span class="n">dev</span> <span class="n">bash</span><span class="o">-</span><span class="n">completion</span> <span class="n">bison</span> <span class="n">build</span><span class="o">-</span><span class="n">essential</span> <span class="n">comerr</span><span class="o">-</span><span class="n">dev</span> \
-<span class="n">debhelper</span> <span class="n">flex</span> <span class="n">g</span><span class="o">++</span> <span class="n">git</span> <span class="n">gperf</span> <span class="n">groff</span> <span class="n">heimdal</span><span class="o">-</span><span class="n">dev</span> <span class="n">libbsd</span><span class="o">-</span><span class="n">resource</span><span class="o">-</span><span class="n">perl</span> <span class="n">libclone</span><span class="o">-</span><span class="n">perl</span> <span class="n">libconfig</span><span class="o">-</span><span class="n">inifiles</span><span class="o">-</span><span class="n">perl</span> \
-<span class="n">libcunit1</span><span class="o">-</span><span class="n">dev</span> <span class="n">libdatetime</span><span class="o">-</span><span class="n">perl</span> <span class="n">libdb</span><span class="o">-</span><span class="n">dev</span> <span class="n">libdigest</span><span class="o">-</span><span class="n">sha</span><span class="o">-</span><span class="n">perl</span> <span class="n">libencode</span><span class="o">-</span><span class="n">imaputf7</span><span class="o">-</span><span class="n">perl</span> <span class="n">libfile</span><span class="o">-</span><span class="n">chdir</span><span class="o">-</span><span class="n">perl</span> \
-<span class="n">libglib2</span><span class="o">.</span><span class="mi">0</span><span class="o">-</span><span class="n">dev</span> <span class="n">libical</span><span class="o">-</span><span class="n">dev</span> <span class="n">libio</span><span class="o">-</span><span class="n">socket</span><span class="o">-</span><span class="n">inet6</span><span class="o">-</span><span class="n">perl</span> <span class="n">libio</span><span class="o">-</span><span class="n">stringy</span><span class="o">-</span><span class="n">perl</span> <span class="n">libjansson</span><span class="o">-</span><span class="n">dev</span> <span class="n">libldap2</span><span class="o">-</span><span class="n">dev</span> \
-<span class="n">libmysqlclient</span><span class="o">-</span><span class="n">dev</span> <span class="n">libnet</span><span class="o">-</span><span class="n">server</span><span class="o">-</span><span class="n">perl</span> <span class="n">libnews</span><span class="o">-</span><span class="n">nntpclient</span><span class="o">-</span><span class="n">perl</span> <span class="n">libpam0g</span><span class="o">-</span><span class="n">dev</span> <span class="n">libpcre3</span><span class="o">-</span><span class="n">dev</span> <span class="n">libsasl2</span><span class="o">-</span><span class="n">dev</span> \
-<span class="n">libsnmp</span><span class="o">-</span><span class="n">dev</span> <span class="n">libsqlite3</span><span class="o">-</span><span class="n">dev</span> <span class="n">libssl</span><span class="o">-</span><span class="n">dev</span> <span class="n">libtest</span><span class="o">-</span><span class="n">unit</span><span class="o">-</span><span class="n">perl</span> <span class="n">libtool</span> <span class="n">libunix</span><span class="o">-</span><span class="n">syslog</span><span class="o">-</span><span class="n">perl</span> <span class="n">liburi</span><span class="o">-</span><span class="n">perl</span> \
-<span class="n">libxapian</span><span class="o">-</span><span class="n">dev</span> <span class="n">libxml</span><span class="o">-</span><span class="n">generator</span><span class="o">-</span><span class="n">perl</span> <span class="n">libxml</span><span class="o">-</span><span class="n">xpath</span><span class="o">-</span><span class="n">perl</span> <span class="n">libxml2</span><span class="o">-</span><span class="n">dev</span> <span class="n">libwrap0</span><span class="o">-</span><span class="n">dev</span> <span class="n">libzephyr</span><span class="o">-</span><span class="n">dev</span> <span class="n">lsb</span><span class="o">-</span><span class="n">base</span> \
-<span class="n">net</span><span class="o">-</span><span class="n">tools</span> <span class="n">perl</span> <span class="n">php</span><span class="o">-</span><span class="n">cli</span> <span class="n">php</span><span class="o">-</span><span class="n">curl</span> <span class="n">pkg</span><span class="o">-</span><span class="n">config</span> <span class="n">po</span><span class="o">-</span><span class="n">debconf</span> <span class="n">tcl</span><span class="o">-</span><span class="n">dev</span> \
-<span class="n">transfig</span> <span class="n">uuid</span><span class="o">-</span><span class="n">dev</span> <span class="n">vim</span> <span class="n">wamerican</span> <span class="n">wget</span> <span class="n">xutils</span><span class="o">-</span><span class="n">dev</span> <span class="n">zlib1g</span><span class="o">-</span><span class="n">dev</span> <span class="n">sasl2</span><span class="o">-</span><span class="nb">bin</span> <span class="n">rsyslog</span> <span class="n">sudo</span> <span class="n">acl</span> <span class="n">telnet</span>
+<div class="highlight-none"><div class="highlight"><pre><span></span>sudo apt-get install -y autoconf automake autotools-dev bash-completion bison build-essential comerr-dev \
+debhelper flex g++ git gperf groff heimdal-dev libbsd-resource-perl libclone-perl libconfig-inifiles-perl \
+libcunit1-dev libdatetime-perl libdb-dev libdigest-sha-perl libencode-imaputf7-perl libfile-chdir-perl \
+libglib2.0-dev libical-dev libio-socket-inet6-perl libio-stringy-perl libjansson-dev libldap2-dev \
+libmysqlclient-dev libnet-server-perl libnews-nntpclient-perl libpam0g-dev libpcre3-dev libsasl2-dev \
+libsnmp-dev libsqlite3-dev libssl-dev libtest-unit-perl libtool libunix-syslog-perl liburi-perl \
+libxapian-dev libxml-generator-perl libxml-xpath-perl libxml2-dev libwrap0-dev libzephyr-dev lsb-base \
+net-tools perl php-cli php-curl pkg-config po-debconf tcl-dev \
+transfig uuid-dev vim wamerican wget xutils-dev zlib1g-dev sasl2-bin rsyslog sudo acl telnet
 </pre></div>
 </div>
 <p>If you&#8217;re on another platform and can provide the list of dependencies, please
@@ -945,8 +964,8 @@ current installation.</p>
 using their standard locations, you might execute this series of
 commands on the <em>new</em> server (where &#8220;oldimap&#8221; is the name of the old
 server):</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">rsync</span> <span class="o">-</span><span class="n">aHv</span> <span class="n">oldimap</span><span class="p">:</span><span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/.</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/.</span>
-<span class="n">rsync</span> <span class="o">-</span><span class="n">aHv</span> <span class="n">oldimap</span><span class="p">:</span><span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">spool</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/.</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">spool</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/.</span>
+<div class="highlight-none"><div class="highlight"><pre><span></span>rsync -aHv oldimap:/var/lib/cyrus/. /var/lib/cyrus/.
+rsync -aHv oldimap:/var/spool/cyrus/. /var/spool/cyrus/.
 </pre></div>
 </div>
 <p>You don&#8217;t need to copy the following databases as Cyrus 3.2 will
@@ -980,13 +999,13 @@ remove the <code class="docutils literal"><span class="pre">tlsprune</span></cod
 on FreeBSD systems, the configuration files <a class="reference internal" href="../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>
 and <a class="reference internal" href="../reference/manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a> are in <code class="docutils literal"><span class="pre">/usr/local/etc</span></code>, rather than
 <code class="docutils literal"><span class="pre">/etc/</span></code>.  Run this command on the <em>old</em> server:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">scp</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">cyrus</span><span class="o">.</span><span class="n">conf</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">imapd</span><span class="o">.</span><span class="n">conf</span> <span class="n">newimap</span><span class="p">:</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span>
+<div class="highlight-none"><div class="highlight"><pre><span></span>scp /etc/cyrus.conf /etc/imapd.conf newimap:/etc/
 </pre></div>
 </div>
 <p>Using the <a class="reference internal" href="../reference/manpages/systemcommands/cyr_info.html#std:cyrusman-cyr_info(8)">cyr_info(8)</a> command, check to see if your
 imapd.conf file contains any deprecated options. Run this command on
 the new server:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">cyr_info</span> <span class="n">conf</span><span class="o">-</span><span class="n">lint</span> <span class="o">-</span><span class="n">C</span> <span class="o">&lt;</span><span class="n">path</span> <span class="n">to</span> <span class="n">imapd</span><span class="o">.</span><span class="n">conf</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">M</span> <span class="o">&lt;</span><span class="n">path</span> <span class="n">to</span> <span class="n">cyrus</span><span class="o">.</span><span class="n">conf</span><span class="o">&gt;</span>
+<div class="highlight-none"><div class="highlight"><pre><span></span>cyr_info conf-lint -C &lt;path to imapd.conf&gt; -M &lt;path to cyrus.conf&gt;
 </pre></div>
 </div>
 <p>You need to provide both imapd.conf and cyrus.conf so that conf-lint knows
@@ -994,7 +1013,7 @@ the names of all your services and can check service-specific overrides.</p>
 <p>To check your entire system&#8217;s configuration you can use the conf-all
 action. This command takes all the system defaults, along with anything
 you have provided overrides for in your config files:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">cyr_info</span> <span class="n">conf</span><span class="o">-</span><span class="nb">all</span> <span class="o">-</span><span class="n">C</span> <span class="o">&lt;</span><span class="n">path</span> <span class="n">to</span> <span class="n">imapd</span><span class="o">.</span><span class="n">conf</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">M</span> <span class="o">&lt;</span><span class="n">path</span> <span class="n">to</span> <span class="n">cyrus</span><span class="o">.</span><span class="n">conf</span><span class="o">&gt;</span>
+<div class="highlight-none"><div class="highlight"><pre><span></span>cyr_info conf-all -C &lt;path to imapd.conf&gt; -M &lt;path to cyrus.conf&gt;
 </pre></div>
 </div>
 <p><strong>Important config</strong> options: <code class="docutils literal"><span class="pre">unixhierarchysep:</span></code> and <code class="docutils literal"><span class="pre">altnamespace:</span></code>
@@ -1035,12 +1054,12 @@ then optionally converted to whatever final format you&#8217;d like in
 your 3.2 installation.</p>
 <p>Databases potentially affected: mailboxes, annotations, conversations, quotas.</p>
 <p>On old install, prior to migration:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">cvt_cyrusdb</span> <span class="o">/&lt;</span><span class="n">configdirectory</span><span class="o">&gt;</span><span class="n">mailboxes</span><span class="o">.</span><span class="n">db</span> <span class="n">berkeley</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">new</span><span class="o">-</span><span class="n">mailboxes</span><span class="o">.</span><span class="n">db</span> <span class="n">skiplist</span>
+<div class="highlight-none"><div class="highlight"><pre><span></span>cvt_cyrusdb /&lt;configdirectory&gt;mailboxes.db berkeley /tmp/new-mailboxes.db skiplist
 </pre></div>
 </div>
 <p>If you don&#8217;t want to use flat or skiplist for 3.2, you can use the
 new 3.2 <a class="reference internal" href="../reference/manpages/systemcommands/cvt_cyrusdb.html#std:cyrusman-cvt_cyrusdb(8)">cvt_cyrusdb(8)</a> to swap to new format:</p>
-<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="n">cvt_cyrusdb</span> <span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">new</span><span class="o">-</span><span class="n">mailboxes</span><span class="o">.</span><span class="n">db</span> <span class="n">skiplist</span> <span class="o">/&lt;</span><span class="n">configdirectory</span><span class="o">&gt;/</span><span class="n">mailboxes</span><span class="o">.</span><span class="n">db</span> <span class="o">&lt;</span><span class="n">new</span> <span class="n">file</span> <span class="nb">format</span><span class="o">&gt;</span>
+<div class="last highlight-none"><div class="highlight"><pre><span></span>cvt_cyrusdb /tmp/new-mailboxes.db skiplist /&lt;configdirectory&gt;/mailboxes.db &lt;new file format&gt;
 </pre></div>
 </div>
 </div>
@@ -1051,7 +1070,7 @@ new 3.2 <a class="reference internal" href="../reference/manpages/systemcommands
 </div>
 <div class="section" id="start-new-3-2-cyrus-and-verify">
 <h2><a class="toc-backref" href="#id12">7. Start new 3.2 Cyrus and verify</a><a class="headerlink" href="#start-new-3-2-cyrus-and-verify" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="o">./</span><span class="n">master</span><span class="o">/</span><span class="n">master</span> <span class="o">-</span><span class="n">d</span>
+<div class="highlight-none"><div class="highlight"><pre><span></span>sudo ./master/master -d
 </pre></div>
 </div>
 <p>Check <code class="docutils literal"><span class="pre">/var/log/syslog</span></code> for errors so you can quickly understand potential problems.</p>
@@ -1072,21 +1091,21 @@ step 2, remember to re-enable them.  Use something like <code class="docutils li
 <p>The following steps can each take a long time, so we recommend
 running them one at a time (to reduce locking contention and high I/O load).</p>
 <p>To upgrade all the mailboxes to the latest version. This will take hours, possibly days.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">reconstruct</span> <span class="o">-</span><span class="n">V</span> <span class="nb">max</span>
+<div class="highlight-none"><div class="highlight"><pre><span></span>reconstruct -V max
 </pre></div>
 </div>
 <p>New configuration: if turning on conversations, you need to create conversations.db for each user.
 (This is required for jmap).:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ctl_conversationsdb</span> <span class="o">-</span><span class="n">b</span> <span class="o">-</span><span class="n">r</span>
+<div class="highlight-none"><div class="highlight"><pre><span></span>ctl_conversationsdb -b -r
 </pre></div>
 </div>
 <p>To check (and correct) quota usage:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">quota</span> <span class="o">-</span><span class="n">f</span>
+<div class="highlight-none"><div class="highlight"><pre><span></span>quota -f
 </pre></div>
 </div>
 <p>If you&#8217;ve been using CalDAV/CardDAV/all of the DAV from earlier releases, then the user.dav
 databases need to be reconstructed due to format changes.:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">dav_reconstruct</span> <span class="o">-</span><span class="n">a</span>
+<div class="highlight-none"><div class="highlight"><pre><span></span>dav_reconstruct -a
 </pre></div>
 </div>
 <p>If you are upgrading from 3.0, and have the <cite>reverseacls</cite> feature enabled
@@ -1158,7 +1177,7 @@ downgrade mailbox versions in transit.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Feb 17 2020
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Apr 29 2020
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1178,7 +1197,7 @@ downgrade mailbox versions in transit.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'3.2.0-rc1',
+            VERSION:'3.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

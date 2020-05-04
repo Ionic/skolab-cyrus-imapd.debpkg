@@ -54,11 +54,29 @@ Sitemap
 
             * Cyrus IMAP 2.5 Releases
 
-          * Series 2.4
+        * Development snapshots
 
-            * Cyrus IMAP 2.4 Releases
+          * Cyrus IMAP 3.1 Tags
 
-            * Cyrus IMAP 2.4-caldav Releases
+            * Cyrus IMAP 3.1.0-dev Release Notes
+
+            * Cyrus IMAP 3.1.1 Tag Notes
+
+            * Cyrus IMAP 3.1.2 Tag Notes
+
+            * Cyrus IMAP 3.1.3 Tag Notes
+
+            * Cyrus IMAP 3.1.4 Tag Notes
+
+            * Cyrus IMAP 3.1.5 Tag Notes
+
+            * Cyrus IMAP 3.1.6 Tag Notes
+
+            * Cyrus IMAP 3.1.7 Tag Notes
+
+            * Cyrus IMAP 3.1.8 Tag Notes
+
+            * Cyrus IMAP 3.1.9 Tag Notes
 
         * Older Versions
 
@@ -66,7 +84,7 @@ Sitemap
 
             * Cyrus IMAP 1.x Release Notes
 
-          * Series 2: 2.0 - 2.3
+          * Series 2: 2.0 - 2.4
 
             * Cyrus IMAP 2.0.x Release Notes
 
@@ -75,6 +93,10 @@ Sitemap
             * Cyrus IMAP 2.2.x Release Notes
 
             * Cyrus IMAP 2.3 Releases
+
+            * Cyrus IMAP 2.4 Releases
+
+            * Cyrus IMAP 2.4-caldav Releases
 
       * Notes for Packagers
 
@@ -95,7 +117,7 @@ Sitemap
 
             * New default settings
 
-            * New features
+            * New or improved features
 
         * Services in "/etc/services"
 
@@ -107,15 +129,13 @@ Sitemap
 
       * Quick install
 
-        * 1. Install Cyrus reference packages
+        * 1. Install Cyrus package(s)
 
-        * 2. Use "apt-get install -f" to complete installation
+        * 2. Setup the cyrus:mail user and group
 
-        * 3. Setup the cyrus:mail user and group
+        * 3. Setting up authentication with SASL
 
-        * 4. Setting up authentication with SASL
-
-        * 5. Setup mail delivery from your MTA
+        * 4. Setup mail delivery from your MTA
 
           * Install Sendmail
 
@@ -123,13 +143,11 @@ Sitemap
 
           * Install Postfix
 
-        * 6. Protocol ports
+        * 5. Protocol ports
 
-        * 7. Configuring Cyrus
+        * 6. Configuring Cyrus
 
-        * 8. Launch Cyrus
-
-        * Feature overview
+        * 7. Launch Cyrus
 
     * Overview
 
