@@ -5,7 +5,7 @@ Description: fix for non x86 arch
 Author: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
 Bug: https://github.com/cyrusimap/cyrus-imapd/issues/3040
 Bug-Debian: https://bugs.debian.org/960263
-Forwarded: <no|not-needed|url proving that it has been forwarded>
+Forwarded: https://github.com/cyrusimap/cyrus-imapd/issues/3040
 Reviewed-By: Xavier Guimard <yadd@debian.org>
 Last-Update: 2020-05-12
 
