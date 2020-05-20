@@ -1,3 +1,12 @@
+cyrus-imapd (3.2.0-4) unstable; urgency=medium
+
+  * Try to fix #960658:
+    + Add patch for big endian arch
+    + Increase test timeout
+    + Re enable all tests
+
+ -- Xavier Guimard <yadd@debian.org>  Wed, 20 May 2020 11:17:46 +0200
+
 cyrus-imapd (3.2.0-3) unstable; urgency=medium
 
   * Disable tests during build on s390x and armhf arch (fixes debci)
