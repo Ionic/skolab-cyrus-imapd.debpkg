@@ -1,0 +1,65 @@
+Description: fix for non amd64 arch
+Author: Ellie Timoney <https://github.com/elliefm>
+Origin: upstream, https://github.com/cyrusimap/cyrus-imapd/commit/fa48648
+Bug: https://github.com/cyrusimap/cyrus-imapd/issues/3040
+Bug-Debian: https://bugs.debian.org/960658
+Forwarded: not-needed
+Reviewed-By: Xavier Guimard <yadd@debian.org>
+Last-Update: 2020-05-20
+
+--- a/cunit/timeout.c
++++ b/cunit/timeout.c
+@@ -104,7 +104,7 @@
+             exit(1);
+         }
+ 
+-        r = read(fd, &c, 1);
++        r = read(fd, &c, sizeof(c));
+         if (r < 0) {
+             perror("timeout: read");
+             exit(1);
+@@ -141,7 +141,7 @@
+             break;
+ 
+         default:
+-            fprintf(stderr, "timeout: Unknown command '%c'\n", c);
++            fprintf(stderr, "timeout: Unknown command '%c' (%#x)\n", c, (unsigned) c);
+             exit(1);
+         }
+     }
+@@ -197,7 +197,7 @@
+ 
+ int timeout_begin(int millisec)
+ {
+-    int c;
++    char c;
+     int r;
+ 
+ // fprintf(stderr, "timeout_begin\n");
+@@ -205,7 +205,7 @@
+         return -1;
+ 
+     c = CMD_BEGIN;
+-    r = write(timeout_fd, &c, 1);
++    r = write(timeout_fd, &c, sizeof(c));
+     if (r < 0) {
+         perror("timeout: write");
+         return -1;
+@@ -220,7 +220,7 @@
+ 
+ int timeout_end(void)
+ {
+-    int c;
++    char c;
+     int r;
+ 
+ // fprintf(stderr, "timeout_end\n");
+@@ -228,7 +228,7 @@
+         return -1;
+ 
+     c = CMD_END;
+-    r = write(timeout_fd, &c, 1);
++    r = write(timeout_fd, &c, sizeof(c));
+     if (r < 0) {
+         perror("timeout: write");
+         return -1;
