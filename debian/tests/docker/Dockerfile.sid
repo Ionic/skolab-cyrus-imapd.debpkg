@@ -85,13 +85,8 @@ RUN apt-get update && apt-get -y install \
     php-curl \
     pkg-config \
     po-debconf \
-    python-docutils \
-    python-sphinx \
-    python-pygments \
-    python3-pygments \
     rsync \
     sudo \
-    sphinx-common \
     tcl-dev \
     transfig \
     uuid-dev \

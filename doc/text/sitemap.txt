@@ -42,6 +42,10 @@ Sitemap
 
         * Supported Product Series
 
+          * Series 3.2
+
+            * Cyrus IMAP 3.2 Releases
+
           * Series 3.0
 
             * Cyrus IMAP 3.0 Releases
@@ -50,11 +54,29 @@ Sitemap
 
             * Cyrus IMAP 2.5 Releases
 
-          * Series 2.4
+        * Development snapshots
 
-            * Cyrus IMAP 2.4 Releases
+          * Cyrus IMAP 3.1 Tags
 
-            * Cyrus IMAP 2.4-caldav Releases
+            * Cyrus IMAP 3.1.0-dev Release Notes
+
+            * Cyrus IMAP 3.1.1 Tag Notes
+
+            * Cyrus IMAP 3.1.2 Tag Notes
+
+            * Cyrus IMAP 3.1.3 Tag Notes
+
+            * Cyrus IMAP 3.1.4 Tag Notes
+
+            * Cyrus IMAP 3.1.5 Tag Notes
+
+            * Cyrus IMAP 3.1.6 Tag Notes
+
+            * Cyrus IMAP 3.1.7 Tag Notes
+
+            * Cyrus IMAP 3.1.8 Tag Notes
+
+            * Cyrus IMAP 3.1.9 Tag Notes
 
         * Older Versions
 
@@ -62,7 +84,7 @@ Sitemap
 
             * Cyrus IMAP 1.x Release Notes
 
-          * Series 2: 2.0 - 2.3
+          * Series 2: 2.0 - 2.4
 
             * Cyrus IMAP 2.0.x Release Notes
 
@@ -72,7 +94,13 @@ Sitemap
 
             * Cyrus IMAP 2.3 Releases
 
+            * Cyrus IMAP 2.4 Releases
+
+            * Cyrus IMAP 2.4-caldav Releases
+
       * Notes for Packagers
+
+        * Binary naming
 
         * Sample configuration files
 
@@ -89,7 +117,7 @@ Sitemap
 
             * New default settings
 
-            * New features
+            * New or improved features
 
         * Services in "/etc/services"
 
@@ -99,19 +127,15 @@ Sitemap
 
         * What is IMAP?
 
-      * Coming Soon
-
       * Quick install
 
-        * 1. Install Cyrus reference packages
+        * 1. Install Cyrus package(s)
 
-        * 2. Use "apt-get install -f" to complete installation
+        * 2. Setup the cyrus:mail user and group
 
-        * 3. Setup the cyrus:mail user and group
+        * 3. Setting up authentication with SASL
 
-        * 4. Setting up authentication with SASL
-
-        * 5. Setup mail delivery from your MTA
+        * 4. Setup mail delivery from your MTA
 
           * Install Sendmail
 
@@ -119,13 +143,11 @@ Sitemap
 
           * Install Postfix
 
-        * 6. Protocol ports
+        * 5. Protocol ports
 
-        * 7. Configuring Cyrus
+        * 6. Configuring Cyrus
 
-        * 8. Launch Cyrus
-
-        * Feature overview
+        * 7. Launch Cyrus
 
     * Overview
 
@@ -395,7 +417,7 @@ Sitemap
 
             * Alternate database formats
 
-            * CalDAV and/or CardDAV
+            * CalDAV, CardDAV, or JMAP
 
             * Other
 
@@ -405,7 +427,7 @@ Sitemap
 
           * Optional dependencies
 
-            * CalDAV and CardDAV
+            * CalDAV, CardDAV, JMAP
 
             * Murder
 
@@ -467,7 +489,7 @@ Sitemap
 
         * Troubleshooting
 
-      * Upgrading to 3.0
+      * Upgrading to 3.2
 
         * 1. Preparation
 
@@ -481,7 +503,7 @@ Sitemap
 
           * Do What As Who?
 
-        * 2. Install new 3.0 Cyrus
+        * 2. Install new 3.2 Cyrus
 
         * 3. Shut down existing Cyrus
 
@@ -491,7 +513,7 @@ Sitemap
 
         * 6. Upgrade specific items
 
-        * 7. Start new 3.0 Cyrus and verify
+        * 7. Start new 3.2 Cyrus and verify
 
         * 8. Reconstruct databases and cache
 
@@ -555,7 +577,8 @@ Sitemap
 
             * News database (fetchnews.db)
 
-            * Search Indexes (cyrus.squat, <userid>.xapianactive)
+            * Search Indexes (cyrus.squat, <userid>.xapianactive,
+              cyrus.indexed.db)
 
             * Zoneinfo db (zoneinfo.db)
 
@@ -576,8 +599,6 @@ Sitemap
             * Twoskip
 
             * Skiplist
-
-            * lmdb
 
             * sql
 
@@ -630,6 +651,8 @@ Sitemap
         * Performance Recommendations
 
           * Databases on Temporary Filesystems
+
+          * Certificates
 
         * Storage Considerations
 
@@ -685,7 +708,7 @@ Sitemap
 
             * See Also
 
-          * imapd.conf
+          * **imapd.conf**
 
             * DESCRIPTION
 
@@ -1023,6 +1046,8 @@ Sitemap
 
             * Options
 
+            * Notifications
+
             * Examples
 
             * History
@@ -1173,6 +1198,18 @@ Sitemap
 
           * **lmtpproxyd**
 
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
           * **masssievec**
 
             * Synopsis
@@ -1220,6 +1257,8 @@ Sitemap
             * Description
 
             * Options
+
+            * Selectors
 
             * Examples
 
@@ -1317,6 +1356,18 @@ Sitemap
 
           * **pop3proxyd**
 
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * Files
+
+            * See Also
+
           * **proxyd**
 
             * Synopsis
@@ -1324,6 +1375,10 @@ Sitemap
             * Description
 
             * Options
+
+            * Examples
+
+            * Files
 
             * See Also
 
@@ -1649,16 +1704,6 @@ Sitemap
 
           * **nntptest**
 
-            * Synopsis
-
-            * Description
-
-            * Options
-
-            * Examples
-
-            * See Also
-
           * **pop3test**
 
             * Synopsis
@@ -1711,57 +1756,15 @@ Sitemap
 
           * **synctest**
 
-      * Tools & Utilities
+            * Synopsis
 
-        * arbitron
+            * Description
 
-        * arbitronsort.pl
+            * Options
 
-        * chk_cyrus
+            * Examples
 
-        * ctl_cyrusdb
-
-        * ctl_deliver
-
-        * ctl_mboxlist
-
-        * cvt_cyrusdb
-
-        * cvt_cyrusdb_all
-
-        * cyr_dbtool
-
-        * cyr_df
-
-        * cyrdump
-
-        * cyr_expire
-
-        * cyr_virusscan
-
-        * fetchnews
-
-        * cyr_sequence
-
-        * cyr_synclog
-
-        * cyr_userseen
-
-        * masssievec
-
-        * mbexamine
-
-        * mbpath
-
-        * mkimap
-
-        * mknewsgroups
-
-        * rehash
-
-        * translatesieve
-
-        * undohash
+            * See Also
 
       * Administrator Guide
 
@@ -1913,6 +1916,12 @@ Sitemap
 
             * Apple Push Service
 
+          * Monitoring
+
+            * Setup
+
+            * Configuration options
+
           * Mailbox Distribution
 
             * Selection Modes
@@ -1954,14 +1963,10 @@ Sitemap
           * Compilation errors about kssl.h and krb5.h on Red Hat
             Linux/Fedora
 
-          * Problems detecting Berkley DB on Red Hat Linux
-
           * Help! There must be an easier way to get all this
             going...
 
           * OpenSSL Version Mismatches
-
-          * Libical v1.0.1 or v2.0
 
         * Common Feature Requests
 
@@ -1982,14 +1987,10 @@ Sitemap
 
           * What annotations are available?
 
-          * Why does ctl_cyrusdb -r take so long with Berkeley DB?
-
           * Is it safe to put <configdirectory>/proc and
             <configdirectory>/lock on a tmpfs filesystem?
 
           * How to enable core dumps
-
-          * Is the "db3: x Lockers" log message harmful?
 
           * Why can I not delete a mailbox as an admin user?
 
@@ -2147,6 +2148,12 @@ Sitemap
 
             * Tips and Tricks
 
+          * JMAP support
+
+            * Cyrus administration
+
+            * JMAP client
+
         * System files and Databases
 
           * Namespaces: a developer view
@@ -2163,6 +2170,8 @@ Sitemap
 
             * Prerequisites
 
+            * Order of operations
+
             * Release notes
 
             * Pre-release testing
@@ -2171,7 +2180,11 @@ Sitemap
 
             * Version tagging
 
-            * Releasing
+            * Inter-version website consistency
+
+            * Uploading
+
+            * Tell the world
 
           * Releasing new builds of ancient Cyrus IMAP versions
 
@@ -2187,17 +2200,334 @@ Sitemap
 
             * Building the release
 
-            * Releasing
+            * Finishing up
 
       * Cyrus.Works
 
         * About Cyrus Works
 
-        * Testing
-
         * How it works
 
-        * Adding Rules
+      * Cyrus Internals
+
+        * Cyrus APIs
+
+          * CyrusDB API
+
+            * The interface
+
+            * Configuration
+
+            * A full example
+
+            * Tools
+
+            * How to use CyrusDB
+
+            * Reading, Writing, & Transactions
+
+            * Gotchas!
+
+            * API Reference
+
+          * cyrusdb API
+
+            * Intro
+
+            * Code Layout
+
+            * Configuration
+
+            * A full example
+
+            * About Transactions
+
+            * API Reference
+
+          * Index API
+
+            * Intro
+
+            * Opening and closing
+
+            * The Index Model
+
+          * Mailbox API
+
+            * Intro
+
+            * Opening and closing
+
+            * Locking and unlocking
+
+            * Creating, renaming and deleting
+
+            * Reading and writing records
+
+            * Delayed Actions
+
+        * Thoughts & Notes
+
+          * Notes for backup implementation
+
+            * messages
+
+            * renames
+
+            * locking
+
+            * verifying index
+
+            * mailboxes database
+
+            * reindex
+
+            * backupd
+
+            * questions
+
+            * restore
+
+            * compact
+
+            * command line locking utility
+
+            * reconstruct
+
+            * ctl_backups
+
+            * cyr_backup
+
+            * partitions
+
+            * data corruption
+
+            * installation instructions
+
+            * chatting about implementation 20/10
+
+            * todo list
+
+          * Cyrus IMAP Server: Sieve Bytecode
+
+            * Motivation
+
+            * Overall Bytecode Format
+
+            * Generation
+
+            * Evaluation
+
+            * Other things to consider
+
+          * Cyrus CalDAV Scheduling Flowchart
+
+            * caldav_put() - create/modify via HTTP PUT on a
+              resource or POST (add-member) on a calendar
+
+            * caldav_delete_sched() - remove via HTTP DELETE on a
+              resource
+
+            * caldav_post() - busytime query via HTTP POST on
+              Scheduling Outbox
+
+            * sched_pollstatus - perform a voter response update
+
+            * sched_request() - perform an organizer request /
+              attendee status update
+
+            * process_attendees() - create a suitable iTIP request
+              message for each attendee
+
+            * sched_exclude() - exclude an attendee from a
+              recurrence instance
+
+            * sched_cancel() - cancel an organizer event/task
+
+            * sched_reply() - perform an attendee reply
+
+            * trim_attendees() - remove all attendees other than the
+              one replying
+
+            * sched_vpoll_reply() - add voter responses to VPOLL
+              reply
+
+            * sched_decline() - decline a recurrence instance for an
+              attendee
+
+            * clean_component() - sanitize a component for use in an
+              iTIP message
+
+            * sched_deliver() - deliver an iTIP message to a
+              recipient
+
+            * sched_deliver_local() - deliver an iTIP message to a
+              local user
+
+            * deliver_merge_reply() - update an organizer resource
+              with an attendee reply
+
+            * deliver_merge_vpoll_reply() - update an organizer
+              resource with voter responses
+
+            * deliver_merge_request() - create/update an attendee
+              resource with an organizer request
+
+            * deliver_merge_pollstatus() - update voter responses on
+              a voter resource
+
+            * sched_deliver_remote() - deliver an iTIP message to a
+              remote user
+
+            * isched_send() - deliver an iTIP message to a remote
+              user via iSchedule (HTTP)
+
+            * imip_send() - deliver an iTIP message to a remote user
+              via iMIP (SMTP)
+
+            * sched_busytime_query() - perform a busytime query
+
+            * busytime_query_local() - perform a busytime query on a
+              local user
+
+            * busytime_query_remote() - perform a busytime query on
+              a remote user
+
+          * Enabling improved_mboxlist_sort
+
+          * Cyrus IMAP Server: Notes
+
+          * Cyrus IMAP Server: Prot Events
+
+        * Guidance for Developers
+
+          * Cyrus IMAP Server: Hacking
+
+            * Memory Allocation
+
+            * strlcpy vs strncpy vs memcpy
+
+            * map_refresh and map_free
+
+            * Network Functions
+
+            * (todo) Authorization Modules
+
+            * General Hints
+
+            * Coding Standards
+
+          * Cyrus IMAP Server: Internationalization
+
+            * introduction
+
+            * cyrus canonical form
+
+            * external interface
+
+            * the TRANSLATE macro: using the transcoding tables
+
+            * searching and compiled patterns
+
+            * generating the tables: "mkchartable"
+
+            * for the future
+
+            * references
+
+          * Cyrus IMAP Server: Locking
+
+            * Mailboxes
+
+            * Xapian
+
+            * Lock lifetime
+
+          * Cyrus IMAP Server: Mailbox File Formats
+
+            * Intro
+
+            * Message Files
+
+            * "cyrus.header"
+
+            * "cyrus.cache"
+
+            * "cyrus.index"
+
+            * Notes
+
+            * Future considerations
+
+          * Cyrus IMAP Server: Namelocks
+
+            * Intro
+
+            * Implementation
+
+            * API
+
+          * Cyrus IMAP Server: prot layer
+
+            * Events
+
+          * Cyrus IMAP Server: Replication Examples
+
+            * Introduction
+
+            * A short example of replication in action
+
+            * Tracking messages between folders
+
+          * Cyrus IMAP Server: Replication Protocol v2.4+
+
+            * DList 1.0
+
+          * Cyrus IMAP Server: Special Characters
+
+            * Current Uses
+
+            * Future Uses
+
+          * Cyrus IMAP Server: var directory structure
+
+            * Directory structure under /var/spool/imap
+
+            * Directory structure under /var/imap
+
+      * Unit Tests
+
+        * Unit Tests
+
+          * Table of Contents
+
+          * 1. Introduction
+
+          * 2. What Is A Unit Test?
+
+          * 3. Running The Tests
+
+            * 3.1. Setting Up The Machine
+
+            * 3.2 Configure Script
+
+            * 3.3 Make
+
+            * 3.4 Using Valgrind
+
+            * 3.5 The Tests Are Failing
+
+          * 3.6 Debugging A Test
+
+          * 4. Adding Your Own Tests
+
+          * 4.1 Where To Put Your Tests
+
+          * 4.1 Adding A New Suite
+
+          * 4.2 Adding A Test To A Suite
+
+          * 4.3 Suite Setup And Teardown
 
     * Support/Community
 

@@ -49,6 +49,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -72,7 +73,6 @@
 #endif
 
 #include "assert.h"
-#include "exitcodes.h"
 #include "index.h"
 #include "global.h"
 #include "mailbox.h"
@@ -142,14 +142,8 @@ int main(int argc, char **argv)
     /* Set namespace -- force standard (internal) */
     if ((r = mboxname_init_namespace(&mbtool_namespace, 1)) != 0) {
         syslog(LOG_ERR, "%s", error_message(r));
-        fatal(error_message(r), EC_CONFIG);
+        fatal(error_message(r), EX_CONFIG);
     }
-
-    annotate_init(NULL, NULL);
-    annotatemore_open();
-
-    mboxlist_init(0);
-    mboxlist_open(NULL);
 
     signals_set_shutdown(&shut_down);
     signals_add_handlers(0);
@@ -157,12 +151,6 @@ int main(int argc, char **argv)
     for (i = optind; i < argc; i++) {
         mboxlist_findall(&mbtool_namespace, argv[i], 1, 0, 0, do_cmd, &cmd);
     }
-
-    mboxlist_close();
-    mboxlist_done();
-
-    annotatemore_close();
-    annotate_done();
 
     exit(0);
 }
@@ -176,7 +164,7 @@ static void usage(void)
     fprintf(stderr, "    -t    normalise internaldates in specified mailboxes\n");
     fprintf(stderr, "\nOptions:\n");
     fprintf(stderr, "    -C alt_config  use alternate imapd.conf file\n");
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 /*
@@ -186,8 +174,8 @@ static int do_timestamp(const mbname_t *mbname)
 {
     int r = 0;
     struct mailbox *mailbox = NULL;
-    char olddate[RFC822_DATETIME_MAX+1];
-    char newdate[RFC822_DATETIME_MAX+1];
+    char olddate[RFC5322_DATETIME_MAX+1];
+    char newdate[RFC5322_DATETIME_MAX+1];
 
     signals_poll();
 
@@ -211,8 +199,8 @@ static int do_timestamp(const mbname_t *mbname)
 
         struct index_record copyrecord = *record;
 
-        time_to_rfc822(copyrecord.internaldate, olddate, sizeof(olddate));
-        time_to_rfc822(copyrecord.gmtime, newdate, sizeof(newdate));
+        time_to_rfc5322(copyrecord.internaldate, olddate, sizeof(olddate));
+        time_to_rfc5322(copyrecord.gmtime, newdate, sizeof(newdate));
         printf("  %u: %s => %s\n", copyrecord.uid, olddate, newdate);
 
         /* switch internaldate */
@@ -264,12 +252,14 @@ static int do_reid(const mbname_t *mbname)
 int do_cmd(struct findall_data *data, void *rock)
 {
     if (!data) return 0;
+    if (!data->is_exactmatch) return 0;
+
     int *valp = (int *)rock;
 
-    if (*valp == CMD_TIME && data->mbname != NULL)
+    if (*valp == CMD_TIME)
         return do_timestamp(data->mbname);
 
-    if (*valp == CMD_REID && data->mbname != NULL)
+    if (*valp == CMD_REID)
         return do_reid(data->mbname);
 
     return 0;

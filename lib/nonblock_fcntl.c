@@ -44,9 +44,9 @@
 #include <sys/types.h>
 #include <sys/file.h>
 #include <fcntl.h>
+#include <sysexits.h>
 
 #include "xmalloc.h"
-#include "exitcodes.h"
 #include "nonblock.h"
 
 #ifndef FNDELAY
@@ -59,7 +59,7 @@
 #define NON_BLOCKING_MODE FNDELAY
 #endif
 
-EXPORTED const char *nonblock_method_desc = "fcntl";
+EXPORTED const char nonblock_method_desc[] = "fcntl";
 
 /*
  * Modifies the non-blocking mode on the file descriptor 'fd'.  If
@@ -71,7 +71,7 @@ EXPORTED void nonblock(int fd, int mode)
     int flags;
 
     flags = fcntl(fd, F_GETFL, 0);
-    if (flags < 0) fatal("Internal error: fcntl F_GETFL failed", EC_IOERR);
+    if (flags < 0) fatal("Internal error: fcntl F_GETFL failed", EX_IOERR);
     if (mode) {
         flags |= NON_BLOCKING_MODE;
     }

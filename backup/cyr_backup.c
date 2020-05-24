@@ -53,10 +53,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
+#include <sysexits.h>
 #include <unistd.h>
 
 #include "lib/cyrusdb.h"
-#include "lib/exitcodes.h"
 #include "lib/gzuncat.h"
 #include "lib/map.h"
 #include "lib/strarray.h"
@@ -116,7 +116,7 @@ static void usage(void)
             "    -u                  # specified backup interpreted as userid (default)\n"
     );
 
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 static void save_argv0(const char *s)
@@ -401,7 +401,7 @@ int main(int argc, char **argv)
     cyrus_done();
 
     strarray_free(options.argv);
-    exit(r ? EC_TEMPFAIL : EC_OK);
+    exit(r ? EX_TEMPFAIL : EX_OK);
 }
 
 static int cmd_list_all(struct backup *backup,
@@ -545,7 +545,9 @@ static int cmd_show_mailboxes(struct backup *backup,
 
         /* or it could be an mboxname */
         if (!mailbox) {
-            mbname_t *mbname = mbname_from_intname(arg);
+            mbname_t *mbname = mbname_from_extname(arg,
+                                                   &cyr_backup_namespace,
+                                                   NULL);
             if (!mbname) continue;
             mailbox = backup_get_mailbox_by_name(backup, mbname,
                                                  BACKUP_MAILBOX_ALL_RECORDS);
@@ -773,7 +775,6 @@ static int json_mailbox_cb(const struct backup_mailbox *mailbox, void *rock)
 {
     json_t *jmailboxes = (json_t *) rock;
     json_t *jmailbox = json_object();
-    json_t *jmessages = json_array();
     char ts_last_appenddate[32] = "[unknown]";
 
     strftime(ts_last_appenddate, sizeof(ts_last_appenddate), "%F %T",
@@ -786,6 +787,7 @@ static int json_mailbox_cb(const struct backup_mailbox *mailbox, void *rock)
 
     if (mailbox->records && mailbox->records->count) {
         struct backup_mailbox_message *iter;
+        json_t *jmessages = json_array();
 
         for (iter = mailbox->records->head; iter; iter = iter->next) {
             json_t *jrecord = json_object();

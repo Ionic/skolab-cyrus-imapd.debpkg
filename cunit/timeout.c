@@ -197,7 +197,7 @@ int timeout_init(void (*cb)(void))
 
 int timeout_begin(int millisec)
 {
-    char c;
+    int c;
     int r;
 
 // fprintf(stderr, "timeout_begin\n");
@@ -220,7 +220,7 @@ int timeout_begin(int millisec)
 
 int timeout_end(void)
 {
-    char c;
+    int c;
     int r;
 
 // fprintf(stderr, "timeout_end\n");

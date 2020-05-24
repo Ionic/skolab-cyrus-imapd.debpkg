@@ -45,6 +45,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sysexits.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -58,7 +59,6 @@
 
 #include "assert.h"
 #include "cyrusdb.h"
-#include "exitcodes.h"
 #include "global.h"
 #include "mailbox.h"
 #include "util.h"
@@ -97,7 +97,7 @@ static int read_key_value(char **keyptr, size_t *keylen, char **valptr, size_t *
     }
     if (*keylen + *vallen >= STACKSIZE - 1) {
       printf("Error, stack overflow\n");
-      fatal("stack overflow", EC_DATAERR);
+      fatal("stack overflow", EX_DATAERR);
     }
   }
   (*keyptr)[*keylen] = '\0';
@@ -154,17 +154,27 @@ static void batch_commands(struct db *db)
     int c = '-';
     int r = 0;
 
-    while (c != EOF) {
+    prot_setisclient(in, 1);
+    prot_setisclient(out, 1);
+
+    while (1) {
         buf_reset(&cmd);
         buf_reset(&key);
         buf_reset(&val);
         line++;
         c = getword(in, &cmd);
+        if (c == EOF) break;
+
         if (c == ' ')
-            c = getastring(in, NULL, &key);
+            c = getbastring(in, NULL, &key);
         if (c == ' ')
-            c = getastring(in, NULL, &val);
+            c = getbastring(in, NULL, &val);
         if (c == '\r') c = prot_getc(in);
+        if (c != '\n') {
+            r = IMAP_PROTOCOL_BAD_PARAMETERS;
+            goto done;
+        }
+
         if (cmd.len) {
             /* got a command! */
             if (!strcmp(cmd.s, "BEGIN")) {
@@ -220,7 +230,6 @@ static void batch_commands(struct db *db)
                 goto done;
             }
         }
-        if (c != '\n') break;
     }
 
 done:
@@ -235,10 +244,10 @@ int main(int argc, char *argv[])
 {
     const char *fname;
     const char *action;
-    char *key;
-    char *value;
+    char *key = NULL;
+    char *value = NULL;
     int i,r;
-    size_t keylen,vallen,reslen;
+    size_t keylen = 0, vallen = 0, reslen = 0;
     int opt,loop;
     char *alt_config = NULL;
     const char *res = NULL;
@@ -311,7 +320,7 @@ int main(int argc, char *argv[])
                "This is because some database backends (mainly berkeley) do not\n"
                "always do what you would expect with them.\n"
                "\nPlease use absolute pathnames instead.\n\n");
-        exit(EC_OSERR);
+        exit(EX_OSERR);
     }
 
     outfd = fileno(stdout);
@@ -320,7 +329,7 @@ int main(int argc, char *argv[])
 
     r = cyrusdb_open(argv[optind+1], fname, db_flags, &db);
     if(r != CYRUSDB_OK)
-        fatal("can't open database", EC_TEMPFAIL);
+        fatal("can't open database", EX_TEMPFAIL);
 
     if (( is_get = !strcmp(action, "get"))  ||
       (is_delete = !strcmp(action, "delete")) ||

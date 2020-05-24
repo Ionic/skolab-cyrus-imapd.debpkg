@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "IMAPD.CONF" "5" "December 16, 2019" "3.0.13" "Cyrus IMAP"
+.TH "IMAPD.CONF" "5" "May 04, 2020" "3.2.0" "Cyrus IMAP"
 .SH NAME
 imapd.conf \- Cyrus IMAP documentation
 .
@@ -77,6 +77,15 @@ Blank lines and lines beginning with \(ga\(ga#\(aq\(aq are ignored.
 For boolean and enumerated options, the values \(ga\(gayes\(aq\(aq, \(ga\(gaon\(aq\(aq, \(ga\(gat\(aq\(aq,
 \(ga\(gatrue\(aq\(aq and \(ga\(ga1\(aq\(aq turn the option on, the values \(ga\(gano\(aq\(aq, \(ga\(gaoff\(aq\(aq,
 \(ga\(gaf\(aq\(aq, \(ga\(gafalse\(aq\(aq and \(ga\(ga0\(aq\(aq turn the option off.
+.sp
+Duration options take the form of a number followed by a unit, for example
+\fB32m\fP (32 minutes).  Units are \fBd\fP (days), \fBh\fP (hours), \fBm\fP
+(minutes) and \fBs\fP (seconds).  Multiple units can be combined and will
+be summed together, for example \fB1h30m\fP is equivalent to \fB90m\fP\&.  If
+no unit is specified, an option\-specific backward\-compatible default unit
+is assumed (documented on an option\-by\-option basis).  These are simple time
+units: 1d=24h, 1h=60m, 1m=60s (daylight savings, timezones, leap adjustments,
+etc are not considered).
 .UNINDENT
 .UNINDENT
 .SH FIELD DESCRIPTIONS
@@ -163,6 +172,13 @@ backend (e.g., sasldb), and that the system can provide enough entropy
 .UNINDENT
 .UNINDENT
 .sp
+\fBallowdeleted:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+Allow access to deleted and expunged data via vendor.cmu\-* access
+.UNINDENT
+.UNINDENT
+.sp
 \fBallownewnews:\fP 0
 .INDENT 0.0
 .INDENT 3.5
@@ -183,6 +199,14 @@ encryption layer to be negotiated prior to any cleartext
 authentication mechanisms being advertised or allowed.  To require a
 TLS/SSL encryption layer to be negotiated prior to ANY
 authentication, see the \fItls_required\fP option.
+.UNINDENT
+.UNINDENT
+.sp
+\fBallowsetacl:\fP 1
+.INDENT 0.0
+.INDENT 3.5
+Defaults to enabled.  If disabled, disallows the use of the SETACL
+command at all via IMAP.
 .UNINDENT
 .UNINDENT
 .sp
@@ -227,7 +251,7 @@ otherwise go under here
 .INDENT 3.5
 The cyrusdb backend to use for mailbox annotations.
 .sp
-Allowed values: \fIskiplist\fP, \fItwoskip\fP, \fIlmdb\fP
+Allowed values: \fIskiplist\fP, \fItwoskip\fP, \fIzeroskip\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -347,6 +371,23 @@ socket.
 .UNINDENT
 .UNINDENT
 .sp
+\fBannotation_callout_disable_append:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+Disables annotations on append with xrunannotator
+.UNINDENT
+.UNINDENT
+.sp
+\fBannotation_enable_legacy_commands:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+Whether to enable the legacy GETANNOTATION/SETANNOTATION commands.
+These commands are deprecated and will be removed in the future,
+but might be useful in the meantime for supporting old clients that
+do not implement the \fI\%RFC 5464\fP IMAP METADATA extension.
+.UNINDENT
+.UNINDENT
+.sp
 \fBaps_topic:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
@@ -378,11 +419,21 @@ mailbox, as distinct from partitions.
 .UNINDENT
 .UNINDENT
 .sp
-\fBarchive_days:\fP 7
+\fBarchive_days:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-The number of days after which to move messages to the archive partition
-if archiving is enabled
+Deprecated in favour of \fIarchive_after\fP\&.
+.UNINDENT
+.UNINDENT
+.sp
+\fBarchive_after:\fP 7d
+.INDENT 0.0
+.INDENT 3.5
+The duration after which to move messages to the archive partition
+if archiving is enabled.
+.sp
+For backward compatibility, if no unit is specified, days is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -493,6 +544,23 @@ Deprecated in favor of \fIautocreate_subscribe_sharedfolders\fP\&.
 .INDENT 0.0
 .INDENT 3.5
 Deprecated in favor of \fIautocreate_subscribe_sharedfolders_all\fP\&.
+.UNINDENT
+.UNINDENT
+.sp
+\fBautocreate_acl:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+If folders are to be created by \fIautocreate_inbox_foldersR, this
+setting can be used to apply additional ACLs to the autocreated
+folders.  The syntax is "autocreate_acl folder identifier rights",
+where **folder\fP must match one of the \fIautocreate_inbox_folders\fP
+folders, \fIidentifier\fP must be a valid cyrus identifier, and
+\fIrights\fP must be a valid cyrus rights string.  Multiple
+identifier|rights pairs can be assigned to a single folder by providing
+this setting multiple times.
+.sp
+For example, "autocreate_acl Plus anyone p" would allow lmtp delivery
+to a folder named "Plus".
 .UNINDENT
 .UNINDENT
 .sp
@@ -641,6 +709,14 @@ automatically created.
 .UNINDENT
 .UNINDENT
 .sp
+\fBautoexpunge:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+If set to yes, then all Deleted messages will be automatically expunged whenever
+an index is closed, whether CLOSE, UNSELECT, SELECT or on disconnect
+.UNINDENT
+.UNINDENT
+.sp
 \fBbackuppartition\-name:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
@@ -687,12 +763,22 @@ will be temp_path/backup
 .UNINDENT
 .UNINDENT
 .sp
-\fBbackup_retention_days:\fP 7
+\fBbackup_retention_days:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-The number of days to keep content in backup after it has been deleted
+Deprecated in favor of \fIbackup_retention\fP\&.
+.UNINDENT
+.UNINDENT
+.sp
+\fBbackup_retention:\fP 7d
+.INDENT 0.0
+.INDENT 3.5
+How long to keep content in backup after it has been deleted
 from the source.  If set to a negative value or zero, deleted content
 will be kept indefinitely.
+.sp
+For backward compatibility, if no unit is specified, days is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -701,7 +787,7 @@ will be kept indefinitely.
 .INDENT 3.5
 The cyrusdb backend to use for the backup locations database.
 .sp
-Allowed values: \fIskiplist\fP, \fIsql\fP, \fItwoskip\fP, \fIlmdb\fP
+Allowed values: \fIskiplist\fP, \fIsql\fP, \fItwoskip\fP, \fIzeroskip\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -740,7 +826,14 @@ than any sane message should have.
 \fBcaldav_allowattach:\fP 1
 .INDENT 0.0
 .INDENT 3.5
-Enable managed attachments support on the caldav server.
+Enable managed attachments support on the CalDAV server.
+.UNINDENT
+.UNINDENT
+.sp
+\fBcaldav_allowcalendaradmin:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+Enable per\-user calendar administration web UI on the CalDAV server.
 .UNINDENT
 .UNINDENT
 .sp
@@ -757,7 +850,7 @@ Allowed values: \fIoff\fP, \fIon\fP, \fIapple\fP
 \fBcaldav_create_attach:\fP 1
 .INDENT 0.0
 .INDENT 3.5
-Create the \(aqAttachments\(aq calendar if it doesn\(aqt already exist
+Create the \(aqAttachments\(aq collection if it doesn\(aqt already exist
 .UNINDENT
 .UNINDENT
 .sp
@@ -772,6 +865,20 @@ Create the \(aqDefault\(aq calendar if it doesn\(aqt already exist
 .INDENT 0.0
 .INDENT 3.5
 Create the \(aqInbox\(aq and \(aqOutbox\(aq calendars if they don\(aqt already exist
+.UNINDENT
+.UNINDENT
+.sp
+\fBcaldav_historical_age:\fP 7d
+.INDENT 0.0
+.INDENT 3.5
+How long after an occurrence of event or task has concluded
+that it is considered \(aqhistorical\(aq.  Changes to historical
+occurrences of events or tasks WILL NOT have invite or reply
+messages sent for them.  A negative value means that events
+and tasks are NEVER considered historical.
+.sp
+For backward compatibility, if no unit is specified, days is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -823,6 +930,32 @@ default), the value of the "servername" option will be used.
 .UNINDENT
 .UNINDENT
 .sp
+\fBcalendar_component_set:\fP VEVENT VTODO VJOURNAL VFREEBUSY VAVAILABILITY VPOLL
+.INDENT 0.0
+.INDENT 3.5
+Space\-separated list of iCalendar component types that calendar
+object resources may contain in a calendar collection.
+This restriction is only set at calendar creation time and only
+if the CalDAV client hasn\(aqt specified a restriction in the creation
+request.
+Allowed values: \fIVEVENT\fP, \fIVTODO\fP, \fIVJOURNAL\fP, \fIVFREEBUSY\fP, \fIVAVAILABILITY\fP, \fIVPOLL\fP
+.UNINDENT
+.UNINDENT
+.sp
+\fBcarddav_allowaddmember:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+Enable support for POST add\-member on the CardDAV server.
+.UNINDENT
+.UNINDENT
+.sp
+\fBcarddav_allowaddressbookadmin:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+Enable per\-user addressbook administration web UI on the CardDAV server.
+.UNINDENT
+.UNINDENT
+.sp
 \fBcarddav_realm:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
@@ -870,11 +1003,14 @@ servername will be used.
 .UNINDENT
 .UNINDENT
 .sp
-\fBclient_timeout:\fP 10
+\fBclient_timeout:\fP 10s
 .INDENT 0.0
 .INDENT 3.5
-Number of seconds to wait before returning a timeout failure when
-performing a client connection (e.g., in a murder environment)
+Time to wait before returning a timeout failure when performing a
+client connection (e.g. in a murder environment).
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -925,16 +1061,34 @@ running server, or the counts will be wrong.
 .INDENT 3.5
 The cyrusdb backend to use for the per\-user conversations database.
 .sp
-Allowed values: \fIskiplist\fP, \fIsql\fP, \fItwoskip\fP, \fIlmdb\fP
+Allowed values: \fIskiplist\fP, \fIsql\fP, \fItwoskip\fP, \fIzeroskip\fP
 .UNINDENT
 .UNINDENT
 .sp
-\fBconversations_expire_days:\fP 90
+\fBconversations_expire_days:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+Deprecated in favor of \fIconversations_expire_after\fP\&.
+.UNINDENT
+.UNINDENT
+.sp
+\fBconversations_expire_after:\fP 90d
 .INDENT 0.0
 .INDENT 3.5
 How long the conversations database keeps the message tracking
 information needed for receiving new messages in existing
-conversations, in days.
+conversations.
+.sp
+For backward compatibility, if no unit is specified, days is
+assumed.
+.UNINDENT
+.UNINDENT
+.sp
+\fBconversations_max_thread:\fP 100
+.INDENT 0.0
+.INDENT 3.5
+maximum size for a single thread.  Threads will split if they have this many
+* messages in them and another message arrives
 .UNINDENT
 .UNINDENT
 .sp
@@ -1001,13 +1155,26 @@ resources (principals).  If not set (the default), the value of the
 .UNINDENT
 .UNINDENT
 .sp
+\fBdav_lock_timeout:\fP 20s
+.INDENT 0.0
+.INDENT 3.5
+The maximum time to wait for a write lock on the per\-user DAV database
+before timeout. For HTTP requests, the HTTP status code 503 is returned
+if the lock can not be obtained within this time.
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
+.UNINDENT
+.UNINDENT
+.sp
 \fBdebug_command:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
 Debug command to be used by processes started with \-D option.  The string
 is a C format string that gets 3 options: the first is the name of the
-executable (without path).  The second is the pid (integer) and the third
-is the service ID.  Example: /usr/local/bin/gdb /usr/cyrus/bin/%s %d
+executable (as specified in the cmd parameter in cyrus.conf). The second
+is the pid (integer) and the third is the service ID.
+Example: /usr/local/bin/gdb /usr/cyrus/bin/%s %d
 .UNINDENT
 .UNINDENT
 .sp
@@ -1149,6 +1316,13 @@ File containing the private key for iSchedule DKIM signing.
 .UNINDENT
 .UNINDENT
 .sp
+\fBischedule_dkim_required:\fP 1
+.INDENT 0.0
+.INDENT 3.5
+A DKIM signature is required on received iSchedule requests.
+.UNINDENT
+.UNINDENT
+.sp
 \fBischedule_dkim_selector:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
@@ -1163,7 +1337,7 @@ domain.
 .INDENT 3.5
 The cyrusdb backend to use for the duplicate delivery suppression
 and sieve.
-Allowed values: \fIskiplist\fP, \fIsql\fP, \fItwoskip\fP, \fIlmdb\fP
+Allowed values: \fIskiplist\fP, \fIsql\fP, \fItwoskip\fP, \fIzeroskip\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -1227,7 +1401,7 @@ Set ALL for any folder
 .INDENT 3.5
 Space\-separated list of extra parameters to add to any appropriated event.
 .sp
-Allowed values: \fIbodyStructure\fP, \fIclientAddress\fP, \fIdiskUsed\fP, \fIflagNames\fP, \fImessageContent\fP, \fImessageSize\fP, \fImessages\fP, \fImodseq\fP, \fIservice\fP, \fItimestamp\fP, \fIuidnext\fP, \fIvnd.cmu.midset\fP, \fIvnd.cmu.unseenMessages\fP, \fIvnd.cmu.envelope\fP, \fIvnd.cmu.sessionId\fP, \fIvnd.cmu.mailboxACL\fP, \fIvnd.cmu.mbtype\fP, \fIvnd.cmu.davFilename\fP, \fIvnd.cmu.davUid\fP, \fIvnd.fastmail.clientId\fP, \fIvnd.fastmail.sessionId\fP, \fIvnd.fastmail.convExists\fP, \fIvnd.fastmail.convUnseen\fP, \fIvnd.fastmail.cid\fP, \fIvnd.fastmail.counters\fP
+Allowed values: \fIbodyStructure\fP, \fIclientAddress\fP, \fIdiskUsed\fP, \fIflagNames\fP, \fImessageContent\fP, \fImessageSize\fP, \fImessages\fP, \fImodseq\fP, \fIservice\fP, \fItimestamp\fP, \fIuidnext\fP, \fIvnd.cmu.midset\fP, \fIvnd.cmu.unseenMessages\fP, \fIvnd.cmu.envelope\fP, \fIvnd.cmu.sessionId\fP, \fIvnd.cmu.mailboxACL\fP, \fIvnd.cmu.mbtype\fP, \fIvnd.cmu.davFilename\fP, \fIvnd.cmu.davUid\fP, \fIvnd.fastmail.clientId\fP, \fIvnd.fastmail.sessionId\fP, \fIvnd.fastmail.convExists\fP, \fIvnd.fastmail.convUnseen\fP, \fIvnd.fastmail.cid\fP, \fIvnd.fastmail.counters\fP, \fIvnd.cmu.emailid\fP, \fIvnd.cmu.threadid\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -1252,29 +1426,31 @@ the \fI\%RFC 5423\fP\&.  If not set, "EVENT" notifications are disabled.
 .INDENT 0.0
 .INDENT 3.5
 The mode in which messages (and their corresponding cache entries)
-are expunged.  "default" mode is the old behavior in which the
+are expunged.  "semidelayed" mode is the old behavior in which the
 message files are purged at the time of the EXPUNGE, but index
-and cache records are retained to facilitate QRESYNC.  (Note that
-this behaviour is no longer the default, but is so named for historical
-reasons.)  In "delayed" mode, which is the default since Cyrus 2.5.0,
+and cache records are retained to facilitate QRESYNC.
+In "delayed" mode, which is the default since Cyrus 2.5.0,
 the message files are also retained, allowing unexpunge to
 rescue them.  In "immediate" mode, both the message files and the
 index records are removed as soon as possible.  In all cases,
 nothing will be finally purged until all other processes have
 closed the mailbox to ensure they never see data disappear under
-them.  In "default" or "delayed" mode, a later run of "cyr_expire"
+them.  In "semidelayed" or "delayed" mode, a later run of "cyr_expire"
 will clean out the retained records (and possibly message files).
 This reduces the amount of I/O that takes place at the time of
 EXPUNGE and should result in greater responsiveness for the client,
 especially when expunging a large number of messages.
-Allowed values: \fIdefault\fP, \fIimmediate\fP, \fIdelayed\fP
+Allowed values: \fIimmediate\fP, \fIsemidelayed\fP, \fIdelayed\fP
 .UNINDENT
 .UNINDENT
 .sp
-\fBfailedloginpause:\fP 3
+\fBfailedloginpause:\fP 3s
 .INDENT 0.0
 .INDENT 3.5
-Number of seconds to pause after a failed login.
+Time to pause after a failed login.
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -1420,15 +1596,18 @@ serve any static content.
 .UNINDENT
 .UNINDENT
 .sp
-\fBhttpkeepalive:\fP 20
+\fBhttpkeepalive:\fP 20s
 .INDENT 0.0
 .INDENT 3.5
-Set the length of the HTTP server\(aqs keepalive heartbeat in seconds.
-The default is 20.  The minimum value is 0, which will disable the
-keepalive heartbeat.  When enabled, if a request takes longer than
-\fIhttpkeepalive\fP seconds to process, the server will send the client
-provisional responses every \fIhttpkeepalive\fP seconds until the
-final response can be sent
+Set the length of the HTTP server\(aqs keepalive heartbeat.  The
+default is 20 seconds.  The minimum value is 0, which will disable
+the keepalive heartbeat.  When enabled, if a request takes longer
+than \fIhttpkeepalive\fP to process, the server will send the client
+provisional responses every \fIhttpkeepalive\fP until the final
+response can be sent.
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -1442,7 +1621,7 @@ at compile time due to missing dependencies (e.g. libical).
 Note that "domainkey" depends on "ischedule" being enabled, and
 that both "freebusy" and "ischedule" depend on "caldav" being
 enabled.
-Allowed values: \fIadmin\fP, \fIcaldav\fP, \fIcarddav\fP, \fIdomainkey\fP, \fIfreebusy\fP, \fIischedule\fP, \fIrss\fP, \fItzdist\fP, \fIwebdav\fP
+Allowed values: \fIadmin\fP, \fIcaldav\fP, \fIcarddav\fP, \fIcgi\fP, \fIdomainkey\fP, \fIfreebusy\fP, \fIischedule\fP, \fIjmap\fP, \fIprometheus\fP, \fIrss\fP, \fItzdist\fP, \fIwebdav\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -1457,12 +1636,15 @@ sent across the wire.
 .UNINDENT
 .UNINDENT
 .sp
-\fBhttptimeout:\fP 5
+\fBhttptimeout:\fP 5m
 .INDENT 0.0
 .INDENT 3.5
-Set the length of the HTTP server\(aqs inactivity autologout timer,
-in minutes.  The default is 5.  The minimum value is 0, which will
+Set the length of the HTTP server\(aqs inactivity autologout timer.
+The default is 5 minutes.  The minimum value is 0, which will
 disable persistent connections.
+.sp
+For backwards compatibility, if no unit is specified, minutes
+is assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -1481,13 +1663,16 @@ the reference argument in LIST or LSUB commands.
 .UNINDENT
 .UNINDENT
 .sp
-\fBimapidlepoll:\fP 60
+\fBimapidlepoll:\fP 60s
 .INDENT 0.0
 .INDENT 3.5
-The interval (in seconds) for polling for mailbox changes and
-ALERTs while running the IDLE command.  This option is used when
-idled is not enabled or cannot be contacted.  The minimum value is
-1.  A value of 0 will disable IDLE.
+The interval for polling for mailbox changes and ALERTs while running
+the IDLE command.  This option is used when idled is not enabled or
+cannot be contacted.  The minimum value is 1 second.  A value of 0
+will disable IDLE.
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -1518,7 +1703,7 @@ the \fI\%RFC 6047\fP\&.  If not set, "IMIP" notifications are disabled.
 .UNINDENT
 .UNINDENT
 .sp
-\fBimplicit_owner_rights:\fP lkxa
+\fBimplicit_owner_rights:\fP lkxan
 .INDENT 0.0
 .INDENT 3.5
 The implicit Access Control List (ACL) for the owner of a mailbox.
@@ -1549,14 +1734,207 @@ See improved_mboxlist_sort.html.
 .UNINDENT
 .UNINDENT
 .sp
-\fBinternaldate_heuristic:\fP standard
+\fBjmap_emailsearch_db_path:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-Mechanism to determine email internaldates on delivery/reconstruct.
-"standard" uses time() when delivering a message, mtime on reconstruct.
-"receivedheader" looks at the top most Received header
-or time/mtime otherwise
-Allowed values: \fIstandard\fP, \fIreceivedheader\fP
+The absolute path to the JMAP email search cache file.  If not
+specified, JMAP Email/query and Email/queryChanges will not
+cache email search results.
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_preview_annot:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+The name of the per\-message annotation, if any, to store message
+previews.
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_imagesize_annot:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+The name of the per\-message annotation, if any, that stores a
+JSON object, mapping message part numbers of MIME image types
+to an array of their image dimensions. The array must have at
+least two entries, where the first entry denotes the width
+and the second entry the height of the image. Any additional
+values are ignored.
+.sp
+For example, if message part 1.2 contains an image of width 300
+and height 200, then the value of this annotation would be:
+.sp
+{ "1.2" : [ 300, 200 ] }
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_inlinedcids_annot:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+The name of the per\-message annotation, if any, that stores a
+JSON object, mapping \fI\%RFC 2392\fP Content\-IDs referenced in HTML bodies
+to the respective HTML body part number.
+.sp
+For example, if message part 1.2 contains HTML and references an
+inlined image at "\fI\%cid:foo\fP", then the value of this annotation
+would be:
+.sp
+{ "<foo>" : "1.2" }
+.sp
+Note that the Content\-ID key must be URL\-unescaped and enclosed in
+angular brackets, as defined in \fI\%RFC 2392\fP\&.
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_preview_length:\fP 64
+.INDENT 0.0
+.INDENT 3.5
+The maximum byte length of dynamically generated message previews. Previews
+stored in jmap_preview_annot take precedence.
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_max_size_upload:\fP 1048576
+.INDENT 0.0
+.INDENT 3.5
+The maximum size (in kilobytes) that the JMAP API accepts
+for blob uploads. Returned as the maxSizeUpload property
+value of the JMAP "\fI\%urn:ietf:params:jmap:core\fP" capabilities object.
+Default is 1Gb.
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_max_concurrent_upload:\fP 5
+.INDENT 0.0
+.INDENT 3.5
+The value to return for the maxConcurrentUpload property of
+the JMAP "\fI\%urn:ietf:params:jmap:core\fP" capabilities object. The Cyrus JMAP
+implementation does not enforce this rate\-limit.
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_max_size_request:\fP 10240
+.INDENT 0.0
+.INDENT 3.5
+The maximum size (in kilobytes) that the JMAP API accepts
+for requests at the API endpoint. Returned as the
+maxSizeRequest property value of the JMAP "\fI\%urn:ietf:params:jmap:core\fP"
+capabilities object. Default is 10Mb.
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_max_concurrent_requests:\fP 5
+.INDENT 0.0
+.INDENT 3.5
+The value to return for the maxConcurrentRequests property of
+the JMAP "\fI\%urn:ietf:params:jmap:core\fP" capabilities object. The Cyrus JMAP
+implementation does not enforce this rate\-limit.
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_max_calls_in_request:\fP 50
+.INDENT 0.0
+.INDENT 3.5
+The maximum number of calls per JMAP request object.
+Returned as the maxCallsInRequest property value of the
+JMAP "\fI\%urn:ietf:params:jmap:core\fP" capabilities object.
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_max_delayed_send:\fP 512d
+.INDENT 0.0
+.INDENT 3.5
+The value to return for the maxDelayedSend property of
+the JMAP "\fI\%urn:ietf:params:jmap:emailsubmission\fP" capabilities object.
+The Cyrus JMAP implementation does not enforce this limit.
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_max_objects_in_get:\fP 4096
+.INDENT 0.0
+.INDENT 3.5
+The maximum number of ids that a JMAP client may request in
+a single "/get" type method call. The actual number
+of returned objects in the response may exceed this number
+if the JMAP object type supports unbounded "/get" calls.
+Returned as the maxObjectsInGet property value of the
+JMAP "\fI\%urn:ietf:params:jmap:core\fP" capabilities object.
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_max_objects_in_set:\fP 4096
+.INDENT 0.0
+.INDENT 3.5
+The maximum number of objects a JMAP client may send to create,
+update or destroy in a single /set type method call.
+Returned as the maxObjectsInSet property value of the
+JMAP "\fI\%urn:ietf:params:jmap:core\fP" capabilities object.
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_mail_max_size_attachments_per_email:\fP 10240
+.INDENT 0.0
+.INDENT 3.5
+The value (in kilobytes) to return for the maxSizeAttachmentsPerEmail
+property of the JMAP "\fI\%urn:ietf:params:jmap:mail\fP" capabilities object. The Cyrus
+JMAP implementation does not enforce this size limit. Default is 10 Mb.
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_nonstandard_extensions:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+If enabled, support non\-standard JMAP extensions.  If not enabled,
+only IETF standard JMAP functionality is supported.
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_set_has_attachment:\fP 1
+.INDENT 0.0
+.INDENT 3.5
+If enabled, the $hasAttachment flag is determined and set for new messages
+created with the JMAP Email/set or Email/import methods. This option should
+typically be enabled, but installations using Cyrus\-external message
+annatotors to determine the $hasAttachment flag might want to disable it.
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_vacation:\fP 1
+.INDENT 0.0
+.INDENT 3.5
+If enabled, support the JMAP vacation extension
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmapuploadfolder:\fP #jmap
+.INDENT 0.0
+.INDENT 3.5
+the name of the folder for JMAP uploads (#jmap)
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmapsubmission_deleteonsend:\fP 1
+.INDENT 0.0
+.INDENT 3.5
+If enabled (the default) then delete the EmailSubmission as soon as the email
+* has been sent
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmapsubmissionfolder:\fP #jmapsubmission
+.INDENT 0.0
+.INDENT 3.5
+the name of the folder for JMAP Submissions (#jmapsubmission)
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmappushsubscriptionfolder:\fP #jmappushsubscription
+.INDENT 0.0
+.INDENT 3.5
+the name of the folder for JMAP Push Subscriptions (#jmappushsubscription)
 .UNINDENT
 .UNINDENT
 .sp
@@ -1645,7 +2023,9 @@ used in the filter string:
 %u   = user
 %U   = user portion of %u (%U = test when %u = \fI\%test@domain.tld\fP)
 %d   = domain portion of %u if available (%d = domain.tld when %u =
-\fI\%%test@domain.tld\fP), otherwise same as %r
+\fI\%test@domain.tld\fP), otherwise same as %R
+%R   = domain portion of %u starting with @ (%R = @domain.tld
+when %u = \fI\%test@domain.tld\fP)
 %D   = user dn.  (use when ldap_member_method: filter)
 %1\-9 = domain tokens (%1 = tld, %2 = domain when %d = domain.tld)
 .sp
@@ -1844,17 +2224,23 @@ ldaps:// in \(aqldap_uri\(aq with this option enabled.
 .UNINDENT
 .UNINDENT
 .sp
-\fBldap_time_limit:\fP 5
+\fBldap_time_limit:\fP 5s
 .INDENT 0.0
 .INDENT 3.5
-Specify a number of seconds for a search request to complete.
+How long to wait for a search request to complete.
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
-\fBldap_timeout:\fP 5
+\fBldap_timeout:\fP 5s
 .INDENT 0.0
 .INDENT 3.5
-Specify a number of seconds a search can take before timing out.
+How long a search can take before timing out.
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -1977,6 +2363,18 @@ If enabled, lmtpd will convert the recipient addresses to lowercase
 .UNINDENT
 .UNINDENT
 .sp
+\fBlmtp_exclude_specialuse:\fP \eSnoozed
+.INDENT 0.0
+.INDENT 3.5
+Don\(aqt allow delivery to folders with given special\-use attributes.
+.sp
+Note that "snoozing" of emails can currently only be done via the
+JMAP protocol, so delivery directly to the Snoozed mailbox is
+prohibited by default as it will not be moved back into INBOX
+automatically.
+.UNINDENT
+.UNINDENT
+.sp
 \fBlmtp_fuzzy_mailbox_match:\fP 0
 .INDENT 0.0
 .INDENT 3.5
@@ -2024,13 +2422,25 @@ match the path specified in cyrus.conf(5).
 .UNINDENT
 .UNINDENT
 .sp
-\fBlmtptxn_timeout:\fP 300
+\fBlmtptxn_timeout:\fP 5m
 .INDENT 0.0
 .INDENT 3.5
-Timeout (in seconds) used during a lmtp transaction to a remote backend
-(e.g. in a murder environment).  Can be used to prevent hung lmtpds
-on proxy hosts when a backend server becomes unresponsive during a
-lmtp transaction.  The default is 300 \- change to zero for infinite.
+Timeout used during a lmtp transaction to a remote backend (e.g. in a
+murder environment).  Can be used to prevent hung lmtpds on proxy hosts
+when a backend server becomes unresponsive during a lmtp transaction.
+The default is 5 minutes \- change to zero for infinite.
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
+.UNINDENT
+.UNINDENT
+.sp
+\fBlock_debugtime:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+A floating point number of seconds.  If set, time how long we wait for
+any lock, and syslog the filename and time if it\(aqs longer than this
+value.  The default of NULL means not to time locks.
 .UNINDENT
 .UNINDENT
 .sp
@@ -2085,6 +2495,20 @@ no flags.  Example: $Label1 $Label2 $Label3 NotSpam Spam
 .INDENT 3.5
 Notifyd(8) method to use for "MAIL" notifications.  If not set, "MAIL"
 notifications are disabled.
+.UNINDENT
+.UNINDENT
+.sp
+\fBmaster_bind_errors_fatal:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+If enabled, failure to bind a port during startup is treated as a fatal
+error, causing master to shut down immediately.  The default is to keep
+running, with the affected service disabled until the next SIGHUP causes
+it to retry.
+.sp
+Note that this only applies during startup.  New services that fail to
+come up in response to a reconfig+SIGHUP will just be logged and disabled
+like the default behaviour, without causing master to exit.
 .UNINDENT
 .UNINDENT
 .sp
@@ -2143,7 +2567,7 @@ Maximum size of a single word for the parser.  Default 128k
 .INDENT 3.5
 The cyrusdb backend to use for mailbox keys.
 .sp
-Allowed values: \fIskiplist\fP, \fItwoskip\fP, \fIlmdb\fP
+Allowed values: \fIskiplist\fP, \fItwoskip\fP, \fIzeroskip\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -2152,7 +2576,7 @@ Allowed values: \fIskiplist\fP, \fItwoskip\fP, \fIlmdb\fP
 .INDENT 3.5
 The cyrusdb backend to use for the mailbox list.
 .sp
-Allowed values: \fIflat\fP, \fIskiplist\fP, \fIsql\fP, \fItwoskip\fP, \fIlmdb\fP
+Allowed values: \fIflat\fP, \fIskiplist\fP, \fIsql\fP, \fItwoskip\fP, \fIzeroskip\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -2419,11 +2843,14 @@ will be configdirectory/fetchnews.db
 .UNINDENT
 .UNINDENT
 .sp
-\fBnntptimeout:\fP 3
+\fBnntptimeout:\fP 3m
 .INDENT 0.0
 .INDENT 3.5
-Set the length of the NNTP server\(aqs inactivity autologout timer,
-in minutes.  The minimum value is 3, the default.
+Set the length of the NNTP server\(aqs inactivity autologout timer.
+The minimum value is 3 minutes, also the default.
+.sp
+For backward compatibility, if no unit is specified, minutes is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -2486,13 +2913,6 @@ value of the \fBdefaultpartion\fP option is \fBpart1\fP, then the
 .UNINDENT
 .UNINDENT
 .sp
-\fBoutbox_sendlater:\fP 0
-.INDENT 0.0
-.INDENT 3.5
-If enabled, any message with a Draft flag will be sent at the time of its INTERNALDATE
-.UNINDENT
-.UNINDENT
-.sp
 \fBpartition_select_mode:\fP freespace\-most
 .INDENT 0.0
 .INDENT 3.5
@@ -2550,13 +2970,16 @@ If all partitions are over that limit, this feature is not used anymore.
 .UNINDENT
 .UNINDENT
 .sp
-\fBplaintextloginpause:\fP 0
+\fBplaintextloginpause:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-Number of seconds to pause after a successful plaintext login.  For
-systems that support strong authentication, this permits users to
-perceive a cost of using plaintext passwords.  (This does not
-affect the use of PLAIN in SASL authentications.)
+Time to pause after a successful plaintext login.  For systems that
+support strong authentication, this permits users to perceive a cost
+of using plaintext passwords.  (This does not affect the use of PLAIN
+in SASL authentications.)
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -2570,22 +2993,30 @@ Message to send to client after a successful plaintext login.
 \fBpopexpiretime:\fP \-1
 .INDENT 0.0
 .INDENT 3.5
-The number of days advertised as being the minimum a message may be
+The duration advertised as being the minimum a message may be
 left on the POP server before it is deleted (via the CAPA command,
 defined in the POP3 Extension Mechanism, which some clients may
-support).  "NEVER", the default, may be specified with a negative
-number.  The Cyrus POP3 server never deletes mail, no matter what
-the value of this parameter is.  However, if a site implements a
-less liberal policy, it needs to change this parameter
-accordingly.
+support).  This duration has a granularity of whole days, with partial
+days truncated (so e.g. "45m" is effectively "0d").  "NEVER", the
+default, may be specified with a negative number.
+.sp
+The Cyrus POP3 server never deletes mail, no matter what the value of
+this parameter is.  However, if a site implements a less liberal policy,
+it needs to change this parameter accordingly.
+.sp
+For backward compatibility, if no unit is specified, days is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
-\fBpopminpoll:\fP 0
+\fBpopminpoll:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
 Set the minimum amount of time the server forces users to wait
-between successive POP logins, in minutes.
+between successive POP logins.
+.sp
+For backward compatibility, if no unit is specified, minutes is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -2616,11 +3047,14 @@ of the slots.
 .UNINDENT
 .UNINDENT
 .sp
-\fBpoptimeout:\fP 10
+\fBpoptimeout:\fP 10m
 .INDENT 0.0
 .INDENT 3.5
-Set the length of the POP server\(aqs inactivity autologout timer,
-in minutes.  The minimum value is 10, the default.
+Set the length of the POP server\(aqs inactivity autologout timer.
+The minimum value is 10 minutes, the default.
+.sp
+For backward compatibility, if no unit is specified, minutes is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -2671,6 +3105,43 @@ the "shared.blah" folder.  By default, an email address of
 Path to proc directory.  Default is NULL \- must be an absolute path
 if specified.  If not specified, the path $configdirectory/proc/ will be
 used.
+.UNINDENT
+.UNINDENT
+.sp
+\fBprometheus_enabled:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+Whether tracking of service metrics for Prometheus is enabled.
+.UNINDENT
+.UNINDENT
+.sp
+\fBprometheus_need_auth:\fP admin
+.INDENT 0.0
+.INDENT 3.5
+Authentication level required to fetch Prometheus metrics.
+.sp
+Allowed values: \fInone\fP, \fIuser\fP, \fIadmin\fP
+.UNINDENT
+.UNINDENT
+.sp
+\fBprometheus_update_freq:\fP 10s
+.INDENT 0.0
+.INDENT 3.5
+Frequency in at which promstatsd should re\-collate its statistics
+report.  The minimum value is 1 second, the default is 10 seconds.
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
+.UNINDENT
+.UNINDENT
+.sp
+\fBprometheus_stats_dir:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+Directory to use for gathering prometheus statistics.  If specified,
+must be an absolute path.  If not specified, the default path
+$configdirectory/stats/ will be used.  It may be advantageous to locate this
+directory on ephemeral storage.
 .UNINDENT
 .UNINDENT
 .sp
@@ -2763,7 +3234,7 @@ Unix domain socket that ptloader listens on.
 .INDENT 3.5
 The cyrusdb backend to use for the pts cache.
 .sp
-Allowed values: \fIskiplist\fP, \fItwoskip\fP, \fIlmdb\fP
+Allowed values: \fIskiplist\fP, \fItwoskip\fP, \fIzeroskip\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -2775,11 +3246,14 @@ will be configdirectory/ptscache.db
 .UNINDENT
 .UNINDENT
 .sp
-\fBptscache_timeout:\fP 10800
+\fBptscache_timeout:\fP 3h
 .INDENT 0.0
 .INDENT 3.5
-The timeout (in seconds) for the PTS cache database when using the
-auth_krb_pts authorization method (default: 3 hours).
+The timeout for the PTS cache database when using the auth_krb_pts
+authorization method (default: 3 hours).
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -2815,7 +3289,7 @@ Allowed values: \fIcs0\fP, \fIcs1\fP, \fIcs2\fP, \fIcs3\fP, \fIcs4\fP, \fIcs5\fP
 .INDENT 3.5
 The cyrusdb backend to use for quotas.
 .sp
-Allowed values: \fIflat\fP, \fIskiplist\fP, \fIsql\fP, \fIquotalegacy\fP, \fItwoskip\fP, \fIlmdb\fP
+Allowed values: \fIflat\fP, \fIskiplist\fP, \fIsql\fP, \fIquotalegacy\fP, \fItwoskip\fP, \fIzeroskip\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -2954,13 +3428,15 @@ wildmat of "*" (ALL mailboxes) will be used.
 .UNINDENT
 .UNINDENT
 .sp
-\fBrss_maxage:\fP 0
+\fBrss_maxage:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-Maximum age (in days) of items to display in an RSS channel.  If
-non\-zero, httpd will only display items received within the last
-\fIrss_maxage\fP days.  If set to 0, all available items will be
-displayed (the default).
+Maximum age of items to display in an RSS channel.  If non\-zero,
+httpd will only display items received within this time period.
+If set to 0, all available items will be displayed (the default).
+.sp
+For backward compatibility, if no unit is specified, days is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3042,6 +3518,68 @@ Note that long batches may delay user commands or mail delivery.
 .UNINDENT
 .UNINDENT
 .sp
+\fBsearch_attachment_extractor_url:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+A HTTP or HTTPS URL to extract search text from rich text attachments
+and other media during search indexing. The server at this URL must
+implement the following protocol:
+.sp
+1. For each attachment of an email, Cyrus sends a GET request to the
+URL <extractor\-url>/<cyrus\-id>, where <extractor\-url> is the
+configured URL and <cyrus\-id> is a Cyrus\-chosen path segment that
+uniquely identifies this attachment.
+.sp
+2. If the extractor already has a cached plain text extract of the
+attachment identified by <cyrus\-id> then it may return HTTP status
+code 200 (OK) and the plain text extract with a Content\-Type
+"text/plain" header. Otherwise it must return HTTP status 404 (Not Found).
+.sp
+3. If Cyrus receives the HTTP status code 404 (Not Found), then it sends
+a PUT request to the same URL as previously. The PUT request body
+contains the decoded, binary body of the attachment. The Content\-Type
+request header has the same value as declared in the MIME part
+headers, including any type parameters.
+.sp
+4. The extractor must return the plain text extract with either HTTP status
+200 (OK) or 201 (Created) and a Content\-Type "text/plain" header.
+If no text can be extracted, then the extractor may return any return code
+in the range 4xx, or 200 and an empty response body.
+.sp
+Any other HTTP status code is treated as an error. For performance
+reasons, the Cyrus indexer attempts to keep\-alive the TCP connection
+to the extractor.
+.UNINDENT
+.UNINDENT
+.sp
+\fBsearch_index_language:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+If enabled, then message bodies and subjects are indexed by their
+detected language, if the cld2 dependency is built into Cyrus.
+Regardless of this flag, bodies and subjects are always indexed and
+searched using the default stemmer.
+.UNINDENT
+.UNINDENT
+.sp
+\fBsearch_index_parts:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+If enabled, then message parts are each indexed separately into Xapian
+so that matches can be done by part.
+.UNINDENT
+.UNINDENT
+.sp
+\fBsearch_query_language:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+If enabled, then message bodies and subjects searched by their language
+that got detected during indexing, if any.
+Regardless of this flag, bodies and subjects are always searched using
+the default stemmer.
+.UNINDENT
+.UNINDENT
+.sp
 \fBsearch_normalisation_max:\fP 1000
 .INDENT 0.0
 .INDENT 3.5
@@ -3057,7 +3595,7 @@ folders.
 .INDENT 3.5
 The indexing engine used to speed up searching.
 .sp
-Allowed values: \fInone\fP, \fIsquat\fP, \fIsphinx\fP, \fIxapian\fP
+Allowed values: \fInone\fP, \fIsquat\fP, \fIxapian\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -3085,9 +3623,9 @@ headers can still be searched, the searches will just be slower.
 \fBsearch_indexed_db:\fP twoskip
 .INDENT 0.0
 .INDENT 3.5
-The cyrusdb backend to use for the search latest indexed uid state.
+The cyrusdb backend to use for the search latest indexed uid state.  Xapian only.
 .sp
-Allowed values: \fIflat\fP, \fIskiplist\fP, \fItwoskip\fP, \fIlmdb\fP
+Allowed values: \fIflat\fP, \fIskiplist\fP, \fItwoskip\fP, \fIzeroskip\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -3096,6 +3634,14 @@ Allowed values: \fIflat\fP, \fIskiplist\fP, \fItwoskip\fP, \fIlmdb\fP
 .INDENT 3.5
 The maximum number of seconds to run a search for before aborting.  Default
 of no value means search "forever" until other timeouts.
+.UNINDENT
+.UNINDENT
+.sp
+\fBsearch_queryscan:\fP 5000
+.INDENT 0.0
+.INDENT 3.5
+The minimum number of records require to do a direct scan of all G keys
+* rather than indexed lookups.  A value of 0 means always do indexed lookups.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3146,7 +3692,7 @@ generated snippet.
 .INDENT 3.5
 The absolute base path to the search stopword lists. If not specified,
 no stopwords will be taken into account during search indexing. Currently,
-the only supported and default stop word file is english.list.
+the only supported and default stop word file is english.txt.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3172,7 +3718,7 @@ This option MUST be specified for xapian search.
 .INDENT 3.5
 The cyrusdb backend to use for the seen state.
 .sp
-Allowed values: \fIflat\fP, \fIskiplist\fP, \fItwoskip\fP, \fIlmdb\fP
+Allowed values: \fIflat\fP, \fIskiplist\fP, \fItwoskip\fP, \fIzeroskip\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -3181,6 +3727,16 @@ Allowed values: \fIflat\fP, \fIskiplist\fP, \fItwoskip\fP, \fIlmdb\fP
 .INDENT 3.5
 The pathname of the sendmail executable.  Sieve invokes sendmail
 for sending rejections, redirects and vacation responses.
+.UNINDENT
+.UNINDENT
+.sp
+\fBsendmail_auth_id:\fP CYRUS_SENDMAIL_AUTH_ID
+.INDENT 0.0
+.INDENT 3.5
+The name of an environment variable to set when invoking sendmail.
+The value of this environment variable will contain the user id
+of the currently authenticated user. If no user is authenticated
+the environment variable is not set.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3290,7 +3846,17 @@ Otherwise, timsieved will proxy traffic to the remote server.
 .UNINDENT
 .UNINDENT
 .sp
-\fBsieve_extensions:\fP fileinto reject vacation vacation\-seconds imapflags notify envelope relational regex subaddress copy date index imap4flags mailbox mboxmetadata servermetadata variables
+\fBsieve_duplicate_max_expiration:\fP 90d
+.INDENT 0.0
+.INDENT 3.5
+Maximum expiration time for duplicate message tracking records.
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
+.UNINDENT
+.UNINDENT
+.sp
+\fBsieve_extensions:\fP fileinto reject vacation vacation\-seconds imapflags notify include envelope environment body relational regex subaddress copy date index imap4flags mailbox mboxmetadata servermetadata variables editheader extlists duplicate ihave fcc special\-use redirect\-dsn redirect\-deliverby mailboxid x\-cyrus\-log x\-cyrus\-jmapquery x\-cyrus\-snooze
 .INDENT 0.0
 .INDENT 3.5
 Space\-separated list of Sieve extensions allowed to be used in
@@ -3299,7 +3865,7 @@ previously installed script will be unaffected by this option and
 will continue to execute regardless of the extensions used.  This
 option has no effect on options that are disabled at compile time
 (e.g., "regex").
-Allowed values: \fIfileinto\fP, \fIreject\fP, \fIvacation\fP, \fIvacation\-seconds\fP, \fIimapflags\fP, \fInotify\fP, \fIinclude\fP, \fIenvelope\fP, \fIbody\fP, \fIrelational\fP, \fIregex\fP, \fIsubaddress\fP, \fIcopy\fP, \fIdate\fP, \fIindex\fP, \fIimap4flags\fP, \fImailbox\fP, \fImboxmetadata\fP, \fIservermetadata\fP, \fIvariables\fP
+Allowed values: \fIfileinto\fP, \fIreject\fP, \fIvacation\fP, \fIvacation\-seconds\fP, \fIimapflags\fP, \fInotify\fP, \fIinclude\fP, \fIenvelope\fP, \fIenvironment\fP, \fIbody\fP, \fIrelational\fP, \fIregex\fP, \fIsubaddress\fP, \fIcopy\fP, \fIdate\fP, \fIindex\fP, \fIimap4flags\fP, \fImailbox\fP, \fImboxmetadata\fP, \fIservermetadata\fP, \fIvariables\fP, \fIeditheader\fP, \fIextlists\fP, \fIduplicate\fP, \fIihave\fP, \fIfcc\fP, \fIspecial\-use\fP, \fIredirect\-dsn\fP, \fIredirect\-deliverby\fP, \fImailboxid\fP, \fIx\-cyrus\-log\fP, \fIx\-cyrus\-jmapquery\fP, \fIx\-cyrus\-snooze\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -3336,19 +3902,34 @@ SASL authentication, per draft\-martin\-managesieve\-12.txt .
 .UNINDENT
 .UNINDENT
 .sp
-\fBsieve_vacation_min_response:\fP 259200 /* 3 days */
+\fBsieve_use_lmtp_reject:\fP 1
 .INDENT 0.0
 .INDENT 3.5
-Minimum time interval (in seconds) between consecutive vacation responses,
-per draft\-ietf\-vacation\-seconds.txt .
+Enabled by default.  If reject can be done via LMTP, then return a 550
+rather than generating the bounce message in Cyrus.
 .UNINDENT
 .UNINDENT
 .sp
-\fBsieve_vacation_max_response:\fP 7776000 /* 90 days */
+\fBsieve_vacation_min_response:\fP 3d
 .INDENT 0.0
 .INDENT 3.5
-Maximum time interval (in seconds) between consecutive vacation responses,
-per draft\-ietf\-vacation\-seconds.txt .
+Minimum time interval between consecutive vacation responses, per
+draft\-ietf\-vacation\-seconds.txt.  The default is 3 days.
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
+.UNINDENT
+.UNINDENT
+.sp
+\fBsieve_vacation_max_response:\fP 90d
+.INDENT 0.0
+.INDENT 3.5
+Maximum time interval between consecutive vacation responses, per
+draft\-ietf\-vacation\-seconds.txt.  The default is 90 days.  The
+minimum is 7 days.
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3413,6 +3994,75 @@ not sync writes to the disk.  Enabling this option is NOT RECOMMENDED.
 .UNINDENT
 .UNINDENT
 .sp
+\fBsmtp_backend:\fP sendmail
+.INDENT 0.0
+.INDENT 3.5
+The SMTP backend to use for sending email.
+.sp
+The "host" backend sends message submissions via
+a TCP socket to the SMTP host defined in the config
+option smtp_host.
+.sp
+The "sendmail" backend forks the Cyrus process into
+the executable defined in the config option sendmail.
+The executable must accept "\-bs" as command line
+argument, read from stdin and must implement the minimum
+SMTP protocol as defined in section 4.5.1 of \fI\%RFC 5321\fP\&.
+.sp
+If the SMTP EHLO command reports AUTH (\fI\%RFC 4954\fP) as a
+supported extension, then the MAIL FROM command includes
+the AUTH parameter, with its value set to the name of any
+authenticated user which triggered the email. The AUTH
+parameter is omitted if the user is unknown to the calling
+process.
+.sp
+If the directory
+\fIconfigdirectory\fP/log/smtpclient.\fIsmtp_backend\fP
+exists, then telemetry logs for outgoing SMTP sessions will
+be created in this directory.
+.sp
+Allowed values: \fIhost\fP, \fIsendmail\fP
+.UNINDENT
+.UNINDENT
+.sp
+\fBsmtp_host:\fP localhost:587
+.INDENT 0.0
+.INDENT 3.5
+The SMTP host to use for sending mail (also see the
+smtp_backend option). The value of this option must
+the name or IP address of a TCP host, followed optionally
+by a colon and the port or service to use. The default
+port is 587. TLS may be activated by appending "/tls"
+to the value. Authentication is enabled if smtp_auth_authname
+is set. Authentication can be explicitly disabled by appending
+"/noauth" to the host address.
+.UNINDENT
+.UNINDENT
+.sp
+\fBsmtp_auth_authname:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+The authentication name to use when authenticating to the SMTP
+server defined in smtp_host.
+.UNINDENT
+.UNINDENT
+.sp
+\fBsmtp_auth_password:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+The password to use when authenticating to the SMTP server defined
+in smtp_host.
+.UNINDENT
+.UNINDENT
+.sp
+\fBsmtp_auth_realm:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+The authentication SASL realm to use when authenticating to a SMTP
+server.
+.UNINDENT
+.UNINDENT
+.sp
 \fBsoft_noauth:\fP 1
 .INDENT 0.0
 .INDENT 3.5
@@ -3427,7 +4077,7 @@ successfully authenticate.  Otherwise lmtpd returns permanent failures
 .INDENT 3.5
 The cyrusdb backend to use for caching sort results (currently only
 used for xconvmultisort)
-Allowed values: \fIskiplist\fP, \fItwoskip\fP, \fIlmdb\fP
+Allowed values: \fIskiplist\fP, \fItwoskip\fP, \fIzeroskip\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -3442,36 +4092,21 @@ if needed.
 .UNINDENT
 .UNINDENT
 .sp
-\fBspecialusealways:\fP 0
+\fBspecialuse_protect:\fP \eArchive \eDrafts \eImportant \eJunk \eSent \eTrash
+.INDENT 0.0
+.INDENT 3.5
+Whitespace separated list of special\-use attributes
+to protect the mailboxes for.  If set, don\(aqt allow
+mailboxes with these special use attributes to be deleted
+or renamed to have a different parent. Default is the built\-in list
+.UNINDENT
+.UNINDENT
+.sp
+\fBspecialusealways:\fP 1
 .INDENT 0.0
 .INDENT 3.5
 If enabled, this option causes LIST and LSUB output to always include
 the XLIST "special\-use" flags
-.UNINDENT
-.UNINDENT
-.sp
-\fBsphinx_text_excludes_odd_headers:\fP 0
-.INDENT 0.0
-.INDENT 3.5
-If enabled, Sphinx will perform a TEXT search as if it matches
-FROM, TO, CC, BCC or SUBJECT but not any other headers.  This
-is contrary to the RFC but a more useful behaviour for most
-users.  Default: disabled.
-.UNINDENT
-.UNINDENT
-.sp
-\fBsphinx_socket:\fP {configdirectory}/socket/sphinx
-.INDENT 0.0
-.INDENT 3.5
-Unix domain socket that the Sphinx searchd
-daemons listens on.
-.UNINDENT
-.UNINDENT
-.sp
-\fBsphinx_pidfile:\fP /var/run/sphinx.pid
-.INDENT 0.0
-.INDENT 3.5
-File where the Sphinx searchd daemon writes its pid.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3519,6 +4154,43 @@ If enabled, a secure connection will be made to the SQL server.
 .UNINDENT
 .UNINDENT
 .sp
+\fBsrs_alwaysrewrite:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+If true, perform SRS rewriting for ALL forwarding, even when not required.
+.UNINDENT
+.UNINDENT
+.sp
+\fBsrs_domain:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+The domain to use in rewritten addresses. This must point only to machines
+which know the encoding secret used by this system. When present, SRS is
+enabled.
+.UNINDENT
+.UNINDENT
+.sp
+\fBsrs_hashlength:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+The hash length to generate in a rewritten address.
+.UNINDENT
+.UNINDENT
+.sp
+\fBsrs_secrets:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+A list of secrets with which to generate addresses.
+.UNINDENT
+.UNINDENT
+.sp
+\fBsrs_separator:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+The separator to appear immediately after SRS[01] in rewritten addresses.
+.UNINDENT
+.UNINDENT
+.sp
 \fBsrvtab:\fP <empty string>
 .INDENT 0.0
 .INDENT 3.5
@@ -3543,7 +4215,7 @@ use with caution.
 .INDENT 3.5
 The cyrusdb backend to use for the subscriptions list.
 .sp
-Allowed values: \fIflat\fP, \fIskiplist\fP, \fItwoskip\fP, \fIlmdb\fP
+Allowed values: \fIflat\fP, \fIskiplist\fP, \fItwoskip\fP, \fIzeroskip\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -3570,7 +4242,7 @@ Enable/disable the imap status cache.
 .INDENT 3.5
 The cyrusdb backend to use for the imap status cache.
 .sp
-Allowed values: \fIskiplist\fP, \fIsql\fP, \fItwoskip\fP, \fIlmdb\fP
+Allowed values: \fIskiplist\fP, \fIsql\fP, \fItwoskip\fP, \fIzeroskip\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -3676,13 +4348,16 @@ Prefix with a channel name to only apply for that channel
 .UNINDENT
 .UNINDENT
 .sp
-\fBsync_repeat_interval:\fP 1
+\fBsync_repeat_interval:\fP 1s
 .INDENT 0.0
 .INDENT 3.5
-Minimum interval (in seconds) between replication runs in rolling
-replication mode. If a replication run takes longer than this
-time, we repeat immediately.
-Prefix with a channel name to only apply for that channel
+Minimum interval between replication runs in rolling replication
+mode. If a replication run takes longer than this time, we repeat
+immediately.  Prefix with a channel name to only apply for that
+channel.
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3695,11 +4370,15 @@ Prefix with a channel name to only apply for that channel
 .UNINDENT
 .UNINDENT
 .sp
-\fBsync_timeout:\fP 1800
+\fBsync_timeout:\fP 30m
 .INDENT 0.0
 .INDENT 3.5
-Number of seconds to wait for a response before returning a timeout
-failure when talking to a replication peer (client or server).
+How long to wait for a response before returning a timeout failure
+when talking to a replication peer (client or server).  The minimum
+duration is 3 seconds, the default is 30 minutes.
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3716,7 +4395,14 @@ apply only for that channel
 \fBsyslog_prefix:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-String to be prepended to the process name in syslog entries.
+String to be prepended to the process name in syslog entries. Can
+be further overridden by setting the $CYRUS_SYSLOG_PREFIX environment
+variable.
+.sp
+Using the $CYRUS_SYSLOG_PREFIX environment variable has the additional
+advantage that it can be set before the \fBimapd.conf\fP is read, so
+errors while reading the config file can be syslogged with the correct
+prefix.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3747,15 +4433,21 @@ connection dead (0 == system default)
 \fBtcp_keepalive_idle:\fP 0
 .INDENT 0.0
 .INDENT 3.5
-Number of seconds a connection must be idle before keepalive
-probes are sent (0 == system default)
+How long a connection must be idle before keepalive probes are sent
+(0 == system default).
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
 \fBtcp_keepalive_intvl:\fP 0
 .INDENT 0.0
 .INDENT 3.5
-Number of seconds between keepalive probes (0 == system default)
+Time between keepalive probes (0 == system default).
+.sp
+For backward compatibility, if no unit is specified, seconds is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3773,22 +4465,27 @@ If true, log by sessionid instead of PID for telemetry
 .UNINDENT
 .UNINDENT
 .sp
-\fBtimeout:\fP 32
+\fBtimeout:\fP 32m
 .INDENT 0.0
 .INDENT 3.5
-The length of the IMAP server\(aqs inactivity autologout timer,
-in minutes.  The minimum value is 30.  The default is 32 to
-allow a bit of leeway for clients that try to NOOP every 30
-minutes.
+The length of the IMAP server\(aqs inactivity autologout timer.
+The minimum value is 30 minutes.  The default is 32 minutes,
+to allow a bit of leeway for clients that try to NOOP every
+30 minutes.
+.sp
+For backward compatibility, if no unit is specified, minutes
+is assumed.
 .UNINDENT
 .UNINDENT
 .sp
-\fBimapidletimeout:\fP 0
+\fBimapidletimeout:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-Timeout for idling clients (\fI\%RFC 2177\fP) in minutes. If set to
-zero (the default) or less, the value of "timeout" will be
-used instead.
+Timeout for idling clients (\fI\%RFC 2177\fP).  If not set (the default),
+the value of "timeout" will be used instead.
+.sp
+For backward compatibility, if no unit is specified, minutes
+is assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3843,6 +4540,13 @@ The list of SSL/TLS ciphers to allow.  The format of the string
 See also Mozilla\(aqs server\-side TLS recommendations:
 .sp
 \fI\%https://wiki.mozilla.org/Security/Server_Side_TLS\fP
+.UNINDENT
+.UNINDENT
+.sp
+\fBtls_crl_file:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+Path to a file containing the Certificate Revocation List
 .UNINDENT
 .UNINDENT
 .sp
@@ -3941,6 +4645,16 @@ offered by the server, when cyrus acts as client.
 .INDENT 0.0
 .INDENT 3.5
 File containing the certificate, including the full chain, presented to clients.
+Two certificates can be set, e.g RSA and EC, if the filenames are separated with
+comma without spaces.
+.UNINDENT
+.UNINDENT
+.sp
+\fBtls_server_dhparam:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+File containing the DH parameters belonging to the certificate in
+tls_server_cert.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3948,7 +4662,9 @@ File containing the certificate, including the full chain, presented to clients.
 .INDENT 0.0
 .INDENT 3.5
 File containing the private key belonging to the certificate in
-tls_server_cert.
+tls_server_cert.  If not set, tls_server_cert must contain both private and
+public key.  Two files with keys can be set, if two certifates are used, in
+which case the files must be separated with comma without spaces
 .UNINDENT
 .UNINDENT
 .sp
@@ -3957,7 +4673,7 @@ tls_server_cert.
 .INDENT 3.5
 The cyrusdb backend to use for the TLS cache.
 .sp
-Allowed values: \fIskiplist\fP, \fIsql\fP, \fItwoskip\fP, \fIlmdb\fP
+Allowed values: \fIskiplist\fP, \fIsql\fP, \fItwoskip\fP, \fIzeroskip\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -3969,12 +4685,15 @@ will be configdirectory/tls_sessions.db
 .UNINDENT
 .UNINDENT
 .sp
-\fBtls_session_timeout:\fP 1440
+\fBtls_session_timeout:\fP 24h
 .INDENT 0.0
 .INDENT 3.5
-The length of time (in minutes) that a TLS session will be cached
-for later reuse.  The maximum value is 1440 (24 hours), the
-default.  A value of 0 will disable session caching.
+The length of time that a TLS session will be cached for later
+reuse.  The maximum value is 24 hours, also the default.  A
+value of 0 will disable session caching.
+.sp
+For backward compatibility, if no unit is specified, minutes is
+assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -4011,7 +4730,7 @@ The umask value used by various Cyrus IMAP programs.
 .INDENT 3.5
 The cyrusdb backend to use for the user access list.
 .sp
-Allowed values: \fIflat\fP, \fIskiplist\fP, \fIsql\fP, \fItwoskip\fP, \fIlmdb\fP
+Allowed values: \fIflat\fP, \fIskiplist\fP, \fIsql\fP, \fItwoskip\fP, \fIzeroskip\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -4088,6 +4807,24 @@ Allowed values: \fIoff\fP, \fIuserid\fP, \fIon\fP
 .UNINDENT
 .UNINDENT
 .sp
+\fBvirusscan_notification_subject:\fP Automatically deleted mail
+.INDENT 0.0
+.INDENT 3.5
+The text used in the subject of email notifications created by
+\fBcyr_virusscan(8)\fP when deleting infected mail.
+.UNINDENT
+.UNINDENT
+.sp
+\fBvirusscan_notification_template:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+The absolute path to a file containing a template to use to describe
+infected messages that have been deleted by \fBcyr_virusscan(8)\fP\&.
+See \fBcyr_virusscan(8)\fP for specification of the format of this file.
+If not specified, the builtin default template will be used.
+.UNINDENT
+.UNINDENT
+.sp
 \fBxbackup_enabled:\fP 0
 .INDENT 0.0
 .INDENT 3.5
@@ -4122,9 +4859,9 @@ INBOX, NOT an email address!
 \fBzoneinfo_db:\fP twoskip
 .INDENT 0.0
 .INDENT 3.5
-The cyrusdb backend to use for zoneinfo.
-.sp
-Allowed values: \fIflat\fP, \fIskiplist\fP, \fItwoskip\fP, \fIlmdb\fP
+The cyrusdb backend to use for zoneinfo.  This database is used by the
+"tzdist" \fIhttp_modules\fP, and is managed by \fBctl_zoneinfo(8)\fP\&.
+Allowed values: \fIflat\fP, \fIskiplist\fP, \fItwoskip\fP, \fIzeroskip\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -4133,6 +4870,19 @@ Allowed values: \fIflat\fP, \fIskiplist\fP, \fItwoskip\fP, \fIlmdb\fP
 .INDENT 3.5
 The absolute path to the zoneinfo db file.  If not specified,
 will be configdirectory/zoneinfo.db
+.UNINDENT
+.UNINDENT
+.sp
+\fBzoneinfo_dir:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+The absolute path to the zoneinfo directory, containing timezone
+definitions as generated by the vzic tool.  If not specified, whatever
+definitions libical finds will be used.
+.sp
+If you are providing a Time Zone Data Distribution Service (i.e. you have
+"tzdist" listed in \fIhttp_modules\fP), then this configuration option MUST
+be specified.
 .UNINDENT
 .UNINDENT
 .sp
@@ -4173,14 +4923,14 @@ features.
 .UNINDENT
 .UNINDENT
 .sp
-\fBopenio_rawx_timeout:\fP 30
+\fBopenio_rawx_timeout:\fP 30s
 .INDENT 0.0
 .INDENT 3.5
 The OpenIO timeout to query to the RAWX services (default 30 sec).
 .UNINDENT
 .UNINDENT
 .sp
-\fBopenio_proxy_timeout:\fP 5
+\fBopenio_proxy_timeout:\fP 5s
 .INDENT 0.0
 .INDENT 3.5
 The OpenIO timeout to query to the PROXY services (default 5 sec).
@@ -4246,6 +4996,6 @@ If enabled, use FastMail style sharing (oldschool full server paths)
 .SH AUTHOR
 The Cyrus Team
 .SH COPYRIGHT
-1993-2017, The Cyrus Team
+1993-2018, The Cyrus Team
 .\" Generated by docutils manpage writer.
 .

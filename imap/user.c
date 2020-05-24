@@ -69,6 +69,7 @@
 # endif
 #endif
 
+#include "assert.h"
 #include "global.h"
 #include "mailbox.h"
 #include "mboxkey.h"
@@ -192,6 +193,8 @@ static int user_deletesieve(const char *user)
 EXPORTED int user_deletedata(const char *userid, int wipe_user)
 {
     char *fname;
+
+    assert(user_isnamespacelocked(userid));
 
     /* delete seen state and mbox keys */
     if(wipe_user) {
@@ -423,7 +426,7 @@ EXPORTED int user_copyquotaroot(const char *oldname, const char *newname)
     quota_init(&q, oldname);
     r = quota_read(&q, NULL, 0);
     if (!r)
-        mboxlist_setquotas(newname, q.limits, 0);
+        mboxlist_setquotas(newname, q.limits, 0, 0);
     quota_free(&q);
 
     return r;
@@ -450,7 +453,7 @@ static int find_cb(void *rockp __attribute__((unused)),
     int r;
 
     root = xstrndup(key, keylen);
-    r = quota_deleteroot(root);
+    r = quota_deleteroot(root, 0);
     free(root);
 
     return r;
@@ -459,11 +462,8 @@ static int find_cb(void *rockp __attribute__((unused)),
 int user_deletequotaroots(const char *userid)
 {
     char *inbox = mboxname_user_mbox(userid, NULL);
-    int r = cyrusdb_foreach(qdb, inbox, strlen(inbox),
-                            &find_p, &find_cb, inbox, NULL);
-
+    int r = quotadb_foreach(inbox, strlen(inbox), &find_p, &find_cb, inbox);
     free(inbox);
-
     return r;
 }
 
@@ -483,4 +483,41 @@ EXPORTED char *user_hash_meta(const char *userid, const char *suffix)
 HIDDEN char *user_hash_subs(const char *userid)
 {
     return user_hash_meta(userid, FNAME_SUBSSUFFIX);
+}
+
+static const char *_namelock_name_from_userid(const char *userid)
+{
+    const char *p;
+    static struct buf buf = BUF_INITIALIZER;
+    if (!userid) userid = ""; // no userid == global lock
+
+    buf_setcstr(&buf, "*U*");
+
+    for (p = userid; *p; p++) {
+        switch(*p) {
+            case '.':
+                buf_putc(&buf, '^');
+                break;
+            default:
+                buf_putc(&buf, *p);
+                break;
+        }
+    }
+
+    return buf_cstring(&buf);
+}
+
+EXPORTED struct mboxlock *user_namespacelock(const char *userid)
+{
+    struct mboxlock *namelock;
+    const char *name = _namelock_name_from_userid(userid);
+    int r = mboxname_lock(name, &namelock, LOCK_EXCLUSIVE);
+    if (r) return NULL;
+    return namelock;
+}
+
+EXPORTED int user_isnamespacelocked(const char *userid)
+{
+    const char *name = _namelock_name_from_userid(userid);
+    return mboxname_islocked(name);
 }

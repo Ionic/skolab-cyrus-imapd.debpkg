@@ -64,7 +64,9 @@ enum { MBNAME_INBOX = 1,
        MBNAME_ALTPREFIX = 4,
        MBNAME_OWNER = 5,
        MBNAME_OTHERUSER = 6,
-       MBNAME_SHARED = 7 };
+       MBNAME_SHARED = 7,
+       MBNAME_OWNERDELETED = 8,
+       MBNAME_OTHERDELETED = 9 };
 
 /* structure holding server namespace info */
 struct namespace {
@@ -125,6 +127,8 @@ char *mboxname_to_external(const char *intname, const struct namespace *ns, cons
 int mboxname_lock(const char *mboxname, struct mboxlock **mboxlockptr,
                   int locktype);
 void mboxname_release(struct mboxlock **mboxlockptr);
+int mboxname_islocked(const char *mboxname);
+struct mboxlock *mboxname_usernamespacelock(const char *mboxname);
 
 /* Create namespace based on config options. */
 int mboxname_init_namespace(struct namespace *namespace, int isadmin);
@@ -139,6 +143,8 @@ int mboxname_userownsmailbox(const char *userid, const char *name);
  * returns 1, otherwise returns 0.
  */
 int mboxname_isusermailbox(const char *name, int isinbox);
+
+int mboxname_isusertrash(const char *name);
 
 /*
  * If (internal) mailbox 'name' is in the DELETED namespace.
@@ -177,13 +183,34 @@ int mboxname_isdavnotificationsmailbox(const char *name, int mbtype);
  */
 int mboxname_isnotesmailbox(const char *name, int mbtype);
 
-/* If (internal) mailbox is a user's mail outbox,
+/*
+ * If (internal) mailbox 'name' is a user's #jmapsubmission mailbox
  * returns boolean
  */
-int mboxname_isoutbox(const char *name);
+int mboxname_issubmissionmailbox(const char *name, int mbtype);
+
+/*
+ * If (internal) mailbox 'name' is a user's #jmappushsubscription mailbox
+ * returns boolean
+ */
+int mboxname_ispushsubscriptionmailbox(const char *name, int mbtype);
+
+#define mboxname_isnonimapmailbox(name, mbtype)            \
+    (mboxname_iscalendarmailbox(name, mbtype)              \
+     || mboxname_isaddressbookmailbox(name, mbtype)        \
+     || mboxname_isdavdrivemailbox(name, mbtype)           \
+     || mboxname_isdavnotificationsmailbox(name, mbtype)   \
+     || mboxname_isnotesmailbox(name, mbtype)              \
+     || mboxname_issubmissionmailbox(name, mbtype)         \
+     || mboxname_ispushsubscriptionmailbox(name, mbtype))
 
 /* check if one mboxname is a parent or same as the other */
 int mboxname_is_prefix(const char *longstr, const char *shortstr);
+/* check if one mboxname contains the parent of the other mboxname */
+int mboxname_contains_parent(const char *mboxname, const char *prev);
+/* Return the internal mailbox name that is ancestor to mboxname1
+ * and mboxname2. Return NULL for INBOX or different owners. */
+char *mboxname_common_ancestor(const char *mboxname1, const char *mboxname2);
 
 void mboxname_hash(char *buf, size_t buf_len,
                    const char *root,
@@ -245,6 +272,7 @@ void mboxname_todeleted(const char *name, char *result, int withtime);
  */
 int mboxname_make_parent(char *namebuf);
 
+
 char *mboxname_conf_getpath(const mbname_t *mbname,
                             const char *suffix);
 
@@ -262,6 +290,10 @@ struct mboxname_counters {
     modseq_t caldavfoldersmodseq;
     modseq_t carddavfoldersmodseq;
     modseq_t notesfoldersmodseq;
+    modseq_t quotamodseq;
+    modseq_t raclmodseq;
+    modseq_t submissionmodseq;
+    modseq_t submissionfoldersmodseq;
     uint32_t uidvalidity;
 };
 
@@ -271,5 +303,11 @@ modseq_t mboxname_setmodseq(const char *mboxname, modseq_t val, int mbtype, int 
 uint32_t mboxname_readuidvalidity(const char *mboxname);
 uint32_t mboxname_nextuidvalidity(const char *mboxname, uint32_t last);
 uint32_t mboxname_setuidvalidity(const char *mboxname, uint32_t val);
+modseq_t mboxname_readquotamodseq(const char *mboxname);
+modseq_t mboxname_nextquotamodseq(const char *mboxname, modseq_t last);
+modseq_t mboxname_setquotamodseq(const char *mboxname, modseq_t val);
+modseq_t mboxname_readraclmodseq(const char *mboxname);
+modseq_t mboxname_nextraclmodseq(const char *mboxname, modseq_t last);
+modseq_t mboxname_setraclmodseq(const char *mboxname, modseq_t val);
 
 #endif

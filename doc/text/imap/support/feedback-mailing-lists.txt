@@ -30,19 +30,19 @@ The list archives can be accessed as follows:
 
 * **cyrus-announce**
 
-     Anonymous IMAP : Web/HTTP or Pipermail
+     Web/HTTP via Pipermail
 
 * **info-cyrus**
 
-     Anonymous IMAP : Web/HTTP or Pipermail
+     Web/HTTP via Pipermail
 
 * **cyrus-sasl**
 
-     Anonymous IMAP: Web/HTTP or Pipermail
+     Web/HTTP via Pipermail
 
 * **cyrus-devel**
 
-     Anonymous IMAP : Web/HTTP or Pipermail
+     Web/HTTP via Pipermail
 
 
 Subscribe/Unsubscribe

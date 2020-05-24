@@ -214,10 +214,6 @@ Note: If your configuration uses "quota_db: quotalegacy", then
 
       Unix domain socket that the mail notification daemon listens on.
 
-   "sphinx_socket:" {configdirectory}/socket/sphinx
-
-      Unix domain socket that the Sphinx searchd daemons listens on.
-
 
 Per-user State Directories
 **************************

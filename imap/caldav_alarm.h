@@ -57,11 +57,17 @@ int caldav_alarm_init(void);
 int caldav_alarm_done(void);
 
 /* add a calendar alarm */
-int caldav_alarm_add_record(struct mailbox *mailbox, const struct index_record *record,
+int caldav_alarm_add_record(struct mailbox *mailbox,
+                            const struct index_record *record,
                             icalcomponent *ical);
 
 /* make sure that the alarms match the annotation */
-int caldav_alarm_touch_record(struct mailbox *mailbox, const struct index_record *record);
+int caldav_alarm_touch_record(struct mailbox *mailbox,
+                              const struct index_record *record);
+
+/* set the caldav_alarm db nextcheck field for the record (from sync_support) */
+int caldav_alarm_sync_nextcheck(struct mailbox *mailbox,
+                                const struct index_record *record);
 
 /* delete all alarms matching the event */
 int caldav_alarm_delete_record(const char *mboxname, uint32_t uid);
@@ -73,7 +79,7 @@ int caldav_alarm_delete_mailbox(const char *mboxname);
 int caldav_alarm_delete_user(const char *userid);
 
 /* distribute alarms with triggers in the next minute */
-int caldav_alarm_process(time_t runtime);
+int caldav_alarm_process(time_t runtime, time_t *next);
 
 /* upgrade old databases */
 int caldav_alarm_upgrade();

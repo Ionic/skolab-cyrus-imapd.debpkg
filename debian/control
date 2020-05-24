@@ -17,22 +17,30 @@ Build-Depends: bison,
                libical-dev (>= 2.0.0),
                libjansson-dev,
                libclamav-dev,
+               libcunit1-dev,
                libkrb5-dev,
                libkvm-dev [kfreebsd-any],
                libldap2-dev,
+               libnghttp2-dev,
                libopendkim-dev,
                libpam0g-dev,
+               libpod-pom-view-restructured-perl,
                libpcre3-dev,
+               libbrotli-dev,
+               libpq-dev,
                libsasl2-dev,
                libsasl2-modules,
+               libshp-dev,
                libsnmp-dev,
                libsqlite3-dev,
                libssl-dev,
                libtool,
                libwrap0-dev,
+               libwslay-dev,
                libxapian-dev,
                libxml2-dev,
                libzephyr-dev,
+               libzstd-dev,
                perl,
                pkg-config,
                po-debconf,
@@ -42,7 +50,7 @@ Build-Depends: bison,
                unicode-data,
                vim-common,
                xutils-dev
-Standards-Version: 4.4.1
+Standards-Version: 4.5.0
 Vcs-Browser: https://salsa.debian.org/debian/cyrus-imapd
 Vcs-Git: https://salsa.debian.org/debian/cyrus-imapd.git
 Homepage: https://www.cyrusimap.org/
@@ -179,10 +187,11 @@ Description: Cyrus mail system - POP3 support
  For more information, please see the cyrus-common package.
 
 Package: cyrus-admin
-Architecture: all
+Architecture: any
 Depends: cyrus-common,
          libcyrus-imap-perl (>= ${binary:Version}),
          ${misc:Depends},
+         ${shlibs:Depends},
          ${perl:Depends}
 Suggests: sasl2-bin
 Pre-Depends: ${misc:Pre-Depends}

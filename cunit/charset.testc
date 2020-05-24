@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "cunit/cunit.h"
+#include "cunit/cyrunit.h"
 #include "charset.h"
 
 extern int charset_debug;
@@ -12,22 +12,18 @@ extern int charset_debug;
 
 static void test_lookupname(void)
 {
-    charset_t cs, cs2;
+    charset_t cs;
 
     /* us-ascii must exist */
     cs = charset_lookupname("us-ascii");
     CU_ASSERT_PTR_NOT_NULL(cs);
+    charset_free(&cs);
 
     /* names are case-insensitive */
-    cs2 = charset_lookupname("US-ASCII");
-    CU_ASSERT_PTR_NOT_NULL(cs2);
-    CU_ASSERT_STRING_EQUAL(charset_name(cs), charset_name(cs2));
-    charset_free(&cs2);
-
-    cs2 = charset_lookupname("Us-AsCiI");
-    CU_ASSERT_PTR_NOT_NULL(cs2);
-    CU_ASSERT_STRING_EQUAL(charset_name(cs), charset_name(cs2));
-    charset_free(&cs2);
+    cs = charset_lookupname("US-ASCII");
+    CU_ASSERT_PTR_NOT_NULL(cs);
+    CU_ASSERT_STRING_EQUAL("us-ascii", charset_canon_name(cs));
+    CU_ASSERT_STRING_EQUAL("US-ASCII", charset_alias_name(cs));
     charset_free(&cs);
 
     /* some others must also exist */
@@ -41,6 +37,8 @@ static void test_lookupname(void)
 
     cs = charset_lookupname("iso-8859-1");
     CU_ASSERT_PTR_NOT_NULL(cs);
+    CU_ASSERT_STRING_EQUAL("windows-1252", charset_canon_name(cs));
+    CU_ASSERT_STRING_EQUAL("iso-8859-1", charset_alias_name(cs));
     charset_free(&cs);
 
     /*
@@ -49,20 +47,22 @@ static void test_lookupname(void)
      */
     cs = charset_lookupname("windows-1252");
     CU_ASSERT_PTR_NOT_NULL(cs);
-    CU_ASSERT_STRING_EQUAL(charset_name(cs), "windows-1252");
+    CU_ASSERT_STRING_EQUAL("windows-1252", charset_canon_name(cs));
+    CU_ASSERT_STRING_EQUAL("windows-1252", charset_alias_name(cs));
     charset_free(&cs);
 
     cs = charset_lookupname("1252");
     CU_ASSERT_PTR_NOT_NULL(cs);
-    CU_ASSERT_STRING_EQUAL(charset_name(cs), "windows-1252");
+    CU_ASSERT_STRING_EQUAL("windows-1252", charset_canon_name(cs));
+    CU_ASSERT_STRING_EQUAL("1252", charset_alias_name(cs));
     charset_free(&cs);
 
-    /* But still use the ICU name if there's no good alias for it */
+    /* But still use the ICU name if there's no Cyrus canon name */
     cs = charset_lookupname("ebcdic-ar");
     CU_ASSERT_PTR_NOT_NULL(cs);
-    CU_ASSERT_STRING_EQUAL(charset_name(cs), "ibm-16804_X110-1999");
+    CU_ASSERT_STRING_EQUAL("ibm-16804_X110-1999", charset_canon_name(cs));
+    CU_ASSERT_STRING_EQUAL("ebcdic-ar", charset_alias_name(cs));
     charset_free(&cs);
-
 }
 
 static void test_to_utf8(void)
@@ -218,6 +218,43 @@ static void test_misc_charsets(void)
                        "\xD1\x94\xD1\x96\xD1\x97\xD2\x91"
                        "\xD0\x84\xD0\x86\xD0\x87\xD2\x90");
 
+    /* iso-8859-1 aliased to windows-1252. */
+    /* They differ in the range 0x80 to 0x9f, where iso-8859-1
+       has control chars that are mostly useless for emails.
+       windows-1252 encoding has visible characters in that range. */
+    TESTCASE("iso-8859-1", "\x80", "\xe2\x82\xac"); // Euro sign
+    TESTCASE("iso-8859-1", "\x81", "\xc2\x81"); // Unassigned
+    TESTCASE("iso-8859-1", "\x82", "\xe2\x80\x9a"); // Single Low-9 Quotation Mark
+    TESTCASE("iso-8859-1", "\x83", "\xc6\x92"); // Latin Small Letter F With Hook
+    TESTCASE("iso-8859-1", "\x84", "\xe2\x80\x9e"); // Double Low-9 Quotation Mark
+    TESTCASE("iso-8859-1", "\x85", "\xe2\x80\xa6"); // Horizontal Ellipsis
+    TESTCASE("iso-8859-1", "\x86", "\xe2\x80\xa0"); // Dagger
+    TESTCASE("iso-8859-1", "\x87", "\xe2\x80\xa1"); // Double Dagger
+    TESTCASE("iso-8859-1", "\x88", "\xcb\x86"); // Modifier Letter Circumflex Accent
+    TESTCASE("iso-8859-1", "\x89", "\xe2\x80\xb0"); // Per Mille Sign
+    TESTCASE("iso-8859-1", "\x8a", "\xc5\xa0"); // Latin Capital Letter S With Caron
+    TESTCASE("iso-8859-1", "\x8b", "\xe2\x80\xb9"); // Single Left-Pointing Angle Quotation Mark
+    TESTCASE("iso-8859-1", "\x8c", "\xc5\x92"); // Latin Capital Ligature OE
+    TESTCASE("iso-8859-1", "\x8d", "\xc2\x8d"); // Unassigned
+    TESTCASE("iso-8859-1", "\x8e", "\xc5\xbd"); // Latin Capital Letter Z With Caron
+    TESTCASE("iso-8859-1", "\x8f", "\xc2\x8f"); // Unassigned
+    TESTCASE("iso-8859-1", "\x90", "\xc2\x90"); // Unassigned
+    TESTCASE("iso-8859-1", "\x91", "\xe2\x80\x98"); // Left Single Quotation Mark
+    TESTCASE("iso-8859-1", "\x92", "\xe2\x80\x99"); // Right Single Quotation Mark
+    TESTCASE("iso-8859-1", "\x93", "\xe2\x80\x9c"); // Left Double Quotation Mark
+    TESTCASE("iso-8859-1", "\x94", "\xe2\x80\x9d"); // Right Double Quotation Mark
+    TESTCASE("iso-8859-1", "\x95", "\xe2\x80\xa2"); // Bullet
+    TESTCASE("iso-8859-1", "\x96", "\xe2\x80\x93"); // En Dash
+    TESTCASE("iso-8859-1", "\x97", "\xe2\x80\x94"); // Em Dash
+    TESTCASE("iso-8859-1", "\x98", "\xcb\x9c"); // Small Tilde
+    TESTCASE("iso-8859-1", "\x99", "\xe2\x84\xa2"); // Trade Mark Sign
+    TESTCASE("iso-8859-1", "\x9a", "\xc5\xa1"); // Latin Small Letter S With Caron
+    TESTCASE("iso-8859-1", "\x9b", "\xe2\x80\xba"); // Single Right-Pointing Angle Quotation Mark
+    TESTCASE("iso-8859-1", "\x9c", "\xc5\x93"); // Latin Small Ligature OE
+    TESTCASE("iso-8859-1", "\x9d", "\xc2\x9d"); // Unassigned
+    TESTCASE("iso-8859-1", "\x9e", "\xc5\xbe"); // Latin Small Letter Z With Caron
+    TESTCASE("iso-8859-1", "\x9f", "\xc5\xb8"); // Latin Capital Letter Y With Diaeresis
+
 #undef TESTCASE
 }
 
@@ -271,7 +308,7 @@ static void test_encode_mimeheader(void)
     { \
         static const char _in[] = (in); \
         static const char _exp[] = (exp); \
-        char *s = charset_encode_mimeheader(_in, 0); \
+        char *s = charset_encode_mimeheader(_in, 0, 0); \
         CU_ASSERT_PTR_NOT_NULL(s); \
         CU_ASSERT_STRING_EQUAL(s, _exp); \
         const char *p, *lf; \
@@ -297,12 +334,12 @@ static void test_encode_mimeheader(void)
 
     /* three-byte UTF-8 word barely fits line length limit */
     TESTCASE("0123456789012345678901234567890123456789012345678901234\xe2\x82\xac",
-            "=?UTF-8?Q?0123456789012345678901234567890123456789012345678901234=E2=82=AC?=");
+             "=?UTF-8?Q?0123456789012345678901234567890123456789012345678901234=E2=82=AC?=");
 
     /* three-byte UTF-8 word must not be split */
     TESTCASE("01234567890123456789012345678901234567890123456789012345\xe2\x82\xac",
-            "=?UTF-8?Q?01234567890123456789012345678901234567890123456789012345?="
-            "\r\n ""=?UTF-8?Q?=E2=82=AC?=");
+             "=?UTF-8?Q?01234567890123456789012345678901234567890123456789012345?="
+             "\r\n ""=?UTF-8?Q?=E2=82=AC?=");
 
 #undef TESTCASE
 }
@@ -311,6 +348,8 @@ static void test_encode_mimeheader(void)
 static void test_decode_mimeheader(void)
 {
     char *s;
+    static const char ERR_1[] = "=?ISO-8859-1?B?SWYgeW91IGNhbiByZWFkIHRoaXMgeW8=?= =?ISO-8859-2?B?dSB1bmRlcnN0YW5kIHRoZSBleGFtcGxlLg==?=";
+    static const char EXP_1[]= "IF YOU CAN READ THIS YOU UNDERSTAND THE EXAMPLE.";
     static const char ASCII_1[] = "Lorem IPSUM dolor \t \t  sit amet";
     static const char SEARCH_1[] = "LOREM IPSUM DOLOR SIT AMET";
     static const char ASCII_B64_2[] = "Lorem =?us-ascii?q?ipsum?= dolor "
@@ -341,6 +380,11 @@ static void test_decode_mimeheader(void)
     s = charset_decode_mimeheader(ASCII_1, flags);
     CU_ASSERT_PTR_NOT_NULL(s);
     CU_ASSERT_STRING_EQUAL(s, SEARCH_1);
+    free(s);
+
+    s = charset_decode_mimeheader(ERR_1, flags);
+    CU_ASSERT_PTR_NOT_NULL(s);
+    CU_ASSERT_STRING_EQUAL(s, EXP_1);
     free(s);
 
     s = charset_decode_mimeheader(ASCII_B64_2, flags);
@@ -389,13 +433,13 @@ static void test_decode_mimeheader(void)
     CU_ASSERT_STRING_EQUAL(s, HTML_4b);
     free(s);
 
-    flags = CHARSET_SNIPPET;
+    flags = CHARSET_KEEPCASE;
     s = charset_decode_mimeheader(HTML_4, flags);
     CU_ASSERT_PTR_NOT_NULL(s);
     CU_ASSERT_STRING_EQUAL(s, HTML_4c);
     free(s);
 
-    flags = CHARSET_SNIPPET|CHARSET_ESCAPEHTML;
+    flags = CHARSET_KEEPCASE|CHARSET_ESCAPEHTML;
     s = charset_decode_mimeheader(HTML_4, flags);
     CU_ASSERT_PTR_NOT_NULL(s);
     CU_ASSERT_STRING_EQUAL(s, HTML_4d);
@@ -477,6 +521,97 @@ static void test_mimeheader_badcharset(void)
     s = charset_decode_mimeheader(ASCII_1, flags);
     CU_ASSERT_PTR_NOT_NULL(s);
     CU_ASSERT_STRING_EQUAL(s, SEARCH_1);
+    free(s);
+}
+
+static void test_mimeheader_mergeqwords(void)
+{
+    int flags = CHARSET_SKIPDIACRIT | CHARSET_MERGESPACE | CHARSET_KEEPCASE;
+
+    static const char SPLIT_Q[] = "=?utf-8?q?=E2=82?= =?utf-8?q?=AC?=";
+    static const char SPLIT_B[] = "=?utf-8?b?wg==?= =?utf-8?b?oUhvbGEsc2XD?= =?utf-8?b?sW9yIQ==?=";
+
+    static const char REGRESSION_Q[] = "=?utf-8?q?=C2=A1Hola,?=  =?utf-8?q?se=C3=B1or!?=";
+    static const char REGRESSION_B[] = "=?utf-8?b?wqFIb2xhLA==?=  =?utf-8?b?c2XDsW9yIQ==?=";
+
+    char *s = charset_decode_mimeheader(SPLIT_Q, flags);
+    CU_ASSERT_PTR_NOT_NULL(s);
+    CU_ASSERT_STRING_EQUAL(s, "\xe2\x82\xac");
+    free(s);
+
+    s = charset_decode_mimeheader(SPLIT_B, flags);
+    CU_ASSERT_PTR_NOT_NULL(s);
+    CU_ASSERT_STRING_EQUAL(s, "¡Hola,señor!");
+    free(s);
+
+    s = charset_decode_mimeheader(REGRESSION_Q, flags);
+    CU_ASSERT_PTR_NOT_NULL(s);
+    CU_ASSERT_STRING_EQUAL(s, "¡Hola,señor!");
+    free(s);
+
+    s = charset_decode_mimeheader(REGRESSION_B, flags);
+    CU_ASSERT_PTR_NOT_NULL(s);
+    CU_ASSERT_STRING_EQUAL(s, "¡Hola,señor!");
+    free(s);
+}
+
+static void test_parse_mimexvalue(void)
+{
+    char *s;
+    struct buf lang = BUF_INITIALIZER;
+    static const char SIMPLE[] = "utf-8'en'foo";
+    static const char OCTETS[] = "utf-8''%F0%9F%98%80";
+    static const char LATIN1[] = "iso-8859-1'de'R%e4tsel";
+
+    s = charset_parse_mimexvalue(NULL, NULL);
+    CU_ASSERT_PTR_NULL(s);
+    free(s);
+
+    s = charset_parse_mimexvalue("foo", NULL);
+    CU_ASSERT_PTR_NULL(s);
+
+    s = charset_parse_mimexvalue(SIMPLE, &lang);
+    CU_ASSERT_PTR_NOT_NULL(s);
+    CU_ASSERT_STRING_EQUAL(s, "foo");
+    CU_ASSERT_STRING_EQUAL(buf_cstring(&lang), "en");
+    buf_reset(&lang);
+    free(s);
+
+    s = charset_parse_mimexvalue(OCTETS, NULL);
+    CU_ASSERT_PTR_NOT_NULL(s);
+    CU_ASSERT_STRING_EQUAL(s, "\xf0\x9f\x98\x80");
+    free(s);
+
+    s = charset_parse_mimexvalue(LATIN1, &lang);
+    CU_ASSERT_PTR_NOT_NULL(s);
+    CU_ASSERT_STRING_EQUAL(s, "Rätsel");
+    CU_ASSERT_STRING_EQUAL(buf_cstring(&lang), "de");
+    buf_reset(&lang);
+    free(s);
+
+    buf_free(&lang);
+}
+
+static void test_encode_mimexvalue(void)
+{
+    char *s;
+
+    s = charset_encode_mimexvalue(NULL, NULL);
+    CU_ASSERT_PTR_NULL(s);
+
+    s = charset_encode_mimexvalue("foo", NULL);
+    CU_ASSERT_PTR_NOT_NULL(s);
+    CU_ASSERT_STRING_EQUAL(s, "utf-8''foo");
+    free(s);
+
+    s = charset_encode_mimexvalue("foo", "en");
+    CU_ASSERT_PTR_NOT_NULL(s);
+    CU_ASSERT_STRING_EQUAL(s, "utf-8'en'foo");
+    free(s);
+
+    s = charset_encode_mimexvalue("R\xc3\xe4tsel", "de");
+    CU_ASSERT_PTR_NOT_NULL(s);
+    CU_ASSERT_STRING_EQUAL(s, "utf-8'de'R%C3%E4tsel");
     free(s);
 }
 
@@ -979,19 +1114,19 @@ static void test_extract(void)
     TESTCASE("A&nonesuch;B", "us-ascii", ENCODING_NONE, "HTML", "A"UTF8_REPLACEMENT"B");
 
     /* HTML: Strip HTML from snippet and don't canonify */
-    flags = CHARSET_SNIPPET;
+    flags = CHARSET_KEEPCASE;
     TESTCASE("<b>Photo</b> <em>booth</em>", "us-ascii", ENCODING_NONE, "HTML", "Photo booth");
 
     /* HTML: Strip HTML from snippet, there is nothing to escape */
-    flags = CHARSET_SNIPPET|CHARSET_ESCAPEHTML;
+    flags = CHARSET_KEEPCASE|CHARSET_ESCAPEHTML;
     TESTCASE("<b>Photo</b>", "us-ascii", ENCODING_NONE, "HTML", "Photo");
 
     /* PLAIN: Generate snippet, don't escape HTML by default */
-    flags = CHARSET_SNIPPET;
+    flags = CHARSET_KEEPCASE;
     TESTCASE("<b>Photo</b>", "us-ascii", ENCODING_NONE, "PLAIN", "<b>Photo</b>");
 
     /* PLAIN: Generate snippet with escaped HTML */
-    flags = CHARSET_SNIPPET|CHARSET_ESCAPEHTML;
+    flags = CHARSET_KEEPCASE|CHARSET_ESCAPEHTML;
     TESTCASE("<b>Photo</b>", "us-ascii", ENCODING_NONE, "PLAIN", "&lt;b&gt;Photo&lt;/b&gt;");
 }
 #undef TESTCASE
@@ -1067,6 +1202,144 @@ static void test_charset_decode(void)
     TESTCASE("", 0, "", 0, ENCODING_BASE64);
     TESTCASE("Hello", 5, "Hello", 5, ENCODING_NONE);
     TESTCASE("beefc0de", 8, "\x6d\xe7\x9f\x73\x47\x5e", 6, ENCODING_BASE64);
+
+    /* RFC 4648 examples */
+    TESTCASE("Zg==", 4, "f", 1, ENCODING_BASE64);
+    TESTCASE("Zm8=", 4, "fo", 2, ENCODING_BASE64);
+    TESTCASE("Zm9v", 4, "foo", 3, ENCODING_BASE64);
+    TESTCASE("Zm9vYg==", 8, "foob", 4, ENCODING_BASE64);
+    TESTCASE("Zm9vYmE=", 8, "fooba", 5, ENCODING_BASE64);
+    TESTCASE("Zm9vYmFy", 8, "foobar", 6, ENCODING_BASE64);
+
+#undef TESTCASE
+}
+
+static void test_broken_length_hint(void)
+{
+    charset_t cs;
+    char *s;
+    const char *body = "x.x&gt;x:";
+
+    cs = charset_lookupname("iso-8859-1");
+    CU_ASSERT_PTR_NOT_NULL(cs);
+
+    s = charset_to_utf8(body, strlen(body), cs, ENCODING_QP);
+    CU_ASSERT_STRING_EQUAL(body, s);
+    charset_free(&cs);
+}
+
+static void test_utf8_normalize(void)
+{
+#define TESTCASE(in, want) \
+    { \
+        char *s; \
+        s = charset_utf8_normalize(in); \
+        if (want) { \
+            CU_ASSERT_PTR_NOT_NULL(s); \
+            CU_ASSERT_STRING_EQUAL(s, want); \
+        } else { \
+            CU_ASSERT_PTR_NULL(s); \
+        } \
+        free(s); \
+    }
+
+    /* Empty is empty */
+    TESTCASE("\0", "\0");
+
+    /* Plain ASCII */
+    TESTCASE("Hello, World", "Hello, World");
+
+    /* The following examples are from
+     * http://www.unicode.org/reports/tr15/#Examples */
+
+    /*
+     * ANGSTROM SIGN (U+212B)
+     * to
+     * LATIN CAPITAL LETTER A WITH RING ABOVE (U+00C5)
+     */
+    TESTCASE("\xe2\x84\xab", "\xc3\x85");
+
+    /*
+     * Multiple Combining Marks:
+     * LATIN SMALL LETTER Q (U+0071)
+     * COMBINING DOT ABOVE (U+0307)
+     * COMBINING DOT BELOW (U+0323)
+     * to
+     * LATIN SMALL LETTER Q (U+0071)
+     * COMBINING DOT BELOW (U+0323)
+     * COMBINING DOT ABOVE (U+0307)
+     */
+    TESTCASE("\x71\xcc\x87\xcc\xa3", "\x71\xcc\xa3\xcc\x87");
+
+#undef TESTCASE
+}
+
+static void test_count_validutf8(void)
+{
+    /* These tests are specific for the charset implementation in Cyrus.
+     * Breaking them is not necessarily an error, but check carefully.
+     *
+     * Example byte sequences are taken from
+     *    https://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt
+     * licensed as
+     *    Markus Kuhn, CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+     */
+
+    const char *data;
+    struct char_counts counts;
+
+    /* Correct UTF-8 text */
+    data = "\xce\xba\xe1\xbd\xb9\xcf\x83\xce\xbc\xce\xb5";
+    counts = charset_count_validutf8(data, strlen(data));
+    CU_ASSERT_EQUAL(5, counts.valid);
+    CU_ASSERT_EQUAL(0, counts.replacement);
+    CU_ASSERT_EQUAL(0, counts.invalid);
+
+    /* Two continuation bytes */
+    data = "a \x80\xbf\x80 text";
+    counts = charset_count_validutf8(data, strlen(data));
+    CU_ASSERT_EQUAL(7, counts.valid);
+    CU_ASSERT_EQUAL(0, counts.replacement);
+    CU_ASSERT_EQUAL(3, counts.invalid);
+
+    /* Lonely start character, followed by 3-byte char, plus replacement char */
+    data = "\xfc\xe2\x82\xac \xef\xbf\xbd";
+    counts = charset_count_validutf8(data, strlen(data));
+    CU_ASSERT_EQUAL(2, counts.valid);
+    CU_ASSERT_EQUAL(1, counts.replacement);
+    CU_ASSERT_EQUAL(1, counts.invalid);
+}
+
+static void test_qpencode_mimebody(void)
+{
+#define TESTCASE(in, want, force_quote) \
+    { \
+        size_t outlen; \
+        const char *_in = (in); \
+        const char *_want = (want); \
+        char *out = charset_qpencode_mimebody(_in, strlen(_in), (force_quote), &outlen); \
+        CU_ASSERT_STRING_EQUAL(_want, out); \
+        CU_ASSERT_EQUAL(strlen(_want), outlen); \
+        free(out); \
+    }
+
+    /* Basic test */
+    TESTCASE("foo", "foo", 0);
+    TESTCASE("foo", "foo", 1);
+
+    /* Assert stray LFs are encoded */
+    TESTCASE("foo\nbar", "foo=0Abar", 0);
+    TESTCASE("foo\nbar", "foo=0Abar", 1);
+
+    /* Long lines are broken regardless of quote-forcing */
+    TESTCASE("0123456789" "0123456789" "0123456789" "0123456789"
+             "0123456789" "0123456789" "0123456789" "0123456789",
+             "0123456789" "0123456789" "0123456789" "0123456789"
+             "0123456789" "0123456789" "0123456789" "01=\r\n23456789", 0);
+    TESTCASE("0123456789" "0123456789" "0123456789" "0123456789"
+             "0123456789" "0123456789" "0123456789" "0123456789",
+             "0123456789" "0123456789" "0123456789" "0123456789"
+             "0123456789" "0123456789" "0123456789" "01=\r\n23456789", 1);
 
 #undef TESTCASE
 }

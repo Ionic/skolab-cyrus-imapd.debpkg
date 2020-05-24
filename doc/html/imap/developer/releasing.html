@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Releasing Cyrus IMAP &mdash; Cyrus IMAP 3.0.13 (stable) documentation</title>
+  <title>Releasing Cyrus IMAP &mdash; Cyrus IMAP 3.2.0 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.0.13 (stable) documentation" href="../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.0 documentation" href="../../index.html"/>
         <link rel="up" title="IMAP Developer Guide" href="../developer.html"/>
         <link rel="next" title="Releasing new builds of ancient Cyrus IMAP versions" href="ancient-releasing.html"/>
         <link rel="prev" title="imclient library" href="libraries/imclient.html"/> 
@@ -130,19 +130,24 @@
 <li class="toctree-l3"><a class="reference internal" href="../download/release-notes/index.html#stable-version">Stable Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../download/release-notes/index.html#development-version">Development Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../download/release-notes/index.html#supported-product-series">Supported Product Series</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../download/release-notes/index.html#series-3-2">Series 3.2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../download/release-notes/index.html#series-3-0">Series 3.0</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../download/release-notes/index.html#series-2-5">Series 2.5</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../download/release-notes/index.html#series-2-4">Series 2.4</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../download/release-notes/index.html#development-snapshots">Development snapshots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../download/release-notes/3.1/index.html">Cyrus IMAP 3.1 Tags</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../download/release-notes/index.html#older-versions">Older Versions</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../download/release-notes/index.html#series-1">Series 1</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../download/release-notes/index.html#series-2-2-0-2-3">Series 2: 2.0 - 2.3</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../download/release-notes/index.html#series-2-2-0-2-4">Series 2: 2.0 - 2.4</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../download/packagers.html">Notes for Packagers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../download/packagers.html#binary-naming">Binary naming</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../download/packagers.html#sample-configuration-files">Sample configuration files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../download/packagers.html#predefined-configurations">Predefined configurations</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../download/packagers.html#the-configuration-file-for-master-cyrus-conf">The configuration file for master: cyrus.conf</a></li>
@@ -159,22 +164,19 @@
 <li class="toctree-l3"><a class="reference internal" href="../quickstart/introduction.html#what-is-imap">What is IMAP?</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#coming-soon">Coming Soon</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../quickstart.html#quick-install">Quick install</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#install-cyrus-reference-packages">1. Install Cyrus reference packages</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#use-apt-get-install-f-to-complete-installation">2. Use &#8220;apt-get install -f&#8221; to complete installation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setup-the-cyrus-mail-user-and-group">3. Setup the cyrus:mail user and group</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setting-up-authentication-with-sasl">4. Setting up authentication with SASL</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setup-mail-delivery-from-your-mta">5. Setup mail delivery from your MTA</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#install-cyrus-package-s">1. Install Cyrus package(s)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setup-the-cyrus-mail-user-and-group">2. Setup the cyrus:mail user and group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setting-up-authentication-with-sasl">3. Setting up authentication with SASL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#setup-mail-delivery-from-your-mta">4. Setup mail delivery from your MTA</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../quickstart.html#install-sendmail">Install Sendmail</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../quickstart.html#sendmail-communication">Sendmail communication</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../quickstart.html#install-postfix">Install Postfix</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#protocol-ports">6. Protocol ports</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#configuring-cyrus">7. Configuring Cyrus</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#launch-cyrus">8. Launch Cyrus</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#feature-overview">Feature overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#protocol-ports">5. Protocol ports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#configuring-cyrus">6. Configuring Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../quickstart.html#launch-cyrus">7. Launch Cyrus</a></li>
 </ul>
 </li>
 </ul>
@@ -331,19 +333,19 @@
 <li class="toctree-l3"><a class="reference internal" href="../installing.html#troubleshooting">Troubleshooting</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../download/upgrade.html">Upgrading to 3.0</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../download/upgrade.html">Upgrading to 3.2</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#preparation">1. Preparation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../download/upgrade.html#installation-from-tarball">Installation from tarball</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../download/upgrade.html#how-are-you-planning-on-upgrading">How are you planning on upgrading?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../download/upgrade.html#do-what-as-who">Do What As Who?</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#install-new-3-0-cyrus">2. Install new 3.0 Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#install-new-3-2-cyrus">2. Install new 3.2 Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#shut-down-existing-cyrus">3. Shut down existing Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#backup-and-copy-existing-data">4. Backup and Copy existing data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#copy-config-files-and-update">5. Copy config files and update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#upgrade-specific-items">6. Upgrade specific items</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#start-new-3-0-cyrus-and-verify">7. Start new 3.0 Cyrus and verify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#start-new-3-2-cyrus-and-verify">7. Start new 3.2 Cyrus and verify</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#reconstruct-databases-and-cache">8. Reconstruct databases and cache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#do-you-want-any-new-features">9. Do you want any new features?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../download/upgrade.html#upgrade-complete">10. Upgrade complete</a></li>
@@ -392,6 +394,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/deployment/performance_recommendations.html">Performance Recommendations</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/performance_recommendations.html#databases-on-temporary-filesystems">Databases on Temporary Filesystems</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/performance_recommendations.html#certificates">Certificates</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/deployment/storage.html">Storage Considerations</a><ul>
@@ -419,7 +422,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../reference/manpages/commands.html">Man pages</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/manpages/commands.html#configuration-files">(5) Configuration Files</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/manpages/configs/cyrus.conf.html"><strong>cyrus.conf</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/configs/imapd.conf.html">imapd.conf</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/configs/imapd.conf.html"><strong>imapd.conf</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/manpages/configs/krb.equiv.html"><strong>krb.equiv</strong></a></li>
 </ul>
 </li>
@@ -508,34 +511,6 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../reference/administration-tools.html">Tools &amp; Utilities</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#arbitron">arbitron</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#arbitronsort-pl">arbitronsort.pl</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#chk-cyrus">chk_cyrus</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#ctl-cyrusdb">ctl_cyrusdb</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#ctl-deliver">ctl_deliver</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#ctl-mboxlist">ctl_mboxlist</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#cvt-cyrusdb">cvt_cyrusdb</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#cvt-cyrusdb-all">cvt_cyrusdb_all</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#cyr-dbtool">cyr_dbtool</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#cyr-df">cyr_df</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#cyrdump">cyrdump</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#cyr-expire">cyr_expire</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#cyr-virusscan">cyr_virusscan</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#fetchnews">fetchnews</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#cyr-sequence">cyr_sequence</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#cyr-synclog">cyr_synclog</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#cyr-userseen">cyr_userseen</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#masssievec">masssievec</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#mbexamine">mbexamine</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#mbpath">mbpath</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#mkimap">mkimap</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#mknewsgroups">mknewsgroups</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#rehash">rehash</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#translatesieve">translatesieve</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../reference/administration-tools.html#undohash">undohash</a></li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="../reference/admin.html">Administrator Guide</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../reference/admin.html#architecture">Architecture</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/architecture.html">System Architecture</a></li>
@@ -552,6 +527,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../reference/admin/protlayer.html">Cyrus Prot Layer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/admin/sop.html">Standard Operating Procedures</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/admin/eventsource.html">Cyrus Event Source</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/admin/monitoring.html">Monitoring</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/admin/config-mailboxdistribution.html">Mailbox Distribution</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/admin/murder/murder.html">Cyrus Murder</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/admin/nginx-proxy.html">HOWTO: Using an NGINX IMAP Proxy</a></li>
@@ -568,10 +544,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/install-detecting-berkeley.html">Problems detecting Berkley DB on Red Hat Linux</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/install-linkerwarnings.html#libical-v1-0-1-or-v2-0">Libical v1.0.1 or v2.0</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/faq.html#common-feature-requests">Common Feature Requests</a><ul>
@@ -584,10 +558,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../reference/faq.html#common-operational-questions">Common Operational Questions</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-acls.html">How do I view ACLs on a mailbox?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-annotations.html">What annotations are available?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-berkeleydb.html">Why does ctl_cyrusdb -r take so long with Berkeley DB?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-coredump.html">How to enable core dumps</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-db3-lockers.html">Is the &#8220;db3: x Lockers&#8221; log message harmful?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
@@ -648,6 +620,7 @@
 <li class="toctree-l4"><a class="reference internal" href="compiling.html">Compiling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../installing.html">Installing Cyrus</a></li>
 <li class="toctree-l4"><a class="reference internal" href="developer-testing.html">Developer Test Environment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="jmap.html">JMAP support</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../developer.html#system-files-and-databases">System files and Databases</a><ul>
@@ -667,9 +640,55 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="cyrusworks.html">Cyrus.Works</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="cyrusworks.html#about-cyrus-works">About Cyrus Works</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cyrusworks.html#testing">Testing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cyrusworks.html#how-it-works">How it works</a></li>
-<li class="toctree-l3"><a class="reference internal" href="cyrusworks.html#adding-rules">Adding Rules</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../developers.html#cyrus-internals">Cyrus Internals</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="API.html">Cyrus APIs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="API/cyrusdb.html">CyrusDB API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="API/cyrusdb2.html">cyrusdb API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="API/index-api.html">Index API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="API/mailbox-api.html">Mailbox API</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="thoughts.html">Thoughts &amp; Notes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="thoughts/backup.html">Notes for backup implementation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="thoughts/bytecode.html">Cyrus IMAP Server: Sieve Bytecode</a></li>
+<li class="toctree-l4"><a class="reference internal" href="thoughts/caldav_scheduling_flowchart.html">Cyrus CalDAV Scheduling Flowchart</a></li>
+<li class="toctree-l4"><a class="reference internal" href="thoughts/improved_mboxlist_sort.html">Enabling improved_mboxlist_sort</a></li>
+<li class="toctree-l4"><a class="reference internal" href="thoughts/notes.html">Cyrus IMAP Server: Notes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="thoughts/prot-events.html">Cyrus IMAP Server: Prot Events</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="guidance.html">Guidance for Developers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="guidance/hacking.html">Cyrus IMAP Server: Hacking</a></li>
+<li class="toctree-l4"><a class="reference internal" href="guidance/internationalization.html">Cyrus IMAP Server: Internationalization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="guidance/locking.html">Cyrus IMAP Server: Locking</a></li>
+<li class="toctree-l4"><a class="reference internal" href="guidance/mailbox-format.html">Cyrus IMAP Server: Mailbox File Formats</a></li>
+<li class="toctree-l4"><a class="reference internal" href="guidance/namelocks.html">Cyrus IMAP Server: Namelocks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="guidance/prot.html">Cyrus IMAP Server: prot layer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="guidance/replication_examples.html">Cyrus IMAP Server: Replication Examples</a></li>
+<li class="toctree-l4"><a class="reference internal" href="guidance/replication_protocol.html">Cyrus IMAP Server: Replication Protocol v2.4+</a></li>
+<li class="toctree-l4"><a class="reference internal" href="guidance/special_chars.html">Cyrus IMAP Server: Special Characters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="guidance/var_directory_structure.html">Cyrus IMAP Server: var directory structure</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../developers.html#unit-tests">Unit Tests</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="unit-tests.html">Unit Tests</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="unit-tests.html#table-of-contents">Table of Contents</a></li>
+<li class="toctree-l4"><a class="reference internal" href="unit-tests.html#introduction">1. Introduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="unit-tests.html#what-is-a-unit-test">2. What Is A Unit Test?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="unit-tests.html#running-the-tests">3. Running The Tests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="unit-tests.html#debugging-a-test">3.6 Debugging A Test</a></li>
+<li class="toctree-l4"><a class="reference internal" href="unit-tests.html#adding-your-own-tests">4. Adding Your Own Tests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="unit-tests.html#where-to-put-your-tests">4.1 Where To Put Your Tests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="unit-tests.html#adding-a-new-suite">4.1 Adding A New Suite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="unit-tests.html#adding-a-test-to-a-suite">4.2 Adding A Test To A Suite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="unit-tests.html#suite-setup-and-teardown">4.3 Suite Setup And Teardown</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -727,7 +746,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd/branches" target="_blank">cyrus-imapd-3.0: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.0"></a>
+    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.2: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.2"></a>
 </div>
       &nbsp;
     </nav>
@@ -747,7 +766,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html">Docs v3.0.13 (stable)</a> &raquo;</li>
+      <li><a href="../../index.html">Docs v3.2.0</a> &raquo;</li>
       
           <li><a href="../../developers.html">Developers</a> &raquo;</li>
       
@@ -757,7 +776,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.0/docsrc/imap/developer/releasing.rst" class="fa fa-github"> Edit on GitHub</a>
+            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.2/docsrc/imap/developer/releasing.rst" class="fa fa-github"> Edit on GitHub</a>
           
         
       </li>
@@ -773,11 +792,14 @@
 <ul class="simple">
 <li><a class="reference internal" href="#releasing-cyrus-imap" id="id1">Releasing Cyrus IMAP</a><ul>
 <li><a class="reference internal" href="#prerequisites" id="id2">Prerequisites</a></li>
-<li><a class="reference internal" href="#release-notes" id="id3">Release notes</a></li>
-<li><a class="reference internal" href="#pre-release-testing" id="id4">Pre-release testing</a></li>
-<li><a class="reference internal" href="#linking-up-release-notes" id="id5">Linking up release notes</a></li>
-<li><a class="reference internal" href="#version-tagging" id="id6">Version tagging</a></li>
-<li><a class="reference internal" href="#releasing" id="id7">Releasing</a></li>
+<li><a class="reference internal" href="#order-of-operations" id="id3">Order of operations</a></li>
+<li><a class="reference internal" href="#release-notes" id="id4">Release notes</a></li>
+<li><a class="reference internal" href="#pre-release-testing" id="id5">Pre-release testing</a></li>
+<li><a class="reference internal" href="#linking-up-release-notes" id="id6">Linking up release notes</a></li>
+<li><a class="reference internal" href="#version-tagging" id="id7">Version tagging</a></li>
+<li><a class="reference internal" href="#inter-version-website-consistency" id="id8">Inter-version website consistency</a></li>
+<li><a class="reference internal" href="#uploading" id="id9">Uploading</a></li>
+<li><a class="reference internal" href="#tell-the-world" id="id10">Tell the world</a></li>
 </ul>
 </li>
 </ul>
@@ -793,13 +815,24 @@ off the top of her head how to create one of these, so for now just read the
 manual like she did. :)</p>
 <p>Once you have a GPG key, it&#8217;s helpful to upload your public key to
 <a class="reference external" href="http://pgp.mit.edu">the MIT key-server</a></p>
-<p>You also need a shell account on www.cyrusimap.org and ftp.cyrusimap.org,
-with SSH key authentication.  You need to be in the &#8220;admin&#8221; group on each,
-and also the &#8220;cyrupload&#8221; group on the latter.</p>
 <p>And you need permission to send to the cyrus-announce mailing list.</p>
 </div>
+<div class="section" id="order-of-operations">
+<h2><a class="toc-backref" href="#id3">Order of operations</a><a class="headerlink" href="#order-of-operations" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes you&#8217;re releasing several new versions all at once(ish), for example
+maybe there&#8217;s been a security fix that affected 2.4, 2.5 and 3.0.</p>
+<p>Github&#8217;s release page will put a &#8220;Latest Release&#8221; graphic on the release with
+the newest tag (by timestamp, I think).  This means that, if you&#8217;re doing new
+releases for several different versions, you want to do the oldest one first,
+and only do the release for the current-stable branch last.</p>
+<p>If you start at the current stable branch and then work your way backwards
+through the older ones, you&#8217;ll get Github saying &#8220;2.5.15 is the Latest
+Release&#8221; even though 3.0.13 was also just released... so, even though
+releasing the current-stable fix feels more urgent, suck it up and get the
+older-branch ones out first.</p>
+</div>
 <div class="section" id="release-notes">
-<h2><a class="toc-backref" href="#id3">Release notes</a><a class="headerlink" href="#release-notes" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id4">Release notes</a><a class="headerlink" href="#release-notes" title="Permalink to this headline">¶</a></h2>
 <p>Write up the release notes, and add them to the appropriate location under
 <code class="docutils literal"><span class="pre">docsrc/imap/download/release-notes/</span></code>.  They will not yet be linked up.</p>
 <p>Commit and push your changes, and then wait for cyrusimap.org to rebuild
@@ -810,7 +843,7 @@ version in the address bar to load up the new one.  Confirm that they are
 correct and complete.</p>
 </div>
 <div class="section" id="pre-release-testing">
-<h2><a class="toc-backref" href="#id4">Pre-release testing</a><a class="headerlink" href="#pre-release-testing" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id5">Pre-release testing</a><a class="headerlink" href="#pre-release-testing" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
 <li>Ensure your git repository is clean, using something like <code class="docutils literal"><span class="pre">git</span> <span class="pre">clean</span> <span class="pre">-xfd</span></code>.
 Note that this command will destroy any uncommitted work you might have,
@@ -820,7 +853,7 @@ so make sure your ducks are in line before proceeding.</li>
 need any other options at this stage).</li>
 <li>Run <code class="docutils literal"><span class="pre">make</span> <span class="pre">distcheck</span></code>.  This will generate a distribution tarball, and
 test it in various ways.  It takes about 10-15 mins to run, depending on
-your hardware.  If this command fails, you are not ready to release &#8211;
+your hardware.  If this command fails*, you are not ready to release &#8211;
 fix the problems, get them tested and committed, then restart the
 pre-release testing.</li>
 <li><code class="docutils literal"><span class="pre">make</span> <span class="pre">distcheck</span></code> can only test so much (it doesn&#8217;t know about cunit or
@@ -840,9 +873,25 @@ testing.</li>
 </ol>
 </li>
 </ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><code class="docutils literal"><span class="pre">make</span> <span class="pre">distcheck</span></code> doesn&#8217;t work on the 2.5 branch.  For 2.5, just use
+<code class="docutils literal"><span class="pre">make</span> <span class="pre">dist</span></code> instead.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Realistically, there&#8217;s usually some set of expected Cassandane failures
+from each Cyrus branch, especially for 2.5.  If you&#8217;re doing releases
+regularly, you&#8217;ve probably got a good gut feel for which failures are a
+problem and which ones are just &#8220;that old thing&#8221;.  If you don&#8217;t do
+releases regularly, try to pull in someone who does for guidance about
+which failures are ignorable, and which should be a source of stress.</p>
+<p class="last">If in doubt, try building and testing the previous release from the same
+series, and compare the test results.</p>
+</div>
 </div>
 <div class="section" id="linking-up-release-notes">
-<h2><a class="toc-backref" href="#id5">Linking up release notes</a><a class="headerlink" href="#linking-up-release-notes" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id6">Linking up release notes</a><a class="headerlink" href="#linking-up-release-notes" title="Permalink to this headline">¶</a></h2>
 <p>The linkage of release notes is handled in <code class="docutils literal"><span class="pre">docsrc/conf.py</span></code>.  There&#8217;s a bunch
 of places it needs to be updated.  We should iterate these in detail at some
 point, but for now the easiest thing to do is look for lines containing the
@@ -855,10 +904,10 @@ gives her 50 minutes to finish the rest of the release process without the
 website updating before the downloads are available.</p>
 </div>
 <div class="section" id="version-tagging">
-<h2><a class="toc-backref" href="#id6">Version tagging</a><a class="headerlink" href="#version-tagging" title="Permalink to this headline">¶</a></h2>
-<p>Note: it is absolutely critical that your local commits have been pushed
-upstream at this point.  If they are not, and if anybody else pushes in the
-meantime, you will end up with a mess.</p>
+<h2><a class="toc-backref" href="#id7">Version tagging</a><a class="headerlink" href="#version-tagging" title="Permalink to this headline">¶</a></h2>
+<p>Note: it is absolutely critical that your repository is clean and your local
+commits have been pushed upstream at this point.  If they are not, and if
+anybody else pushes in the meantime, you will end up with a mess.</p>
 <ol class="arabic">
 <li><p class="first">Ensure your repository is clean again: <code class="docutils literal"><span class="pre">git</span> <span class="pre">clean</span> <span class="pre">-xfd</span></code></p>
 </li>
@@ -896,16 +945,64 @@ remote is named &#8220;ci&#8221;).</p>
 </li>
 </ol>
 </div>
-<div class="section" id="releasing">
-<h2><a class="toc-backref" href="#id7">Releasing</a><a class="headerlink" href="#releasing" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="inter-version-website-consistency">
+<h2><a class="toc-backref" href="#id8">Inter-version website consistency</a><a class="headerlink" href="#inter-version-website-consistency" title="Permalink to this headline">¶</a></h2>
+<p>The website is built from an amalgamation of documentation from:</p>
+<ul>
+<li><p class="first">The current stable cyrus-imapd branch (top level)</p>
+</li>
+<li><p class="first">The current master cyrus-imapd branch (<code class="docutils literal"><span class="pre">/dev</span></code> hierarchy)</p>
+</li>
+<li><p class="first">Each of the following cyrus-imapd branches (<code class="docutils literal"><span class="pre">/x.y</span></code> hierarchies)</p>
+<blockquote>
+<div><ul class="simple">
+<li>cyrus-imapd-2.5</li>
+<li>cyrus-imapd-3.0</li>
+<li>cyrus-imapd-3.2</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">The current master cyrus-sasl branch (<code class="docutils literal"><span class="pre">/sasl</span></code> hierarchy)</p>
+</li>
+</ul>
+<p>When making a cyrus-imapd release, you need to add the new release notes
+file to each relevant cyrus-imapd branch.  You also need to check and
+update the contents of <code class="docutils literal"><span class="pre">docsrc/conf.py</span></code> on each branch AND the cyrus-sasl
+repository.</p>
+<p>Sometimes you can just cherry-pick the commits around, but note that the
+2.5 website stores release notes files in a different path, so if you
+bother to copy release notes back to this branch, a naive cherry-pick will
+not put them in the right place!</p>
+<p>This step often gets forgotten, so if you actually follow it, and notice
+some missing versions, just go ahead and add them while you&#8217;re there.</p>
+</div>
+<div class="section" id="uploading">
+<h2><a class="toc-backref" href="#id9">Uploading</a><a class="headerlink" href="#uploading" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This section does NOT apply to releases from the master branch.  We
+do not publish release tarballs for those.  People running master code
+are expected to use a git checkout.</p>
+</div>
+<p>Time to upload the release tarball and signature file!</p>
 <ol class="arabic simple">
-<li>Upload the tarball and signature to www: <code class="docutils literal"><span class="pre">scp</span> <span class="pre">cyrus-imapd-*.tar.gz</span> <span class="pre">cyrus-imapd-*.tar.gz.sig</span>
-<span class="pre">www.cyrusimap.org:/var/www/html/releases/</span></code></li>
-<li>Upload them to ftp too: <code class="docutils literal"><span class="pre">scp</span> <span class="pre">cyrus-imapd-*.tar.gz</span> <span class="pre">cyrus-imapd-*.tar.gz.sig</span>
-<span class="pre">ftp.cyrusimap.org:/srv/ftp/cyrus-imapd/</span></code></li>
-<li>SSH into both www and ftp, and move older releases to the old versions
-directory.  You want only the two most recent tarball+sig pairs for each
-major series.</li>
+<li>Navigate to <a class="reference external" href="https://github.com/cyrusimap/cyrus-imapd/releases">https://github.com/cyrusimap/cyrus-imapd/releases</a></li>
+<li>The tag you pushed earlier will now be available as a release, but it will
+have very little information about it</li>
+<li>Click on the tag name</li>
+<li>Click &#8220;Edit tag&#8221; on the right</li>
+<li><em>Leave every field on the page as it is (probably blank!), except</em>:</li>
+<li>Use the &#8220;Attach binaries by dropping them here or selecting them&#8221; widget
+to upload the tarball and signature files</li>
+<li>If this is an alpha/beta/rc release, click the &#8220;This is a pre-release&#8221;
+checkbox</li>
+<li>Click &#8220;Save&#8221;.  The commit message from the tag annotation will be used
+as the release description.</li>
+</ol>
+</div>
+<div class="section" id="tell-the-world">
+<h2><a class="toc-backref" href="#id10">Tell the world</a><a class="headerlink" href="#tell-the-world" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
 <li>Update the topic in the #cyrus IRC channel.</li>
 <li>Send an announcement to the info-cyrus and cyrus-announce lists.</li>
 </ol>
@@ -930,7 +1027,7 @@ major series.</li>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2017, The Cyrus Team. Last updated on May 21 2018
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Mar 06 2020
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -950,7 +1047,7 @@ major series.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'3.0.13 (stable)',
+            VERSION:'3.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

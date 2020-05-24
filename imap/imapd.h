@@ -51,6 +51,7 @@
 #include "prot.h"
 #include "strarray.h"
 #include "search_expr.h"
+#include "search_sort.h"
 #include "conversations.h"
 
 /* Userid client has logged in as */
@@ -105,6 +106,7 @@ struct fetchargs {
     int isadmin;
     struct auth_state *authstate;
     hash_table *cidhash;          /* for XCONVFETCH */
+    struct conversations_state *convstate; /* for FETCH_MAILBOXIDS */
 };
 
 /* Bitmasks for fetchitems */
@@ -129,7 +131,18 @@ enum {
     FETCH_FILESIZE =            (1<<17),
     FETCH_CID =                 (1<<18),
     FETCH_FOLDER =              (1<<19),
-    FETCH_UIDVALIDITY =         (1<<20)
+    FETCH_UIDVALIDITY =         (1<<20),
+    FETCH_BASECID =             (1<<21),
+    FETCH_EMAILID =             (1<<22),
+    FETCH_THREADID =            (1<<23),
+    FETCH_SAVEDATE =            (1<<24),
+    FETCH_CREATEDMODSEQ =       (1<<25),
+    FETCH_MAILBOXIDS =          (1<<26),
+    FETCH_MAILBOXES =           (1<<27),
+    FETCH_PREVIEW =             (1<<28),
+    FETCH_LASTUPDATED =         (1<<29),
+
+    /* XXX fetchitems is an int, we're running low on bits */
 };
 
 enum {
@@ -219,51 +232,6 @@ struct searchargs {
     int isadmin;
 };
 
-/* Sort criterion */
-struct sortcrit {
-    unsigned key;               /* sort key */
-    int flags;                  /* key modifiers as defined below */
-    union {                     /* argument(s) to the sort key */
-        struct {
-            char *entry;
-            char *userid;
-        } annot;
-        struct {
-            char *name;
-        } flag;
-    } args;
-};
-
-/* Values for sort keys */
-enum {
-    SORT_SEQUENCE = 0,
-    SORT_ARRIVAL,       /* RFC 5256 */
-    SORT_CC,            /* RFC 5256 */
-    SORT_DATE,          /* RFC 5256 */
-    SORT_DISPLAYFROM,   /* RFC 5957 */
-    SORT_DISPLAYTO,     /* RFC 5957 */
-    SORT_FROM,          /* RFC 5256 */
-    SORT_SIZE,          /* RFC 5256 */
-    SORT_SUBJECT,       /* RFC 5256 */
-    SORT_TO,            /* RFC 5256 */
-    SORT_ANNOTATION,    /* RFC 5257 */
-    SORT_MODSEQ,        /* nonstandard */
-    SORT_UID,           /* nonstandard */
-    SORT_HASFLAG,       /* nonstandard */
-    SORT_CONVMODSEQ,    /* nonstandard */
-    SORT_CONVEXISTS,    /* nonstandard */
-    SORT_CONVSIZE,      /* nonstandard */
-    SORT_HASCONVFLAG,   /* nonstandard */
-    SORT_FOLDER,        /* nonstandard */
-    SORT_RELEVANCY,     /* RFC 6203 */
-    SORT_SPAMSCORE,     /* nonstandard */
-    SORT_GUID           /* nonstandard */
-    /* values > 255 are reserved for internal use */
-};
-
-/* Sort key modifier flag bits */
-#define SORT_REVERSE            (1<<0)      /* RFC 5256 */
-
 /* Windowing arguments for the XCONVSORT command */
 struct windowargs {
     int conversations;          /* whether to limit the results by
@@ -315,14 +283,21 @@ enum {
     STATUS_UIDNEXT =            (1<<2),
     STATUS_UIDVALIDITY =        (1<<3),
     STATUS_UNSEEN =             (1<<4),
-    STATUS_HIGHESTMODSEQ =      (1<<5),
-    STATUS_XCONVEXISTS =        (1<<6),
-    STATUS_XCONVUNSEEN =        (1<<7),
-    STATUS_XCONVMODSEQ =        (1<<8)
+    STATUS_MAILBOXID =          (1<<5),
+    STATUS_SIZE =               (1<<6),
+    STATUS_HIGHESTMODSEQ =      (1<<7),
+    STATUS_XCONVEXISTS =        (1<<8),
+    STATUS_XCONVUNSEEN =        (1<<9),
+    STATUS_XCONVMODSEQ =        (1<<10),
+    STATUS_CREATEDMODSEQ =      (1<<11),
+    STATUS_MBOPTIONS =          (1<<12)
     /* New items MUST be handled in imapd.c:list_data_remote() */
 };
 
 #define STATUS_CONVITEMS (STATUS_XCONVEXISTS|STATUS_XCONVUNSEEN|STATUS_XCONVMODSEQ)
+#define STATUS_MBENTRYITEMS (STATUS_MAILBOXID|STATUS_UIDVALIDITY)
+#define STATUS_INDEXITEMS (STATUS_MESSAGES|STATUS_UIDNEXT|STATUS_SIZE|STATUS_HIGHESTMODSEQ|STATUS_CREATEDMODSEQ|STATUS_MBOPTIONS)
+#define STATUS_SEENITEMS (STATUS_RECENT|STATUS_UNSEEN)
 
 struct getmetadata_options {
     size_t biggest;
@@ -362,7 +337,9 @@ enum {
     LIST_SEL_RECURSIVEMATCH =   (1<<2),
     LIST_SEL_SPECIALUSE =       (1<<3),
     LIST_SEL_DAV =              (1<<4),
-    LIST_SEL_METADATA =         (1<<5)
+    LIST_SEL_METADATA =         (1<<5),
+    LIST_SEL_INTERMEDIATES =    (1<<6),
+    LIST_SEL_DELETED =          (1<<7)
     /* New options MUST be handled in imapd.c:list_data_remote() */
 };
 

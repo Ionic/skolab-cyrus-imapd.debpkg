@@ -48,7 +48,7 @@
 
 #include "global.h"
 
-struct vparse_card *vcard_parse_string(const char *str, int repair)
+EXPORTED struct vparse_card *vcard_parse_string(const char *str, int repair)
 {
     struct vparse_state vparser;
     struct vparse_card *vcard = NULL;
@@ -62,6 +62,7 @@ struct vparse_card *vcard_parse_string(const char *str, int repair)
     vparse_set_multival(&vparser, "n", ';');
     vparse_set_multival(&vparser, "nickname", ',');
     vparse_set_multival(&vparser, "categories", ',');
+    vparse_set_multiparam(&vparser, "type");
     vparser.ctrl = repair ? VPARSE_CTRL_SKIP : VPARSE_CTRL_REJECT;
     vr = vparse_parse(&vparser, 0);
     if (vr) {
@@ -97,13 +98,13 @@ struct vparse_card *vcard_parse_string(const char *str, int repair)
     return vcard;
 }
 
-struct vparse_card *vcard_parse_buf(const struct buf *buf)
+EXPORTED struct vparse_card *vcard_parse_buf(const struct buf *buf)
 {
     int repair = config_getswitch(IMAPOPT_CARDDAV_REPAIR_VCARD);
     return vcard_parse_string(buf_cstring(buf), repair);
 }
 
-struct buf *vcard_as_buf(struct vparse_card *vcard)
+EXPORTED struct buf *vcard_as_buf(struct vparse_card *vcard)
 {
     struct buf *buf = buf_new();
 
@@ -112,7 +113,7 @@ struct buf *vcard_as_buf(struct vparse_card *vcard)
     return buf;
 }
 
-struct vparse_card *record_to_vcard(struct mailbox *mailbox,
+EXPORTED struct vparse_card *record_to_vcard(struct mailbox *mailbox,
                                     const struct index_record *record)
 {
     struct buf buf = BUF_INITIALIZER;
@@ -126,3 +127,62 @@ struct vparse_card *record_to_vcard(struct mailbox *mailbox,
 
     return vcard;
 }
+
+/* Decode a base64-encoded binary vCard property and calculate a GUID.
+
+   XXX  This currently assumes vCard v3.
+*/
+EXPORTED size_t vcard_prop_decode_value(struct vparse_entry *prop,
+                                        struct buf *value,
+                                        char **content_type,
+                                        struct message_guid *guid)
+{
+    struct vparse_param *param;
+    size_t size = 0;
+
+    if (!prop) return 0;
+
+    /* Make sure value=binary (default) and encoding=b (base64) */
+    if ((!(param = vparse_get_param(prop, "value")) ||
+         !strcasecmp("binary", param->value)) &&
+        ((param = vparse_get_param(prop, "encoding")) &&
+         !strcasecmp("b", param->value))) {
+
+        char *decbuf = NULL;
+
+        /* Decode property value */
+        if (charset_decode_mimebody(prop->v.value, strlen(prop->v.value),
+                                    ENCODING_BASE64,
+                                    &decbuf, &size) == prop->v.value) return 0;
+
+        if (content_type) {
+            struct vparse_param *type = vparse_get_param(prop, "type");
+
+            if (!type) *content_type = NULL;
+            else {
+                struct buf buf = BUF_INITIALIZER;
+
+                lcase(type->value);
+                if (strncmp(type->value, "image/", 6))
+                    buf_setcstr(&buf, "image/");
+                buf_appendcstr(&buf, type->value);
+
+                *content_type = buf_release(&buf);
+            }
+        }
+
+        if (guid) {
+            /* Generate GUID from decoded property value */
+            message_guid_generate(guid, decbuf, size);
+        }
+
+        if (value) {
+            /* Return the value in the specified buffer */
+            buf_setmap(value, decbuf, size);
+        }
+        free(decbuf);
+    }
+
+    return size;
+}
+

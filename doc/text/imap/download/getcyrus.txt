@@ -36,8 +36,8 @@ Use a release packaged tarball
 The Cyrus team produce packaged tarballs containing full source and
 pre-built documentation.
 
-Download a versioned tarball using FTP or HTTPS. Latest stable version
-is 3.0.13.
+Download a versioned tarball using HTTPS. Latest stable version is
+3.2.0.
 
 Extract the tarball:
 

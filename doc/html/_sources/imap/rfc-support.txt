@@ -54,6 +54,10 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
     DEFLATE Compressed Data Format Specification version 1.3
 
+:rfc:`1952`
+
+    GZIP file format specification version 4.3
+
 :rfc:`2033`
 
     Local Mail Transfer Protocol
@@ -149,7 +153,8 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
 :rfc:`2617`
 
-    HTTP Authentication: Basic and Digest Access Authentication
+    HTTP Authentication: Basic and Digest Access Authentication,
+    updated by :rfc:`7615`, :rfc:`7616`, :rfc:`7617`.
 
 :rfc:`2817`
 
@@ -388,6 +393,10 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
     Sieve Email Filtering: Body Extension
 
+:rfc:`5183`
+
+    Sieve Email Filtering: Environment Extension
+
 :rfc:`5228`
 
     Sieve: A Mail Filtering Language
@@ -432,6 +441,10 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
     .. versionadded:: 2.5.0
 
+:rfc:`5293`
+
+    Sieve Email Filtering: Editheader Extension
+
 :rfc:`5321`
 
     Simple Mail Transfer Protocol
@@ -452,10 +465,6 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
     Sieve Email Filtering: Reject and Extended Reject Extensions
 
-    .. NOTE::
-
-        Only the ``reject`` action is currently implemented.
-
 :rfc:`5435`
 
     Sieve Email Filtering: Extension for Notifications
@@ -464,13 +473,18 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
     Sieve Notification Mechanism: mailto
 
+:rfc:`5463`
+
+    Sieve Email Filtering: Ihave Extension
+
 :rfc:`5464`
 
     The IMAP METADATA Extension
 
-:rfc:`5465`
+:rfc:`5490`
 
-    The IMAP NOTIFY Extension
+    The Sieve Mail-Filtering Language -- Extensions for Checking Mailbox
+    Status and Accessing Mailbox Metadata
 
 :rfc:`5524`
 
@@ -529,7 +543,7 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
     .. NOTE::
 
-        SSLv3 is considered insecure as it is vulnerable to POODLE.
+        SSLv3 is considered inscure as it is vulnerable to POODLE.
 
         Support for SSLv3 is being deprecated and removed.
 
@@ -537,18 +551,14 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
     Sieve Vacation Extension: "Seconds" Parameter
 
-:rfc:`5463`
-
-    Sieve Email Filtering: Ihave Extension
-
 :rfc:`6154`
 
     IMAP LIST Extension for Special-Use Mailboxes
 
     .. NOTE::
 
-        The LIST and LSUB commands don't return by default the special-use flags,
-        unless ``specialusealways`` is turned explicitly on.
+        The LIST and LSUB commands return the special-use flags, unless the
+	``specialusealways`` configuration variable is explicitly turned off.
 
 :rfc:`6321`
 
@@ -641,7 +651,33 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
 :rfc:`7529`
 
-    Non-Gregorian Recurrence Rules in the Internet Calendaring and Scheduling Core Object Specification (iCalendar) (obsoletes draft-ietf-calext-rscale)
+    Non-Gregorian Recurrence Rules in the Internet Calendaring and
+    Scheduling Core Object Specification (iCalendar)
+
+:rfc:`7540`
+
+      Hypertext Transfer Protocol Version 2 (HTTP/2)
+
+:rfc:`7615`
+
+    HTTP Authentication-Info and Proxy-Authentication-Info Response
+    Header Fields
+
+:rfc:`7616`
+
+    HTTP Digest Access Authentication
+
+:rfc:`7617`
+
+    The 'Basic' HTTP Authentication Scheme
+
+:rfc:`7694`
+
+    Hypertext Transfer Protocol (HTTP) Client-Initiated Content-Encoding
+
+:rfc:`7804`
+
+    Salted Challenge Response HTTP Authentication Mechanism
 
 :rfc:`7808`
 
@@ -651,9 +687,19 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
     CalDAV: Time Zones by Reference
 
+:rfc:`7932`
+
+    Brotli Compressed Data Format
+
 :rfc:`7953`
 
     Calendar Availability
+
+:rfc:`8144`
+
+    Use of the Prefer Header Field in Web Distributed Authoring and
+    Versioning (WebDAV)
+
 
 IETF RFC Drafts
 ===============
@@ -684,29 +730,6 @@ draft-thomson-hybi-http-timeout
 
     Hypertext Transfer Protocol (HTTP) Keep-Alive Header
 
-draft-murchison-webdav-prefer
-
-    Use of the Prefer Header Field in Web Distributed Authoring and
-    Versioning (WebDAV)
-
-
-draft-ietf-httpauth-basicauth-update
-
-    The 'Basic' HTTP Authentication Scheme
-
-draft-ietf-httpauth-digest
-
-    HTTP Digest Access Authentication
-
-draft-ietf-httpbis-auth-info
-
-    The Hypertext Transfer Protocol (HTTP) Authentication-Info and
-    Proxy- Authentication-Info Response Header Fields
-
-draft-ietf-httpbis-cice
-
-    Hypertext Transfer Protocol (HTTP) Client-Initiated Content-Encoding
-
 ..
 
     caldav-ctag     Calendar Collection Entity Tag (CTag) in CalDAV
@@ -715,31 +738,14 @@ draft-ietf-httpbis-cice
 RFC Wishlist
 ============
 
-:rfc:`5183`
-
-    Sieve Email Filtering: Environment Extension
-
 :rfc:`5235`
 
     Sieve Email Filtering: Spamtest and Virustest Extensions
-
-:rfc:`5293`
-
-    Sieve Email Filtering: Editheader Extension
-
-:rfc:`5429`
-
-    Sieve Email Filtering: Reject and Extended Reject Extensions
 
 :rfc:`5437`
 
     Sieve Notification Mechanism: Extensible Messaging and Presence
     Protocol (XMPP)
-
-:rfc:`5490`
-
-    The Sieve Mail-Filtering Language -- Extensions for Checking Mailbox
-    Status and Accessing Mailbox Metadata
 
 :rfc:`5703`
 

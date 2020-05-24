@@ -15,19 +15,14 @@ Important: Make sure to read the Upgrading to Cyrus IMAP 2.5.0 notes
 
 * Development: Sphinx for Documentation
 
-Download via HTTP:
+Download from GitHub:
 
-   * http://www.cyrusimap.org/releases/old/cyrus-imapd-2.5.0.tar.gz
-
-   * http://www.cyrusimap.org/releases/old/cyrus-
-     imapd-2.5.0.tar.gz.sig
-
-Download via FTP:
-
-   * ftp://ftp.cyrusimap.org/cyrus-imapd/OLD-VERSIONS/cyrus-
+   * https://github.com/cyrusimap/cyrus-
+     imapd/releases/download/cyrus- imapd-2.5.0/cyrus-
      imapd-2.5.0.tar.gz
 
-   * ftp://ftp.cyrusimap.org/cyrus-imapd/OLD-VERSIONS/cyrus-
+   * https://github.com/cyrusimap/cyrus-
+     imapd/releases/download/cyrus- imapd-2.5.0/cyrus-
      imapd-2.5.0.tar.gz.sig
 
 

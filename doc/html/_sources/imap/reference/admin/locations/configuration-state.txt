@@ -174,10 +174,6 @@ settings in :cyrusman:`imapd.conf(5)`:
 	:start-after: startblob notifysocket
 	:end-before: endblob notifysocket
 
-.. include:: /imap/reference/manpages/configs/imapd.conf.rst
-	:start-after: startblob sphinx_socket
-	:end-before: endblob sphinx_socket
-
 Per-user State Directories
 ==========================
 

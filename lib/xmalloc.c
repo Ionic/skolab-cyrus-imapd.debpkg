@@ -44,9 +44,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sysexits.h>
 #include "xmalloc.h"
 
-#include "exitcodes.h"
 
 EXPORTED void* xmalloc(size_t size)
 {
@@ -55,22 +55,15 @@ EXPORTED void* xmalloc(size_t size)
     ret = malloc(size);
     if (ret != NULL) return ret;
 
-    fatal("Virtual memory exhausted", EC_TEMPFAIL);
+    fatal("Virtual memory exhausted", EX_TEMPFAIL);
     return 0; /*NOTREACHED*/
 }
 
 EXPORTED void* xzmalloc(size_t size)
 {
-    void *ret;
-
-    ret = malloc(size);
-    if (ret != NULL) {
-        memset(ret, 0, size);
-        return ret;
-    }
-
-    fatal("Virtual memory exhausted", EC_TEMPFAIL);
-    return 0; /*NOTREACHED*/
+    void *ret = xmalloc(size);
+    memset(ret, 0, size);
+    return ret;
 }
 
 EXPORTED void *xcalloc(size_t nmemb, size_t size)
@@ -86,7 +79,7 @@ EXPORTED void *xrealloc (void* ptr, size_t size)
     ret = (!ptr ? malloc (size) : realloc (ptr, size));
     if (ret != NULL) return ret;
 
-    fatal("Virtual memory exhausted", EC_TEMPFAIL);
+    fatal("Virtual memory exhausted", EX_TEMPFAIL);
     return 0; /*NOTREACHED*/
 }
 

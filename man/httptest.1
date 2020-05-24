@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "HTTPTEST" "1" "December 16, 2019" "3.0.13" "Cyrus IMAP"
+.TH "HTTPTEST" "1" "May 04, 2020" "3.2.0" "Cyrus IMAP"
 .SH NAME
 httptest \- Cyrus IMAP documentation
 .
@@ -32,24 +32,28 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 ..
 .sp
 Interactive HTTP test program.
-.SH SYNOPSIS
-.sp
-.nf
-\fBhttptest\fP [ \fB\-t\fP \fIkeyfile\fP ] [ \fB\-p\fP \fIport\fP ] [ \fB\-m\fP \fImechanism\fP ] [ \fB\-a\fP \fIuserid\fP ]
-    [ \fB\-u\fP \fIuserid\fP ] [ \fB\-k\fP \fInum\fP ] [ \fB\-l\fP \fInum\fP ] [ \fB\-r\fP \fIrealm\fP ] [ \fB\-f\fP \fIfile\fP ]
-    [ \fB\-n\fP \fInum\fP ] [ \fB\-s\fP ] [ \fB\-c\fP ] [ \fB\-i\fP ] [ \fB\-v\fP ] [ \fB\-w\fP \fIpasswd\fP ] [ \fB\-o\fP \fIoption\fP=\fIvalue\fP ] \fIhostname\fP
-.fi
-.SH DESCRIPTION
 .sp
 This is actually installed as a hard linked copy of imtest(1)\&.
 .sp
-\fBhttptest\fP is a utility that allows you to authenticate to a
-HTTP server and interactively issue requests to it. Once
-authenticated you may issue any HTTP request by simply typing it in.
-It is capable of multiple SASL authentication mechanisms and handles
+It allows you to authenticate and send HTTP commands to the server.
+.SH SYNOPSIS
+.sp
+.nf
+\fBimtest\fP [ \fB\-t\fP \fIkeyfile\fP ] [ \fB\-p\fP \fIport\fP ] [ \fB\-m\fP \fImechanism\fP ]
+    [ \fB\-a\fP \fIuserid\fP ] [ \fB\-u\fP \fIuserid\fP ] [ \fB\-k\fP \fInum\fP ] [ \fB\-l\fP \fInum\fP ]
+    [ \fB\-r\fP \fIrealm\fP ] [ \fB\-f\fP \fIfile\fP ] [ \fB\-n\fP \fInum\fP ] [ \fB\-s\fP ] [ \fB\-q\fP ]
+    [ \fB\-c\fP ] [ \fB\-i\fP ] [ \fB\-z\fP ] [ \fB\-v\fP ] [ \fB\-I\fP \fIfile\fP ] [ \fB\-x\fP \fIfile\fP ]
+    [ \fB\-X\fP \fIfile\fP ] [ \fB\-w\fP \fIpasswd\fP ] [ \fB\-o\fP \fIoption\fP=\fIvalue\fP ] \fIhostname\fP
+.fi
+.SH DESCRIPTION
+.sp
+\fBimtest\fP is a utility that allows you to authenticate to a IMAP or
+IMSP server and interactively issue commands to it. Once authenticated
+you may issue any IMAP or IMSP command by simply typing it in. It is
+capable of multiple SASL authentication mechanisms and handles
 encryption layers transparently. This utility is often used for testing
-the operation of an http server. Also those developing HTTP clients
-find it useful.
+the operation of a imsp or imap server. Also those developing IMAP
+clients find it useful.
 .SH OPTIONS
 .INDENT 0.0
 .TP
@@ -61,23 +65,23 @@ authentication.
 .INDENT 0.0
 .TP
 .B \-p  port
-Port to connect to. If left off this defaults to \fBhttp\fP as
-defined in \fB/etc/services\fP\&.
+Port to connect to. If left off this defaults to \fBimap\fP as defined
+in \fB/etc/services\fP\&.
 .UNINDENT
 .INDENT 0.0
 .TP
 .B \-m  mechanism
-Force \fBhttptest\fP to use \fImechanism\fP for authentication. If not
-specified, the strongest authentication mechanism supported by the
-server is chosen.  Specify one of \fIBasic\fP, \fIDigest\fP, \fINTLM\fP, or
-\fINegotiate\fP (GSS\-SPNEGO).
+Force \fBimtest\fP to use \fImechanism\fP for authentication. If not
+specified the strongest authentication mechanism supported by the
+server is chosen.  Specify \fIlogin\fP to use the LOGIN command instead
+of AUTHENTICATE.
 .UNINDENT
 .INDENT 0.0
 .TP
 .B \-a  userid
 Userid to use for authentication; defaults to the current user.
-This is the userid whose password or credentials will be presented
-to the server for verification.
+This is the userid whose password or credentials will be presented to
+the server for verification.
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -85,6 +89,14 @@ to the server for verification.
 Userid to use for authorization; defaults to the current user.
 This is the userid whose identity will be assumed after
 authentication.
+.sp
+\fBNOTE:\fP
+.INDENT 7.0
+.INDENT 3.5
+This is only used with SASL mechanisms that allow proxying
+(e.g. PLAIN, DIGEST\-MD5).
+.UNINDENT
+.UNINDENT
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -121,14 +133,19 @@ attempt to do SSL/TLS session reuse and/or fast reauth
 .INDENT 0.0
 .TP
 .B \-s
-Enable HTTP over SSL (https).
+Enable SSL over chosen protocol.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-q
+Enable IMAP COMPRESSion (after authentication).
 .UNINDENT
 .INDENT 0.0
 .TP
 .B \-c
-Enable challenge prompt callbacks.  This will cause the OTP
-mechanism to ask for the the one\-time password instead of the
-secret pass\-phrase (library generates the correct response).
+Enable challenge prompt callbacks.  This will cause the OTP mechanism
+to ask for the the one\-time password instead of the secret pass\-phrase
+(library generates the correct response).
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -138,12 +155,33 @@ the protocol supports it.
 .UNINDENT
 .INDENT 0.0
 .TP
+.B \-I  file
+Echo the PID of the running process into \fIfile\fP (This can be useful
+with \-X).
+.UNINDENT
+.INDENT 0.0
+.TP
 .B \-v
 Verbose. Print out more information than usual.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-w
+.B \-z
+Timing test.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-x  file
+Open the named socket for the interactive portion.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-X  file
+Like \-x, only close all file descriptors & daemonize the process.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-w passwd
 Password to use (if not supplied, we will prompt).
 .UNINDENT
 .INDENT 0.0
@@ -154,10 +192,12 @@ Set the SASL \fIoption\fP to \fIvalue\fP\&.
 .SH EXAMPLES
 .SH SEE ALSO
 .sp
+imapd(8)
+.sp
 httpd(8)
 .SH AUTHOR
 The Cyrus Team
 .SH COPYRIGHT
-1993-2017, The Cyrus Team
+1993-2018, The Cyrus Team
 .\" Generated by docutils manpage writer.
 .

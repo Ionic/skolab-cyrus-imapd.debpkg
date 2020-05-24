@@ -47,6 +47,7 @@
 
 #include "sieve_interface.h"
 
+#include "bc_parse.h"
 #include "bytecode.h"
 #include "script.h"
 
@@ -60,12 +61,9 @@
 #include <string.h>
 
 #include "map.h"
+#include "times.h"
 
 static void dump2(bytecode_input_t *d, int len);
-static int dump2_test(bytecode_input_t * d, int i, int version);
-
-/* from bc_eval.c */
-int unwrap_string(bytecode_input_t *bc, int pos, const char **str, int *len);
 
 /*this is called by xmalloc*/
 EXPORTED void fatal(const char *s, int code)
@@ -128,655 +126,680 @@ int main(int argc, char * argv[])
     }
 }
 
-static int write_list(int list_len, int i, bytecode_input_t * d)
+static void print_string(const char *label, const char *str)
 {
-    int x;
-    i++;
-    for (x=0; x<list_len; x++)
-    {
-        const char *data;
-        int len;
+    size_t len;
 
-        i = unwrap_string(d, i, &data, &len);
-
-        printf("{%d}%s\n", len, data);
+    if (str) len = strlen(str);
+    else {
+        str = "[nil]";
+        len = -1;
     }
-    return i;
+
+    printf("%s({%zd}%s)", label, len, str);
 }
 
-static int printComparison(bytecode_input_t *d ,int i)
+static void print_stringlist(const char *label, strarray_t *list)
 {
-    printf("Comparison: ");
-    switch(ntohl(d[i].value))
-    {
-    case B_IS: printf("Is"); break;
-    case B_CONTAINS:printf("Contains"); break;
-    case B_MATCHES: printf("Matches"); break;
-    case B_REGEX: printf("Regex"); break;
-    case B_COUNT:
-        printf("Count");
+    int x, list_len = strarray_size(list);
 
-        switch(ntohl(d[i+1].value))
-        {
-        case B_GT: printf(" greater than "); break;
-        case B_GE: printf(" greater than or equal "); break;
-        case B_LT: printf(" less than "); break;
-        case B_LE: printf(" less than or equal "); break;
-        case B_NE: printf(" not equal "); break;
-        case B_EQ: printf(" equal "); break;
-        }
+    printf("%s{%d} [", label, list_len);
 
-        break;
-    case B_VALUE:
-        printf("Value");
+    for (x = 0; x < list_len; x++) {
+        const char *str = strarray_nth(list, x);
 
-        switch(ntohl(d[i+1].value))
-        {
-        case B_GT: printf(" greater than "); break;
-        case B_GE: printf(" greater than or equal ");break;
-        case B_LT: printf(" less than ");    break;
-        case B_LE: printf(" less than or equal ");break;
-        case B_NE: printf(" not equal ");    break;
-        case B_EQ: printf(" equal ");break;
-        }
-
-        break;
-    default:
-        exit(1);
+        if (!(x % 5)) printf("\n\t\t");
+        print_string(" ", str);
     }
+    printf("\n\t]");
 
-    switch (ntohl(d[i+2].value))
-    {
-    case B_ASCIICASEMAP: printf("   (ascii-casemap) "); break;
-    case B_OCTET: printf("    (octet) "); break;
-    case B_ASCIINUMERIC:  printf("   (ascii-numeric) "); break;
+    free(strarray_takevf(list));
+}
+
+static void print_time(uint64_t t)
+{
+    printf(" %02lu:%02lu:%02lu", t / 3600, (t % 3600) / 60, t % 60);
+}
+
+static void print_vallist(const char *label, arrayu64_t *list,
+                          void (*print_cb)(uint64_t))
+{
+    int x, list_len = arrayu64_size(list);
+
+    printf("%s{%d} [", label, list_len);
+
+    for (x = 0; x < list_len; x++) {
+        uint64_t i = arrayu64_nth(list, x);
+
+        if (!(x % 5)) printf("\n\t\t");
+        if (print_cb) print_cb(i);
+        else printf(" %lu", i);
+    }
+    printf("\n\t]");
+
+    arrayu64_free(list);
+}
+
+static void print_comparator(comp_t *comp)
+{
+    printf(" COMPARATOR [ ");
+
+    switch (comp->match) {
+    case B_IS:       printf("Is");       break;
+    case B_CONTAINS: printf("Contains"); break;
+    case B_MATCHES:  printf("Matches");  break;
+    case B_REGEX:    printf("Regex");    break;
+    case B_LIST:     printf("List");     break;
+    case B_COUNT:
+    case B_VALUE:
+        printf("%s", comp->match == B_COUNT ? "Count" : "Value");
+
+        switch (comp->relation) {
+        case B_GT: printf(" >");  break;
+        case B_GE: printf(" >="); break;
+        case B_LT: printf(" <");  break;
+        case B_LE: printf(" <="); break;
+        case B_NE: printf(" !="); break;
+        case B_EQ: printf(" =="); break;
+        }
+        break;
+
     default: exit(1);
     }
 
-    printf("\n");
-    return i+3;
+    switch (comp->collation) {
+    case B_OCTET:        printf(" (octet)");         break;
+    case B_ASCIICASEMAP: printf(" (ascii-casemap)"); break;
+    case B_ASCIINUMERIC: printf(" (ascii-numeric)"); break;
+    }
+
+    printf(" ]");
 }
 
-
-static int dump2_test(bytecode_input_t * d, int i, int version)
+static const char *addrpart_to_string(int part)
 {
-    int l,x,index;
-    int opcode;
-    int has_index=0;/* used to differentiate between pre and post index tests */
-
-    opcode = ntohl(d[i].value);
-    switch(opcode) {
-    case BC_FALSE:
-        printf("false");
-        i++;
-        break;
-    case BC_TRUE:
-        printf("true");
-        i++;
-        break;
-    case BC_NOT:/*2*/
-        /* XXX
-           there is a value being skipped in the second pass...
-           no idea what it does, but it isn't carried to here...
-           see bytecodee.c */
-        printf(" not(");
-        i=dump2_test(d, i+1, version);
-        printf(")\n");
-        break;
-    case BC_EXISTS:
-        printf("exists");
-        i=write_list(ntohl(d[i+1].len), i+2, d);
-        break;
-    case BC_SIZE:
-        printf("size");
-        if (ntohl(d[i+1].value)==B_OVER) {
-            /* over */
-            printf("over %d", ntohl(d[i+2].value));
-        } else {
-            /* under */
-            printf("under %d", ntohl(d[i+2].value));
-        }
-        i+=3;
-        break;
-    case BC_ANYOF:/*5*/
-        printf("any of \n(");
-        l=ntohl(d[i+1].len);
-        i+=3;
-
-        for (x=0; x<l; x++)
-        {
-            i=dump2_test(d, i, version);
-            if((x+1)<l)
-                printf(" OR ");
-        }
-
-        printf(")\n");
-        break;
-    case BC_ALLOF:/*6*/
-        printf("all of \n(");
-        l=ntohl(d[i+1].len);
-        i+=3;
-
-        for (x=0; x<l; x++)
-        {
-            i=dump2_test(d, i, version);
-            if((x+1)<l)
-                printf(" AND ");
-        }
-
-        printf(")\n");
-        break;
-    case BC_ADDRESS:/*13*/
-        has_index=1;
-        /*fall-through*/
-    case BC_ADDRESS_PRE_INDEX:/*7*/
-        if (0x07 == version && BC_ADDRESS_PRE_INDEX == opcode) {
-            /* There was a version of the bytecode that had the index extension
-             * but did not update the bytecode codepoints, nor did it increment
-             * the bytecode version number.  This tests if the index extension
-             * was in the bytecode based on the position of the match-type
-             * argument.
-             * We test for the applicable version number explicitly.
-             */
-            switch (ntohl(d[i+2].value)) {
-            case B_IS:
-            case B_CONTAINS:
-            case B_MATCHES:
-            case B_REGEX:
-            case B_COUNT:
-            case B_VALUE:
-                has_index = 1;
-                break;
-            default:
-                has_index = 0;
-            }
-        }
-        printf("Address [");
-        index = has_index ? ntohl(d[++i].value) : 0;
-        i=printComparison(d, i+1);
-        printf("               type: ");
-        switch(ntohl(d[i++].value))
-        {
-        case B_ALL: printf("all"); break;
-        case B_LOCALPART:printf("localpart"); break;
-        case B_DOMAIN:printf("domain"); break;
-        case B_USER:printf("user"); break;
-        case B_DETAIL:printf("detail"); break;
-        }
-        printf("\n");
-        if (index != 0) {
-                printf("              Index: %d %s\n",
-                    abs(index), index < 0 ? "[LAST]" : "");
-        }
-        printf("              Headers:");
-        i=write_list(ntohl(d[i].len), i+1, d);
-        printf("              Data:");
-        i=write_list(ntohl(d[i].len), i+1, d);
-        printf("             ]\n");
-        break;
-    case BC_ENVELOPE:/*8*/
-        printf("Envelope [");
-        i=printComparison(d, i+1);
-        printf("                type: ");
-        switch(ntohl(d[i++].value))
-        {
-        case B_ALL: printf("all"); break;
-        case B_LOCALPART:printf("localpart"); break;
-        case B_DOMAIN:printf("domain"); break;
-        case B_USER:printf("user"); break;
-        case B_DETAIL:printf("detail"); break;
-        }
-        printf("              Headers:");
-        i=write_list(ntohl(d[i].len), i+1, d);
-        printf("              Data:");
-        i=write_list(ntohl(d[i].len), i+1, d);
-        printf("             ]\n");
-        break;
-    case BC_HEADER:/*14*/
-        has_index=1;
-        /*fall-through*/
-    case BC_HEADER_PRE_INDEX:/*9*/
-        if (0x07 == version && BC_HEADER_PRE_INDEX == opcode) {
-            /* There was a version of the bytecode that had the index extension
-             * but did not update the bytecode codepoints, nor did it increment
-             * the bytecode version number.  This tests if the index extension
-             * was in the bytecode based on the position of the match-type
-             * argument.
-             * We test for the applicable version number explicitly.
-             */
-            switch (ntohl(d[i+2].value)) {
-            case B_IS:
-            case B_CONTAINS:
-            case B_MATCHES:
-            case B_REGEX:
-            case B_COUNT:
-            case B_VALUE:
-                    has_index = 1;
-                    break;
-            default:
-                    has_index = 0;
-            }
-        }
-        printf("Header [");
-        index = has_index ? ntohl(d[++i].value) : 0;
-        i= printComparison(d, i+1);
-        if (index != 0) {
-                printf("              Index: %d %s\n",
-                    abs(index), index < 0 ? "[LAST]" : "");
-        }
-        printf("              Headers: ");
-        i=write_list(ntohl(d[i].len), i+1, d);
-        printf("              Data: ");
-        i=write_list(ntohl(d[i].len), i+1, d);
-        printf("             ]\n");
-        break;
-    case BC_HASFLAG:/*15*/
-    case BC_STRING:/*21*/
-        if (BC_HASFLAG == opcode) {
-            printf("Hasflag [");
-        } else {
-            printf("String [");
-        }
-        i= printComparison(d, i+1);
-        printf("              Variables: ");
-        i=write_list(ntohl(d[i].len), i+1, d);
-        printf("              Data: ");
-        i=write_list(ntohl(d[i].len), i+1, d);
-        printf("             ]\n");
-        break;
-    case BC_BODY:/*10*/
-        printf("Body [");
-        i=printComparison(d, i+1);
-        printf("              Transform: ");
-        switch(ntohl(d[i++].value))
-        {
-        case B_RAW: printf("raw"); break;
-        case B_TEXT:printf("text"); break;
-        case B_CONTENT:printf("content"); break;
-        }
-        printf("\tOffset: %d\n", ntohl(d[i++].value));
-        printf("              Content-Types:");
-        i=write_list(ntohl(d[i].len), i+1, d);
-        printf("              Data:");
-        i=write_list(ntohl(d[i].len), i+1, d);
-        printf("             ]\n");
-        break;
-    case BC_DATE:/*11*/
-        has_index=1;
-        GCC_FALLTHROUGH
-    case BC_CURRENTDATE:/*12*/
-        if (0x07 == version) {
-            /* There was a version of the bytecode that had the index extension
-             * but did not update the bytecode codepoints, nor did it increment
-             * the bytecode version number.  This tests if the index extension
-             * was in the bytecode based on the position of the match-type
-             * or comparator argument.  This will correctly identify whether
-             * the index extension was supported in every case except the case
-             * of a timezone that is 61 minutes offset (since 61 corresponds to
-             * B_ORIGINALZONE).
-             * There was also an unnumbered version of BC_CURRENTDATE that did
-             * allow :index.  This also covers that case.
-             * We test for the applicable version number explicitly.
-             */
-            switch (ntohl(d[i+4].value)) {
-            /* if the 4th parameter is a comparator, we have neither :index nor
-             *  :zone tags.  B_ORIGINALZONE is the first parameter.
-             */
-            case B_ASCIICASEMAP:
-            case B_OCTET:
-            case B_ASCIINUMERIC:
-                has_index = 0;
-                break;
-            default:
-                /* otherwise, we either have a :zone tag, an :index tag, or
-                 * both
-                 */
-                switch (ntohl(d[i+5].value)) {
-                /* if the 5th paramater is a comparator, we have either :index
-                 * or :zone, but not both.
-                 */
-                case B_ASCIICASEMAP:
-                case B_OCTET:
-                case B_ASCIINUMERIC:
-                    /* The ambiguous case is B_TIMEZONE as 1st parameter and
-                     * B_ORIGINALZONE as second parameter, which could mean
-                     * either ':index 60 :originalzone' or ':zone "+0101"'
-                     */
-                    if (B_TIMEZONE == ntohl(d[i+1].value) &&
-                            B_ORIGINALZONE == ntohl(d[i+2].value)) {
-                        /* This is the ambiguous case.  Resolve the ambiguity
-                         * by assuming that there is no :index tag since the
-                         * unnumbered bytecode that shipped with Kolab
-                         * Groupware 3.3 included support for the date
-                         * extension, but not for the index extension.
-                         */
-                        has_index = 0;
-
-                    } else if (B_TIMEZONE == ntohl(d[i+1].value)) {
-                        /* if the first parameter is B_TIMEZONE, and the above
-                         * test was false, it must be a :zone tag, and we
-                         * don't have :index.
-                         */
-                        has_index = 0;
-                    } else {
-                        /* if the first parameter is not B_TIMEZONE, it must
-                         * be an :index tag, and we don't have :zone.
-                         */
-                        has_index = 1;
-                    }
-                    break;
-                default:
-                    /* if the 5th parameter is not a comparator, the 6th is,
-                     * and we have both :index and :zone
-                     */
-                    has_index = 1;
-                }
-            }
-        }
-        ++i; /* skip opcode */
-
-        if (BC_DATE == opcode) {
-                printf("date [");
-        }
-        else {
-                printf("currentdate [");
-        }
-
-        /* index */
-        index = has_index ? ntohl(d[i++].value) : 0;
-        if (index != 0) {
-                printf("              Index: %d %s\n",
-                    abs(index), index < 0 ? "[LAST]" : "");
-        }
-
-        /* zone tag */
-        {
-                printf("Zone-Tag: ");
-                switch (ntohl(d[i++].value)) {
-                case B_TIMEZONE:
-                        printf("Specific timezone: offset by %d minutes.\n", ntohl(d[i++].value));
-                        break;
-                case B_ORIGINALZONE:
-                        printf("Original zone.\n");
-                        break;
-                }
-        }
-
-        i=printComparison(d, i);
-
-        printf("              Date-Type: ");
-        switch(ntohl(d[i++].value))
-        {
-        case B_YEAR: printf("year\n"); break;
-        case B_MONTH: printf("month\n"); break;
-        case B_DAY: printf("day\n"); break;
-        case B_JULIAN: printf("julian\n"); break;
-        case B_HOUR: printf("hour\n"); break;
-        case B_MINUTE: printf("minute\n"); break;
-        case B_SECOND: printf("second\n"); break;
-        case B_TIME: printf("time\n"); break;
-        case B_ISO8601: printf("iso8601\n"); break;
-        case B_STD11: printf("std11\n"); break;
-        case B_ZONE: printf("zone\n"); break;
-        case B_WEEKDAY: printf("weekday\n"); break;
-        }
-
-        /* header name */
-        if (BC_DATE == opcode) {
-                const char *data;
-                int len;
-                i = unwrap_string(d, i, &data, &len);
-                printf("              Header Name: {%d}%s\n", len, data);
-        }
-
-        printf("              Key List: ");
-        i=write_list(ntohl(d[i].len), i+1, d);
-        printf("             ]\n");
-        break;
-    default:
-        printf("WERT %d ", ntohl(d[i].value));
+    switch (part) {
+    case B_ALL:       return "all";
+    case B_LOCALPART: return "localpart";
+    case B_DOMAIN:    return "domain";
+    case B_USER:      return "user";
+    case B_DETAIL:    return "detail";
+    default:          return NULL;
     }
+}
+
+static const char *transform_to_string(int transform)
+{
+    switch (transform) {
+    case B_RAW:     return "raw";
+    case B_TEXT:    return "text";
+    case B_CONTENT: return "content";
+    default:        return NULL;
+    }
+}
+
+static const char *datepart_to_string(int part)
+{
+    switch (part) {
+    case B_YEAR:    return "year";
+    case B_MONTH:   return "month";
+    case B_DAY:     return "day";
+    case B_DATE:    return "date";
+    case B_JULIAN:  return "julian";
+    case B_HOUR:    return "hour";
+    case B_MINUTE:  return "minute";
+    case B_SECOND:  return "second";
+    case B_TIME:    return "time";
+    case B_ISO8601: return "iso8601";
+    case B_STD11:   return "std11";
+    case B_ZONE:    return "zone";
+    case B_WEEKDAY: return "weekday";
+    default:        return NULL;
+    }
+}
+
+static void print_test(test_t *test)
+{
+    switch (test->type) {
+    case BC_FALSE:
+        printf("FALSE");
+        break;
+
+    case BC_TRUE:
+        printf("TRUE");
+        break;
+
+    case BC_EXISTS:
+        print_stringlist("EXISTS", test->u.sl);
+        break;
+
+    case BC_SIZE:
+        printf("SIZE %s %d",
+               (test->u.sz.t == B_OVER) ? "over" : "under", test->u.sz.n);
+        break;
+
+    case BC_ADDRESS:
+        printf("ADDRESS");
+        printf(" ADDRPART(%s)", addrpart_to_string(test->u.ae.addrpart));
+        if (test->u.ae.comp.index) {
+            printf(" INDEX(%d %s)", abs(test->u.ae.comp.index),
+                   (test->u.ae.comp.index < 0) ? "[LAST]" : "");
+        }
+        print_comparator(&test->u.ae.comp);
+        print_stringlist("\n\tHEADERS", test->u.ae.sl);
+        print_stringlist(" PATTERNS", test->u.ae.pl);
+        break;
+
+    case BC_ENVELOPE:
+        printf("ENVELOPE");
+        printf(" ADDRPART(%s)", addrpart_to_string(test->u.ae.addrpart));
+        print_comparator(&test->u.ae.comp);
+        print_stringlist("\n\tHEADERS", test->u.ae.sl);
+        print_stringlist(" PATTERNS", test->u.ae.pl);
+        break;
+
+    case BC_HEADER:
+        printf("HEADER");
+        if (test->u.hhs.comp.index) {
+            printf(" INDEX(%d %s)", abs(test->u.hhs.comp.index),
+                   (test->u.hhs.comp.index < 0) ? "[LAST]" : "");
+        }
+        print_comparator(&test->u.hhs.comp);
+        print_stringlist("\n\tHEADERS", test->u.hhs.sl);
+        print_stringlist(" PATTERNS", test->u.hhs.pl);
+        break;
+
+    case BC_BODY:
+        printf("BODY");
+        print_comparator(&test->u.b.comp);
+        printf("\n\tTRANSFORM(%s)", transform_to_string(test->u.b.transform));
+        printf(" OFFSET(%d)", test->u.b.offset);
+        print_stringlist(" CONTENT-TYPES", test->u.b.content_types);
+        print_stringlist(" PATTERNS", test->u.b.pl);
+        break;
+
+    case BC_DATE:
+        printf("DATE");
+        if (test->u.dt.comp.index) {
+            printf(" INDEX(%d %s)", abs(test->u.dt.comp.index),
+                   (test->u.dt.comp.index < 0) ? "[LAST]" : "");
+        }
+        if (test->u.dt.zonetag == B_TIMEZONE)
+            printf(" ZONE(%+dmin)", test->u.dt.zone);
+        else
+            printf(" ZONE(ORIGINAL)");
+        print_comparator(&test->u.dt.comp);
+        printf("\n\tDATEPART(%s)", datepart_to_string(test->u.dt.date_part));
+        print_string(" HEADER", test->u.dt.header_name);
+        print_stringlist(" KEYS", test->u.dt.kl);
+        break;
+
+    case BC_CURRENTDATE:
+        printf("CURRENTDATE");
+        if (test->u.dt.zonetag == B_TIMEZONE)
+            printf(" ZONE(%+dmin)", test->u.dt.zone);
+        else
+            printf(" ZONE(ORIGINAL)");
+        print_comparator(&test->u.dt.comp);
+        printf("\n\tDATEPART(%s)", datepart_to_string(test->u.dt.date_part));
+        print_stringlist(" KEYS", test->u.dt.kl);
+        break;
+
+    case BC_HASFLAG:
+        printf("HASFLAG");
+        print_comparator(&test->u.hhs.comp);
+        print_stringlist("\n\tVARIABLES", test->u.hhs.sl);
+        print_stringlist(" PATTERNS", test->u.hhs.pl);
+        break;
+
+    case BC_MAILBOXEXISTS:
+        print_stringlist("MAILBOXEXISTS", test->u.mm.keylist);
+        break;
+
+    case BC_MAILBOXIDEXISTS:
+        print_stringlist("MAILBOXIDEXISTS", test->u.mm.keylist);
+        break;
+
+    case BC_METADATA:
+        printf("METADATA");
+        print_comparator(&test->u.mm.comp);
+        print_string("\n\tMAILBOX", test->u.mm.extname);
+        print_string(" ANNOTATION", test->u.mm.keyname);
+        print_stringlist(" PATTERNS", test->u.mm.keylist);
+        break;
+
+    case BC_METADATAEXISTS:
+        printf("METAEXISTS");
+        print_string("MAILBOX", test->u.mm.extname);
+        print_stringlist(" ANNOTATIONS", test->u.mm.keylist);
+        break;
+
+    case BC_SERVERMETADATA:
+        printf("SERVERMETADATA");
+        print_comparator(&test->u.mm.comp);
+        print_string("\n\tANNOTATION", test->u.mm.keyname);
+        print_stringlist(" PATTERNS", test->u.mm.keylist);
+        break;
+
+    case BC_SERVERMETADATAEXISTS:
+        print_stringlist("SERVERMETADATAEXISTS", test->u.mm.keylist);
+        break;
+
+    case BC_STRING:
+        printf("STRING");
+        print_comparator(&test->u.hhs.comp);
+        print_stringlist("\n\tVARIABLES", test->u.hhs.sl);
+        print_stringlist(" PATTERNS", test->u.hhs.pl);
+        break;
+
+    case BC_VALIDEXTLIST:
+        print_stringlist("VALIDEXTLIST", test->u.sl);
+        break;
+
+    case BC_VALIDNOTIFYMETHOD:
+        print_stringlist("VALIDNOTIFYMETHOD", test->u.sl);
+        break;
+
+    case BC_NOTIFYMETHODCAPABILITY:
+        printf("NOTIFYMETHODCAPABILITY");
+        print_comparator(&test->u.mm.comp);
+        print_string("\n\tURI", test->u.mm.extname);
+        print_string(" CAPABILITY", test->u.mm.keyname);
+        print_stringlist(" KEYS", test->u.mm.keylist);
+        break;
+
+    case BC_DUPLICATE:
+        printf("DUPLICATE");
+        print_string((test->u.dup.idtype == B_UNIQUEID) ?
+                     " UNIQUEID" : " HDRNAME", test->u.dup.idval);
+        print_string(" HANDLE", test->u.dup.handle);
+        printf("\n\tSECONDS(%d) LAST(%d)",
+                     test->u.dup.seconds, test->u.dup.last);
+        break;
+
+    case BC_IHAVE:
+        print_stringlist("IHAVE", test->u.sl);
+        break;
+
+    case BC_SPECIALUSEEXISTS:
+        printf("SPECIALUSEEXISTS");
+        print_string("MAILBOX", test->u.mm.extname);
+        print_stringlist(" FLAGS", test->u.mm.keylist);
+        break;
+
+    case BC_ENVIRONMENT:
+        printf("ENVIRONMENT");
+        print_comparator(&test->u.mm.comp);
+        print_string("\n\tITEM", test->u.mm.keyname);
+        print_stringlist(" KEYS", test->u.mm.keylist);
+        break;
+
+#ifdef WITH_JMAP
+    case BC_JMAPQUERY: {
+        json_error_t jerr;
+        json_t *jquery = json_loads(test->u.jquery, 0, &jerr);
+        char *json = json_dumps(jquery, JSON_INDENT(2));
+
+        printf("JMAPQUERY");
+        print_string(" ", json);
+        json_decref(jquery);
+        free(json);
+        break;
+    }
+#endif
+    }
+
+    printf("\n");
+}
+
+static int dump2_test(bytecode_input_t *d, int i, int version)
+{
+    test_t test;
+    int len;
+
+    /* there is no short circuiting involved here */
+    i = bc_test_parse(d, i, version, &test);
+
+    switch (test.type) {
+    case BC_NOT:
+        printf("NOT ");
+        i = dump2_test(d, i, version);
+        break;
+
+    case BC_ANYOF:
+    case BC_ALLOF:
+        len = test.u.aa.ntests;
+
+        printf("%s({%d}\n\t",
+               (test.type == BC_ANYOF) ? "ANYOF" : "ALLOF", len);
+
+        while (len--) {
+            i = dump2_test(d, i, version);
+            printf("\t");
+        }
+        printf(")\n");
+        break;
+
+    default:
+        print_test(&test);
+        break;
+    }
+
     return i;
 }
 
 static void dump2(bytecode_input_t *d, int bc_len)
 {
     int i;
-    int version;
-    const char *data;
-    int len;
+    int version, requires;
 
     if (!d) return;
 
-    if (memcmp(d, BYTECODE_MAGIC, BYTECODE_MAGIC_LEN)) {
+    i = bc_header_parse(d, &version, &requires);
+    if (i <  0) {
         printf("not a bytecode file [magic number test failed]\n");
         return;
     }
 
-    i = BYTECODE_MAGIC_LEN / sizeof(bytecode_input_t);
-
-    version = ntohl(d[i].op);
-    printf("Sievecode version %d\n", version);
-    if (version >= 0x11 && ntohl(d[++i].value) & BFE_VARIABLES) {
-        printf("Require Variables\n");
+    printf("Bytecode version: %d\n", version);
+    if (version >= 0x11) {
+        printf("Require:");
+        if (requires & BFE_VARIABLES) printf(" Variables");
+        printf("\n");
     }
-    
-    for(i++; i<bc_len;) 
-    {
-        int op;
-        int copy = 0;
-        int create = 0;
-        int supports_variables = 0;
+    printf("\n");
 
-        printf("%d: ",i);
+    while (i < bc_len) {
+        commandlist_t cmd;
 
-        op = ntohl(d[i++].op);
-        switch (op) {
+        printf("%04d: ", i);
 
-        case B_STOP:/*0*/
-            printf("STOP\n");
+        i = bc_action_parse(d, i, version, &cmd);
+
+        switch (cmd.type) {
+        case B_STOP:
+            printf("STOP");
             break;
 
-        case B_KEEP:/*22*/
-            printf("KEEP FLAGS {%d}\n", ntohl(d[i].listlen));
-            i=write_list(ntohl(d[i].listlen), i+1, d);
-            copy = ntohl(d[i++].value);
-            printf("              COPY(%d)\n",copy);
-            break;
-        case B_KEEP_ORIG:/*1*/
-            printf("KEEP\n");
-            break;
-
-        case B_DISCARD:/*2*/
-            printf("DISCARD\n");
-            break;
-
-        case B_REJECT:/*3*/
-            i = unwrap_string(d, i, &data, &len);
-            printf("REJECT {%d}%s\n", len, data);
-            break;
-
-        case B_FILEINTO: /*24*/
-            create = ntohl(d[i++].value);
-            /* fall through */
-        case B_FILEINTO_FLAGS:/*23*/
-            printf("FILEINTO FLAGS {%d}\n", ntohl(d[i].listlen));
-            i=write_list(ntohl(d[i].listlen), i+1, d);
-            copy = ntohl(d[i++].value);
-            i = unwrap_string(d, i, &data, &len);
-            printf("              CREATE(%d) COPY(%d) FOLDER({%d}%s)\n",
-                    create, copy, len, data);
-            break;
-
-        case B_FILEINTO_COPY : /*19*/
-            copy = ntohl(d[i++].value);
-            /* fall through */
-        case B_FILEINTO_ORIG: /*4*/
-            i = unwrap_string(d, i, &data, &len);
-            printf("FILEINTO COPY(%d) CREATE(%d) FOLDER({%d}%s)\n",copy,create,len,data);
-            break;
-
-        case B_REDIRECT: /*20*/
-            copy = ntohl(d[i++].value);
-            /* fall through */
-        case B_REDIRECT_ORIG: /*5*/
-            i = unwrap_string(d, i, &data, &len);
-            printf("REDIRECT COPY(%d) ADDRESS({%d}%s)\n",copy,len,data);
-            break;
-
-        case B_IF:/*6*/
-            printf("IF (ends at %d)", ntohl(d[i].value));
-
-            /* there is no short circuiting involved here*/
-            i = dump2_test(d, i+1, version);
-            printf("\n");
-
-            break;
-
-        case B_MARK:/*7*/
-            printf("MARK\n");
-            break;
-
-        case B_UNMARK:/*8*/
-            printf("UNMARK\n");
-            break;
-
-        case B_ADDFLAG: /*26*/
-        case B_SETFLAG: /*27*/
-        case B_REMOVEFLAG: /*28*/
-            i = unwrap_string(d, i, &data, &len);
-            supports_variables = 1;
-            /* fall through */
-        case B_ADDFLAG_ORIG: /*9*/
-        case B_SETFLAG_ORIG: /*10*/
-        case B_REMOVEFLAG_ORIG: /*11*/
-            switch (op) {
-            case B_ADDFLAG_ORIG:
-            case B_ADDFLAG:
-                printf("ADDFLAG ");
-                break;
-            case B_SETFLAG:
-            case B_SETFLAG_ORIG:
-                printf("SETFLAG ");
-                break;
-            case B_REMOVEFLAG:
-            case B_REMOVEFLAG_ORIG:
-                printf("REMOVEFLAG ");
-                break;
+            
+        case B_KEEP_ORIG:
+        case B_KEEP_COPY:
+        case B_KEEP:
+            printf("KEEP");
+            if (cmd.type >= B_KEEP_COPY) {
+                print_stringlist(" FLAGS", cmd.u.k.flags);
             }
-            if (supports_variables) {
-                printf("VARIABLE({%d}%s) ", len, data);
+            break;
+
+
+        case B_DISCARD:
+            printf("DISCARD");
+            break;
+
+
+        case B_EREJECT:
+            printf("E");
+
+            GCC_FALLTHROUGH
+
+        case B_REJECT:
+            print_string("REJECT ", cmd.u.str);
+            break;
+
+
+        case B_ERROR:
+            print_string("ERROR ", cmd.u.str);
+            break;
+
+
+        case B_FILEINTO_ORIG:
+        case B_FILEINTO_COPY:
+        case B_FILEINTO_FLAGS:
+        case B_FILEINTO_CREATE:
+        case B_FILEINTO_SPECIALUSE:
+        case B_FILEINTO:
+            printf("FILEINTO");
+            if (cmd.type >= B_FILEINTO_COPY) {
+                printf(" COPY(%d)", cmd.u.f.copy);
+
+                if (cmd.type >= B_FILEINTO_FLAGS) {
+                    print_stringlist(" FLAGS", cmd.u.f.flags);
+
+                    if (cmd.type >= B_FILEINTO_CREATE) {
+                        printf("\n\tCREATE(%d)", cmd.u.f.create);
+
+                        if (cmd.type >= B_FILEINTO_SPECIALUSE) {
+                            print_string(" SPECIALUSE", cmd.u.f.specialuse);
+
+                            if (cmd.type >= B_FILEINTO) {
+                                print_string(" MAILBOXID", cmd.u.f.mailboxid);
+                            }
+                        }
+                    }
+                }
             }
-            printf("FLAGS {%d}\n",ntohl(d[i].len));
-            i=write_list(ntohl(d[i].len),i+1,d);
+            print_string(" FOLDER", cmd.u.f.folder);
             break;
 
-        case B_DENOTIFY:/*12*/
-            printf("DENOTIFY\n");
-            printf("            PRIORITY(%d) Comparison type %d (relat %d)\n",
-                   ntohl(d[i].value), ntohl(d[i+1].value), ntohl(d[i+2].value));
-            i+=3;
 
-            i = unwrap_string(d, i, &data, &len);
+        case B_REDIRECT_ORIG:
+        case B_REDIRECT_COPY:
+        case B_REDIRECT_LIST:
+        case B_REDIRECT:
+            printf("REDIRECT");
+            if (cmd.type >= B_REDIRECT_COPY) {
+                printf(" COPY(%d)", cmd.u.r.copy);
 
-            printf("           ({%d}%s)\n", len, (!data ? "[nil]" : data));
+                if (cmd.type >= B_REDIRECT_LIST) {
+                    printf( "LIST(%d)", cmd.u.r.list);
+
+                    if (cmd.type >= B_REDIRECT) {
+                        print_string(" BYTIME", cmd.u.r.bytime);
+                        print_string(" BYMODE", cmd.u.r.bymode);
+                        printf(" BYTRACE(%d)", cmd.u.r.bytrace);
+                        print_string("\n\tDSN-NOTIFY", cmd.u.r.dsn_notify);
+                        print_string(" DSN-RET", cmd.u.r.dsn_ret);
+                    }
+                }
+            }
+            print_string(" ADDRESS", cmd.u.r.address);
             break;
 
-        case B_NOTIFY: /*13*/
-            i = unwrap_string(d, i, &data, &len);
 
-            printf("NOTIFY METHOD({%d}%s)\n",len,data);
-
-            i = unwrap_string(d, i, &data, &len);
-
-            printf("            ID({%d}%s) OPTIONS ", len,
-                   (!data ? "[nil]" : data));
-
-            i=write_list(ntohl(d[i].len),i+1,d);
-
-            printf("            PRIORITY(%d)\n", ntohl(d[i].value));
-            i++;
-
-            i = unwrap_string(d, i, &data, &len);
-
-            printf("            MESSAGE({%d}%s)\n", len, data);
-
+        case B_IF:
+            printf("IF (ends at %d) ", cmd.u.i.testend);
+            i = dump2_test(d, i, version);
             break;
 
-        case B_VACATION_ORIG:/*14*/
-        case B_VACATION:/*22*/
-            printf("VACATION\n");
-            /*add address list here!*/
-            i=write_list(ntohl(d[i].len),i+1,d);
 
-            i = unwrap_string(d, i, &data, &len);
+        case B_MARK:
+            printf("MARK");
+            break;
 
-            printf("%d SUBJ({%d}%s) \n",i, len, (!data ? "[nil]" : data));
 
-            i = unwrap_string(d, i, &data, &len);
+        case B_UNMARK:
+            printf("UNMARK");
+            break;
 
-            printf("%d MESG({%d}%s) \n", i, len, (!data ? "[nil]" : data));
 
-            printf("SECONDS(%d) MIME(%d)\n", ntohl(d[i].value) * (op == B_VACATION ? 1: 24 * 60 * 60 /* 1 day */), ntohl(d[i+1].value));
-            i+=2;
+        case B_ADDFLAG_ORIG:
+        case B_ADDFLAG:
+            printf("ADDFLAG");
+            if (cmd.type >= B_ADDFLAG)
+                print_string(" VARIABLE", cmd.u.fl.variable);
+            print_stringlist(" FLAGS", cmd.u.fl.flags);
+            break;
+
+
+        case B_SETFLAG_ORIG:
+        case B_SETFLAG:
+            printf("SETFLAG");
+            if (cmd.type >= B_SETFLAG)
+                print_string(" VARIABLE", cmd.u.fl.variable);
+            print_stringlist(" FLAGS", cmd.u.fl.flags);
+            break;
+
+
+        case B_REMOVEFLAG_ORIG:
+        case B_REMOVEFLAG:
+            printf("REMOVEFLAG");
+            if (cmd.type >= B_REMOVEFLAG)
+                print_string(" VARIABLE", cmd.u.fl.variable);
+            print_stringlist(" FLAGS", cmd.u.fl.flags);
+            break;
+
+
+        case B_DENOTIFY:
+            printf("DENOTIFY PRIORITY(%d)", cmd.u.d.priority);
+            if (cmd.u.d.pattern) {
+                print_comparator(&cmd.u.d.comp);
+                print_string("\n\tPATTERN", cmd.u.d.pattern);
+            }
+            break;
+
+
+        case B_ENOTIFY:
+            printf("E");
+
+            GCC_FALLTHROUGH
+
+        case B_NOTIFY:
+            printf("NOTIFY ");
+            print_string(" METHOD", cmd.u.n.method);
+            if (cmd.type == B_ENOTIFY) {
+                printf(" IMPORTANCE(%d)", cmd.u.n.priority);
+                print_string(" FROM", cmd.u.n.from);
+            }
+            else {
+                printf(" PRIORITY(%d)", cmd.u.n.priority);
+                print_string(" ID", cmd.u.n.id);
+            }
+            print_stringlist(" OPTIONS", cmd.u.n.options);
+            print_string("\n\tMESSAGE", cmd.u.n.message);
+            break;
+
+
+        case B_VACATION_ORIG:
+        case B_VACATION_SEC:
+        case B_VACATION_FCC:
+        case B_VACATION:
+            printf("VACATION");
+            print_stringlist(" ADDR", cmd.u.v.addresses);
+            print_string("\n\tSUBJ", cmd.u.v.subject);
+            print_string("\n\tMESG", cmd.u.v.message);
+            printf("\n\tSECONDS(%d) MIME(%d)",
+                   cmd.u.v.seconds * (cmd.type == B_VACATION_ORIG ? DAY2SEC : 1),
+                   cmd.u.v.mime);
 
             if (version >= 0x05) {
-                i = unwrap_string(d, i, &data, &len);
+                print_string(" FROM", cmd.u.v.from);
+                print_string(" HANDLE", cmd.u.v.handle);
 
-                printf("%d FROM({%d}%s) \n",i, len, (!data ? "[nil]" : data));
+                if (cmd.type >= B_VACATION_FCC) {
+                    print_string("\n\tFCC", cmd.u.v.fcc.folder);
 
-                i = unwrap_string(d, i, &data, &len);
+                    if (cmd.u.v.fcc.folder) {
+                        printf(" CREATE(%d)", cmd.u.v.fcc.create);
+                        print_stringlist(" FLAGS", cmd.u.v.fcc.flags);
 
-                printf("%d HANDLE({%d}%s) \n",i, len, (!data ? "[nil]" : data));
+                        if (cmd.type >= B_VACATION) {
+                            print_string("\n\tSPECIALUSE",
+                                         cmd.u.v.fcc.specialuse);
+                        }
+                    }
+                }
             }
-
-            break;
-        case B_NULL:/*15*/
-            printf("NULL\n");
-            break;
-        case B_JUMP:/*16*/
-            printf("JUMP %d\n", ntohl(d[i].jump));
-            i+=1;
             break;
 
-        case B_INCLUDE:/*17*/
-            printf("INCLUDE ");
-            switch (ntohl(d[i].value) & 63) {
-            case B_PERSONAL: printf("Personal"); break;
-            case B_GLOBAL: printf("Global"); break;
+
+        case B_NULL:
+            printf("NULL");
+            break;
+
+
+        case B_JUMP:
+            printf("JUMP %d", cmd.u.jump);
+            break;
+
+
+        case B_INCLUDE:
+            printf("INCLUDE LOCATION(%s) ONCE(%d) OPTIONAL(%d)",
+                   (cmd.u.inc.location = B_PERSONAL) ? "Personal" : "Global",
+                   cmd.u.inc.once, cmd.u.inc.optional);
+            print_string("\n\tSCRIPT", cmd.u.inc.script);
+            break;
+
+
+        case B_SET:
+            printf("SET LOWER(%d) UPPER(%d)",
+                   cmd.u.s.mod40 & BFV_LOWER, cmd.u.s.mod40 & BFV_UPPER);
+            printf(" LOWERFIRST(%d) UPPERFIRST(%d)",
+                   cmd.u.s.mod30 & BFV_LOWERFIRST,
+                   cmd.u.s.mod30 & BFV_UPPERFIRST);
+            printf("\n\tQUOTEWILDCARD(%d) QUOTEREGEX(%d)",
+                   cmd.u.s.mod20 & BFV_QUOTEWILDCARD,
+                   cmd.u.s.mod20 & BFV_QUOTEREGEX);
+            printf(" ENCODEURL(%d) LENGTH(%d)",
+                   cmd.u.s.mod15 & BFV_ENCODEURL, cmd.u.s.mod10 & BFV_LENGTH);
+            print_string("\n\tVARIABLE", cmd.u.s.variable);
+            print_string(" VALUE", cmd.u.s.value);
+            break;
+
+
+        case B_ADDHEADER:
+            printf("ADDHEADER INDEX(%d)", cmd.u.ah.index);
+            print_string(" NAME", cmd.u.ah.name);
+            print_string(" VALUE", cmd.u.ah.value);
+            break;
+
+
+        case B_DELETEHEADER:
+            printf("DELETEHEADER INDEX(%d)", cmd.u.dh.comp.index);
+            print_comparator(&cmd.u.dh.comp);
+            print_string("\n\tNAME", cmd.u.dh.name);
+            print_stringlist(" VALUES", cmd.u.dh.values);
+            break;
+
+
+        case B_LOG:
+            printf("LOG TEXT(%s)", cmd.u.l.text);
+            break;
+
+
+        case B_RETURN:
+            printf("RETURN");
+            break;
+
+
+        case B_SNOOZE: {
+            const char *sep = "";
+            int i;
+
+            printf("SNOOZE");
+            print_string(cmd.u.sn.is_mboxid ? " MAILBOXID" : " MAILBOX",
+                         cmd.u.sn.mailbox);
+            print_stringlist("\n\tADDFLAGS", cmd.u.sn.addflags);
+            print_stringlist("\n\tREMOVEFLAGS", cmd.u.sn.removeflags);
+            printf("\n\tWEEKDAYS [");
+            for (i = 0; i < 7; i++) {
+                if (cmd.u.sn.days & (1<<i)) {
+                    printf("%s %u", sep, i);
+                    sep = ",";
+                }
             }
-            printf(" once:%s optional:%s",
-                ntohl(d[i].value) & 64 ? "yes" : "no",
-                ntohl(d[i].value) & 128 ? "yes" : "no");
-            i = unwrap_string(d, i+1, &data, &len);
-            printf(" {%d}%s\n", len, data);
+            printf(" ]");
+            print_vallist("\n\tTIMES", cmd.u.sn.times, &print_time);
             break;
-
-        case B_SET: /*25*/
-        {
-            int m = ntohl(d[i++].value);
-            i = unwrap_string(d, i, &data, &len);
-            printf("SET ");
-            printf("LOWER(%d) UPPER(%d) LOWERFIRST(%d) UPPERFIRST(%d) "
-                   "QUOTEWILDCARD(%d) LENGTH(%d)\n",
-		   m & BFV_LOWER, m & BFV_UPPER, m & BFV_LOWERFIRST,
-		   m & BFV_UPPERFIRST, m & BFV_QUOTEWILDCARD, m & BFV_LENGTH);
-            printf("              VARS({%d}%s)", len, data);
-            i = unwrap_string(d, i, &data, &len);
-            printf(" VALS({%d}%s)\n", len, data);
         }
-            break;
 
-        case B_RETURN:/*18*/
-            printf("RETURN\n");
-            break;
 
         default:
-            printf("%d (NOT AN OP)\n",ntohl(d[i-1].op));
+            printf("%d (NOT AN OP)\n", cmd.type);
             exit(1);
         }
+
+        printf("\n");
     }
+
     printf("full len is: %d\n", bc_len);
 }
-
-

@@ -43,6 +43,7 @@
 
 #include <config.h>
 
+#include <sysexits.h>
 #include <syslog.h>
 #include <string.h>
 
@@ -51,7 +52,6 @@
 #include "caldav_alarm.h"
 #include "caldav_db.h"
 #include "cyrusdb.h"
-#include "exitcodes.h"
 #include "httpd.h"
 #include "http_dav.h"
 #include "ical_support.h"
@@ -61,6 +61,8 @@
 #include "xstrlcat.h"
 #include "xmalloc.h"
 
+/* generated headers are not necessarily in current directory */
+#include "imap/imap_err.h"
 
 struct caldav_db {
     sqldb_t *db;                        /* DB handle */
@@ -75,12 +77,26 @@ struct caldav_db {
     struct buf dtstart;
     struct buf dtend;
     struct buf sched_tag;
+    struct buf jmapdata;
 };
 
 
 static struct namespace caldav_namespace;
-time_t caldav_epoch = -1;
-time_t caldav_eternity = -1;
+EXPORTED time_t caldav_epoch = -1;
+EXPORTED time_t caldav_eternity = -1;
+
+static int caldav_initialized = 0;
+
+static void done_cb(void *rock __attribute__((unused))) {
+    caldav_done();
+}
+
+static void init_internal() {
+    if (!caldav_initialized) {
+        caldav_init();
+        cyrus_modules_add(done_cb, NULL);
+    }
+}
 
 EXPORTED int caldav_init(void)
 {
@@ -90,7 +106,7 @@ EXPORTED int caldav_init(void)
     /* Set namespace -- force standard (internal) */
     if ((r = mboxname_init_namespace(&caldav_namespace, 1))) {
         syslog(LOG_ERR, "%s", error_message(r));
-        fatal(error_message(r), EC_CONFIG);
+        fatal(error_message(r), EX_CONFIG);
     }
 
     /* Get min date-time */
@@ -109,19 +125,26 @@ EXPORTED int caldav_init(void)
 
     r = sqldb_init();
     caldav_alarm_init();
+
+    if (!r) caldav_initialized = 1;
     return r;
 }
 
 
 EXPORTED int caldav_done(void)
 {
+    int r;
     caldav_alarm_done();
-    return sqldb_done();
+    r = sqldb_done();
+    if (!r) caldav_initialized = 0;
+    return r;
 }
 
 EXPORTED struct caldav_db *caldav_open_userid(const char *userid)
 {
     struct caldav_db *caldavdb = NULL;
+
+    init_internal();
 
     sqldb_t *db = dav_open_userid(userid);
     if (!db) return NULL;
@@ -140,6 +163,8 @@ EXPORTED struct caldav_db *caldav_open_mailbox(struct mailbox *mailbox)
 {
     struct caldav_db *caldavdb = NULL;
     char *userid = mboxname_to_userid(mailbox->name);
+
+    init_internal();
 
     if (userid) {
         caldavdb = caldav_open_userid(userid);
@@ -174,6 +199,7 @@ EXPORTED int caldav_close(struct caldav_db *caldavdb)
     buf_free(&caldavdb->dtstart);
     buf_free(&caldavdb->dtend);
     buf_free(&caldavdb->sched_tag);
+    buf_free(&caldavdb->jmapdata);
 
     r = sqldb_close(&caldavdb->db);
 
@@ -218,28 +244,40 @@ static const char *column_text_to_buf(const char *text, struct buf *buf)
 
 static void _num_to_comp_flags(struct comp_flags *flags, unsigned num)
 {
-    flags->recurring = num & 1;
-    flags->transp = (num >> 1) & 1;
-    flags->status = (num >> 2) & 3;
-    flags->tzbyref = (num >> 4) & 1;
-    flags->mattach = (num >> 5) & 1;
+    flags->recurring =  num & 1;
+    flags->transp    = (num >> 1) & 1;
+    flags->status    = (num >> 2) & 3;
+    flags->tzbyref   = (num >> 4) & 1;
+    flags->mattach   = (num >> 5) & 1;
+    flags->shared    = (num >> 6) & 1;
 }
 
 static unsigned _comp_flags_to_num(struct comp_flags *flags)
 {
    return (flags->recurring & 1)
-       + ((flags->transp & 1) << 1)
-       + ((flags->status & 3) << 2)
-       + ((flags->tzbyref & 1) << 4)
-       + ((flags->mattach & 1) << 5);
+       + ((flags->transp    & 1) << 1)
+       + ((flags->status    & 3) << 2)
+       + ((flags->tzbyref   & 1) << 4)
+       + ((flags->mattach   & 1) << 5)
+       + ((flags->shared    & 1) << 6);
 }
 
 #define CMD_READFIELDS                                                  \
     "SELECT rowid, creationdate, mailbox, resource, imap_uid,"          \
     "  lock_token, lock_owner, lock_ownerid, lock_expire,"              \
     "  comp_type, ical_uid, organizer, dtstart, dtend,"                 \
-    "  comp_flags, sched_tag, alive, modseq"                            \
+    "  comp_flags, sched_tag, alive, modseq, createdmodseq,"            \
+    "  NULL, NULL"                                                      \
     " FROM ical_objs"                                                   \
+
+#define CMD_READFIELDS_JMAP                                             \
+    "SELECT ical_objs.rowid, creationdate, mailbox, resource, imap_uid,"\
+    "  lock_token, lock_owner, lock_ownerid, lock_expire,"              \
+    "  comp_type, ical_uid, organizer, dtstart, dtend,"                 \
+    "  comp_flags, sched_tag, alive, modseq, createdmodseq,"            \
+    "  jmapversion, jmapdata"                                           \
+    " FROM ical_objs LEFT JOIN ical_jmapcache"                          \
+    " ON (ical_objs.rowid = ical_jmapcache.rowid AND ical_jmapcache.userid = :asuserid)"
 
 static int read_cb(sqlite3_stmt *stmt, void *rock)
 {
@@ -251,8 +289,9 @@ static int read_cb(sqlite3_stmt *stmt, void *rock)
     memset(cdata, 0, sizeof(struct caldav_data));
 
     cdata->dav.alive = sqlite3_column_int(stmt, 16);
-    cdata->dav.modseq = sqlite3_column_int(stmt, 17);
-    if (!(rrock->flags && RROCK_FLAG_TOMBSTONES) && !cdata->dav.alive)
+    cdata->dav.modseq = sqlite3_column_int64(stmt, 17);
+    cdata->dav.createdmodseq = sqlite3_column_int64(stmt, 18);
+    if (!(rrock->flags & RROCK_FLAG_TOMBSTONES) && !cdata->dav.alive)
         return 0;
 
     cdata->dav.rowid = sqlite3_column_int(stmt, 0);
@@ -261,6 +300,7 @@ static int read_cb(sqlite3_stmt *stmt, void *rock)
     cdata->dav.lock_expire = sqlite3_column_int(stmt, 8);
     cdata->comp_type = sqlite3_column_int(stmt, 9);
     _num_to_comp_flags(&cdata->comp_flags, sqlite3_column_int(stmt, 14));
+    cdata->jmapversion = sqlite3_column_int(stmt, 19);
 
     if (rrock->cb) {
         /* We can use the column data directly for the callback */
@@ -274,6 +314,7 @@ static int read_cb(sqlite3_stmt *stmt, void *rock)
         cdata->dtstart = (const char *) sqlite3_column_text(stmt, 12);
         cdata->dtend = (const char *) sqlite3_column_text(stmt, 13);
         cdata->sched_tag = (const char *) sqlite3_column_text(stmt, 15);
+        cdata->jmapdata = (const char *) sqlite3_column_text(stmt, 20);
         r = rrock->cb(rrock->rock, cdata);
     }
     else {
@@ -310,6 +351,9 @@ static int read_cb(sqlite3_stmt *stmt, void *rock)
         cdata->sched_tag =
             column_text_to_buf((const char *) sqlite3_column_text(stmt, 15),
                                &db->sched_tag);
+        cdata->jmapdata =
+            column_text_to_buf((const char *) sqlite3_column_text(stmt, 20),
+                               &db->jmapdata);
     }
 
     return r;
@@ -424,15 +468,16 @@ EXPORTED int caldav_foreach(struct caldav_db *caldavdb, const char *mailbox,
 
 #define CMD_SELRANGE_MBOX CMD_READFIELDS \
     " WHERE dtend > :after AND dtstart < :before " \
-    " AND mailbox = :mailbox AND alive = 1;"
+    " AND mailbox = :mailbox AND alive = 1 "
 
 #define CMD_SELRANGE CMD_READFIELDS \
     " WHERE dtend > :after AND dtstart < :before " \
-    " AND alive = 1;"
+    " AND alive = 1 "
 
 EXPORTED int caldav_foreach_timerange(struct caldav_db *caldavdb,
                                       const char *mailbox,
                                       time_t after, time_t before,
+                                      enum caldav_sort* sort, size_t nsort,
                                       caldav_cb_t *cb, void *rock)
 {
     struct sqldb_bindval bval[] = {
@@ -457,22 +502,47 @@ EXPORTED int caldav_foreach_timerange(struct caldav_db *caldavdb,
 
     /* XXX - tombstones */
 
-    if (mailbox) {
-        return sqldb_exec(caldavdb->db, CMD_SELRANGE_MBOX, bval, &read_cb, &rrock);
-    } else {
-        return sqldb_exec(caldavdb->db, CMD_SELRANGE, bval, &read_cb, &rrock);
+    struct buf stmt = BUF_INITIALIZER;
+    buf_setcstr(&stmt, mailbox ? CMD_SELRANGE_MBOX : CMD_SELRANGE);
+    if (nsort) {
+        buf_appendcstr(&stmt, " ORDER BY ");
+        size_t i;
+        for (i = 0; i < nsort; i++) {
+            if (i) buf_appendcstr(&stmt, ", ");
+            switch (sort[i] & ~CAL_SORT_DESC) {
+                case CAL_SORT_UID:
+                    buf_appendcstr(&stmt, "ical_uid");
+                    break;
+                case CAL_SORT_START:
+                    buf_appendcstr(&stmt, "dtstart");
+                    break;
+                case CAL_SORT_MAILBOX:
+                    buf_appendcstr(&stmt, "mailbox");
+                    break;
+                default:
+                    continue;
+            }
+            buf_appendcstr(&stmt, sort[i] & CAL_SORT_DESC ? " DESC" : " ASC");
+        }
     }
+    buf_putc(&stmt, ';');
+
+    int r = sqldb_exec(caldavdb->db, buf_cstring(&stmt), bval, &read_cb, &rrock);
+    buf_free(&stmt);
+    return r;
 }
 
 
 #define CMD_INSERT                                                      \
     "INSERT INTO ical_objs ("                                           \
     "  alive, mailbox, resource, creationdate, imap_uid, modseq,"       \
+    "  createdmodseq,"                                                  \
     "  lock_token, lock_owner, lock_ownerid, lock_expire,"              \
     "  comp_type, ical_uid, organizer, dtstart, dtend,"                 \
     "  comp_flags, sched_tag )"                                         \
     " VALUES ("                                                         \
     "  :alive, :mailbox, :resource, :creationdate, :imap_uid, :modseq," \
+    "  :createdmodseq,"                                                 \
     "  :lock_token, :lock_owner, :lock_ownerid, :lock_expire,"          \
     "  :comp_type, :ical_uid, :organizer, :dtstart, :dtend,"            \
     "  :comp_flags, :sched_tag );"
@@ -483,6 +553,7 @@ EXPORTED int caldav_foreach_timerange(struct caldav_db *caldavdb,
     "  creationdate = :creationdate,"   \
     "  imap_uid     = :imap_uid,"       \
     "  modseq       = :modseq,"         \
+    "  createdmodseq = :createdmodseq,"  \
     "  lock_token   = :lock_token,"     \
     "  lock_owner   = :lock_owner,"     \
     "  lock_ownerid = :lock_ownerid,"   \
@@ -496,9 +567,11 @@ EXPORTED int caldav_foreach_timerange(struct caldav_db *caldavdb,
     "  sched_tag    = :sched_tag"       \
     " WHERE rowid = :rowid;"
 
+#define CMD_DELETE_JMAPCACHE "DELETE FROM ical_jmapcache WHERE rowid = :rowid"
+
 EXPORTED int caldav_write(struct caldav_db *caldavdb, struct caldav_data *cdata)
 {
-    int comp_flags = _comp_flags_to_num(&cdata->comp_flags);
+    unsigned comp_flags = _comp_flags_to_num(&cdata->comp_flags);
     struct sqldb_bindval bval[] = {
         { ":rowid",        SQLITE_INTEGER, { .i = cdata->dav.rowid        } },
         { ":alive",        SQLITE_INTEGER, { .i = cdata->dav.alive        } },
@@ -507,6 +580,7 @@ EXPORTED int caldav_write(struct caldav_db *caldavdb, struct caldav_data *cdata)
         { ":creationdate", SQLITE_INTEGER, { .i = cdata->dav.creationdate } },
         { ":imap_uid",     SQLITE_INTEGER, { .i = cdata->dav.imap_uid     } },
         { ":modseq",       SQLITE_INTEGER, { .i = cdata->dav.modseq       } },
+        { ":createdmodseq", SQLITE_INTEGER, { .i = cdata->dav.createdmodseq } },
         { ":lock_token",   SQLITE_TEXT,    { .s = cdata->dav.lock_token   } },
         { ":lock_owner",   SQLITE_TEXT,    { .s = cdata->dav.lock_owner   } },
         { ":lock_ownerid", SQLITE_TEXT,    { .s = cdata->dav.lock_ownerid } },
@@ -521,7 +595,9 @@ EXPORTED int caldav_write(struct caldav_db *caldavdb, struct caldav_data *cdata)
         { NULL,            SQLITE_NULL,    { .s = NULL                    } } };
 
     if (cdata->dav.rowid) {
-        int r = sqldb_exec(caldavdb->db, CMD_UPDATE, bval, NULL, NULL);
+        int r = sqldb_exec(caldavdb->db, CMD_DELETE_JMAPCACHE, bval, NULL, NULL);
+        if (r) return r;
+        r = sqldb_exec(caldavdb->db, CMD_UPDATE, bval, NULL, NULL);
         if (r) return r;
     }
     else {
@@ -563,17 +639,9 @@ EXPORTED int caldav_delmbox(struct caldav_db *caldavdb, const char *mailbox)
     return r;
 }
 
-
-#define CMD_GETUPDATES CMD_READFIELDS \
-      " WHERE comp_type = :comp_type AND modseq > :modseq" \
-      " ORDER BY modseq LIMIT :limit;"
-
-#define CMD_GETUPDATES_MBOX CMD_READFIELDS \
-      " WHERE mailbox = :mailbox AND comp_type = :comp_type AND modseq > :modseq" \
-      " ORDER BY modseq LIMIT :limit;"
-
 EXPORTED int caldav_get_updates(struct caldav_db *caldavdb,
-                                modseq_t oldmodseq, const char *mboxname, int kind, int limit,
+                                modseq_t oldmodseq, const char *mboxname,
+                                int kind, int limit,
                                 int (*cb)(void *rock, struct caldav_data *cdata),
                                 void *rock)
 {
@@ -581,19 +649,28 @@ EXPORTED int caldav_get_updates(struct caldav_db *caldavdb,
         { ":mailbox",      SQLITE_TEXT,    { .s = mboxname  } },
         { ":modseq",       SQLITE_INTEGER, { .i = oldmodseq } },
         { ":comp_type",    SQLITE_INTEGER, { .i = kind      } },
+        /* SQLite interprets a negative limit as unbounded. */
         { ":limit",        SQLITE_INTEGER, { .i = limit > 0 ? limit : -1 } },
         { NULL,            SQLITE_NULL,    { .s = NULL      } }
     };
     static struct caldav_data cdata;
-    struct read_rock rrock = { caldavdb, &cdata, RROCK_FLAG_TOMBSTONES, cb, rock };
+    struct read_rock rrock =
+        { caldavdb, &cdata, RROCK_FLAG_TOMBSTONES, cb, rock };
+    struct buf sqlbuf = BUF_INITIALIZER;
     int r;
 
-    /* SQLite interprets a negative limit as unbounded. */
-    if (mboxname) {
-        r = sqldb_exec(caldavdb->db, CMD_GETUPDATES_MBOX, bval, &read_cb, &rrock);
-    } else {
-        r = sqldb_exec(caldavdb->db, CMD_GETUPDATES, bval, &read_cb, &rrock);
+    buf_setcstr(&sqlbuf, CMD_READFIELDS " WHERE");
+    if (mboxname) buf_appendcstr(&sqlbuf, " mailbox = :mailbox AND");
+    if (kind >= 0) {
+        /* Use a negative value to signal that we accept ALL components types */
+        buf_appendcstr(&sqlbuf, " comp_type = :comp_type AND");
     }
+    if (!oldmodseq) buf_appendcstr(&sqlbuf, " alive = 1 AND");
+    buf_appendcstr(&sqlbuf, " modseq > :modseq ORDER BY modseq LIMIT :limit;");
+
+    r = sqldb_exec(caldavdb->db, buf_cstring(&sqlbuf), bval, &read_cb, &rrock);
+    buf_free(&sqlbuf);
+
     if (r) {
         syslog(LOG_ERR, "caldav error %s", error_message(r));
     }
@@ -645,9 +722,7 @@ EXPORTED int caldav_writeentry(struct caldav_db *caldavdb, struct caldav_data *c
     case ICAL_VJOURNAL_COMPONENT: mykind = CAL_COMP_VJOURNAL; break;
     case ICAL_VFREEBUSY_COMPONENT: mykind = CAL_COMP_VFREEBUSY; break;
     case ICAL_VAVAILABILITY_COMPONENT: mykind = CAL_COMP_VAVAILABILITY; break;
-#ifdef HAVE_VPOLL
     case ICAL_VPOLL_COMPONENT: mykind = CAL_COMP_VPOLL; break;
-#endif
     default: break;
     }
     cdata->comp_type = mykind;
@@ -693,7 +768,7 @@ EXPORTED int caldav_writeentry(struct caldav_db *caldavdb, struct caldav_data *c
     cdata->comp_flags.transp = transp;
 
     /* Get span of component set and check for managed attachments */
-    span = icalrecurrenceset_get_utc_timespan(ical, kind, &recurring,
+    span = icalrecurrenceset_get_utc_timespan(ical, kind, NULL, &recurring,
                                               &check_mattach_cb, &mattach);
 
     cdata->dtstart = icaltime_as_ical_string(span.start);
@@ -725,22 +800,20 @@ EXPORTED char *caldav_mboxname(const char *userid, const char *name)
     return res;
 }
 
-#define CMD_SELMBOX CMD_READFIELDS \
-    " WHERE mailbox = :mailbox AND alive = 1;"
-
-EXPORTED int caldav_get_events(struct caldav_db *caldavdb,
+EXPORTED int caldav_get_events(struct caldav_db *caldavdb, const char *asuserid,
                                const char *mailbox, const char *ical_uid,
                                caldav_cb_t *cb, void *rock)
 {
     struct sqldb_bindval bval[] = {
         { ":mailbox",  SQLITE_TEXT, { .s = mailbox } },
         { ":ical_uid", SQLITE_TEXT, { .s = ical_uid } },
+        { ":asuserid", SQLITE_TEXT, { .s = asuserid } },
         { NULL,        SQLITE_NULL, { .s = NULL    } } };
     struct caldav_data cdata;
     struct read_rock rrock = { caldavdb, &cdata, 0, cb, rock };
     struct buf sqlbuf = BUF_INITIALIZER;
 
-    buf_setcstr(&sqlbuf, CMD_READFIELDS);
+    buf_setcstr(&sqlbuf, CMD_READFIELDS_JMAP);
     buf_appendcstr(&sqlbuf, " WHERE alive = 1");
     if (mailbox)
         buf_appendcstr(&sqlbuf, " AND mailbox = :mailbox");
@@ -754,10 +827,221 @@ EXPORTED int caldav_get_events(struct caldav_db *caldavdb,
     buf_free(&sqlbuf);
 
     if (r) {
-        syslog(LOG_ERR, "carddav error %s", error_message(r));
+        syslog(LOG_ERR, "caldav error %s", error_message(r));
         /* XXX - free memory */
     }
 
+    return r;
+}
+
+#define CMD_DELETE_JMAPCACHE_USER "DELETE FROM ical_jmapcache WHERE rowid = :rowid AND userid = :userid"
+#define CMD_INSERT_JMAPCACHE_USER                                           \
+    "INSERT INTO ical_jmapcache ( rowid, userid, jmapversion, jmapdata )"   \
+    " VALUES ( :rowid, :userid, :jmapversion, :jmapdata );"
+
+EXPORTED int caldav_write_jmapcache(struct caldav_db *caldavdb, int rowid, const char *userid, int version, const char *data)
+{
+    struct sqldb_bindval bval[] = {
+        { ":rowid",        SQLITE_INTEGER, { .i = rowid  } },
+        { ":userid",       SQLITE_TEXT,    { .s = userid } },
+        { ":jmapversion",  SQLITE_INTEGER, { .i = version } },
+        { ":jmapdata",     SQLITE_TEXT,    { .s = data   } },
+        { NULL,            SQLITE_NULL,    { .s = NULL   } } };
+    int r;
+
+    /* clean up existing records if any */
+    r = sqldb_exec(caldavdb->db, CMD_DELETE_JMAPCACHE_USER, bval, NULL, NULL);
+    if (r) return r;
+
+    /* insert the cache record */
+    return sqldb_exec(caldavdb->db, CMD_INSERT_JMAPCACHE_USER, bval, NULL, NULL);
+}
+
+struct shareacls_rock {
+    const char *userid;
+    char *principalname;
+    char *principalacl;
+    char *newprincipalacl;
+    char *outboxname;
+    char *outboxacl;
+    char *newoutboxacl;
+    hash_table user_access;
+};
+
+#define CALSHARE_WANTSCHED 1
+#define CALSHARE_HAVESCHED 2
+#define CALSHARE_WANTPRIN 4
+#define CALSHARE_HAVEPRIN 8
+
+static int _add_shareacls(const mbentry_t *mbentry, void *rock)
+{
+    struct shareacls_rock *share = rock;
+
+    char *acl = xstrdup(mbentry->acl);
+
+    int isprincipal = !strcmp(mbentry->name, share->principalname);
+    int isoutbox = !strcmp(mbentry->name, share->outboxname);
+
+    if (isprincipal) {
+        share->principalacl = xstrdup(acl);
+        share->newprincipalacl = xstrdup(acl);
+    }
+
+    if (isoutbox) {
+        share->outboxacl = xstrdup(acl);
+        share->newoutboxacl = xstrdup(acl);
+    }
+
+    char *userid;
+    char *nextid = NULL;
+    for (userid = acl; userid; userid = nextid) {
+        char *rightstr;
+        int access;
+
+        rightstr = strchr(userid, '\t');
+        if (!rightstr) break;
+        *rightstr++ = '\0';
+
+        nextid = strchr(rightstr, '\t');
+        if (!nextid) break;
+        *nextid++ = '\0';
+
+        /* skip system users and owner */
+        if (is_system_user(userid)) continue;
+        if (!strcmp(userid, share->userid)) continue;
+
+        cyrus_acl_strtomask(rightstr, &access);
+
+        unsigned long long have = (unsigned long long)hash_lookup(userid, &share->user_access);
+        unsigned long long set = have;
+
+        // if it's the principal, we have each user with principal read access
+        if (isprincipal) {
+            if ((access & DACL_READ) == DACL_READ)
+                set |= CALSHARE_HAVEPRIN;
+        }
+        // if it's the Outbox, we have each user with reply ability
+        else if (isoutbox) {
+            if ((access & (DACL_INVITE|DACL_REPLY)) == (DACL_INVITE|DACL_REPLY))
+                set |= CALSHARE_HAVESCHED;
+        }
+        // and if they can see anything else, then we NEED the above!
+        else {
+            if (access & ACL_READ)
+                set |= CALSHARE_WANTPRIN;
+            if (access & ACL_INSERT)
+                set |= CALSHARE_WANTSCHED;
+        }
+
+        if (set != have) hash_insert(userid, (void *)set, &share->user_access);
+    }
+
+    free(acl);
+    return 0;
+}
+
+static void _update_acls(const char *userid, void *data, void *rock)
+{
+    struct shareacls_rock *share = rock;
+    unsigned long long aclstatus = (unsigned long long)data;
+
+    if ((aclstatus & CALSHARE_WANTSCHED) && !(aclstatus & CALSHARE_HAVESCHED)) {
+        cyrus_acl_set(&share->newoutboxacl, userid, ACL_MODE_ADD, (DACL_INVITE|DACL_REPLY), NULL, NULL);
+    }
+
+    if (!(aclstatus & CALSHARE_WANTSCHED) && (aclstatus & CALSHARE_HAVESCHED)) {
+        cyrus_acl_set(&share->newoutboxacl, userid, ACL_MODE_REMOVE, (DACL_INVITE|DACL_REPLY), NULL, NULL);
+    }
+
+    if ((aclstatus & CALSHARE_WANTPRIN) && !(aclstatus & CALSHARE_HAVEPRIN)) {
+        cyrus_acl_set(&share->newprincipalacl, userid, ACL_MODE_ADD, DACL_READ, NULL, NULL);
+    }
+
+    if (!(aclstatus & CALSHARE_WANTPRIN) && (aclstatus & CALSHARE_HAVEPRIN)) {
+        cyrus_acl_set(&share->newprincipalacl, userid, ACL_MODE_REMOVE, DACL_READ, NULL, NULL);
+    }
+}
+
+/* update the share acls.  We do this by:
+ * 1) iterating all the calendars for this user, looking at all the ACLs and
+ *    tracking for each user mentioned, whether they have or need principal
+ *    access or scheduling access.
+ * 2) when we see the inbox and outbox, clone the ACLs.
+ * 3) iterate all seen users, and decide whether we need to change the ACLs
+ *    for either of those mailboxes.
+ */
+EXPORTED int caldav_update_shareacls(const char *userid)
+{
+    struct shareacls_rock rock = {
+        userid,
+        NULL, NULL, NULL,
+        NULL, NULL, NULL,
+        HASH_TABLE_INITIALIZER
+    };
+    construct_hash_table(&rock.user_access, 10, 0);
+    rock.principalname = caldav_mboxname(userid, NULL);
+    rock.outboxname = caldav_mboxname(userid, SCHED_OUTBOX);
+
+    // find out what the values should be
+    int r = mboxlist_mboxtree(rock.principalname, _add_shareacls, &rock, 0);
+
+    // did we find the ACLs?  If not, bail now!
+    if (!rock.principalacl || !rock.outboxacl) {
+        r = IMAP_MAILBOX_NONEXISTENT;
+        goto done;
+    }
+
+    // change the ACLs as required
+    hash_enumerate(&rock.user_access, _update_acls, &rock);
+
+    if (strcmp(rock.principalacl, rock.newprincipalacl)) {
+        r = mboxlist_updateacl_raw(rock.principalname, rock.newprincipalacl);
+        if (r) goto done;
+    }
+
+    if (strcmp(rock.outboxacl, rock.newoutboxacl)) {
+        r = mboxlist_updateacl_raw(rock.outboxname, rock.newoutboxacl);
+        if (r) goto done;
+    }
+
+done:
+    free(rock.principalname);
+    free(rock.principalacl);
+    free(rock.newprincipalacl);
+    free(rock.outboxname);
+    free(rock.outboxacl);
+    free(rock.newoutboxacl);
+    free_hash_table(&rock.user_access, NULL);
 
     return r;
 }
+
+
+EXPORTED const char *caldav_comp_type_as_string(unsigned comp_type)
+{
+    switch (comp_type) {
+        /* "Real" components */
+        case CAL_COMP_VEVENT:
+            return "VEVENT";
+        case CAL_COMP_VTODO:
+            return "VTODO";
+        case CAL_COMP_VJOURNAL:
+            return "VJOURNAL";
+        case CAL_COMP_VFREEBUSY:
+            return "VFREEBUSY";
+        case CAL_COMP_VAVAILABILITY:
+            return "VAVAILABILITY";
+        case CAL_COMP_VPOLL:
+            return "VPOLL";
+        /* Other components */
+        case CAL_COMP_VALARM:
+            return "VALARM";
+        case CAL_COMP_VTIMEZONE:
+            return "VTIMEZONE";
+        case CAL_COMP_VCALENDAR:
+            return "VCALENDAR";
+        default:
+            return NULL;
+    }
+}
+

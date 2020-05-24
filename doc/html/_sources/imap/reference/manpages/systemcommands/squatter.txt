@@ -19,13 +19,12 @@ Synopsis
     **squatter** [ **-C** *config-file* ] [**mode**] [**options**] [**source**]
 
     i.e.:
-    **squatter** [ **-C** *config-file* ] [ **-v** ] [ **-a** ] [ **-S** *seconds* ]
-    **squatter** [ **-C** *config-file* ] [ **-v** ] [ **-a** ] [ **-i** ] [ **-N** *name* ] [ **-S** *seconds* ] [ **-r** ]  *mailbox*...
-    **squatter** [ **-C** *config-file* ] [ **-v** ] [ **-a** ] [ **-i** ] [ **-N** *name* ] [ **-S** *seconds* ] [ **-r** ]  **-u** *user*...
-    **squatter** [ **-C** *config-file* ] [ **-v** ] [ **-a** ] **-R** [ **-n** *channel* ] [ **-d** ] [ **-S** *seconds* ]
-    **squatter** [ **-C** *config-file* ] [ **-v** ] [ **-a** ] **-f** *synclogfile* [ **-S** *seconds* ]
-    **squatter** [ **-C** *config-file* ] [ **-v** ] **-I** *file*
-    **squatter** [ **-C** *config-file* ] [ **-v** ] **-t** *srctier(s)*... **-z** *desttier* [ **-F** ] [ **-T** *dir* ] [ **-X** ] [ **-o** ]  [ **-S** *seconds* ] [ **-u** *user*... ]
+    **squatter** [ **-C** *config-file* ] [ **-v** ] [ **-a** ] [ **-S** *seconds* ] [ **-Z** ]
+    **squatter** [ **-C** *config-file* ] [ **-v** ] [ **-a** ] [ **-i** ] [ **-N** *name* ] [ **-S** *seconds* ] [ **-r** ] [ **-Z** ] *mailbox*...
+    **squatter** [ **-C** *config-file* ] [ **-v** ] [ **-a** ] [ **-i** ] [ **-N** *name* ] [ **-S** *seconds* ] [ **-r** ] [ **-Z** ] **-u** *user*...
+    **squatter** [ **-C** *config-file* ] [ **-v** ] [ **-a** ] **-R** [ **-n** *channel* ] [ **-d** ] [ **-S** *seconds* ] [ **-Z** ]
+    **squatter** [ **-C** *config-file* ] [ **-v** ] [ **-a** ] **-f** *synclogfile* [ **-S** *seconds* ] [ **-Z** ]
+    **squatter** [ **-C** *config-file* ] [ **-v** ] **-t** *srctier(s)*... **-z** *desttier* [ **-F** ] [ **-U** ] [ **-T** *dir* ] [ **-X** ] [ **-o** ] [ **-S** *seconds* ] [ **-u** *user*... ]
 
 
 
@@ -47,7 +46,7 @@ The index is a unified index of all of the header and body text
 of each message in a given mailbox.  This index is used to significantly
 reduce IMAP SEARCH times on a mailbox.
 
-**mode** is one of indexer, indexfrom (-I), search, rolling, synclog or compact.
+**mode** is one of indexer, search, rolling, synclog, compact or audit.
 
 By default, **squatter** creates an index of ALL messages in the
 mailbox, not just those since the last time that it was run.  The
@@ -82,19 +81,26 @@ In the fifth synopsis, **squatter** reads a single sync log file and
 performs incremental indexing on the mailbox(es) listed therein.  This
 is sometimes useful for cleaning up after problems with rolling mode.
 
-In the sixth synopsis, **squatter** reads *file* containing *mailbox*
-*uid* tuples and performs indexing on the specified messages.
-
-In the seventh synopsis, **squatter** will compact indices from
+In the sixth synopsis, **squatter** will compact indices from
 *srctier(s)* to *desttier*, optionally reindexing (**-X**) or filtering
-expunged records (**-F**) in the process.  The optional **-T** flag may
-be used to specify a directory to use for temporary files.  The **-o**
-flag may be used to direct that a single index be copied, rather than
-compacted, from *srctier* to *desttier*.  The **-u** flag may be used
-to restrict operation to the specified user(s).
+expunged records (**-F**) in the process.  The optional **-T** flag may be
+used to specify a directory to use for temporary files.  These files are
+eventually copied with `rsync -a` and then removed by `rm`.
+`rsync` can increase the load average of the system, especially when the
+temporary directory is on `tmpfs`.  To throttle `rsync` it is possible to
+modify the call in `imap/search_xapian.c` and pass `-\\-bwlimit=<number>` as further
+parameter.  The **-o** flag may be used to direct that a single index be
+copied, rather than compacted, from *srctier* to *desttier*.  The **-u** flag
+may be used to restrict operation to the specified user(s).
 
-For all modes, the **-S** option may be specified, causing squatter to
+For all modes, the **-S** option may be specified, causing **squatter** to
 pause *seconds* seconds after each mailbox, to smooth loads.
+
+When using the Xapian engine the **-Z** option may be specified, for
+the indexing modes.  This tells **squatter** to consult the Xapian
+internally indexed GUIDs, rather than relying on what's stored in
+`cyrus.indexed.db`, allowing for recovery from broken
+`cyrus.indexed.db` at the sacrifice of efficiency.
 
 .. Note::
     Incremental updates are very inefficient with the SQUAT search
@@ -130,6 +136,11 @@ Options
     inherit one), then the mailbox is not indexed. In other words, the
     implicit value of */vendor/cmu/cyrus-imapd/squat* is "false".
 
+.. option:: -A
+
+    Missing documentation, starts audit mode.
+    |master-new-feature|
+
 .. option:: -d
 
     In rolling mode, don't background and do emit log messages on
@@ -153,11 +164,6 @@ Options
 
     Display this usage information.
 
-.. option:: -I file
-
-    Read from *file* and index individual messages described by
-    mailbox/uid tuples contained therein.
-
 .. option:: -i
 
     Incremental updates where indexes already exist.
@@ -180,6 +186,11 @@ Options
     In compact mode, if only one source database is selected, just copy
     it to the destination rather than compacting.
     |v3-new-feature|
+
+.. option:: -P
+
+    Missing documentation, reindex parts mode.
+    |master-new-feature|
 
 .. option:: -R
 
@@ -211,7 +222,7 @@ Options
 
 .. option:: -t srctier...
 
-    In compact mode, the comma separated source tier(s) for the compacted
+    In compact mode, the comma-separated source tier(s) for the compacted
     indices.  At least one source tier must be specified in compact mode.
     Xapian only.
     |v3-new-feature|
@@ -221,6 +232,12 @@ Options
     Extra options refer to usernames (e.g. foo@bar.com) rather than
     mailbox names.  Usernames are space-separated.
     |v3-new-feature|
+
+.. option:: -U
+
+    In compact mode, only compact if re-indexing.
+    Xapian only.
+    |master-new-feature|
 
 .. option:: -v
 
@@ -243,6 +260,15 @@ Options
     This must be specified in compact mode.
     Xapian only.
     |v3-new-feature|
+
+.. option:: -Z
+
+    When indexing messages, use the Xapian internal cyrusid rather than
+    referencing the ranges of already indexed messages to know if a
+    particular message is indexed.  Useful if the ranges get out of
+    sync with the actual messages (e.g. if files on a tier are lost)
+    Xapian only.
+    |master-new-feature|
 
 Examples
 ========
@@ -339,3 +365,7 @@ See Also
 ========
 
 :cyrusman:`imapd.conf(5)`, :cyrusman:`cyrus.conf(5)`
+
+.. only:: html
+
+    :ref:`configuring-xapian`

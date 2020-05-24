@@ -50,6 +50,7 @@
 #include <pwd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -63,13 +64,13 @@
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
+#include <time.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
 #include "byteorder64.h"
-#include "exitcodes.h"
 #include "libconfig.h"
 #include "map.h"
 #include "retry.h"
@@ -78,9 +79,6 @@
 #include "xmalloc.h"
 #ifdef HAVE_ZLIB
 #include "zlib.h"
-#endif
-#ifdef HAVE_LIBUUID
-#include <uuid/uuid.h>
 #endif
 
 
@@ -174,6 +172,84 @@ const unsigned char convert_to_uppercase[256] = {
     0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7,
     0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff
 };
+
+static const uint16_t lchexchars[256] = {
+#if BYTE_ORDER == LITTLE_ENDIAN
+    0x3030, 0x3130, 0x3230, 0x3330, 0x3430, 0x3530, 0x3630, 0x3730,
+    0x3830, 0x3930, 0x6130, 0x6230, 0x6330, 0x6430, 0x6530, 0x6630,
+    0x3031, 0x3131, 0x3231, 0x3331, 0x3431, 0x3531, 0x3631, 0x3731,
+    0x3831, 0x3931, 0x6131, 0x6231, 0x6331, 0x6431, 0x6531, 0x6631,
+    0x3032, 0x3132, 0x3232, 0x3332, 0x3432, 0x3532, 0x3632, 0x3732,
+    0x3832, 0x3932, 0x6132, 0x6232, 0x6332, 0x6432, 0x6532, 0x6632,
+    0x3033, 0x3133, 0x3233, 0x3333, 0x3433, 0x3533, 0x3633, 0x3733,
+    0x3833, 0x3933, 0x6133, 0x6233, 0x6333, 0x6433, 0x6533, 0x6633,
+    0x3034, 0x3134, 0x3234, 0x3334, 0x3434, 0x3534, 0x3634, 0x3734,
+    0x3834, 0x3934, 0x6134, 0x6234, 0x6334, 0x6434, 0x6534, 0x6634,
+    0x3035, 0x3135, 0x3235, 0x3335, 0x3435, 0x3535, 0x3635, 0x3735,
+    0x3835, 0x3935, 0x6135, 0x6235, 0x6335, 0x6435, 0x6535, 0x6635,
+    0x3036, 0x3136, 0x3236, 0x3336, 0x3436, 0x3536, 0x3636, 0x3736,
+    0x3836, 0x3936, 0x6136, 0x6236, 0x6336, 0x6436, 0x6536, 0x6636,
+    0x3037, 0x3137, 0x3237, 0x3337, 0x3437, 0x3537, 0x3637, 0x3737,
+    0x3837, 0x3937, 0x6137, 0x6237, 0x6337, 0x6437, 0x6537, 0x6637,
+    0x3038, 0x3138, 0x3238, 0x3338, 0x3438, 0x3538, 0x3638, 0x3738,
+    0x3838, 0x3938, 0x6138, 0x6238, 0x6338, 0x6438, 0x6538, 0x6638,
+    0x3039, 0x3139, 0x3239, 0x3339, 0x3439, 0x3539, 0x3639, 0x3739,
+    0x3839, 0x3939, 0x6139, 0x6239, 0x6339, 0x6439, 0x6539, 0x6639,
+    0x3061, 0x3161, 0x3261, 0x3361, 0x3461, 0x3561, 0x3661, 0x3761,
+    0x3861, 0x3961, 0x6161, 0x6261, 0x6361, 0x6461, 0x6561, 0x6661,
+    0x3062, 0x3162, 0x3262, 0x3362, 0x3462, 0x3562, 0x3662, 0x3762,
+    0x3862, 0x3962, 0x6162, 0x6262, 0x6362, 0x6462, 0x6562, 0x6662,
+    0x3063, 0x3163, 0x3263, 0x3363, 0x3463, 0x3563, 0x3663, 0x3763,
+    0x3863, 0x3963, 0x6163, 0x6263, 0x6363, 0x6463, 0x6563, 0x6663,
+    0x3064, 0x3164, 0x3264, 0x3364, 0x3464, 0x3564, 0x3664, 0x3764,
+    0x3864, 0x3964, 0x6164, 0x6264, 0x6364, 0x6464, 0x6564, 0x6664,
+    0x3065, 0x3165, 0x3265, 0x3365, 0x3465, 0x3565, 0x3665, 0x3765,
+    0x3865, 0x3965, 0x6165, 0x6265, 0x6365, 0x6465, 0x6565, 0x6665,
+    0x3066, 0x3166, 0x3266, 0x3366, 0x3466, 0x3566, 0x3666, 0x3766,
+    0x3866, 0x3966, 0x6166, 0x6266, 0x6366, 0x6466, 0x6566, 0x6666
+#else
+    0x3030, 0x3031, 0x3032, 0x3033, 0x3034, 0x3035, 0x3036, 0x3037,
+    0x3038, 0x3039, 0x3061, 0x3062, 0x3063, 0x3064, 0x3065, 0x3066,
+    0x3130, 0x3131, 0x3132, 0x3133, 0x3134, 0x3135, 0x3136, 0x3137,
+    0x3138, 0x3139, 0x3161, 0x3162, 0x3163, 0x3164, 0x3165, 0x3166,
+    0x3230, 0x3231, 0x3232, 0x3233, 0x3234, 0x3235, 0x3236, 0x3237,
+    0x3238, 0x3239, 0x3261, 0x3262, 0x3263, 0x3264, 0x3265, 0x3266,
+    0x3330, 0x3331, 0x3332, 0x3333, 0x3334, 0x3335, 0x3336, 0x3337,
+    0x3338, 0x3339, 0x3361, 0x3362, 0x3363, 0x3364, 0x3365, 0x3366,
+    0x3430, 0x3431, 0x3432, 0x3433, 0x3434, 0x3435, 0x3436, 0x3437,
+    0x3438, 0x3439, 0x3461, 0x3462, 0x3463, 0x3464, 0x3465, 0x3466,
+    0x3530, 0x3531, 0x3532, 0x3533, 0x3534, 0x3535, 0x3536, 0x3537,
+    0x3538, 0x3539, 0x3561, 0x3562, 0x3563, 0x3564, 0x3565, 0x3566,
+    0x3630, 0x3631, 0x3632, 0x3633, 0x3634, 0x3635, 0x3636, 0x3637,
+    0x3638, 0x3639, 0x3661, 0x3662, 0x3663, 0x3664, 0x3665, 0x3666,
+    0x3730, 0x3731, 0x3732, 0x3733, 0x3734, 0x3735, 0x3736, 0x3737,
+    0x3738, 0x3739, 0x3761, 0x3762, 0x3763, 0x3764, 0x3765, 0x3766,
+    0x3830, 0x3831, 0x3832, 0x3833, 0x3834, 0x3835, 0x3836, 0x3837,
+    0x3838, 0x3839, 0x3861, 0x3862, 0x3863, 0x3864, 0x3865, 0x3866,
+    0x3930, 0x3931, 0x3932, 0x3933, 0x3934, 0x3935, 0x3936, 0x3937,
+    0x3938, 0x3939, 0x3961, 0x3962, 0x3963, 0x3964, 0x3965, 0x3966,
+    0x6130, 0x6131, 0x6132, 0x6133, 0x6134, 0x6135, 0x6136, 0x6137,
+    0x6138, 0x6139, 0x6161, 0x6162, 0x6163, 0x6164, 0x6165, 0x6166,
+    0x6230, 0x6231, 0x6232, 0x6233, 0x6234, 0x6235, 0x6236, 0x6237,
+    0x6238, 0x6239, 0x6261, 0x6262, 0x6263, 0x6264, 0x6265, 0x6266,
+    0x6330, 0x6331, 0x6332, 0x6333, 0x6334, 0x6335, 0x6336, 0x6337,
+    0x6338, 0x6339, 0x6361, 0x6362, 0x6363, 0x6364, 0x6365, 0x6366,
+    0x6430, 0x6431, 0x6432, 0x6433, 0x6434, 0x6435, 0x6436, 0x6437,
+    0x6438, 0x6439, 0x6461, 0x6462, 0x6463, 0x6464, 0x6465, 0x6466,
+    0x6530, 0x6531, 0x6532, 0x6533, 0x6534, 0x6535, 0x6536, 0x6537,
+    0x6538, 0x6539, 0x6561, 0x6562, 0x6563, 0x6564, 0x6565, 0x6566,
+    0x6630, 0x6631, 0x6632, 0x6633, 0x6634, 0x6635, 0x6636, 0x6637,
+    0x6638, 0x6639, 0x6661, 0x6662, 0x6663, 0x6664, 0x6665, 0x6666
+#endif
+};
+
+
+#ifdef EXTRA_IDENT
+#define CYRUS_VERSION_STR PACKAGE_VERSION "-" EXTRA_IDENT
+#else
+#define CYRUS_VERSION_STR PACKAGE_VERSION
+#endif
+EXPORTED const char CYRUS_VERSION[sizeof(CYRUS_VERSION_STR)] = CYRUS_VERSION_STR;
 
 /* convert string to all lower case
  */
@@ -362,20 +438,20 @@ EXPORTED void cyrus_reset_stdio(void)
     int devnull = open("/dev/null", O_RDWR, 0);
 
     if (devnull == -1) {
-        fatal("open() on /dev/null failed", EC_TEMPFAIL);
+        fatal("open() on /dev/null failed", EX_TEMPFAIL);
     }
 
     /* stdin */
     shutdown(0, SHUT_RD);
-    dup2(devnull, 0);
+    dup2(devnull, STDIN_FILENO);
 
     /* stdout */
     shutdown(1, SHUT_RD);
-    dup2(devnull, 1);
+    dup2(devnull, STDOUT_FILENO);
 
     /* stderr */
     shutdown(2, SHUT_RD);
-    dup2(devnull, 2);
+    dup2(devnull, STDERR_FILENO);
 
     if (devnull > 2) close(devnull);
 }
@@ -442,6 +518,7 @@ static int _copyfile_helper(const char *from, const char *to, int flags)
     int n;
     int r = 0;
     int nolink = flags & COPYFILE_NOLINK;
+    int keeptime = flags & COPYFILE_KEEPTIME;
 
     /* try to hard link, but don't fail - fall back to regular copy */
     if (!nolink) {
@@ -491,6 +568,16 @@ static int _copyfile_helper(const char *from, const char *to, int flags)
         r = -1;
         unlink(to);  /* remove any rubbish we created */
         goto done;
+    }
+
+    if (keeptime) {
+        struct timeval tv[2];
+        TIMESPEC_TO_TIMEVAL(&tv[0], &sbuf.st_atim);
+        TIMESPEC_TO_TIMEVAL(&tv[1], &sbuf.st_mtim);
+        if (futimes(destfd, tv)) {
+            syslog(LOG_ERR, "IOERROR: setting times on %s: %m", to);
+            r = -1;
+        }
     }
 
 done:
@@ -579,7 +666,7 @@ EXPORTED int set_caps(int stage __attribute__((unused)),
 }
 #endif
 
-static int cap_setuid(int uid, int is_master)
+static int cyrus_cap_setuid(int uid, int is_master)
 {
     int r;
 
@@ -599,7 +686,7 @@ EXPORTED int become_cyrus(int is_master)
     int result;
     static uid_t uid = 0;
 
-    if (uid) return cap_setuid(uid, is_master);
+    if (uid) return cyrus_cap_setuid(uid, is_master);
 
     const char *cyrus = cyrus_user();
     const char *mail = cyrus_group();
@@ -645,7 +732,7 @@ EXPORTED int become_cyrus(int is_master)
         return -1;
     }
 
-    result = cap_setuid(newuid, is_master);
+    result = cyrus_cap_setuid(newuid, is_master);
 
     /* Only set static uid if successful, else future calls won't reset gid */
     if (result == 0)
@@ -673,7 +760,7 @@ static int cmdtime_enabled = 0;
 static struct timeval cmdtime_start, cmdtime_end, nettime_start, nettime_end;
 static double totaltime, cmdtime, nettime, search_maxtime;
 
-double timeval_get_double(const struct timeval *tv)
+EXPORTED double timeval_get_double(const struct timeval *tv)
 {
     return (double)tv->tv_sec + (double)tv->tv_usec/1000000.0;
 }
@@ -693,6 +780,19 @@ EXPORTED double timesub(const struct timeval *start, const struct timeval *end)
 {
     return (double)(end->tv_sec - start->tv_sec) +
            (double)(end->tv_usec - start->tv_usec)/1000000.0;
+}
+
+EXPORTED int64_t now_ms(void)
+{
+    struct timespec ts;
+
+    if (clock_gettime(CLOCK_REALTIME, &ts) == 0) {
+        return (ts.tv_sec * 1000) + (ts.tv_nsec / 1000000);
+    }
+    else {
+        syslog(LOG_WARNING, "clock_gettime(): %m");
+        return time(NULL) * 1000;
+    }
 }
 
 EXPORTED void cmdtime_settimer(int enable)
@@ -778,8 +878,9 @@ EXPORTED int parseint32(const char *p, const char **ptr, int32_t *res)
 
     /* INT_MAX == 2147483647 */
     while (cyrus_isdigit(*p)) {
-        if (result > 214748364 || (result == 214748364 && (*p > '7')))
-            fatal("num too big", EC_IOERR);
+        if (result > 214748364 || (result == 214748364 && (*p > '7'))) {
+            return -1;
+        }
         result = result * 10 + *p++ - '0';
         gotchar = 1;
     }
@@ -801,8 +902,9 @@ EXPORTED int parseuint32(const char *p, const char **ptr, uint32_t *res)
 
     /* UINT_MAX == 4294967295U */
     while (cyrus_isdigit(*p)) {
-        if (result > 429496729 || (result == 429496729 && (*p > '5')))
-            fatal("num too big", EC_IOERR);
+        if (result > 429496729 || (result == 429496729 && (*p > '5'))) {
+            return -1;
+        }
         result = result * 10 + *p++ - '0';
         gotchar = 1;
     }
@@ -822,14 +924,15 @@ EXPORTED int parsenum(const char *p, const char **ptr, int maxlen, bit64 *res)
     int cval;
 
     /* ULLONG_MAX == 18446744073709551615ULL
-     * - and I don't care about those last 5
      */
     for (n = 0; !maxlen || n < maxlen; n++) {
         if (!cyrus_isdigit(p[n]))
             break;
-        if (result > 1844674407370955161ULL)
-            fatal("num too big", EC_IOERR);
         cval = p[n] - '0';
+        if (result >= 1844674407370955161ULL) {
+            if (result > 1844674407370955161ULL || cval > 5)
+                return -1;
+        }
         result = result * 10 + cval;
     }
 
@@ -859,11 +962,13 @@ EXPORTED int parsehex(const char *p, const char **ptr, int maxlen, bit64 *res)
     int cval;
 
     /* ULLONG_MAX == 18446744073709551615ULL
-     * - and I don't care about those last 5
+     * so if we're greater or equal to (ULLONG_MAX+1)/16
+     * then we will overflow
      */
     for (n = 0; !maxlen || n < maxlen; n++) {
-        if (result > 1844674407370955161ULL)
-            fatal("num too big", EC_IOERR);
+        if (result >= 1152921504606846976ULL) {
+            return -1;
+        }
         cval = unxdigit[(int)p[n]];
         if (cval == 0xff) break;
         result = result * 16 + cval;
@@ -880,8 +985,10 @@ EXPORTED int parsehex(const char *p, const char **ptr, int maxlen, bit64 *res)
 
 /* buffer handling functions */
 
+#ifdef HAVE_DECLARE_OPTIMIZE
 static inline size_t roundup(size_t size)
     __attribute__((pure, always_inline, optimize("-O3")));
+#endif
 static inline size_t roundup(size_t size)
 {
     if (size < 32)
@@ -894,7 +1001,7 @@ static inline size_t roundup(size_t size)
         return 256;
     if (size < 512)
         return 512;
-    return ((size + 1024) & ~1023);
+    return ((size * 2) & ~1023);
 }
 
 /* this function has a side-effect of always leaving the buffer writable */
@@ -952,7 +1059,9 @@ EXPORTED char *buf_newcstring(struct buf *buf)
 EXPORTED char *buf_release(struct buf *buf)
 {
     char *ret = (char *)buf_cstring(buf);
-    buf_init(buf);
+    buf->alloc = 0;
+    buf->s = NULL;
+    buf_free(buf);
     return ret;
 }
 
@@ -962,10 +1071,18 @@ EXPORTED const char *buf_cstringnull(const struct buf *buf)
     return buf_cstring(buf);
 }
 
+EXPORTED const char *buf_cstringnull_ifempty(const struct buf *buf)
+{
+    if (!buf->len) return NULL;
+    return buf_cstring(buf);
+}
+
 EXPORTED char *buf_releasenull(struct buf *buf)
 {
     char *ret = (char *)buf_cstringnull(buf);
-    buf_init(buf);
+    buf->alloc = 0;
+    buf->s = NULL;
+    buf_free(buf);
     return ret;
 }
 
@@ -999,15 +1116,19 @@ EXPORTED int buf_getline(struct buf *buf, FILE *fp)
     return (!(buf->len == 0 && c == EOF));
 }
 
+#ifdef HAVE_DECLARE_OPTIMIZE
 EXPORTED inline size_t buf_len(const struct buf *buf)
     __attribute__((always_inline, optimize("-O3")));
+#endif
 EXPORTED inline size_t buf_len(const struct buf *buf)
 {
     return buf->len;
 }
 
+#ifdef HAVE_DECLARE_OPTIMIZE
 EXPORTED inline const char *buf_base(const struct buf *buf)
     __attribute__((always_inline, optimize("-O3")));
+#endif
 EXPORTED inline const char *buf_base(const struct buf *buf)
 {
     return buf->s;
@@ -1064,6 +1185,30 @@ EXPORTED void buf_append(struct buf *dst, const struct buf *src)
 EXPORTED void buf_appendcstr(struct buf *buf, const char *str)
 {
     buf_appendmap(buf, str, strlen(str));
+}
+
+/* Append str to buf, omitting any byte sequence at the start
+ * of str that matches the exact same byte sequence at the
+ * end of buf. E.g. if buf="fooxyz" and str="xyzbar" then the
+ * result is "fooxyzbar". */
+EXPORTED void buf_appendoverlap(struct buf *buf, const char *str)
+{
+    const char *t = buf_cstring(buf);
+    size_t matchlen = strlen(str);
+    if (matchlen < buf_len(buf)) {
+        t += buf_len(buf) - matchlen;
+    } else {
+        matchlen = buf_len(buf);
+    }
+
+    while (*t && matchlen && strncasecmp(t, str, matchlen)) {
+        t++; matchlen--;
+    }
+
+    if (*t && matchlen) {
+        buf_truncate(buf, buf_len(buf) - matchlen);
+    }
+    buf_appendcstr(buf, str);
 }
 
 EXPORTED void buf_appendbit32(struct buf *buf, bit32 num)
@@ -1290,6 +1435,7 @@ EXPORTED void buf_insertcstr(struct buf *dst, unsigned int off, const char *str)
     struct buf str_buf = BUF_INITIALIZER;
     buf_init_ro_cstr(&str_buf, str);
     buf_replace_buf(dst, off, 0, &str_buf);
+    buf_free(&str_buf);
 }
 
 EXPORTED void buf_insertmap(struct buf *dst, unsigned int off,
@@ -1298,12 +1444,14 @@ EXPORTED void buf_insertmap(struct buf *dst, unsigned int off,
     struct buf map_buf = BUF_INITIALIZER;
     buf_init_ro(&map_buf, base, len);
     buf_replace_buf(dst, off, 0, &map_buf);
+    buf_free(&map_buf);
 }
 
 EXPORTED void buf_remove(struct buf *dst, unsigned int off, unsigned int len)
 {
     struct buf empty_buf = BUF_INITIALIZER;
     buf_replace_buf(dst, off, len, &empty_buf);
+    buf_free(&empty_buf);
 }
 
 /*
@@ -1328,14 +1476,6 @@ EXPORTED int buf_cmp(const struct buf *a, const struct buf *b)
     return r;
 }
 
-EXPORTED void buf_init(struct buf *buf)
-{
-    buf->alloc = 0;
-    buf->len = 0;
-    buf->flags = 0;
-    buf->s = NULL;
-}
-
 /*
  * Initialise a struct buf to point to read-only data.  The key here is
  * setting buf->alloc=0 which indicates CoW is in effect, i.e. the data
@@ -1343,10 +1483,9 @@ EXPORTED void buf_init(struct buf *buf)
  */
 EXPORTED void buf_init_ro(struct buf *buf, const char *base, size_t len)
 {
-    buf->alloc = 0;
-    buf->len = len;
-    buf->flags = 0;
+    buf_free(buf);
     buf->s = (char *)base;
+    buf->len = len;
 }
 
 /*
@@ -1356,9 +1495,9 @@ EXPORTED void buf_init_ro(struct buf *buf, const char *base, size_t len)
  */
 EXPORTED void buf_initm(struct buf *buf, char *base, int len)
 {
-    buf->alloc = buf->len = len;
-    buf->flags = 0;
+    buf_free(buf);
     buf->s = base;
+    buf->alloc = buf->len = len;
 }
 
 /*
@@ -1366,10 +1505,9 @@ EXPORTED void buf_initm(struct buf *buf, char *base, int len)
  */
 EXPORTED void buf_init_ro_cstr(struct buf *buf, const char *str)
 {
-    buf->alloc = 0;
-    buf->len = (str ? strlen(str) : 0);
-    buf->flags = 0;
+    buf_free(buf);
     buf->s = (char *)str;
+    buf->len = (str ? strlen(str) : 0);
 }
 
 /*
@@ -1377,25 +1515,21 @@ EXPORTED void buf_init_ro_cstr(struct buf *buf, const char *str)
  * This buf is CoW, and if written to the data will be freed
  * using map_free().
  */
-EXPORTED void buf_init_mmap(struct buf *buf, int onceonly, int fd,
+EXPORTED void buf_refresh_mmap(struct buf *buf, int onceonly, int fd,
                             const char *fname, size_t size, const char *mboxname)
 {
+    assert(!buf->alloc);
     buf->flags = BUF_MMAP;
     map_refresh(fd, onceonly, (const char **)&buf->s, &buf->len,
                 size, fname, mboxname);
 }
 
-static void _buf_free_data(struct buf *buf)
+EXPORTED void buf_free(struct buf *buf)
 {
     if (buf->alloc)
         free(buf->s);
     else if (buf->flags & BUF_MMAP)
         map_free((const char **)&buf->s, &buf->len);
-}
-
-EXPORTED void buf_free(struct buf *buf)
-{
-    _buf_free_data(buf);
     buf->alloc = 0;
     buf->s = NULL;
     buf->len = 0;
@@ -1404,9 +1538,9 @@ EXPORTED void buf_free(struct buf *buf)
 
 EXPORTED void buf_move(struct buf *dst, struct buf *src)
 {
-    _buf_free_data(dst);
+    buf_free(dst);
     *dst = *src;
-    buf_init(src);
+    memset(src, 0, sizeof(struct buf));
 }
 
 EXPORTED int buf_findchar(const struct buf *buf, unsigned int off, int c)
@@ -1494,6 +1628,34 @@ EXPORTED const char *buf_lcase(struct buf *buf)
     return buf->s;
 }
 
+EXPORTED const char *buf_ucase(struct buf *buf)
+{
+    buf_cstring(buf);
+    ucase(buf->s);
+    return buf->s;
+}
+
+EXPORTED const char *buf_tocrlf(struct buf *buf)
+{
+    size_t i;
+
+    buf_cstring(buf);
+
+    for (i = 0; i < buf->len; i++) {
+        if (buf->s[i] == '\r' && buf->s[i+1] != '\n') {
+            /* bare \r: add a \n after it */
+            buf_insertcstr(buf, i+1, "\n");
+        }
+        else if (buf->s[i] == '\n') {
+            if (i == 0 || buf->s[i-1] != '\r') {
+                buf_insertcstr(buf, i, "\r");
+            }
+        }
+    }
+
+    return buf->s;
+}
+
 EXPORTED void buf_trim(struct buf *buf)
 {
     size_t i;
@@ -1535,6 +1697,17 @@ EXPORTED int bin_to_hex(const void *bin, size_t binlen, char *hex, int flags)
     *p = '\0';
 
     return p-hex;
+}
+
+EXPORTED int bin_to_lchex(const void *bin, size_t binlen, char *hex)
+{
+    uint16_t *p = (void *)hex;
+    const unsigned char *v = bin;
+    size_t i;
+    for (i = 0; i < binlen; i++)
+        *p++ = lchexchars[*v++];
+    hex[binlen*2] = '\0';
+    return 2 * binlen;
 }
 
 EXPORTED int hex_to_bin(const char *hex, size_t hexlen, void *bin)
@@ -1736,8 +1909,8 @@ EXPORTED int warmup_file(const char *filename,
 EXPORTED const char *makeuuid()
 {
     /* 36 bytes of uuid plus \0 */
-    static char res[37];
-    memset(res, 0, 37);
+    static char res[UUID_STR_LEN];
+    memset(res, 0, UUID_STR_LEN);
 #ifdef HAVE_LIBUUID
     uuid_t uu;
     uuid_clear(uu); /* Just In Case */
@@ -1811,7 +1984,7 @@ EXPORTED void tcp_enable_keepalive(int fd)
         }
 #endif
 #ifdef TCP_KEEPIDLE
-        optval = config_getint(IMAPOPT_TCP_KEEPALIVE_IDLE);
+        optval = config_getduration(IMAPOPT_TCP_KEEPALIVE_IDLE, 's');
         if (optval) {
             r = setsockopt(fd, proto->p_proto, TCP_KEEPIDLE, &optval, optlen);
             if (r < 0) {
@@ -1820,7 +1993,7 @@ EXPORTED void tcp_enable_keepalive(int fd)
         }
 #endif
 #ifdef TCP_KEEPINTVL
-        optval = config_getint(IMAPOPT_TCP_KEEPALIVE_INTVL);
+        optval = config_getduration(IMAPOPT_TCP_KEEPALIVE_INTVL, 's');
         if (optval) {
             r = setsockopt(fd, proto->p_proto, TCP_KEEPINTVL, &optval, optlen);
             if (r < 0) {

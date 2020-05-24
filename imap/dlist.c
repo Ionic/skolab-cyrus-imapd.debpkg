@@ -201,6 +201,7 @@ static int reservefile(struct protstream *in, const char *part,
             break;
         }
         size -= n;
+        if (!file) continue;
         if (fwrite(buf, 1, n, file) != n) {
             syslog(LOG_ERR, "IOERROR: writing to file '%s': %m", *fname);
             r = IMAP_IOERROR;
@@ -824,6 +825,7 @@ struct dlistsax_state {
     dlistsax_cb_t *proc;
     int depth;
     struct dlistsax_data d;
+    struct buf buf;
     struct buf gbuf;
 };
 
@@ -862,15 +864,25 @@ static int _parseliteral(struct dlistsax_state *s, struct buf *buf)
     while (s->p < s->end) {
         if (cyrus_isdigit(*s->p)) {
             len = (len * 10) + (*s->p++ - '0');
+            continue;
         }
-        else if (*s->p == '}') {
+
+        // skip literal+ if present
+        if (*s->p == '+' && (s->p + 1 < s->end))
+            s->p++;
+
+        // we'd better be at the end of the literal
+        if (*s->p == '}') {
             if (s->p + 3 + len >= s->end) break;
             if (s->p[1] != '\r') break;
             if (s->p[2] != '\n') break;
-            buf_setmap(buf, s->p+3, len);
-            s->p += len = 3;
+            buf_truncate(buf, 0);
+            buf_appendmap(buf, s->p + 3, len);
+            s->p += len + 3;
             return 0;
         }
+
+        break;
     }
 
     return IMAP_INVALID_IDENTIFIER;
@@ -879,19 +891,28 @@ static int _parseliteral(struct dlistsax_state *s, struct buf *buf)
 static int _parseitem(struct dlistsax_state *s, struct buf *buf)
 {
     const char *sp;
-    if (*s->p == '"')
+
+    /* this is much faster than setmap because it doesn't
+     * do a reset and check the MMAP flag */
+    buf_truncate(buf, 0);
+
+    switch (*s->p) {
+    case '"':
         return _parseqstring(s, buf);
-    else if (*s->p == '{')
+
+    case '{':
         return _parseliteral(s, buf);
 
-    sp = memchr(s->p, ' ', s->end - s->p);
-    if (!sp) sp = s->end;
-    while (sp[-1] == ')' && sp > s->p) sp--;
-    /* this is much faster because it doesn't do a reset and check the MMAP flag */
-    buf->len = 0;
-    buf_appendmap(buf, s->p, sp - s->p);
-    s->p = sp;
-    return 0; /* this could be the last thing, so end is OK */
+    default:
+        sp = memchr(s->p, ' ', s->end - s->p);
+        if (!sp) sp = s->end;
+        while (sp[-1] == ')' && sp > s->p) sp--;
+        buf_appendmap(buf, s->p, sp - s->p);
+        s->p = sp;
+        if (buf->len == 3 && buf->s[0] == 'N' && buf->s[1] == 'I' && buf->s[2] == 'L')
+            return IMAP_ZERO_LENGTH_LITERAL; // this is kinda bogus, but...
+        return 0; /* this could be the last thing, so end is OK */
+    }
 }
 
 static int _parsesax(struct dlistsax_state *s, int parsekey)
@@ -901,15 +922,16 @@ static int _parsesax(struct dlistsax_state *s, int parsekey)
     s->depth++;
 
     /* handle the key if wanted */
+    struct buf *backdoor = (struct buf *)(&s->d.kbuf);
     if (parsekey) {
-        r = _parseitem(s, &s->d.kbuf);
+        r = _parseitem(s, backdoor);
         if (r) return r;
         if (s->p >= s->end) return IMAP_INVALID_IDENTIFIER;
         if (*s->p == ' ') s->p++;
         else return IMAP_INVALID_IDENTIFIER;
     }
     else {
-        s->d.kbuf.len = 0;
+        backdoor->len = 0;
     }
 
     if (s->p >= s->end) return IMAP_INVALID_IDENTIFIER;
@@ -967,10 +989,14 @@ static int _parsesax(struct dlistsax_state *s, int parsekey)
         }
     }
     else {
-        r = _parseitem(s, &s->d.buf);
-        if (r) return r;
-
+        r = _parseitem(s, &s->buf);
+        if (r == IMAP_ZERO_LENGTH_LITERAL)
+            s->d.data = NULL; // NIL
+        else if (r) return r;
+        else
+            s->d.data = buf_cstring(&s->buf);
         r = s->proc(DLISTSAX_STRING, &s->d);
+        s->d.data = NULL; // zero out for next call
         if (r) return r;
     }
 
@@ -1305,6 +1331,7 @@ HIDDEN int dlist_tomap(struct dlist *dl, const char **valp, size_t *lenp)
     case DL_ATOM:
     case DL_FLAG:
     case DL_BUF:
+    case DL_NIL:
         break;
 
     default:

@@ -48,6 +48,7 @@
 #include <syslog.h>
 
 #include "httpd.h"
+#include "ical_support.h"
 #include "json_support.h"
 #include "jcal.h"
 #include "xcal.h"
@@ -248,11 +249,9 @@ static void icalparameter_as_json_object_member(icalparameter *param,
         kind_string = icalparameter_get_xname(param);
         break;
 
-#ifdef HAVE_IANA_PARAMS
     case ICAL_IANA_PARAMETER:
         kind_string = icalparameter_get_iana_name(param);
         break;
-#endif
 
     default:                    /* XXX: Is the default case here deliberate?? */
         kind_string = icalparameter_kind_to_string(kind);
@@ -847,28 +846,37 @@ EXPORTED icalcomponent *jcal_string_as_icalcomponent(const struct buf *buf)
 }
 
 
-EXPORTED const char *begin_jcal(struct buf *buf)
+EXPORTED const char *begin_jcal(struct buf *buf, struct mailbox *mailbox,
+                                const char *prodid, const char *name,
+                                const char *desc, const char *color)
 {
+    icalcomponent *ical;
+    icalproperty *prop;
+    json_t *jprops;
+    char *jbuf;
+    size_t flags = JSON_PRESERVE_ORDER;
+
+    flags |= (config_httpprettytelemetry ? JSON_INDENT(2) : JSON_COMPACT);
+
+    /* Add toplevel properties */
+    ical = icalcomponent_new_stream(mailbox, prodid, name, desc, color);
+    jprops = json_array();
+
+    for (prop = icalcomponent_get_first_property(ical, ICAL_ANY_PROPERTY);
+         prop;
+         prop = icalcomponent_get_next_property(ical, ICAL_ANY_PROPERTY)) {
+
+        json_array_append_new(jprops, icalproperty_as_json_array(prop));
+    }
+    icalcomponent_free(ical);
+
+    jbuf = json_dumps(jprops, flags);
+    json_decref(jprops);
+
     /* Begin jCal stream */
     buf_reset(buf);
-    buf_printf_markup(buf, 0, "[");
-    buf_printf_markup(buf, 1, "\"vcalendar\",");
-    buf_printf_markup(buf, 1, "[");
-    buf_printf_markup(buf, 2, "[");
-    buf_printf_markup(buf, 3, "\"prodid\",");
-    buf_printf_markup(buf, 3, "{},");
-    buf_printf_markup(buf, 3, "\"text\",");
-    buf_printf_markup(buf, 3, "\"-//CyrusIMAP.org/Cyrus %s//EN\"",
-                      cyrus_version());
-    buf_printf_markup(buf, 2, "],");
-    buf_printf_markup(buf, 2, "[");
-    buf_printf_markup(buf, 3, "\"version\",");
-    buf_printf_markup(buf, 3, "{},");
-    buf_printf_markup(buf, 3, "\"text\",");
-    buf_printf_markup(buf, 3, "\"2.0\"");
-    buf_printf_markup(buf, 2, "]");
-    buf_printf_markup(buf, 1, "],");
-    buf_printf_markup(buf, 0, "[");
+    buf_printf(buf, "[ \"vcalendar\",\r\n%s, [\r\n", jbuf);
+    free(jbuf);
 
     return ",";
 }
@@ -877,5 +885,5 @@ EXPORTED const char *begin_jcal(struct buf *buf)
 EXPORTED void end_jcal(struct buf *buf)
 {
     /* End jCal stream */
-    buf_setcstr(buf, "]]");
+    buf_setcstr(buf, "]]\r\n");
 }

@@ -61,16 +61,17 @@
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/file.h>
+#include <sysexits.h>
 #include <syslog.h>
 
 #include <pwd.h>
 
 #include "prot.h"
+#include "lib/times.h"
 
 #include "imclient.h"
 #include "util.h"
 #include "xmalloc.h"
-#include "exitcodes.h"
 
 #include "readconfig.h"
 
@@ -152,11 +153,11 @@ EXPORTED void fatal(const char *s, int code)
 /***********************
  * Parse a mech list of the form: ... AUTH=foo AUTH=bar ...
  *
- * Return: string with mechs seperated by spaces
+ * Return: string with mechs separated by spaces
  *
  ***********************/
 
-typedef struct capabilies_s {
+typedef struct capabilities_s {
 
   char *mechs;
 
@@ -331,7 +332,7 @@ static int send_delete(const char *mbox, const char *uidlist)
                mbox, cmd_resp ? cmd_resp : "");
         return -1;
     }
-    else fatal("marking message deleted", EC_TEMPFAIL);
+    else fatal("marking message deleted", EX_TEMPFAIL);
 }
 
 static void mark_all_deleted(const char *mbox, uid_list_t *list, mbox_stats_t *stats)
@@ -392,26 +393,6 @@ static void mark_all_deleted(const char *mbox, uid_list_t *list, mbox_stats_t *s
     }
 }
 
-static char *month_string(int mon)
-{
-    switch(mon)
-        {
-            case 0: return "Jan";
-            case 1: return "Feb";
-            case 2: return "Mar";
-            case 3: return "Apr";
-            case 4: return "May";
-            case 5: return "Jun";
-            case 6: return "Jul";
-            case 7: return "Aug";
-            case 8: return "Sep";
-            case 9: return "Oct";
-            case 10: return "Nov";
-            case 11: return "Dec";
-        default: return "BAD";
-        }
-}
-
 /* we don't check what comes in on matchlen and category, should we? */
 static int purge_me(char *name, time_t when)
 {
@@ -427,7 +408,7 @@ static int purge_me(char *name, time_t when)
     snprintf(search_string,sizeof(search_string),
              "BEFORE %d-%s-%d",
              my_tm->tm_mday,
-             month_string(my_tm->tm_mon),
+             monthname[my_tm->tm_mon],
              1900+my_tm->tm_year);
 
     if (noop) {
@@ -458,7 +439,7 @@ static int purge_me(char *name, time_t when)
         syslog(LOG_ERR, "unable to select %s: %s", name, cmd_resp);
         return 0;
     } else if (cmd_done != IMAP_OK) {
-        fatal("selecting mailbox", EC_TEMPFAIL);
+        fatal("selecting mailbox", EX_TEMPFAIL);
     }
 
     stats.total = current_mbox_exists;
@@ -484,7 +465,7 @@ static int purge_me(char *name, time_t when)
             imclient_processoneevent(imclient_conn);
         }
         if (cmd_done != IMAP_OK) {
-            fatal("UID Search failed", EC_TEMPFAIL);
+            fatal("UID Search failed", EX_TEMPFAIL);
         }
 
         if (uidlist.size > 0) {
@@ -503,7 +484,7 @@ static int purge_me(char *name, time_t when)
     }
 
     if (cmd_done != IMAP_OK) {
-        fatal("unable to CLOSE mailbox", EC_TEMPFAIL);
+        fatal("unable to CLOSE mailbox", EX_TEMPFAIL);
     }
 
     if(current_mbox_exists) {
@@ -548,7 +529,7 @@ static void do_list(char *matchstr)
         imclient_processoneevent(imclient_conn);
     }
 
-    if (cmd_done!=IMAP_OK) fatal("unable to LIST mailboxes", EC_TEMPFAIL);
+    if (cmd_done!=IMAP_OK) fatal("unable to LIST mailboxes", EX_TEMPFAIL);
 }
 
 /*
@@ -602,7 +583,7 @@ static void remote_purge(char *configpath, char **matches)
         configstream = fopen(name,"r");
 
         if (configstream == NULL)
-            fatal("unable to open config file", EC_CONFIG);
+            fatal("unable to open config file", EX_CONFIG);
 
         EXPreadfile(configstream);
         /* ret val */
@@ -630,7 +611,7 @@ static void usage(void)
 
   printf("  -d days  : purge all message <days> old\n");
 
-  exit(EC_USAGE);
+  exit(EX_USAGE);
 }
 
 int main(int argc, char **argv)
@@ -708,7 +689,7 @@ int main(int argc, char **argv)
     r = imclient_connect (&imclient_conn, servername, port, NULL);
 
     if (r!=0) {
-        fatal("imclient_connect()", EC_TEMPFAIL);
+        fatal("imclient_connect()", EX_TEMPFAIL);
     }
 
     spew(0, "connected");
@@ -735,7 +716,7 @@ int main(int argc, char **argv)
                               maxssf);
 
     if (r!=0) {
-        fatal("imclient_authenticate()\n", EC_CONFIG);
+        fatal("imclient_authenticate()\n", EX_CONFIG);
     }
 
     spew(0, "authenticated");

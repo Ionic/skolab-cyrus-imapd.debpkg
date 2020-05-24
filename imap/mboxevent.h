@@ -50,6 +50,9 @@
 #include "mailbox.h"
 #include "mboxname.h"
 
+/* Forward declaration to avoid circular dependency */
+typedef struct msgrecord msgrecord_t;
+
 /*
  * event types defined in RFC 5423 - Internet Message Store Events
  */
@@ -84,7 +87,8 @@ enum event_type {
     EVENT_CALENDAR_ALARM      = (1<<22),
     /* Other */
     EVENT_APPLEPUSHSERVICE     = (1<<23),
-    EVENT_APPLEPUSHSERVICE_DAV = (1<<24)
+    EVENT_APPLEPUSHSERVICE_DAV = (1<<24),
+    EVENT_MAILBOX_MODSEQ       = (1<<25)
 };
 
 /*
@@ -133,10 +137,14 @@ enum event_param {
     EVENT_CONVUNSEEN,
     EVENT_MESSAGE_CID,
     EVENT_COUNTERS,
+    EVENT_MESSAGE_EMAILID,
+    EVENT_MESSAGE_THREADID,
     EVENT_CALENDAR_ALARM_TIME,
     EVENT_CALENDAR_ALARM_RECIPIENTS,
     EVENT_CALENDAR_USER_ID,
+    EVENT_CALENDAR_CALENDAR_ID,
     EVENT_CALENDAR_CALENDAR_NAME,
+    EVENT_CALENDAR_CALENDAR_COLOR,
     EVENT_CALENDAR_UID,
     EVENT_CALENDAR_ACTION,
     EVENT_CALENDAR_SUMMARY,
@@ -300,17 +308,37 @@ void mboxevent_extract_record(struct mboxevent *event,
                               struct index_record *record);
 
 /*
+ * Extract data from the given message record to fill these event parameters :
+ * - uidset from UID
+ * - vnd.cmu.midset from Message-Id in ENVELOPE structure
+ * - messageSize
+ * - bodyStructure
+ *
+ * Called once per message and always before mboxevent_extract_mailbox
+ */
+void mboxevent_extract_msgrecord(struct mboxevent *event, msgrecord_t *msgrec);
+
+
+/*
  * Fill event parameter about the copied message.
  * Called once per message and always before mboxevent_extract_mailbox
  */
 void mboxevent_extract_copied_record(struct mboxevent *event,
                                      const struct mailbox *mailbox, struct index_record *record);
 
+extern void mboxevent_extract_copied_msgrecord(struct mboxevent *event, msgrecord_t *msgrec);
+
 /*
  * Extract message content to include to event notification
  */
 void mboxevent_extract_content(struct mboxevent *event,
                                const struct index_record *record, FILE* content);
+
+/*
+ * Extract message content to include to event notification
+ */
+void mboxevent_extract_content_msgrec(struct mboxevent *event,
+                               msgrecord_t *msgrec, FILE* content);
 
 /*
  * Extract quota limit, quota usage and quota root to include to event

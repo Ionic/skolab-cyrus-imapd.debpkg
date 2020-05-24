@@ -77,6 +77,9 @@ ec IMAP_MAILBOX_BADFORMAT,
 ec IMAP_SYNC_CHECKSUM,
    "Replication inconsistency detected"
 
+ec IMAP_SYNC_CHANGED,
+   "Mailbox has changed since last sync"
+
 ec IMAP_SYNC_BADSIEVE,
    "Sieve script compilation failure"
 
@@ -160,6 +163,9 @@ ec IMAP_BADURL,
 
 ec IMAP_ZERO_LENGTH_LITERAL,
    "Zero-length message literal"
+
+ec IMAP_DISABLED,
+   "Command is disabled by configuration"
 
 # following used only proxy/db operations
 ec IMAP_BAD_SERVER,
@@ -252,6 +258,12 @@ ec IMAP_CANCELLED,
 
 ec IMAP_SEARCH_SLOW,
     "Search taking too long - try reducing the set of messages searched"
+
+ec IMAP_SEARCH_MUTABLE,
+    "Search is mutable"
+
+ec IMAP_SEARCH_NOT_SUPPORTED,
+    "Search is not supported"
 
 # Following used for internationalization of untagged BYE response
 

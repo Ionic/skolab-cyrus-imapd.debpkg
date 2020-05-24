@@ -1,7 +1,7 @@
 /* tree.h -- abstract syntax tree
  * Larry Greenfield
  *
- * Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
+ * Copyright (c) 1994-2017 Carnegie Mellon University.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -44,84 +44,80 @@
 #ifndef TREE_H
 #define TREE_H
 
+#include <jansson.h>
+
 #include "comparator.h"
 #include "strarray.h"
+#include "arrayu64.h"
 
 /* abstract syntax tree for sieve */
 typedef struct Commandlist commandlist_t;
 typedef struct Test test_t;
 typedef struct Testlist testlist_t;
-typedef struct Tag tag_t;
-typedef struct Taglist taglist_t;
+typedef struct Comp comp_t;
 
-struct Tag {
-    int type;
-    char *arg;
-};
-
-struct Taglist {
-    tag_t *t;
-    taglist_t *next;
+struct Comp {
+    int match;
+    int relation;
+    int collation;  /* only used where :comparator can be defined */
+    int index;      /* only used where index extension is defined */
 };
 
 struct Test {
     int type;
+    int ignore_err;
     union {
-        testlist_t *tl; /* anyof, allof */
-        strarray_t *sl; /* exists */
+        test_t *t; /* not */
+        strarray_t *sl; /* exists, ihave, valid_ext_list */
+        testlist_t *tl; /* anyof, allof (bytecode generation only) */
+        struct { /* anyof, allof (bytecode parsing/eval only) */
+            int ntests;   /* number of tests */
+            int endtests; /* offset to end of tests */
+        } aa;
         struct { /* it's a header or hasflag or string test */
-            int index;
-            int comptag;
-            char * comparator;
-            int relation;
-            void *comprock;
+            comp_t comp;
             strarray_t *sl;
             strarray_t *pl;
-        } h;
+        } hhs;
         struct { /* it's an address or envelope test */
-            int index;
-            int comptag;
-            char * comparator;
-            int relation;
-            void *comprock;
+            comp_t comp;
             strarray_t *sl;
             strarray_t *pl;
             int addrpart;
         } ae;
         struct { /* it's a body test */
-            int comptag;
-            int relation;
-            char * comparator;
-            void *comprock;
+            comp_t comp;
             int transform;
             int offset;
             strarray_t *content_types;
             strarray_t *pl;
         } b;
-        test_t *t; /* not */
         struct { /* size */
             int t; /* tag */
             int n; /* param */
         } sz;
         struct { /* it's a date test */
-            int index;
+            comp_t comp;
             int zonetag;
-            char *zone;
-            int comptag;
-            int relation;
-            char *comparator;
+            int zone;  /* time-zone offset in minutes */
             int date_part;
             char *header_name;
             strarray_t *kl;
         } dt;
-        struct { /* it's one of the mailbox type tests */
+        struct { /* it's a mailbox or metadata or environment test */
+            comp_t comp;
             char *extname;
             char *keyname;
             strarray_t *keylist;
-            int comptag;
-            int relation;
-            char *comparator;
-        } mbx;
+        } mm;
+        struct { /* its a duplicate test */
+            int idtype;
+            char *idval;
+            char *handle;
+            int seconds;
+            int last;
+        } dup;
+        char *jquery; /* jmapquery */
     } u;
 };
 
@@ -130,12 +126,23 @@ struct Testlist {
     testlist_t *next;
 };
 
+struct Fileinto {
+    strarray_t *flags;
+    char *folder;
+    char *specialuse;
+    int copy;
+    int create;
+    char *mailboxid;
+};
+
 struct Commandlist {
     int type;
     union {
-        char *reject; /* its a reject action */
+        int jump; /* bytecode parsing/eval only */
+        char *str; /* its a reject or error action */
         struct { /* it's an if statement */
             test_t *t;
+            int testend; /* offset to end of test (bytecode parsing/eval only) */
             commandlist_t *do_then;
             commandlist_t *do_else;
         } i;
@@ -149,20 +156,15 @@ struct Commandlist {
             int mod40; /* :lower or :upper */
             int mod30; /* :lowerfirst or :upperfirst */
             int mod20; /* :quotewildcard */
+            int mod15; /* :encodeurl */
             int mod10; /* :length */
             char *variable;
             char *value;
         } s;
         struct { /* it's a keep action */
-            int copy;
             strarray_t *flags;
         } k;
-        struct { /* it's a fileinto action */
-            char *folder;
-            int copy;
-            int create;
-            strarray_t *flags;
-        } f;
+        struct Fileinto f; /* it's a fileinto action */
         struct { /* it's a flag action */
             char *variable;
             strarray_t *flags;
@@ -170,6 +172,12 @@ struct Commandlist {
         struct { /* it's a redirect action */
             char *address;
             int copy;
+            int list;
+            char *bytime;
+            char *bymode;
+            int bytrace;
+            char *dsn_notify;
+            char *dsn_ret;
         } r;
         struct { /* it's a vacation action */
             char *subject;
@@ -179,32 +187,55 @@ struct Commandlist {
             char *from;
             char *handle;
             int mime;
+            struct Fileinto fcc;
         } v;
-        struct { /* it's a notify action */
+        struct { /* it's an (e)notify action */
             char *method;
             char *id;
+            char *from;
             strarray_t *options;
             int priority;
             char *message;
+            struct Fileinto fcc;
         } n;
         struct { /* it's a denotify action */
-            int comptag;
-            int relation;
-            void *comprock;
-            void *pattern;
+            comp_t comp;
+            char *pattern;
             int priority;
         } d;
+        struct { /* it's an addheader action */
+            int index;
+            char *name;
+            char *value;
+        } ah;
+        struct { /* it's a deleteheader action */
+            comp_t comp;
+            char *name;
+            strarray_t *values;
+        } dh;
+        struct { /* it's a log action */
+            char *text;
+        } l;
+        struct { /* it's a snooze action */
+            char *mailbox;
+            int is_mboxid;
+            strarray_t *addflags;
+            strarray_t *removeflags;
+            unsigned char days;
+            arrayu64_t *times;
+        } sn;
     } u;
     struct Commandlist *next;
 };
 
-tag_t *new_tag(int type, char *s);
-taglist_t *new_taglist(tag_t *t, taglist_t *n);
-test_t *new_test(int type);
+comp_t *canon_comptags(comp_t *c, sieve_script_t *parse_script);
+
+test_t *new_test(int type, sieve_script_t *parse_script);
 testlist_t *new_testlist(test_t *t, testlist_t *n);
-commandlist_t *new_command(int type);
+commandlist_t *new_command(int type, sieve_script_t *parse_script);
 commandlist_t *new_if(test_t *t, commandlist_t *y, commandlist_t *n);
 
+void free_testlist(testlist_t *tl);
 void free_test(test_t *t);
 void free_tree(commandlist_t *cl);
 

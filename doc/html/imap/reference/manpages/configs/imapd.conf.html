@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>imapd.conf &mdash; Cyrus IMAP 3.0.13 (stable) documentation</title>
+  <title>imapd.conf &mdash; Cyrus IMAP 3.2.0 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.0.13 (stable) documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.0 documentation" href="../../../../index.html"/>
         <link rel="up" title="Man pages" href="../commands.html"/>
         <link rel="next" title="krb.equiv" href="krb.equiv.html"/>
         <link rel="prev" title="cyrus.conf" href="cyrus.conf.html"/> 
@@ -130,19 +130,24 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#stable-version">Stable Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#development-version">Development Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#supported-product-series">Supported Product Series</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-3-2">Series 3.2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-3-0">Series 3.0</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-2-5">Series 2.5</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-2-4">Series 2.4</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#development-snapshots">Development snapshots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/3.1/index.html">Cyrus IMAP 3.1 Tags</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#older-versions">Older Versions</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-1">Series 1</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-2-2-0-2-3">Series 2: 2.0 - 2.3</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-2-2-0-2-4">Series 2: 2.0 - 2.4</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../download/packagers.html">Notes for Packagers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#binary-naming">Binary naming</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#sample-configuration-files">Sample configuration files</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#predefined-configurations">Predefined configurations</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/packagers.html#the-configuration-file-for-master-cyrus-conf">The configuration file for master: cyrus.conf</a></li>
@@ -159,22 +164,19 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../quickstart/introduction.html#what-is-imap">What is IMAP?</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../quickstart.html#coming-soon">Coming Soon</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../quickstart.html#quick-install">Quick install</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#install-cyrus-reference-packages">1. Install Cyrus reference packages</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#use-apt-get-install-f-to-complete-installation">2. Use &#8220;apt-get install -f&#8221; to complete installation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#setup-the-cyrus-mail-user-and-group">3. Setup the cyrus:mail user and group</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#setting-up-authentication-with-sasl">4. Setting up authentication with SASL</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#setup-mail-delivery-from-your-mta">5. Setup mail delivery from your MTA</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#install-cyrus-package-s">1. Install Cyrus package(s)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#setup-the-cyrus-mail-user-and-group">2. Setup the cyrus:mail user and group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#setting-up-authentication-with-sasl">3. Setting up authentication with SASL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#setup-mail-delivery-from-your-mta">4. Setup mail delivery from your MTA</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../quickstart.html#install-sendmail">Install Sendmail</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../quickstart.html#sendmail-communication">Sendmail communication</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../quickstart.html#install-postfix">Install Postfix</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#protocol-ports">6. Protocol ports</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#configuring-cyrus">7. Configuring Cyrus</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#launch-cyrus">8. Launch Cyrus</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#feature-overview">Feature overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#protocol-ports">5. Protocol ports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#configuring-cyrus">6. Configuring Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#launch-cyrus">7. Launch Cyrus</a></li>
 </ul>
 </li>
 </ul>
@@ -331,19 +333,19 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../installing.html#troubleshooting">Troubleshooting</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../../download/upgrade.html">Upgrading to 3.0</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../download/upgrade.html">Upgrading to 3.2</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#preparation">1. Preparation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/upgrade.html#installation-from-tarball">Installation from tarball</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/upgrade.html#how-are-you-planning-on-upgrading">How are you planning on upgrading?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/upgrade.html#do-what-as-who">Do What As Who?</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#install-new-3-0-cyrus">2. Install new 3.0 Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#install-new-3-2-cyrus">2. Install new 3.2 Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#shut-down-existing-cyrus">3. Shut down existing Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#backup-and-copy-existing-data">4. Backup and Copy existing data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#copy-config-files-and-update">5. Copy config files and update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#upgrade-specific-items">6. Upgrade specific items</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#start-new-3-0-cyrus-and-verify">7. Start new 3.0 Cyrus and verify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#start-new-3-2-cyrus-and-verify">7. Start new 3.2 Cyrus and verify</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#reconstruct-databases-and-cache">8. Reconstruct databases and cache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#do-you-want-any-new-features">9. Do you want any new features?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#upgrade-complete">10. Upgrade complete</a></li>
@@ -392,6 +394,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/deployment/performance_recommendations.html">Performance Recommendations</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/performance_recommendations.html#databases-on-temporary-filesystems">Databases on Temporary Filesystems</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/performance_recommendations.html#certificates">Certificates</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/deployment/storage.html">Storage Considerations</a><ul>
@@ -419,7 +422,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="../commands.html">Man pages</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="../commands.html#configuration-files">(5) Configuration Files</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="cyrus.conf.html"><strong>cyrus.conf</strong></a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">imapd.conf</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#"><strong>imapd.conf</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="krb.equiv.html"><strong>krb.equiv</strong></a></li>
 </ul>
 </li>
@@ -508,34 +511,6 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../administration-tools.html">Tools &amp; Utilities</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#arbitron">arbitron</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#arbitronsort-pl">arbitronsort.pl</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#chk-cyrus">chk_cyrus</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#ctl-cyrusdb">ctl_cyrusdb</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#ctl-deliver">ctl_deliver</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#ctl-mboxlist">ctl_mboxlist</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#cvt-cyrusdb">cvt_cyrusdb</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#cvt-cyrusdb-all">cvt_cyrusdb_all</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#cyr-dbtool">cyr_dbtool</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#cyr-df">cyr_df</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#cyrdump">cyrdump</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#cyr-expire">cyr_expire</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#cyr-virusscan">cyr_virusscan</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#fetchnews">fetchnews</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#cyr-sequence">cyr_sequence</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#cyr-synclog">cyr_synclog</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#cyr-userseen">cyr_userseen</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#masssievec">masssievec</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#mbexamine">mbexamine</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#mbpath">mbpath</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#mkimap">mkimap</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#mknewsgroups">mknewsgroups</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#rehash">rehash</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#translatesieve">translatesieve</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../administration-tools.html#undohash">undohash</a></li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="../../admin.html">Administrator Guide</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../admin.html#architecture">Architecture</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../architecture.html">System Architecture</a></li>
@@ -552,6 +527,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../admin/protlayer.html">Cyrus Prot Layer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../admin/sop.html">Standard Operating Procedures</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../admin/eventsource.html">Cyrus Event Source</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../admin/monitoring.html">Monitoring</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../admin/config-mailboxdistribution.html">Mailbox Distribution</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../admin/murder/murder.html">Cyrus Murder</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../admin/nginx-proxy.html">HOWTO: Using an NGINX IMAP Proxy</a></li>
@@ -568,10 +544,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-detecting-berkeley.html">Problems detecting Berkley DB on Red Hat Linux</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-linkerwarnings.html#libical-v1-0-1-or-v2-0">Libical v1.0.1 or v2.0</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#common-feature-requests">Common Feature Requests</a><ul>
@@ -584,10 +558,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#common-operational-questions">Common Operational Questions</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-acls.html">How do I view ACLs on a mailbox?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-annotations.html">What annotations are available?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-berkeleydb.html">Why does ctl_cyrusdb -r take so long with Berkeley DB?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-coredump.html">How to enable core dumps</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-db3-lockers.html">Is the &#8220;db3: x Lockers&#8221; log message harmful?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
@@ -648,6 +620,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../developer/compiling.html">Compiling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../installing.html">Installing Cyrus</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../developer/developer-testing.html">Developer Test Environment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/jmap.html">JMAP support</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../developer.html#system-files-and-databases">System files and Databases</a><ul>
@@ -667,9 +640,55 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../../developer/cyrusworks.html">Cyrus.Works</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../developer/cyrusworks.html#about-cyrus-works">About Cyrus Works</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../developer/cyrusworks.html#testing">Testing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../developer/cyrusworks.html#how-it-works">How it works</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../developer/cyrusworks.html#adding-rules">Adding Rules</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../developers.html#cyrus-internals">Cyrus Internals</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../developer/API.html">Cyrus APIs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/API/cyrusdb.html">CyrusDB API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/API/cyrusdb2.html">cyrusdb API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/API/index-api.html">Index API</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/API/mailbox-api.html">Mailbox API</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../developer/thoughts.html">Thoughts &amp; Notes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/thoughts/backup.html">Notes for backup implementation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/thoughts/bytecode.html">Cyrus IMAP Server: Sieve Bytecode</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/thoughts/caldav_scheduling_flowchart.html">Cyrus CalDAV Scheduling Flowchart</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/thoughts/improved_mboxlist_sort.html">Enabling improved_mboxlist_sort</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/thoughts/notes.html">Cyrus IMAP Server: Notes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/thoughts/prot-events.html">Cyrus IMAP Server: Prot Events</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../developer/guidance.html">Guidance for Developers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/guidance/hacking.html">Cyrus IMAP Server: Hacking</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/guidance/internationalization.html">Cyrus IMAP Server: Internationalization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/guidance/locking.html">Cyrus IMAP Server: Locking</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/guidance/mailbox-format.html">Cyrus IMAP Server: Mailbox File Formats</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/guidance/namelocks.html">Cyrus IMAP Server: Namelocks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/guidance/prot.html">Cyrus IMAP Server: prot layer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/guidance/replication_examples.html">Cyrus IMAP Server: Replication Examples</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/guidance/replication_protocol.html">Cyrus IMAP Server: Replication Protocol v2.4+</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/guidance/special_chars.html">Cyrus IMAP Server: Special Characters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/guidance/var_directory_structure.html">Cyrus IMAP Server: var directory structure</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../developers.html#unit-tests">Unit Tests</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../developer/unit-tests.html">Unit Tests</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/unit-tests.html#table-of-contents">Table of Contents</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/unit-tests.html#introduction">1. Introduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/unit-tests.html#what-is-a-unit-test">2. What Is A Unit Test?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/unit-tests.html#running-the-tests">3. Running The Tests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/unit-tests.html#debugging-a-test">3.6 Debugging A Test</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/unit-tests.html#adding-your-own-tests">4. Adding Your Own Tests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/unit-tests.html#where-to-put-your-tests">4.1 Where To Put Your Tests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/unit-tests.html#adding-a-new-suite">4.1 Adding A New Suite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/unit-tests.html#adding-a-test-to-a-suite">4.2 Adding A Test To A Suite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/unit-tests.html#suite-setup-and-teardown">4.3 Suite Setup And Teardown</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -727,7 +746,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd/branches" target="_blank">cyrus-imapd-3.0: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.0"></a>
+    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.2: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.2"></a>
 </div>
       &nbsp;
     </nav>
@@ -747,13 +766,13 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.0.13 (stable)</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.2.0</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
           <li><a href="../commands.html">Man pages</a> &raquo;</li>
       
-    <li>imapd.conf</li>
+    <li><strong>imapd.conf</strong></li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -767,7 +786,7 @@
           <div role="main" class="document">
             
   <div class="section" id="imapd-conf">
-<span id="imap-reference-manpages-configs-imapd-conf"></span><span id="std:cyrusman-imapd.conf(5)"></span><h1>imapd.conf<a class="headerlink" href="#imapd-conf" title="Permalink to this headline">¶</a></h1>
+<span id="imap-reference-manpages-configs-imapd-conf"></span><span id="std:cyrusman-imapd.conf(5)"></span><h1><strong>imapd.conf</strong><a class="headerlink" href="#imapd-conf" title="Permalink to this headline">¶</a></h1>
 <p>IMAP configuration file</p>
 <div class="section" id="description">
 <h2>DESCRIPTION<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
@@ -803,6 +822,14 @@ using ``\&#8217;&#8217; character(s) is still considered a single line.</p>
 <p>For boolean and enumerated options, the values ``yes&#8217;&#8216;, ``on&#8217;&#8216;, ``t&#8217;&#8216;,
 ``true&#8217;&#8217; and ``1&#8217;&#8217; turn the option on, the values ``no&#8217;&#8216;, ``off&#8217;&#8216;,
 ``f&#8217;&#8216;, ``false&#8217;&#8217; and ``0&#8217;&#8217; turn the option off.</p>
+<p>Duration options take the form of a number followed by a unit, for example
+<strong>32m</strong> (32 minutes).  Units are <strong>d</strong> (days), <strong>h</strong> (hours), <strong>m</strong>
+(minutes) and <strong>s</strong> (seconds).  Multiple units can be combined and will
+be summed together, for example <strong>1h30m</strong> is equivalent to <strong>90m</strong>.  If
+no unit is specified, an option-specific backward-compatible default unit
+is assumed (documented on an option-by-option basis).  These are simple time
+units: 1d=24h, 1h=60m, 1m=60s (daylight savings, timezones, leap adjustments,
+etc are not considered).</p>
 </div></blockquote>
 </div>
 <div class="section" id="field-descriptions">
@@ -860,6 +887,9 @@ support, that the plaintext passwords are available in a SASL auxprop
 backend (e.g., sasldb), and that the system can provide enough entropy
 (e.g., from /dev/urandom) to create a challenge in the banner.</p>
 </div></blockquote>
+<p><code class="docutils literal"><span class="pre">allowdeleted:</span></code> 0</p>
+<blockquote>
+<div>Allow access to deleted and expunged data via vendor.cmu-* access</div></blockquote>
 <p><code class="docutils literal"><span class="pre">allownewnews:</span></code> 0</p>
 <blockquote>
 <div><p>Allow use of the NNTP NEWNEWS command.</p>
@@ -875,6 +905,10 @@ authentication mechanisms being advertised or allowed.  To require a
 TLS/SSL encryption layer to be negotiated prior to ANY
 authentication, see the <em>tls_required</em> option.</p>
 </div></blockquote>
+<p><code class="docutils literal"><span class="pre">allowsetacl:</span></code> 1</p>
+<blockquote>
+<div>Defaults to enabled.  If disabled, disallows the use of the SETACL
+command at all via IMAP.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">allowusermoves:</span></code> 0</p>
 <blockquote>
 <div><p>Allow moving user accounts (with associated meta-data) via RENAME
@@ -902,7 +936,7 @@ otherwise go under here</div></blockquote>
 <p><code class="docutils literal"><span class="pre">annotation_db:</span></code> twoskip</p>
 <blockquote>
 <div><p>The cyrusdb backend to use for mailbox annotations.</p>
-<p>Allowed values: <em>skiplist</em>, <em>twoskip</em>, <em>lmdb</em></p>
+<p>Allowed values: <em>skiplist</em>, <em>twoskip</em>, <em>zeroskip</em></p>
 </div></blockquote>
 <p><code class="docutils literal"><span class="pre">annotation_db_path:</span></code> &lt;none&gt;</p>
 <blockquote>
@@ -984,6 +1018,15 @@ particular the <strong>a</strong> permission bit does not achieve this.</p>
 or flags to a message when it is appended to a mailbox.  The path can
 be either an executable (including a script), or a UNIX domain
 socket.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">annotation_callout_disable_append:</span></code> 0</p>
+<blockquote>
+<div>Disables annotations on append with xrunannotator</div></blockquote>
+<p><code class="docutils literal"><span class="pre">annotation_enable_legacy_commands:</span></code> 0</p>
+<blockquote>
+<div>Whether to enable the legacy GETANNOTATION/SETANNOTATION commands.
+These commands are deprecated and will be removed in the future,
+but might be useful in the meantime for supporting old clients that
+do not implement the <span class="target" id="index-4"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5464.html"><strong>RFC 5464</strong></a> IMAP METADATA extension.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">aps_topic:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>Topic for Apple Push Service registration.</div></blockquote>
@@ -999,10 +1042,16 @@ socket.</div></blockquote>
 archivepartition for the mailbox.  Archiving allows older email
 to be stored on slower, cheaper disks - even within the same
 mailbox, as distinct from partitions.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">archive_days:</span></code> 7</p>
+<p><code class="docutils literal"><span class="pre">archive_days:</span></code> &lt;none&gt;</p>
 <blockquote>
-<div>The number of days after which to move messages to the archive partition
-if archiving is enabled</div></blockquote>
+<div>Deprecated in favour of <em>archive_after</em>.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">archive_after:</span></code> 7d</p>
+<blockquote>
+<div><p>The duration after which to move messages to the archive partition
+if archiving is enabled.</p>
+<p>For backward compatibility, if no unit is specified, days is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">archive_maxsize:</span></code> 1024</p>
 <blockquote>
 <div>The size in kilobytes of the largest message that won&#8217;t be archived
@@ -1057,6 +1106,19 @@ can be very useful for tracking down what happened if things look strange</div><
 <p><code class="docutils literal"><span class="pre">autosubscribe_all_sharedfolders:</span></code> 0</p>
 <blockquote>
 <div>Deprecated in favor of <em>autocreate_subscribe_sharedfolders_all</em>.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">autocreate_acl:</span></code> &lt;none&gt;</p>
+<blockquote>
+<div><p>If folders are to be created by <em>autocreate_inbox_foldersR, this
+setting can be used to apply additional ACLs to the autocreated
+folders.  The syntax is &#8220;autocreate_acl folder identifier rights&#8221;,
+where **folder</em> must match one of the <em>autocreate_inbox_folders</em>
+folders, <em>identifier</em> must be a valid cyrus identifier, and
+<em>rights</em> must be a valid cyrus rights string.  Multiple
+identifier|rights pairs can be assigned to a single folder by providing
+this setting multiple times.</p>
+<p>For example, &#8220;autocreate_acl Plus anyone p&#8221; would allow lmtp delivery
+to a folder named &#8220;Plus&#8221;.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">autocreate_inbox_folders:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div><p>If a user does not have an INBOX already, and the INBOX is to be
@@ -1150,6 +1212,10 @@ to subscribe to.</div></blockquote>
 <blockquote>
 <div>A space separated list of users and/or groups that are allowed their INBOX to be
 automatically created.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">autoexpunge:</span></code> 0</p>
+<blockquote>
+<div>If set to yes, then all Deleted messages will be automatically expunged whenever
+an index is closed, whether CLOSE, UNSELECT, SELECT or on disconnect</div></blockquote>
 <p><code class="docutils literal"><span class="pre">backuppartition-name:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>The pathname of the backup partition <em>name</em>.  At least one backup
@@ -1176,15 +1242,21 @@ is treated as being one.</div></blockquote>
 <blockquote>
 <div>The absolute path of the backup staging area.  If not specified,
 will be temp_path/backup</div></blockquote>
-<p><code class="docutils literal"><span class="pre">backup_retention_days:</span></code> 7</p>
+<p><code class="docutils literal"><span class="pre">backup_retention_days:</span></code> &lt;none&gt;</p>
 <blockquote>
-<div>The number of days to keep content in backup after it has been deleted
+<div>Deprecated in favor of <em>backup_retention</em>.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">backup_retention:</span></code> 7d</p>
+<blockquote>
+<div><p>How long to keep content in backup after it has been deleted
 from the source.  If set to a negative value or zero, deleted content
-will be kept indefinitely.</div></blockquote>
+will be kept indefinitely.</p>
+<p>For backward compatibility, if no unit is specified, days is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">backup_db:</span></code> twoskip</p>
 <blockquote>
 <div><p>The cyrusdb backend to use for the backup locations database.</p>
-<p>Allowed values: <em>skiplist</em>, <em>sql</em>, <em>twoskip</em>, <em>lmdb</em></p>
+<p>Allowed values: <em>skiplist</em>, <em>sql</em>, <em>twoskip</em>, <em>zeroskip</em></p>
 </div></blockquote>
 <p><code class="docutils literal"><span class="pre">backup_db_path:</span></code> &lt;none&gt;</p>
 <blockquote>
@@ -1208,7 +1280,10 @@ layers of MIME structure.  The default of 1000 is much higher
 than any sane message should have.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">caldav_allowattach:</span></code> 1</p>
 <blockquote>
-<div>Enable managed attachments support on the caldav server.</div></blockquote>
+<div>Enable managed attachments support on the CalDAV server.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">caldav_allowcalendaradmin:</span></code> 0</p>
+<blockquote>
+<div>Enable per-user calendar administration web UI on the CalDAV server.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">caldav_allowscheduling:</span></code> on</p>
 <blockquote>
 <div>Enable calendar scheduling operations. If set to &#8220;apple&#8221;, the
@@ -1217,13 +1292,23 @@ possible.
 Allowed values: <em>off</em>, <em>on</em>, <em>apple</em></div></blockquote>
 <p><code class="docutils literal"><span class="pre">caldav_create_attach:</span></code> 1</p>
 <blockquote>
-<div>Create the &#8216;Attachments&#8217; calendar if it doesn&#8217;t already exist</div></blockquote>
+<div>Create the &#8216;Attachments&#8217; collection if it doesn&#8217;t already exist</div></blockquote>
 <p><code class="docutils literal"><span class="pre">caldav_create_default:</span></code> 1</p>
 <blockquote>
 <div>Create the &#8216;Default&#8217; calendar if it doesn&#8217;t already exist</div></blockquote>
 <p><code class="docutils literal"><span class="pre">caldav_create_sched:</span></code> 1</p>
 <blockquote>
 <div>Create the &#8216;Inbox&#8217; and &#8216;Outbox&#8217; calendars if they don&#8217;t already exist</div></blockquote>
+<p><code class="docutils literal"><span class="pre">caldav_historical_age:</span></code> 7d</p>
+<blockquote>
+<div><p>How long after an occurrence of event or task has concluded
+that it is considered &#8216;historical&#8217;.  Changes to historical
+occurrences of events or tasks WILL NOT have invite or reply
+messages sent for them.  A negative value means that events
+and tasks are NEVER considered historical.</p>
+<p>For backward compatibility, if no unit is specified, days is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">caldav_maxdatetime:</span></code> 20380119T031407Z</p>
 <blockquote>
 <div><p>The latest date and time accepted by the server (ISO format).  This
@@ -1252,6 +1337,20 @@ user&#8217;s personal calendar hierarchy will be a child of their Inbox.</div></
 <div>Space-separated list of domains corresponding to calendar user
 addresses for which the server is responsible.  If not set (the
 default), the value of the &#8220;servername&#8221; option will be used.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">calendar_component_set:</span></code> VEVENT VTODO VJOURNAL VFREEBUSY VAVAILABILITY VPOLL</p>
+<blockquote>
+<div>Space-separated list of iCalendar component types that calendar
+object resources may contain in a calendar collection.
+This restriction is only set at calendar creation time and only
+if the CalDAV client hasn&#8217;t specified a restriction in the creation
+request.
+Allowed values: <em>VEVENT</em>, <em>VTODO</em>, <em>VJOURNAL</em>, <em>VFREEBUSY</em>, <em>VAVAILABILITY</em>, <em>VPOLL</em></div></blockquote>
+<p><code class="docutils literal"><span class="pre">carddav_allowaddmember:</span></code> 0</p>
+<blockquote>
+<div>Enable support for POST add-member on the CardDAV server.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">carddav_allowaddressbookadmin:</span></code> 0</p>
+<blockquote>
+<div>Enable per-user addressbook administration web UI on the CardDAV server.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">carddav_realm:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>The realm to present for HTTP authentication of CardDAV resources.
@@ -1279,10 +1378,13 @@ connections will use an IP chosen by the operating system.</p>
 <div>IPv4, IPv6 address or hostname to bind for client connections when
 <strong>client_bind</strong> is enabled.  If not set (the default),
 servername will be used.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">client_timeout:</span></code> 10</p>
+<p><code class="docutils literal"><span class="pre">client_timeout:</span></code> 10s</p>
 <blockquote>
-<div>Number of seconds to wait before returning a timeout failure when
-performing a client connection (e.g., in a murder environment)</div></blockquote>
+<div><p>Time to wait before returning a timeout failure when performing a
+client connection (e.g. in a murder environment).</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">commandmintimer:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>Time in seconds. Any imap command that takes longer than this
@@ -1308,13 +1410,23 @@ running server, or the counts will be wrong.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">conversations_db:</span></code> skiplist</p>
 <blockquote>
 <div><p>The cyrusdb backend to use for the per-user conversations database.</p>
-<p>Allowed values: <em>skiplist</em>, <em>sql</em>, <em>twoskip</em>, <em>lmdb</em></p>
+<p>Allowed values: <em>skiplist</em>, <em>sql</em>, <em>twoskip</em>, <em>zeroskip</em></p>
 </div></blockquote>
-<p><code class="docutils literal"><span class="pre">conversations_expire_days:</span></code> 90</p>
+<p><code class="docutils literal"><span class="pre">conversations_expire_days:</span></code> &lt;none&gt;</p>
 <blockquote>
-<div>How long the conversations database keeps the message tracking
+<div>Deprecated in favor of <em>conversations_expire_after</em>.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">conversations_expire_after:</span></code> 90d</p>
+<blockquote>
+<div><p>How long the conversations database keeps the message tracking
 information needed for receiving new messages in existing
-conversations, in days.</div></blockquote>
+conversations.</p>
+<p>For backward compatibility, if no unit is specified, days is
+assumed.</p>
+</div></blockquote>
+<p><code class="docutils literal"><span class="pre">conversations_max_thread:</span></code> 100</p>
+<blockquote>
+<div>maximum size for a single thread.  Threads will split if they have this many
+* messages in them and another message arrives</div></blockquote>
 <p><code class="docutils literal"><span class="pre">crossdomains:</span></code> 0</p>
 <blockquote>
 <div>Enable cross domain sharing.  This works best with alt namespace and
@@ -1350,12 +1462,21 @@ user&#8217;s personal notifications hierarchy will be a child of their Inbox.</d
 <div>The realm to present for HTTP authentication of generic DAV
 resources (principals).  If not set (the default), the value of the
 &#8220;servername&#8221; option will be used.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">dav_lock_timeout:</span></code> 20s</p>
+<blockquote>
+<div><p>The maximum time to wait for a write lock on the per-user DAV database
+before timeout. For HTTP requests, the HTTP status code 503 is returned
+if the lock can not be obtained within this time.</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">debug_command:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>Debug command to be used by processes started with -D option.  The string
 is a C format string that gets 3 options: the first is the name of the
-executable (without path).  The second is the pid (integer) and the third
-is the service ID.  Example: /usr/local/bin/gdb /usr/cyrus/bin/%s %d</div></blockquote>
+executable (as specified in the cmd parameter in cyrus.conf). The second
+is the pid (integer) and the third is the service ID.
+Example: /usr/local/bin/gdb /usr/cyrus/bin/%s %d</div></blockquote>
 <p><code class="docutils literal"><span class="pre">defaultacl:</span></code> anyone lrs</p>
 <blockquote>
 <div>The Access Control List (ACL) placed on a newly-created (non-user)
@@ -1406,13 +1527,13 @@ immediately.</p>
 <p><code class="docutils literal"><span class="pre">delete_unsubscribe:</span></code> 0</p>
 <blockquote>
 <div>Whether to also unsubscribe from mailboxes when they are deleted.
-Note that this behaviour contravenes <span class="target" id="index-4"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc3501.html"><strong>RFC 3501</strong></a> section 6.3.9, but
+Note that this behaviour contravenes <span class="target" id="index-5"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc3501.html"><strong>RFC 3501</strong></a> section 6.3.9, but
 may be useful for avoiding user/client software confusion.
 The default is &#8216;no&#8217;.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">deleteright:</span></code> c</p>
 <blockquote>
 <div>Deprecated - only used for backwards compatibility with existing
-installations.  Lists the old <span class="target" id="index-5"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2086.html"><strong>RFC 2086</strong></a> right which was used to
+installations.  Lists the old <span class="target" id="index-6"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2086.html"><strong>RFC 2086</strong></a> right which was used to
 grant the user the ability to delete a mailbox.  If a user has this
 right, they will automatically be given the new &#8216;x&#8217; right.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">disable_user_namespace:</span></code> 0</p>
@@ -1437,6 +1558,9 @@ in use by the client.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">ischedule_dkim_key_file:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>File containing the private key for iSchedule DKIM signing.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">ischedule_dkim_required:</span></code> 1</p>
+<blockquote>
+<div>A DKIM signature is required on received iSchedule requests.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">ischedule_dkim_selector:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>Name of the selector subdividing the domain namespace.  This
@@ -1446,7 +1570,7 @@ domain.</div></blockquote>
 <blockquote>
 <div>The cyrusdb backend to use for the duplicate delivery suppression
 and sieve.
-Allowed values: <em>skiplist</em>, <em>sql</em>, <em>twoskip</em>, <em>lmdb</em></div></blockquote>
+Allowed values: <em>skiplist</em>, <em>sql</em>, <em>twoskip</em>, <em>zeroskip</em></div></blockquote>
 <p><code class="docutils literal"><span class="pre">duplicate_db_path:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>The absolute path to the duplicate db file.  If not specified,
@@ -1481,7 +1605,7 @@ Set ALL for any folder</div></blockquote>
 <p><code class="docutils literal"><span class="pre">event_extra_params:</span></code> timestamp</p>
 <blockquote>
 <div><p>Space-separated list of extra parameters to add to any appropriated event.</p>
-<p>Allowed values: <em>bodyStructure</em>, <em>clientAddress</em>, <em>diskUsed</em>, <em>flagNames</em>, <em>messageContent</em>, <em>messageSize</em>, <em>messages</em>, <em>modseq</em>, <em>service</em>, <em>timestamp</em>, <em>uidnext</em>, <em>vnd.cmu.midset</em>, <em>vnd.cmu.unseenMessages</em>, <em>vnd.cmu.envelope</em>, <em>vnd.cmu.sessionId</em>, <em>vnd.cmu.mailboxACL</em>, <em>vnd.cmu.mbtype</em>, <em>vnd.cmu.davFilename</em>, <em>vnd.cmu.davUid</em>, <em>vnd.fastmail.clientId</em>, <em>vnd.fastmail.sessionId</em>, <em>vnd.fastmail.convExists</em>, <em>vnd.fastmail.convUnseen</em>, <em>vnd.fastmail.cid</em>, <em>vnd.fastmail.counters</em></p>
+<p>Allowed values: <em>bodyStructure</em>, <em>clientAddress</em>, <em>diskUsed</em>, <em>flagNames</em>, <em>messageContent</em>, <em>messageSize</em>, <em>messages</em>, <em>modseq</em>, <em>service</em>, <em>timestamp</em>, <em>uidnext</em>, <em>vnd.cmu.midset</em>, <em>vnd.cmu.unseenMessages</em>, <em>vnd.cmu.envelope</em>, <em>vnd.cmu.sessionId</em>, <em>vnd.cmu.mailboxACL</em>, <em>vnd.cmu.mbtype</em>, <em>vnd.cmu.davFilename</em>, <em>vnd.cmu.davUid</em>, <em>vnd.fastmail.clientId</em>, <em>vnd.fastmail.sessionId</em>, <em>vnd.fastmail.convExists</em>, <em>vnd.fastmail.convUnseen</em>, <em>vnd.fastmail.cid</em>, <em>vnd.fastmail.counters</em>, <em>vnd.cmu.emailid</em>, <em>vnd.cmu.threadid</em></p>
 </div></blockquote>
 <p><code class="docutils literal"><span class="pre">event_groups:</span></code> message mailbox</p>
 <blockquote>
@@ -1491,29 +1615,31 @@ Set ALL for any folder</div></blockquote>
 <p><code class="docutils literal"><span class="pre">event_notifier:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>Notifyd(8) method to use for &#8220;EVENT&#8221; notifications which are based on
-the <span class="target" id="index-6"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5423.html"><strong>RFC 5423</strong></a>.  If not set, &#8220;EVENT&#8221; notifications are disabled.</div></blockquote>
+the <span class="target" id="index-7"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5423.html"><strong>RFC 5423</strong></a>.  If not set, &#8220;EVENT&#8221; notifications are disabled.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">expunge_mode:</span></code> delayed</p>
 <blockquote>
 <div>The mode in which messages (and their corresponding cache entries)
-are expunged.  &#8220;default&#8221; mode is the old behavior in which the
+are expunged.  &#8220;semidelayed&#8221; mode is the old behavior in which the
 message files are purged at the time of the EXPUNGE, but index
-and cache records are retained to facilitate QRESYNC.  (Note that
-this behaviour is no longer the default, but is so named for historical
-reasons.)  In &#8220;delayed&#8221; mode, which is the default since Cyrus 2.5.0,
+and cache records are retained to facilitate QRESYNC.
+In &#8220;delayed&#8221; mode, which is the default since Cyrus 2.5.0,
 the message files are also retained, allowing unexpunge to
 rescue them.  In &#8220;immediate&#8221; mode, both the message files and the
 index records are removed as soon as possible.  In all cases,
 nothing will be finally purged until all other processes have
 closed the mailbox to ensure they never see data disappear under
-them.  In &#8220;default&#8221; or &#8220;delayed&#8221; mode, a later run of &#8220;cyr_expire&#8221;
+them.  In &#8220;semidelayed&#8221; or &#8220;delayed&#8221; mode, a later run of &#8220;cyr_expire&#8221;
 will clean out the retained records (and possibly message files).
 This reduces the amount of I/O that takes place at the time of
 EXPUNGE and should result in greater responsiveness for the client,
 especially when expunging a large number of messages.
-Allowed values: <em>default</em>, <em>immediate</em>, <em>delayed</em></div></blockquote>
-<p><code class="docutils literal"><span class="pre">failedloginpause:</span></code> 3</p>
+Allowed values: <em>immediate</em>, <em>semidelayed</em>, <em>delayed</em></div></blockquote>
+<p><code class="docutils literal"><span class="pre">failedloginpause:</span></code> 3s</p>
 <blockquote>
-<div>Number of seconds to pause after a failed login.</div></blockquote>
+<div><p>Time to pause after a failed login.</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">flushseenstate:</span></code> 1</p>
 <blockquote>
 <div>Deprecated. No longer used</div></blockquote>
@@ -1600,14 +1726,17 @@ by clients anyways.</div></blockquote>
 <div>If set, http will serve the static content (html/text/jpeg/gif
 files, etc) rooted at this directory.  Otherwise, httpd will not
 serve any static content.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">httpkeepalive:</span></code> 20</p>
+<p><code class="docutils literal"><span class="pre">httpkeepalive:</span></code> 20s</p>
 <blockquote>
-<div>Set the length of the HTTP server&#8217;s keepalive heartbeat in seconds.
-The default is 20.  The minimum value is 0, which will disable the
-keepalive heartbeat.  When enabled, if a request takes longer than
-<em>httpkeepalive</em> seconds to process, the server will send the client
-provisional responses every <em>httpkeepalive</em> seconds until the
-final response can be sent</div></blockquote>
+<div><p>Set the length of the HTTP server&#8217;s keepalive heartbeat.  The
+default is 20 seconds.  The minimum value is 0, which will disable
+the keepalive heartbeat.  When enabled, if a request takes longer
+than <em>httpkeepalive</em> to process, the server will send the client
+provisional responses every <em>httpkeepalive</em> until the final
+response can be sent.</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">httpmodules:</span></code> &lt;empty string&gt;</p>
 <blockquote>
 <div><p>Space-separated list of HTTP modules that will be enabled in
@@ -1616,7 +1745,7 @@ at compile time due to missing dependencies (e.g. libical).</p>
 <p>Note that &#8220;domainkey&#8221; depends on &#8220;ischedule&#8221; being enabled, and
 that both &#8220;freebusy&#8221; and &#8220;ischedule&#8221; depend on &#8220;caldav&#8221; being
 enabled.
-Allowed values: <em>admin</em>, <em>caldav</em>, <em>carddav</em>, <em>domainkey</em>, <em>freebusy</em>, <em>ischedule</em>, <em>rss</em>, <em>tzdist</em>, <em>webdav</em></p>
+Allowed values: <em>admin</em>, <em>caldav</em>, <em>carddav</em>, <em>cgi</em>, <em>domainkey</em>, <em>freebusy</em>, <em>ischedule</em>, <em>jmap</em>, <em>prometheus</em>, <em>rss</em>, <em>tzdist</em>, <em>webdav</em></p>
 </div></blockquote>
 <p><code class="docutils literal"><span class="pre">httpprettytelemetry:</span></code> 0</p>
 <blockquote>
@@ -1625,11 +1754,14 @@ markup languages (HTML, XML) will utilize line breaks and
 indentation to promote better human-readability in telemetry logs.
 Note that enabling this option will increase the amount of data
 sent across the wire.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">httptimeout:</span></code> 5</p>
+<p><code class="docutils literal"><span class="pre">httptimeout:</span></code> 5m</p>
 <blockquote>
-<div>Set the length of the HTTP server&#8217;s inactivity autologout timer,
-in minutes.  The default is 5.  The minimum value is 0, which will
-disable persistent connections.</div></blockquote>
+<div><p>Set the length of the HTTP server&#8217;s inactivity autologout timer.
+The default is 5 minutes.  The minimum value is 0, which will
+disable persistent connections.</p>
+<p>For backwards compatibility, if no unit is specified, minutes
+is assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">idlesocket:</span></code> {configdirectory}/socket/idle</p>
 <blockquote>
 <div>Unix domain socket that idled listens on.</div></blockquote>
@@ -1637,12 +1769,15 @@ disable persistent connections.</div></blockquote>
 <blockquote>
 <div>For backwards compatibility with Cyrus 1.5.10 and earlier &#8211; ignore
 the reference argument in LIST or LSUB commands.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">imapidlepoll:</span></code> 60</p>
+<p><code class="docutils literal"><span class="pre">imapidlepoll:</span></code> 60s</p>
 <blockquote>
-<div>The interval (in seconds) for polling for mailbox changes and
-ALERTs while running the IDLE command.  This option is used when
-idled is not enabled or cannot be contacted.  The minimum value is
-1.  A value of 0 will disable IDLE.</div></blockquote>
+<div><p>The interval for polling for mailbox changes and ALERTs while running
+the IDLE command.  This option is used when idled is not enabled or
+cannot be contacted.  The minimum value is 1 second.  A value of 0
+will disable IDLE.</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">imapidresponse:</span></code> 1</p>
 <blockquote>
 <div>If enabled, the server responds to an ID command with a parameter
@@ -1657,8 +1792,8 @@ mailboxes.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">imipnotifier:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>Notifyd(8) method to use for &#8220;IMIP&#8221; notifications which are based on
-the <span class="target" id="index-7"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6047.html"><strong>RFC 6047</strong></a>.  If not set, &#8220;IMIP&#8221; notifications are disabled.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">implicit_owner_rights:</span></code> lkxa</p>
+the <span class="target" id="index-8"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6047.html"><strong>RFC 6047</strong></a>.  If not set, &#8220;IMIP&#8221; notifications are disabled.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">implicit_owner_rights:</span></code> lkxan</p>
 <blockquote>
 <div>The implicit Access Control List (ACL) for the owner of a mailbox.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">&#64;include:</span></code> &lt;none&gt;</p>
@@ -1677,13 +1812,123 @@ option.  When not using flat files for the subscriptions databases
 the same has to be done (cyr_dbtool) for each subscription database
 See improved_mboxlist_sort.html.</p>
 </div></blockquote>
-<p><code class="docutils literal"><span class="pre">internaldate_heuristic:</span></code> standard</p>
+<p><code class="docutils literal"><span class="pre">jmap_emailsearch_db_path:</span></code> &lt;none&gt;</p>
 <blockquote>
-<div>Mechanism to determine email internaldates on delivery/reconstruct.
-&#8220;standard&#8221; uses time() when delivering a message, mtime on reconstruct.
-&#8220;receivedheader&#8221; looks at the top most Received header
-or time/mtime otherwise
-Allowed values: <em>standard</em>, <em>receivedheader</em></div></blockquote>
+<div>The absolute path to the JMAP email search cache file.  If not
+specified, JMAP Email/query and Email/queryChanges will not
+cache email search results.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmap_preview_annot:</span></code> &lt;none&gt;</p>
+<blockquote>
+<div>The name of the per-message annotation, if any, to store message
+previews.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmap_imagesize_annot:</span></code> &lt;none&gt;</p>
+<blockquote>
+<div><p>The name of the per-message annotation, if any, that stores a
+JSON object, mapping message part numbers of MIME image types
+to an array of their image dimensions. The array must have at
+least two entries, where the first entry denotes the width
+and the second entry the height of the image. Any additional
+values are ignored.</p>
+<p>For example, if message part 1.2 contains an image of width 300
+and height 200, then the value of this annotation would be:</p>
+<p>{ &#8220;1.2&#8221; : [ 300, 200 ] }</p>
+</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmap_inlinedcids_annot:</span></code> &lt;none&gt;</p>
+<blockquote>
+<div><p>The name of the per-message annotation, if any, that stores a
+JSON object, mapping <span class="target" id="index-9"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2392.html"><strong>RFC 2392</strong></a> Content-IDs referenced in HTML bodies
+to the respective HTML body part number.</p>
+<p>For example, if message part 1.2 contains HTML and references an
+inlined image at &#8220;<a class="reference external" href="cid:foo">cid:foo</a>&#8221;, then the value of this annotation
+would be:</p>
+<p>{ &#8220;&lt;foo&gt;&#8221; : &#8220;1.2&#8221; }</p>
+<p>Note that the Content-ID key must be URL-unescaped and enclosed in
+angular brackets, as defined in <span class="target" id="index-10"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2392.html"><strong>RFC 2392</strong></a>.</p>
+</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmap_preview_length:</span></code> 64</p>
+<blockquote>
+<div>The maximum byte length of dynamically generated message previews. Previews
+stored in jmap_preview_annot take precedence.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmap_max_size_upload:</span></code> 1048576</p>
+<blockquote>
+<div>The maximum size (in kilobytes) that the JMAP API accepts
+for blob uploads. Returned as the maxSizeUpload property
+value of the JMAP &#8220;<a class="reference external" href="urn:ietf:params:jmap:core">urn:ietf:params:jmap:core</a>&#8221; capabilities object.
+Default is 1Gb.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmap_max_concurrent_upload:</span></code> 5</p>
+<blockquote>
+<div>The value to return for the maxConcurrentUpload property of
+the JMAP &#8220;<a class="reference external" href="urn:ietf:params:jmap:core">urn:ietf:params:jmap:core</a>&#8221; capabilities object. The Cyrus JMAP
+implementation does not enforce this rate-limit.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmap_max_size_request:</span></code> 10240</p>
+<blockquote>
+<div>The maximum size (in kilobytes) that the JMAP API accepts
+for requests at the API endpoint. Returned as the
+maxSizeRequest property value of the JMAP &#8220;<a class="reference external" href="urn:ietf:params:jmap:core">urn:ietf:params:jmap:core</a>&#8221;
+capabilities object. Default is 10Mb.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmap_max_concurrent_requests:</span></code> 5</p>
+<blockquote>
+<div>The value to return for the maxConcurrentRequests property of
+the JMAP &#8220;<a class="reference external" href="urn:ietf:params:jmap:core">urn:ietf:params:jmap:core</a>&#8221; capabilities object. The Cyrus JMAP
+implementation does not enforce this rate-limit.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmap_max_calls_in_request:</span></code> 50</p>
+<blockquote>
+<div>The maximum number of calls per JMAP request object.
+Returned as the maxCallsInRequest property value of the
+JMAP &#8220;<a class="reference external" href="urn:ietf:params:jmap:core">urn:ietf:params:jmap:core</a>&#8221; capabilities object.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmap_max_delayed_send:</span></code> 512d</p>
+<blockquote>
+<div><p>The value to return for the maxDelayedSend property of
+the JMAP &#8220;<a class="reference external" href="urn:ietf:params:jmap:emailsubmission">urn:ietf:params:jmap:emailsubmission</a>&#8221; capabilities object.
+The Cyrus JMAP implementation does not enforce this limit.</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmap_max_objects_in_get:</span></code> 4096</p>
+<blockquote>
+<div>The maximum number of ids that a JMAP client may request in
+a single &#8220;/get&#8221; type method call. The actual number
+of returned objects in the response may exceed this number
+if the JMAP object type supports unbounded &#8220;/get&#8221; calls.
+Returned as the maxObjectsInGet property value of the
+JMAP &#8220;<a class="reference external" href="urn:ietf:params:jmap:core">urn:ietf:params:jmap:core</a>&#8221; capabilities object.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmap_max_objects_in_set:</span></code> 4096</p>
+<blockquote>
+<div>The maximum number of objects a JMAP client may send to create,
+update or destroy in a single /set type method call.
+Returned as the maxObjectsInSet property value of the
+JMAP &#8220;<a class="reference external" href="urn:ietf:params:jmap:core">urn:ietf:params:jmap:core</a>&#8221; capabilities object.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmap_mail_max_size_attachments_per_email:</span></code> 10240</p>
+<blockquote>
+<div>The value (in kilobytes) to return for the maxSizeAttachmentsPerEmail
+property of the JMAP &#8220;<a class="reference external" href="urn:ietf:params:jmap:mail">urn:ietf:params:jmap:mail</a>&#8221; capabilities object. The Cyrus
+JMAP implementation does not enforce this size limit. Default is 10 Mb.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmap_nonstandard_extensions:</span></code> 0</p>
+<blockquote>
+<div>If enabled, support non-standard JMAP extensions.  If not enabled,
+only IETF standard JMAP functionality is supported.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmap_set_has_attachment:</span></code> 1</p>
+<blockquote>
+<div>If enabled, the $hasAttachment flag is determined and set for new messages
+created with the JMAP Email/set or Email/import methods. This option should
+typically be enabled, but installations using Cyrus-external message
+annatotors to determine the $hasAttachment flag might want to disable it.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmap_vacation:</span></code> 1</p>
+<blockquote>
+<div>If enabled, support the JMAP vacation extension</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmapuploadfolder:</span></code> #jmap</p>
+<blockquote>
+<div>the name of the folder for JMAP uploads (#jmap)</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmapsubmission_deleteonsend:</span></code> 1</p>
+<blockquote>
+<div>If enabled (the default) then delete the EmailSubmission as soon as the email
+* has been sent</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmapsubmissionfolder:</span></code> #jmapsubmission</p>
+<blockquote>
+<div>the name of the folder for JMAP Submissions (#jmapsubmission)</div></blockquote>
+<p><code class="docutils literal"><span class="pre">jmappushsubscriptionfolder:</span></code> #jmappushsubscription</p>
+<blockquote>
+<div>the name of the folder for JMAP Push Subscriptions (#jmappushsubscription)</div></blockquote>
 <p><code class="docutils literal"><span class="pre">iolog:</span></code> 0</p>
 <blockquote>
 <div>Should cyrus output I/O log entries</div></blockquote>
@@ -1727,7 +1972,9 @@ used in the filter string:</p>
 %u   = user
 %U   = user portion of %u (%U = test when %u = <a class="reference external" href="mailto:test&#37;&#52;&#48;domain&#46;tld">test<span>&#64;</span>domain<span>&#46;</span>tld</a>)
 %d   = domain portion of %u if available (%d = domain.tld when %u =
-<a class="reference external" href="mailto:%test&#37;&#52;&#48;domain&#46;tld">%test<span>&#64;</span>domain<span>&#46;</span>tld</a>), otherwise same as %r
+<a class="reference external" href="mailto:test&#37;&#52;&#48;domain&#46;tld">test<span>&#64;</span>domain<span>&#46;</span>tld</a>), otherwise same as %R
+%R   = domain portion of %u starting with &#64; (%R = &#64;domain.tld
+when %u = <a class="reference external" href="mailto:test&#37;&#52;&#48;domain&#46;tld">test<span>&#64;</span>domain<span>&#46;</span>tld</a>)
 %D   = user dn.  (use when ldap_member_method: filter)
 %1-9 = domain tokens (%1 = tld, %2 = domain when %d = domain.tld)</p>
 <p>ldap_filter is not used when ldap_sasl is enabled.</p>
@@ -1823,12 +2070,18 @@ if they abort prematurely.</div></blockquote>
 <blockquote>
 <div>Use transport layer security for <a class="reference external" href="ldap://">ldap://</a> using STARTTLS. Do not use
 ldaps:// in &#8216;ldap_uri&#8217; with this option enabled.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">ldap_time_limit:</span></code> 5</p>
+<p><code class="docutils literal"><span class="pre">ldap_time_limit:</span></code> 5s</p>
 <blockquote>
-<div>Specify a number of seconds for a search request to complete.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">ldap_timeout:</span></code> 5</p>
+<div><p>How long to wait for a search request to complete.</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
+<p><code class="docutils literal"><span class="pre">ldap_timeout:</span></code> 5s</p>
 <blockquote>
-<div>Specify a number of seconds a search can take before timing out.</div></blockquote>
+<div><p>How long a search can take before timing out.</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">ldap_ca_dir:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>Path to a directory with CA (Certificate Authority) certificates.</div></blockquote>
@@ -1879,11 +2132,19 @@ set to 3.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">literalminus:</span></code> 0</p>
 <blockquote>
 <div>if enabled, CAPABILITIES will reply with LITERAL- rather than
-LITERAL+ (<span class="target" id="index-8"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7888.html"><strong>RFC 7888</strong></a>).  Doesn&#8217;t actually size-restrict uploads though</div></blockquote>
+LITERAL+ (<span class="target" id="index-11"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7888.html"><strong>RFC 7888</strong></a>).  Doesn&#8217;t actually size-restrict uploads though</div></blockquote>
 <p><code class="docutils literal"><span class="pre">lmtp_downcase_rcpt:</span></code> 1</p>
 <blockquote>
 <div>If enabled, lmtpd will convert the recipient addresses to lowercase
 (up to a &#8216;+&#8217; character, if present).</div></blockquote>
+<p><code class="docutils literal"><span class="pre">lmtp_exclude_specialuse:</span></code> \Snoozed</p>
+<blockquote>
+<div><p>Don&#8217;t allow delivery to folders with given special-use attributes.</p>
+<p>Note that &#8220;snoozing&#8221; of emails can currently only be done via the
+JMAP protocol, so delivery directly to the Snoozed mailbox is
+prohibited by default as it will not be moved back into INBOX
+automatically.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">lmtp_fuzzy_mailbox_match:</span></code> 0</p>
 <blockquote>
 <div>If enabled, and the mailbox specified in the detail part of the
@@ -1902,7 +2163,7 @@ will cause the user&#8217;s mailbox to exceed its quota.  By default, the
 failure won&#8217;t occur until the mailbox is already over quota.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">lmtp_strict_rfc2821:</span></code> 1</p>
 <blockquote>
-<div>By default, lmtpd will be strict (per <span class="target" id="index-9"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2821.html"><strong>RFC 2821</strong></a>) with regards to which
+<div>By default, lmtpd will be strict (per <span class="target" id="index-12"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2821.html"><strong>RFC 2821</strong></a>) with regards to which
 envelope addresses are allowed.  If this option is set to false, 8bit
 characters in the local-part of envelope addresses are changed to &#8216;X&#8217;
 instead.  This is useful to avoid generating backscatter with
@@ -1911,12 +2172,20 @@ certain MTAs like Postfix or Exim which accept such messages.</div></blockquote>
 <blockquote>
 <div>Unix domain socket that lmtpd listens on, used by deliver(8). This should
 match the path specified in cyrus.conf(5).</div></blockquote>
-<p><code class="docutils literal"><span class="pre">lmtptxn_timeout:</span></code> 300</p>
+<p><code class="docutils literal"><span class="pre">lmtptxn_timeout:</span></code> 5m</p>
 <blockquote>
-<div>Timeout (in seconds) used during a lmtp transaction to a remote backend
-(e.g. in a murder environment).  Can be used to prevent hung lmtpds
-on proxy hosts when a backend server becomes unresponsive during a
-lmtp transaction.  The default is 300 - change to zero for infinite.</div></blockquote>
+<div><p>Timeout used during a lmtp transaction to a remote backend (e.g. in a
+murder environment).  Can be used to prevent hung lmtpds on proxy hosts
+when a backend server becomes unresponsive during a lmtp transaction.
+The default is 5 minutes - change to zero for infinite.</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
+<p><code class="docutils literal"><span class="pre">lock_debugtime:</span></code> &lt;none&gt;</p>
+<blockquote>
+<div>A floating point number of seconds.  If set, time how long we wait for
+any lock, and syslog the filename and time if it&#8217;s longer than this
+value.  The default of NULL means not to time locks.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">loginrealms:</span></code> &lt;empty string&gt;</p>
 <blockquote>
 <div>The list of remote realms whose users may authenticate using cross-realm
@@ -1947,6 +2216,16 @@ no flags.  Example: $Label1 $Label2 $Label3 NotSpam Spam</div></blockquote>
 <blockquote>
 <div>Notifyd(8) method to use for &#8220;MAIL&#8221; notifications.  If not set, &#8220;MAIL&#8221;
 notifications are disabled.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">master_bind_errors_fatal:</span></code> 0</p>
+<blockquote>
+<div><p>If enabled, failure to bind a port during startup is treated as a fatal
+error, causing master to shut down immediately.  The default is to keep
+running, with the affected service disabled until the next SIGHUP causes
+it to retry.</p>
+<p>Note that this only applies during startup.  New services that fail to
+come up in response to a reconfig+SIGHUP will just be logged and disabled
+like the default behaviour, without causing master to exit.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">maxheaderlines:</span></code> 1000</p>
 <blockquote>
 <div>Maximum number of lines of header that will be processed into cache
@@ -1976,12 +2255,12 @@ will allow messages of any size (the default).</div></blockquote>
 <p><code class="docutils literal"><span class="pre">mboxkey_db:</span></code> twoskip</p>
 <blockquote>
 <div><p>The cyrusdb backend to use for mailbox keys.</p>
-<p>Allowed values: <em>skiplist</em>, <em>twoskip</em>, <em>lmdb</em></p>
+<p>Allowed values: <em>skiplist</em>, <em>twoskip</em>, <em>zeroskip</em></p>
 </div></blockquote>
 <p><code class="docutils literal"><span class="pre">mboxlist_db:</span></code> twoskip</p>
 <blockquote>
 <div><p>The cyrusdb backend to use for the mailbox list.</p>
-<p>Allowed values: <em>flat</em>, <em>skiplist</em>, <em>sql</em>, <em>twoskip</em>, <em>lmdb</em></p>
+<p>Allowed values: <em>flat</em>, <em>skiplist</em>, <em>sql</em>, <em>twoskip</em>, <em>zeroskip</em></p>
 </div></blockquote>
 <p><code class="docutils literal"><span class="pre">mboxlist_db_path:</span></code> &lt;none&gt;</p>
 <blockquote>
@@ -2026,7 +2305,7 @@ Allowed values: <em>standard</em>, <em>unified</em>, <em>replicated</em></div></
 headers.  The 8-bit characters are changed to `X&#8217;.  If
 <strong>reject8bit</strong> is enabled, setting <strong>munge8bit</strong> has no effect.
 (A proper solution to non-ASCII characters in headers is offered by
-<span class="target" id="index-10"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2047.html"><strong>RFC 2047</strong></a> and its predecessors.)</div></blockquote>
+<span class="target" id="index-13"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2047.html"><strong>RFC 2047</strong></a> and its predecessors.)</div></blockquote>
 <p><code class="docutils literal"><span class="pre">mupdate_connections_max:</span></code> 128</p>
 <blockquote>
 <div>The max number of connections that a mupdate process will allow, this
@@ -2142,10 +2421,13 @@ IMAP mailbox names.</div></blockquote>
 <blockquote>
 <div>The absolute path to the newsrc db file.  If not specified,
 will be configdirectory/fetchnews.db</div></blockquote>
-<p><code class="docutils literal"><span class="pre">nntptimeout:</span></code> 3</p>
+<p><code class="docutils literal"><span class="pre">nntptimeout:</span></code> 3m</p>
 <blockquote>
-<div>Set the length of the NNTP server&#8217;s inactivity autologout timer,
-in minutes.  The minimum value is 3, the default.</div></blockquote>
+<div><p>Set the length of the NNTP server&#8217;s inactivity autologout timer.
+The minimum value is 3 minutes, also the default.</p>
+<p>For backward compatibility, if no unit is specified, minutes is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">notesmailbox:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>The top level mailbox in each user&#8217;s account which is used to store
@@ -2190,9 +2472,6 @@ pathname MUST be specified.  If the <strong>defaultpartition</strong> option is
 used, then its pathname MUST be specified.  For example, if the
 value of the <strong>defaultpartion</strong> option is <strong>part1</strong>, then the
 <strong>partition-part1</strong> field is required.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">outbox_sendlater:</span></code> 0</p>
-<blockquote>
-<div>If enabled, any message with a Draft flag will be sent at the time of its INTERNALDATE</div></blockquote>
 <p><code class="docutils literal"><span class="pre">partition_select_mode:</span></code> freespace-most</p>
 <blockquote>
 <div><p>Partition selection mode.</p>
@@ -2229,29 +2508,39 @@ for which partitions usage data are cached.</div></blockquote>
 automatically excluded from selection mode.</p>
 <p>If all partitions are over that limit, this feature is not used anymore.</p>
 </div></blockquote>
-<p><code class="docutils literal"><span class="pre">plaintextloginpause:</span></code> 0</p>
+<p><code class="docutils literal"><span class="pre">plaintextloginpause:</span></code> &lt;none&gt;</p>
 <blockquote>
-<div>Number of seconds to pause after a successful plaintext login.  For
-systems that support strong authentication, this permits users to
-perceive a cost of using plaintext passwords.  (This does not
-affect the use of PLAIN in SASL authentications.)</div></blockquote>
+<div><p>Time to pause after a successful plaintext login.  For systems that
+support strong authentication, this permits users to perceive a cost
+of using plaintext passwords.  (This does not affect the use of PLAIN
+in SASL authentications.)</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">plaintextloginalert:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>Message to send to client after a successful plaintext login.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">popexpiretime:</span></code> -1</p>
 <blockquote>
-<div>The number of days advertised as being the minimum a message may be
+<div><p>The duration advertised as being the minimum a message may be
 left on the POP server before it is deleted (via the CAPA command,
 defined in the POP3 Extension Mechanism, which some clients may
-support).  &#8220;NEVER&#8221;, the default, may be specified with a negative
-number.  The Cyrus POP3 server never deletes mail, no matter what
-the value of this parameter is.  However, if a site implements a
-less liberal policy, it needs to change this parameter
-accordingly.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">popminpoll:</span></code> 0</p>
+support).  This duration has a granularity of whole days, with partial
+days truncated (so e.g. &#8220;45m&#8221; is effectively &#8220;0d&#8221;).  &#8220;NEVER&#8221;, the
+default, may be specified with a negative number.</p>
+<p>The Cyrus POP3 server never deletes mail, no matter what the value of
+this parameter is.  However, if a site implements a less liberal policy,
+it needs to change this parameter accordingly.</p>
+<p>For backward compatibility, if no unit is specified, days is
+assumed.</p>
+</div></blockquote>
+<p><code class="docutils literal"><span class="pre">popminpoll:</span></code> &lt;none&gt;</p>
 <blockquote>
-<div>Set the minimum amount of time the server forces users to wait
-between successive POP logins, in minutes.</div></blockquote>
+<div><p>Set the minimum amount of time the server forces users to wait
+between successive POP logins.</p>
+<p>For backward compatibility, if no unit is specified, minutes is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">popsubfolders:</span></code> 0</p>
 <blockquote>
 <div>Allow access to subfolders of INBOX via POP3 by using
@@ -2271,10 +2560,13 @@ will not be able to check mail again until a slot is cleared.  If the
 user waits a sufficient amount of time, they will get back many or all
 of the slots.</p>
 </div></blockquote>
-<p><code class="docutils literal"><span class="pre">poptimeout:</span></code> 10</p>
+<p><code class="docutils literal"><span class="pre">poptimeout:</span></code> 10m</p>
 <blockquote>
-<div>Set the length of the POP server&#8217;s inactivity autologout timer,
-in minutes.  The minimum value is 10, the default.</div></blockquote>
+<div><p>Set the length of the POP server&#8217;s inactivity autologout timer.
+The minimum value is 10 minutes, the default.</p>
+<p>For backward compatibility, if no unit is specified, minutes is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">popuseacl:</span></code> 0</p>
 <blockquote>
 <div>Enforce IMAP ACLs in the pop server.  Due to the nature of the POP3
@@ -2305,6 +2597,27 @@ the &#8220;shared.blah&#8221; folder.  By default, an email address of
 <div>Path to proc directory.  Default is NULL - must be an absolute path
 if specified.  If not specified, the path $configdirectory/proc/ will be
 used.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">prometheus_enabled:</span></code> 0</p>
+<blockquote>
+<div>Whether tracking of service metrics for Prometheus is enabled.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">prometheus_need_auth:</span></code> admin</p>
+<blockquote>
+<div><p>Authentication level required to fetch Prometheus metrics.</p>
+<p>Allowed values: <em>none</em>, <em>user</em>, <em>admin</em></p>
+</div></blockquote>
+<p><code class="docutils literal"><span class="pre">prometheus_update_freq:</span></code> 10s</p>
+<blockquote>
+<div><p>Frequency in at which promstatsd should re-collate its statistics
+report.  The minimum value is 1 second, the default is 10 seconds.</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
+<p><code class="docutils literal"><span class="pre">prometheus_stats_dir:</span></code> &lt;none&gt;</p>
+<blockquote>
+<div>Directory to use for gathering prometheus statistics.  If specified,
+must be an absolute path.  If not specified, the default path
+$configdirectory/stats/ will be used.  It may be advantageous to locate this
+directory on ephemeral storage.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">proxy_authname:</span></code> proxy</p>
 <blockquote>
 <div>The authentication name to use when authenticating to a backend server
@@ -2356,16 +2669,19 @@ DO NOT SET on frontends or things won&#8217;t work properly.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">ptscache_db:</span></code> twoskip</p>
 <blockquote>
 <div><p>The cyrusdb backend to use for the pts cache.</p>
-<p>Allowed values: <em>skiplist</em>, <em>twoskip</em>, <em>lmdb</em></p>
+<p>Allowed values: <em>skiplist</em>, <em>twoskip</em>, <em>zeroskip</em></p>
 </div></blockquote>
 <p><code class="docutils literal"><span class="pre">ptscache_db_path:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>The absolute path to the ptscache db file.  If not specified,
 will be configdirectory/ptscache.db</div></blockquote>
-<p><code class="docutils literal"><span class="pre">ptscache_timeout:</span></code> 10800</p>
+<p><code class="docutils literal"><span class="pre">ptscache_timeout:</span></code> 3h</p>
 <blockquote>
-<div>The timeout (in seconds) for the PTS cache database when using the
-auth_krb_pts authorization method (default: 3 hours).</div></blockquote>
+<div><p>The timeout for the PTS cache database when using the auth_krb_pts
+authorization method (default: 3 hours).</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">ptskrb5_convert524:</span></code> 1</p>
 <blockquote>
 <div>When using the AFSKRB ptloader module with Kerberos 5 canonicalization,
@@ -2384,7 +2700,7 @@ Allowed values: <em>cs0</em>, <em>cs1</em>, <em>cs2</em>, <em>cs3</em>, <em>cs4<
 <p><code class="docutils literal"><span class="pre">quota_db:</span></code> quotalegacy</p>
 <blockquote>
 <div><p>The cyrusdb backend to use for quotas.</p>
-<p>Allowed values: <em>flat</em>, <em>skiplist</em>, <em>sql</em>, <em>quotalegacy</em>, <em>twoskip</em>, <em>lmdb</em></p>
+<p>Allowed values: <em>flat</em>, <em>skiplist</em>, <em>sql</em>, <em>quotalegacy</em>, <em>twoskip</em>, <em>zeroskip</em></p>
 </div></blockquote>
 <p><code class="docutils literal"><span class="pre">quota_db_path:</span></code> &lt;none&gt;</p>
 <blockquote>
@@ -2427,7 +2743,7 @@ authenticating to an IMAP/sync server.</div></blockquote>
 will either add or remove reverse ACL pointers from mailboxes.db</div></blockquote>
 <p><code class="docutils literal"><span class="pre">rfc2046_strict:</span></code> 0</p>
 <blockquote>
-<div>If enabled, imapd will be strict (per <span class="target" id="index-11"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2046.html"><strong>RFC 2046</strong></a>) when matching MIME
+<div>If enabled, imapd will be strict (per <span class="target" id="index-14"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2046.html"><strong>RFC 2046</strong></a>) when matching MIME
 boundary strings.  This means that boundaries containing other
 boundaries as substrings will be treated as identical.  Since
 enabling this option will break some messages created by Eudora 5.1
@@ -2437,13 +2753,13 @@ there is good reason to do otherwise.</div></blockquote>
 <blockquote>
 <div>If enabled, imapd will parse any non-encoded character sequence in
 MIME header values as UTF8. This is useful for installations that
-either advertise the UTF8SMTP (<span class="target" id="index-12"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5335.html"><strong>RFC 5335</strong></a>) extension or receive mails
+either advertise the UTF8SMTP (<span class="target" id="index-15"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5335.html"><strong>RFC 5335</strong></a>) extension or receive mails
 with improperly escaped UTF-8 byte sequences. It is recommended that
 this option is left disabled unless there is good reason to do
 otherwise.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">rfc3028_strict:</span></code> 1</p>
 <blockquote>
-<div>If enabled, Sieve will be strict (per <span class="target" id="index-13"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc3028.html"><strong>RFC 3028</strong></a>) with regards to
+<div>If enabled, Sieve will be strict (per <span class="target" id="index-16"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc3028.html"><strong>RFC 3028</strong></a>) with regards to
 which headers are allowed to be used in address and envelope tests.
 This means that only those headers which are defined to contain addresses
 will be allowed in address tests and only &#8220;to&#8221; and &#8220;from&#8221; will be
@@ -2465,12 +2781,14 @@ URL on the server.</div></blockquote>
 treated as RSS feeds.  Only mailboxes matching the wildmat will
 have their messages available via RSS.  If not set, a default
 wildmat of &#8220;*&#8221; (ALL mailboxes) will be used.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">rss_maxage:</span></code> 0</p>
+<p><code class="docutils literal"><span class="pre">rss_maxage:</span></code> &lt;none&gt;</p>
 <blockquote>
-<div>Maximum age (in days) of items to display in an RSS channel.  If
-non-zero, httpd will only display items received within the last
-<em>rss_maxage</em> days.  If set to 0, all available items will be
-displayed (the default).</div></blockquote>
+<div><p>Maximum age of items to display in an RSS channel.  If non-zero,
+httpd will only display items received within this time period.
+If set to 0, all available items will be displayed (the default).</p>
+<p>For backward compatibility, if no unit is specified, days is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">rss_maxitems:</span></code> 0</p>
 <blockquote>
 <div>Maximum number of items to display in an RSS channel.  If non-zero,
@@ -2513,6 +2831,48 @@ Possible values include &#8220;auxprop&#8221;, &#8220;saslauthd&#8221;, and &#82
 <blockquote>
 <div>The number of messages to be indexed in one batch (default 20).
 Note that long batches may delay user commands or mail delivery.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">search_attachment_extractor_url:</span></code> &lt;none&gt;</p>
+<blockquote>
+<div><p>A HTTP or HTTPS URL to extract search text from rich text attachments
+and other media during search indexing. The server at this URL must
+implement the following protocol:</p>
+<p>1. For each attachment of an email, Cyrus sends a GET request to the
+URL &lt;extractor-url&gt;/&lt;cyrus-id&gt;, where &lt;extractor-url&gt; is the
+configured URL and &lt;cyrus-id&gt; is a Cyrus-chosen path segment that
+uniquely identifies this attachment.</p>
+<p>2. If the extractor already has a cached plain text extract of the
+attachment identified by &lt;cyrus-id&gt; then it may return HTTP status
+code 200 (OK) and the plain text extract with a Content-Type
+&#8220;text/plain&#8221; header. Otherwise it must return HTTP status 404 (Not Found).</p>
+<p>3. If Cyrus receives the HTTP status code 404 (Not Found), then it sends
+a PUT request to the same URL as previously. The PUT request body
+contains the decoded, binary body of the attachment. The Content-Type
+request header has the same value as declared in the MIME part
+headers, including any type parameters.</p>
+<p>4. The extractor must return the plain text extract with either HTTP status
+200 (OK) or 201 (Created) and a Content-Type &#8220;text/plain&#8221; header.
+If no text can be extracted, then the extractor may return any return code
+in the range 4xx, or 200 and an empty response body.</p>
+<p>Any other HTTP status code is treated as an error. For performance
+reasons, the Cyrus indexer attempts to keep-alive the TCP connection
+to the extractor.</p>
+</div></blockquote>
+<p><code class="docutils literal"><span class="pre">search_index_language:</span></code> 0</p>
+<blockquote>
+<div>If enabled, then message bodies and subjects are indexed by their
+detected language, if the cld2 dependency is built into Cyrus.
+Regardless of this flag, bodies and subjects are always indexed and
+searched using the default stemmer.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">search_index_parts:</span></code> 0</p>
+<blockquote>
+<div>If enabled, then message parts are each indexed separately into Xapian
+so that matches can be done by part.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">search_query_language:</span></code> 0</p>
+<blockquote>
+<div>If enabled, then message bodies and subjects searched by their language
+that got detected during indexing, if any.
+Regardless of this flag, bodies and subjects are always searched using
+the default stemmer.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">search_normalisation_max:</span></code> 1000</p>
 <blockquote>
 <div>A resource bound for the combinatorial explosion of search expression
@@ -2522,11 +2882,11 @@ folders.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">search_engine:</span></code> none</p>
 <blockquote>
 <div><p>The indexing engine used to speed up searching.</p>
-<p>Allowed values: <em>none</em>, <em>squat</em>, <em>sphinx</em>, <em>xapian</em></p>
+<p>Allowed values: <em>none</em>, <em>squat</em>, <em>xapian</em></p>
 </div></blockquote>
 <p><code class="docutils literal"><span class="pre">search_fuzzy_always:</span></code> 0</p>
 <blockquote>
-<div>Whether to enable <span class="target" id="index-14"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6203.html"><strong>RFC 6203</strong></a> FUZZY search for all IMAP SEARCH. If turned
+<div>Whether to enable <span class="target" id="index-17"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6203.html"><strong>RFC 6203</strong></a> FUZZY search for all IMAP SEARCH. If turned
 on, search attributes will be searched using FUZZY search by default.
 If turned off, clients have to explicitly use the FUZZY search key to
 enable fuzzy search for regular SEARCH commands.</div></blockquote>
@@ -2539,18 +2899,22 @@ the utility of searching.  Note that is header indexing is disabled,
 headers can still be searched, the searches will just be slower.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">search_indexed_db:</span></code> twoskip</p>
 <blockquote>
-<div><p>The cyrusdb backend to use for the search latest indexed uid state.</p>
-<p>Allowed values: <em>flat</em>, <em>skiplist</em>, <em>twoskip</em>, <em>lmdb</em></p>
+<div><p>The cyrusdb backend to use for the search latest indexed uid state.  Xapian only.</p>
+<p>Allowed values: <em>flat</em>, <em>skiplist</em>, <em>twoskip</em>, <em>zeroskip</em></p>
 </div></blockquote>
 <p><code class="docutils literal"><span class="pre">search_maxtime:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>The maximum number of seconds to run a search for before aborting.  Default
 of no value means search &#8220;forever&#8221; until other timeouts.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">search_queryscan:</span></code> 5000</p>
+<blockquote>
+<div>The minimum number of records require to do a direct scan of all G keys
+* rather than indexed lookups.  A value of 0 means always do indexed lookups.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">search_skipdiacrit:</span></code> 1</p>
 <blockquote>
 <div>When searching, should diacriticals be stripped from the search
 terms.  The default is &#8220;true&#8221;, a search for &#8220;hav&#8221; will match
-&#8220;Håvard&#8221;.  This is not <span class="target" id="index-15"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5051.html"><strong>RFC 5051</strong></a> compliant, but it backwards
+&#8220;Håvard&#8221;.  This is not <span class="target" id="index-18"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5051.html"><strong>RFC 5051</strong></a> compliant, but it backwards
 compatible, and may be preferred by some sites.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">search_skiphtml:</span></code> 0</p>
 <blockquote>
@@ -2576,7 +2940,7 @@ generated snippet.</div></blockquote>
 <blockquote>
 <div>The absolute base path to the search stopword lists. If not specified,
 no stopwords will be taken into account during search indexing. Currently,
-the only supported and default stop word file is english.list.</div></blockquote>
+the only supported and default stop word file is english.txt.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">searchpartition-name:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div><p>The pathname where to store the xapian search indexes of <em>searchtier</em>
@@ -2592,12 +2956,18 @@ store this tier1&#8217;s search index for the part1 partition.</p>
 <p><code class="docutils literal"><span class="pre">seenstate_db:</span></code> twoskip</p>
 <blockquote>
 <div><p>The cyrusdb backend to use for the seen state.</p>
-<p>Allowed values: <em>flat</em>, <em>skiplist</em>, <em>twoskip</em>, <em>lmdb</em></p>
+<p>Allowed values: <em>flat</em>, <em>skiplist</em>, <em>twoskip</em>, <em>zeroskip</em></p>
 </div></blockquote>
 <p><code class="docutils literal"><span class="pre">sendmail:</span></code> /usr/lib/sendmail</p>
 <blockquote>
 <div>The pathname of the sendmail executable.  Sieve invokes sendmail
 for sending rejections, redirects and vacation responses.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">sendmail_auth_id:</span></code> CYRUS_SENDMAIL_AUTH_ID</p>
+<blockquote>
+<div>The name of an environment variable to set when invoking sendmail.
+The value of this environment variable will contain the user id
+of the currently authenticated user. If no user is authenticated
+the environment variable is not set.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">serverlist:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>Whitespace separated list of backend server names.  Used for
@@ -2664,7 +3034,13 @@ namespace.  The hierarchy delimiter will be automatically appended.</div></block
 <div>If enabled, timsieved will issue referrals to clients when the
 user&#8217;s scripts reside on a remote server (in a Murder).
 Otherwise, timsieved will proxy traffic to the remote server.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">sieve_extensions:</span></code> fileinto reject vacation vacation-seconds imapflags notify envelope relational regex subaddress copy date index imap4flags mailbox mboxmetadata servermetadata variables</p>
+<p><code class="docutils literal"><span class="pre">sieve_duplicate_max_expiration:</span></code> 90d</p>
+<blockquote>
+<div><p>Maximum expiration time for duplicate message tracking records.</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
+<p><code class="docutils literal"><span class="pre">sieve_extensions:</span></code> fileinto reject vacation vacation-seconds imapflags notify include envelope environment body relational regex subaddress copy date index imap4flags mailbox mboxmetadata servermetadata variables editheader extlists duplicate ihave fcc special-use redirect-dsn redirect-deliverby mailboxid x-cyrus-log x-cyrus-jmapquery x-cyrus-snooze</p>
 <blockquote>
 <div>Space-separated list of Sieve extensions allowed to be used in
 sieve scripts, enforced at submission by timsieved(8).  Any
@@ -2672,7 +3048,7 @@ previously installed script will be unaffected by this option and
 will continue to execute regardless of the extensions used.  This
 option has no effect on options that are disabled at compile time
 (e.g., &#8220;regex&#8221;).
-Allowed values: <em>fileinto</em>, <em>reject</em>, <em>vacation</em>, <em>vacation-seconds</em>, <em>imapflags</em>, <em>notify</em>, <em>include</em>, <em>envelope</em>, <em>body</em>, <em>relational</em>, <em>regex</em>, <em>subaddress</em>, <em>copy</em>, <em>date</em>, <em>index</em>, <em>imap4flags</em>, <em>mailbox</em>, <em>mboxmetadata</em>, <em>servermetadata</em>, <em>variables</em></div></blockquote>
+Allowed values: <em>fileinto</em>, <em>reject</em>, <em>vacation</em>, <em>vacation-seconds</em>, <em>imapflags</em>, <em>notify</em>, <em>include</em>, <em>envelope</em>, <em>environment</em>, <em>body</em>, <em>relational</em>, <em>regex</em>, <em>subaddress</em>, <em>copy</em>, <em>date</em>, <em>index</em>, <em>imap4flags</em>, <em>mailbox</em>, <em>mboxmetadata</em>, <em>servermetadata</em>, <em>variables</em>, <em>editheader</em>, <em>extlists</em>, <em>duplicate</em>, <em>ihave</em>, <em>fcc</em>, <em>special-use</em>, <em>redirect-dsn</em>, <em>redirect-deliverby</em>, <em>mailboxid</em>, <em>x-cyrus-log</em>, <em>x-cyrus-jmapquery</em>, <em>x-cyrus-snooze</em></div></blockquote>
 <p><code class="docutils literal"><span class="pre">sieve_maxscriptsize:</span></code> 32</p>
 <blockquote>
 <div>Maximum size (in kilobytes) any sieve script can be, enforced at
@@ -2690,14 +3066,25 @@ modified UTF7 encoding should be used.</div></blockquote>
 <blockquote>
 <div>If enabled, timsieved will emit a capability response after a successful
 SASL authentication, per draft-martin-managesieve-12.txt .</div></blockquote>
-<p><code class="docutils literal"><span class="pre">sieve_vacation_min_response:</span></code> 259200 /* 3 days */</p>
+<p><code class="docutils literal"><span class="pre">sieve_use_lmtp_reject:</span></code> 1</p>
 <blockquote>
-<div>Minimum time interval (in seconds) between consecutive vacation responses,
-per draft-ietf-vacation-seconds.txt .</div></blockquote>
-<p><code class="docutils literal"><span class="pre">sieve_vacation_max_response:</span></code> 7776000 /* 90 days */</p>
+<div>Enabled by default.  If reject can be done via LMTP, then return a 550
+rather than generating the bounce message in Cyrus.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">sieve_vacation_min_response:</span></code> 3d</p>
 <blockquote>
-<div>Maximum time interval (in seconds) between consecutive vacation responses,
-per draft-ietf-vacation-seconds.txt .</div></blockquote>
+<div><p>Minimum time interval between consecutive vacation responses, per
+draft-ietf-vacation-seconds.txt.  The default is 3 days.</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
+<p><code class="docutils literal"><span class="pre">sieve_vacation_max_response:</span></code> 90d</p>
+<blockquote>
+<div><p>Maximum time interval between consecutive vacation responses, per
+draft-ietf-vacation-seconds.txt.  The default is 90 days.  The
+minimum is 7 days.</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">sievedir:</span></code> /usr/sieve</p>
 <blockquote>
 <div>If sieveusehomedir is false, this directory is searched for Sieve
@@ -2731,6 +3118,51 @@ and the entire file is already &#8220;hot&#8221;.</div></blockquote>
 <blockquote>
 <div>If enabled, this option forces the skiplist cyrusdb backend to
 not sync writes to the disk.  Enabling this option is NOT RECOMMENDED.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">smtp_backend:</span></code> sendmail</p>
+<blockquote>
+<div><p>The SMTP backend to use for sending email.</p>
+<p>The &#8220;host&#8221; backend sends message submissions via
+a TCP socket to the SMTP host defined in the config
+option smtp_host.</p>
+<p>The &#8220;sendmail&#8221; backend forks the Cyrus process into
+the executable defined in the config option sendmail.
+The executable must accept &#8220;-bs&#8221; as command line
+argument, read from stdin and must implement the minimum
+SMTP protocol as defined in section 4.5.1 of <span class="target" id="index-19"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5321.html"><strong>RFC 5321</strong></a>.</p>
+<p>If the SMTP EHLO command reports AUTH (<span class="target" id="index-20"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc4954.html"><strong>RFC 4954</strong></a>) as a
+supported extension, then the MAIL FROM command includes
+the AUTH parameter, with its value set to the name of any
+authenticated user which triggered the email. The AUTH
+parameter is omitted if the user is unknown to the calling
+process.</p>
+<p>If the directory
+<em>configdirectory</em>/log/smtpclient.<em>smtp_backend</em>
+exists, then telemetry logs for outgoing SMTP sessions will
+be created in this directory.</p>
+<p>Allowed values: <em>host</em>, <em>sendmail</em></p>
+</div></blockquote>
+<p><code class="docutils literal"><span class="pre">smtp_host:</span></code> localhost:587</p>
+<blockquote>
+<div>The SMTP host to use for sending mail (also see the
+smtp_backend option). The value of this option must
+the name or IP address of a TCP host, followed optionally
+by a colon and the port or service to use. The default
+port is 587. TLS may be activated by appending &#8220;/tls&#8221;
+to the value. Authentication is enabled if smtp_auth_authname
+is set. Authentication can be explicitly disabled by appending
+&#8220;/noauth&#8221; to the host address.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">smtp_auth_authname:</span></code> &lt;none&gt;</p>
+<blockquote>
+<div>The authentication name to use when authenticating to the SMTP
+server defined in smtp_host.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">smtp_auth_password:</span></code> &lt;none&gt;</p>
+<blockquote>
+<div>The password to use when authenticating to the SMTP server defined
+in smtp_host.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">smtp_auth_realm:</span></code> &lt;none&gt;</p>
+<blockquote>
+<div>The authentication SASL realm to use when authenticating to a SMTP
+server.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">soft_noauth:</span></code> 1</p>
 <blockquote>
 <div>If enabled, lmtpd returns temporary failures if the client does not
@@ -2740,31 +3172,24 @@ successfully authenticate.  Otherwise lmtpd returns permanent failures
 <blockquote>
 <div>The cyrusdb backend to use for caching sort results (currently only
 used for xconvmultisort)
-Allowed values: <em>skiplist</em>, <em>twoskip</em>, <em>lmdb</em></div></blockquote>
+Allowed values: <em>skiplist</em>, <em>twoskip</em>, <em>zeroskip</em></div></blockquote>
 <p><code class="docutils literal"><span class="pre">specialuse_extra:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>Whitespace separated list of extra special-use attributes
-that can be set on a mailbox. <span class="target" id="index-16"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6154.html"><strong>RFC 6154</strong></a> currently lists
+that can be set on a mailbox. <span class="target" id="index-21"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6154.html"><strong>RFC 6154</strong></a> currently lists
 what special-use attributes can be set. This allows
 extending that list in the future or adding your own
 if needed.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">specialusealways:</span></code> 0</p>
+<p><code class="docutils literal"><span class="pre">specialuse_protect:</span></code> \Archive \Drafts \Important \Junk \Sent \Trash</p>
+<blockquote>
+<div>Whitespace separated list of special-use attributes
+to protect the mailboxes for.  If set, don&#8217;t allow
+mailboxes with these special use attributes to be deleted
+or renamed to have a different parent. Default is the built-in list</div></blockquote>
+<p><code class="docutils literal"><span class="pre">specialusealways:</span></code> 1</p>
 <blockquote>
 <div>If enabled, this option causes LIST and LSUB output to always include
 the XLIST &#8220;special-use&#8221; flags</div></blockquote>
-<p><code class="docutils literal"><span class="pre">sphinx_text_excludes_odd_headers:</span></code> 0</p>
-<blockquote>
-<div>If enabled, Sphinx will perform a TEXT search as if it matches
-FROM, TO, CC, BCC or SUBJECT but not any other headers.  This
-is contrary to the RFC but a more useful behaviour for most
-users.  Default: disabled.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">sphinx_socket:</span></code> {configdirectory}/socket/sphinx</p>
-<blockquote>
-<div>Unix domain socket that the Sphinx searchd
-daemons listens on.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">sphinx_pidfile:</span></code> /var/run/sphinx.pid</p>
-<blockquote>
-<div>File where the Sphinx searchd daemon writes its pid.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">sql_database:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>Name of the database which contains the cyrusdb table(s).</div></blockquote>
@@ -2785,6 +3210,23 @@ daemons listens on.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">sql_usessl:</span></code> 0</p>
 <blockquote>
 <div>If enabled, a secure connection will be made to the SQL server.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">srs_alwaysrewrite:</span></code> 0</p>
+<blockquote>
+<div>If true, perform SRS rewriting for ALL forwarding, even when not required.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">srs_domain:</span></code> &lt;none&gt;</p>
+<blockquote>
+<div>The domain to use in rewritten addresses. This must point only to machines
+which know the encoding secret used by this system. When present, SRS is
+enabled.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">srs_hashlength:</span></code> 0</p>
+<blockquote>
+<div>The hash length to generate in a rewritten address.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">srs_secrets:</span></code> &lt;none&gt;</p>
+<blockquote>
+<div>A list of secrets with which to generate addresses.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">srs_separator:</span></code> &lt;none&gt;</p>
+<blockquote>
+<div>The separator to appear immediately after SRS[01] in rewritten addresses.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">srvtab:</span></code> &lt;empty string&gt;</p>
 <blockquote>
 <div>The pathname of <em>srvtab</em> file containing the server&#8217;s private
@@ -2799,7 +3241,7 @@ use with caution.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">subscription_db:</span></code> flat</p>
 <blockquote>
 <div><p>The cyrusdb backend to use for the subscriptions list.</p>
-<p>Allowed values: <em>flat</em>, <em>skiplist</em>, <em>twoskip</em>, <em>lmdb</em></p>
+<p>Allowed values: <em>flat</em>, <em>skiplist</em>, <em>twoskip</em>, <em>zeroskip</em></p>
 </div></blockquote>
 <p><code class="docutils literal"><span class="pre">suppress_capabilities:</span></code> &lt;none&gt;</p>
 <blockquote>
@@ -2814,7 +3256,7 @@ confused by new capabilities that some backends don&#8217;t support.</div></bloc
 <p><code class="docutils literal"><span class="pre">statuscache_db:</span></code> twoskip</p>
 <blockquote>
 <div><p>The cyrusdb backend to use for the imap status cache.</p>
-<p>Allowed values: <em>skiplist</em>, <em>sql</em>, <em>twoskip</em>, <em>lmdb</em></p>
+<p>Allowed values: <em>skiplist</em>, <em>sql</em>, <em>twoskip</em>, <em>zeroskip</em></p>
 </div></blockquote>
 <p><code class="docutils literal"><span class="pre">statuscache_db_path:</span></code> &lt;none&gt;</p>
 <blockquote>
@@ -2874,21 +3316,28 @@ will default to &#8220;csync&#8221; (usually port 2005).</div></blockquote>
 <blockquote>
 <div>The authentication realm to use when authenticating to a sync server.
 Prefix with a channel name to only apply for that channel</div></blockquote>
-<p><code class="docutils literal"><span class="pre">sync_repeat_interval:</span></code> 1</p>
+<p><code class="docutils literal"><span class="pre">sync_repeat_interval:</span></code> 1s</p>
 <blockquote>
-<div>Minimum interval (in seconds) between replication runs in rolling
-replication mode. If a replication run takes longer than this
-time, we repeat immediately.
-Prefix with a channel name to only apply for that channel</div></blockquote>
+<div><p>Minimum interval between replication runs in rolling replication
+mode. If a replication run takes longer than this time, we repeat
+immediately.  Prefix with a channel name to only apply for that
+channel.</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">sync_shutdown_file:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>Simple latch used to tell sync_client(8) that it should shut down at the
 next opportunity. Safer than sending signals to running processes.
 Prefix with a channel name to only apply for that channel</div></blockquote>
-<p><code class="docutils literal"><span class="pre">sync_timeout:</span></code> 1800</p>
+<p><code class="docutils literal"><span class="pre">sync_timeout:</span></code> 30m</p>
 <blockquote>
-<div>Number of seconds to wait for a response before returning a timeout
-failure when talking to a replication peer (client or server).</div></blockquote>
+<div><p>How long to wait for a response before returning a timeout failure
+when talking to a replication peer (client or server).  The minimum
+duration is 3 seconds, the default is 30 minutes.</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">sync_try_imap:</span></code> 1</p>
 <blockquote>
 <div>Whether sync_client should try to perform an IMAP connection
@@ -2897,7 +3346,14 @@ sync_client will only use csync.  Prefix with a channel name to
 apply only for that channel</div></blockquote>
 <p><code class="docutils literal"><span class="pre">syslog_prefix:</span></code> &lt;none&gt;</p>
 <blockquote>
-<div>String to be prepended to the process name in syslog entries.</div></blockquote>
+<div><p>String to be prepended to the process name in syslog entries. Can
+be further overridden by setting the $CYRUS_SYSLOG_PREFIX environment
+variable.</p>
+<p>Using the $CYRUS_SYSLOG_PREFIX environment variable has the additional
+advantage that it can be set before the <strong>imapd.conf</strong> is read, so
+errors while reading the config file can be syslogged with the correct
+prefix.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">syslog_facility:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>Configure a syslog facility.  The default is whatever is compiled
@@ -2912,28 +3368,39 @@ through to LOCAL7</div></blockquote>
 connection dead (0 == system default)</div></blockquote>
 <p><code class="docutils literal"><span class="pre">tcp_keepalive_idle:</span></code> 0</p>
 <blockquote>
-<div>Number of seconds a connection must be idle before keepalive
-probes are sent (0 == system default)</div></blockquote>
+<div><p>How long a connection must be idle before keepalive probes are sent
+(0 == system default).</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">tcp_keepalive_intvl:</span></code> 0</p>
 <blockquote>
-<div>Number of seconds between keepalive probes (0 == system default)</div></blockquote>
+<div><p>Time between keepalive probes (0 == system default).</p>
+<p>For backward compatibility, if no unit is specified, seconds is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">temp_path:</span></code> /tmp</p>
 <blockquote>
 <div>The pathname to store temporary files in</div></blockquote>
 <p><code class="docutils literal"><span class="pre">telemetry_bysessionid:</span></code> 0</p>
 <blockquote>
 <div>If true, log by sessionid instead of PID for telemetry</div></blockquote>
-<p><code class="docutils literal"><span class="pre">timeout:</span></code> 32</p>
+<p><code class="docutils literal"><span class="pre">timeout:</span></code> 32m</p>
 <blockquote>
-<div>The length of the IMAP server&#8217;s inactivity autologout timer,
-in minutes.  The minimum value is 30.  The default is 32 to
-allow a bit of leeway for clients that try to NOOP every 30
-minutes.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">imapidletimeout:</span></code> 0</p>
+<div><p>The length of the IMAP server&#8217;s inactivity autologout timer.
+The minimum value is 30 minutes.  The default is 32 minutes,
+to allow a bit of leeway for clients that try to NOOP every
+30 minutes.</p>
+<p>For backward compatibility, if no unit is specified, minutes
+is assumed.</p>
+</div></blockquote>
+<p><code class="docutils literal"><span class="pre">imapidletimeout:</span></code> &lt;none&gt;</p>
 <blockquote>
-<div>Timeout for idling clients (<span class="target" id="index-17"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2177.html"><strong>RFC 2177</strong></a>) in minutes. If set to
-zero (the default) or less, the value of &#8220;timeout&#8221; will be
-used instead.</div></blockquote>
+<div><p>Timeout for idling clients (<span class="target" id="index-22"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2177.html"><strong>RFC 2177</strong></a>).  If not set (the default),
+the value of &#8220;timeout&#8221; will be used instead.</p>
+<p>For backward compatibility, if no unit is specified, minutes
+is assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">tls_ca_file:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>Deprecated in favor of <em>tls_client_ca_file</em>.</div></blockquote>
@@ -2959,6 +3426,9 @@ used instead.</div></blockquote>
 <p>See also Mozilla&#8217;s server-side TLS recommendations:</p>
 <p><a class="reference external" href="https://wiki.mozilla.org/Security/Server_Side_TLS">https://wiki.mozilla.org/Security/Server_Side_TLS</a></p>
 </div></blockquote>
+<p><code class="docutils literal"><span class="pre">tls_crl_file:</span></code> &lt;none&gt;</p>
+<blockquote>
+<div>Path to a file containing the Certificate Revocation List</div></blockquote>
 <p><code class="docutils literal"><span class="pre">tls_client_ca_dir:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>Path to a directory containing the CA certificates used to verify
@@ -3008,25 +3478,36 @@ openssl(1)).</div></blockquote>
 offered by the server, when cyrus acts as client.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">tls_server_cert:</span></code> &lt;none&gt;</p>
 <blockquote>
-<div>File containing the certificate, including the full chain, presented to clients.</div></blockquote>
+<div>File containing the certificate, including the full chain, presented to clients.
+Two certificates can be set, e.g RSA and EC, if the filenames are separated with
+comma without spaces.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">tls_server_dhparam:</span></code> &lt;none&gt;</p>
+<blockquote>
+<div>File containing the DH parameters belonging to the certificate in
+tls_server_cert.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">tls_server_key:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>File containing the private key belonging to the certificate in
-tls_server_cert.</div></blockquote>
+tls_server_cert.  If not set, tls_server_cert must contain both private and
+public key.  Two files with keys can be set, if two certifates are used, in
+which case the files must be separated with comma without spaces</div></blockquote>
 <p><code class="docutils literal"><span class="pre">tls_sessions_db:</span></code> twoskip</p>
 <blockquote>
 <div><p>The cyrusdb backend to use for the TLS cache.</p>
-<p>Allowed values: <em>skiplist</em>, <em>sql</em>, <em>twoskip</em>, <em>lmdb</em></p>
+<p>Allowed values: <em>skiplist</em>, <em>sql</em>, <em>twoskip</em>, <em>zeroskip</em></p>
 </div></blockquote>
 <p><code class="docutils literal"><span class="pre">tls_sessions_db_path:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>The absolute path to the TLS sessions db file. If not specified,
 will be configdirectory/tls_sessions.db</div></blockquote>
-<p><code class="docutils literal"><span class="pre">tls_session_timeout:</span></code> 1440</p>
+<p><code class="docutils literal"><span class="pre">tls_session_timeout:</span></code> 24h</p>
 <blockquote>
-<div>The length of time (in minutes) that a TLS session will be cached
-for later reuse.  The maximum value is 1440 (24 hours), the
-default.  A value of 0 will disable session caching.</div></blockquote>
+<div><p>The length of time that a TLS session will be cached for later
+reuse.  The maximum value is 24 hours, also the default.  A
+value of 0 will disable session caching.</p>
+<p>For backward compatibility, if no unit is specified, minutes is
+assumed.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">tls_versions:</span></code> tls1_0 tls1_1 tls1_2 tls1_3</p>
 <blockquote>
 <div>A list of SSL/TLS versions to not disable. Cyrus IMAP SSL/TLS starts
@@ -3046,7 +3527,7 @@ Allowed values: <em>uidonly</em>, <em>cyrus</em>, <em>dovecot</em>, <em>courier<
 <p><code class="docutils literal"><span class="pre">userdeny_db:</span></code> flat</p>
 <blockquote>
 <div><p>The cyrusdb backend to use for the user access list.</p>
-<p>Allowed values: <em>flat</em>, <em>skiplist</em>, <em>sql</em>, <em>twoskip</em>, <em>lmdb</em></p>
+<p>Allowed values: <em>flat</em>, <em>skiplist</em>, <em>sql</em>, <em>twoskip</em>, <em>zeroskip</em></p>
 </div></blockquote>
 <p><code class="docutils literal"><span class="pre">userdeny_db_path:</span></code> &lt;none&gt;</p>
 <blockquote>
@@ -3095,6 +3576,16 @@ of the incoming network interface, or if no record is found, the
 </dd>
 </dl>
 </div></blockquote>
+<p><code class="docutils literal"><span class="pre">virusscan_notification_subject:</span></code> Automatically deleted mail</p>
+<blockquote>
+<div>The text used in the subject of email notifications created by
+<strong>cyr_virusscan(8)</strong> when deleting infected mail.</div></blockquote>
+<p><code class="docutils literal"><span class="pre">virusscan_notification_template:</span></code> &lt;none&gt;</p>
+<blockquote>
+<div>The absolute path to a file containing a template to use to describe
+infected messages that have been deleted by <strong>cyr_virusscan(8)</strong>.
+See <strong>cyr_virusscan(8)</strong> for specification of the format of this file.
+If not specified, the builtin default template will be used.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">xbackup_enabled:</span></code> 0</p>
 <blockquote>
 <div>Enable support for the XBACKUP command in imapd.  If enabled, admin
@@ -3116,13 +3607,22 @@ this user.  NOTE: This must be an existing local user name with an
 INBOX, NOT an email address!</div></blockquote>
 <p><code class="docutils literal"><span class="pre">zoneinfo_db:</span></code> twoskip</p>
 <blockquote>
-<div><p>The cyrusdb backend to use for zoneinfo.</p>
-<p>Allowed values: <em>flat</em>, <em>skiplist</em>, <em>twoskip</em>, <em>lmdb</em></p>
-</div></blockquote>
+<div>The cyrusdb backend to use for zoneinfo.  This database is used by the
+&#8220;tzdist&#8221; <em>http_modules</em>, and is managed by <strong>ctl_zoneinfo(8)</strong>.
+Allowed values: <em>flat</em>, <em>skiplist</em>, <em>twoskip</em>, <em>zeroskip</em></div></blockquote>
 <p><code class="docutils literal"><span class="pre">zoneinfo_db_path:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>The absolute path to the zoneinfo db file.  If not specified,
 will be configdirectory/zoneinfo.db</div></blockquote>
+<p><code class="docutils literal"><span class="pre">zoneinfo_dir:</span></code> &lt;none&gt;</p>
+<blockquote>
+<div><p>The absolute path to the zoneinfo directory, containing timezone
+definitions as generated by the vzic tool.  If not specified, whatever
+definitions libical finds will be used.</p>
+<p>If you are providing a Time Zone Data Distribution Service (i.e. you have
+&#8220;tzdist&#8221; listed in <em>http_modules</em>), then this configuration option MUST
+be specified.</p>
+</div></blockquote>
 <p><code class="docutils literal"><span class="pre">object_storage_enabled:</span></code> 0</p>
 <blockquote>
 <div>Is Object storage enabled for this server.  You also need to have
@@ -3144,10 +3644,10 @@ by the OpenIO&#8217;s SDK to locate its platform entry point.</div></blockquote>
 <div>The OpenIO account used to account for stored emails. Accounts are unique
 in their namespace. They provides virtual partitions, with quotas and QoS
 features.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">openio_rawx_timeout:</span></code> 30</p>
+<p><code class="docutils literal"><span class="pre">openio_rawx_timeout:</span></code> 30s</p>
 <blockquote>
 <div>The OpenIO timeout to query to the RAWX services (default 30 sec).</div></blockquote>
-<p><code class="docutils literal"><span class="pre">openio_proxy_timeout:</span></code> 5</p>
+<p><code class="docutils literal"><span class="pre">openio_proxy_timeout:</span></code> 5s</p>
 <blockquote>
 <div>The OpenIO timeout to query to the PROXY services (default 5 sec).</div></blockquote>
 <p><code class="docutils literal"><span class="pre">openio_autocreate:</span></code> 0</p>
@@ -3206,7 +3706,7 @@ on HTTP 1.1 using a RESTful architecture</div></blockquote>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2017, The Cyrus Team.
+        &copy; Copyright 1993-2018, The Cyrus Team.
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -3226,7 +3726,7 @@ on HTTP 1.1 using a RESTful architecture</div></blockquote>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.0.13 (stable)',
+            VERSION:'3.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

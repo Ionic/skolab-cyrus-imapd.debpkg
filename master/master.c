@@ -43,6 +43,7 @@
 #include <config.h>
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -119,6 +120,7 @@
 #include "service.h"
 
 #include "cyr_lock.h"
+#include "retry.h"
 #include "util.h"
 #include "xmalloc.h"
 #include "strarray.h"
@@ -142,6 +144,9 @@ const char *MASTER_CONFIG_FILENAME = DEFAULT_MASTER_CONFIG_FILENAME;
 
 #define MAX_READY_FAILS              5
 #define MAX_READY_FAIL_INTERVAL     10  /* 10 seconds */
+
+#define FNAME_PROM_STATS_DIR        "/stats" /* keep in sync with prometheus.h */
+#define FNAME_PROM_MASTER_REPORT    "master.txt"
 
 struct service *Services = NULL;
 static int allocservices = 0;
@@ -185,7 +190,14 @@ static int janitor_frequency = 1;       /* Janitor sweeps per second */
 static int janitor_position;            /* Entry to begin at in next sweep */
 static struct timeval janitor_mark;     /* Last time janitor did a sweep */
 
+static int prom_enabled = 0;
+static int prom_frequency = 0;
+static struct timeval prom_prev_report = { 0, 0 };
+static char *prom_report_fname = NULL;
+
+#ifdef HAVE_SETRLIMIT
 static void limit_fds(rlim_t);
+#endif
 static void schedule_event(struct event *a);
 static void child_sighandler_setup(void);
 
@@ -285,7 +297,7 @@ static void get_statsock(int filedes[2])
         fatalf(1, "unable to set close-on-exec: %m");
 }
 
-static int cap_bind(int socket, struct sockaddr *addr, socklen_t length)
+static int cyrus_cap_bind(int socket, struct sockaddr *addr, socklen_t length)
 {
     int r;
 
@@ -375,7 +387,7 @@ static void centry_set_state(struct centry *c, enum sstate state)
 /*
  * Parse the "listen" parameter as one of the forms:
  *
- * hostname
+ * port
  * hostname ':' port
  * ipv4-address
  * ipv4-address ':' port
@@ -474,7 +486,7 @@ static struct service *service_add(const struct service *proto)
     return s;
 }
 
-static void service_create(struct service *s)
+static void service_create(struct service *s, int is_startup)
 {
     struct service service0, service;
     struct addrinfo hints, *res0, *res;
@@ -605,6 +617,14 @@ static void service_create(struct service *s)
 
         s->socket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
         if (s->socket < 0) {
+            int e = errno;
+            if (is_startup && config_getswitch(IMAPOPT_MASTER_BIND_ERRORS_FATAL)) {
+                struct buf buf = BUF_INITIALIZER;
+                buf_printf(&buf, "unable to open %s/%s socket: %s",
+                                 s->name, s->familyname, strerror(e));
+                fatal(buf_cstring(&buf), EX_UNAVAILABLE);
+            }
+
             syslog(LOG_ERR, "unable to open %s/%s socket: %m",
                 s->name, s->familyname);
             continue;
@@ -643,9 +663,17 @@ static void service_create(struct service *s)
 #endif
 
         oldumask = umask((mode_t) 0); /* for linux */
-        r = cap_bind(s->socket, res->ai_addr, res->ai_addrlen);
+        r = cyrus_cap_bind(s->socket, res->ai_addr, res->ai_addrlen);
         umask(oldumask);
         if (r < 0) {
+            int e = errno;
+            if (is_startup && config_getswitch(IMAPOPT_MASTER_BIND_ERRORS_FATAL)) {
+                struct buf buf = BUF_INITIALIZER;
+                buf_printf(&buf, "unable to bind to %s/%s socket: %s",
+                                 s->name, s->familyname, strerror(e));
+                fatal(buf_cstring(&buf), EX_UNAVAILABLE);
+            }
+
             syslog(LOG_ERR, "unable to bind to %s/%s socket: %m",
                 s->name, s->familyname);
             xclose(s->socket);
@@ -661,6 +689,14 @@ static void service_create(struct service *s)
         if ((!strcmp(s->proto, "tcp") || !strcmp(s->proto, "tcp4")
              || !strcmp(s->proto, "tcp6"))
             && listen(s->socket, listen_queue_backlog) < 0) {
+            int e = errno;
+            if (is_startup && config_getswitch(IMAPOPT_MASTER_BIND_ERRORS_FATAL)) {
+                struct buf buf = BUF_INITIALIZER;
+                buf_printf(&buf, "unable to listen to %s/%s socket: %s",
+                                 s->name, s->familyname, strerror(e));
+                fatal(buf_cstring(&buf), EX_UNAVAILABLE);
+            }
+
             syslog(LOG_ERR, "unable to listen to %s/%s socket: %m",
                 s->name, s->familyname);
             xclose(s->socket);
@@ -697,6 +733,9 @@ static int decode_wait_status(struct centry *c, pid_t pid, int status)
     if (WIFEXITED(status)) {
         if (!WEXITSTATUS(status)) {
             syslog(LOG_DEBUG, "%s exited normally", desc);
+        }
+        else if (WEXITSTATUS(status) == EX_TEMPFAIL) {
+            syslog(LOG_DEBUG, "%s was killed", desc);
         }
         else {
             syslog(LOG_ERR, "%s exited, status %d",
@@ -745,8 +784,6 @@ static void run_startup(const char *name, const strarray_t *cmd)
         set_caps(AFTER_FORK, /*is_master*/1);
 
         child_sighandler_setup();
-
-        limit_fds(256);
 
         syslog(LOG_DEBUG, "about to exec %s", path);
         execv(path, cmd->data);
@@ -882,7 +919,9 @@ static void spawn_service(int si)
             snprintf(name_env3, sizeof(name_env3), "CYRUS_ISDAEMON=1");
             putenv(name_env3);
         }
-        limit_fds(s->maxfds);
+#ifdef HAVE_SETRLIMIT
+        if (s->maxfds) limit_fds(s->maxfds);
+#endif
 
         /* close all listeners */
         for (i = 0; i < nservices; i++) {
@@ -989,7 +1028,6 @@ static void spawn_schedule(struct timeval now)
                     xclose(Services[i].stat[0]);
                     xclose(Services[i].stat[1]);
                 }
-                limit_fds(256);
 
                 syslog(LOG_DEBUG, "about to exec %s", path);
                 execv(path, a->exec->data);
@@ -1473,7 +1511,7 @@ static void process_msg(int si, struct notify_message *msg)
             break;
 
         case SERVICE_STATE_UNKNOWN:
-            /* since state is unknwon, error in non-DoS way, i.e.
+            /* since state is unknown, error in non-DoS way, i.e.
              * we don't increment ready_workers */
             syslog(LOG_DEBUG,
                    "service %s/%s pid %d in UNKNOWN state: now available and in READY state",
@@ -1644,7 +1682,7 @@ static void add_daemon(const char *name, struct entry *e, void *rock)
 {
     int ignore_err = rock ? 1 : 0;
     char *cmd = xstrdup(masterconf_getstring(e, "cmd", ""));
-    rlim_t maxfds = (rlim_t) masterconf_getint(e, "maxfds", 256);
+    rlim_t maxfds = (rlim_t) masterconf_getint(e, "maxfds", 0);
     int maxforkrate = masterconf_getint(e, "maxforkrate", 0);
     int reconfig = 0;
     int i;
@@ -1735,7 +1773,7 @@ static void add_service(const char *name, struct entry *e, void *rock)
     char *listen = xstrdup(masterconf_getstring(e, "listen", ""));
     char *proto = xstrdup(masterconf_getstring(e, "proto", "tcp"));
     char *max = xstrdup(masterconf_getstring(e, "maxchild", "-1"));
-    rlim_t maxfds = (rlim_t) masterconf_getint(e, "maxfds", 256);
+    rlim_t maxfds = (rlim_t) masterconf_getint(e, "maxfds", 0);
     int reconfig = 0;
     int i, j;
 
@@ -1955,11 +1993,190 @@ static void limit_fds(rlim_t x)
                rl.rlim_cur);
     }
 }
-#else
-static void limit_fds(rlim_t x)
-{
-}
 #endif /* HAVE_SETRLIMIT */
+
+/* minimal-dependency prometheus text report */
+static void init_prom_report(struct timeval now)
+{
+    struct buf buf = BUF_INITIALIZER;
+    struct event *evt;
+    const char *tmp;
+
+    prom_enabled = config_getswitch(IMAPOPT_PROMETHEUS_ENABLED);
+    prom_frequency = config_getduration(IMAPOPT_PROMETHEUS_UPDATE_FREQ, 's');
+
+    if (prom_frequency < 1) prom_enabled = 0;
+    if (!prom_enabled) return;
+
+    prom_prev_report.tv_sec = now.tv_sec - prom_frequency; /* next report asap */
+    prom_prev_report.tv_usec = 0;
+
+    if ((tmp = config_getstring(IMAPOPT_PROMETHEUS_STATS_DIR))) {
+        if (tmp[0] == '/' && tmp[1] != '\0') {
+            buf_setcstr(&buf, tmp);
+            if (buf.s[buf.len-1] != '/')
+                buf_putc(&buf, '/');
+            buf_appendcstr(&buf, FNAME_PROM_MASTER_REPORT);
+        }
+    }
+    else if ((tmp = config_getstring(IMAPOPT_CONFIGDIRECTORY))) {
+        buf_setcstr(&buf, tmp);
+        buf_appendcstr(&buf, FNAME_PROM_STATS_DIR);
+        buf_putc(&buf, '/');
+        buf_appendcstr(&buf, FNAME_PROM_MASTER_REPORT);
+    }
+
+    if (!buf_len(&buf)) {
+        syslog(LOG_NOTICE, "couldn't find somewhere to write prometheus report to"
+                           " - disabling master prometheus report until next reload");
+        prom_enabled = 0;
+        buf_free(&buf);
+        return;
+    }
+
+    if (prom_report_fname) free(prom_report_fname);
+    prom_report_fname = buf_release(&buf);
+    cyrus_mkdir(prom_report_fname, 0755);
+
+    evt = xzmalloc(sizeof(*evt));
+    evt->name = xstrdup("master prometheus report periodic wakeup call");
+    evt->period = prom_frequency;
+    evt->periodic = 1;
+    evt->mark = now;
+    schedule_event(evt);
+
+    syslog(LOG_DEBUG, "updating %s every %d seconds", prom_report_fname, prom_frequency);
+}
+
+static void do_prom_report(struct timeval now)
+{
+    struct buf report = BUF_INITIALIZER;
+    int fd, i, r;
+    int64_t last_updated;
+
+    if (!prom_enabled || timesub(&prom_prev_report, &now) + 0.5 < prom_frequency)
+        return;
+
+    /* open and grab the lock -- but if we would block, just skip this time */
+    fd = open(prom_report_fname, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+    if (fd == -1) {
+        syslog(LOG_ERR, "open(%s): %m - %s",
+                        prom_report_fname,
+                        "disabling master prometheus report until next reload");
+        prom_enabled = 0;
+        return;
+    }
+    r = lock_setlock(fd, /*ex*/ 1, /*nb*/ 1, prom_report_fname);
+    if (r == -1) {
+        if (errno != EWOULDBLOCK) {
+            syslog(LOG_ERR, "lock_setlock(%s): %m - %s",
+                            prom_report_fname,
+                            "disabling master prometheus report until next reload");
+            prom_enabled = 0;
+        }
+        return;
+    }
+
+    /* okay, now prepare the report */
+    syslog(LOG_DEBUG, "updating prometheus report for master process");
+    last_updated = now_ms();
+
+    buf_printf(&report, "# HELP %s %s\n",
+                        "cyrus_master_ready_workers",
+                        "The number of ready workers");
+    buf_appendcstr(&report, "# TYPE cyrus_master_ready_workers gauge\n");
+    for (i = 0; i < nservices; i++) {
+        const struct service *s = &Services[i];
+        buf_printf(&report, "cyrus_master_ready_workers{service=\"%s\",family=\"%s\"}",
+                            s->name, s->familyname);
+        buf_printf(&report, " %d %" PRId64 "\n",
+                            s->ready_workers, last_updated);
+    }
+
+    buf_printf(&report, "# HELP %s %s\n",
+                        "cyrus_master_forks_total",
+                        "The number of children spawned");
+    buf_appendcstr(&report, "# TYPE cyrus_master_forks_total counter\n");
+    for (i = 0; i < nservices; i++) {
+        const struct service *s = &Services[i];
+        buf_printf(&report, "cyrus_master_forks_total{service=\"%s\",family=\"%s\"}",
+                            s->name, s->familyname);
+        buf_printf(&report, " %d %" PRId64 "\n",
+                            s->nforks, last_updated);
+    }
+
+    buf_printf(&report, "# HELP %s %s\n",
+                        "cyrus_master_active_children",
+                        "The number of children servicing clients");
+    buf_appendcstr(&report, "# TYPE cyrus_master_active_children gauge\n");
+    for (i = 0; i < nservices; i++) {
+        const struct service *s = &Services[i];
+        buf_printf(&report, "cyrus_master_active_children{service=\"%s\",family=\"%s\"}",
+                            s->name, s->familyname);
+        buf_printf(&report, " %d %" PRId64 "\n",
+                            s->nactive, last_updated);
+    }
+
+    buf_printf(&report, "# HELP %s %s\n",
+                        "cyrus_master_max_children",
+                        "The maximum number of child processes");
+    buf_appendcstr(&report, "# TYPE cyrus_master_max_children gauge\n");
+    for (i = 0; i < nservices; i++) {
+        const struct service *s = &Services[i];
+        buf_printf(&report, "cyrus_master_max_children{service=\"%s\",family=\"%s\"}",
+                            s->name, s->familyname);
+        buf_printf(&report, " %d %" PRId64 "\n",
+                            s->max_workers, last_updated);
+    }
+
+    /* XXX what is nconnections? */
+
+    buf_printf(&report, "# HELP %s %s\n",
+                        "cyrus_master_forks_per_second",
+                        "The rate at which we're spawning children");
+    buf_appendcstr(&report, "# TYPE cyrus_master_forks_per_second gauge\n");
+    for (i = 0; i < nservices; i++) {
+        const struct service *s = &Services[i];
+        buf_printf(&report, "cyrus_master_forks_per_second{service=\"%s\",family=\"%s\"}",
+                            s->name, s->familyname);
+        buf_printf(&report, " %g %" PRId64 "\n",
+                            s->forkrate, last_updated);
+    }
+
+    buf_printf(&report, "# HELP %s %s\n",
+                        "cyrus_master_max_forks_per_second",
+                        "The maximum rate at which we will spawn children");
+    buf_appendcstr(&report, "# TYPE cyrus_master_max_forks_per_second gauge\n");
+    for (i = 0; i < nservices; i++) {
+        const struct service *s = &Services[i];
+        buf_printf(&report, "cyrus_master_max_forks_per_second{service=\"%s\",family=\"%s\"}",
+                            s->name, s->familyname);
+        buf_printf(&report, " %u %" PRId64 "\n",
+                            s->maxforkrate, last_updated);
+    }
+
+    buf_printf(&report, "# HELP %s %s\n",
+                        "cyrus_master_ready_fails_total",
+                        "The number of failures in READY state");
+    buf_appendcstr(&report, "# TYPE cyrus_master_ready_fails_total counter\n");
+    for (i = 0; i < nservices; i++) {
+        const struct service *s = &Services[i];
+        buf_printf(&report, "cyrus_master_ready_fails_total{service=\"%s\",family=\"%s\"}",
+                            s->name, s->familyname);
+        buf_printf(&report, " %d %" PRId64 "\n",
+                            s->nreadyfails, last_updated);
+    }
+
+    /* write it out */
+    retry_write(fd, buf_cstring(&report), buf_len(&report));
+    ftruncate(fd, buf_len(&report));
+    lock_unlock(fd, prom_report_fname);
+    close(fd);
+
+    prom_prev_report = now;
+
+    buf_free(&report);
+}
 
 static void reread_conf(struct timeval now)
 {
@@ -2020,7 +2237,7 @@ static void reread_conf(struct timeval now)
         else if (Services[i].exec && (Services[i].socket < 0)) {
             /* initialize new services */
 
-            service_create(&Services[i]);
+            service_create(&Services[i], 0);
             if (verbose > 2)
                 syslog(LOG_DEBUG, "init: service %s/%s socket %d pipe %d %d",
                        Services[i].name, Services[i].familyname,
@@ -2042,6 +2259,9 @@ static void reread_conf(struct timeval now)
 
     /* reinit child janitor */
     init_janitor(now);
+
+    /* reinit prom report */
+    init_prom_report(now);
 
     /* send some feedback to admin */
     syslog(LOG_NOTICE,
@@ -2130,15 +2350,7 @@ int main(int argc, char **argv)
             break;
         case 'V':
             /* print version information and exit */
-            /* XXX can't just call cyrus_version() because that would require
-             * XXX linking against libcyrus_imap */
-            printf("%s %s%s\n", PACKAGE_NAME, PACKAGE_VERSION,
-#ifdef EXTRA_IDENT
-                   "-" EXTRA_IDENT
-#else
-                   ""
-#endif
-            );
+            printf("%s %s\n", PACKAGE_NAME, CYRUS_VERSION);
             return 0;
         default:
             break;
@@ -2148,9 +2360,9 @@ int main(int argc, char **argv)
     if (daemon_mode && !close_std)
         fatal("Unable to be both debug and daemon mode", EX_CONFIG);
 
-    /* we reserve fds 3 and 4 for children to communicate with us, so they
+    /* we reserve fds for children to communicate with us, so they
        better be available. */
-    for (fd = 3; fd < 5; fd++) {
+    for (fd = STATUS_FD; fd <= LISTEN_FD; fd++) {
         close(fd);
         if (dup(0) != fd) fatalf(2, "couldn't dup fd 0: %m");
     }
@@ -2215,8 +2427,9 @@ int main(int argc, char **argv)
                 if (path == NULL)
                         path = "/tmp";
         }
-        (void) chdir(path);
-        (void) chdir("cores");
+        if (chdir(path))
+            fatalf(2, "couldn't chdir to %s: %m", path);
+        r = chdir("cores");
 
         do {
             pid = fork();
@@ -2263,8 +2476,6 @@ int main(int argc, char **argv)
             fatal("setsid failure", EX_OSERR);
         }
     }
-
-    limit_fds(1024);
 
     /* Write out the pidfile */
     pidfd = open(pidfile, O_CREAT|O_RDWR, 0644);
@@ -2389,7 +2600,7 @@ int main(int argc, char **argv)
 
     /* initialize services */
     for (i = 0; i < nservices; i++) {
-        service_create(&Services[i]);
+        service_create(&Services[i], 1);
         if (verbose > 2)
             syslog(LOG_DEBUG, "init: service %s/%s socket %d pipe %d %d",
                    Services[i].name, Services[i].familyname,
@@ -2407,6 +2618,9 @@ int main(int argc, char **argv)
     /* init ctable janitor */
     gettimeofday(&now, 0);
     init_janitor(now);
+
+    /* init prom report */
+    init_prom_report(now);
 
     /* ok, we're going to start spawning like mad now */
     syslog(LOG_DEBUG, "ready for work");
@@ -2620,6 +2834,7 @@ int main(int argc, char **argv)
 
         gettimeofday(&now, 0);
         child_janitor(now);
+        do_prom_report(now);
 
 #ifdef HAVE_NETSNMP
         if (ready_fds == 0)

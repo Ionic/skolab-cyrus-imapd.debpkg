@@ -15,11 +15,11 @@ Getting Started
     developer/compiling
     installing
     developer/developer-testing
+    developer/jmap
 
 .. toctree::
     :hidden:
 
-    developer/developer-tips
     developer/install-xapian
 
 System files and Databases

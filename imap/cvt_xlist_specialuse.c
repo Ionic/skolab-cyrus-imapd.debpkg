@@ -45,10 +45,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sysexits.h>
 #include <syslog.h>
 #include <unistd.h>
 
-#include "lib/exitcodes.h"
 #include "lib/hash.h"
 #include "lib/libconfig.h"
 
@@ -70,7 +70,7 @@ static void usage(void)
             "    -v                  # verbose\n"
     );
 
-    exit(EC_USAGE);
+    exit(EX_USAGE);
 }
 
 static void save_argv0(const char *s)
@@ -115,8 +115,7 @@ static int set_specialuse(struct findall_data *data, void *rock)
     int r;
 
     if (!data) return 0;
-
-    if (!data->mbname) return 0; /* XXX what does this mean? */
+    if (!data->is_exactmatch) return 0;
 
     if (!mbname_userid(data->mbname)) return 0;
 
@@ -195,30 +194,12 @@ int main (int argc, char **argv)
         strarray_append(&patterns, argv[i]);
     }
 
-    mboxlist_init(0);
-    mboxlist_open(NULL);
-
-    quotadb_init(0);
-    quotadb_open(NULL);
-
-    annotate_init(NULL, NULL);
-    annotatemore_open();
-
     r = mboxlist_findallmulti(NULL, &patterns, 1, NULL, NULL, set_specialuse, &xlist);
-
-    annotatemore_close();
-    annotate_done();
-
-    quotadb_close();
-    quotadb_done();
-
-    mboxlist_close();
-    mboxlist_done();
 
 done:
     free_hash_table(&xlist, (void (*)(void*)) buf_free);
     strarray_fini(&patterns);
 
     cyrus_done();
-    return r ? EC_TEMPFAIL : EC_OK;
+    return r ? EX_TEMPFAIL : EX_OK;
 }

@@ -8,18 +8,20 @@ Translate mailbox names to filesystem paths
 Synopsis
 ========
 
-   **mbpath** [ **-C** *config-file* ] [ **-q** ] [ **-s** ] [ **-m** ] [ *mailbox-names*... ]
+   **mbpath** [ **-C** *config-file* ] [ **-l** ] [ **-m** ] [ **-q** ] [ **-s** ] [ **-u** ] [ **-a** | **-A** | **-M** | **-S** | **-U** ] [ *mailbox-names*... ]
 
 
 Description
 ===========
 
 Given a mailbox name or a space separated list of mailbox names,
-**mbpath** outputs the filesystem path to the mailbox.
+**mbpath** outputs the filesystem path(s) of the mailbox.  By default,
+the mailboxes' data partition paths are shown (same as **-D**). See
+Selectors for selecting which filesystem path(s) to output.
 
 **mbpath** reads its configuration options out of the imapd.conf(5)
 file unless specified otherwise by **-C**. It uses
-<configdirectory>/mailboxes.db to locate the mailbox on disk.
+<configdirectory>/mailboxes.db to locate the mailboxes on disk.
 
 
 Options
@@ -30,6 +32,16 @@ Options
    Use the specified configuration file *config-file* rather than the
    default imapd.conf(5).
 
+-l
+
+   Local mailboxes only (exits with error for remote or nonexistent
+   mailboxes)
+
+-m
+
+   Output the path to the metadata files (if different from the
+   message files).  Legacy, use **-M**.
+
 -q
 
    Suppress any error output.
@@ -39,10 +51,37 @@ Options
    If any error occurs, stop processing the list of mailboxes and
    exit.
 
--m
+-u
 
-   Output the path to the metadata files (if different from the
-   message files).
+   The specified *mailbox-names* are users, not mailboxes.
+
+
+Selectors
+=========
+
+-A
+
+   Show the mailbox archive path
+
+-D
+
+   Show the mailbox data path (*default*)
+
+-M
+
+   Show the mailbox metadata path (same as **-m**)
+
+-S
+
+   Show the user sieve scripts path
+
+-U
+
+   Show the user files path (seen, sub, etc)
+
+-a
+
+   Show all paths, as if all selectors were specified
 
 
 Examples
@@ -50,11 +89,15 @@ Examples
 
    **mbpath** *user.jsmith*
 
-   Display the path for mailbox *user.jsmith*.
+   Display the data path for mailbox *user.jsmith*.
 
-   **mbpath -m** *user.jsmith*
+   **mbpath -M** *user.jsmith*
 
    Display the metadata path for mailbox *user.jsmith*.
+
+   **mbpath -u -S** *jsmith*
+
+   Display the sieve scripts path for user *jsmith*.
 
 
 Files

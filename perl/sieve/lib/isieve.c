@@ -53,6 +53,7 @@
 #include <unistd.h>
 
 #include "iptostring.h"
+#include "util.h"
 #include "xmalloc.h"
 #include "perl/sieve/lib/isieve.h"
 #include "perl/sieve/lib/lex.h"
@@ -195,14 +196,7 @@ int init_sasl(isieve_t *obj,
   addrsize=sizeof(struct sockaddr_storage);
   if (getsockname(obj->sock,(struct sockaddr *)&saddr_l,&addrsize)!=0)
       return -1;
-#if 0
-  /* XXX  The following line causes problems with KERBEROS_V4 decoding.
-   * We're not sure why its an issue, but this code isn't used in any of
-   * our other client code (imtest.c, backend.c), so we're removing it.
-   */
-  /* set the port manually since getsockname is stupid and doesn't */
-  ((struct sockaddr_in *)&saddr_l)->sin_port = htons(obj->port);
-#endif
+
   if (iptostring((struct sockaddr *)&saddr_r, addrsize, remoteip, 60))
       return -1;
 
@@ -437,7 +431,7 @@ int auth_sasl(char *mechlist, isieve_t *obj, const char **mechusing,
         fillin_interactions(client_interact); /* fill in prompts */
     }
 
-    /* check if sasl suceeded */
+    /* check if sasl succeeded */
     if (saslresult<SASL_OK)
     {
         /* send cancel notice */
@@ -571,11 +565,19 @@ static int do_referral(isieve_t *obj, char *refer_to)
 
             switch (callbacks[n].id) {
             case SASL_CB_USER:
+#if GCC_VERSION >= 80000
+                callbacks[n].proc = (void*)&refer_simple_cb;
+#else
                 callbacks[n].proc = (int (*)(void))&refer_simple_cb;
+#endif
                 callbacks[n].context = userid ? userid : authid;
                 break;
             case SASL_CB_AUTHNAME:
+#if GCC_VERSION >= 80000
+                callbacks[n].proc = (void*)&refer_simple_cb;
+#else
                 callbacks[n].proc = (int (*)(void))&refer_simple_cb;
+#endif
                 callbacks[n].context = authid;
                 break;
             default:

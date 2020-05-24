@@ -45,6 +45,7 @@
 #define _HTTP_PROXY_H
 
 #include "backend.h"
+#include "http_h2.h"
 
 
 extern struct protocol_t http_protocol;
@@ -55,5 +56,6 @@ extern void http_proto_host(hdrcache_t req_hdrs,
 extern int http_pipe_req_resp(struct backend *be, struct transaction_t *txn);
 extern int http_proxy_copy(struct backend *src_be, struct backend *dest_be,
                            struct transaction_t *txn);
+extern long http_status_to_code(unsigned code);
 
 #endif /* _HTTP_PROXY_H */

@@ -60,7 +60,10 @@ usr/share/man/man8/cyr_virusscan.8
 usr/share/man/man8/cyrus-arbitron.8
 usr/share/man/man8/cyrus-arbitronsort.8
 usr/share/man/man8/cyrus-chk_*.8
-usr/share/man/man8/cyrus-ctl_*.8
+#usr/share/man/man8/cyrus-ctl_*.8
+usr/share/man/man8/cyrus-ctl_deliver.8
+usr/share/man/man8/cyrus-ctl_cyrusdb.8
+usr/share/man/man8/cyrus-ctl_mboxlist.8
 usr/share/man/man8/cyrus-cvt_*.8
 usr/share/man/man8/cyrus-cyr_buildinfo.8
 usr/share/man/man8/cyrus-cyr_dbtool.8

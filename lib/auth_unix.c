@@ -236,7 +236,7 @@ static struct auth_state *mynewstate(const char *identifier)
         groupids = (gid_t *)xrealloc((gid_t *)groupids,
                                      ngroups * sizeof(gid_t));
 
-        oldngroups = ngroups; /* copy of ngroups for comparision */
+        oldngroups = ngroups; /* copy of ngroups for comparison */
         ret = getgrouplist(identifier, gid, groupids, &ngroups);
         /*
          * This is tricky. We do this as long as getgrouplist tells us to
@@ -280,6 +280,10 @@ static void myfreestate(struct auth_state *auth_state)
     free(auth_state);
 }
 
+static strarray_t *mygroups(const struct auth_state *auth_state)
+{
+    return strarray_dup(&auth_state->groups);
+}
 
 HIDDEN struct auth_mech auth_unix =
 {
@@ -289,4 +293,5 @@ HIDDEN struct auth_mech auth_unix =
     &mymemberof,
     &mynewstate,
     &myfreestate,
+    &mygroups,
 };

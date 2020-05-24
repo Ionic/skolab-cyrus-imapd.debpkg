@@ -81,6 +81,7 @@
 #define USER_COLLECTION_PREFIX  "user"
 #define GROUP_COLLECTION_PREFIX "group"
 
+#define LOCK_TOKEN_URL_SCHEME "urn:uuid:"
 #define SYNC_TOKEN_URL_SCHEME "data:,"
 
 #define SHARED_COLLECTION_DELIM '.'
@@ -101,11 +102,11 @@ enum {
 
 /* Cyrus-specific privileges */
 #define DACL_PROPCOL    ACL_WRITE       /* CY:write-properties-collection */
-#define DACL_PROPRES    ACL_ANNOTATEMSG /* CY:write-properties-resource */
+#define DACL_PROPRSRC   ACL_ANNOTATEMSG /* CY:write-properties-resource */
 #define DACL_MKCOL      ACL_CREATE      /* CY:make-collection */
-#define DACL_ADDRES     ACL_POST        /* CY:add-resource */
+#define DACL_ADDRSRC    ACL_POST        /* CY:add-resource */
 #define DACL_RMCOL      ACL_DELETEMBOX  /* CY:remove-collection */
-#define DACL_RMRES      (ACL_DELETEMSG\
+#define DACL_RMRSRC     (ACL_DELETEMSG\
                          |ACL_EXPUNGE)  /* CY:remove-resource */
 #define DACL_ADMIN      ACL_ADMIN       /* CY:admin (aggregates
                                            DAV:read-acl, DAV:write-acl,
@@ -118,11 +119,11 @@ enum {
                                            and CALDAV:read-free-busy) */
 #define DACL_WRITECONT  ACL_INSERT      /* DAV:write-content */
 #define DACL_WRITEPROPS (DACL_PROPCOL\
-                         |DACL_PROPRES) /* DAV:write-properties */
+                         |DACL_PROPRSRC)/* DAV:write-properties */
 #define DACL_BIND       (DACL_MKCOL\
-                         |DACL_ADDRES)  /* DAV:bind */
+                         |DACL_ADDRSRC) /* DAV:bind */
 #define DACL_UNBIND     (DACL_RMCOL\
-                         |DACL_RMRES)   /* DAV:unbind */
+                         |DACL_RMRSRC)  /* DAV:unbind */
 #define DACL_WRITE      (DACL_WRITECONT\
                          |DACL_WRITEPROPS\
                          |DACL_BIND\
@@ -171,14 +172,9 @@ enum {
                                            schedule-send-reply,
                                            schedule-send-freebusy) */
 
-/* Privileges assigned via WebDAV Sharing (draft-pot-webdav-resource-sharing) */
-#define DACL_SHARE      (DACL_READ|DACL_WRITEPROPS)
-#define DACL_SHARERW    (DACL_READ|DACL_WRITE)
-
-
 /* Index into preconditions array */
 enum {
-    /* WebDAV (RFC 4918) preconditons */
+    /* WebDAV (RFC 4918) preconditions */
     DAV_PROT_PROP = 1,
     DAV_BAD_LOCK_TOKEN,
     DAV_NEED_LOCK_TOKEN,
@@ -281,18 +277,41 @@ enum {
 };
 
 
-typedef void *(*db_open_proc_t)(struct mailbox *mailbox);
-typedef void (*db_close_proc_t)(void *davdb);
+extern struct meth_params princ_params;
 
-/* Function to lookup DAV 'resource' in 'mailbox', with optional 'lock',
+/* Function to fetch resource validators */
+typedef int (*get_validators_t)(struct mailbox *mailbox, void *data,
+                                const char *userid, struct index_record *record,
+                                const char **etag, time_t *lastmod);
+
+/* Function to fetch resource modseq */
+typedef modseq_t (*get_modseq_t)(struct mailbox *mailbox,
+                                 void *data, const char *userid);
+
+typedef void *(*db_open_proc_t)(struct mailbox *mailbox);
+typedef int (*db_close_proc_t)(void *davdb);
+
+/* Function to lookup DAV 'resource' in 'mailbox',
  * placing the record in 'data'
  */
 typedef int (*db_lookup_proc_t)(void *davdb, const char *mailbox,
                                 const char *resource, void **data,
                                 int tombstones);
 
+/* Function to lookup DAV 'imapuid' in 'mailbox',
+ * placing the record in 'data'
+ */
+typedef int (*db_imapuid_proc_t)(void *davdb, const char *mailbox,
+                                 int uid, void **data, int tombstones);
+
 /* Function to process each DAV resource in 'mailbox' with 'cb' */
 typedef int (*db_foreach_proc_t)(void *davdb, const char *mailbox,
+                                 int (*cb)(void *rock, void *data), void *rock);
+
+/* Function to process 'limit' DAV resources
+   updated since 'oldmodseq' in 'mailbox' with 'cb' */
+typedef int (*db_updates_proc_t)(void *davdb, modseq_t oldmodseq,
+                                 const char *mailbox, int kind, int limit,
                                  int (*cb)(void *rock, void *data), void *rock);
 
 /* Context for fetching properties */
@@ -316,11 +335,12 @@ struct propfind_ctx {
     int userisadmin;                    /* is userid an admin */
     struct auth_state *authstate;       /* authorization state for userid */
     void *davdb;                        /* DAV DB corresponding to collection */
-    const mbentry_t *mbentry;           /* mbentry correspondng to collection */
-    struct mailbox *mailbox;            /* mailbox correspondng to collection */
+    const mbentry_t *mbentry;           /* mbentry corresponding to collection */
+    struct mailbox *mailbox;            /* mailbox corresponding to collection */
     struct quota quota;                 /* quota info for collection */
     struct index_record *record;        /* cyrus.index record for resource */
     void *data;                         /* DAV record for resource */
+    get_validators_t get_validators;    /* fetch resource validators */
     struct buf msg_buf;                 /* mmap()'d resource file */
     void *obj;                          /* parsed resource */
     void (*free_obj)(void *);           /* free parsed object */
@@ -343,6 +363,7 @@ struct propfind_ctx {
     int *ret;                           /* Return code to pass up to caller */
     struct fctx_flags_t flags;          /* Return flags for this propfind */
     struct buf buf;                     /* Working buffer */
+    xmlBufferPtr xmlbuf;                /* Buffer for dumping XML nodes */
 };
 
 
@@ -400,8 +421,9 @@ enum {
     PROP_ALLPROP =      (1<<0),         /* Returned in <allprop> request */
     PROP_COLLECTION =   (1<<1),         /* Returned for collection */
     PROP_RESOURCE =     (1<<2),         /* Returned for resource */
-    PROP_PRESCREEN =    (1<<3),         /* Prescreen property using callback */
-    PROP_CLEANUP =      (1<<4)          /* Cleanup property using callback */
+    PROP_PERUSER =      (1<<3),         /* Per-user property */
+    PROP_PRESCREEN =    (1<<4),         /* Prescreen property using callback */
+    PROP_CLEANUP =      (1<<5)          /* Cleanup property using callback */
 };
 
 
@@ -427,7 +449,9 @@ struct davdb_params {
     db_proc_t commit_transaction;
     db_proc_t abort_transaction;
     db_lookup_proc_t lookup_resource;   /* lookup a specific resource */
+    db_imapuid_proc_t lookup_imapuid;   /* lookup a specific resource */
     db_foreach_proc_t foreach_resource; /* process all resources in a mailbox */
+    db_updates_proc_t foreach_update;   /* process updated resources in a mbox */
     /* XXX - convert these to lock management only.  For everything else,
      * we need to go via mailbox.c for replication support */
     db_write_proc_t write_resourceLOCKONLY;     /* write a specific resource */
@@ -458,13 +482,19 @@ struct mime_type_t {
     struct buf* (*from_object)(void *);
     void* (*to_object)(const struct buf *);
     void (*free)(void *);
-    const char* (*begin_stream)(struct buf *);
+    const char* (*begin_stream)(struct buf *, struct mailbox *mailbox,
+                                const char *prodid, const char *name,
+                                const char *desc, const char *color);
     void (*end_stream)(struct buf *);
 };
+
+/* meth_mkcol() parameters */
+typedef int (*mkcol_proc_t)(struct mailbox *mailbox);
 
 struct mkcol_params {
     unsigned location_precond;          /* precond code for bad location */
     uint32_t mbtype;                    /* mailbox type collection */
+    mkcol_proc_t proc;                  /* func to do post-create processing */
 };
 
 /*
@@ -481,8 +511,7 @@ typedef int (*import_proc_t)(struct transaction_t *txn, void *obj,
 /* POST "mode" bits */
 enum {
     POST_ADDMEMBER = (1<<0),
-    POST_SHARE     = (1<<1),
-    POST_BULK      = (1<<2)
+    POST_SHARE     = (1<<1)
 };
 
 /* meth_put() parameters */
@@ -498,7 +527,11 @@ struct copy_params {
 struct post_params {
     unsigned allowed;                   /* allowed generic POST "modes" */
     post_proc_t proc;                   /* special POST handling (optional) */
-    import_proc_t import;               /* func to import multiple rsrcs (opt) */
+    struct {
+        unsigned data_ns;               /* namespace of "data" property */
+        const char *data_prop;          /* name of "data" prop for CRUD (opt) */
+        import_proc_t import;           /* func to import multiple rsrcs (opt) */
+    } bulk;
 };
 
 struct put_params {
@@ -542,6 +575,8 @@ enum {
 struct meth_params {
     struct mime_type_t *mime_types;     /* array of MIME types and conv funcs */
     parse_path_t parse_path;            /* parse URI path & generate mboxname */
+    get_validators_t get_validators;    /* fetch resource validators */
+    get_modseq_t get_modseq;            /* fetch resource modseq */
     check_precond_t check_precond;      /* check headers for preconditions */
     struct davdb_params davdb;          /* DAV DB access functions */
     acl_proc_t acl_ext;                 /* special ACL handling (extensions) */
@@ -628,13 +663,14 @@ struct filter_profile_t {
 #define DAV_FILTER_ISNOTDEF_ERR \
     "is-not-defined can NOT be combined with other elements"
 
+void dav_get_synctoken(struct mailbox *mailbox,
+                       struct buf *buf, const char *prefix);
+
 void dav_parse_propfilter(xmlNodePtr root, struct prop_filter **prop,
                           struct filter_profile_t *profile,
                           struct error_t *error);
 void dav_free_propfilter(struct prop_filter *prop);
 int dav_apply_textmatch(xmlChar *text, struct text_match_t *match);
-
-int notify_post(struct transaction_t *txn);
 
 int report_expand_prop(struct transaction_t *txn, struct meth_params *rparams,
                        xmlNodePtr inroot, struct propfind_ctx *fctx);
@@ -646,21 +682,32 @@ int report_sync_col(struct transaction_t *txn, struct meth_params *rparams,
                     xmlNodePtr inroot, struct propfind_ctx *fctx);
 
 
+unsigned long calcarddav_allow_cb(struct request_target_t *tgt);
+int dav_parse_req_target(struct transaction_t *txn,
+                         struct meth_params *params);
 int calcarddav_parse_path(const char *path, struct request_target_t *tgt,
-                          const char *mboxprefix, const char **errstr);
+                          const char *mboxprefix, const char **resultstr);
+int dav_get_validators(struct mailbox *mailbox, void *data,
+                       const char *userid, struct index_record *record,
+                       const char **etag, time_t *lastmod);
+modseq_t dav_get_modseq(struct mailbox *mailbox,
+                        void *data, const char *userid);
 int dav_check_precond(struct transaction_t *txn, struct meth_params *params,
                       struct mailbox *mailbox, const void *data,
                       const char *etag, time_t lastmod);
 int dav_store_resource(struct transaction_t *txn,
                        const char *data, size_t datalen,
                        struct mailbox *mailbox, struct index_record *oldrecord,
-                       strarray_t *imapflags);
+                       modseq_t createdmodseq, strarray_t *imapflags);
 int dav_premethod(struct transaction_t *txn);
 unsigned get_preferences(struct transaction_t *txn);
 struct mime_type_t *get_accept_type(const char **hdr, struct mime_type_t *types);
 
 int parse_xml_body(struct transaction_t *txn, xmlNodePtr *root,
                    const char *mimetype);
+
+size_t make_collection_url(struct buf *buf, const char *urlprefix, int haszzzz,
+                           const mbname_t *mbname, const char *userid);
 
 /* Initialize an XML tree */
 xmlNodePtr init_xml_response(const char *resp, int ns,
@@ -677,13 +724,17 @@ void xml_add_lockdisc(xmlNodePtr node, const char *path, struct dav_data *data);
 int ensure_ns(xmlNsPtr *respNs, int ns, xmlNodePtr node,
               const char *url, const char *prefix);
 
-int xml_add_response(struct propfind_ctx *fctx, long code, unsigned precond);
+int xml_add_response(struct propfind_ctx *fctx, long code, unsigned precond,
+                     const char *desc, const char *location);
 int propfind_by_resource(void *rock, void *data);
 int propfind_by_collection(const mbentry_t *mbentry, void *rock);
 int expand_property(xmlNodePtr inroot, struct propfind_ctx *fctx,
                     struct namespace_t *namespace, const char *href,
                     parse_path_t parse_path, const struct prop_entry *lprops,
                     xmlNodePtr root, int depth);
+
+int preload_proplist(xmlNodePtr proplist, struct propfind_ctx *fctx);
+void free_entry_list(struct propfind_entry_list *elist);
 
 /* DAV method processing functions */
 int meth_acl(struct transaction_t *txn, void *params);
@@ -702,10 +753,12 @@ int meth_unlock(struct transaction_t *txn, void *params);
 
 
 /* PROPFIND callbacks */
+
 int propfind_getdata(const xmlChar *name, xmlNsPtr ns,
                      struct propfind_ctx *fctx,
                      xmlNodePtr prop, struct propstat propstat[],
-                     struct mime_type_t *mime_types, int precond,
+                     struct mime_type_t *mime_types,
+                     struct mime_type_t **out_type,
                      const char *data, unsigned long datalen);
 int propfind_fromdb(const xmlChar *name, xmlNsPtr ns,
                     struct propfind_ctx *fctx,
@@ -719,6 +772,10 @@ int propfind_creationdate(const xmlChar *name, xmlNsPtr ns,
                           struct propfind_ctx *fctx,
                           xmlNodePtr prop, xmlNodePtr resp,
                           struct propstat propstat[], void *rock);
+int propfind_collectionname(const xmlChar *name, xmlNsPtr ns,
+                            struct propfind_ctx *fctx,
+                            xmlNodePtr prop, xmlNodePtr resp,
+                            struct propstat propstat[], void *rock);
 int propfind_getlength(const xmlChar *name, xmlNsPtr ns,
                        struct propfind_ctx *fctx,
                        xmlNodePtr prop, xmlNodePtr resp,
@@ -743,6 +800,11 @@ int propfind_suplock(const xmlChar *name, xmlNsPtr ns,
 int propfind_reportset(const xmlChar *name, xmlNsPtr ns,
                        struct propfind_ctx *fctx,
                        xmlNodePtr prop, xmlNodePtr resp,
+                       struct propstat propstat[], void *rock);
+
+int propfind_methodset(const xmlChar *name, xmlNsPtr ns,
+                       struct propfind_ctx *fctx,
+                       xmlNodePtr prop, xmlNodePtr,
                        struct propstat propstat[], void *rock);
 
 int propfind_collationset(const xmlChar *name, xmlNsPtr ns,
@@ -817,26 +879,18 @@ int propfind_caluseraddr(const xmlChar *name, xmlNsPtr ns,
                          struct propfind_ctx *fctx,
                          xmlNodePtr prop, xmlNodePtr resp,
                          struct propstat propstat[], void *rock);
+int propfind_caluseremail(const xmlChar *name, xmlNsPtr ns,
+                         struct propfind_ctx *fctx,
+                         xmlNodePtr prop, xmlNodePtr resp,
+                         struct propstat propstat[], void *rock);
+int proppatch_caluseraddr(xmlNodePtr prop, unsigned set,
+                          struct proppatch_ctx *pctx,
+                          struct propstat propstat[], void *rock);
 int propfind_calusertype(const xmlChar *name, xmlNsPtr ns,
                          struct propfind_ctx *fctx,
                          xmlNodePtr prop, xmlNodePtr resp,
                          struct propstat propstat[], void *rock);
 int propfind_abookhome(const xmlChar *name, xmlNsPtr ns,
-                       struct propfind_ctx *fctx,
-                       xmlNodePtr prop, xmlNodePtr resp,
-                       struct propstat propstat[], void *rock);
-
-void xml_add_shareaccess(struct propfind_ctx *fctx,
-                         xmlNodePtr resp, xmlNodePtr node, int legacy);
-int propfind_shareaccess(const xmlChar *name, xmlNsPtr ns,
-                         struct propfind_ctx *fctx,
-                         xmlNodePtr prop, xmlNodePtr resp,
-                         struct propstat propstat[], void *rock);
-int propfind_invite(const xmlChar *name, xmlNsPtr ns,
-                    struct propfind_ctx *fctx,
-                    xmlNodePtr prop, xmlNodePtr resp,
-                    struct propstat propstat[], void *rock);
-int propfind_sharedurl(const xmlChar *name, xmlNsPtr ns,
                        struct propfind_ctx *fctx,
                        xmlNodePtr prop, xmlNodePtr resp,
                        struct propstat propstat[], void *rock);

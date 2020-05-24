@@ -52,10 +52,16 @@
 #include "imapparse.h"
 #include "util.h"
 
-#define MAX_SESSIONID_SIZE 256
+#ifdef HAVE_SSL
+#include <openssl/evp.h>
+#define MAX_FINISHED_LEN EVP_MAX_MD_SIZE
 
-/* This is a string because we only ever use it as a string */
-#define SPHINX_MAX_MATCHES          "1000000"
+#else /* !HAVE_SSL */
+#define MAX_FINISHED_LEN 1
+#endif /* HAVE_SSL */
+
+
+#define MAX_SESSIONID_SIZE 256
 
 /* Flags for cyrus_init() */
 enum {
@@ -72,6 +78,10 @@ extern int cyrus_init(const char *alt_config, const char *ident,
 extern void global_sasl_init(int client, int server,
                              const sasl_callback_t *callbacks);
 
+/* Register a module callback. This callback will be called
+ * during cyrus_done, passing callback data rock */
+extern void cyrus_modules_add(void (*done)(void*), void *rock);
+
 /* Shutdown a cyrus process */
 extern void cyrus_done(void);
 
@@ -83,7 +93,11 @@ extern int mysasl_config(void *context,
                          unsigned *len);
 extern sasl_security_properties_t *mysasl_secprops(int flags);
 
+#if GCC_VERSION >= 80000
+typedef void mysasl_cb_ft;  /* shut up GCC */
+#else
 typedef int (mysasl_cb_ft)(void);
+#endif
 
 /* user canonification */
 extern const char *canonify_userid(char *user, const char *loginid,
@@ -122,12 +136,28 @@ struct proxy_context {
     int *userisproxyadmin;
 };
 
+struct saslprops_t {
+    struct buf iplocalport;
+    struct buf ipremoteport;
+    sasl_ssf_t ssf;
+    struct buf authid;
+    sasl_channel_binding_t cbinding;
+    unsigned char tls_finished[MAX_FINISHED_LEN];
+};
+#define SASLPROPS_INITIALIZER \
+    { BUF_INITIALIZER, BUF_INITIALIZER, 0, BUF_INITIALIZER, \
+      { NULL, 0, 0, NULL }, { 0 } }
+
 /* Misc utils */
 extern int shutdown_file(char *buf, int size);
 extern char *find_msgid(char *, char **);
 #define UNIX_SOCKET "[unix socket]"
 extern const char *get_clienthost(int s,
                                   const char **localip, const char **remoteip);
+extern void saslprops_reset(struct saslprops_t *saslprops);
+extern void saslprops_free(struct saslprops_t *saslprops);
+extern int saslprops_set_tls(struct saslprops_t *saslprops,
+                             sasl_conn_t *saslconn);
 
 /* Misc globals */
 extern int in_shutdown;
@@ -159,6 +189,6 @@ extern void parse_sessionid(const char *str, char *sessionid);
 /* Capability suppression */
 extern int capa_is_disabled(const char *str);
 
-extern int cmd_cancelled();
+extern int cmd_cancelled(int insearch);
 
 #endif /* INCLUDED_GLOBAL_H */

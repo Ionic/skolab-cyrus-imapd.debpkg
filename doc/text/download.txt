@@ -36,19 +36,25 @@ Download
 
   * Supported Product Series
 
+    * Series 3.2
+
     * Series 3.0
 
     * Series 2.5
 
-    * Series 2.4
+  * Development snapshots
+
+    * Cyrus IMAP 3.1 Tags
 
   * Older Versions
 
     * Series 1
 
-    * Series 2: 2.0 - 2.3
+    * Series 2: 2.0 - 2.4
 
 * Notes for Packagers
+
+  * Binary naming
 
   * Sample configuration files
 

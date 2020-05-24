@@ -180,6 +180,12 @@ Sieve has a lot of `extensions <http://www.iana.org/assignments/sieve-extensions
 * Date :rfc:`5260`
 * Index :rfc:`5260`
 * Variables :rfc:`5229`
+* Editheader Extension :rfc:`5293`
+* Reject and Extended Reject :rfc:`5429`
+* Externally Stored Lists :rfc:`6134`
+* Duplicate Extension :rfc:`7352`
+* Ihave Extension :rfc:`5463`
+* Delivering to Special-Use Mailboxes `Draft special-use RFC <http://tools.ietf.org/html/draft-bosch-sieve-special-use-01>`_
 * IMAP flag Extension `Draft imap flags RFC <http://tools.ietf.org/html/draft-ietf-sieve-imapflags-05>`_
 * Body Extension :rfc:`5173`
 

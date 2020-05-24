@@ -2,7 +2,7 @@
 #include <config.h>
 #endif
 #include <assert.h>
-#include "cunit/cunit.h"
+#include "cunit/cyrunit.h"
 #include "libconfig.h"
 #include "imap/mboxname.h"
 #include "imap/mailbox.h"
@@ -48,6 +48,35 @@ static void test_dir_hash_c(void)
     CU_ASSERT_EQUAL(c, 'J');
     c = dir_hash_c(LONGNAME_SUB, 1);
     CU_ASSERT_EQUAL(c, 'J');
+}
+
+static void test_mboxname_hash(void)
+{
+    static const char FRED[] = "fred";
+    static const char JANEAT_SENT[] = "bloggs.com!user.jane.Sent";
+    char s[MAX_MAILBOX_PATH];
+
+    mboxname_hash(s, MAX_MAILBOX_PATH, "/tmp", FRED);
+    CU_ASSERT_STRING_EQUAL(s, "/tmp/fred");
+
+    mboxname_hash(s, MAX_MAILBOX_PATH, "/tmp", JANEAT_SENT);
+    CU_ASSERT_STRING_EQUAL(s, "/tmp/domain/bloggs.com/user/jane/Sent");
+
+    config_hashimapspool = 1;
+
+    mboxname_hash(s, MAX_MAILBOX_PATH, "/tmp", FRED);
+    CU_ASSERT_STRING_EQUAL(s, "/tmp/f/fred");
+
+    mboxname_hash(s, MAX_MAILBOX_PATH, "/tmp", JANEAT_SENT);
+    CU_ASSERT_STRING_EQUAL(s, "/tmp/domain/b/bloggs.com/j/user/jane/Sent");
+
+    config_fulldirhash = 1;
+
+    mboxname_hash(s, MAX_MAILBOX_PATH, "/tmp", FRED);
+    CU_ASSERT_STRING_EQUAL(s, "/tmp/E/fred");
+
+    mboxname_hash(s, MAX_MAILBOX_PATH, "/tmp", JANEAT_SENT);
+    CU_ASSERT_STRING_EQUAL(s, "/tmp/domain/L/bloggs.com/I/user/jane/Sent");
 }
 
 static void test_to_parts(void)
@@ -667,6 +696,39 @@ static void test_toexternal_specials(void)
     toexternal_helper("bloggs.com!user.fred.*!^", "INBOX/*!.");
 }
 
+static void test_virtdomains_at(void)
+{
+    memset(&conf, 0, sizeof(conf));
+    conf.userid = "fred";
+
+    toexternal_helper("user.fred.a@b", "INBOX.a@b");
+
+    conf.unixhierarchysep = 1;
+
+    toexternal_helper("user.fred.a@b", "INBOX/a@b");
+
+    conf.userid = "fred@bloggs.com";
+    conf.virtdomains = 1;
+    conf.unixhierarchysep = 0;
+
+    toexternal_helper("bloggs.com!user.fred.a@b", "INBOX.a@b");
+
+    conf.unixhierarchysep = 1;
+
+    toexternal_helper("bloggs.com!user.fred.a@b", "INBOX/a@b");
+
+    conf.defdomain = "bloggs.com";
+    conf.userid = "fred";
+
+    conf.unixhierarchysep = 0;
+
+    toexternal_helper("user.fred.a@b", "INBOX.a@b");
+
+    conf.unixhierarchysep = 1;
+
+    toexternal_helper("user.fred.a@b", "INBOX/a@b");
+}
+
 static void test_toexternal_unixhier(void)
 {
     memset(&conf, 0, sizeof(conf));
@@ -705,6 +767,21 @@ static void test_toexternal_alt(void)
     toexternal_helper("shared.quux", "Chaired.shared.quux");
 }
 
+static void test_contains_parent(void)
+{
+    CU_ASSERT_EQUAL(0, mboxname_contains_parent("user.foo.B", "user"));
+    CU_ASSERT_EQUAL(1, mboxname_contains_parent("user.foo.B", "user.foo"));
+    CU_ASSERT_EQUAL(1, mboxname_contains_parent("user.foo.B", "user.foo.A"));
+    CU_ASSERT_EQUAL(1, mboxname_contains_parent("user.foo.B", "user.foo.A.sub"));
+    CU_ASSERT_EQUAL(0, mboxname_contains_parent("user.foo.B.sub", "user.foo"));
+    CU_ASSERT_EQUAL(0, mboxname_contains_parent("user.foo.B.sub", "user.foo.A"));
+    CU_ASSERT_EQUAL(0, mboxname_contains_parent("user.foo.B.sub", "user.foo.A.sub"));
+    CU_ASSERT_EQUAL(0, mboxname_contains_parent("user.foo.BA.sub", "user.foo.B.sub"));
+    CU_ASSERT_EQUAL(0, mboxname_contains_parent("user.foo.B.A", "user.foo.BA"));
+    // this one is a bit fun - shared has no parent, so should be OK anywhere
+    CU_ASSERT_EQUAL(0, mboxname_contains_parent("shared", "user.foo.A"));
+}
+
 static void test_nextmodseq(void)
 {
     static const char FREDNAME[] = "bloggs.com!user.fred";
@@ -729,6 +806,33 @@ static void test_nextmodseq(void)
     /* lower value should not decrease */
     CU_ASSERT_EQUAL(mboxname_nextmodseq(FREDNAME, 5, 0, 0), 102);
 }
+
+static void test_common_ancestor(void)
+{
+    char *ancestor;
+
+    ancestor = mboxname_common_ancestor("user.foo.A.B", "user.foo.A");
+    CU_ASSERT_PTR_NULL(ancestor);
+
+    ancestor = mboxname_common_ancestor("user.foo.A.B", "user.foo.C.D");
+    CU_ASSERT_PTR_NULL(ancestor);
+
+    ancestor = mboxname_common_ancestor("user.foo.A.B.C", "user.foo.A.B");
+    CU_ASSERT_STRING_EQUAL("user.foo.A", ancestor);
+    free(ancestor);
+
+    ancestor = mboxname_common_ancestor("user.foo.A.B.C", "user.foo.A.X.Y");
+    CU_ASSERT_STRING_EQUAL("user.foo.A", ancestor);
+    free(ancestor);
+
+    ancestor = mboxname_common_ancestor("user.foo.A.B.C", "user.bar.A.B");
+    CU_ASSERT_PTR_NULL(ancestor);
+
+    ancestor = mboxname_common_ancestor("user.foo.A.B.C", "user.bar.A.X.Y");
+    CU_ASSERT_PTR_NULL(ancestor);
+}
+
+
 
 static enum enum_value old_config_virtdomains;
 static union config_value old_config_unixhierarchysep;

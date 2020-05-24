@@ -95,7 +95,7 @@ more about the pertinent settings:
          The cyrusdb backend to use for quotas.
 
          Allowed values: *flat*, *skiplist*, *sql*, *quotalegacy*,
-         *twoskip*, *lmdb*
+         *twoskip*, *zeroskip*
 
       "quota_db_path:" <none>
 

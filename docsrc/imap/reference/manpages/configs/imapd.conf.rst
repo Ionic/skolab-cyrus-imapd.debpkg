@@ -5,9 +5,9 @@
 
 .. _imap-reference-manpages-configs-imapd.conf:
 
-==========
-imapd.conf
-==========
+==============
+**imapd.conf**
+==============
 
 
 
@@ -54,6 +54,15 @@ DESCRIPTION
     For boolean and enumerated options, the values \`\`yes'', \`\`on'', \`\`t'',
     \`\`true'' and \`\`\ 1'' turn the option on, the values \`\`no'', \`\`off'',
     \`\`f'', \`\`false'' and \`\`\ 0'' turn the option off.
+
+    Duration options take the form of a number followed by a unit, for example
+    **\ 32m** (32 minutes).  Units are **d** (days), **h** (hours), **m**
+    (minutes) and **s** (seconds).  Multiple units can be combined and will
+    be summed together, for example **\ 1h30m** is equivalent to **\ 90m**.  If
+    no unit is specified, an option-specific backward-compatible default unit
+    is assumed (documented on an option-by-option basis).  These are simple time
+    units: 1d=24h, 1h=60m, 1m=60s (daylight savings, timezones, leap adjustments,
+    etc are not considered).
 
 FIELD DESCRIPTIONS
 ==================
@@ -149,6 +158,15 @@ FIELD DESCRIPTIONS
 
     .. endblob allowapop
 
+    .. startblob allowdeleted
+
+    ``allowdeleted:`` 0
+
+        Allow access to deleted and expunged data via vendor.cmu-\* access 
+
+
+    .. endblob allowdeleted
+
     .. startblob allownewnews
 
     ``allownewnews:`` 0
@@ -173,6 +191,15 @@ FIELD DESCRIPTIONS
         authentication, see the *tls_required* option. 
 
     .. endblob allowplaintext
+
+    .. startblob allowsetacl
+
+    ``allowsetacl:`` 1
+
+        Defaults to enabled.  If disabled, disallows the use of the SETACL
+        command at all via IMAP. 
+
+    .. endblob allowsetacl
 
     .. startblob allowusermoves
 
@@ -219,7 +246,7 @@ FIELD DESCRIPTIONS
 
         The cyrusdb backend to use for mailbox annotations. 
 
-        Allowed values: *skiplist*, *twoskip*, *lmdb*
+        Allowed values: *skiplist*, *twoskip*, *zeroskip*
 
 
     .. endblob annotation_db
@@ -336,6 +363,26 @@ FIELD DESCRIPTIONS
 
     .. endblob annotation_callout
 
+    .. startblob annotation_callout_disable_append
+
+    ``annotation_callout_disable_append:`` 0
+
+        Disables annotations on append with xrunannotator 
+
+
+    .. endblob annotation_callout_disable_append
+
+    .. startblob annotation_enable_legacy_commands
+
+    ``annotation_enable_legacy_commands:`` 0
+
+        Whether to enable the legacy GETANNOTATION/SETANNOTATION commands.
+        These commands are deprecated and will be removed in the future,
+        but might be useful in the meantime for supporting old clients that
+        do not implement the :rfc:`5464` IMAP METADATA extension. 
+
+    .. endblob annotation_enable_legacy_commands
+
     .. startblob aps_topic
 
     ``aps_topic:`` <none>
@@ -376,12 +423,24 @@ FIELD DESCRIPTIONS
 
     .. startblob archive_days
 
-    ``archive_days:`` 7
+    ``archive_days:`` <none>
 
-        The number of days after which to move messages to the archive partition
-        if archiving is enabled 
+        Deprecated in favour of *archive_after*. 
+
 
     .. endblob archive_days
+
+    .. startblob archive_after
+
+    ``archive_after:`` 7d
+
+        The duration after which to move messages to the archive partition
+        if archiving is enabled.
+
+        For backward compatibility, if no unit is specified, days is
+        assumed.  
+
+    .. endblob archive_after
 
     .. startblob archive_maxsize
 
@@ -516,6 +575,25 @@ FIELD DESCRIPTIONS
 
 
     .. endblob autosubscribe_all_sharedfolders
+
+    .. startblob autocreate_acl
+
+    ``autocreate_acl:`` <none>
+
+        If folders are to be created by *autocreate_inbox_folders\R, this
+        setting can be used to apply additional ACLs to the autocreated
+        folders.  The syntax is "autocreate_acl folder identifier rights",
+        where *\ *folder* must match one of the *autocreate_inbox_folders*
+        folders, *identifier* must be a valid cyrus identifier, and
+        *rights* must be a valid cyrus rights string.  Multiple
+        identifier|rights pairs can be assigned to a single folder by providing
+        this setting multiple times.
+
+        For example, "autocreate_acl Plus anyone p" would allow lmtp delivery
+        to a folder named "Plus".
+
+
+    .. endblob autocreate_acl
 
     .. startblob autocreate_inbox_folders
 
@@ -676,6 +754,15 @@ FIELD DESCRIPTIONS
 
     .. endblob autocreate_users
 
+    .. startblob autoexpunge
+
+    ``autoexpunge:`` 0
+
+        If set to yes, then all \Deleted messages will be automatically expunged whenever
+        an index is closed, whether CLOSE, UNSELECT, SELECT or on disconnect 
+
+    .. endblob autoexpunge
+
     .. startblob backuppartition-name
 
     ``backuppartition-name:`` <none>
@@ -729,13 +816,25 @@ FIELD DESCRIPTIONS
 
     .. startblob backup_retention_days
 
-    ``backup_retention_days:`` 7
+    ``backup_retention_days:`` <none>
 
-        The number of days to keep content in backup after it has been deleted
-        from the source.  If set to a negative value or zero, deleted content
-        will be kept indefinitely. 
+        Deprecated in favor of *backup_retention*. 
+
 
     .. endblob backup_retention_days
+
+    .. startblob backup_retention
+
+    ``backup_retention:`` 7d
+
+        How long to keep content in backup after it has been deleted
+        from the source.  If set to a negative value or zero, deleted content
+        will be kept indefinitely.
+
+        For backward compatibility, if no unit is specified, days is
+        assumed.  
+
+    .. endblob backup_retention
 
     .. startblob backup_db
 
@@ -743,7 +842,7 @@ FIELD DESCRIPTIONS
 
         The cyrusdb backend to use for the backup locations database. 
 
-        Allowed values: *skiplist*, *sql*, *twoskip*, *lmdb*
+        Allowed values: *skiplist*, *sql*, *twoskip*, *zeroskip*
 
 
     .. endblob backup_db
@@ -787,10 +886,19 @@ FIELD DESCRIPTIONS
 
     ``caldav_allowattach:`` 1
 
-        Enable managed attachments support on the caldav server. 
+        Enable managed attachments support on the CalDAV server. 
 
 
     .. endblob caldav_allowattach
+
+    .. startblob caldav_allowcalendaradmin
+
+    ``caldav_allowcalendaradmin:`` 0
+
+        Enable per-user calendar administration web UI on the CalDAV server. 
+
+
+    .. endblob caldav_allowcalendaradmin
 
     .. startblob caldav_allowscheduling
 
@@ -808,7 +916,7 @@ FIELD DESCRIPTIONS
 
     ``caldav_create_attach:`` 1
 
-        Create the 'Attachments' calendar if it doesn't already exist 
+        Create the 'Attachments' collection if it doesn't already exist 
 
 
     .. endblob caldav_create_attach
@@ -830,6 +938,21 @@ FIELD DESCRIPTIONS
 
 
     .. endblob caldav_create_sched
+
+    .. startblob caldav_historical_age
+
+    ``caldav_historical_age:`` 7d
+
+        How long after an occurrence of event or task has concluded
+        that it is considered 'historical'.  Changes to historical
+        occurrences of events or tasks WILL NOT have invite or reply
+        messages sent for them.  A negative value means that events
+        and tasks are NEVER considered historical.
+
+        For backward compatibility, if no unit is specified, days is
+        assumed.  
+
+    .. endblob caldav_historical_age
 
     .. startblob caldav_maxdatetime
 
@@ -885,6 +1008,38 @@ FIELD DESCRIPTIONS
 
     .. endblob calendar_user_address_set
 
+    .. startblob calendar_component_set
+
+    ``calendar_component_set:`` VEVENT VTODO VJOURNAL VFREEBUSY VAVAILABILITY VPOLL
+
+        Space-separated list of iCalendar component types that calendar
+        object resources may contain in a calendar collection.
+        This restriction is only set at calendar creation time and only
+        if the CalDAV client hasn't specified a restriction in the creation
+        request. 
+        Allowed values: *VEVENT*, *VTODO*, *VJOURNAL*, *VFREEBUSY*, *VAVAILABILITY*, *VPOLL*
+
+
+    .. endblob calendar_component_set
+
+    .. startblob carddav_allowaddmember
+
+    ``carddav_allowaddmember:`` 0
+
+        Enable support for POST add-member on the CardDAV server. 
+
+
+    .. endblob carddav_allowaddmember
+
+    .. startblob carddav_allowaddressbookadmin
+
+    ``carddav_allowaddressbookadmin:`` 0
+
+        Enable per-user addressbook administration web UI on the CardDAV server. 
+
+
+    .. endblob carddav_allowaddressbookadmin
+
     .. startblob carddav_realm
 
     ``carddav_realm:`` <none>
@@ -939,10 +1094,13 @@ FIELD DESCRIPTIONS
 
     .. startblob client_timeout
 
-    ``client_timeout:`` 10
+    ``client_timeout:`` 10s
 
-        Number of seconds to wait before returning a timeout failure when
-        performing a client connection (e.g., in a murder environment) 
+        Time to wait before returning a timeout failure when performing a
+        client connection (e.g. in a murder environment).
+
+        For backward compatibility, if no unit is specified, seconds is
+        assumed.  
 
     .. endblob client_timeout
 
@@ -1000,20 +1158,41 @@ FIELD DESCRIPTIONS
 
         The cyrusdb backend to use for the per-user conversations database. 
 
-        Allowed values: *skiplist*, *sql*, *twoskip*, *lmdb*
+        Allowed values: *skiplist*, *sql*, *twoskip*, *zeroskip*
 
 
     .. endblob conversations_db
 
     .. startblob conversations_expire_days
 
-    ``conversations_expire_days:`` 90
+    ``conversations_expire_days:`` <none>
+
+        Deprecated in favor of *conversations_expire_after*. 
+
+
+    .. endblob conversations_expire_days
+
+    .. startblob conversations_expire_after
+
+    ``conversations_expire_after:`` 90d
 
         How long the conversations database keeps the message tracking
         information needed for receiving new messages in existing
-        conversations, in days. 
+        conversations.
 
-    .. endblob conversations_expire_days
+        For backward compatibility, if no unit is specified, days is
+        assumed. 
+
+    .. endblob conversations_expire_after
+
+    .. startblob conversations_max_thread
+
+    ``conversations_max_thread:`` 100
+
+        maximum size for a single thread.  Threads will split if they have this many
+        \* messages in them and another message arrives 
+
+    .. endblob conversations_max_thread
 
     .. startblob crossdomains
 
@@ -1085,14 +1264,28 @@ FIELD DESCRIPTIONS
 
     .. endblob dav_realm
 
+    .. startblob dav_lock_timeout
+
+    ``dav_lock_timeout:`` 20s
+
+        The maximum time to wait for a write lock on the per-user DAV database
+        before timeout. For HTTP requests, the HTTP status code 503 is returned
+        if the lock can not be obtained within this time.
+
+        For backward compatibility, if no unit is specified, seconds is
+        assumed. 
+
+    .. endblob dav_lock_timeout
+
     .. startblob debug_command
 
     ``debug_command:`` <none>
 
         Debug command to be used by processes started with -D option.  The string
         is a C format string that gets 3 options: the first is the name of the
-        executable (without path).  The second is the pid (integer) and the third
-        is the service ID.  Example: /usr/local/bin/gdb /usr/cyrus/bin/%s %d 
+        executable (as specified in the cmd parameter in cyrus.conf). The second
+        is the pid (integer) and the third is the service ID.
+        Example: /usr/local/bin/gdb /usr/cyrus/bin/%s %d 
 
     .. endblob debug_command
 
@@ -1253,6 +1446,15 @@ FIELD DESCRIPTIONS
 
     .. endblob ischedule_dkim_key_file
 
+    .. startblob ischedule_dkim_required
+
+    ``ischedule_dkim_required:`` 1
+
+        A DKIM signature is required on received iSchedule requests. 
+
+
+    .. endblob ischedule_dkim_required
+
     .. startblob ischedule_dkim_selector
 
     ``ischedule_dkim_selector:`` <none>
@@ -1269,7 +1471,7 @@ FIELD DESCRIPTIONS
 
         The cyrusdb backend to use for the duplicate delivery suppression
         and sieve. 
-        Allowed values: *skiplist*, *sql*, *twoskip*, *lmdb*
+        Allowed values: *skiplist*, *sql*, *twoskip*, *zeroskip*
 
 
     .. endblob duplicate_db
@@ -1343,7 +1545,7 @@ FIELD DESCRIPTIONS
 
         Space-separated list of extra parameters to add to any appropriated event. 
 
-        Allowed values: *bodyStructure*, *clientAddress*, *diskUsed*, *flagNames*, *messageContent*, *messageSize*, *messages*, *modseq*, *service*, *timestamp*, *uidnext*, *vnd.cmu.midset*, *vnd.cmu.unseenMessages*, *vnd.cmu.envelope*, *vnd.cmu.sessionId*, *vnd.cmu.mailboxACL*, *vnd.cmu.mbtype*, *vnd.cmu.davFilename*, *vnd.cmu.davUid*, *vnd.fastmail.clientId*, *vnd.fastmail.sessionId*, *vnd.fastmail.convExists*, *vnd.fastmail.convUnseen*, *vnd.fastmail.cid*, *vnd.fastmail.counters*
+        Allowed values: *bodyStructure*, *clientAddress*, *diskUsed*, *flagNames*, *messageContent*, *messageSize*, *messages*, *modseq*, *service*, *timestamp*, *uidnext*, *vnd.cmu.midset*, *vnd.cmu.unseenMessages*, *vnd.cmu.envelope*, *vnd.cmu.sessionId*, *vnd.cmu.mailboxACL*, *vnd.cmu.mbtype*, *vnd.cmu.davFilename*, *vnd.cmu.davUid*, *vnd.fastmail.clientId*, *vnd.fastmail.sessionId*, *vnd.fastmail.convExists*, *vnd.fastmail.convUnseen*, *vnd.fastmail.cid*, *vnd.fastmail.counters*, *vnd.cmu.emailid*, *vnd.cmu.threadid*
 
 
     .. endblob event_extra_params
@@ -1373,32 +1575,33 @@ FIELD DESCRIPTIONS
     ``expunge_mode:`` delayed
 
         The mode in which messages (and their corresponding cache entries)
-        are expunged.  "default" mode is the old behavior in which the
+        are expunged.  "semidelayed" mode is the old behavior in which the
         message files are purged at the time of the EXPUNGE, but index
-        and cache records are retained to facilitate QRESYNC.  (Note that
-        this behaviour is no longer the default, but is so named for historical
-        reasons.)  In "delayed" mode, which is the default since Cyrus 2.5.0,
+        and cache records are retained to facilitate QRESYNC.
+        In "delayed" mode, which is the default since Cyrus 2.5.0,
         the message files are also retained, allowing unexpunge to
         rescue them.  In "immediate" mode, both the message files and the
         index records are removed as soon as possible.  In all cases,
         nothing will be finally purged until all other processes have
         closed the mailbox to ensure they never see data disappear under
-        them.  In "default" or "delayed" mode, a later run of "cyr_expire"
+        them.  In "semidelayed" or "delayed" mode, a later run of "cyr_expire"
         will clean out the retained records (and possibly message files).
         This reduces the amount of I/O that takes place at the time of
         EXPUNGE and should result in greater responsiveness for the client,
         especially when expunging a large number of messages. 
-        Allowed values: *default*, *immediate*, *delayed*
+        Allowed values: *immediate*, *semidelayed*, *delayed*
 
 
     .. endblob expunge_mode
 
     .. startblob failedloginpause
 
-    ``failedloginpause:`` 3
+    ``failedloginpause:`` 3s
 
-        Number of seconds to pause after a failed login. 
+        Time to pause after a failed login.
 
+        For backward compatibility, if no unit is specified, seconds is
+        assumed. 
 
     .. endblob failedloginpause
 
@@ -1562,14 +1765,17 @@ FIELD DESCRIPTIONS
 
     .. startblob httpkeepalive
 
-    ``httpkeepalive:`` 20
+    ``httpkeepalive:`` 20s
 
-        Set the length of the HTTP server's keepalive heartbeat in seconds.
-        The default is 20.  The minimum value is 0, which will disable the
-        keepalive heartbeat.  When enabled, if a request takes longer than
-        *httpkeepalive* seconds to process, the server will send the client
-        provisional responses every *httpkeepalive* seconds until the
-        final response can be sent 
+        Set the length of the HTTP server's keepalive heartbeat.  The
+        default is 20 seconds.  The minimum value is 0, which will disable
+        the keepalive heartbeat.  When enabled, if a request takes longer
+        than *httpkeepalive* to process, the server will send the client
+        provisional responses every *httpkeepalive* until the final
+        response can be sent.
+
+        For backward compatibility, if no unit is specified, seconds is
+        assumed. 
 
     .. endblob httpkeepalive
 
@@ -1584,7 +1790,7 @@ FIELD DESCRIPTIONS
         Note that "domainkey" depends on "ischedule" being enabled, and
         that both "freebusy" and "ischedule" depend on "caldav" being
         enabled. 
-        Allowed values: *admin*, *caldav*, *carddav*, *domainkey*, *freebusy*, *ischedule*, *rss*, *tzdist*, *webdav*
+        Allowed values: *admin*, *caldav*, *carddav*, *cgi*, *domainkey*, *freebusy*, *ischedule*, *jmap*, *prometheus*, *rss*, *tzdist*, *webdav*
 
 
     .. endblob httpmodules
@@ -1603,11 +1809,14 @@ FIELD DESCRIPTIONS
 
     .. startblob httptimeout
 
-    ``httptimeout:`` 5
+    ``httptimeout:`` 5m
 
-        Set the length of the HTTP server's inactivity autologout timer,
-        in minutes.  The default is 5.  The minimum value is 0, which will
-        disable persistent connections. 
+        Set the length of the HTTP server's inactivity autologout timer.
+        The default is 5 minutes.  The minimum value is 0, which will
+        disable persistent connections.
+
+        For backwards compatibility, if no unit is specified, minutes
+        is assumed. 
 
     .. endblob httptimeout
 
@@ -1631,12 +1840,15 @@ FIELD DESCRIPTIONS
 
     .. startblob imapidlepoll
 
-    ``imapidlepoll:`` 60
+    ``imapidlepoll:`` 60s
 
-        The interval (in seconds) for polling for mailbox changes and
-        ALERTs while running the IDLE command.  This option is used when
-        idled is not enabled or cannot be contacted.  The minimum value is
-        1.  A value of 0 will disable IDLE. 
+        The interval for polling for mailbox changes and ALERTs while running
+        the IDLE command.  This option is used when idled is not enabled or
+        cannot be contacted.  The minimum value is 1 second.  A value of 0
+        will disable IDLE.
+
+        For backward compatibility, if no unit is specified, seconds is
+        assumed. 
 
     .. endblob imapidlepoll
 
@@ -1672,7 +1884,7 @@ FIELD DESCRIPTIONS
 
     .. startblob implicit_owner_rights
 
-    ``implicit_owner_rights:`` lkxa
+    ``implicit_owner_rights:`` lkxan
 
         The implicit Access Control List (ACL) for the owner of a mailbox. 
 
@@ -1705,18 +1917,235 @@ FIELD DESCRIPTIONS
 
     .. endblob improved_mboxlist_sort
 
-    .. startblob internaldate_heuristic
+    .. startblob jmap_emailsearch_db_path
 
-    ``internaldate_heuristic:`` standard
+    ``jmap_emailsearch_db_path:`` <none>
 
-        Mechanism to determine email internaldates on delivery/reconstruct.
-        "standard" uses time() when delivering a message, mtime on reconstruct.
-        "receivedheader" looks at the top most Received header
-        or time/mtime otherwise 
-        Allowed values: *standard*, *receivedheader*
+        The absolute path to the JMAP email search cache file.  If not
+        specified, JMAP Email/query and Email/queryChanges will not
+        cache email search results. 
+
+    .. endblob jmap_emailsearch_db_path
+
+    .. startblob jmap_preview_annot
+
+    ``jmap_preview_annot:`` <none>
+
+        The name of the per-message annotation, if any, to store message
+        previews. 
+
+    .. endblob jmap_preview_annot
+
+    .. startblob jmap_imagesize_annot
+
+    ``jmap_imagesize_annot:`` <none>
+
+        The name of the per-message annotation, if any, that stores a
+        JSON object, mapping message part numbers of MIME image types
+        to an array of their image dimensions. The array must have at
+        least two entries, where the first entry denotes the width
+        and the second entry the height of the image. Any additional
+        values are ignored.
+
+        For example, if message part 1.2 contains an image of width 300
+        and height 200, then the value of this annotation would be:
+
+        { "1.2" : [ 300, 200 ] }
 
 
-    .. endblob internaldate_heuristic
+    .. endblob jmap_imagesize_annot
+
+    .. startblob jmap_inlinedcids_annot
+
+    ``jmap_inlinedcids_annot:`` <none>
+
+        The name of the per-message annotation, if any, that stores a
+        JSON object, mapping :rfc:`2392` Content-IDs referenced in HTML bodies
+        to the respective HTML body part number.
+
+        For example, if message part 1.2 contains HTML and references an
+        inlined image at "cid:foo", then the value of this annotation
+        would be:
+
+        { "<foo>" : "1.2" }
+
+        Note that the Content-ID key must be URL-unescaped and enclosed in
+        angular brackets, as defined in :rfc:`2392`. 
+
+    .. endblob jmap_inlinedcids_annot
+
+    .. startblob jmap_preview_length
+
+    ``jmap_preview_length:`` 64
+
+        The maximum byte length of dynamically generated message previews. Previews
+        stored in jmap_preview_annot take precedence. 
+
+    .. endblob jmap_preview_length
+
+    .. startblob jmap_max_size_upload
+
+    ``jmap_max_size_upload:`` 1048576
+
+        The maximum size (in kilobytes) that the JMAP API accepts
+        for blob uploads. Returned as the maxSizeUpload property
+        value of the JMAP \"urn:ietf:params:jmap:core\" capabilities object.
+        Default is 1Gb. 
+
+    .. endblob jmap_max_size_upload
+
+    .. startblob jmap_max_concurrent_upload
+
+    ``jmap_max_concurrent_upload:`` 5
+
+        The value to return for the maxConcurrentUpload property of
+        the JMAP \"urn:ietf:params:jmap:core\" capabilities object. The Cyrus JMAP
+        implementation does not enforce this rate-limit. 
+
+    .. endblob jmap_max_concurrent_upload
+
+    .. startblob jmap_max_size_request
+
+    ``jmap_max_size_request:`` 10240
+
+        The maximum size (in kilobytes) that the JMAP API accepts
+        for requests at the API endpoint. Returned as the
+        maxSizeRequest property value of the JMAP \"urn:ietf:params:jmap:core\"
+        capabilities object. Default is 10Mb. 
+
+    .. endblob jmap_max_size_request
+
+    .. startblob jmap_max_concurrent_requests
+
+    ``jmap_max_concurrent_requests:`` 5
+
+        The value to return for the maxConcurrentRequests property of
+        the JMAP \"urn:ietf:params:jmap:core\" capabilities object. The Cyrus JMAP
+        implementation does not enforce this rate-limit. 
+
+    .. endblob jmap_max_concurrent_requests
+
+    .. startblob jmap_max_calls_in_request
+
+    ``jmap_max_calls_in_request:`` 50
+
+        The maximum number of calls per JMAP request object.
+        Returned as the maxCallsInRequest property value of the
+        JMAP \"urn:ietf:params:jmap:core\" capabilities object. 
+
+    .. endblob jmap_max_calls_in_request
+
+    .. startblob jmap_max_delayed_send
+
+    ``jmap_max_delayed_send:`` 512d
+
+        The value to return for the maxDelayedSend property of
+        the JMAP \"urn:ietf:params:jmap:emailsubmission\" capabilities object.
+        The Cyrus JMAP implementation does not enforce this limit.
+
+        For backward compatibility, if no unit is specified, seconds is
+        assumed. 
+
+    .. endblob jmap_max_delayed_send
+
+    .. startblob jmap_max_objects_in_get
+
+    ``jmap_max_objects_in_get:`` 4096
+
+        The maximum number of ids that a JMAP client may request in
+        a single \"/get\" type method call. The actual number
+        of returned objects in the response may exceed this number
+        if the JMAP object type supports unbounded \"/get\" calls.
+        Returned as the maxObjectsInGet property value of the
+        JMAP \"urn:ietf:params:jmap:core\" capabilities object. 
+
+    .. endblob jmap_max_objects_in_get
+
+    .. startblob jmap_max_objects_in_set
+
+    ``jmap_max_objects_in_set:`` 4096
+
+        The maximum number of objects a JMAP client may send to create,
+        update or destroy in a single /set type method call.
+        Returned as the maxObjectsInSet property value of the
+        JMAP \"urn:ietf:params:jmap:core\" capabilities object. 
+
+    .. endblob jmap_max_objects_in_set
+
+    .. startblob jmap_mail_max_size_attachments_per_email
+
+    ``jmap_mail_max_size_attachments_per_email:`` 10240
+
+        The value (in kilobytes) to return for the maxSizeAttachmentsPerEmail
+        property of the JMAP \"urn:ietf:params:jmap:mail\" capabilities object. The Cyrus
+        JMAP implementation does not enforce this size limit. Default is 10 Mb.
+
+    .. endblob jmap_mail_max_size_attachments_per_email
+
+    .. startblob jmap_nonstandard_extensions
+
+    ``jmap_nonstandard_extensions:`` 0
+
+        If enabled, support non-standard JMAP extensions.  If not enabled,
+        only IETF standard JMAP functionality is supported. 
+
+    .. endblob jmap_nonstandard_extensions
+
+    .. startblob jmap_set_has_attachment
+
+    ``jmap_set_has_attachment:`` 1
+
+        If enabled, the $hasAttachment flag is determined and set for new messages
+        created with the JMAP Email/set or Email/import methods. This option should
+        typically be enabled, but installations using Cyrus-external message
+        annatotors to determine the $hasAttachment flag might want to disable it. 
+
+    .. endblob jmap_set_has_attachment
+
+    .. startblob jmap_vacation
+
+    ``jmap_vacation:`` 1
+
+        If enabled, support the JMAP vacation extension 
+
+
+    .. endblob jmap_vacation
+
+    .. startblob jmapuploadfolder
+
+    ``jmapuploadfolder:`` #jmap
+
+        the name of the folder for JMAP uploads (#jmap) 
+
+
+    .. endblob jmapuploadfolder
+
+    .. startblob jmapsubmission_deleteonsend
+
+    ``jmapsubmission_deleteonsend:`` 1
+
+        If enabled (the default) then delete the EmailSubmission as soon as the email
+        \* has been sent 
+
+    .. endblob jmapsubmission_deleteonsend
+
+    .. startblob jmapsubmissionfolder
+
+    ``jmapsubmissionfolder:`` #jmapsubmission
+
+        the name of the folder for JMAP Submissions (#jmapsubmission) 
+
+
+    .. endblob jmapsubmissionfolder
+
+    .. startblob jmappushsubscriptionfolder
+
+    ``jmappushsubscriptionfolder:`` #jmappushsubscription
+
+        the name of the folder for JMAP Push Subscriptions (#jmappushsubscription) 
+
+
+    .. endblob jmappushsubscriptionfolder
 
     .. startblob iolog
 
@@ -1823,7 +2252,9 @@ FIELD DESCRIPTIONS
         %u   = user
         %U   = user portion of %u (%U = test when %u = test@domain.tld)
         %d   = domain portion of %u if available (%d = domain.tld when %u =
-        %test@domain.tld), otherwise same as %r
+        test@domain.tld), otherwise same as %R
+        %R   = domain portion of %u starting with @ (%R = @domain.tld
+        when %u = test@domain.tld)
         %D   = user dn.  (use when ldap_member_method: filter)
         %1-9 = domain tokens (%1 = tld, %2 = domain when %d = domain.tld)
 
@@ -2069,19 +2500,23 @@ FIELD DESCRIPTIONS
 
     .. startblob ldap_time_limit
 
-    ``ldap_time_limit:`` 5
+    ``ldap_time_limit:`` 5s
 
-        Specify a number of seconds for a search request to complete. 
+        How long to wait for a search request to complete.
 
+        For backward compatibility, if no unit is specified, seconds is
+        assumed. 
 
     .. endblob ldap_time_limit
 
     .. startblob ldap_timeout
 
-    ``ldap_timeout:`` 5
+    ``ldap_timeout:`` 5s
 
-        Specify a number of seconds a search can take before timing out. 
+        How long a search can take before timing out.
 
+        For backward compatibility, if no unit is specified, seconds is
+        assumed. 
 
     .. endblob ldap_timeout
 
@@ -2230,6 +2665,19 @@ FIELD DESCRIPTIONS
 
     .. endblob lmtp_downcase_rcpt
 
+    .. startblob lmtp_exclude_specialuse
+
+    ``lmtp_exclude_specialuse:`` \\Snoozed
+
+        Don't allow delivery to folders with given special-use attributes.
+
+        Note that "snoozing" of emails can currently only be done via the
+        JMAP protocol, so delivery directly to the \Snoozed mailbox is
+        prohibited by default as it will not be moved back into INBOX
+        automatically. 
+
+    .. endblob lmtp_exclude_specialuse
+
     .. startblob lmtp_fuzzy_mailbox_match
 
     ``lmtp_fuzzy_mailbox_match:`` 0
@@ -2284,14 +2732,27 @@ FIELD DESCRIPTIONS
 
     .. startblob lmtptxn_timeout
 
-    ``lmtptxn_timeout:`` 300
+    ``lmtptxn_timeout:`` 5m
 
-        Timeout (in seconds) used during a lmtp transaction to a remote backend
-        (e.g. in a murder environment).  Can be used to prevent hung lmtpds
-        on proxy hosts when a backend server becomes unresponsive during a
-        lmtp transaction.  The default is 300 - change to zero for infinite. 
+        Timeout used during a lmtp transaction to a remote backend (e.g. in a
+        murder environment).  Can be used to prevent hung lmtpds on proxy hosts
+        when a backend server becomes unresponsive during a lmtp transaction.
+        The default is 5 minutes - change to zero for infinite.
+
+        For backward compatibility, if no unit is specified, seconds is
+        assumed. 
 
     .. endblob lmtptxn_timeout
+
+    .. startblob lock_debugtime
+
+    ``lock_debugtime:`` <none>
+
+        A floating point number of seconds.  If set, time how long we wait for
+        any lock, and syslog the filename and time if it's longer than this
+        value.  The default of NULL means not to time locks. 
+
+    .. endblob lock_debugtime
 
     .. startblob loginrealms
 
@@ -2352,6 +2813,21 @@ FIELD DESCRIPTIONS
         notifications are disabled. 
 
     .. endblob mailnotifier
+
+    .. startblob master_bind_errors_fatal
+
+    ``master_bind_errors_fatal:`` 0
+
+        If enabled, failure to bind a port during startup is treated as a fatal
+        error, causing master to shut down immediately.  The default is to keep
+        running, with the affected service disabled until the next SIGHUP causes
+        it to retry.
+
+        Note that this only applies during startup.  New services that fail to
+        come up in response to a reconfig+SIGHUP will just be logged and disabled
+        like the default behaviour, without causing master to exit. 
+
+    .. endblob master_bind_errors_fatal
 
     .. startblob maxheaderlines
 
@@ -2417,7 +2893,7 @@ FIELD DESCRIPTIONS
 
         The cyrusdb backend to use for mailbox keys. 
 
-        Allowed values: *skiplist*, *twoskip*, *lmdb*
+        Allowed values: *skiplist*, *twoskip*, *zeroskip*
 
 
     .. endblob mboxkey_db
@@ -2428,7 +2904,7 @@ FIELD DESCRIPTIONS
 
         The cyrusdb backend to use for the mailbox list. 
 
-        Allowed values: *flat*, *skiplist*, *sql*, *twoskip*, *lmdb*
+        Allowed values: *flat*, *skiplist*, *sql*, *twoskip*, *zeroskip*
 
 
     .. endblob mboxlist_db
@@ -2738,10 +3214,13 @@ FIELD DESCRIPTIONS
 
     .. startblob nntptimeout
 
-    ``nntptimeout:`` 3
+    ``nntptimeout:`` 3m
 
-        Set the length of the NNTP server's inactivity autologout timer,
-        in minutes.  The minimum value is 3, the default. 
+        Set the length of the NNTP server's inactivity autologout timer.
+        The minimum value is 3 minutes, also the default.
+
+        For backward compatibility, if no unit is specified, minutes is
+        assumed. 
 
     .. endblob nntptimeout
 
@@ -2797,15 +3276,6 @@ FIELD DESCRIPTIONS
         **partition-part1** field is required. 
 
     .. endblob partition-name
-
-    .. startblob outbox_sendlater
-
-    ``outbox_sendlater:`` 0
-
-        If enabled, any message with a \Draft flag will be sent at the time of its INTERNALDATE 
-
-
-    .. endblob outbox_sendlater
 
     .. startblob partition_select_mode
 
@@ -2871,12 +3341,15 @@ FIELD DESCRIPTIONS
 
     .. startblob plaintextloginpause
 
-    ``plaintextloginpause:`` 0
+    ``plaintextloginpause:`` <none>
 
-        Number of seconds to pause after a successful plaintext login.  For
-        systems that support strong authentication, this permits users to
-        perceive a cost of using plaintext passwords.  (This does not
-        affect the use of PLAIN in SASL authentications.) 
+        Time to pause after a successful plaintext login.  For systems that
+        support strong authentication, this permits users to perceive a cost
+        of using plaintext passwords.  (This does not affect the use of PLAIN
+        in SASL authentications.)
+
+        For backward compatibility, if no unit is specified, seconds is
+        assumed. 
 
     .. endblob plaintextloginpause
 
@@ -2893,23 +3366,31 @@ FIELD DESCRIPTIONS
 
     ``popexpiretime:`` -1
 
-        The number of days advertised as being the minimum a message may be
+        The duration advertised as being the minimum a message may be
         left on the POP server before it is deleted (via the CAPA command,
         defined in the POP3 Extension Mechanism, which some clients may
-        support).  "NEVER", the default, may be specified with a negative
-        number.  The Cyrus POP3 server never deletes mail, no matter what
-        the value of this parameter is.  However, if a site implements a
-        less liberal policy, it needs to change this parameter
-        accordingly. 
+        support).  This duration has a granularity of whole days, with partial
+        days truncated (so e.g. "45m" is effectively "0d").  "NEVER", the
+        default, may be specified with a negative number.
+
+        The Cyrus POP3 server never deletes mail, no matter what the value of
+        this parameter is.  However, if a site implements a less liberal policy,
+        it needs to change this parameter accordingly.
+
+        For backward compatibility, if no unit is specified, days is
+        assumed. 
 
     .. endblob popexpiretime
 
     .. startblob popminpoll
 
-    ``popminpoll:`` 0
+    ``popminpoll:`` <none>
 
         Set the minimum amount of time the server forces users to wait
-        between successive POP logins, in minutes. 
+        between successive POP logins.
+
+        For backward compatibility, if no unit is specified, minutes is
+        assumed. 
 
     .. endblob popminpoll
 
@@ -2945,10 +3426,13 @@ FIELD DESCRIPTIONS
 
     .. startblob poptimeout
 
-    ``poptimeout:`` 10
+    ``poptimeout:`` 10m
 
-        Set the length of the POP server's inactivity autologout timer,
-        in minutes.  The minimum value is 10, the default. 
+        Set the length of the POP server's inactivity autologout timer.
+        The minimum value is 10 minutes, the default.
+
+        For backward compatibility, if no unit is specified, minutes is
+        assumed. 
 
     .. endblob poptimeout
 
@@ -3006,6 +3490,49 @@ FIELD DESCRIPTIONS
         used. 
 
     .. endblob proc_path
+
+    .. startblob prometheus_enabled
+
+    ``prometheus_enabled:`` 0
+
+        Whether tracking of service metrics for Prometheus is enabled. 
+
+
+    .. endblob prometheus_enabled
+
+    .. startblob prometheus_need_auth
+
+    ``prometheus_need_auth:`` admin
+
+        Authentication level required to fetch Prometheus metrics. 
+
+        Allowed values: *none*, *user*, *admin*
+
+
+    .. endblob prometheus_need_auth
+
+    .. startblob prometheus_update_freq
+
+    ``prometheus_update_freq:`` 10s
+
+        Frequency in at which promstatsd should re-collate its statistics
+        report.  The minimum value is 1 second, the default is 10 seconds.
+
+        For backward compatibility, if no unit is specified, seconds is
+        assumed. 
+
+    .. endblob prometheus_update_freq
+
+    .. startblob prometheus_stats_dir
+
+    ``prometheus_stats_dir:`` <none>
+
+        Directory to use for gathering prometheus statistics.  If specified,
+        must be an absolute path.  If not specified, the default path
+        $configdirectory/stats/ will be used.  It may be advantageous to locate this
+        directory on ephemeral storage. 
+
+    .. endblob prometheus_stats_dir
 
     .. startblob proxy_authname
 
@@ -3107,7 +3634,7 @@ FIELD DESCRIPTIONS
 
         The cyrusdb backend to use for the pts cache. 
 
-        Allowed values: *skiplist*, *twoskip*, *lmdb*
+        Allowed values: *skiplist*, *twoskip*, *zeroskip*
 
 
     .. endblob ptscache_db
@@ -3123,10 +3650,13 @@ FIELD DESCRIPTIONS
 
     .. startblob ptscache_timeout
 
-    ``ptscache_timeout:`` 10800
+    ``ptscache_timeout:`` 3h
 
-        The timeout (in seconds) for the PTS cache database when using the
-        auth_krb_pts authorization method (default: 3 hours). 
+        The timeout for the PTS cache database when using the auth_krb_pts
+        authorization method (default: 3 hours).
+
+        For backward compatibility, if no unit is specified, seconds is
+        assumed. 
 
     .. endblob ptscache_timeout
 
@@ -3167,7 +3697,7 @@ FIELD DESCRIPTIONS
 
         The cyrusdb backend to use for quotas. 
 
-        Allowed values: *flat*, *skiplist*, *sql*, *quotalegacy*, *twoskip*, *lmdb*
+        Allowed values: *flat*, *skiplist*, *sql*, *quotalegacy*, *twoskip*, *zeroskip*
 
 
     .. endblob quota_db
@@ -3323,12 +3853,14 @@ FIELD DESCRIPTIONS
 
     .. startblob rss_maxage
 
-    ``rss_maxage:`` 0
+    ``rss_maxage:`` <none>
 
-        Maximum age (in days) of items to display in an RSS channel.  If
-        non-zero, httpd will only display items received within the last
-        *rss_maxage* days.  If set to 0, all available items will be
-        displayed (the default). 
+        Maximum age of items to display in an RSS channel.  If non-zero,
+        httpd will only display items received within this time period.
+        If set to 0, all available items will be displayed (the default).
+
+        For backward compatibility, if no unit is specified, days is
+        assumed. 
 
     .. endblob rss_maxage
 
@@ -3419,6 +3951,78 @@ FIELD DESCRIPTIONS
 
     .. endblob search_batchsize
 
+    .. startblob search_attachment_extractor_url
+
+    ``search_attachment_extractor_url:`` <none>
+
+        A HTTP or HTTPS URL to extract search text from rich text attachments
+        and other media during search indexing. The server at this URL must
+        implement the following protocol:
+
+        1. For each attachment of an email, Cyrus sends a GET request to the
+        URL <extractor-url>/<cyrus-id>, where <extractor-url> is the
+        configured URL and <cyrus-id> is a Cyrus-chosen path segment that
+        uniquely identifies this attachment.
+
+        2. If the extractor already has a cached plain text extract of the
+        attachment identified by <cyrus-id> then it may return HTTP status
+        code 200 (OK) and the plain text extract with a Content-Type
+        "text/plain" header. Otherwise it must return HTTP status 404 (Not Found).
+
+        3. If Cyrus receives the HTTP status code 404 (Not Found), then it sends
+        a PUT request to the same URL as previously. The PUT request body
+        contains the decoded, binary body of the attachment. The Content-Type
+        request header has the same value as declared in the MIME part
+        headers, including any type parameters.
+
+        4. The extractor must return the plain text extract with either HTTP status
+        200 (OK) or 201 (Created) and a Content-Type "text/plain" header.
+        If no text can be extracted, then the extractor may return any return code
+        in the range 4xx, or 200 and an empty response body.
+
+        Any other HTTP status code is treated as an error. For performance
+        reasons, the Cyrus indexer attempts to keep-alive the TCP connection
+        to the extractor. 
+
+    .. endblob search_attachment_extractor_url
+
+    .. startblob search_index_language
+
+    ``search_index_language:`` 0
+
+
+        If enabled, then message bodies and subjects are indexed by their
+        detected language, if the cld2 dependency is built into Cyrus.
+        Regardless of this flag, bodies and subjects are always indexed and
+        searched using the default stemmer.
+
+
+    .. endblob search_index_language
+
+    .. startblob search_index_parts
+
+    ``search_index_parts:`` 0
+
+
+        If enabled, then message parts are each indexed separately into Xapian
+        so that matches can be done by part.
+
+
+    .. endblob search_index_parts
+
+    .. startblob search_query_language
+
+    ``search_query_language:`` 0
+
+
+        If enabled, then message bodies and subjects searched by their language
+        that got detected during indexing, if any.
+        Regardless of this flag, bodies and subjects are always searched using
+        the default stemmer.
+
+
+    .. endblob search_query_language
+
     .. startblob search_normalisation_max
 
     ``search_normalisation_max:`` 1000
@@ -3436,7 +4040,7 @@ FIELD DESCRIPTIONS
 
         The indexing engine used to speed up searching.  
 
-        Allowed values: *none*, *squat*, *sphinx*, *xapian*
+        Allowed values: *none*, *squat*, *xapian*
 
 
     .. endblob search_engine
@@ -3469,9 +4073,9 @@ FIELD DESCRIPTIONS
 
     ``search_indexed_db:`` twoskip
 
-        The cyrusdb backend to use for the search latest indexed uid state. 
+        The cyrusdb backend to use for the search latest indexed uid state.  Xapian only. 
 
-        Allowed values: *flat*, *skiplist*, *twoskip*, *lmdb*
+        Allowed values: *flat*, *skiplist*, *twoskip*, *zeroskip*
 
 
     .. endblob search_indexed_db
@@ -3484,6 +4088,16 @@ FIELD DESCRIPTIONS
         of no value means search "forever" until other timeouts. 
 
     .. endblob search_maxtime
+
+    .. startblob search_queryscan
+
+    ``search_queryscan:`` 5000
+
+        The minimum number of records require to do a direct scan of all G keys
+        \* rather than indexed lookups.  A value of 0 means always do indexed lookups.
+
+
+    .. endblob search_queryscan
 
     .. startblob search_skipdiacrit
 
@@ -3538,7 +4152,7 @@ FIELD DESCRIPTIONS
 
         The absolute base path to the search stopword lists. If not specified,
         no stopwords will be taken into account during search indexing. Currently,
-        the only supported and default stop word file is english.list. 
+        the only supported and default stop word file is english.txt. 
 
     .. endblob search_stopword_path
 
@@ -3566,7 +4180,7 @@ FIELD DESCRIPTIONS
 
         The cyrusdb backend to use for the seen state. 
 
-        Allowed values: *flat*, *skiplist*, *twoskip*, *lmdb*
+        Allowed values: *flat*, *skiplist*, *twoskip*, *zeroskip*
 
 
     .. endblob seenstate_db
@@ -3579,6 +4193,17 @@ FIELD DESCRIPTIONS
         for sending rejections, redirects and vacation responses. 
 
     .. endblob sendmail
+
+    .. startblob sendmail_auth_id
+
+    ``sendmail_auth_id:`` CYRUS_SENDMAIL_AUTH_ID
+
+        The name of an environment variable to set when invoking sendmail.
+        The value of this environment variable will contain the user id
+        of the currently authenticated user. If no user is authenticated
+        the environment variable is not set. 
+
+    .. endblob sendmail_auth_id
 
     .. startblob serverlist
 
@@ -3695,9 +4320,20 @@ FIELD DESCRIPTIONS
 
     .. endblob sieve_allowreferrals
 
+    .. startblob sieve_duplicate_max_expiration
+
+    ``sieve_duplicate_max_expiration:`` 90d
+
+        Maximum expiration time for duplicate message tracking records.
+
+        For backward compatibility, if no unit is specified, seconds is
+        assumed. 
+
+    .. endblob sieve_duplicate_max_expiration
+
     .. startblob sieve_extensions
 
-    ``sieve_extensions:`` fileinto reject vacation vacation-seconds imapflags notify envelope relational regex subaddress copy date index imap4flags mailbox mboxmetadata servermetadata variables
+    ``sieve_extensions:`` fileinto reject vacation vacation-seconds imapflags notify include envelope environment body relational regex subaddress copy date index imap4flags mailbox mboxmetadata servermetadata variables editheader extlists duplicate ihave fcc special-use redirect-dsn redirect-deliverby mailboxid x-cyrus-log x-cyrus-jmapquery x-cyrus-snooze
 
         Space-separated list of Sieve extensions allowed to be used in
         sieve scripts, enforced at submission by timsieved(8).  Any
@@ -3705,7 +4341,7 @@ FIELD DESCRIPTIONS
         will continue to execute regardless of the extensions used.  This
         option has no effect on options that are disabled at compile time
         (e.g., "regex"). 
-        Allowed values: *fileinto*, *reject*, *vacation*, *vacation-seconds*, *imapflags*, *notify*, *include*, *envelope*, *body*, *relational*, *regex*, *subaddress*, *copy*, *date*, *index*, *imap4flags*, *mailbox*, *mboxmetadata*, *servermetadata*, *variables*
+        Allowed values: *fileinto*, *reject*, *vacation*, *vacation-seconds*, *imapflags*, *notify*, *include*, *envelope*, *environment*, *body*, *relational*, *regex*, *subaddress*, *copy*, *date*, *index*, *imap4flags*, *mailbox*, *mboxmetadata*, *servermetadata*, *variables*, *editheader*, *extlists*, *duplicate*, *ihave*, *fcc*, *special-use*, *redirect-dsn*, *redirect-deliverby*, *mailboxid*, *x-cyrus-log*, *x-cyrus-jmapquery*, *x-cyrus-snooze*
 
 
     .. endblob sieve_extensions
@@ -3747,21 +4383,37 @@ FIELD DESCRIPTIONS
 
     .. endblob sieve_sasl_send_unsolicited_capability
 
+    .. startblob sieve_use_lmtp_reject
+
+    ``sieve_use_lmtp_reject:`` 1
+
+        Enabled by default.  If reject can be done via LMTP, then return a 550
+        rather than generating the bounce message in Cyrus. 
+
+    .. endblob sieve_use_lmtp_reject
+
     .. startblob sieve_vacation_min_response
 
-    ``sieve_vacation_min_response:`` 259200 /\* 3 days \*/
+    ``sieve_vacation_min_response:`` 3d
 
-        Minimum time interval (in seconds) between consecutive vacation responses,
-        per draft-ietf-vacation-seconds.txt . 
+        Minimum time interval between consecutive vacation responses, per
+        draft-ietf-vacation-seconds.txt.  The default is 3 days.
+
+        For backward compatibility, if no unit is specified, seconds is
+        assumed. 
 
     .. endblob sieve_vacation_min_response
 
     .. startblob sieve_vacation_max_response
 
-    ``sieve_vacation_max_response:`` 7776000 /\* 90 days \*/
+    ``sieve_vacation_max_response:`` 90d
 
-        Maximum time interval (in seconds) between consecutive vacation responses,
-        per draft-ietf-vacation-seconds.txt . 
+        Maximum time interval between consecutive vacation responses, per
+        draft-ietf-vacation-seconds.txt.  The default is 90 days.  The
+        minimum is 7 days.
+
+        For backward compatibility, if no unit is specified, seconds is
+        assumed. 
 
     .. endblob sieve_vacation_max_response
 
@@ -3833,6 +4485,81 @@ FIELD DESCRIPTIONS
 
     .. endblob skiplist_unsafe
 
+    .. startblob smtp_backend
+
+    ``smtp_backend:`` sendmail
+
+        The SMTP backend to use for sending email.
+
+        The \"host\" backend sends message submissions via
+        a TCP socket to the SMTP host defined in the config
+        option smtp_host.
+
+        The \"sendmail\" backend forks the Cyrus process into
+        the executable defined in the config option sendmail.
+        The executable must accept \"-bs\" as command line
+        argument, read from stdin and must implement the minimum
+        SMTP protocol as defined in section 4.5.1 of :rfc:`5321`.
+
+        If the SMTP EHLO command reports AUTH (:rfc:`4954`) as a
+        supported extension, then the MAIL FROM command includes
+        the AUTH parameter, with its value set to the name of any
+        authenticated user which triggered the email. The AUTH
+        parameter is omitted if the user is unknown to the calling
+        process.
+
+        If the directory
+        *configdirectory*/log/smtpclient.\ *smtp_backend*
+        exists, then telemetry logs for outgoing SMTP sessions will
+        be created in this directory.
+
+        Allowed values: *host*, *sendmail*
+
+
+    .. endblob smtp_backend
+
+    .. startblob smtp_host
+
+    ``smtp_host:`` localhost:587
+
+        The SMTP host to use for sending mail (also see the
+        smtp_backend option). The value of this option must
+        the name or IP address of a TCP host, followed optionally
+        by a colon and the port or service to use. The default
+        port is 587. TLS may be activated by appending \"/tls\"
+        to the value. Authentication is enabled if smtp_auth_authname
+        is set. Authentication can be explicitly disabled by appending
+        \"/noauth\" to the host address. 
+
+    .. endblob smtp_host
+
+    .. startblob smtp_auth_authname
+
+    ``smtp_auth_authname:`` <none>
+
+        The authentication name to use when authenticating to the SMTP
+        server defined in smtp_host. 
+
+    .. endblob smtp_auth_authname
+
+    .. startblob smtp_auth_password
+
+    ``smtp_auth_password:`` <none>
+
+        The password to use when authenticating to the SMTP server defined
+        in smtp_host. 
+
+    .. endblob smtp_auth_password
+
+    .. startblob smtp_auth_realm
+
+    ``smtp_auth_realm:`` <none>
+
+        The authentication SASL realm to use when authenticating to a SMTP
+        server. 
+
+    .. endblob smtp_auth_realm
+
     .. startblob soft_noauth
 
     ``soft_noauth:`` 1
@@ -3849,7 +4576,7 @@ FIELD DESCRIPTIONS
 
         The cyrusdb backend to use for caching sort results (currently only
         used for xconvmultisort) 
-        Allowed values: *skiplist*, *twoskip*, *lmdb*
+        Allowed values: *skiplist*, *twoskip*, *zeroskip*
 
 
     .. endblob sortcache_db
@@ -3866,43 +4593,25 @@ FIELD DESCRIPTIONS
 
     .. endblob specialuse_extra
 
+    .. startblob specialuse_protect
+
+    ``specialuse_protect:`` \\Archive \\Drafts \\Important \\Junk \\Sent \\Trash
+
+        Whitespace separated list of special-use attributes
+        to protect the mailboxes for.  If set, don't allow
+        mailboxes with these special use attributes to be deleted
+        or renamed to have a different parent. Default is the built-in list
+
+    .. endblob specialuse_protect
+
     .. startblob specialusealways
 
-    ``specialusealways:`` 0
+    ``specialusealways:`` 1
 
         If enabled, this option causes LIST and LSUB output to always include
         the XLIST "special-use" flags 
 
     .. endblob specialusealways
-
-    .. startblob sphinx_text_excludes_odd_headers
-
-    ``sphinx_text_excludes_odd_headers:`` 0
-
-        If enabled, Sphinx will perform a TEXT search as if it matches
-        FROM, TO, CC, BCC or SUBJECT but not any other headers.  This
-        is contrary to the RFC but a more useful behaviour for most
-        users.  Default: disabled. 
-
-    .. endblob sphinx_text_excludes_odd_headers
-
-    .. startblob sphinx_socket
-
-    ``sphinx_socket:`` {configdirectory}/socket/sphinx
-
-        Unix domain socket that the Sphinx searchd
-        daemons listens on. 
-
-    .. endblob sphinx_socket
-
-    .. startblob sphinx_pidfile
-
-    ``sphinx_pidfile:`` /var/run/sphinx.pid
-
-        File where the Sphinx searchd daemon writes its pid. 
-
-
-    .. endblob sphinx_pidfile
 
     .. startblob sql_database
 
@@ -3960,6 +4669,52 @@ FIELD DESCRIPTIONS
 
     .. endblob sql_usessl
 
+    .. startblob srs_alwaysrewrite
+
+    ``srs_alwaysrewrite:`` 0
+
+        If true, perform SRS rewriting for ALL forwarding, even when not required. 
+
+
+    .. endblob srs_alwaysrewrite
+
+    .. startblob srs_domain
+
+    ``srs_domain:`` <none>
+
+        The domain to use in rewritten addresses. This must point only to machines
+        which know the encoding secret used by this system. When present, SRS is
+        enabled. 
+
+    .. endblob srs_domain
+
+    .. startblob srs_hashlength
+
+    ``srs_hashlength:`` 0
+
+        The hash length to generate in a rewritten address. 
+
+
+    .. endblob srs_hashlength
+
+    .. startblob srs_secrets
+
+    ``srs_secrets:`` <none>
+
+        A list of secrets with which to generate addresses. 
+
+
+    .. endblob srs_secrets
+
+    .. startblob srs_separator
+
+    ``srs_separator:`` <none>
+
+        The separator to appear immediately after SRS[01] in rewritten addresses. 
+
+
+    .. endblob srs_separator
+
     .. startblob srvtab
 
     ``srvtab:`` <empty string>
@@ -3987,7 +4742,7 @@ FIELD DESCRIPTIONS
 
         The cyrusdb backend to use for the subscriptions list. 
 
-        Allowed values: *flat*, *skiplist*, *twoskip*, *lmdb*
+        Allowed values: *flat*, *skiplist*, *twoskip*, *zeroskip*
 
 
     .. endblob subscription_db
@@ -4019,7 +4774,7 @@ FIELD DESCRIPTIONS
 
         The cyrusdb backend to use for the imap status cache. 
 
-        Allowed values: *skiplist*, *sql*, *twoskip*, *lmdb*
+        Allowed values: *skiplist*, *sql*, *twoskip*, *zeroskip*
 
 
     .. endblob statuscache_db
@@ -4139,12 +4894,15 @@ FIELD DESCRIPTIONS
 
     .. startblob sync_repeat_interval
 
-    ``sync_repeat_interval:`` 1
+    ``sync_repeat_interval:`` 1s
 
-        Minimum interval (in seconds) between replication runs in rolling
-        replication mode. If a replication run takes longer than this
-        time, we repeat immediately.
-        Prefix with a channel name to only apply for that channel 
+        Minimum interval between replication runs in rolling replication
+        mode. If a replication run takes longer than this time, we repeat
+        immediately.  Prefix with a channel name to only apply for that
+        channel.
+
+        For backward compatibility, if no unit is specified, seconds is
+        assumed. 
 
     .. endblob sync_repeat_interval
 
@@ -4160,10 +4918,14 @@ FIELD DESCRIPTIONS
 
     .. startblob sync_timeout
 
-    ``sync_timeout:`` 1800
+    ``sync_timeout:`` 30m
 
-        Number of seconds to wait for a response before returning a timeout
-        failure when talking to a replication peer (client or server). 
+        How long to wait for a response before returning a timeout failure
+        when talking to a replication peer (client or server).  The minimum
+        duration is 3 seconds, the default is 30 minutes.
+
+        For backward compatibility, if no unit is specified, seconds is
+        assumed. 
 
     .. endblob sync_timeout
 
@@ -4182,8 +4944,14 @@ FIELD DESCRIPTIONS
 
     ``syslog_prefix:`` <none>
 
-        String to be prepended to the process name in syslog entries. 
+        String to be prepended to the process name in syslog entries. Can
+        be further overridden by setting the $CYRUS_SYSLOG_PREFIX environment
+        variable.
 
+        Using the $CYRUS_SYSLOG_PREFIX environment variable has the additional
+        advantage that it can be set before the **imapd.conf** is read, so
+        errors while reading the config file can be syslogged with the correct
+        prefix. 
 
     .. endblob syslog_prefix
 
@@ -4219,8 +4987,11 @@ FIELD DESCRIPTIONS
 
     ``tcp_keepalive_idle:`` 0
 
-        Number of seconds a connection must be idle before keepalive
-        probes are sent (0 == system default) 
+        How long a connection must be idle before keepalive probes are sent
+        (0 == system default).
+
+        For backward compatibility, if no unit is specified, seconds is
+        assumed. 
 
     .. endblob tcp_keepalive_idle
 
@@ -4228,8 +4999,10 @@ FIELD DESCRIPTIONS
 
     ``tcp_keepalive_intvl:`` 0
 
-        Number of seconds between keepalive probes (0 == system default) 
+        Time between keepalive probes (0 == system default).
 
+        For backward compatibility, if no unit is specified, seconds is
+        assumed. 
 
     .. endblob tcp_keepalive_intvl
 
@@ -4253,22 +5026,27 @@ FIELD DESCRIPTIONS
 
     .. startblob timeout
 
-    ``timeout:`` 32
+    ``timeout:`` 32m
 
-        The length of the IMAP server's inactivity autologout timer,
-        in minutes.  The minimum value is 30.  The default is 32 to
-        allow a bit of leeway for clients that try to NOOP every 30
-        minutes. 
+        The length of the IMAP server's inactivity autologout timer.
+        The minimum value is 30 minutes.  The default is 32 minutes,
+        to allow a bit of leeway for clients that try to NOOP every
+        30 minutes.
+
+        For backward compatibility, if no unit is specified, minutes
+        is assumed. 
 
     .. endblob timeout
 
     .. startblob imapidletimeout
 
-    ``imapidletimeout:`` 0
+    ``imapidletimeout:`` <none>
 
-        Timeout for idling clients (:rfc:`2177`) in minutes. If set to
-        zero (the default) or less, the value of "timeout" will be
-        used instead. 
+        Timeout for idling clients (:rfc:`2177`).  If not set (the default),
+        the value of "timeout" will be used instead.
+
+        For backward compatibility, if no unit is specified, minutes
+        is assumed. 
 
     .. endblob imapidletimeout
 
@@ -4338,6 +5116,15 @@ FIELD DESCRIPTIONS
         https://wiki.mozilla.org/Security/Server_Side_TLS 
 
     .. endblob tls_ciphers
+
+    .. startblob tls_crl_file
+
+    ``tls_crl_file:`` <none>
+
+        Path to a file containing the Certificate Revocation List 
+
+
+    .. endblob tls_crl_file
 
     .. startblob tls_client_ca_dir
 
@@ -4448,17 +5235,29 @@ FIELD DESCRIPTIONS
 
     ``tls_server_cert:`` <none>
 
-        File containing the certificate, including the full chain, presented to clients. 
-
+        File containing the certificate, including the full chain, presented to clients.
+        Two certificates can be set, e.g RSA and EC, if the filenames are separated with
+        comma without spaces. 
 
     .. endblob tls_server_cert
+
+    .. startblob tls_server_dhparam
+
+    ``tls_server_dhparam:`` <none>
+
+        File containing the DH parameters belonging to the certificate in
+        tls_server_cert. 
+
+    .. endblob tls_server_dhparam
 
     .. startblob tls_server_key
 
     ``tls_server_key:`` <none>
 
         File containing the private key belonging to the certificate in
-        tls_server_cert. 
+        tls_server_cert.  If not set, tls_server_cert must contain both private and
+        public key.  Two files with keys can be set, if two certifates are used, in
+        which case the files must be separated with comma without spaces 
 
     .. endblob tls_server_key
 
@@ -4468,7 +5267,7 @@ FIELD DESCRIPTIONS
 
         The cyrusdb backend to use for the TLS cache. 
 
-        Allowed values: *skiplist*, *sql*, *twoskip*, *lmdb*
+        Allowed values: *skiplist*, *sql*, *twoskip*, *zeroskip*
 
 
     .. endblob tls_sessions_db
@@ -4484,11 +5283,14 @@ FIELD DESCRIPTIONS
 
     .. startblob tls_session_timeout
 
-    ``tls_session_timeout:`` 1440
+    ``tls_session_timeout:`` 24h
 
-        The length of time (in minutes) that a TLS session will be cached
-        for later reuse.  The maximum value is 1440 (24 hours), the
-        default.  A value of 0 will disable session caching. 
+        The length of time that a TLS session will be cached for later
+        reuse.  The maximum value is 24 hours, also the default.  A
+        value of 0 will disable session caching.
+
+        For backward compatibility, if no unit is specified, minutes is
+        assumed. 
 
     .. endblob tls_session_timeout
 
@@ -4531,7 +5333,7 @@ FIELD DESCRIPTIONS
 
         The cyrusdb backend to use for the user access list. 
 
-        Allowed values: *flat*, *skiplist*, *sql*, *twoskip*, *lmdb*
+        Allowed values: *flat*, *skiplist*, *sql*, *twoskip*, *zeroskip*
 
 
     .. endblob userdeny_db
@@ -4616,6 +5418,26 @@ FIELD DESCRIPTIONS
 
     .. endblob virtdomains
 
+    .. startblob virusscan_notification_subject
+
+    ``virusscan_notification_subject:`` Automatically deleted mail
+
+        The text used in the subject of email notifications created by
+        **cyr_virusscan(8)** when deleting infected mail. 
+
+    .. endblob virusscan_notification_subject
+
+    .. startblob virusscan_notification_template
+
+    ``virusscan_notification_template:`` <none>
+
+        The absolute path to a file containing a template to use to describe
+        infected messages that have been deleted by **cyr_virusscan(8)**.
+        See **cyr_virusscan(8)** for specification of the format of this file.
+        If not specified, the builtin default template will be used. 
+
+    .. endblob virusscan_notification_template
+
     .. startblob xbackup_enabled
 
     ``xbackup_enabled:`` 0
@@ -4655,9 +5477,9 @@ FIELD DESCRIPTIONS
 
     ``zoneinfo_db:`` twoskip
 
-        The cyrusdb backend to use for zoneinfo. 
-
-        Allowed values: *flat*, *skiplist*, *twoskip*, *lmdb*
+        The cyrusdb backend to use for zoneinfo.  This database is used by the
+        "tzdist" *http_modules*, and is managed by **ctl_zoneinfo(8)**.
+        Allowed values: *flat*, *skiplist*, *twoskip*, *zeroskip*
 
 
     .. endblob zoneinfo_db
@@ -4670,6 +5492,20 @@ FIELD DESCRIPTIONS
         will be configdirectory/zoneinfo.db 
 
     .. endblob zoneinfo_db_path
+
+    .. startblob zoneinfo_dir
+
+    ``zoneinfo_dir:`` <none>
+
+        The absolute path to the zoneinfo directory, containing timezone
+        definitions as generated by the vzic tool.  If not specified, whatever
+        definitions libical finds will be used.
+
+        If you are providing a Time Zone Data Distribution Service (i.e. you have
+        "tzdist" listed in *http_modules*), then this configuration option MUST
+        be specified. 
+
+    .. endblob zoneinfo_dir
 
     .. startblob object_storage_enabled
 
@@ -4714,7 +5550,7 @@ FIELD DESCRIPTIONS
 
     .. startblob openio_rawx_timeout
 
-    ``openio_rawx_timeout:`` 30
+    ``openio_rawx_timeout:`` 30s
 
         The OpenIO timeout to query to the RAWX services (default 30 sec). 
 
@@ -4723,7 +5559,7 @@ FIELD DESCRIPTIONS
 
     .. startblob openio_proxy_timeout
 
-    ``openio_proxy_timeout:`` 5
+    ``openio_proxy_timeout:`` 5s
 
         The OpenIO timeout to query to the PROXY services (default 5 sec). 
 

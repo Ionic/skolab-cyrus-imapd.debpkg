@@ -46,6 +46,7 @@
 
 #include "sieve_interface.h"    /* for action contexts */
 #include "tree.h"
+#include "ptrarray.h"
 
 typedef struct Action action_list_t;
 
@@ -53,7 +54,9 @@ typedef enum {
     ACTION_NULL = -1,
     ACTION_NONE = 0,
     ACTION_REJECT,
+    ACTION_EREJECT,
     ACTION_FILEINTO,
+    ACTION_SNOOZE,
     ACTION_KEEP,
     ACTION_REDIRECT,
     ACTION_DISCARD,
@@ -63,6 +66,9 @@ typedef enum {
     ACTION_REMOVEFLAG,
     ACTION_MARK,
     ACTION_UNMARK,
+    ACTION_ADDHEADER,
+    ACTION_DELETEHEADER,
+    ACTION_ENOTIFY,
     ACTION_NOTIFY,
     ACTION_DENOTIFY
 } action_t;
@@ -80,6 +86,7 @@ struct Action {
     int cancel_keep;
     union {
         sieve_reject_context_t rej;
+        sieve_snooze_context_t snz;
         sieve_fileinto_context_t fil;
         sieve_keep_context_t keep;
         sieve_redirect_context_t red;
@@ -91,6 +98,19 @@ struct Action {
         struct {
             const char *flag;
         } fla;
+        struct {
+            const char *name;
+            const char *value;
+            int index;
+        } addh;
+        struct {
+            const char *name;
+            ptrarray_t *patterns;
+            int index;
+            int comptype;
+            comparator_t *compfunc;
+            void *comprock;
+        } delh;
     } u;
     char *param;                /* freed! */
     struct Action *next;
@@ -102,6 +122,7 @@ struct Action {
 typedef struct notify_list_s {
     int isactive;
     const char *id;
+    const char *from;
     const char *method;
     const char **options;
     const char *priority;
@@ -112,28 +133,49 @@ typedef struct notify_list_s {
 notify_list_t *new_notify_list(void);
 void free_notify_list(notify_list_t *n);
 
+typedef struct duptrack_list_s {
+    char *id;
+    int seconds;
+    struct duptrack_list_s *next;
+} duptrack_list_t;
+
+duptrack_list_t *new_duptrack_list(void);
+void free_duptrack_list(duptrack_list_t *d);
+
 /* actions; return negative on failure.
  * these don't actually perform the actions, they just add it to the
  * action list */
-int do_reject(action_list_t *m, const char *msg);
-int do_fileinto(action_list_t *m, const char *mbox, int cancel_keep, int do_create,
+int do_reject(action_list_t *m, int action, const char *msg);
+int do_fileinto(action_list_t *m, const char *mbox, const char *specialuse,
+                int cancel_keep, int do_create, const char *mailboxid,
                 strarray_t *imapflags);
-int do_redirect(action_list_t *m, const char *addr, int cancel_keep);
-int do_keep(action_list_t *m, int cancel_keep, strarray_t *imapflags);
+int do_redirect(action_list_t *a, const char *addr, const char *deliverby,
+                const char *dsn_notify, const char *dsn_ret,
+                int is_ext_list, int cancel_keep);
+int do_keep(action_list_t *m, strarray_t *imapflags);
 int do_discard(action_list_t *m);
-int do_vacation(action_list_t *m, char *addr, char *fromaddr,
-                char *subj, const char *msg, int seconds, int mime,
-                const char *handle);
+int do_vacation(action_list_t *m, char *addr, char *fromaddr, char *subj,
+                const char *msg, int seconds, int mime, const char *handle,
+                const sieve_fileinto_context_t *fcc);
 int do_setflag(action_list_t *m);
 int do_addflag(action_list_t *m, const char *flag);
 int do_removeflag(action_list_t *m, const char *flag);
 int do_mark(action_list_t *m);
 int do_unmark(action_list_t *m);
-int do_notify(notify_list_t *n, const char *id,
+int do_notify(notify_list_t *n, const char *id, const char *from,
               const char *method, const char **options,
               const char *priority, const char *message);
 int do_denotify(notify_list_t *n, comparator_t *comp, const void *pat,
-                void *comprock, const char *priority);
-
+                strarray_t *match_vars, void *comprock, const char *priority);
+int do_duptrack(duptrack_list_t *d, sieve_duplicate_context_t *dc);
+int do_snooze(action_list_t *a, const char *awaken_mbox, int is_mboxid,
+              strarray_t *addflags, strarray_t *removeflags,
+              unsigned char days, arrayu64_t *times,
+              strarray_t *imapflags);
+int do_addheader(action_list_t *a, const char *name, const char *value,
+                 int index);
+int do_deleteheader(action_list_t *a, const char *name, void *patterns,
+                    int index, int comptype,
+                    comparator_t *compfunc, void *comprock);
 
 #endif

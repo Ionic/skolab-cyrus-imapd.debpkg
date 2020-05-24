@@ -1,0 +1,74 @@
+Description: fix for non x86 arch
+ The problem here is va_list. On some architectures, the calling convention
+ doesn't seem to allow comparing va_list against NULL due to the way va_list
+ is implemented on a particular architecture.
+Author: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+Bug: https://github.com/cyrusimap/cyrus-imapd/issues/3040
+Bug-Debian: https://bugs.debian.org/960263
+Forwarded: https://github.com/cyrusimap/cyrus-imapd/issues/3040
+Reviewed-By: Xavier Guimard <yadd@debian.org>
+Last-Update: 2020-05-12
+
+--- a/imap/httpd.c
++++ b/imap/httpd.c
+@@ -2350,7 +2350,7 @@
+     simple_hdr(txn, "Access-Control-Expose-Headers", hdr)
+ 
+ static void comma_list_body(struct buf *buf,
+-                            const char *vals[], unsigned flags, va_list args)
++                            const char *vals[], unsigned flags, int has_args, va_list args)
+ {
+     const char *sep = "";
+     int i;
+@@ -2358,11 +2358,11 @@
+     for (i = 0; vals[i]; i++) {
+         if (flags & (1 << i)) {
+             buf_appendcstr(buf, sep);
+-            if (args) buf_vprintf(buf, vals[i], args);
++            if (has_args) buf_vprintf(buf, vals[i], args);
+             else buf_appendcstr(buf, vals[i]);
+             sep = ", ";
+         }
+-        else if (args) {
++        else if (has_args) {
+             /* discard any unused args */
+             vsnprintf(NULL, 0, vals[i], args);
+         }
+@@ -2377,7 +2377,7 @@
+ 
+     va_start(args, flags);
+ 
+-    comma_list_body(&buf, vals, flags, args);
++    comma_list_body(&buf, vals, flags, 1, args);
+ 
+     va_end(args);
+ 
+@@ -2512,6 +2512,7 @@
+     int i;
+     time_t now;
+     char datestr[30];
++    va_list noargs;
+     double cmdtime, nettime;
+     const char **hdr, *sep;
+     struct auth_challenge_t *auth_chal = &txn->auth_chal;
+@@ -3077,17 +3078,17 @@
+     }
+     if (code == HTTP_SWITCH_PROT || code == HTTP_UPGRADE) {
+         buf_printf(logbuf, "%supgrade=", sep);
+-        comma_list_body(logbuf, upgrd_tokens, txn->flags.upgrade, NULL);
++        comma_list_body(logbuf, upgrd_tokens, txn->flags.upgrade, 0, noargs);
+         sep = "; ";
+     }
+     if (txn->flags.te) {
+         buf_printf(logbuf, "%stx-encoding=", sep);
+-        comma_list_body(logbuf, te, txn->flags.te, NULL);
++        comma_list_body(logbuf, te, txn->flags.te, 0, noargs);
+         sep = "; ";
+     }
+     if (txn->resp_body.enc.proc) {
+         buf_printf(logbuf, "%scnt-encoding=", sep);
+-        comma_list_body(logbuf, ce, txn->resp_body.enc.type, NULL);
++        comma_list_body(logbuf, ce, txn->resp_body.enc.type, 0, noargs);
+         sep = "; ";
+     }
+     if (txn->location) {

@@ -44,7 +44,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "exitcodes.h"
+#include <sysexits.h>
 #include "sequence.h"
 #include "string.h"
 #include "util.h"
@@ -75,7 +75,7 @@ EXPORTED struct seqset *seqset_init(unsigned maxval, int flags)
     /* make sure flags are sane - be explicit about what
      * sort of list we're building */
     if (flags != SEQ_SPARSE && flags != SEQ_MERGE)
-        fatal("invalid flags", EC_SOFTWARE);
+        fatal("invalid flags", EX_SOFTWARE);
 
     seq->maxval = maxval;
     seq->flags = flags;
@@ -92,8 +92,14 @@ EXPORTED void seqset_add(struct seqset *seq, unsigned num, int ismember)
 {
     if (!seq) return;
 
+    /* there are some cases where we want to make sure something is added
+     * as an initial value and then re-add it again later, so if we get
+     * the same number multiple times, that's OK */
+    if (ismember && num == seq->prev && seq->len && seq->set[seq->len-1].high == num)
+        return;
+
     if (num <= seq->prev)
-        fatal("numbers out of order", EC_SOFTWARE);
+        fatal("numbers out of order", EX_SOFTWARE);
 
     if (!ismember) {
         seq->prev = num;
@@ -159,46 +165,43 @@ EXPORTED unsigned int seq_lastnum(const char *list, const char **numstart)
 
 /* Comparator function that sorts ranges by the low value,
    and coalesces intersecting ranges to have the same high value */
-static int comp_coalesce(const void *v1, const void *v2)
+static int comp_rangesort(const void *v1, const void *v2)
 {
     struct seq_range *r1 = (struct seq_range *) v1;
     struct seq_range *r2 = (struct seq_range *) v2;
 
-    /* If ranges don't intersect, we're done */
-    if (r1->high < r2->low) return -1;
-    if (r1->low > r2->high) return 1;
-
-    /* Ranges intersect, coalesce them */
-    r1->high = r2->high = MAX(r1->high, r2->high);
-
-    return r1->low - r2->low;;
+    int ret = r1->low - r2->low;
+    if (ret) return ret;
+    return r1->high - r2->high;
 }
 
-static void seqset_simplify(struct seqset *set)
+static void seqset_simplify(struct seqset *seq)
 {
-    int out = 0;
+    unsigned out = 0;
     unsigned i;
 
     /* nothing to simplify */
-    if (!set->len)
+    if (!seq->len)
         return;
 
     /* Sort the ranges using our special comparator */
-    qsort(set->set, set->len, sizeof(struct seq_range), comp_coalesce);
+    qsort(seq->set, seq->len, sizeof(struct seq_range), comp_rangesort);
 
     /* Merge intersecting/adjacent ranges */
-    for (i = 1; i < set->len; i++) {
-        if ((int)(set->set[i].low - set->set[out].high) <= 1) {
-            set->set[out].high = set->set[i].high;
-        } else {
+    for (i = 1; i < seq->len; i++) {
+        if (seq->set[out].high + 1 < seq->set[i].low) {
+            /* these are disjoint */
             out++;
-            set->set[out].low = set->set[i].low;
-            set->set[out].high = set->set[i].high;
+            if (out != i)
+                seq->set[out] = seq->set[i];
+        }
+        else if (seq->set[out].high < seq->set[i].high) {
+            seq->set[out].high = seq->set[i].high;
         }
     }
 
     /* final length */
-    set->len = out+1;
+    seq->len = out+1;
 }
 
 static int read_num(const char **input, unsigned maxval, unsigned *res)
@@ -241,11 +244,11 @@ EXPORTED struct seqset *seqset_parse(const char *sequence,
 
     while (*sequence) {
         if (read_num(&sequence, maxval, &start))
-            fatal("invalid sequence", EC_SOFTWARE);
+            fatal("invalid sequence", EX_SOFTWARE);
         if (*sequence == ':') {
             sequence++;
             if (read_num(&sequence, maxval, &end))
-                fatal("invalid sequence", EC_SOFTWARE);
+                fatal("invalid sequence", EX_SOFTWARE);
         }
         else
             end = start;
@@ -350,6 +353,7 @@ EXPORTED unsigned seqset_last(const struct seqset *seq)
  * the first element */
 EXPORTED unsigned seqset_firstnonmember(const struct seqset *seq)
 {
+    if (!seq) return 1;
     if (!seq->len) return 1;
     if (seq->set[0].low != 1) return 1;
     return seq->set[0].high + 1;

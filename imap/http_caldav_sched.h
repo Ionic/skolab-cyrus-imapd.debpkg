@@ -81,7 +81,10 @@ struct sched_data {
     unsigned is_reply;
     unsigned is_update;
     icalcomponent *itip;
+    icalcomponent *oldical;
+    icalcomponent *newical;
     icalparameter_scheduleforcesend force_send;
+    const strarray_t *schedule_addresses;
     const char *status;
 };
 
@@ -96,7 +99,7 @@ struct proplist {
 };
 
 /* Each calendar user address has the following scheduling protocol params */
-/* All memory must be freed with sched_param_free. */
+/* All memory must be freed with sched_param_fini. */
 struct caldav_sched_param {
     char *userid;       /* Userid corresponding to calendar address */
     char *server;       /* Remote server user lives on */
@@ -106,7 +109,7 @@ struct caldav_sched_param {
     struct proplist *props; /* List of attendee iCal properties */
 };
 
-extern void sched_param_free(struct caldav_sched_param *sparam);
+extern void sched_param_fini(struct caldav_sched_param *sparam);
 
 struct freebusy {
     struct icalperiodtype per;
@@ -166,15 +169,15 @@ extern int isched_send(struct caldav_sched_param *sparam, const char *recipient,
 
 extern int sched_busytime_query(struct transaction_t *txn,
                                 struct mime_type_t *mime, icalcomponent *comp);
-extern void sched_request(const char *userid, const char *organizer,
+extern void sched_request(const char *onuserid, const strarray_t *schedule_addresses, const char *organizer,
                           icalcomponent *oldical, icalcomponent *newical);
-extern void sched_reply(const char *userid, const char *attendee,
+extern void sched_reply(const char *onuserid, const strarray_t *schedule_addresses,
                         icalcomponent *oldical, icalcomponent *newical);
-extern void sched_deliver(const char *recipient, void *data, void *rock);
+extern void sched_deliver(const char *sender, const char *recipient, void *data, void *rock);
 extern xmlNodePtr xml_add_schedresponse(xmlNodePtr root, xmlNsPtr dav_ns,
                                         xmlChar *recipient, xmlChar *status);
 extern int caladdress_lookup(const char *addr, struct caldav_sched_param *param,
-                             const char *myuserid);
+                             const strarray_t *schedule_addresses);
 
 
 #endif /* HTTP_CALDAV_SCHED_H */

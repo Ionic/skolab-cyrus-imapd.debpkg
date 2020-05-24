@@ -1,16 +1,12 @@
-From: =?utf-8?b?T25kxZllaiBTdXLDvQ==?= <ondrej@debian.org>
-Date: Tue, 4 Aug 2015 10:38:07 +0200
-Subject: Fix PATH_MAX on GNU/Hurd
-
----
- imap/pop3d.c     | 4 ++++
- master/master.c  | 4 ++++
- master/service.c | 4 ++++
- 3 files changed, 12 insertions(+)
+Description: Fix PATH_MAX on GNU/Hurd
+Aurhor: Ondrej Sury <ondrej@debian.org>
+Forwarded: no
+Reviewed-By: Xavier Guimard <yadd@debian.org
+Last-Update: 2020-02-10
 
 --- a/imap/pop3d.c
 +++ b/imap/pop3d.c
-@@ -100,6 +100,10 @@
+@@ -99,6 +99,10 @@
  #define MAXHOSTNAMELEN 256
  #endif
  
@@ -23,7 +19,7 @@ Subject: Fix PATH_MAX on GNU/Hurd
  #define DES_DEFS
 --- a/master/master.c
 +++ b/master/master.c
-@@ -75,6 +75,10 @@
+@@ -76,6 +76,10 @@
  #define PATH_MAX 4096
  #endif
  
