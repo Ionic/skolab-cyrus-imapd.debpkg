@@ -1,3 +1,9 @@
+cyrus-imapd (3.2.0-6) experimental; urgency=medium
+
+  * Re-enable all test with an updated patch
+
+ -- Xavier Guimard <yadd@debian.org>  Mon, 25 May 2020 09:29:26 +0200
+
 cyrus-imapd (3.2.0-5) unstable; urgency=medium
 
   * Disable some unimportant tests that fail with non amd64 arch
