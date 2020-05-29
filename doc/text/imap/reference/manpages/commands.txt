@@ -106,6 +106,8 @@ Man pages
 
 * **pop3proxyd**
 
+* **promstatsd**
+
 * **proxyd**
 
 * **ptdump**

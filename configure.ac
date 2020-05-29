@@ -171,6 +171,11 @@ AC_CHECK_SIZEOF(size_t)
 AC_CHECK_SIZEOF(off_t)
 AC_CHECK_SIZEOF(time_t)
 
+dnl Warn if time_t is only 32 bits
+AS_IF([test "$ac_cv_sizeof_time_t" -lt 8],
+      [AC_MSG_WARN([Your platform's time_t is less than 64 bits])
+])
+
 dnl Check that `long long int' is available
 AC_CHECK_SIZEOF(long long int)
 AC_CHECK_SIZEOF(unsigned long long int)
@@ -180,6 +185,9 @@ if test "$ac_cv_sizeof_long_long_int" -eq 8 -a \
 else
   AC_MSG_ERROR(The Cyrus IMAPD requires support for long long int)
 fi
+
+dnl Check the required alignment for various types
+AC_CHECK_ALIGNOF(uint32_t)
 
 dnl check for -R, etc. switch
 CMU_GUESS_RUNPATH_SWITCH
@@ -1431,7 +1439,7 @@ dnl Check for ICU library, needed for charset conversions and non-gregorian
 dnl rscale conversions
 dnl
 with_icu4c=no
-PKG_CHECK_MODULES([ICU], [icu-i18n icu-uc], [
+PKG_CHECK_MODULES([ICU], [icu-i18n >= 55 icu-uc >= 55], [
                     AC_DEFINE(HAVE_ICU, [], [Build with ICU support])
                     with_icu4c=yes
                   ],
@@ -2180,7 +2188,7 @@ AX_PROG_PERL_MODULES([Pod::POM::View::Restructured],
                        have_ppvr=no
                      ])
 
-AX_PYTHON_MODULE([git], [], [python2])
+AX_PYTHON_MODULE([git], [], [python])
 AS_CASE([$HAVE_PYMOD_GIT],
         [yes],  [],
         [*],    [AC_MSG_WARN([GitPython not found, won't be able to regenerate docs])])

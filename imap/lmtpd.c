@@ -260,7 +260,10 @@ int service_main(int argc, char **argv,
     struct io_count *io_count_start = NULL;
     struct io_count *io_count_stop = NULL;
 
+    /* fatal/shut_down will adjust these, so we need to set them early */
     prometheus_decrement(CYRUS_LMTP_READY_LISTENERS);
+    prometheus_increment(CYRUS_LMTP_ACTIVE_CONNECTIONS);
+    snmp_increment(ACTIVE_CONNECTIONS, 1);
 
     if (config_iolog) {
         io_count_start = xmalloc (sizeof (struct io_count));
@@ -284,11 +287,9 @@ int service_main(int argc, char **argv,
         }
     }
 
+    /* count the connection, now that it's established */
     prometheus_increment(CYRUS_LMTP_CONNECTIONS_TOTAL);
-    prometheus_increment(CYRUS_LMTP_ACTIVE_CONNECTIONS);
-
     snmp_increment(TOTAL_CONNECTIONS, 1);
-    snmp_increment(ACTIVE_CONNECTIONS, 1);
 
     lmtpmode(&mylmtp, deliver_in, deliver_out, 0);
 
@@ -330,6 +331,17 @@ void service_abort(int error)
 
 static void usage(void)
 {
+    if (deliver_out) {
+        /* one less active connection */
+        prometheus_decrement(CYRUS_LMTP_ACTIVE_CONNECTIONS);
+        snmp_increment(ACTIVE_CONNECTIONS, -1);
+    }
+    else {
+        /* one less ready listener */
+        prometheus_decrement(CYRUS_LMTP_READY_LISTENERS);
+    }
+    prometheus_increment(CYRUS_LMTP_SHUTDOWN_TOTAL_STATUS_ERROR);
+
     fprintf(stderr, "421-4.3.0 usage: lmtpd [-C <alt_config>] [-a]\r\n");
     fprintf(stderr, "421 4.3.0 %s\n", CYRUS_VERSION);
     exit(EX_USAGE);
@@ -943,14 +955,23 @@ EXPORTED void fatal(const char* s, int code)
 {
     static int recurse_code = 0;
 
-    if(recurse_code) {
+    if (recurse_code) {
         /* We were called recursively. Just give up */
-        prometheus_decrement(CYRUS_LMTP_ACTIVE_CONNECTIONS);
-        snmp_increment(ACTIVE_CONNECTIONS, -1);
+        if (deliver_out) {
+            /* one less active connection */
+            prometheus_decrement(CYRUS_LMTP_ACTIVE_CONNECTIONS);
+            snmp_increment(ACTIVE_CONNECTIONS, -1);
+        }
+        else {
+            /* one less ready listener */
+            prometheus_decrement(CYRUS_LMTP_READY_LISTENERS);
+        }
+        prometheus_increment(CYRUS_LMTP_SHUTDOWN_TOTAL_STATUS_ERROR);
+
         exit(recurse_code);
     }
     recurse_code = code;
-    if(deliver_out) {
+    if (deliver_out) {
         prot_printf(deliver_out,"421 4.3.0 lmtpd: %s\r\n", s);
         prot_flush(deliver_out);
     }
