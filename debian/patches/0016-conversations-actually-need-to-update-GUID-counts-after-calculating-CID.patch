@@ -11,7 +11,7 @@ Last-Update: 2020-02-10
 
 --- a/imap/conversations.c
 +++ b/imap/conversations.c
-@@ -2353,6 +2353,21 @@
+@@ -2351,6 +2351,21 @@
      const struct index_record *record = new ? new : old;
      if (!record) return 0;
  
