@@ -59,6 +59,9 @@
 #include "times.h"
 #include "xapian_wrap.h"
 
+/* generated headers are not necessarily in current directory */
+#include "imap/imap_err.h"
+
 EXPORTED int jmap_readprop_full(json_t *root, const char *prefix, const char *name,
                               int mandatory, json_t *invalid, const char *fmt,
                               void *dst)
@@ -480,9 +483,14 @@ HIDDEN void jmap_parser_invalid(struct jmap_parser *parser, const char *prop)
 
 HIDDEN json_t *jmap_server_error(int r)
 {
-    return json_pack("{s:s, s:s}",
-                     "type", "serverError",
-                     "description", error_message(r));
+    switch (r) {
+    case IMAP_QUOTA_EXCEEDED:
+        return json_pack("{s:s}", "type", "overQuota");
+    default:
+        return json_pack("{s:s, s:s}",
+                         "type", "serverFail",
+                         "description", error_message(r));
+    }
 }
 
 HIDDEN char *jmap_encode_base64_nopad(const char *data, size_t len)

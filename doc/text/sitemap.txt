@@ -1368,6 +1368,22 @@ Sitemap
 
             * See Also
 
+          * **promstatsd**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
+
+            * History
+
+            * Files
+
+            * See Also
+
           * **proxyd**
 
             * Synopsis

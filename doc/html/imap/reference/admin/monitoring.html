@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Monitoring &mdash; Cyrus IMAP 3.2.0 documentation</title>
+  <title>Monitoring &mdash; Cyrus IMAP 3.2.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.0 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.1 documentation" href="../../../index.html"/>
         <link rel="up" title="Administrator Guide" href="../admin.html"/>
         <link rel="next" title="Mailbox Distribution" href="config-mailboxdistribution.html"/>
         <link rel="prev" title="Cyrus Event Source" href="eventsource.html"/> 
@@ -472,6 +472,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../manpages/systemcommands/notifyd.html"><strong>notifyd</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../manpages/systemcommands/pop3d.html"><strong>pop3d</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../manpages/systemcommands/pop3proxyd.html"><strong>pop3proxyd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../manpages/systemcommands/promstatsd.html"><strong>promstatsd</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../manpages/systemcommands/proxyd.html"><strong>proxyd</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../manpages/systemcommands/ptdump.html"><strong>ptdump</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../manpages/systemcommands/ptexpire.html"><strong>ptexpire</strong></a></li>
@@ -766,7 +767,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.2.0</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.2.1</a> &raquo;</li>
       
           <li><a href="../../../operations.html">Operations</a> &raquo;</li>
       
@@ -798,10 +799,10 @@
 <li>Add the <cite>prometheus</cite> module to your <cite>httpmodules</cite> in <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a></li>
 <li>Set the <cite>prometheus_need_auth</cite>, <cite>prometheus_update_freq</cite> and <cite>prometheus_stats_dir</cite>
 settings in <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> to taste</li>
+<li>Add a job to run <a class="reference internal" href="../manpages/systemcommands/promstatsd.html#std:cyrusman-promstatsd(8)">promstatsd(8)</a> to the DAEMON section of
+<a class="reference internal" href="../manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a> (the actual daemon process)</li>
 <li>Add a job to run <code class="docutils literal"><span class="pre">promstatsd</span> <span class="pre">-c</span></code> to the START section of <a class="reference internal" href="../manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a>
 (this cleans up the stats files from the previous run)</li>
-<li>Add a job to run <code class="docutils literal"><span class="pre">promstatsd</span></code> to the DAEMON section of <a class="reference internal" href="../manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a>
-(the actual daemon process)</li>
 <li>Configure your Prometheus server to scrape <a class="reference external" href="http://yourserver.example.com/metrics">http://yourserver.example.com/metrics</a></li>
 </ul>
 </div></blockquote>
@@ -861,7 +862,7 @@ directory on ephemeral storage.</div></blockquote>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Aug 01 2017
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on May 18 2020
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -881,7 +882,7 @@ directory on ephemeral storage.</div></blockquote>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.2.0',
+            VERSION:'3.2.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
