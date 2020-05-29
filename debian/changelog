@@ -1,3 +1,10 @@
+cyrus-imapd (3.2.1-1) experimental; urgency=medium
+
+  * New upstream version 3.2.1
+  * Refresh patches
+
+ -- Xavier Guimard <yadd@debian.org>  Fri, 29 May 2020 07:17:19 +0200
+
 cyrus-imapd (3.2.0-6) experimental; urgency=medium
 
   * Re-enable all test with an updated patch
