@@ -52,6 +52,9 @@
 /* Should the AFS PTS plugin use krb5? */
 #undef AFSPTS_USE_KRB5
 
+/* The normal alignment of `uint32_t', in bytes. */
+#undef ALIGNOF_UINT32_T
+
 /* What user will we run as? */
 #undef CYRUS_USER
 

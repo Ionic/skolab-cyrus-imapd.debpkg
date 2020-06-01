@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Compiling &mdash; Cyrus IMAP 3.2.0 documentation</title>
+  <title>Compiling &mdash; Cyrus IMAP 3.2.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.0 documentation" href="../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.1 documentation" href="../../index.html"/>
         <link rel="up" title="Setup" href="../../setup.html"/>
         <link rel="next" title="Installing Cyrus" href="../installing.html"/>
         <link rel="prev" title="Setup" href="../../setup.html"/> 
@@ -472,6 +472,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/notifyd.html"><strong>notifyd</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/pop3d.html"><strong>pop3d</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/pop3proxyd.html"><strong>pop3proxyd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/promstatsd.html"><strong>promstatsd</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/proxyd.html"><strong>proxyd</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/ptdump.html"><strong>ptdump</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/manpages/systemcommands/ptexpire.html"><strong>ptexpire</strong></a></li>
@@ -766,7 +767,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html">Docs v3.2.0</a> &raquo;</li>
+      <li><a href="../../index.html">Docs v3.2.1</a> &raquo;</li>
       
           <li><a href="../../setup.html">Setup</a> &raquo;</li>
       
@@ -795,76 +796,93 @@
 <table border="1" class="docutils" id="id2">
 <caption><span class="caption-text">Build Dependencies</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
 <colgroup>
-<col width="33%" />
-<col width="33%" />
-<col width="33%" />
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
 </colgroup>
 <thead valign="bottom">
 <tr class="row-odd"><th class="head">Package</th>
 <th class="head">Debian</th>
 <th class="head">RedHat</th>
+<th class="head">Notes</th>
 </tr>
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td><a class="reference external" href="http://www.gnu.org/software/autoconf/">autoconf</a></td>
 <td>autoconf</td>
 <td>autoconf</td>
+<td>&nbsp;</td>
 </tr>
 <tr class="row-odd"><td><a class="reference external" href="http://www.gnu.org/software/automake/">automake</a></td>
 <td>automake</td>
 <td>automake</td>
+<td>&nbsp;</td>
 </tr>
 <tr class="row-even"><td><a class="reference external" href="http://www.gnu.org/software/bison/">bison</a></td>
 <td>bison</td>
 <td>bison</td>
+<td>&nbsp;</td>
 </tr>
 <tr class="row-odd"><td><a class="reference external" href=":ref:`CyrusSASL&lt;cyrussasl:sasl-index&gt;`">Cyrus SASL</a></td>
 <td>libsasl2-dev</td>
 <td>cyrus-sasl-devel</td>
+<td>&nbsp;</td>
 </tr>
 <tr class="row-even"><td><a class="reference external" href="http://flex.sourceforge.net/">flex</a></td>
 <td>flex</td>
 <td>flex</td>
+<td>&nbsp;</td>
 </tr>
 <tr class="row-odd"><td><a class="reference external" href="http://gcc.gnu.org">gcc</a></td>
 <td>gcc</td>
 <td>gcc</td>
+<td>&nbsp;</td>
 </tr>
 <tr class="row-even"><td><a class="reference external" href="http://www.gnu.org/software/gperf/">gperf</a></td>
 <td>gperf</td>
 <td>gperf</td>
+<td>&nbsp;</td>
 </tr>
 <tr class="row-odd"><td><a class="reference external" href="http://www.digip.org/jansson/">jansson</a></td>
 <td>libjansson-dev</td>
 <td>jansson-devel</td>
+<td>&nbsp;</td>
 </tr>
 <tr class="row-even"><td><a class="reference external" href="https://libbsd.freedesktop.org/wiki/">libbsd</a></td>
 <td>libbsd-dev</td>
 <td>libbsd-devel</td>
+<td>&nbsp;</td>
 </tr>
 <tr class="row-odd"><td><a class="reference external" href="http://www.gnu.org/software/libtool/">libtool</a></td>
 <td>libtool</td>
 <td>libtool</td>
+<td>&nbsp;</td>
 </tr>
 <tr class="row-even"><td><a class="reference external" href="http://www.icu-project.org/">ICU</a></td>
 <td>libicu-dev</td>
 <td>libicu-devel</td>
+<td>version 55 or newer</td>
 </tr>
 <tr class="row-odd"><td><a class="reference external" href="https://www.kernel.org/pub/linux/utils/util-linux/">uuid</a></td>
 <td>uuid-dev</td>
 <td>libuuid-devel</td>
+<td>&nbsp;</td>
 </tr>
 <tr class="row-even"><td><a class="reference external" href="http://www.openssl.org/">openssl</a> <a class="reference internal" href="../reference/faqs/install-linkerwarnings.html#openssl-versions"><span class="std std-ref">(Note about versions)</span></a></td>
 <td>libssl-dev</td>
 <td>openssl-devel</td>
+<td>&nbsp;</td>
 </tr>
 <tr class="row-odd"><td><a class="reference external" href="http://pkgconfig.freedesktop.org">pkgconfig</a></td>
 <td>pkg-config</td>
 <td>pkgconfig</td>
+<td>&nbsp;</td>
 </tr>
 <tr class="row-even"><td><a class="reference external" href="https://www.sqlite.org/">sqlite</a></td>
 <td>libsqlite3-dev</td>
 <td>sqlite-devel</td>
+<td>&nbsp;</td>
 </tr>
 </tbody>
 </table>
@@ -1319,7 +1337,7 @@ version, operating system and affected libraries.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Mar 11 2020
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on May 15 2020
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1339,7 +1357,7 @@ version, operating system and affected libraries.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'3.2.0',
+            VERSION:'3.2.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

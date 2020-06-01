@@ -1,3 +1,28 @@
+cyrus-imapd (3.2.1-3) unstable; urgency=medium
+
+  * Back to unstable after successful tests (Closes: #960558)
+
+ -- Xavier Guimard <yadd@debian.org>  Fri, 29 May 2020 09:52:46 +0200
+
+cyrus-imapd (3.2.1-2) experimental; urgency=medium
+
+  * Fix upstream test (Closes: #960658)
+
+ -- Xavier Guimard <yadd@debian.org>  Fri, 29 May 2020 09:08:39 +0200
+
+cyrus-imapd (3.2.1-1) experimental; urgency=medium
+
+  * New upstream version 3.2.1
+  * Refresh patches
+
+ -- Xavier Guimard <yadd@debian.org>  Fri, 29 May 2020 07:17:19 +0200
+
+cyrus-imapd (3.2.0-6) experimental; urgency=medium
+
+  * Re-enable all test with an updated patch
+
+ -- Xavier Guimard <yadd@debian.org>  Mon, 25 May 2020 09:29:26 +0200
+
 cyrus-imapd (3.2.0-5~bpo10+1) buster-backports; urgency=medium
 
   * Rebuild for buster-backports.

@@ -819,7 +819,9 @@ int service_main(int argc __attribute__((unused)),
     struct auth_scheme_t *scheme;
     struct http_connection http_conn;
 
+    /* fatal/shut_down will adjust these, so we need to set them early */
     prometheus_decrement(CYRUS_HTTP_READY_LISTENERS);
+    prometheus_increment(CYRUS_HTTP_ACTIVE_CONNECTIONS);
 
     session_new_id();
 
@@ -933,8 +935,8 @@ int service_main(int argc __attribute__((unused)),
 
     index_text_extractor_init(httpd_in);
 
+    /* count the connection, now that it's established */
     prometheus_increment(CYRUS_HTTP_CONNECTIONS_TOTAL);
-    prometheus_increment(CYRUS_HTTP_ACTIVE_CONNECTIONS);
 
     cmdloop(&http_conn);
 
@@ -1057,6 +1059,15 @@ void fatal(const char* s, int code)
     if (recurse_code) {
         /* We were called recursively. Just give up */
         proc_cleanup();
+        if (httpd_out) {
+            /* one less active connection */
+            prometheus_decrement(CYRUS_HTTP_ACTIVE_CONNECTIONS);
+        }
+        else {
+            /* one less ready listener */
+            prometheus_decrement(CYRUS_HTTP_READY_LISTENERS);
+        }
+        prometheus_increment(CYRUS_HTTP_SHUTDOWN_TOTAL_STATUS_ERROR);
         exit(recurse_code);
     }
     recurse_code = code;
@@ -2350,7 +2361,7 @@ EXPORTED void simple_hdr(struct transaction_t *txn,
     simple_hdr(txn, "Access-Control-Expose-Headers", hdr)
 
 static void comma_list_body(struct buf *buf,
-                            const char *vals[], unsigned flags, va_list args)
+                            const char *vals[], unsigned flags, int has_args, va_list args)
 {
     const char *sep = "";
     int i;
@@ -2358,11 +2369,11 @@ static void comma_list_body(struct buf *buf,
     for (i = 0; vals[i]; i++) {
         if (flags & (1 << i)) {
             buf_appendcstr(buf, sep);
-            if (args) buf_vprintf(buf, vals[i], args);
+            if (has_args) buf_vprintf(buf, vals[i], args);
             else buf_appendcstr(buf, vals[i]);
             sep = ", ";
         }
-        else if (args) {
+        else if (has_args) {
             /* discard any unused args */
             vsnprintf(NULL, 0, vals[i], args);
         }
@@ -2377,7 +2388,7 @@ EXPORTED void comma_list_hdr(struct transaction_t *txn, const char *name,
 
     va_start(args, flags);
 
-    comma_list_body(&buf, vals, flags, args);
+    comma_list_body(&buf, vals, flags, 1, args);
 
     va_end(args);
 
@@ -2512,6 +2523,7 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
     int i;
     time_t now;
     char datestr[30];
+    va_list noargs;
     double cmdtime, nettime;
     const char **hdr, *sep;
     struct auth_challenge_t *auth_chal = &txn->auth_chal;
@@ -3077,17 +3089,17 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
     }
     if (code == HTTP_SWITCH_PROT || code == HTTP_UPGRADE) {
         buf_printf(logbuf, "%supgrade=", sep);
-        comma_list_body(logbuf, upgrd_tokens, txn->flags.upgrade, NULL);
+        comma_list_body(logbuf, upgrd_tokens, txn->flags.upgrade, 0, noargs);
         sep = "; ";
     }
     if (txn->flags.te) {
         buf_printf(logbuf, "%stx-encoding=", sep);
-        comma_list_body(logbuf, te, txn->flags.te, NULL);
+        comma_list_body(logbuf, te, txn->flags.te, 0, noargs);
         sep = "; ";
     }
     if (txn->resp_body.enc.proc) {
         buf_printf(logbuf, "%scnt-encoding=", sep);
-        comma_list_body(logbuf, ce, txn->resp_body.enc.type, NULL);
+        comma_list_body(logbuf, ce, txn->resp_body.enc.type, 0, noargs);
         sep = "; ";
     }
     if (txn->location) {

@@ -36,7 +36,7 @@ Last-Update: 2020-02-10
  
 --- a/imap/imapd.c
 +++ b/imap/imapd.c
-@@ -1134,6 +1134,10 @@
+@@ -1136,6 +1136,10 @@
  #ifdef HAVE_SSL
      tls_shutdown_serverengine();
  #endif
@@ -49,7 +49,7 @@ Last-Update: 2020-02-10
  
 --- a/imap/lmtpd.c
 +++ b/imap/lmtpd.c
-@@ -1014,6 +1014,9 @@
+@@ -1035,6 +1035,9 @@
  
      cyrus_done();
  

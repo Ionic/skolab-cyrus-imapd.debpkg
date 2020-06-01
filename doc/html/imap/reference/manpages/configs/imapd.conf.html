@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>imapd.conf &mdash; Cyrus IMAP 3.2.0 documentation</title>
+  <title>imapd.conf &mdash; Cyrus IMAP 3.2.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.0 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.1 documentation" href="../../../../index.html"/>
         <link rel="up" title="Man pages" href="../commands.html"/>
         <link rel="next" title="krb.equiv" href="krb.equiv.html"/>
         <link rel="prev" title="cyrus.conf" href="cyrus.conf.html"/> 
@@ -472,6 +472,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../systemcommands/notifyd.html"><strong>notifyd</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../systemcommands/pop3d.html"><strong>pop3d</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../systemcommands/pop3proxyd.html"><strong>pop3proxyd</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../systemcommands/promstatsd.html"><strong>promstatsd</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../systemcommands/proxyd.html"><strong>proxyd</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../systemcommands/ptdump.html"><strong>ptdump</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../systemcommands/ptexpire.html"><strong>ptexpire</strong></a></li>
@@ -766,7 +767,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.2.0</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.2.1</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -2833,46 +2834,16 @@ Possible values include &#8220;auxprop&#8221;, &#8220;saslauthd&#8221;, and &#82
 Note that long batches may delay user commands or mail delivery.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">search_attachment_extractor_url:</span></code> &lt;none&gt;</p>
 <blockquote>
-<div><p>A HTTP or HTTPS URL to extract search text from rich text attachments
-and other media during search indexing. The server at this URL must
-implement the following protocol:</p>
-<p>1. For each attachment of an email, Cyrus sends a GET request to the
-URL &lt;extractor-url&gt;/&lt;cyrus-id&gt;, where &lt;extractor-url&gt; is the
-configured URL and &lt;cyrus-id&gt; is a Cyrus-chosen path segment that
-uniquely identifies this attachment.</p>
-<p>2. If the extractor already has a cached plain text extract of the
-attachment identified by &lt;cyrus-id&gt; then it may return HTTP status
-code 200 (OK) and the plain text extract with a Content-Type
-&#8220;text/plain&#8221; header. Otherwise it must return HTTP status 404 (Not Found).</p>
-<p>3. If Cyrus receives the HTTP status code 404 (Not Found), then it sends
-a PUT request to the same URL as previously. The PUT request body
-contains the decoded, binary body of the attachment. The Content-Type
-request header has the same value as declared in the MIME part
-headers, including any type parameters.</p>
-<p>4. The extractor must return the plain text extract with either HTTP status
-200 (OK) or 201 (Created) and a Content-Type &#8220;text/plain&#8221; header.
-If no text can be extracted, then the extractor may return any return code
-in the range 4xx, or 200 and an empty response body.</p>
-<p>Any other HTTP status code is treated as an error. For performance
-reasons, the Cyrus indexer attempts to keep-alive the TCP connection
-to the extractor.</p>
-</div></blockquote>
+<div>Reserved for future use.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">search_index_language:</span></code> 0</p>
 <blockquote>
-<div>If enabled, then message bodies and subjects are indexed by their
-detected language, if the cld2 dependency is built into Cyrus.
-Regardless of this flag, bodies and subjects are always indexed and
-searched using the default stemmer.</div></blockquote>
+<div>Reserved for future use.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">search_index_parts:</span></code> 0</p>
 <blockquote>
-<div>If enabled, then message parts are each indexed separately into Xapian
-so that matches can be done by part.</div></blockquote>
+<div>Deprecated. No longer used.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">search_query_language:</span></code> 0</p>
 <blockquote>
-<div>If enabled, then message bodies and subjects searched by their language
-that got detected during indexing, if any.
-Regardless of this flag, bodies and subjects are always searched using
-the default stemmer.</div></blockquote>
+<div>Reserved for future use.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">search_normalisation_max:</span></code> 1000</p>
 <blockquote>
 <div>A resource bound for the combinatorial explosion of search expression
@@ -3608,7 +3579,7 @@ INBOX, NOT an email address!</div></blockquote>
 <p><code class="docutils literal"><span class="pre">zoneinfo_db:</span></code> twoskip</p>
 <blockquote>
 <div>The cyrusdb backend to use for zoneinfo.  This database is used by the
-&#8220;tzdist&#8221; <em>http_modules</em>, and is managed by <strong>ctl_zoneinfo(8)</strong>.
+&#8220;tzdist&#8221; <em>httpmodules</em>, and is managed by <strong>ctl_zoneinfo(8)</strong>.
 Allowed values: <em>flat</em>, <em>skiplist</em>, <em>twoskip</em>, <em>zeroskip</em></div></blockquote>
 <p><code class="docutils literal"><span class="pre">zoneinfo_db_path:</span></code> &lt;none&gt;</p>
 <blockquote>
@@ -3620,7 +3591,7 @@ will be configdirectory/zoneinfo.db</div></blockquote>
 definitions as generated by the vzic tool.  If not specified, whatever
 definitions libical finds will be used.</p>
 <p>If you are providing a Time Zone Data Distribution Service (i.e. you have
-&#8220;tzdist&#8221; listed in <em>http_modules</em>), then this configuration option MUST
+&#8220;tzdist&#8221; listed in <em>httpmodules</em>), then this configuration option MUST
 be specified.</p>
 </div></blockquote>
 <p><code class="docutils literal"><span class="pre">object_storage_enabled:</span></code> 0</p>
@@ -3726,7 +3697,7 @@ on HTTP 1.1 using a RESTful architecture</div></blockquote>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.2.0',
+            VERSION:'3.2.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
