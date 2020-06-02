@@ -279,6 +279,7 @@ Description: Cyrus mail system - test clients
 Package: cyrus-dev
 Architecture: any
 Section: devel
+Multi-Arch: same
 Depends: cyrus-common (= ${binary:Version}),
          libcyrus-imap-perl (>= ${binary:Version}),
          libsasl2-dev,
