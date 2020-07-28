@@ -12,5 +12,5 @@
 0012-Use-UnicodeData.txt-from-system.patch
 0016-conversations-actually-need-to-update-GUID-counts-after-calculating-CID.patch
 0018-increase-test-timeout.patch
-0019-fix-tests.patch
+#0019-fix-tests.patch
 #0020-disable-some-tests.patch

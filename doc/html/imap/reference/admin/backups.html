@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Cyrus Backups &mdash; Cyrus IMAP 3.2.1 documentation</title>
+  <title>Cyrus Backups &mdash; Cyrus IMAP 3.2.2 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.1 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.2 documentation" href="../../../index.html"/>
         <link rel="up" title="Administrator Guide" href="../admin.html"/>
         <link rel="next" title="Cyrus NNTP" href="nntp.html"/>
         <link rel="prev" title="Cyrus Sieve" href="sieve.html"/> 
@@ -767,7 +767,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.2.1</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.2.2</a> &raquo;</li>
       
           <li><a href="../../../operations.html">Operations</a> &raquo;</li>
       
@@ -969,7 +969,12 @@ of delayed recovery of storage space.</p>
 <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a></p>
 </li>
 <li><p class="first">Set up a <a class="reference internal" href="../manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a> file for it:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">SERVICES</span> <span class="p">{</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">START</span> <span class="p">{</span>
+    <span class="c1"># this is required</span>
+    <span class="n">recover</span> <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;ctl_cyrusdb -r&quot;</span>
+<span class="p">}</span>
+
+<span class="n">SERVICES</span> <span class="p">{</span>
     <span class="c1"># backupd is probably the only service entry your backup server needs</span>
     <span class="n">backupd</span> <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;backupd&quot;</span> <span class="n">listen</span><span class="o">=</span><span class="s2">&quot;csync&quot;</span> <span class="n">prefork</span><span class="o">=</span><span class="mi">0</span>
 <span class="p">}</span>
@@ -1026,7 +1031,7 @@ this &#8220;backup&#8221;</dd>
 means livelier backups but more network I/O. Larger value reduces I/O.</dd>
 </dl>
 <p>Update <a class="reference internal" href="../manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a> to add a <a class="reference internal" href="../manpages/systemcommands/sync_client.html#std:cyrusman-sync_client(8)">sync_client(8)</a> invocation
-to the SERVICES section specifying (at least) the <code class="docutils literal"><span class="pre">-r</span></code> and <code class="docutils literal"><span class="pre">-n</span> <span class="pre">channel</span></code>
+to the DAEMON section specifying (at least) the <code class="docutils literal"><span class="pre">-r</span></code> and <code class="docutils literal"><span class="pre">-n</span> <span class="pre">channel</span></code>
 options.</p>
 <p>See <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> for additional <em>sync_</em> settings that can
 be used to affect the replication behaviour.  Many can be prefixed with
@@ -1290,7 +1295,7 @@ messages.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on May 08 2017
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jun 22 2020
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1310,7 +1315,7 @@ messages.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.2.1',
+            VERSION:'3.2.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

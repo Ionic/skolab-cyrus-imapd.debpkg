@@ -235,6 +235,11 @@ Cyrus Backups server
 
 5. Set up a cyrus.conf(5) file for it:
 
+      START {
+          # this is required
+          recover cmd="ctl_cyrusdb -r"
+      }
+
       SERVICES {
           # backupd is probably the only service entry your backup server needs
           backupd cmd="backupd" listen="csync" prefork=0
@@ -302,9 +307,8 @@ sync_log_channels: *channel*
    value means livelier backups but more network I/O. Larger value
    reduces I/O.
 
-Update cyrus.conf(5) to add a sync_client(8) invocation to the
-SERVICES section specifying (at least) the "-r" and "-n channel"
-options.
+Update cyrus.conf(5) to add a sync_client(8) invocation to the DAEMON
+section specifying (at least) the "-r" and "-n channel" options.
 
 See imapd.conf(5) for additional *sync_* settings that can be used to
 affect the replication behaviour.  Many can be prefixed with a channel
