@@ -8,7 +8,7 @@ Section: mail
 Priority: optional
 Build-Depends: bison,
                comerr-dev,
-               debhelper-compat (= 12),
+               debhelper-compat (= 13),
                flex,
                ghostscript,
                groff,
