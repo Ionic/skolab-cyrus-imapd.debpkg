@@ -409,7 +409,7 @@ Sitemap
 
           * Required Build Dependencies
 
-          * Optional Build Dependencies
+          * Build dependencies for additional functionality
 
             * Developers only
 
@@ -417,7 +417,7 @@ Sitemap
 
             * Alternate database formats
 
-            * CalDAV, CardDAV, or JMAP
+            * CalDAV, CardDAV, or JMAP (httpd subsystem)
 
             * Other
 
@@ -427,7 +427,7 @@ Sitemap
 
           * Optional dependencies
 
-            * CalDAV, CardDAV, JMAP
+            * CalDAV, CardDAV, WebDAV, JMAP
 
             * Murder
 

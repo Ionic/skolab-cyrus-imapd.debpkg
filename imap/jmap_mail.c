@@ -3097,7 +3097,7 @@ static struct guidsearch_expr *guidsearch_expr_build(search_expr_t *parent,
                         ge = gc;
                     }
                     else if (!ptrarray_size(&ge->children)) {
-                        ge->op = SEOP_FALSE;
+                        ge->op = GSEOP_FALSE;
                     }
                 }
                 else if (e->attr == &_emailsearch_folders_otherthan_attr) {
@@ -3845,6 +3845,8 @@ static void _email_query(jmap_req_t *req, struct jmap_emailquery *q,
     struct emailsearch *search = _emailsearch_new(req, q->super.filter,
                                                   q->super.sort,
                                                   contactgroups, 0, 0);
+    int r = 0;
+
     if (!search) {
         *err = jmap_server_error(IMAP_INTERNAL);
         goto done;
@@ -3867,7 +3869,6 @@ static void _email_query(jmap_req_t *req, struct jmap_emailquery *q,
     }
 
     /* Try to fetch matching guids directly from Xapian */
-    int r = 0;
     int is_guidsearch = 0;
     if (!q->disable_guidsearch && !q->super.calculate_total &&
         (q->super.limit || !q->super.have_limit) && !q->want_partids) {

@@ -64,9 +64,13 @@ Controlling
 And to control the criteria used to manage migration of data between
 partitions:
 
-   "archive_days:" <none>
+   "archive_after:" 7d
 
-      Deprecated in favour of *archive_after*.
+      The duration after which to move messages to the archive
+      partition if archiving is enabled.
+
+      For backward compatibility, if no unit is specified, days is
+      assumed.
 
    "archive_maxsize:" 1024
 
