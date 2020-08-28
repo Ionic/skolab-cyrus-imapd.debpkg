@@ -553,7 +553,8 @@ int service_main(int argc __attribute__((unused)),
     if ((mboxevent = mboxevent_new(EVENT_LOGOUT))) {
         mboxevent_set_access(mboxevent,
                              buf_cstringnull_ifempty(&saslprops.iplocalport),
-                             NULL, popd_userid, NULL, 1);
+                             buf_cstringnull_ifempty(&saslprops.ipremoteport),
+                             popd_userid, NULL, 1);
 
         mboxevent_notify(&mboxevent);
         mboxevent_free(&mboxevent);
@@ -1228,6 +1229,7 @@ void uidl_msg(uint32_t msgno)
 static void cmd_starttls(int pop3s)
 {
     int result;
+    char *localip, *remoteip;
 
     if (popd_starttls_done == 1)
     {
@@ -1260,11 +1262,22 @@ static void cmd_starttls(int pop3s)
         prot_flush(popd_out);
     }
 
+    /* tls_start_servertls is going to reset saslprops, discarding the
+     * iplocalport and ipremoteport fields.  Preserve them, then put them back
+     * after the call.
+     */
+    localip = buf_release(&saslprops.iplocalport);
+    remoteip = buf_release(&saslprops.ipremoteport);
+
     result=tls_start_servertls(0, /* read */
                                1, /* write */
                                pop3s ? 180 : popd_timeout,
                                &saslprops,
                                &tls_conn);
+
+    /* put the iplocalport and ipremoteport back */
+    if (localip)  buf_initm(&saslprops.iplocalport, localip, strlen(localip));
+    if (remoteip) buf_initm(&saslprops.ipremoteport, remoteip, strlen(remoteip));
 
     /* if error */
     if (result==-1) {

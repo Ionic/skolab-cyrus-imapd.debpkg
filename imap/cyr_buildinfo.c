@@ -251,11 +251,6 @@ static json_t *buildinfo()
 #else
     json_object_set_new(dependency, "chardet", json_false());
 #endif
-#ifdef HAVE_CLD2
-    json_object_set_new(dependency, "cld2", json_true());
-#else
-    json_object_set_new(dependency, "cld2", json_false());
-#endif
 
     /* Enabled databases */
 #ifdef HAVE_MYSQL
@@ -286,13 +281,6 @@ static json_t *buildinfo()
     json_object_set_new(search, "xapian", json_false());
 #endif
     json_object_set_new(search, "xapian_cjk_tokens", json_string(XAPIAN_CJK_TOKENS));
-
-    /* Supported hardware features */
-#ifdef HAVE_SSE42
-    json_object_set_new(hardware, "sse42", json_true());
-#else
-    json_object_set_new(hardware, "sse42", json_false());
-#endif
 
     return buildconf;
 }

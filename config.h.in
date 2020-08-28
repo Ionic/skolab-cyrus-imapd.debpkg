@@ -88,9 +88,6 @@
 /* Do we have ClamAV? */
 #undef HAVE_CLAMAV
 
-/* Build with cld2 library support */
-#undef HAVE_CLD2
-
 /* Do we have CU_SetUpFunc? */
 #undef HAVE_CU_SETUPFUNC
 
@@ -110,6 +107,9 @@
 /* Define to 1 if you have the declaration of `tzname', and to 0 if you don't.
    */
 #undef HAVE_DECL_TZNAME
+
+/* Do we have deflatePending()? */
+#undef HAVE_DEFLATE_PENDING
 
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
@@ -317,9 +317,6 @@
 
 /* Build in SQLite support? */
 #undef HAVE_SQLITE
-
-/* "Compiler has support for SSE4.2 extensions" */
-#undef HAVE_SSE42
 
 /* Build with SSL support? */
 #undef HAVE_SSL

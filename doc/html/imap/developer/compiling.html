@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Compiling &mdash; Cyrus IMAP 3.2.2 documentation</title>
+  <title>Compiling &mdash; Cyrus IMAP 3.2.3 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.2 documentation" href="../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.3 documentation" href="../../index.html"/>
         <link rel="up" title="Setup" href="../../setup.html"/>
         <link rel="next" title="Installing Cyrus" href="../installing.html"/>
         <link rel="prev" title="Setup" href="../../setup.html"/> 
@@ -297,7 +297,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Compiling</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#setting-up-dependencies">Setting up dependencies</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#required-build-dependencies">Required Build Dependencies</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#optional-build-dependencies">Optional Build Dependencies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#build-dependencies-for-additional-functionality">Build dependencies for additional functionality</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#compile-cyrus">Compile Cyrus</a><ul>
@@ -767,7 +767,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html">Docs v3.2.2</a> &raquo;</li>
+      <li><a href="../../index.html">Docs v3.2.3</a> &raquo;</li>
       
           <li><a href="../../setup.html">Setup</a> &raquo;</li>
       
@@ -786,15 +786,20 @@
             
   <div class="section" id="compiling">
 <span id="id1"></span><h1>Compiling<a class="headerlink" href="#compiling" title="Permalink to this headline">¶</a></h1>
-<p>These instructions are based on Debian 8.0 because it has to be based on something. Other Linux distributions will be similar in the broad ideas but may differ in the specifics. If you already have a preferred distro, use that (we assume you know how to use its package management system). If you don&#8217;t already have a preferred distro, maybe consider using Debian.</p>
-<p>First make sure you have a <a class="reference internal" href="../download/getcyrus.html#getcyrus"><span class="std std-ref">copy of the source</span></a>. You can either fetch the latest source from git, or using one of our release tarballs.</p>
+<p>These instructions are based on Debian 8.0 because it has to be based on
+something. Other Linux distributions will be similar in the broad ideas but may
+differ in the specifics. If you already have a preferred distro, use that (we
+assume you know how to use its package management system). If you don&#8217;t already
+have a preferred distro, maybe consider using Debian.</p>
+<p>First make sure you have a <a class="reference internal" href="../download/getcyrus.html#getcyrus"><span class="std std-ref">copy of the source</span></a>. You can either
+fetch the latest source from git, or download one of our release tarballs.</p>
 <div class="section" id="setting-up-dependencies">
 <h2>Setting up dependencies<a class="headerlink" href="#setting-up-dependencies" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="required-build-dependencies">
 <h3>Required Build Dependencies<a class="headerlink" href="#required-build-dependencies" title="Permalink to this headline">¶</a></h3>
-<p>Building a basic Cyrus that can send and receive email: the minimum libraries required to build a functional Cyrus.</p>
-<table border="1" class="docutils" id="id2">
-<caption><span class="caption-text">Build Dependencies</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
+<p>Building a basic Cyrus that can send and receive email: the minimum libraries
+required to build a functional cyrus-imapd.</p>
+<table border="1" class="docutils">
 <colgroup>
 <col width="25%" />
 <col width="25%" />
@@ -895,12 +900,18 @@ sudo apt-get -t jessie-backports install libxapian-dev
 </pre></div>
 </div>
 </div>
-<div class="section" id="optional-build-dependencies">
-<h3>Optional Build Dependencies<a class="headerlink" href="#optional-build-dependencies" title="Permalink to this headline">¶</a></h3>
-<p>The following build dependencies are optional, and enable functionality,
-code maintenance tasks or building the documentation.</p>
+<div class="section" id="build-dependencies-for-additional-functionality">
+<h3>Build dependencies for additional functionality<a class="headerlink" href="#build-dependencies-for-additional-functionality" title="Permalink to this headline">¶</a></h3>
+<p>The following dependencies enable additional functionality, help with
+code maintenance tasks or are required for building the documentation.</p>
 <div class="section" id="developers-only">
 <h4>Developers only<a class="headerlink" href="#developers-only" title="Permalink to this headline">¶</a></h4>
+<p>The developer dependencies are required if you are building from git sources,
+have modified certain source files from the release tarball, or have configured
+with <code class="docutils literal"><span class="pre">--enable-maintainer-mode</span></code> in order to build a new package.</p>
+<p>If you are building normally from a pure release tarball, then you don&#8217;t need
+these dependencies. The files, these dependencies produce, have been pre-built
+and included in the release, and do not normally need to be re-built.</p>
 <table border="1" class="colwidths-given docutils">
 <colgroup>
 <col width="20%" />
@@ -913,68 +924,67 @@ code maintenance tasks or building the documentation.</p>
 <tr class="row-odd"><th class="head">Package</th>
 <th class="head">Debian</th>
 <th class="head">RedHat</th>
-<th class="head">Required for <code class="docutils literal"><span class="pre">make</span> <span class="pre">check</span></code>?</th>
+<th class="head">Required</th>
 <th class="head">Notes</th>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><a class="reference external" href="http://cunit.sourceforge.net/">CUnit</a></td>
-<td>libcunit1-dev</td>
-<td>cunit-devel</td>
-<td>yes</td>
-<td>Development headers for compiling Cyrus IMAP&#8217;s unit tests.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference external" href="http://search.cpan.org/dist/ExtUtils-MakeMaker/">perl(ExtUtils::MakeMaker)</a></td>
-<td>??</td>
-<td>??</td>
-<td>no</td>
-<td><p class="first">Perl library to assist in building extensions to Perl.</p>
-<p class="last">Configure option: <code class="docutils literal"><span class="pre">--with-perl</span></code></p>
-</td>
-</tr>
-<tr class="row-even"><td><cite>libdb-dev</cite></td>
-<td>libdb-dev</td>
-<td>libdb-devel</td>
-<td>no</td>
-<td>The -dev package must match the version of libdb you already have installed (assuming it&#8217;s probably already installed). On Debian 8.0, <code class="docutils literal"><span class="pre">libdb5.3-dev</span></code> is needed, but <code class="docutils literal"><span class="pre">libdb5.1-dev</span></code> on 7.8.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference external" href="http://www.perl.org/">perl-devel</a></td>
+<tr class="row-even"><td><a class="reference external" href="http://www.perl.org/">perl-devel</a></td>
 <td>perl-dev</td>
 <td>perl-devel</td>
 <td>no</td>
-<td><p class="first">Perl development headers to allow building binary perl libraries. Needs version 5+.</p>
-<p class="last">Configure option: <code class="docutils literal"><span class="pre">--with-perl</span></code></p>
-</td>
+<td>Needed for building binary perl
+libraries, version 5+.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference external" href="http://search.cpan.org/dist/ExtUtils-MakeMaker/">perl(ExtUtils::MakeMaker)</a></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>no</td>
+<td>Needed for building extensions to
+Perl.</td>
 </tr>
 <tr class="row-even"><td><a class="reference external" href="https://metacpan.org/pod/Pod::POM::View::Restructured">perl(Pod::POM::View::Restructured)</a></td>
 <td>&nbsp;</td>
 <td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>Perl library to generate man pages.  This has to be available to the system-wide perl interpreter, found by <code class="docutils literal"><span class="pre">which</span></code>:  <code class="docutils literal"><span class="pre">./configure</span> <span class="pre">--with-perl</span></code> is not honoured.</td>
+<td>no</td>
+<td>Needed to generate man
+pages. This has to be available to the system-wide perl interpreter, found
+by <code class="docutils literal"><span class="pre">which</span></code>.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference external" href="https://github.com/gitpython-developers/GitPython">python(GitPython)</a></td>
 <td>&nbsp;</td>
 <td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>Python library needed for building the documentation</td>
+<td>no</td>
+<td>Needed for building the documentation.</td>
 </tr>
 <tr class="row-even"><td><a class="reference external" href="https://www.sphinx-doc.org/">python(Sphinx)</a></td>
 <td>&nbsp;</td>
 <td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>Python library needed for building the documentation</td>
+<td>no</td>
+<td>Needed for building the documentation.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference external" href="http://www.valgrind.org/">valgrind</a></td>
+<tr class="row-odd"><td><a class="reference external" href="http://www.xfig.org/">transfig</a></td>
+<td>transfig</td>
+<td>transfig</td>
+<td>no</td>
+<td>Also known as fig2dev, transfig is
+an artifact from the old days, and is only used for generation of a couple
+of png files in the legacy documentation (doc/legacy/murder.png and
+doc/legacy/netnews.png). One day it should be merged into the current
+documentation, cause then we can get rid of it: <a class="reference external" href="https://github.com/cyrusimap/cyrus-imapd/issues/1769">issues/1769</a>.</td>
+</tr>
+<tr class="row-even"><td><a class="reference external" href="http://www.valgrind.org/">valgrind</a></td>
 <td>valgrind</td>
 <td>valgrind</td>
 <td>no</td>
 <td>Performance and memory testing.</td>
 </tr>
-<tr class="row-even"><td><a class="reference external" href="https://github.com/ConorOG/xxd/">xxd</a></td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>For rebuilding the _js.h files, for CalDAV and CardDAV support.</td>
+<tr class="row-odd"><td><a class="reference external" href="https://github.com/ConorOG/xxd/">xxd</a></td>
+<td>vim-common</td>
+<td>vim-common</td>
+<td>no</td>
+<td>Needed for the _js.h files, for CalDAV
+and CardDAV support.</td>
 </tr>
 </tbody>
 </table>
@@ -993,7 +1003,7 @@ code maintenance tasks or building the documentation.</p>
 <tr class="row-odd"><th class="head">Package</th>
 <th class="head">Debian</th>
 <th class="head">RedHat</th>
-<th class="head">Required for <code class="docutils literal"><span class="pre">make</span> <span class="pre">check</span></code>?</th>
+<th class="head">Required</th>
 <th class="head">Notes</th>
 </tr>
 </thead>
@@ -1001,30 +1011,32 @@ code maintenance tasks or building the documentation.</p>
 <tr class="row-even"><td><a class="reference external" href=":ref:`CyrusSASL&lt;cyrussasl:sasl-index&gt;`">Cyrus SASL Plain</a></td>
 <td>libsasl2-modules</td>
 <td>cyrus-sasl-plain</td>
-<td>yes</td>
-<td>Cyrus SASL package that ships the library required to pass Cyrus IMAP&#8217;s PLAIN authentication unit tests.</td>
+<td>yes/no</td>
+<td>Required
+to pass Cyrus IMAP&#8217;s PLAIN authentication unit tests.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference external" href=":ref:`CyrusSASL&lt;cyrussasl:sasl-index&gt;`">Cyrus SASL MD5</a></td>
 <td>libsasl2-modules</td>
 <td>cyrus-sasl-md5</td>
-<td>yes</td>
-<td>Cyrus SASL library required to pass Cyrus IMAP&#8217;s DIGEST-MD5
-authentication unit tests</td>
+<td>yes/no</td>
+<td>Required to
+pass Cyrus IMAP&#8217;s DIGEST-MD5 authentication unit tests.</td>
 </tr>
 <tr class="row-even"><td><a class="reference external" href=":ref:`CyrusSASL&lt;cyrussasl:sasl-index&gt;`">sasl binaries</a></td>
 <td>sasl2-bin</td>
 <td>sasl2-bin</td>
 <td>no</td>
-<td>Administration tools for managing SASL</td>
+<td>Administration tools for
+managing SASL.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference external" href="http://web.mit.edu/kerberos/www/">Kerberos</a></td>
 <td>libsasl2-modules-gssapi-mit</td>
 <td>krb5-devel</td>
-<td>no</td>
-<td><p class="first">Development headers required to enable Kerberos v5 authentication
-capabilities. Otherwise also known as the authentication mechanism <em>GSSAPI</em>.</p>
-<p class="last">Configure option: <code class="docutils literal"><span class="pre">--with-krbimpl=mit</span></code></p>
-</td>
+<td>yes/no</td>
+<td>Development
+headers required to enable Kerberos v5 authentication capabilities, also
+known as the authentication mechanism <em>GSSAPI</em>. Configure option:
+<code class="docutils literal"><span class="pre">--with-krbimpl=mit</span></code>.</td>
 </tr>
 </tbody>
 </table>
@@ -1043,31 +1055,34 @@ capabilities. Otherwise also known as the authentication mechanism <em>GSSAPI</e
 <tr class="row-odd"><th class="head">Package</th>
 <th class="head">Debian</th>
 <th class="head">RedHat</th>
-<th class="head">Required for <code class="docutils literal"><span class="pre">make</span> <span class="pre">check</span></code>?</th>
+<th class="head">Required</th>
 <th class="head">Notes</th>
 </tr>
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td><a class="reference external" href="http://www.mysql.com">mysql</a> or <a class="reference external" href="http://mariadb.org">mariadb</a></td>
 <td>libmysqlclient-dev or libmariadb-dev</td>
-<td>mysql-devel or mariadb-devel</td>
-<td>no</td>
-<td><p class="first">MariaDB or MySQL development headers, to allow Cyrus IMAP to use
-it as the backend for its databases.</p>
-<p class="last">Configure option: <code class="docutils literal"><span class="pre">--with-mysql</span></code>, <code class="docutils literal"><span class="pre">--with-mysql-incdir</span></code>, <code class="docutils literal"><span class="pre">--with-mysql-libdir</span></code></p>
-</td>
+<td>mysql-devel
+or mariadb-devel</td>
+<td>yes/no</td>
+<td>MariaDB or MySQL development headers, required
+to allow Cyrus IMAP to use it as the backend for its databases. Configure
+options: <code class="docutils literal"><span class="pre">--with-mysql</span></code>, <code class="docutils literal"><span class="pre">--with-mysql-incdir</span></code>,
+<code class="docutils literal"><span class="pre">--with-mysql-libdir</span></code>.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference external" href="http://www.postgresql.org/">postgresql</a></td>
 <td>postgresql-dev</td>
 <td>postgresql-devel</td>
-<td>no</td>
-<td>&nbsp;</td>
+<td>yes/no</td>
+<td>PostgreSQL
+development headers, required to allow Cyrus IMAP to use it as the backend
+for its databases. Configure option: <code class="docutils literal"><span class="pre">--with-pgsql</span></code>.</td>
 </tr>
 </tbody>
 </table>
 </div>
-<div class="section" id="caldav-carddav-or-jmap">
-<h4>CalDAV, CardDAV, or JMAP<a class="headerlink" href="#caldav-carddav-or-jmap" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="caldav-carddav-or-jmap-httpd-subsystem">
+<h4>CalDAV, CardDAV, or JMAP (httpd subsystem)<a class="headerlink" href="#caldav-carddav-or-jmap-httpd-subsystem" title="Permalink to this headline">¶</a></h4>
 <table border="1" class="colwidths-given docutils">
 <colgroup>
 <col width="20%" />
@@ -1080,34 +1095,73 @@ it as the backend for its databases.</p>
 <tr class="row-odd"><th class="head">Package</th>
 <th class="head">Debian</th>
 <th class="head">RedHat</th>
-<th class="head">Required for <code class="docutils literal"><span class="pre">make</span> <span class="pre">check</span></code>?</th>
+<th class="head">Required</th>
 <th class="head">Notes</th>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><a class="reference external" href="https://github.com/Joungkyun/libchardet">libchardet</a></td>
+<tr class="row-even"><td><a class="reference external" href="https://github.com/google/brotli">libbrotli</a></td>
+<td>libbrotli-dev</td>
+<td>brotli-devel</td>
+<td>no</td>
+<td>It provides Brotli
+compression support for http communications (otherwise only <code class="docutils literal"><span class="pre">deflate</span></code> and
+<code class="docutils literal"><span class="pre">gzip</span></code> (optionally) would be available).</td>
+</tr>
+<tr class="row-odd"><td><a class="reference external" href="https://github.com/Joungkyun/libchardet">libchardet</a></td>
 <td>libchardet-dev</td>
 <td>libchardet-devel</td>
-<td>no</td>
-<td>&nbsp;</td>
+<td>yes/no</td>
+<td>It is used
+by the <strong>JMAP</strong> module of httpd to detect the character set of untagged
+8-bit headers. Without it, cyrus-imapd will not do character-set detection.
+If some piece of data has no character set coming in, it will have no
+character set. Required for JMAP, but otherwise is not needed.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference external" href="https://github.com/libical/libical/">libical</a></td>
+<tr class="row-even"><td><a class="reference external" href="https://github.com/libical/libical/">libical</a></td>
 <td>libical-dev</td>
 <td>libical-devel</td>
-<td>no</td>
-<td>version 3.0.0 or higher</td>
+<td>yes</td>
+<td>It provides
+calendaring functionality for CalDAV, which can&#8217;t be used without this lib.
+Version 3.0.0 or higher is required.</td>
 </tr>
-<tr class="row-even"><td><a class="reference external" href="http://xmlsoft.org/">libxml</a></td>
+<tr class="row-odd"><td><a class="reference external" href="http://xmlsoft.org/">libxml</a></td>
 <td>libxml2-dev</td>
 <td>libxml2-devel</td>
+<td>yes</td>
+<td>A fundamental lib for
+all *DAV functionality.</td>
+</tr>
+<tr class="row-even"><td><a class="reference external" href="https://nghttp2.org/">nghttp2</a></td>
+<td>libnghttp2-dev</td>
+<td>libnghttp2-devel</td>
 <td>no</td>
-<td>&nbsp;</td>
+<td>HTTP/2 support
+for the entire <strong>httpd</strong> subsystem (*DAV &amp; JMAP).</td>
 </tr>
 <tr class="row-odd"><td><a class="reference external" href="http://shapelib.maptools.org">shapelib</a></td>
 <td>shapelib</td>
-<td>&nbsp;</td>
+<td>shapelib</td>
+<td>yes/no</td>
+<td>It is required for
+<strong>tzdist</strong> service to have geolocation support. Otherwise it is not needed.
+Version 1.3.0 or higher is required when using it.</td>
+</tr>
+<tr class="row-even"><td><a class="reference external" href="https://tatsuhiro-t.github.io/wslay/">wslay</a></td>
+<td>libwslay-dev</td>
+<td>wslay-devel</td>
 <td>no</td>
-<td>version 1.3.0 or higher</td>
+<td>It provides WebSockets support
+in httpd. Only used with <strong>JMAP</strong>, otherwise not needed. Version 1.1.1 or
+higher is required when using it.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference external" href="http://zlib.net/">zlib</a></td>
+<td>zlib1g-dev</td>
+<td>zlib-devel</td>
+<td>no</td>
+<td>It provides gzip compression
+support for http communications.</td>
 </tr>
 </tbody>
 </table>
@@ -1126,93 +1180,64 @@ it as the backend for its databases.</p>
 <tr class="row-odd"><th class="head">Package</th>
 <th class="head">Debian</th>
 <th class="head">RedHat</th>
-<th class="head">Required for <code class="docutils literal"><span class="pre">make</span> <span class="pre">check</span></code>?</th>
+<th class="head">Required</th>
 <th class="head">Notes</th>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td>SSL certificates</td>
+<tr class="row-even"><td><a class="reference external" href="http://cunit.sourceforge.net/">CUnit</a></td>
+<td>libcunit1-dev</td>
+<td>cunit-devel</td>
+<td>no</td>
+<td>Development headers for
+compiling Cyrus IMAP&#8217;s unit tests. Required to run <code class="docutils literal"><span class="pre">make</span> <span class="pre">check</span></code>.</td>
+</tr>
+<tr class="row-odd"><td>SSL certificates</td>
 <td>ssl-cert-dev</td>
 <td>mod_ssl</td>
 <td>no</td>
-<td>Used if you&#8217;re installing SSL certificates</td>
+<td>Used if you&#8217;re
+installing SSL certificates.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference external" href="https://www.clamav.net/">ClamAV</a></td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>Used by <strong>cyr_virusscan</strong>.</td>
-</tr>
-<tr class="row-even"><td><a class="reference external" href="http://net-snmp.sourceforge.net/">net-snmp</a></td>
-<td>libsnmp-dev</td>
-<td>net-snmp-devel</td>
+<tr class="row-even"><td><a class="reference external" href="https://www.clamav.net/">ClamAV</a></td>
+<td>libclamav-dev</td>
+<td>clamav-devel</td>
 <td>no</td>
-<td>version 4.2 or higher</td>
+<td>It is used by
+<strong>cyr_virusscan</strong>, otherwise not needed.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference external" href="http://www.openldap.org/">openldap</a></td>
 <td>libldap2-dev</td>
 <td>openldap-devel</td>
 <td>no</td>
-<td><p class="first">Development headers to enable <strong>ptloader</strong> to interface with LDAP
-directly, for canonification of login usernames to mailbox names,
-and verification of login usernames, ACL subjects and group
-membership.</p>
-<p class="last">Configure option: <code class="docutils literal"><span class="pre">--with-ldap</span></code></p>
-</td>
-</tr>
-<tr class="row-even"><td><a class="reference external" href="ftp://ftp.porcupine.org/pub/security/index.html">tcp_wrappers</a></td>
-<td>tcp_wrappers</td>
-<td>xx</td>
-<td>no</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-odd"><td><a class="reference external" href="http://www.xfig.org/">transfig</a></td>
-<td>transfig</td>
-<td>xx</td>
-<td>no</td>
-<td>also known as fig2dev</td>
+<td>Development headers
+to enable <strong>ptloader</strong> to interface with LDAP directly, for canonification
+of login usernames to mailbox names, and verification of login usernames,
+ACL subjects and group membership. Configure option: <code class="docutils literal"><span class="pre">--with-ldap</span></code>.</td>
 </tr>
 <tr class="row-even"><td><a class="reference external" href="http://www.pcre.org/">pcre</a></td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>PCRE 1 (or 8) - for regular expression matching</td>
+<td>libpcre3-dev</td>
+<td>pcre-devel</td>
+<td>yes</td>
+<td>PCRE 1 (8.x) - for utf-8/unicode
+regular expression matching. Could be replaced by something else in the
+future. See <a class="reference external" href="https://github.com/cyrusimap/cyrus-imapd/issues/1731#issuecomment-273064554">issues/1731</a> for more information.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference external" href="https://metacpan.org/pod/Term::ReadLine">perl(Term::ReadLine)</a></td>
 <td>&nbsp;</td>
 <td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>Perl library needed by cyradm</td>
+<td>no</td>
+<td>Perl library needed by <strong>cyradm</strong>.</td>
 </tr>
 <tr class="row-even"><td><a class="reference external" href="https://www.libsrs2.org/">libsrs2</a></td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>Sender Rewriting Scheme for lmtp, used on Sieve redirect</td>
-</tr>
-<tr class="row-odd"><td><a class="reference external" href="http://zlib.net/">zlib</a></td>
-<td>zlib1g-dev</td>
-<td>zlib-devel</td>
+<td><em>no package</em></td>
+<td><em>no package</em></td>
 <td>no</td>
-<td>Compression support for httpd</td>
-</tr>
-<tr class="row-even"><td><a class="reference external" href="https://github.com/google/brotli">libbrotli</a></td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>Brotli compression support for httpd</td>
-</tr>
-<tr class="row-odd"><td><a class="reference external" href="https://tatsuhiro-t.github.io/wslay/">wslay</a></td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>WebSockets support in httpd</td>
-</tr>
-<tr class="row-even"><td><a class="reference external" href="https://nghttp2.org/">nghttp2</a></td>
-<td>libnghttp2-dev</td>
-<td>libnghttp2-devel</td>
-<td>no</td>
-<td>HTTP/2 support for httpd</td>
+<td>It is used for
+implementing Sender Rewriting Scheme (SRS) functionality for messages
+forwarded by sieve scripts. Without it, messages forwarded by sieve scripts
+will not have this functionality and might have difficulty delivering to
+SMTP servers that insist on it.</td>
 </tr>
 </tbody>
 </table>
@@ -1234,8 +1259,8 @@ membership.</p>
 </div>
 <div class="section" id="compile-cyrus">
 <h2>Compile Cyrus<a class="headerlink" href="#compile-cyrus" title="Permalink to this headline">¶</a></h2>
-<p>There are additional <a class="reference internal" href="install-xapian.html#imapinstall-xapian"><span class="std std-ref">compile and installation steps</span></a> if you are using Xapian for searching,
-or if you are <a class="reference internal" href="jmap.html#developer-jmap"><span class="std std-ref">using jmap</span></a>.</p>
+<p>There are additional <a class="reference internal" href="install-xapian.html#imapinstall-xapian"><span class="std std-ref">compile and installation steps</span></a>
+if you are using Xapian for searching, or if you are <a class="reference internal" href="jmap.html#developer-jmap"><span class="std std-ref">using jmap</span></a>.</p>
 <div class="section" id="default-build-mail-only">
 <h3>Default build: mail only<a class="headerlink" href="#default-build-mail-only" title="Permalink to this headline">¶</a></h3>
 <pre class="literal-block">
@@ -1251,10 +1276,9 @@ please see:</p>
 </pre>
 <div class="admonition tip">
 <p class="first admonition-title">Tip</p>
-<p class="last">Passing environment variables as an argument to configure,
-rather than setting them in the environment before running configure,
-allows their values to be logged in config.log.  This is useful for diagnosing
-problems.</p>
+<p class="last">Passing environment variables as an argument to configure, rather than
+setting them in the environment before running configure, allows their
+values to be logged in config.log.  This is useful for diagnosing problems.</p>
 </div>
 </div>
 <div class="section" id="optional-dependencies">
@@ -1262,8 +1286,8 @@ problems.</p>
 <p>Some features are disabled by default and must be explicitly enabled
 via configure.</p>
 <p>Sieve is enabled by default.</p>
-<div class="section" id="caldav-carddav-jmap">
-<h4>CalDAV, CardDAV, JMAP<a class="headerlink" href="#caldav-carddav-jmap" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="caldav-carddav-webdav-jmap">
+<h4>CalDAV, CardDAV, WebDAV, JMAP<a class="headerlink" href="#caldav-carddav-webdav-jmap" title="Permalink to this headline">¶</a></h4>
 <blockquote>
 <div><code class="docutils literal"><span class="pre">./configure</span> <span class="pre">--enable-http</span> <span class="pre">--enable-calalarmd</span> <span class="pre">--enable-jmap</span></code></div></blockquote>
 </div>
@@ -1296,14 +1320,19 @@ make
 </pre></div>
 </div>
 <p>The <code class="docutils literal"><span class="pre">--prefix</span></code> option sets where Cyrus is installed to.</p>
-<p>It may be of use to also add <code class="docutils literal"><span class="pre">--std=gnu99</span></code> to the <code class="docutils literal"><span class="pre">CFLAGS</span></code>.  That generates TONS of warnings.</p>
+<p>It may be of use to also add <code class="docutils literal"><span class="pre">--std=gnu99</span></code> to the <code class="docutils literal"><span class="pre">CFLAGS</span></code>. That generates
+TONS of warnings.</p>
 <p>Having problems with <a class="reference internal" href="../reference/faqs/install-compilationerrors.html#compilationerrors"><span class="std std-ref">compilation</span></a> or
 <a class="reference internal" href="../reference/faqs/install-linkerwarnings.html#linker-warnings"><span class="std std-ref">linking</span></a>?</p>
-<p>If you&#8217;re running on Debian, and you install to <code class="docutils literal"><span class="pre">/usr/local</span></code>, you may need to update your library loader. Edit <code class="docutils literal"><span class="pre">/etc/ld.so.conf.d/x86_64-linux-gnu.conf</span></code> so it includes the following additional line:</p>
+<p>If you&#8217;re running on Debian, and you install to <code class="docutils literal"><span class="pre">/usr/local</span></code>, you may need to
+update your library loader. Edit <code class="docutils literal"><span class="pre">/etc/ld.so.conf.d/x86_64-linux-gnu.conf</span></code> so
+it includes the following additional line:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">x86_64</span><span class="o">-</span><span class="n">linux</span><span class="o">-</span><span class="n">gnu</span>
 </pre></div>
 </div>
-<p>Without this, when you attempt to start Cyrus, it reports <code class="docutils literal"><span class="pre">error</span> <span class="pre">while</span> <span class="pre">loading</span> <span class="pre">shared</span> <span class="pre">libraries:</span> <span class="pre">libcyrus_imap.so.0:</span> <span class="pre">cannot</span> <span class="pre">open</span> <span class="pre">shared</span> <span class="pre">object</span> <span class="pre">file:</span> <span class="pre">No</span> <span class="pre">such</span> <span class="pre">file</span> <span class="pre">or</span> <span class="pre">directory</span></code> because it can&#8217;t find the Cyrus library in /usr/local/lib.</p>
+<p>Without this, when you attempt to start Cyrus, it reports <code class="docutils literal"><span class="pre">error</span> <span class="pre">while</span> <span class="pre">loading</span>
+<span class="pre">shared</span> <span class="pre">libraries:</span> <span class="pre">libcyrus_imap.so.0:</span> <span class="pre">cannot</span> <span class="pre">open</span> <span class="pre">shared</span> <span class="pre">object</span> <span class="pre">file:</span> <span class="pre">No</span> <span class="pre">such</span>
+<span class="pre">file</span> <span class="pre">or</span> <span class="pre">directory</span></code> because it can&#8217;t find the Cyrus library in /usr/local/lib.</p>
 </div>
 <div class="section" id="check">
 <h3>Check<a class="headerlink" href="#check" title="Permalink to this headline">¶</a></h3>
@@ -1337,7 +1366,7 @@ version, operating system and affected libraries.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on May 15 2020
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jul 08 2020
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1357,7 +1386,7 @@ version, operating system and affected libraries.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'3.2.2',
+            VERSION:'3.2.3',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

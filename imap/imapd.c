@@ -8980,6 +8980,7 @@ out:
 static void cmd_starttls(char *tag, int imaps)
 {
     int result;
+    char *localip, *remoteip;
 
     if (imapd_starttls_done == 1)
     {
@@ -9012,11 +9013,22 @@ static void cmd_starttls(char *tag, int imaps)
         prot_flush(imapd_out);
     }
 
+    /* tls_start_servertls is going to reset saslprops, discarding the
+     * iplocalport and ipremoteport fields.  Preserve them, then put them back
+     * after the call.
+     */
+    localip = buf_release(&saslprops.iplocalport);
+    remoteip = buf_release(&saslprops.ipremoteport);
+
     result=tls_start_servertls(0, /* read */
                                1, /* write */
                                imaps ? 180 : imapd_timeout,
                                &saslprops,
                                &tls_conn);
+
+    /* put the iplocalport and ipremoteport back */
+    if (localip)  buf_initm(&saslprops.iplocalport, localip, strlen(localip));
+    if (remoteip) buf_initm(&saslprops.ipremoteport, remoteip, strlen(remoteip));
 
     /* if error */
     if (result==-1) {
@@ -11190,6 +11202,8 @@ static int backend_version(struct backend *be)
      * Otherwise, old versions will be unable to recognise the new version,
      * assume it is ancient, and downgrade the index to the oldest version
      * supported (version 6, prior to v2.3).
+     *
+     * In 3.3 and later, this function lives in backend.c
      */
 
     /* It's like looking in the mirror and not suffering from schizophrenia */
@@ -11197,7 +11211,24 @@ static int backend_version(struct backend *be)
         return MAILBOX_MINOR_VERSION;
     }
 
-    /* master branch? */
+    /* unstable 3.3 series ranges from 17..?? */
+    if (strstr(be->banner, "Cyrus IMAP 3.3")) {
+        /* all versions of 3.3 support at least this version */
+        return 17;
+    }
+
+    /* version 3.2 is 16 */
+    if (strstr(be->banner, "Cyrus IMAP 3.2")) {
+        return 16;
+    }
+
+    /* unstable 3.1 series ranges from 13..16 */
+    if (strstr(be->banner, "Cyrus IMAP 3.1")) {
+        /* all versions of 3.1 support at least this version */
+        return 13;
+    }
+
+    /* version 3.0 is 13 */
     if (strstr(be->banner, "Cyrus IMAP 3.0")) {
         return 13;
     }
@@ -11215,7 +11246,8 @@ static int backend_version(struct backend *be)
     }
 
     minor = strstr(be->banner, "v2.3.");
-    if (!minor) return 6;
+    if (!minor) goto unrecognised;
+    minor += strlen("v2.3.");
 
     /* at least version 2.3.10 */
     if (minor[1] != ' ') {
@@ -11243,7 +11275,11 @@ static int backend_version(struct backend *be)
         break;
     }
 
+unrecognised:
     /* fallthrough, shouldn't happen */
+    syslog(LOG_WARNING, "%s: did not recognise remote Cyrus version from "
+                        "banner \"%s\".  Assuming index version 6!",
+                        __func__, be->banner);
     return 6;
 }
 

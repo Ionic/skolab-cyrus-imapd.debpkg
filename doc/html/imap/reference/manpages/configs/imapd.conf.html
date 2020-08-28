@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>imapd.conf &mdash; Cyrus IMAP 3.2.2 documentation</title>
+  <title>imapd.conf &mdash; Cyrus IMAP 3.2.3 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.2 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.3 documentation" href="../../../../index.html"/>
         <link rel="up" title="Man pages" href="../commands.html"/>
         <link rel="next" title="krb.equiv" href="krb.equiv.html"/>
         <link rel="prev" title="cyrus.conf" href="cyrus.conf.html"/> 
@@ -297,7 +297,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../developer/compiling.html">Compiling</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../developer/compiling.html#setting-up-dependencies">Setting up dependencies</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../developer/compiling.html#required-build-dependencies">Required Build Dependencies</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../developer/compiling.html#optional-build-dependencies">Optional Build Dependencies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../developer/compiling.html#build-dependencies-for-additional-functionality">Build dependencies for additional functionality</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../developer/compiling.html#compile-cyrus">Compile Cyrus</a><ul>
@@ -767,7 +767,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.2.2</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.2.3</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -1109,10 +1109,10 @@ can be very useful for tracking down what happened if things look strange</div><
 <div>Deprecated in favor of <em>autocreate_subscribe_sharedfolders_all</em>.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">autocreate_acl:</span></code> &lt;none&gt;</p>
 <blockquote>
-<div><p>If folders are to be created by <em>autocreate_inbox_foldersR, this
+<div><p>If folders are to be created by <em>autocreate_inbox_folders</em>, this
 setting can be used to apply additional ACLs to the autocreated
 folders.  The syntax is &#8220;autocreate_acl folder identifier rights&#8221;,
-where **folder</em> must match one of the <em>autocreate_inbox_folders</em>
+where <em>folder</em> must match one of the <em>autocreate_inbox_folders</em>
 folders, <em>identifier</em> must be a valid cyrus identifier, and
 <em>rights</em> must be a valid cyrus rights string.  Multiple
 identifier|rights pairs can be assigned to a single folder by providing
@@ -3697,7 +3697,7 @@ on HTTP 1.1 using a RESTful architecture</div></blockquote>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.2.2',
+            VERSION:'3.2.3',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
