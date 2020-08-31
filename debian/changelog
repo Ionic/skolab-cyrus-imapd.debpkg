@@ -1,3 +1,10 @@
+cyrus-imapd (3.2.3-1) unstable; urgency=medium
+
+  * Bump debhelper compatibility level to 13
+  * New upstream version 3.2.3
+
+ -- Xavier Guimard <yadd@debian.org>  Fri, 28 Aug 2020 07:31:01 +0200
+
 cyrus-imapd (3.2.2-1~bpo10+1) buster-backports; urgency=medium
 
   * Rebuild for buster-backports.

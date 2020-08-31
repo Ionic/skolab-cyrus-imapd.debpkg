@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "IMAPD.CONF" "5" "June 22, 2020" "3.2.2" "Cyrus IMAP"
+.TH "IMAPD.CONF" "5" "August 28, 2020" "3.2.3" "Cyrus IMAP"
 .SH NAME
 imapd.conf \- Cyrus IMAP documentation
 .
@@ -550,10 +550,10 @@ Deprecated in favor of \fIautocreate_subscribe_sharedfolders_all\fP\&.
 \fBautocreate_acl:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-If folders are to be created by \fIautocreate_inbox_foldersR, this
+If folders are to be created by \fIautocreate_inbox_folders\fP, this
 setting can be used to apply additional ACLs to the autocreated
 folders.  The syntax is "autocreate_acl folder identifier rights",
-where **folder\fP must match one of the \fIautocreate_inbox_folders\fP
+where \fIfolder\fP must match one of the \fIautocreate_inbox_folders\fP
 folders, \fIidentifier\fP must be a valid cyrus identifier, and
 \fIrights\fP must be a valid cyrus rights string.  Multiple
 identifier|rights pairs can be assigned to a single folder by providing

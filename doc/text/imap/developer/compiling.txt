@@ -10,7 +10,7 @@ system). If you don't already have a preferred distro, maybe consider
 using Debian.
 
 First make sure you have a copy of the source. You can either fetch
-the latest source from git, or using one of our release tarballs.
+the latest source from git, or download one of our release tarballs.
 
 
 Setting up dependencies
@@ -21,11 +21,7 @@ Required Build Dependencies
 ---------------------------
 
 Building a basic Cyrus that can send and receive email: the minimum
-libraries required to build a functional Cyrus.
-
-
-Build Dependencies
-^^^^^^^^^^^^^^^^^^
+libraries required to build a functional cyrus-imapd.
 
 +---------------------------+---------------------------+---------------------------+---------------------------+
 | Package                   | Debian                    | RedHat                    | Notes                     |
@@ -71,55 +67,57 @@ To install all dependencies from packages on Debian Jessie, use this:
    sudo apt-get -t jessie-backports install libxapian-dev
 
 
-Optional Build Dependencies
----------------------------
+Build dependencies for additional functionality
+-----------------------------------------------
 
-The following build dependencies are optional, and enable
-functionality, code maintenance tasks or building the documentation.
+The following dependencies enable additional functionality, help with
+code maintenance tasks or are required for building the documentation.
 
 
 Developers only
 ~~~~~~~~~~~~~~~
 
+The developer dependencies are required if you are building from git
+sources, have modified certain source files from the release tarball,
+or have configured with "--enable-maintainer-mode" in order to build a
+new package.
+
+If you are building normally from a pure release tarball, then you
+don't need these dependencies. The files, these dependencies produce,
+have been pre-built and included in the release, and do not normally
+need to be re-built.
+
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | Package              | Debian          | RedHat          | Requ  | Notes                                         |
 |                      |                 |                 | ired  |                                               |
-|                      |                 |                 | for   |                                               |
-|                      |                 |                 | "make |                                               |
-|                      |                 |                 | chec  |                                               |
-|                      |                 |                 | k"?   |                                               |
 +======================+=================+=================+=======+===============================================+
-| CUnit                | libcunit1-dev   | cunit-devel     | yes   | Development headers for compiling Cyrus       |
-|                      |                 |                 |       | IMAP's unit tests.                            |
+| perl-devel           | perl-dev        | perl-devel      | no    | Needed for building binary perl libraries,    |
+|                      |                 |                 |       | version 5+.                                   |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| perl(ExtUtils::Make  | ??              | ??              | no    | Perl library to assist in building extensions |
-| Maker)               |                 |                 |       | to Perl.  Configure option: "--with-perl"     |
+| perl(ExtUtils::Make  |                 |                 | no    | Needed for building extensions to Perl.       |
+| Maker)               |                 |                 |       |                                               |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| *libdb-dev*          | libdb-dev       | libdb-devel     | no    | The -dev package must match the version of    |
-|                      |                 |                 |       | libdb you already have installed (assuming    |
-|                      |                 |                 |       | it's probably already installed). On Debian   |
-|                      |                 |                 |       | 8.0, "libdb5.3-dev" is needed, but            |
-|                      |                 |                 |       | "libdb5.1-dev" on 7.8.                        |
+| perl(Pod::POM::View  |                 |                 | no    | Needed to generate man pages. This has to be  |
+| ::Restructured)      |                 |                 |       | available to the system- wide perl            |
+|                      |                 |                 |       | interpreter, found by "which".                |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| perl-devel           | perl-dev        | perl-devel      | no    | Perl development headers to allow building    |
-|                      |                 |                 |       | binary perl libraries. Needs version 5+.      |
-|                      |                 |                 |       | Configure option: "--with-perl"               |
+| python(GitPython)    |                 |                 | no    | Needed for building the documentation.        |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| perl(Pod::POM::View  |                 |                 |       | Perl library to generate man pages.  This has |
-| ::Restructured)      |                 |                 |       | to be available to the system-wide perl       |
-|                      |                 |                 |       | interpreter, found by "which":  "./configure  |
-|                      |                 |                 |       | --with- perl" is not honoured.                |
+| python(Sphinx)       |                 |                 | no    | Needed for building the documentation.        |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| python(GitPython)    |                 |                 |       | Python library needed for building the        |
-|                      |                 |                 |       | documentation                                 |
-+----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| python(Sphinx)       |                 |                 |       | Python library needed for building the        |
-|                      |                 |                 |       | documentation                                 |
+| transfig             | transfig        | transfig        | no    | Also known as fig2dev, transfig is an         |
+|                      |                 |                 |       | artifact from the old days, and is only used  |
+|                      |                 |                 |       | for generation of a couple of png files in    |
+|                      |                 |                 |       | the legacy documentation                      |
+|                      |                 |                 |       | (doc/legacy/murder.png and                    |
+|                      |                 |                 |       | doc/legacy/netnews.png). One day it should be |
+|                      |                 |                 |       | merged into the current documentation, cause  |
+|                      |                 |                 |       | then we can get rid of it: issues/1769.       |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | valgrind             | valgrind        | valgrind        | no    | Performance and memory testing.               |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| xxd                  |                 |                 |       | For rebuilding the _js.h files, for CalDAV    |
-|                      |                 |                 |       | and CardDAV support.                          |
+| xxd                  | vim-common      | vim-common      | no    | Needed for the _js.h files, for CalDAV and    |
+|                      |                 |                 |       | CardDAV support.                              |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 
 
@@ -129,25 +127,20 @@ SASL Authentication
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | Package              | Debian          | RedHat          | Requ  | Notes                                         |
 |                      |                 |                 | ired  |                                               |
-|                      |                 |                 | for   |                                               |
-|                      |                 |                 | "make |                                               |
-|                      |                 |                 | chec  |                                               |
-|                      |                 |                 | k"?   |                                               |
 +======================+=================+=================+=======+===============================================+
-| Cyrus SASL Plain     | libsasl2-modul  | cyrus-sasl-     | yes   | Cyrus SASL package that ships the library     |
-|                      | es              | plain           |       | required to pass Cyrus IMAP's PLAIN           |
-|                      |                 |                 |       | authentication unit tests.                    |
+| Cyrus SASL Plain     | libsasl2-modul  | cyrus-sasl-     | yes/  | Required to pass Cyrus IMAP's PLAIN           |
+|                      | es              | plain           | no    | authentication unit tests.                    |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| Cyrus SASL MD5       | libsasl2-modul  | cyrus-sasl-md5  | yes   | Cyrus SASL library required to pass Cyrus     |
-|                      | es              |                 |       | IMAP's DIGEST-MD5 authentication unit tests   |
+| Cyrus SASL MD5       | libsasl2-modul  | cyrus-sasl-md5  | yes/  | Required to pass Cyrus IMAP's DIGEST-MD5      |
+|                      | es              |                 | no    | authentication unit tests.                    |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| sasl binaries        | sasl2-bin       | sasl2-bin       | no    | Administration tools for managing SASL        |
+| sasl binaries        | sasl2-bin       | sasl2-bin       | no    | Administration tools for managing SASL.       |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| Kerberos             | libsasl2        | krb5-devel      | no    | Development headers required to enable        |
-|                      | -modules-       |                 |       | Kerberos v5 authentication capabilities.      |
-|                      | gssapi-mit      |                 |       | Otherwise also known as the authentication    |
-|                      |                 |                 |       | mechanism *GSSAPI*.  Configure option: "--    |
-|                      |                 |                 |       | with-krbimpl=mit"                             |
+| Kerberos             | libsasl2        | krb5-devel      | yes/  | Development headers required to enable        |
+|                      | -modules-       |                 | no    | Kerberos v5 authentication capabilities, also |
+|                      | gssapi-mit      |                 |       | known as the authentication mechanism         |
+|                      |                 |                 |       | *GSSAPI*. Configure option: "--with-          |
+|                      |                 |                 |       | krbimpl=mit".                                 |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 
 
@@ -157,41 +150,60 @@ Alternate database formats
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | Package              | Debian          | RedHat          | Requ  | Notes                                         |
 |                      |                 |                 | ired  |                                               |
-|                      |                 |                 | for   |                                               |
-|                      |                 |                 | "make |                                               |
-|                      |                 |                 | chec  |                                               |
-|                      |                 |                 | k"?   |                                               |
 +======================+=================+=================+=======+===============================================+
-| mysql or mariadb     | libmysqlclient- | mysql-devel or  | no    | MariaDB or MySQL development headers, to      |
-|                      | dev or          | mariadb-devel   |       | allow Cyrus IMAP to use it as the backend for |
-|                      | libmariadb-dev  |                 |       | its databases.  Configure option: "--with-    |
-|                      |                 |                 |       | mysql", "--with-mysql-incdir", "--with-       |
-|                      |                 |                 |       | mysql-libdir"                                 |
+| mysql or mariadb     | libmysqlclient- | mysql-devel or  | yes/  | MariaDB or MySQL development headers,         |
+|                      | dev or          | mariadb-devel   | no    | required to allow Cyrus IMAP to use it as the |
+|                      | libmariadb-dev  |                 |       | backend for its databases. Configure options: |
+|                      |                 |                 |       | "--with- mysql", "--with-mysql-incdir", "--   |
+|                      |                 |                 |       | with-mysql-libdir".                           |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| postgresql           | postgresql-dev  | postgresql-     | no    |                                               |
-|                      |                 | devel           |       |                                               |
+| postgresql           | postgresql-dev  | postgresql-     | yes/  | PostgreSQL development headers, required to   |
+|                      |                 | devel           | no    | allow Cyrus IMAP to use it as the backend for |
+|                      |                 |                 |       | its databases. Configure option: "--with-     |
+|                      |                 |                 |       | pgsql".                                       |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 
 
-CalDAV, CardDAV, or JMAP
-~~~~~~~~~~~~~~~~~~~~~~~~
+CalDAV, CardDAV, or JMAP (httpd subsystem)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | Package              | Debian          | RedHat          | Requ  | Notes                                         |
 |                      |                 |                 | ired  |                                               |
-|                      |                 |                 | for   |                                               |
-|                      |                 |                 | "make |                                               |
-|                      |                 |                 | chec  |                                               |
-|                      |                 |                 | k"?   |                                               |
 +======================+=================+=================+=======+===============================================+
-| libchardet           | libchardet-dev  | libchardet-     | no    |                                               |
-|                      |                 | devel           |       |                                               |
+| libbrotli            | libbrotli-dev   | brotli-devel    | no    | It provides Brotli compression support for    |
+|                      |                 |                 |       | http communications (otherwise only "deflate" |
+|                      |                 |                 |       | and "gzip" (optionally) would be available).  |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| libical              | libical-dev     | libical-devel   | no    | version 3.0.0 or higher                       |
+| libchardet           | libchardet-dev  | libchardet-     | yes/  | It is used by the **JMAP** module of httpd to |
+|                      |                 | devel           | no    | detect the character set of untagged 8-bit    |
+|                      |                 |                 |       | headers. Without it, cyrus-imapd will not do  |
+|                      |                 |                 |       | character-set detection. If some piece of     |
+|                      |                 |                 |       | data has no character set coming in, it will  |
+|                      |                 |                 |       | have no character set. Required for JMAP, but |
+|                      |                 |                 |       | otherwise is not needed.                      |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| libxml               | libxml2-dev     | libxml2-devel   | no    |                                               |
+| libical              | libical-dev     | libical-devel   | yes   | It provides calendaring functionality for     |
+|                      |                 |                 |       | CalDAV, which can't be used without this lib. |
+|                      |                 |                 |       | Version 3.0.0 or higher is required.          |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| shapelib             | shapelib        |                 | no    | version 1.3.0 or higher                       |
+| libxml               | libxml2-dev     | libxml2-devel   | yes   | A fundamental lib for all *DAV functionality. |
++----------------------+-----------------+-----------------+-------+-----------------------------------------------+
+| nghttp2              | libnghttp2-dev  | libnghttp2-dev  | no    | HTTP/2 support for the entire **httpd**       |
+|                      |                 | el              |       | subsystem (*DAV & JMAP).                      |
++----------------------+-----------------+-----------------+-------+-----------------------------------------------+
+| shapelib             | shapelib        | shapelib        | yes/  | It is required for **tzdist** service to have |
+|                      |                 |                 | no    | geolocation support. Otherwise it is not      |
+|                      |                 |                 |       | needed. Version 1.3.0 or higher is required   |
+|                      |                 |                 |       | when using it.                                |
++----------------------+-----------------+-----------------+-------+-----------------------------------------------+
+| wslay                | libwslay-dev    | wslay-devel     | no    | It provides WebSockets support in httpd. Only |
+|                      |                 |                 |       | used with **JMAP**, otherwise not needed.     |
+|                      |                 |                 |       | Version 1.1.1 or higher is required when      |
+|                      |                 |                 |       | using it.                                     |
++----------------------+-----------------+-----------------+-------+-----------------------------------------------+
+| zlib                 | zlib1g-dev      | zlib-devel      | no    | It provides gzip compression support for http |
+|                      |                 |                 |       | communications.                               |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 
 
@@ -201,44 +213,37 @@ Other
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | Package              | Debian          | RedHat          | Requ  | Notes                                         |
 |                      |                 |                 | ired  |                                               |
-|                      |                 |                 | for   |                                               |
-|                      |                 |                 | "make |                                               |
-|                      |                 |                 | chec  |                                               |
-|                      |                 |                 | k"?   |                                               |
 +======================+=================+=================+=======+===============================================+
-| SSL certificates     | ssl-cert-dev    | mod_ssl         | no    | Used if you're installing SSL certificates    |
+| CUnit                | libcunit1-dev   | cunit-devel     | no    | Development headers for compiling Cyrus       |
+|                      |                 |                 |       | IMAP's unit tests. Required to run "make      |
+|                      |                 |                 |       | check".                                       |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| ClamAV               |                 |                 |       | Used by **cyr_virusscan**.                    |
+| SSL certificates     | ssl-cert-dev    | mod_ssl         | no    | Used if you're installing SSL certificates.   |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| net-snmp             | libsnmp-dev     | net-snmp-devel  | no    | version 4.2 or higher                         |
+| ClamAV               | libclamav-dev   | clamav-devel    | no    | It is used by **cyr_virusscan**, otherwise    |
+|                      |                 |                 |       | not needed.                                   |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | openldap             | libldap2-dev    | openldap-devel  | no    | Development headers to enable **ptloader** to |
 |                      |                 |                 |       | interface with LDAP directly, for             |
 |                      |                 |                 |       | canonification of login usernames to mailbox  |
 |                      |                 |                 |       | names, and verification of login usernames,   |
-|                      |                 |                 |       | ACL subjects and group membership.  Configure |
-|                      |                 |                 |       | option: "--with-ldap"                         |
+|                      |                 |                 |       | ACL subjects and group membership. Configure  |
+|                      |                 |                 |       | option: "--with-ldap".                        |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| tcp_wrappers         | tcp_wrappers    | xx              | no    |                                               |
+| pcre                 | libpcre3-dev    | pcre-devel      | yes   | PCRE 1 (8.x) - for utf-8/unicode regular      |
+|                      |                 |                 |       | expression matching. Could be replaced by     |
+|                      |                 |                 |       | something else in the future. See issues/1731 |
+|                      |                 |                 |       | for more information.                         |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| transfig             | transfig        | xx              | no    | also known as fig2dev                         |
+| perl(Term::ReadLine) |                 |                 | no    | Perl library needed by **cyradm**.            |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| pcre                 |                 |                 |       | PCRE 1 (or 8) - for regular expression        |
-|                      |                 |                 |       | matching                                      |
-+----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| perl(Term::ReadLine) |                 |                 |       | Perl library needed by cyradm                 |
-+----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| libsrs2              |                 |                 |       | Sender Rewriting Scheme for lmtp, used on     |
-|                      |                 |                 |       | Sieve redirect                                |
-+----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| zlib                 | zlib1g-dev      | zlib-devel      | no    | Compression support for httpd                 |
-+----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| libbrotli            |                 |                 |       | Brotli compression support for httpd          |
-+----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| wslay                |                 |                 |       | WebSockets support in httpd                   |
-+----------------------+-----------------+-----------------+-------+-----------------------------------------------+
-| nghttp2              | libnghttp2-dev  | libnghttp2-dev  | no    | HTTP/2 support for httpd                      |
-|                      |                 | el              |       |                                               |
+| libsrs2              | *no package*    | *no package*    | no    | It is used for implementing Sender Rewriting  |
+|                      |                 |                 |       | Scheme (SRS) functionality for messages       |
+|                      |                 |                 |       | forwarded by sieve scripts. Without it,       |
+|                      |                 |                 |       | messages forwarded by sieve scripts will not  |
+|                      |                 |                 |       | have this functionality and might have        |
+|                      |                 |                 |       | difficulty delivering to SMTP servers that    |
+|                      |                 |                 |       | insist on it.                                 |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 
 Install tools for building
@@ -286,8 +291,8 @@ via configure.
 Sieve is enabled by default.
 
 
-CalDAV, CardDAV, JMAP
-~~~~~~~~~~~~~~~~~~~~~
+CalDAV, CardDAV, WebDAV, JMAP
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    "./configure --enable-http --enable-calalarmd --enable-jmap"
 
@@ -323,7 +328,7 @@ Compile
 
 The "--prefix" option sets where Cyrus is installed to.
 
-It may be of use to also add "--std=gnu99" to the "CFLAGS".  That
+It may be of use to also add "--std=gnu99" to the "CFLAGS". That
 generates TONS of warnings.
 
 Having problems with compilation or linking?

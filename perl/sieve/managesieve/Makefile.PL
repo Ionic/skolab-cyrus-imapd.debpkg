@@ -69,7 +69,7 @@ WriteMakefile(
     'ABSTRACT'  => 'Cyrus Sieve management interface',
     'VERSION_FROM' => "../../../perl/sieve/managesieve/managesieve.pm", # finds $VERSION
     'MYEXTLIB'  => '../lib/.libs/libisieve.a ../../../perl/.libs/libcyrus.a ../../../perl/.libs/libcyrus_min.a',
-    'LIBS'	=> ["$LIB_SASL -lssl -lcrypto -lssl -lcrypto  -luuid -lz  -lsqlite3  "],
+    'LIBS'	=> ["$LIB_SASL -lssl -lcrypto -lssl -lcrypto  -luuid -lpcre -lpcreposix -lz  -lsqlite3  "],
     'CCFLAGS'	=> '',
     'DEFINE'	=> '-DPERL_POLLUTE',     # e.g., '-DHAVE_SOMETHING' 
     'INC'	=> "-I../../../lib -I../../../perl/sieve -I../../../perl/sieve/lib  ",

@@ -580,10 +580,10 @@ FIELD DESCRIPTIONS
 
     ``autocreate_acl:`` <none>
 
-        If folders are to be created by *autocreate_inbox_folders\R, this
+        If folders are to be created by *autocreate_inbox_folders*, this
         setting can be used to apply additional ACLs to the autocreated
         folders.  The syntax is "autocreate_acl folder identifier rights",
-        where *\ *folder* must match one of the *autocreate_inbox_folders*
+        where *folder* must match one of the *autocreate_inbox_folders*
         folders, *identifier* must be a valid cyrus identifier, and
         *rights* must be a valid cyrus rights string.  Multiple
         identifier|rights pairs can be assigned to a single folder by providing

@@ -624,7 +624,7 @@ if test "x$enable_xapian" != xno ; then
             AC_DEFINE([USE_XAPIAN_CJK_WORDS], [], [Use Xapian CJK word tokenizer, rather than n-grams?])
             xapian_cjk_tokens=words
         else
-            AC_MSG_NOTICE([Your Xapian does not support CJK word tokenization. Consider installing a recent Xapian >= 1.4.11])
+            AC_MSG_NOTICE([Your Xapian does not support CJK word tokenization. CJK ngram tokenization will be used instead.])
             xapian_cjk_tokens=ngrams
         fi
         LDFLAGS=$ORIG_LDFLAGS
@@ -679,20 +679,23 @@ if test "$enable_pcre" != "no"; then
         fi
 fi
 
+LIB_REGEX=
 if test "$cyrus_cv_pcre_utf8" = "yes"; then
-        LIBS="$LIBS -lpcre -lpcreposix";
+        LIB_REGEX="-lpcre -lpcreposix";
         AC_DEFINE(ENABLE_REGEX, [], [Do we have a regex library?])
         AC_DEFINE(HAVE_PCREPOSIX_H, [], [Do we have usable pcre library?])
 else
         AC_CHECK_HEADERS(rxposix.h)
         if test "$ac_cv_header_rxposix_h" = "yes"; then
-            LIBS="$LIBS -lrx"
+            LIB_REGEX="-lrx"
             AC_DEFINE(ENABLE_REGEX, [], [Do we have a regex library?])
         else
             AC_SEARCH_LIBS(regcomp, regex,
                            AC_DEFINE(ENABLE_REGEX, [], [Do we have a regex library?]), [])
         fi
 fi
+AC_SUBST(LIB_REGEX)
+LIBS="$LIBS $LIB_REGEX"
 
 dnl
 dnl see if we're compiling with SRS
@@ -1350,6 +1353,9 @@ if test "$with_zlib" != "no"; then
     AC_DEFINE(HAVE_ZLIB,[],[Do we have zlib?])
     ZLIB="-lz"
     HAVE_ZLIB=1
+
+    AC_CHECK_LIB(z, deflatePending,
+            AC_DEFINE(HAVE_DEFLATE_PENDING,[], [Do we have deflatePending()?]))
 else
     CPPFLAGS=$save_CPPFLAGS
     LDFLAGS=$save_LDFLAGS
@@ -1483,22 +1489,6 @@ AS_IF([test "x$with_chardet" != "xyes"],
 AC_SUBST([LIBCHARDET_LIBS])
 AC_SUBST([LIBCHARDET_CFLAGS])
 AM_CONDITIONAL([USE_LIBCHARDET], [test "x$with_chardet" = xyes])
-
-dnl
-dnl Check for cld2 library
-dnl
-AC_ARG_WITH([cld2],
-	[AS_HELP_STRING([--without-cld2], [ignore presence of cld2 library and disable it])],
-    [],
-    [with_cld2=yes])
-AS_IF([test "x$with_cld2" = "xyes"],
-	[ PKG_CHECK_MODULES([CLD2], [cld2],
-		[ AC_DEFINE(HAVE_CLD2, [], [Build with cld2 library support])
-		  with_cld2=yes ],
-          with_cld2=no)])
-AC_SUBST([CLD2_LIBS])
-AC_SUBST([CLD2_CFLAGS])
-AM_CONDITIONAL([HAVE_CLD2], [test "x$with_cld2" = xyes])
 
 dnl
 dnl Set pidfile location
@@ -1960,7 +1950,7 @@ dnl add perl cccdlflags when building libraries -- this ensures that the
 dnl libraries will be compiled as PIC if perl requires PIC objects
 dnl -- this is needed on NetBSD and Linux, but seems to cause problems on atleast Solaris --
     case "${target_os}" in
-        linux*|netbsd*|freebsd*|dragonfly*)
+        linux*|netbsd*|freebsd*|dragonfly*|openbsd*)
             AC_MSG_CHECKING(for perl cccdlflags needed on "${target_os}")
             eval `${PERL} -V:cccdlflags`
             PERL_CCCDLFLAGS="$cccdlflags"
@@ -2153,25 +2143,6 @@ if test "$cyrus_cv_declare_optimize" = "yes"; then
   AC_DEFINE(HAVE_DECLARE_OPTIMIZE,[],[Do we have support for optimize __attribute__?])
 fi
 
-
-dnl CRC32 optimisations
-
-dnl if the compiler has support for SSE4.2 then we can compile a hardware
-dnl implementation of CRC32C
-AC_MSG_CHECKING(for compiler support for SSE4.2 instruction)
-AC_CACHE_VAL(cyrus_cv_sse42, AC_TRY_COMPILE([
-    #include <stdint.h>
-],[
-    uint64_t a = 0, b = 1;
-    __asm__("crc32q\t" "(%1), %0"
-            : "=r"(b)
-            : "r"(b), "0"(a));
-    return b;
-], cyrus_cv_sse42=yes, cyrus_cv_sse42=no))
-if test "$cyrus_cv_sse42" = "yes" ; then
-    AC_DEFINE(HAVE_SSE42,1,"Compiler has support for SSE4.2 extensions")
-fi
-AC_MSG_RESULT($cyrus_cv_sse42)
 
 dnl documentation generation (sphinx, perl2rst, gitpython)
 AC_ARG_VAR(SPHINX_BUILD, [Location of sphinx-build])
@@ -2477,7 +2448,6 @@ External dependencies:
    icu4c:              $with_icu4c
    shapelib:           $with_shapelib
    chardet:            $with_chardet
-   cld2:               $with_cld2
 
 Database support:
    mysql:              $with_mysql
@@ -2489,9 +2459,6 @@ Search engine:
    squat:              $enable_squat
    xapian:             $enable_xapian
    xapian_cjk_tokens:  $xapian_cjk_tokens
-
-Hardware support:
-   SSE4.2:             $cyrus_cv_sse42
 
 Documentation dependencies:
    sphinx-build:       $SPHINX_BUILD
