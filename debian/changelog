@@ -1,3 +1,9 @@
+cyrus-imapd (3.2.3-2) unstable; urgency=medium
+
+  * Fix debian/cyrus-common.tmpfiles for debhelper ≥ 13 (Closes: #969261)
+
+ -- Xavier Guimard <yadd@debian.org>  Sun, 13 Sep 2020 17:50:16 +0200
+
 cyrus-imapd (3.2.3-1) unstable; urgency=medium
 
   * Bump debhelper compatibility level to 13
