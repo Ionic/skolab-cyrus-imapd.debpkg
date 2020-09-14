@@ -61,7 +61,7 @@ start-stop-daemon --start --exec /usr/lib/cyrus/bin/ctl_mboxlist --quiet --chuid
 }
 
 # 3. runs chk_cyrus
-[ -x /usr/lib/cyrus/bin/chk_cyrus ] && {
+[ $CHKCYRUS -ne 0 ] && [ -x /usr/lib/cyrus/bin/chk_cyrus ] && {
 	tmpfile=$(mktemp -t cyrus-daily-cronjob.XXXXXXXXXX)
 	trap 'rm -f "${tmpfile}"' 0
 #	su "--command=/usr/sbin/chk_cyrus" - cyrus | ...
