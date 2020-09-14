@@ -124,4 +124,4 @@ Depends: cyrus-imapd,
     wget,
     xutils-dev,
     zlib1g-dev
-Restrictions: needs-root, allow-stderr
+Restrictions: needs-root, allow-stderr, needs-internet
