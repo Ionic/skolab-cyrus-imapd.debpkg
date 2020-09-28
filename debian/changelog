@@ -1,9 +1,13 @@
-cyrus-imapd (3.2.3-3) UNRELEASED; urgency=medium
+cyrus-imapd (3.2.3-3) unstable; urgency=medium
 
   [ Jean Charles Delépine ]
   * cron jobs: chk_cyrus should'nt be used if CHKCYRUS=0 (Closes: #964442)
 
- -- Xavier Guimard <yadd@debian.org>  Mon, 14 Sep 2020 10:02:45 +0200
+  [ Xavier Guimard ]
+  * Tag autopkgtest with "needs-internet" (Closes: #966114)
+  * Workaround: disable HTTP/2 support (Closes: #969222)
+
+ -- Xavier Guimard <yadd@debian.org>  Mon, 28 Sep 2020 06:23:46 +0200
 
 cyrus-imapd (3.2.3-2) unstable; urgency=medium
 
