@@ -1,3 +1,11 @@
+cyrus-imapd (3.2.4-1) unstable; urgency=medium
+
+  * Remove useless cyrus-caldav-2.4 breaks/conflicts
+  * New upstream version 3.2.4
+  * Refresh patches
+
+ -- Xavier Guimard <yadd@debian.org>  Mon, 05 Oct 2020 10:00:46 +0200
+
 cyrus-imapd (3.2.3-3) unstable; urgency=medium
 
   [ Jean Charles Delépine ]
