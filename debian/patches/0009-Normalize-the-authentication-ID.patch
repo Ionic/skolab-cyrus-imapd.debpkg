@@ -72,7 +72,7 @@ Last-Update: 2020-02-10
  .PP
 --- a/lib/libcyr_cfg.c
 +++ b/lib/libcyr_cfg.c
-@@ -145,6 +145,10 @@
+@@ -144,6 +144,10 @@
        CFGVAL(long, 1),
        CYRUS_OPT_SWITCH },
  

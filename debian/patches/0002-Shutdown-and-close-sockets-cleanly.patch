@@ -18,7 +18,7 @@ Last-Update: 2020-02-10
 
 --- a/imap/fud.c
 +++ b/imap/fud.c
-@@ -141,6 +141,15 @@
+@@ -143,6 +143,15 @@
      seen_done();
      closelog();
      cyrus_done();
@@ -61,7 +61,7 @@ Last-Update: 2020-02-10
  
 --- a/imap/pop3d.c
 +++ b/imap/pop3d.c
-@@ -649,6 +649,9 @@
+@@ -650,6 +650,9 @@
      saslprops_free(&saslprops);
  
      cyrus_done();
