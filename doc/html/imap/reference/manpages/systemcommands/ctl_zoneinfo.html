@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ctl_zoneinfo &mdash; Cyrus IMAP 3.2.3 documentation</title>
+  <title>ctl_zoneinfo &mdash; Cyrus IMAP 3.2.4 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.3 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../../index.html"/>
         <link rel="up" title="Man pages" href="../commands.html"/>
         <link rel="next" title="cvt_cyrusdb" href="cvt_cyrusdb.html"/>
         <link rel="prev" title="ctl_mboxlist" href="ctl_mboxlist.html"/> 
@@ -767,7 +767,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.2.3</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.2.4</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -793,6 +793,8 @@
 <h2>Synopsis<a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
 <pre class="literal-block">
 <strong>ctl_zoneinfo</strong> [ <strong>-C</strong> <em>config-file</em> ] [ <strong>-v</strong> ] <strong>-r</strong> <em>version-string</em>
+
+<strong>ctl_zoneinfo</strong> [ <strong>-C</strong> <em>config-file</em> ] [ <strong>-v</strong> ] <strong>-w</strong> <em>file</em>
 </pre>
 </div>
 <div class="section" id="description">
@@ -823,8 +825,15 @@ the zoneinfo database.</p>
 in the default location of <em>configdirectory</em>/<strong>zoneinfo.db</strong> unless
 otherwise specified by the <em>zoneinfo_db_path</em> option in
 <a class="reference internal" href="../configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.  The <em>version-string</em> should describe the
-source of the timezone data (e.g. &#8220;Olson 2013h&#8221;) and will be used
-by the <em>timezone</em> module of <em class="manpage">httpd(8)</em>.</p>
+source of the timezone data (e.g. &#8220;Olson:2020a&#8221;) and will be used
+by the <em>tzdist</em> module of <em class="manpage">httpd(8)</em>.  The <em>version-string</em>
+must contain a colon between the description and the version.</p>
+</dd></dl>
+
+<dl class="option">
+<dt id="cmdoption-**ctl_zoneinfo**-w">
+<code class="descname">-w</code><code class="descclassname"> file</code><a class="headerlink" href="#cmdoption-**ctl_zoneinfo**-w" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads Windows Zone XML file.</p>
 </dd></dl>
 
 </div>
@@ -865,7 +874,7 @@ by the <em>timezone</em> module of <em class="manpage">httpd(8)</em>.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jun 05 2017
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Oct 02 2020
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -885,7 +894,7 @@ by the <em>timezone</em> module of <em class="manpage">httpd(8)</em>.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.2.3',
+            VERSION:'3.2.4',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

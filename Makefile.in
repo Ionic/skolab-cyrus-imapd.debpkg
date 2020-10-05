@@ -1116,7 +1116,7 @@ imap_ctl_mboxlist_OBJECTS = $(am_imap_ctl_mboxlist_OBJECTS)
 imap_ctl_mboxlist_DEPENDENCIES = $(am__DEPENDENCIES_8)
 am_imap_ctl_zoneinfo_OBJECTS = imap/cli_fatal.$(OBJEXT) \
 	imap/ctl_zoneinfo.$(OBJEXT) imap/mutex_fake.$(OBJEXT) \
-	imap/zoneinfo_db.$(OBJEXT)
+	imap/zoneinfo_db.$(OBJEXT) imap/xml_support.$(OBJEXT)
 imap_ctl_zoneinfo_OBJECTS = $(am_imap_ctl_zoneinfo_OBJECTS)
 imap_ctl_zoneinfo_DEPENDENCIES = $(am__DEPENDENCIES_8)
 am_imap_cvt_cyrusdb_OBJECTS = imap/cli_fatal.$(OBJEXT) \
@@ -2521,7 +2521,7 @@ imap_ctl_deliver_SOURCES = imap/cli_fatal.c imap/ctl_deliver.c imap/mutex_fake.c
 imap_ctl_deliver_LDADD = $(LD_UTILITY_ADD)
 imap_ctl_mboxlist_SOURCES = imap/cli_fatal.c imap/ctl_mboxlist.c imap/mutex_fake.c
 imap_ctl_mboxlist_LDADD = $(LD_UTILITY_ADD)
-imap_ctl_zoneinfo_SOURCES = imap/cli_fatal.c imap/ctl_zoneinfo.c imap/mutex_fake.c imap/zoneinfo_db.c
+imap_ctl_zoneinfo_SOURCES = imap/cli_fatal.c imap/ctl_zoneinfo.c imap/mutex_fake.c imap/zoneinfo_db.c imap/xml_support.c
 imap_ctl_zoneinfo_LDADD = $(LD_UTILITY_ADD)
 imap_cvt_cyrusdb_SOURCES = imap/cli_fatal.c imap/cvt_cyrusdb.c imap/mutex_fake.c
 imap_cvt_cyrusdb_LDADD = $(LD_UTILITY_ADD)
@@ -3912,6 +3912,8 @@ imap/ctl_zoneinfo.$(OBJEXT): imap/$(am__dirstamp) \
 	imap/$(DEPDIR)/$(am__dirstamp)
 imap/zoneinfo_db.$(OBJEXT): imap/$(am__dirstamp) \
 	imap/$(DEPDIR)/$(am__dirstamp)
+imap/xml_support.$(OBJEXT): imap/$(am__dirstamp) \
+	imap/$(DEPDIR)/$(am__dirstamp)
 
 imap/ctl_zoneinfo$(EXEEXT): $(imap_ctl_zoneinfo_OBJECTS) $(imap_ctl_zoneinfo_DEPENDENCIES) $(EXTRA_imap_ctl_zoneinfo_DEPENDENCIES) imap/$(am__dirstamp)
 	@rm -f imap/ctl_zoneinfo$(EXEEXT)
@@ -4075,8 +4077,6 @@ imap/jcal.$(OBJEXT): imap/$(am__dirstamp) \
 imap/smtpclient.$(OBJEXT): imap/$(am__dirstamp) \
 	imap/$(DEPDIR)/$(am__dirstamp)
 imap/xcal.$(OBJEXT): imap/$(am__dirstamp) \
-	imap/$(DEPDIR)/$(am__dirstamp)
-imap/xml_support.$(OBJEXT): imap/$(am__dirstamp) \
 	imap/$(DEPDIR)/$(am__dirstamp)
 imap/http_jmap.$(OBJEXT): imap/$(am__dirstamp) \
 	imap/$(DEPDIR)/$(am__dirstamp)

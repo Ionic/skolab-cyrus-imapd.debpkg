@@ -327,8 +327,8 @@ int main(int argc, char **argv)
 void usage(void)
 {
     fprintf(stderr,
-            "usage: zoneinfo_reconstruct [-C <alt_config>] [-v]"
-            " -r <publisher>:<version>\n");
+            "usage: ctl_zoneinfo [-C <alt_config>] [-v]"
+            " -r <publisher>:<version> | -w <file>\n");
     exit(EX_USAGE);
 }
 
