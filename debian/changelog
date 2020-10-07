@@ -1,3 +1,10 @@
+cyrus-imapd (3.2.4-3) unstable; urgency=medium
+
+  * Add missing autopkgtest dependency (fixes debci)
+  * Skip autopkgtest if test environment install failed
+
+ -- Xavier Guimard <yadd@debian.org>  Wed, 07 Oct 2020 10:24:25 +0200
+
 cyrus-imapd (3.2.4-2) unstable; urgency=medium
 
   * Fix systemd tmpfiles (Closes: #969261)
