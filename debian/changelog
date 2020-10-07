@@ -1,3 +1,9 @@
+cyrus-imapd (3.2.4-2) unstable; urgency=medium
+
+  * Fix systemd tmpfiles (Closes: #969261)
+
+ -- Xavier Guimard <yadd@debian.org>  Wed, 07 Oct 2020 05:58:14 +0200
+
 cyrus-imapd (3.2.4-1) unstable; urgency=medium
 
   * Remove useless cyrus-caldav-2.4 breaks/conflicts
