@@ -1,3 +1,35 @@
+cyrus-imapd (3.2.4-3) unstable; urgency=medium
+
+  * Add missing autopkgtest dependency (fixes debci)
+  * Skip autopkgtest if test environment install failed
+
+ -- Xavier Guimard <yadd@debian.org>  Wed, 07 Oct 2020 10:24:25 +0200
+
+cyrus-imapd (3.2.4-2) unstable; urgency=medium
+
+  * Fix systemd tmpfiles (Closes: #969261)
+
+ -- Xavier Guimard <yadd@debian.org>  Wed, 07 Oct 2020 05:58:14 +0200
+
+cyrus-imapd (3.2.4-1) unstable; urgency=medium
+
+  * Remove useless cyrus-caldav-2.4 breaks/conflicts
+  * New upstream version 3.2.4
+  * Refresh patches
+
+ -- Xavier Guimard <yadd@debian.org>  Mon, 05 Oct 2020 10:00:46 +0200
+
+cyrus-imapd (3.2.3-3) unstable; urgency=medium
+
+  [ Jean Charles Delépine ]
+  * cron jobs: chk_cyrus should'nt be used if CHKCYRUS=0 (Closes: #964442)
+
+  [ Xavier Guimard ]
+  * Tag autopkgtest with "needs-internet" (Closes: #966114)
+  * Workaround: disable HTTP/2 support (Closes: #969222)
+
+ -- Xavier Guimard <yadd@debian.org>  Mon, 28 Sep 2020 06:23:46 +0200
+
 cyrus-imapd (3.2.3-2~bpo10+1) buster-backports; urgency=medium
 
   * Rebuild for buster-backports.

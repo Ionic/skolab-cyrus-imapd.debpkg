@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 BUILD_CYRUS_FROM_SOURCE=${BUILD_CYRUS_FROM_SOURCE:-yes}
 export CASSANDANEOPTS=${CASSANDANEOPTS:-""}
 

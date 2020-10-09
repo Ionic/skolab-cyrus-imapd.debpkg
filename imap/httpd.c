@@ -189,7 +189,7 @@ HIDDEN int zlib_compress(struct transaction_t *txn, unsigned flags,
             }
 #else
             /* Even if we have used all input, this will return non-zero */
-            pending = deflateBound(zstrm, zstrm->avail_in));
+            pending = deflateBound(zstrm, zstrm->avail_in);
 #endif
 
             buf_ensure(&txn->zbuf, pending);
@@ -3743,7 +3743,7 @@ HIDDEN void log_cachehdr(const char *name, const char *contents,
     /* Ignore private headers in our cache */
     if (name[0] == ':') return;
 
-    if (!strcasecmp(name, "authorization")) {
+    if (!strcasecmp(name, "authorization") && strchr(contents, ' ')) {
         /* Replace authorization credentials with an ellipsis */
         const char *creds = strchr(contents, ' ') + 1;
         buf_printf(buf, "%c%s: %.*s%-*s\r\n", toupper(name[0]), name+1,

@@ -254,8 +254,6 @@ Depends: cyrus-common (= ${binary:Version}),
          ${misc:Depends},
          ${shlibs:Depends}
 Pre-Depends: ${misc:Pre-Depends}
-Conflicts: cyrus-caldav-2.4
-Replaces: cyrus-caldav-2.4
 Description: Cyrus mail system - CalDAV and CardDAV support
  This package contains the CalDAV and CardDAV portion of the Cyrus
  IMAPd suite.

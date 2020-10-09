@@ -34,6 +34,7 @@ Depends: cyrus-imapd,
     libclone-perl,
     libconfig-inifiles-perl,
     libcunit1-dev,
+    libcyrus-imap-perl,
     libdata-visitor-perl,
     libdatetime-perl,
     libdb-dev,
@@ -124,4 +125,4 @@ Depends: cyrus-imapd,
     wget,
     xutils-dev,
     zlib1g-dev
-Restrictions: needs-root, allow-stderr
+Restrictions: needs-root, allow-stderr, needs-internet, skippable
