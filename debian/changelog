@@ -1,3 +1,9 @@
+cyrus-imapd (3.2.4-3~bpo10+1) buster-backports; urgency=medium
+
+  * Rebuild for buster-backports.
+
+ -- Xavier Guimard <yadd@debian.org>  Fri, 09 Oct 2020 09:26:25 +0200
+
 cyrus-imapd (3.2.4-3) unstable; urgency=medium
 
   * Add missing autopkgtest dependency (fixes debci)
