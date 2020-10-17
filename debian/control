@@ -297,6 +297,7 @@ Depends: ${misc:Depends},
          ${perl:Depends},
          ${shlibs:Depends}
 Pre-Depends: ${misc:Pre-Depends}
+Recommends: libterm-readline-gnu-perl
 Description: Interface to Cyrus imap client imclient library
  The Cyrus::IMAP module provides an interface to the Cyrus imclient
  library.  These are primarily useful for implementing cyradm operations
