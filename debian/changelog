@@ -1,8 +1,9 @@
 cyrus-imapd (3.2.4-4) UNRELEASED; urgency=medium
 
   * Fix cron job (Closes: #935431)
+  * Add recommended dependency to libterm-readline-gnu-perl (Closes: #797789)
 
- -- Xavier Guimard <yadd@debian.org>  Tue, 13 Oct 2020 10:04:33 +0200
+ -- Xavier Guimard <yadd@debian.org>  Sat, 17 Oct 2020 09:09:02 +0200
 
 cyrus-imapd (3.2.4-3) unstable; urgency=medium
 
