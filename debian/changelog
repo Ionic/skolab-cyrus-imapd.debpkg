@@ -1,10 +1,11 @@
-cyrus-imapd (3.2.4-4) UNRELEASED; urgency=medium
+cyrus-imapd (3.2.4-4) experimental; urgency=medium
 
   * Fix cron job (Closes: #935431)
   * Add recommended dependency to libterm-readline-gnu-perl (Closes: #797789)
   * Import upstream fix to close properly HTTP/2 connections (Closes: #969222)
+    and re-enable HTTP/2
 
- -- Xavier Guimard <yadd@debian.org>  Sun, 25 Oct 2020 07:34:31 +0100
+ -- Xavier Guimard <yadd@debian.org>  Sun, 25 Oct 2020 07:35:51 +0100
 
 cyrus-imapd (3.2.4-3) unstable; urgency=medium
 
