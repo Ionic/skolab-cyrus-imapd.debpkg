@@ -1,6 +1,5 @@
 Description: Try 3.2.5
-Author: ellie timoney <ellie@fastmail.com>
-Origin: upstream, https://github.com/cyrusimap/cyrus-imapd/compare/cyrus-imapd-3.2...elliefm:v32/3262-patch.patch
+Origin: upstream, https://patch-diff.githubusercontent.com/raw/cyrusimap/cyrus-imapd/pull/3262.patch
 Forwarded: not-needed
 Reviewed-By: Xavier Guimard <yadd@debian.org>
 Last-Update: 2020-11-06
@@ -104,7 +103,15 @@ Last-Update: 2020-11-06
 +])
 --- a/configure.ac
 +++ b/configure.ac
-@@ -241,6 +241,24 @@
+@@ -170,6 +170,7 @@
+ AC_CHECK_SIZEOF(size_t)
+ AC_CHECK_SIZEOF(off_t)
+ AC_CHECK_SIZEOF(time_t)
++AC_CHECK_SIZEOF(rlim_t)
+ 
+ dnl Warn if time_t is only 32 bits
+ AS_IF([test "$ac_cv_sizeof_time_t" -lt 8],
+@@ -241,6 +242,30 @@
  AC_SUBST(LOCALDEFS)
  AC_FUNC_VPRINTF
  
@@ -126,10 +133,16 @@ Last-Update: 2020-11-06
 +AC_DEFINE_UNQUOTED([strtoofft(a,b,c)], [$cyr_cv_parse_off_t(a,b,c)],
 +                   [strtol-like parse function for off_t])
 +
++CYR_INTTYPE([rlim_t], [#include <sys/resource.h>])
++AC_DEFINE_UNQUOTED([RLIM_T_FMT], ["$cyr_cv_format_rlim_t"],
++                   [printf formatter for rlim_t])
++AC_DEFINE_UNQUOTED([strtorlimt(a,b,c)], [$cyr_cv_parse_rlim_t(a,b,c)],
++                   [strtol-like parse function for rlim_t])
++
  dnl function for doing each of the database backends
  dnl parameters: backend name, variable to set, withval
  
-@@ -2315,27 +2333,6 @@
+@@ -2315,27 +2340,6 @@
  #define shutdown(fd, mode) 0
  #endif
  
@@ -507,6 +520,17 @@ Last-Update: 2020-11-06
                 compile_time, sbuf.st_mtime, sbuf.st_size);
      sbuf.st_mtime = MAX(compile_time, sbuf.st_mtime);
  
+--- a/imap/index.c
++++ b/imap/index.c
+@@ -5503,7 +5503,7 @@
+                     "Keep-Alive: timeout=%u\r\n"
+                     "Accept: text/plain\r\n"
+                     "Content-Type: %s/%s%s\r\n"
+-                    "Content-Length: %ld\r\n"
++                    "Content-Length: " SIZE_T_FMT "\r\n"
+                     "\r\n",
+                     ctx->path, guidstr, HTTP_VERSION,
+                     (int) hostlen, be->hostname, CYRUS_VERSION, ctx->timeout,
 --- a/imap/mailbox.c
 +++ b/imap/mailbox.c
 @@ -2899,7 +2899,7 @@
@@ -670,14 +694,14 @@ Last-Update: 2020-11-06
  
      if (verbose > 1) {
 -        syslog(LOG_DEBUG, "set maximum file descriptors to %ld/%ld",
-+        syslog(LOG_DEBUG, "set maximum file descriptors to %" PRIu64 "/%" PRIu64,
++        syslog(LOG_DEBUG, "set maximum file descriptors to " RLIM_T_FMT "/" RLIM_T_FMT,
                 rl.rlim_cur, rl.rlim_max);
      }
  
      if (setrlimit(RLIMIT_NUMFDS, &rl) < 0 && x != RLIM_INFINITY) {
          syslog(LOG_ERR,
 -               "setrlimit: Unable to set file descriptors limit to %ld: %m",
-+               "setrlimit: Unable to set file descriptors limit to %" PRIu64 ": %m",
++               "setrlimit: Unable to set file descriptors limit to " RLIM_T_FMT ": %m",
                 rl.rlim_cur);
      }
  }
