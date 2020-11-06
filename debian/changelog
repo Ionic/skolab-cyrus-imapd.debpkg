@@ -1,3 +1,9 @@
+cyrus-imapd (3.2.4-6) experimental; urgency=medium
+
+  * Second test for upstream
+
+ -- Xavier Guimard <yadd@debian.org>  Fri, 06 Nov 2020 10:42:11 +0100
+
 cyrus-imapd (3.2.4-5) experimental; urgency=medium
 
   * Fix po files encoding
