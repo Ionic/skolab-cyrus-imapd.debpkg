@@ -1,3 +1,10 @@
+cyrus-imapd (3.2.4-5) experimental; urgency=medium
+
+  * Fix po files encoding
+  * Test for upstream
+
+ -- Xavier Guimard <yadd@debian.org>  Fri, 06 Nov 2020 06:15:49 +0100
+
 cyrus-imapd (3.2.4-4) experimental; urgency=medium
 
   * Fix cron job (Closes: #935431)
