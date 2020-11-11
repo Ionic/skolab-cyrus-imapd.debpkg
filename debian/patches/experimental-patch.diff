@@ -698,7 +698,7 @@ Last-Update: 2020-11-06
                 rl.rlim_cur, rl.rlim_max);
      }
  
-     if (setrlimit(RLIMIT_NUMFDS, &rl) < 0 && x != RLIM_INFINITY) {
+     if (setrlimit(RLIMIT_NUMFDS, &rl) < 0) {
          syslog(LOG_ERR,
 -               "setrlimit: Unable to set file descriptors limit to %ld: %m",
 +               "setrlimit: Unable to set file descriptors limit to " RLIM_T_FMT ": %m",
