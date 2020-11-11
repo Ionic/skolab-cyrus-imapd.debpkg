@@ -1,7 +1,6 @@
 0001-Disable-runpath-checking.patch
 0002-Shutdown-and-close-sockets-cleanly.patch
 0003-Fix-syslog-prefix.patch
-0004-silence-erroneous-RLIMIT_NUMFDS-related-log-messages.patch
 0005-Updates-calling-of-the-perl-interpreter-to-what-we-e.patch
 0006-Fix-paths-on-Debian-in-tools-rehash.patch
 0007-Adds-some-enhancements-to-sieveshell-and-fixes-some-.patch
