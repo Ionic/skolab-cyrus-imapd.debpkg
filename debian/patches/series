@@ -5,7 +5,6 @@
 0005-Updates-calling-of-the-perl-interpreter-to-what-we-e.patch
 0006-Fix-paths-on-Debian-in-tools-rehash.patch
 0007-Adds-some-enhancements-to-sieveshell-and-fixes-some-.patch
-0008-Accept-invalid-From-header-in-email.patch
 0009-Normalize-the-authentication-ID.patch
 0010-Fix-PATH_MAX-on-GNU-Hurd.patch
 0011-Fix-extra-libpci-in-SNMP_LIBS.patch
