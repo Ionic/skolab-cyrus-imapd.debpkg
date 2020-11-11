@@ -1,6 +1,6 @@
 Description: Fix PATH_MAX on GNU/Hurd
 Aurhor: Ondrej Sury <ondrej@debian.org>
-Forwarded: no
+Forwarded: https://github.com/cyrusimap/cyrus-imapd/pull/3277
 Reviewed-By: Xavier Guimard <yadd@debian.org
 Last-Update: 2020-02-10
 

@@ -1,5 +1,5 @@
 Description: Fix extra libpci in SNMP_LIBS
-Forwarded: no
+Forwarded: not-needed
 Reviewed-By: Xavier Guimard <yadd@debian.org
 Last-Update: 2020-02-10
 

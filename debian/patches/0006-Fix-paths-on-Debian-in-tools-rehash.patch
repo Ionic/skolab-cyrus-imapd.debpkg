@@ -1,6 +1,6 @@
 Description: Fix paths on Debian in tools/rehash
 Author: Sven Mueller <debian@incase.de>
-Forwarded: no
+Forwarded: not-needed
 Reviewed-By: Xavier Guimard <yadd@debian.org
 Last-Update: 2020-02-10
 

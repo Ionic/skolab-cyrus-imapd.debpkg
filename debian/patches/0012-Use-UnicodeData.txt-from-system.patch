@@ -1,6 +1,6 @@
 Description: Use UnicodeData.txt from system
 Author: Ondrej Sury <ondrej@debian.org>
-Forwarded: no
+Forwarded: not-needed
 Reviewed-By: Xavier Guimard <yadd@debian.org
 Last-Update: 2020-02-10
 

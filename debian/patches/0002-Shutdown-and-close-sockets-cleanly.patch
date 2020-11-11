@@ -12,7 +12,7 @@ Description: Shutdown and close sockets cleanly
  Also, it is possible that new daemons and utils in Cyrus 2.2 and 2.3 may
  need similar patches.
 Author: Henrique de Moraes Holschuh <hmh@debian.org>
-Forwarded: no
+Forwarded: https://github.com/cyrusimap/cyrus-imapd/pull/3278
 Reviewed-By: Xavier Guimard <yadd@debian.org
 Last-Update: 2020-02-10
 

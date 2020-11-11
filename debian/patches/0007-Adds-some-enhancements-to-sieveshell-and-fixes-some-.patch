@@ -1,6 +1,6 @@
 Description: Adds some enhancements to sieveshell and fixes some paths.
 Author: Sven Mueller <debian@incase.de>
-Forwarded: no
+Forwarded: https://github.com/cyrusimap/cyrus-imapd/pull/3281
 Reviewed-By: Xavier Guimard <yadd@debian.org
 Last-Update: 2020-02-10
 
