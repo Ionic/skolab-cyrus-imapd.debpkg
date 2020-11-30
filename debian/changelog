@@ -1,15 +1,23 @@
-cyrus-imapd (3.2.4-6) experimental; urgency=medium
+cyrus-imapd (3.2.5-1) unstable; urgency=medium
 
-  * Second test for upstream
+  * New upstream version 3.2.5
+  * Patches (all were pushed to upstream):
+    + Refresh patches
+    + Remove GUID patch, upstream fixed that somewhere else
+    + Drop patch 0008-Accept-invalid-From-header-in-email
+      (see upstream #3382)
+    + Drop patch 0004-silence-erroneous-RLIMIT_NUMFDS-related-log-messages
+      (see upstream #3280)
+    + Drop patch 0007-Adds-some-enhancements-to-sieveshell, accepted
+    + Drop HTTP/2 patch, now included
+    + Drop GUID patch, upstream fixed that somewhere else
+    + Drop patch 0010-Fix-PATH_MAX-on-GNU-Hurd, fixed elsewhere
+  * Set upstream metadata fields: Bug-Submit
+  * Remove obsolete field Name from debian/upstream/metadata
+    (already present in machine-readable debian/copyright).
+  * Declare complicance with policy 4.5.1
 
- -- Xavier Guimard <yadd@debian.org>  Fri, 06 Nov 2020 10:42:11 +0100
-
-cyrus-imapd (3.2.4-5) experimental; urgency=medium
-
-  * Fix po files encoding
-  * Test for upstream
-
- -- Xavier Guimard <yadd@debian.org>  Fri, 06 Nov 2020 06:15:49 +0100
+ -- Xavier Guimard <yadd@debian.org>  Mon, 30 Nov 2020 06:07:34 +0100
 
 cyrus-imapd (3.2.4-4) experimental; urgency=medium
 
