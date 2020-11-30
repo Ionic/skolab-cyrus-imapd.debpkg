@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>cyradm &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>cyradm &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../../index.html"/>
         <link rel="up" title="Man pages" href="../commands.html"/>
         <link rel="next" title="cyrdump" href="cyrdump.html"/>
         <link rel="prev" title="cyr_virusscan" href="cyr_virusscan.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../../../index.html">
-      <img src="../../../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../../../index.html">
  
 
-  
           
-          <img src="../../../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -884,8 +877,8 @@ action will run <code class="docutils literal"><span class="pre">pwd</span></cod
 and getopt-style usages are accepted (combining them will produce an error).
 Optionally assign a special use to the mailbox.</p>
 <p>New mailboxes inherit the ACL permissions of
-their parent mailbox, except for top-level mailboxes such as the user&#8217;s
-INBOX. Mailboxes that are the user&#8217;s INBOX are assigned all to the
+their parent mailbox, except for top-level mailboxes such as the user's
+INBOX. Mailboxes that are the user's INBOX are assigned all to the
 corresponding user.</p>
 <p>Example Usage</p>
 <blockquote>
@@ -1009,7 +1002,7 @@ find the quota root for a mailbox.</p>
 <span id="imap-reference-manpages-systemcommands-cyradm-mboxconfig"></span><h3>mboxconfig<a class="headerlink" href="#mboxconfig" title="Permalink to this headline">¶</a></h3>
 <p><strong>mboxconfig</strong> [<code class="docutils literal"><span class="pre">--private</span></code>] <em>mailbox</em> <em>attribute</em> <em>value</em></p>
 <p>Set mailbox metadata, optionally set the private instead of the shared
-version of the metadata. A value of &#8220;none&#8221; will remove the attribute.</p>
+version of the metadata. A value of &quot;none&quot; will remove the attribute.</p>
 <p>The currently supported attributes are:</p>
 <p><code class="docutils literal"><span class="pre">comment</span></code> <em>description</em></p>
 <blockquote>
@@ -1023,13 +1016,13 @@ version of the metadata. A value of &#8220;none&#8221; will remove the attribute
 will be sent.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">pop3showafter</span></code> <em>time</em></p>
 <blockquote>
-<div>Sets a time (in RFC3501 format, for example &#8220;6-Jan-2011 11:45:32 +1100&#8221;)
+<div>Sets a time (in RFC3501 format, for example &quot;6-Jan-2011 11:45:32 +1100&quot;)
 which specifies a cutoff date such that POP3 fetching of the folder does
 not see messages whose internaldate is before or equal to the date.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">sharedseen</span></code> <em>true|false</em></p>
 <blockquote>
 <div>Enables the use of a shared Seen flag on messages rather than a
-per-user Seen flag.  The &#8216;s&#8217; right in the mailbox ACL still controls
+per-user Seen flag.  The 's' right in the mailbox ACL still controls
 whether a user can set the shared Seen flag.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">sieve</span></code> <em>scriptname</em></p>
 <blockquote>
@@ -1059,11 +1052,11 @@ produce an error.</p>
 <div class="section" id="server">
 <span id="imap-reference-manpages-systemcommands-cyradm-server"></span><h3>server<a class="headerlink" href="#server" title="Permalink to this headline">¶</a></h3>
 <p><strong>server</strong></p>
-<p><strong>server</strong> <em>[&#8211;noauthenticate]</em> <em>[server]</em></p>
+<p><strong>server</strong> <em>[--noauthenticate]</em> <em>[server]</em></p>
 <p>With no arguments, show the current server.  With an argument, connect to that
 server.  It will prompt for automatic login unless the <code class="docutils literal"><span class="pre">--noauthenticate</span></code>option is specified.  (This may change; in particular, either automatic
 authentication will be removed or all <a class="reference internal" href="#authenticate">authenticate</a> options will be added.)</p>
-<p>When connected to a server, <strong>cyradm</strong>&#8216;s prompt changes from <code class="docutils literal"><span class="pre">cyradm&gt;</span></code> to
+<p>When connected to a server, <strong>cyradm</strong>'s prompt changes from <code class="docutils literal"><span class="pre">cyradm&gt;</span></code> to
 <code class="docutils literal"><span class="pre">servername&gt;</span></code>, where <em>servername</em> is the fully qualified domain name
 of the connected server.</p>
 <p>aliases: <code class="docutils literal"><span class="pre">connect</span></code>, <code class="docutils literal"><span class="pre">servername</span></code></p>
@@ -1112,11 +1105,11 @@ any combinations of the ACL codes:</p>
 <div class="section" id="setinfo">
 <span id="imap-reference-manpages-systemcommands-cyradm-setinfo"></span><h3>setinfo<a class="headerlink" href="#setinfo" title="Permalink to this headline">¶</a></h3>
 <p><strong>setinfo</strong> <em>attribute</em> <em>value</em></p>
-<p>Set server metadata.  A value of &#8220;none&#8221; will remove the attribute.
+<p>Set server metadata.  A value of &quot;none&quot; will remove the attribute.
 The currently supported attributes are:</p>
 <p><code class="docutils literal"><span class="pre">motd</span></code> <em>message</em></p>
 <blockquote>
-<div>Sets a &#8220;message of the day&#8221;.  The message gets displayed as an ALERT upon
+<div>Sets a &quot;message of the day&quot;.  The message gets displayed as an ALERT upon
 connection.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">comment</span></code> <em>note</em></p>
 <blockquote>
@@ -1139,7 +1132,7 @@ them (unless overridden by a mailbox annotation).</div></blockquote>
 </div>
 <div class="section" id="setmetadata">
 <span id="imap-reference-manpages-systemcommands-cyradm-setmetadata"></span><h3>setmetadata<a class="headerlink" href="#setmetadata" title="Permalink to this headline">¶</a></h3>
-<p><strong>setmetadata</strong> [&#8211;private] mailbox [<em>annotation</em>] <em>value</em></p>
+<p><strong>setmetadata</strong> [--private] mailbox [<em>annotation</em>] <em>value</em></p>
 <p>Set metadata on mailbox, where <em>annotation</em> is one of
 [comment|expire|news2mail|pop3showafter|sharedseen|sieve|specialuse|
 squat|/&lt;explicit annotation&gt;].</p>
@@ -1148,11 +1141,11 @@ additional backslash.  For example:</p>
 <div class="highlight-perl"><div class="highlight"><pre><span></span><span class="n">setmetadata</span> <span class="o">--</span><span class="n">private</span> <span class="n">Spam</span> <span class="n">specialuse</span> <span class="s">&quot;\\Junk&quot;</span>
 </pre></div>
 </div>
-<p>Note, too, that &#8220;private&#8221; annotations are private to the user currently
+<p>Note, too, that &quot;private&quot; annotations are private to the user currently
 authenticated as, not necessarily the owner of the mailbox.  To set
 annotations for another user you must authorize as that user.</p>
-<p>In addition to the use of optional flag <strong>&#8211;private</strong>, one may use a more
-explicit syntax, prefixing the annotation with &#8216;/shared/&#8217; or &#8216;/private/&#8217;
+<p>In addition to the use of optional flag <strong>--private</strong>, one may use a more
+explicit syntax, prefixing the annotation with '/shared/' or '/private/'
 as in this example:</p>
 <div class="highlight-perl"><div class="highlight"><pre><span></span><span class="n">setmetadata</span> <span class="n">Spam</span> <span class="sr">/private/s</span><span class="n">pecialuse</span> <span class="s">&quot;\\Junk&quot;</span>
 </pre></div>
@@ -1271,7 +1264,7 @@ sh(1), perl(1), imapd(8), imapd.conf(5), reconstruct(8)</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

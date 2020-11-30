@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Documentation &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>Documentation &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../index.html"/>
         <link rel="up" title="Developers" href="../../developers.html"/>
         <link rel="next" title="IMAP Developer Guide" href="../developer.html"/>
         <link rel="prev" title="We need your help" href="../../contribute.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../index.html">
-      <img src="../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../index.html">
  
 
-  
           
-          <img src="../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../developers.html">Developers</a> &raquo;</li>
       
@@ -788,9 +781,9 @@
 <span id="contribute-docs"></span><h1>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>Our documentation for the website is held under git source control, the same as the source. We&#8217;d love to have your contributions, which can be sent to the <a class="reference internal" href="../support/feedback-mailing-lists.html#feedback-mailing-lists"><span class="std std-ref">mailing list</span></a> or you can submit a patch directly against the source.</p>
+<p>Our documentation for the website is held under git source control, the same as the source. We'd love to have your contributions, which can be sent to the <a class="reference internal" href="../support/feedback-mailing-lists.html#feedback-mailing-lists"><span class="std std-ref">mailing list</span></a> or you can submit a patch directly against the source.</p>
 <p>Our helpfile source uses <a class="reference external" href="http://sphinx-doc.org">Sphinx</a> and <a class="reference external" href="http://docutils.sourceforge.net/rst.html">Restructured Text</a>.</p>
-<p>While editing the documentation can take place in any text editor, you&#8217;ll need tools to fetch the source, generate man pages and html for testing.</p>
+<p>While editing the documentation can take place in any text editor, you'll need tools to fetch the source, generate man pages and html for testing.</p>
 </div>
 <div class="section" id="documentation-tools">
 <h2>Documentation Tools<a class="headerlink" href="#documentation-tools" title="Permalink to this headline">¶</a></h2>
@@ -858,7 +851,7 @@ python package for performing datestamp operations:</p>
 </pre></div>
 </div>
 <p>This runs <code class="docutils literal"><span class="pre">make</span> <span class="pre">doc-html</span> <span class="pre">doc-text</span> <span class="pre">man</span></code> and places the relevant output in <code class="docutils literal"><span class="pre">doc/html/</span></code>, <code class="docutils literal"><span class="pre">doc/text/</span></code> and <code class="docutils literal"><span class="pre">man/</span></code> directories.</p>
-<p>If you don&#8217;t have a full source build environment and just want to manage the documentation
+<p>If you don't have a full source build environment and just want to manage the documentation
 on its own, from the <cite>docsrc/`</cite> directory run:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">clean</span> <span class="n">init</span> <span class="n">man</span> <span class="n">html</span>
 </pre></div>
@@ -870,12 +863,12 @@ on its own, from the <cite>docsrc/`</cite> directory run:</p>
 <h2>Submitting updates<a class="headerlink" href="#submitting-updates" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="using-github-pull-requests">
 <h3>Using GitHub pull requests<a class="headerlink" href="#using-github-pull-requests" title="Permalink to this headline">¶</a></h3>
-<p>We operate on the GitHub fork/pull model. We&#8217;d love to have your pull request come through!</p>
-<p>If you&#8217;re new to GitHub or the fork/pull model, we have a <a class="reference internal" href="github-guide.html#github-guide"><span class="std std-ref">Quick GitHub guide</span></a> to get you going.</p>
+<p>We operate on the GitHub fork/pull model. We'd love to have your pull request come through!</p>
+<p>If you're new to GitHub or the fork/pull model, we have a <a class="reference internal" href="github-guide.html#github-guide"><span class="std std-ref">Quick GitHub guide</span></a> to get you going.</p>
 </div>
 <div class="section" id="patches-through-the-mailing-list">
 <h3>Patches through the mailing list<a class="headerlink" href="#patches-through-the-mailing-list" title="Permalink to this headline">¶</a></h3>
-<p>If you&#8217;re not planning on regularly submitting changes, you can just send your patch through to the <a class="reference internal" href="../support/feedback-mailing-lists.html#feedback-mailing-lists"><span class="std std-ref">mailing list</span></a> and one of the regular maintainers will incorporate it.</p>
+<p>If you're not planning on regularly submitting changes, you can just send your patch through to the <a class="reference internal" href="../support/feedback-mailing-lists.html#feedback-mailing-lists"><span class="std std-ref">mailing list</span></a> and one of the regular maintainers will incorporate it.</p>
 </div>
 </div>
 <div class="section" id="special-tags">
@@ -898,12 +891,12 @@ on its own, from the <cite>docsrc/`</cite> directory run:</p>
 <h3>imap_current_stable_version<a class="headerlink" href="#imap-current-stable-version" title="Permalink to this headline">¶</a></h3>
 <p>This is a replacement tag and will output the current stable version number defined in conf.py.</p>
 <p>Usage: <code class="docutils literal"><span class="pre">|imap_current_stable_version|</span></code></p>
-<p>Produces 3.2.4.</p>
+<p>Produces 3.2.5.</p>
 </div>
 </div>
 <div class="section" id="conventions-man-pages">
 <h2>Conventions: Man Pages<a class="headerlink" href="#conventions-man-pages" title="Permalink to this headline">¶</a></h2>
-<p>For Unix manual, or &#8220;man&#8221; pages, we follow the conventions laid out in the man page for man(1) itself:</p>
+<p>For Unix manual, or &quot;man&quot; pages, we follow the conventions laid out in the man page for man(1) itself:</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Conventional section names include NAME, SYNOPSIS, CONFIGURATION, DESCRIPTION, OPTIONS, EXIT STATUS, RETURN VALUE, ERRORS, ENVIRONMENT, FILES, VERSIONS, CONFORMING TO, NOTES, BUGS, EXAMPLE, AUTHORS, and SEE ALSO. The following conventions apply to the SYNOPSIS section and can be used as a guide in other sections.</p>
@@ -937,7 +930,7 @@ on its own, from the <cite>docsrc/`</cite> directory run:</p>
 </div>
 <div class="section" id="examples">
 <h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
-<p>In order to preserve space in traditional man page output, we&#8217;re using the <code class="docutils literal"><span class="pre">..</span> <span class="pre">only::</span> <span class="pre">html</span></code> directive in the reStructured Text (.rst) files for the verbose output of the Examples for commands.</p>
+<p>In order to preserve space in traditional man page output, we're using the <code class="docutils literal"><span class="pre">..</span> <span class="pre">only::</span> <span class="pre">html</span></code> directive in the reStructured Text (.rst) files for the verbose output of the Examples for commands.</p>
 <p>For example, this is good, and follows the style of the man(8) manpage:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Examples</span>
 <span class="o">========</span>
@@ -1025,7 +1018,7 @@ on its own, from the <cite>docsrc/`</cite> directory run:</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

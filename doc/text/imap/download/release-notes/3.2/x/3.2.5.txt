@@ -1,0 +1,63 @@
+
+Cyrus IMAP 3.2.5 Release Notes
+******************************
+
+Download from GitHub:
+
+   * https://github.com/cyrusimap/cyrus-
+     imapd/releases/download/cyrus- imapd-3.2.5/cyrus-
+     imapd-3.2.5.tar.gz
+
+   * https://github.com/cyrusimap/cyrus-
+     imapd/releases/download/cyrus- imapd-3.2.5/cyrus-
+     imapd-3.2.5.tar.gz.sig
+
+
+Changes since 3.2.4
+===================
+
+
+Build changes
+-------------
+
+* Fixed Issue #3172: add fallback implementation of *memrchr()*
+  (thanks Andy Fiddaman)
+
+* Fixed Issue #3128: many "format specifies type ... but" warnings
+  on non-Linux/x86_64 platforms (thanks Anatoli)
+
+* Fixed Issue #3265: *__attribute__((optimise))* support detection
+
+* Fixed Issue #3275: *--enable-srs* configure option was always
+  ignored (thanks Carlos Velasco)
+
+
+Bug fixes
+---------
+
+* Fixed Issue #3180: httpd process hang when using HTTP/2
+
+* Fixed Issue #3239: don't redefine MAXDOMNAME/MAXLOGNAME if already
+  defined (thanks Anatoli)
+
+* Fixed: lmtpd no longer allows delivery/keep/fileinto to non-IMAP
+  mailboxes
+
+* Fixed: ensure JMAP sinceState is a number
+
+* Fixed Issue #3260: addseen failure when moving messages between
+  mailboxes with different seen settings
+
+* Fixed Issue #3214: don't choke on 8-bit MIME parameters
+
+* Fixed Issue #3287: tools/translatesive also iterated parent
+  directory (thanks Daniel O'Connor)
+
+* Fixed Issue #3272: add handler stub for JMAP eventSourceUrl
+
+
+Other
+-----
+
+* Added *--password* and *--execfile* options to sieveshell(1),
+  based on patch from Debian in Issue #3281 (thanks Xavier Guimard)

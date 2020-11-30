@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>SQL Authentication &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>SQL Authentication &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../index.html"/>
         <link rel="up" title="Features" href="../features.html"/>
         <link rel="next" title="Access Control" href="access-control.html"/>
         <link rel="prev" title="LDAP Authentication" href="authentication-ldap.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../../index.html">
-      <img src="../../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../../index.html">
  
 
-  
           
-          <img src="../../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../../overview.html">Overview</a> &raquo;</li>
       
@@ -798,17 +791,17 @@
 <p>The database connection details are completely changeable and you can even use a remote MySQL server, but remember to change them throughout the instructions below.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The database table doesn&#8217;t need to be writable by the Cyrus server. If your master database is held on a different server, you could use MySQL replication to replicate just the mail_users table to the Cyrus server and make the table read-only on the replica.</p>
+<p class="last">The database table doesn't need to be writable by the Cyrus server. If your master database is held on a different server, you could use MySQL replication to replicate just the mail_users table to the Cyrus server and make the table read-only on the replica.</p>
 </div>
 </div>
 <div class="section" id="saslauthd">
 <h3>saslauthd<a class="headerlink" href="#saslauthd" title="Permalink to this headline">¶</a></h3>
-<p>saslauthd needs to be configured to use PAM. In the output of <strong class="command">ps ax | grep saslauthd</strong> it&#8217;ll probably look like <strong class="command">saslauthd -a pam</strong>
+<p>saslauthd needs to be configured to use PAM. In the output of <strong class="command">ps ax | grep saslauthd</strong> it'll probably look like <strong class="command">saslauthd -a pam</strong>
 Optionally <code class="docutils literal"><span class="pre">-r</span></code> (realm) parameter with saslauthd if you plan to use <a class="reference external" href="mailto:username&#37;&#52;&#48;domain">username<span>&#64;</span>domain</a> style logins instead of just username</p>
 </div>
 <div class="section" id="pam-mysql">
 <h3>pam_mysql<a class="headerlink" href="#pam-mysql" title="Permalink to this headline">¶</a></h3>
-<p>pam_mysql (0.7) from <a class="reference external" href="http://pam-mysql.sourceforge.net/">http://pam-mysql.sourceforge.net/</a> - it&#8217;s quite likely that other MySQL PAM modules would work, but this one definitely works and using a different version will require different configuration to that described below.</p>
+<p>pam_mysql (0.7) from <a class="reference external" href="http://pam-mysql.sourceforge.net/">http://pam-mysql.sourceforge.net/</a> - it's quite likely that other MySQL PAM modules would work, but this one definitely works and using a different version will require different configuration to that described below.</p>
 </div>
 </div>
 <div class="section" id="database-structure">
@@ -828,7 +821,7 @@ Optionally <code class="docutils literal"><span class="pre">-r</span></code> (re
 <span class="p">);</span>
 </pre></div>
 </div>
-<p>Next insert an example record for testing purposes. The username must match the mailbox created in Cyrus and the login is the full email address. If you don&#8217;t need/want domain based virtual users, you can also just insert a username without the &#64;example.org</p>
+<p>Next insert an example record for testing purposes. The username must match the mailbox created in Cyrus and the login is the full email address. If you don't need/want domain based virtual users, you can also just insert a username without the &#64;example.org</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">INSERT</span> <span class="n">INTO</span> <span class="n">mail_users</span> <span class="n">SET</span> <span class="n">username</span><span class="o">=</span><span class="s1">&#39;jane@example.org&#39;</span><span class="p">,</span>
     <span class="n">password</span><span class="o">=</span><span class="n">ENCRYPT</span><span class="p">(</span><span class="s1">&#39;janepass&#39;</span><span class="p">,</span><span class="s1">&#39;$1$1234abcd&#39;</span><span class="p">),</span> <span class="n">active</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
 </pre></div>
@@ -878,9 +871,9 @@ Optionally <code class="docutils literal"><span class="pre">-r</span></code> (re
 </div>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">Because this file contains the database password, you should ensure it is properly protected. Change the ownership to root:root (if it&#8217;s not already), and <strong class="command">chmod 600 /etc/mail-pam-mysql.conf</strong></p>
+<p class="last">Because this file contains the database password, you should ensure it is properly protected. Change the ownership to root:root (if it's not already), and <strong class="command">chmod 600 /etc/mail-pam-mysql.conf</strong></p>
 </div>
-<p>Changing verbose to 1 results in a large amount of debugging output in the logs, including the SQL being run. This can be useful if it&#8217;s not working as expected.
+<p>Changing verbose to 1 results in a large amount of debugging output in the logs, including the SQL being run. This can be useful if it's not working as expected.
 If you are using the MySQL PASSWORD() function, change password_crypt to 1</p>
 </div>
 <div class="section" id="testing-the-sasl-configuration">
@@ -896,7 +889,7 @@ $ <strong class="command">testsaslauthd -u jane -r example.org -p janepas3 -s im
 $ <strong class="command">testsaslauthd -u jane -r example.org -p janepass -s pop</strong>
 0: NO &quot;authentication failed&quot;
 </pre>
-<p>This fails because we haven&#8217;t setup the PAM config file for the POP service, update /etc/pam.d/pop by adding the following two &#8216;sufficient&#8217; lines above the appropriate &#8216;required&#8217; lines.</p>
+<p>This fails because we haven't setup the PAM config file for the POP service, update /etc/pam.d/pop by adding the following two 'sufficient' lines above the appropriate 'required' lines.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">auth</span>       <span class="n">sufficient</span>   <span class="n">pam_mysql</span><span class="o">.</span><span class="n">so</span> <span class="n">config_file</span><span class="o">=/</span><span class="n">etc</span><span class="o">/</span><span class="n">mail</span><span class="o">-</span><span class="n">pam</span><span class="o">-</span><span class="n">mysql</span><span class="o">.</span><span class="n">conf</span>
 <span class="n">account</span>    <span class="n">sufficient</span>   <span class="n">pam_mysql</span><span class="o">.</span><span class="n">so</span> <span class="n">config_file</span><span class="o">=/</span><span class="n">etc</span><span class="o">/</span><span class="n">mail</span><span class="o">-</span><span class="n">pam</span><span class="o">-</span><span class="n">mysql</span><span class="o">.</span><span class="n">conf</span>
 </pre></div>
@@ -916,7 +909,7 @@ $ <strong class="command">testsaslauthd -u jane -r example.org -p janepass -s po
 </div>
 <div class="section" id="testing-everything-together">
 <h2>Testing everything together<a class="headerlink" href="#testing-everything-together" title="Permalink to this headline">¶</a></h2>
-<p>This step assumes Cyrus is already configured and listening on localhost port 143 (IMAP). Change the openssl command as required if it&#8217;s not.</p>
+<p>This step assumes Cyrus is already configured and listening on localhost port 143 (IMAP). Change the openssl command as required if it's not.</p>
 <pre class="literal-block">
 $ <strong class="command">openssl s_client -connect localhost:143 -starttls imap</strong>
 ...
@@ -927,7 +920,7 @@ $ <strong class="command">openssl s_client -connect localhost:143 -starttls imap
 * BYE LOGOUT received
 0 OK Completed
 </pre>
-<p>If you don&#8217;t get an OK response to the LOGIN command, something isn&#8217;t working properly and there may be useful log messages in either maillog, messages or secure log files.</p>
+<p>If you don't get an OK response to the LOGIN command, something isn't working properly and there may be useful log messages in either maillog, messages or secure log files.</p>
 <p>Back to <a class="reference internal" href="../features.html#imap-features"><span class="std std-ref">Features</span></a></p>
 </div>
 </div>
@@ -970,7 +963,7 @@ $ <strong class="command">openssl s_client -connect localhost:143 -starttls imap
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

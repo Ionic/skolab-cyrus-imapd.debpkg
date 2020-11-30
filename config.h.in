@@ -260,6 +260,9 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Define to 1 if you have the `memrchr' function. */
+#undef HAVE_MEMRCHR
+
 /* Build in MySQL support? */
 #undef HAVE_MYSQL
 
@@ -470,6 +473,9 @@
 /* Do we have a sys_errlist? */
 #undef NEED_SYS_ERRLIST
 
+/* printf formatter for off_t */
+#undef OFF_T_FMT
+
 /* Use "imap" as sieve service name? */
 #undef OLD_SIEVE_SERVICE_NAME
 
@@ -499,6 +505,9 @@
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
+
+/* printf formatter for rlim_t */
+#undef RLIM_T_FMT
 
 /* Path to 'rm' binary */
 #undef RM_BIN
@@ -530,6 +539,9 @@
 /* The size of `unsigned long long int', as computed by sizeof. */
 #undef SIZEOF_UNSIGNED_LONG_LONG_INT
 
+/* printf formatter for size_t */
+#undef SIZE_T_FMT
+
 /* Do we already have setproctitle? */
 #undef SPT_TYPE
 
@@ -538,6 +550,9 @@
 
 /* Syslog facility to use. */
 #undef SYSLOG_FACILITY
+
+/* printf formatter for time_t */
+#undef TIME_T_FMT
 
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
 #undef TIME_WITH_SYS_TIME
@@ -574,6 +589,9 @@
 
 /* Build in Squat support? */
 #undef USE_SQUAT
+
+/* Build with srs functionality */
+#undef USE_SRS
 
 /* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE
@@ -649,6 +667,18 @@
 #ifndef __cplusplus
 #undef inline
 #endif
+
+/* strtol-like parse function for off_t */
+#undef strtoofft
+
+/* strtol-like parse function for rlim_t */
+#undef strtorlimt
+
+/* strtol-like parse function for size_t */
+#undef strtosizet
+
+/* strtol-like parse function for time_t */
+#undef strtotimet
 
 #if HAVE_VISIBILITY
 #define EXPORTED __attribute__((__visibility__("default")))
@@ -765,27 +795,6 @@ struct sockaddr_storage {
 #define shutdown(fd, mode) 0
 #endif
 
-/* *printf() macros */
-#if (SIZEOF_SIZE_T == SIZEOF_INT)
-#define SIZE_T_FMT "%u"
-#elif (SIZEOF_SIZE_T == SIZEOF_LONG)
-#define SIZE_T_FMT "%lu"
-#elif (SIZEOF_SIZE_T == SIZEOF_LONG_LONG_INT)
-#define SIZE_T_FMT "%llu"
-#else
-#error dont know what to use for SIZE_T_FMT
-#endif
-
-#if (SIZEOF_OFF_T == SIZEOF_LONG)
-#define OFF_T_FMT "%ld"
-#define strtoofft(nptr, endptr, base) strtol(nptr, endptr, base)
-#elif (SIZEOF_OFF_T == SIZEOF_LONG_LONG_INT)
-#define OFF_T_FMT "%lld"
-#define strtoofft(nptr, endptr, base) strtoll(nptr, endptr, base)
-#else
-#error dont know what to use for OFF_T_FMT
-#endif
-
 #ifndef HAVE_POSIX_FADVISE
 #define POSIX_FADV_WILLNEED 0
 extern int posix_fadvise(int fd, off_t offset, off_t len, int advice);
@@ -797,6 +806,10 @@ extern char *strsep(char **, const char *);
 
 #ifndef HAVE_MEMMEM
 extern void *memmem(const void *, size_t, const void *, size_t);
+#endif
+
+#ifndef HAVE_MEMRCHR
+extern void *memrchr(const void *, int, size_t);
 #endif
 
 /* compile time options; think carefully before modifying */

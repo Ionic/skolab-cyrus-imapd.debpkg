@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Combining Access Rights &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>Combining Access Rights &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../../index.html"/>
         <link rel="up" title="Access Control" href="../access-control.html"/>
         <link rel="next" title="Access Control Defaults" href="defaults.html"/>
         <link rel="prev" title="Access Control" href="../access-control.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../../../index.html">
-      <img src="../../../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../../../index.html">
  
 
-  
           
-          <img src="../../../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -790,8 +783,8 @@
             
   <div class="section" id="combining-access-rights">
 <span id="imap-admin-access-control-combining-rights"></span><h1>Combining Access Rights<a class="headerlink" href="#combining-access-rights" title="Permalink to this headline">¶</a></h1>
-<p>Access rights can combined to set a typical set of &#8220;read&#8221;, &#8220;write&#8221; and
-&#8220;full control&#8221;, potentially making it easier for client implementors to
+<p>Access rights can combined to set a typical set of &quot;read&quot;, &quot;write&quot; and
+&quot;full control&quot;, potentially making it easier for client implementors to
 present their users with an interface to administer the ACLs to their
 mailboxes easily.</p>
 <div class="admonition note">
@@ -803,7 +796,7 @@ such as the <a class="reference internal" href="rights-reference.html#imap-admin
 <code class="docutils literal"><span class="pre">\Deleted</span></code> flags on messages, and the
 <a class="reference internal" href="rights-reference.html#imap-admin-access-control-right-w"><span class="std std-ref">w</span></a> right for maintaining non-
 system flags on messages.</p>
-<p class="last">Cyrus IMAP responds with <code class="docutils literal"><span class="pre">READ-ONLY</span></code> if the mailbox&#8217;s
+<p class="last">Cyrus IMAP responds with <code class="docutils literal"><span class="pre">READ-ONLY</span></code> if the mailbox's
 <code class="docutils literal"><span class="pre">/vendor/cmu/cyrus-imapd/sharedseen</span></code> annotation is set to <code class="docutils literal"><span class="pre">true</span></code>
 and the user selecting the mailbox is not given the
 <a class="reference internal" href="rights-reference.html#imap-admin-access-control-right-e"><span class="std std-ref">e</span></a>,
@@ -814,20 +807,20 @@ and the user selecting the mailbox is not given the
 </div>
 <div class="section" id="lrs">
 <h2>lrs<a class="headerlink" href="#lrs" title="Permalink to this headline">¶</a></h2>
-<p>The set of rights often referred to as &#8220;read-only&#8221;. The ACI subject is
+<p>The set of rights often referred to as &quot;read-only&quot;. The ACI subject is
 allowed to lookup the folder, read its contents and maintain <code class="docutils literal"><span class="pre">\Seen</span></code>
 flags on messages. Meanwhile, the <code class="docutils literal"><span class="pre">\Recent</span></code> flags are maintained for
 the ACI subject as well.</p>
 </div>
 <div class="section" id="lirstw">
 <h2>lirstw<a class="headerlink" href="#lirstw" title="Permalink to this headline">¶</a></h2>
-<p>The set of rights that could arguably be referred to &#8220;semi-full&#8221;.</p>
+<p>The set of rights that could arguably be referred to &quot;semi-full&quot;.</p>
 <p>The ACI subject is allowed to lookup the folder, read its contents and
 maintain flags on messages, as well as insert new messages in to the
-folder, and flag messages as <code class="docutils literal"><span class="pre">\Deleted</span></code>, but not expunge the folder&#8217;s
+folder, and flag messages as <code class="docutils literal"><span class="pre">\Deleted</span></code>, but not expunge the folder's
 contents.</p>
 <p>Allowing ACI subjects to flag messages as <code class="docutils literal"><span class="pre">\Deleted</span></code> but not
-delegating the right to <code class="docutils literal"><span class="pre">EXPUNGE</span></code> the folder&#8217;s contents enables
+delegating the right to <code class="docutils literal"><span class="pre">EXPUNGE</span></code> the folder's contents enables
 messages to quickly be restored by ACI subjects themselves, if the
 client used can be configured to show or hide messages flagged
 <code class="docutils literal"><span class="pre">\Deleted</span></code>.</p>
@@ -843,7 +836,7 @@ the <code class="docutils literal"><span class="pre">\Deleted</span></code> flag
 precise, all flags other than <code class="docutils literal"><span class="pre">\Seen</span></code> are global.</p>
 </div>
 <div class="section" id="acl-macros">
-<h2>ACL &#8220;Macros&#8221;<a class="headerlink" href="#acl-macros" title="Permalink to this headline">¶</a></h2>
+<h2>ACL &quot;Macros&quot;<a class="headerlink" href="#acl-macros" title="Permalink to this headline">¶</a></h2>
 <p>Cyrus administration supports short-hand macros you may use:</p>
 <div class="section" id="none">
 <h3>none<a class="headerlink" href="#none" title="Permalink to this headline">¶</a></h3>
@@ -863,7 +856,7 @@ precise, all flags other than <code class="docutils literal"><span class="pre">\
 the mailbox using the delivery system (<em>lookup</em>, <em>read</em>, <em>seen</em> and
 <em>post</em>).</p>
 <p>Most delivery systems do not provide authentication, so the <code class="docutils literal"><span class="pre">p</span></code>
-right usually has meaning only for the &#8220;anonymous&#8221; user.</p>
+right usually has meaning only for the &quot;anonymous&quot; user.</p>
 </div></blockquote>
 </div>
 <div class="section" id="append-lrsip">
@@ -945,7 +938,7 @@ right, and any one of the <a class="reference internal" href="rights-reference.h
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

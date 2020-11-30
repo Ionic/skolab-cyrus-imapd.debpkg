@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Authentication and Authorization &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>Authentication and Authorization &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../index.html"/>
         <link rel="up" title="Configuration Guide" href="../deployment.html"/>
         <link rel="next" title="Performance Recommendations" href="performance_recommendations.html"/>
         <link rel="prev" title="Known Protocol Limitations" href="known_protocol_limitations.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../../index.html">
-      <img src="../../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../../index.html">
  
 
-  
           
-          <img src="../../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../../setup.html">Setup</a> &raquo;</li>
       
@@ -791,7 +784,7 @@
 <p>The use of Cyrus IMAP may have a significant impact on the design, use and load of the current authentication and authorization infrastructure. In addition, authentication and authorization relates to both to security, and also, in the particular case of Cyrus IMAP, personal privacy.</p>
 <p>Typically, an authentication and authorization database, such as for example LDAP, is already available and in use within an infrastructure. Cyrus IMAP would integrate with a variety of technologies, but a few considerations deserve outlining.</p>
 <p>For example, when a user wants to set group permissions on an IMAP folder, the most intuitive attribute in LDAP to refer to the group is the Common Name (CN). This attribute however is not guaranteed to be unique. Uniqueness can be enforced within LDAP, although that may be too restrictive, and so the groups available in Cyrus IMAP can be limited to scope one, while the cn is used in the rdn (the cn is the naming attribute to compose the dn with); effectively enforcing uniqueness for those groups available to Cyrus IMAP.</p>
-<p>Similarly, many deployments choose to use the mail LDAP attribute value as the mailbox name, while mail is a multi-valued attribute and is not configured to be enforced globally unique in the LDAP information tree under the root dn. In addition, attributes such as <code class="docutils literal"><span class="pre">mailAlternativeAddress</span></code> and/or alias could potentially hold the same value as anyone&#8217;s mail attribute. These limitations or such implications become very clear when canonification of the authentication ID to the desired authorization ID is attempted.</p>
+<p>Similarly, many deployments choose to use the mail LDAP attribute value as the mailbox name, while mail is a multi-valued attribute and is not configured to be enforced globally unique in the LDAP information tree under the root dn. In addition, attributes such as <code class="docutils literal"><span class="pre">mailAlternativeAddress</span></code> and/or alias could potentially hold the same value as anyone's mail attribute. These limitations or such implications become very clear when canonification of the authentication ID to the desired authorization ID is attempted.</p>
 <p>For example, if <code class="docutils literal"><span class="pre">jdoe</span></code> is the login username, and Cyrus IMAP has a default realm configured <code class="docutils literal"><span class="pre">example.org</span></code>, the authentication ID becomes <code class="docutils literal"><span class="pre">jdoe&#64;example.org</span></code>. It is this authentication ID, and not the supplied login username, that Cyrus IMAP uses to verify the credentials.</p>
 <p>Cyrus IMAP thereafter allows authorization mechanisms, such as <em>ptclient</em> modules, to canonify the authentication ID to then ultimately return the authorization ID.</p>
 <p>Suppose in the case of <code class="docutils literal"><span class="pre">jdoe&#64;example.org</span></code>, where the authentication ID had been set, an LDAP module for ptloader could search LDAP for a <code class="docutils literal"><span class="pre">uid=%U</span></code> (where <code class="docutils literal"><span class="pre">%U</span></code> is the local part of the authentication ID), find the mail attribute value is <code class="docutils literal"><span class="pre">john.doe&#64;example.org</span></code>, and authorize the user as such. Effectively, this enables Cyrus IMAP users to log in both with their username (uid) as well as their email address (or any of the aliases).</p>
@@ -805,16 +798,16 @@
 <p class="last">Authentication and authorization are two separate processes. Authentication is about verifying the credentials supplied by the client, while authorization is the process of determining what rights the client has. Authentication, logically, preseeds authorization.</p>
 </div>
 <p>The most common set of credentials is a <em>username</em> and <em>password</em>, but other forms exist like Kerberos v5 ticket exchange (for which, to obtain such, most often a password is supplied), or certificate based authentication (the secret keys for which are most often locked with a passphrase). In any case, authentication works based on a shared secret, and/or a trusted source for verification. Kerberos v5 works based on shared secrets (keytab), and certificate based authentication works based on shared, trusted sources for verification.</p>
-<p>In the case of usernames and passwords though, the exchange and verification of the credentials is at the basis of its security. Sending plain text usernames and passwords over the wire would not allow any application to verify the source of the credentials is actually the user &#8212; who is supposed to be the only party to know the unique combination of username and password.</p>
+<p>In the case of usernames and passwords though, the exchange and verification of the credentials is at the basis of its security. Sending plain text usernames and passwords over the wire would not allow any application to verify the source of the credentials is actually the user --- who is supposed to be the only party to know the unique combination of username and password.</p>
 <p>To obfuscate the login credentials, authentication can be encrypted with CRAM-MD5 or DIGEST-MD5, but this requires the server to have a copy of the original, plain text password. The password in this case becomes the shared secret.</p>
 <p>Another method is to allow the plain text username and password to be transmitted over the wire, but ensure Transport Layer Security (TLS) or the more implicit Secure Socket Layer (SSL). The plain text password can now be used to compare it against a SQL database, bind to an LDAP database, attempt PAM authentication with, etc.</p>
 </div>
 <div class="section" id="users-and-mailboxes">
 <h2>Users and Mailboxes<a class="headerlink" href="#users-and-mailboxes" title="Permalink to this headline">¶</a></h2>
-<p>User mailboxes have a globally unique identifier which is not necessarily the same as the login name used. There are three distinguishable aspects to a user&#8217;s entity and the mailbox associated with it;</p>
+<p>User mailboxes have a globally unique identifier which is not necessarily the same as the login name used. There are three distinguishable aspects to a user's entity and the mailbox associated with it;</p>
 <p>The <strong>user login credentials</strong> that are associated with the user authentication entity and verify the user is who the user claims to be.</p>
 <p>For example, the user logs in with username <code class="docutils literal"><span class="pre">john.doe&#64;example.org</span></code> and password <code class="docutils literal"><span class="pre">verysecret</span></code>.</p>
-<p>The <strong>user&#8217;s authentication entity</strong> &#8212; with all attributes associated with it &#8212; can have one of those attributes be used to create the relationship between the user authentication entity on the one side, and the mailbox entity on the other side.</p>
+<p>The <strong>user's authentication entity</strong> --- with all attributes associated with it --- can have one of those attributes be used to create the relationship between the user authentication entity on the one side, and the mailbox entity on the other side.</p>
 <p>For example, the user that authenticated as <code class="docutils literal"><span class="pre">john.doe&#64;example.org</span></code> may have a mailbox named <code class="docutils literal"><span class="pre">jdoe</span></code>.</p>
 <p>The <strong>authorization entity</strong>, used to assign certain permissions to the user, uses the same attribute used to determine the mailbox name.</p>
 <p>For example, the user that authenticated as <code class="docutils literal"><span class="pre">john.doe&#64;example.com</span></code> and has mailbox <code class="docutils literal"><span class="pre">jdoe</span></code> needs an access control list entry on that mailbox that assigns <code class="docutils literal"><span class="pre">jdoe</span></code> certain rights on said mailbox.</p>
@@ -859,7 +852,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

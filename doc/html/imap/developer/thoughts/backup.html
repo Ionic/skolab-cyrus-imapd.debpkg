@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Notes for backup implementation &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>Notes for backup implementation &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../index.html"/>
         <link rel="up" title="Developer Thoughts &amp; Notes" href="../thoughts.html"/>
         <link rel="next" title="Cyrus IMAP Server: Sieve Bytecode" href="bytecode.html"/>
         <link rel="prev" title="Developer Thoughts &amp; Notes" href="../thoughts.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../../index.html">
-      <img src="../../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../../index.html">
  
 
-  
           
-          <img src="../../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../../developers.html">Developers</a> &raquo;</li>
       
@@ -871,10 +864,10 @@
 </pre></div>
 </div>
 <p>sieve scripts and messages are both identified by a GUID
-but APPLY SIEVE doesn&#8217;t take a GUID, it seems to be generated locally?
+but APPLY SIEVE doesn't take a GUID, it seems to be generated locally?
 the GUID in the response to APPLY SIEVE is generated in the process of
 reading the script from disk (sync_sieve_list_generate)</p>
-<p>can&#8217;t activate scripts because only bytecode files are activated, but
+<p>can't activate scripts because only bytecode files are activated, but
 we neither receive bytecode files over sync protocol nor do we compile
 them ourselves.</p>
 <p>possibly reduce index size by breaking deleted/expunged values into their
@@ -883,7 +876,7 @@ actually deleted.  use left join + is null to find undeleted content</p>
 <div class="section" id="messages">
 <h2>messages<a class="headerlink" href="#messages" title="Permalink to this headline">¶</a></h2>
 <p>APPLY MESSAGE is a list of messages, not necessarily only one message.
-Actually, it&#8217;s a list of messages for potentially multiple users, but we avoid
+Actually, it's a list of messages for potentially multiple users, but we avoid
 this by rejecting GET MESSAGES requests that span multiple users (so that
 sync_client retries at USER level, and so we only see APPLY MESSAGE requests
 for a single user).</p>
@@ -908,31 +901,31 @@ MAILBOX responses.</p>
 <p>We identify mboxes by uniqueid, so when we start seeing sync data for the same
 uniqueid with a new mboxname we just transparently update it anyway, without
 needing to handle the APPLY RENAME.  Not sure if this is a problem...  Do we
-need to record an mbox&#8217;s previous names somehow?</p>
-<p>I think it&#8217;s possible to use this to rename a USER though, something like:</p>
+need to record an mbox's previous names somehow?</p>
+<p>I think it's possible to use this to rename a USER though, something like:</p>
 <p>APPLY RENAME %(OLDMBOXNAME example.com!user.smithj NEWMBOXNAME example.com!user.jsmith ...)</p>
-<p>&#8211; in which case, without special handling of the RENAME command itself, there
+<p>-- in which case, without special handling of the RENAME command itself, there
 will be a backup for the old user that ends with the RENAME, and a backup of
 the new user that (probably) duplicates everything again (except for stuff
-that&#8217;s been expunged).</p>
+that's been expunged).</p>
 <p>And if someone else gets given the original name, like</p>
 <p>APPLY RENAME %(OLDMBOXNAME example.com!user.samantha-mithj NEWMBOXNAME example.com!user.smithj ...)</p>
 <p>Then anything that was expunged from the original user but still available in
 backup disappears?  Or the two backups get conflated, and samantha can
-&#8220;restore&#8221; the original smithj&#8217;s old mail?</p>
+&quot;restore&quot; the original smithj's old mail?</p>
 <p>Uggh.</p>
-<p>if there&#8217;s a mailboxes database pointing to the backup files, then the backup
-file names don&#8217;t need to be based on the userid, they could e.g. be based on
-the user&#8217;s inbox&#8217;s uniqueid.  this would make it easier to deal with user
-renames because the backup filename wouldn&#8217;t need to change.  but this depends
+<p>if there's a mailboxes database pointing to the backup files, then the backup
+file names don't need to be based on the userid, they could e.g. be based on
+the user's inbox's uniqueid.  this would make it easier to deal with user
+renames because the backup filename wouldn't need to change.  but this depends
 on the uniqueid(s) in question being present on most areas of the sync
-protocol, otherwise when starting a backup of a brand new user we won&#8217;t be
+protocol, otherwise when starting a backup of a brand new user we won't be
 able to tell where to store it.  workaround in the meantime could be to make
 some kind of backup id from the mailboxes database, and base the filename on
 this.</p>
-<p>actually, using &#8220;some kind of backup id from the mailboxes database&#8221; is probably
+<p>actually, using &quot;some kind of backup id from the mailboxes database&quot; is probably
 the best solution.  otherwise the lock complexity of renaming a user while making
-sure their new backup filename doesn&#8217;t already exist is frightful.</p>
+sure their new backup filename doesn't already exist is frightful.</p>
 <p>maybe do something with mkstemp()?</p>
 <p>furthermore: what if a mailbox is moved from one user to another?  like:</p>
 <p>APPLY RENAME %(OLD... example.com!user.foo.something NEW... example.com!user.bar.something ...)</p>
@@ -945,14 +938,14 @@ so they can take effect correctly, and THEN rename the backup file itself. but
 how to tell when the appends are finished?</p>
 <p>how can we tell the difference between folder(s) moved to a different user vs
 user has been renamed?</p>
-<p>there is a setting: &#8216;allowusermoves: 0&#8217; which, when enabled, allows users to
+<p>there is a setting: 'allowusermoves: 0' which, when enabled, allows users to
 be renamed via IMAP rename/xfer commands.  but the default is that this is
 disabled.  we could initially require this to be disabled while using backups...</p>
 <p>not sure what the workflow looks like for renaming a user if this is not enabled.</p>
 <p>not sure what the sync flow looks like in either case.</p>
-<p>looking at sync_apply_rename and mboxlist_renamemailbox, it seems like we&#8217;ll
+<p>looking at sync_apply_rename and mboxlist_renamemailbox, it seems like we'll
 see an APPLY RENAME for each affected mbox when a recursive rename is occurring.</p>
-<p>there doesn&#8217;t seem to be anything preventing user/a/foo -&gt; user/b/foo in the
+<p>there doesn't seem to be anything preventing user/a/foo -&gt; user/b/foo in the
 general (non-INBOX) case.</p>
 <p>renames might be a little easier to handle if the index replicated the mailbox
 hierarchy rather than just being a flat structure.  though this adds complexity
@@ -991,7 +984,7 @@ ostensibly represents?</p>
 <p>one way to do this would be to have backup_index_end() store a checksum of
 the corresponding data contents in the index.</p>
 <p>when opening a backup, verify this checksum against the data, and refuse to
-load the index if it doesn&#8217;t match.</p>
+load the index if it doesn't match.</p>
 <ul class="simple">
 <li>sha1sum of (compressed) contents of file prior to each chunk</li>
 </ul>
@@ -1017,7 +1010,7 @@ userid -&gt; backup_filename</p>
 <h2>reindex<a class="headerlink" href="#reindex" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>convert user mailbox name to backup name</li>
-<li>complain if there&#8217;s no backup data file?</li>
+<li>complain if there's no backup data file?</li>
 <li>lock, rename .index to .index.old, init new .index</li>
 <li>foreach file chunk:</li>
 <li>timestamp is from first line in chunk</li>
@@ -1042,17 +1035,17 @@ userid -&gt; backup_filename</p>
 <p>periodic cleanup:
 * check timestamp of each held lock
 * if stale (define: stale?), release
-* FIXME if we&#8217;ve appended more than the chunk size we would compact to, release</p>
+* FIXME if we've appended more than the chunk size we would compact to, release</p>
 <p>sync restart:
 * release each held lock</p>
 <p>exit:
 * release each held lock</p>
-<p>need a &#8220;backup_index_abort&#8221; to complete the backup_index_start/end set.
+<p>need a &quot;backup_index_abort&quot; to complete the backup_index_start/end set.
 _start should create a transaction, _end should commit it, and _abort should
 roll it back.  then, if backupd fails to write to the gzip file for some
 reason, the (now invalid) index info we added can be discarded too.</p>
 <p>flushing immediately on write results in poor gzip compression, but for
-incremental backups that&#8217;s not a problem.  when the compact process hits the
+incremental backups that's not a problem.  when the compact process hits the
 file it will recompress the data more efficiently.</p>
 </div>
 <div class="section" id="questions">
@@ -1064,7 +1057,7 @@ file it will recompress the data more efficiently.</p>
 <div class="section" id="restore">
 <h2>restore<a class="headerlink" href="#restore" title="Permalink to this headline">¶</a></h2>
 <p>restoration is effectively a reverse-direction replication (replicating TO master),
-which means we can&#8217;t necessarily supply things like uid, modseq, etc without racing
+which means we can't necessarily supply things like uid, modseq, etc without racing
 against normal message arrivals.  so instead we add an extra command to the protocol
 to restore a message to a folder but let the destination determine the tasty bits.</p>
 <p>protocol flow looks something like:</p>
@@ -1080,19 +1073,19 @@ APPLY MAILBOX.  it specifies, for a mailbox, the mailbox state plus the message
 records relevant to the restore.</p>
 <p>the imapd/sync_server receiving the RESTORE command creates the mailbox if necessary,
 and then adds the message records to it as new records (i.e. generating new uid etc).
-this will end up generating new events in the backup channel&#8217;s sync log, and then the
+this will end up generating new events in the backup channel's sync log, and then the
 messages will be backed up again with their new uids, etc.  additional wire transfer
 of message data should be avoided by keeping the same guid.</p>
 <p>if the mailbox already exists but its uniqueid does not match the one from the backup,
 then what?  this probably means user has deleted folder and contents, then made new
-folder with same name.  so it&#8217;s probably v common for mailbox uniqueid to not match
-like this.  so we don&#8217;t care about special handling for this case.  just add any
-messages that aren&#8217;t already there.</p>
-<p>if the mailbox doesn&#8217;t already exist on the destination (e.g. if rebuilding a server
-from backups) then it&#8217;s safe and good to reuse uidvalidity, uniqueid, uid, modseq etc,
+folder with same name.  so it's probably v common for mailbox uniqueid to not match
+like this.  so we don't care about special handling for this case.  just add any
+messages that aren't already there.</p>
+<p>if the mailbox doesn't already exist on the destination (e.g. if rebuilding a server
+from backups) then it's safe and good to reuse uidvalidity, uniqueid, uid, modseq etc,
 such that connecting clients can preserve their state.  so the imapd/sync_server
 receiving the restore request accepts these fields as optional, but only preserves
-them if it&#8217;s safe to do so.</p>
+them if it's safe to do so.</p>
 <ul class="simple">
 <li>restore: sbin program for selecting and restoring messages</li>
 </ul>
@@ -1126,7 +1119,7 @@ them if it&#8217;s safe to do so.</p>
 <td># alternate config file</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-D</span></kbd></td>
-<td># don&#8217;t trim deletedprefix before restoring</td></tr>
+<td># don't trim deletedprefix before restoring</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-F <var>input-file</var></span></kbd></td>
 <td># read mailboxes/messages from file rather than argv</td></tr>
@@ -1144,13 +1137,13 @@ them if it&#8217;s safe to do so.</p>
 <td># try to preserve uniqueid, uid, modseq, etc</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-X</span></kbd></td>
-<td># don&#8217;t restore expunged messages</td></tr>
+<td># don't restore expunged messages</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-a</span></kbd></td>
 <td># try to restore all mailboxes in backup</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-n</span></kbd></td>
-<td># calculate work required but don&#8217;t perform restoration</td></tr>
+<td># calculate work required but don't perform restoration</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-r</span></kbd></td>
 <td># recurse into submailboxes</td></tr>
@@ -1192,7 +1185,7 @@ them if it&#8217;s safe to do so.</p>
 <h2>compact<a class="headerlink" href="#compact" title="Permalink to this headline">¶</a></h2>
 <p># finding messages that are to be kept (either exist as unexpunged somewhere,
 # or exist as expunged but more recently than threshold)
-# (to get unique rows, add &#8220;distinct&#8221; and remove mm.expunged from fields)
+# (to get unique rows, add &quot;distinct&quot; and remove mm.expunged from fields)
 sqlite&gt; select m.*, mm.expunged from message as m join mailbox_message as mm on m.id = mm.message_id and (mm.expunged is null or mm.expunged &gt; 1437709300);
 id|guid|partition|chunk_id|offset|length|expunged
 1|1c7cca361502dfed2d918da97e506f1c1e97dfbe|default|1|458|2159|
@@ -1217,7 +1210,7 @@ id|timestamp|offset|length|file_sha1|data_sha1
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first">&#8220;quick&#8221; vs &#8220;full&#8221; compaction</p>
+<li><p class="first">&quot;quick&quot; vs &quot;full&quot; compaction</p>
 </li>
 </ul>
 <p>settings:</p>
@@ -1237,15 +1230,15 @@ backup_max_chunk_duration: 0 for no maximum
 priority: size or duration??</p>
 <p>data we absolutely need to keep:</p>
 <ul class="simple">
-<li>the most recent APPLY MAILBOX for each mailbox we&#8217;re keeping (mailbox state)</li>
-<li>the APPLY MAILBOX containing the most recent RECORD for each message we&#8217;re keeping (record state)</li>
-<li>the APPLY MESSAGE for each message we&#8217;re keeping (message data)</li>
+<li>the most recent APPLY MAILBOX for each mailbox we're keeping (mailbox state)</li>
+<li>the APPLY MAILBOX containing the most recent RECORD for each message we're keeping (record state)</li>
+<li>the APPLY MESSAGE for each message we're keeping (message data)</li>
 </ul>
 <p>data that we should practically keep:</p>
 <ul class="simple">
 <li>all APPLY MAILBOXes for a given mailbox from the chunk identified as its last</li>
 <li>all APPLY MAILBOXes containing a RECORD for a given message from the chunk identified as its last</li>
-<li>the APPLY MESSAGE for each message we&#8217;re keeping</li>
+<li>the APPLY MESSAGE for each message we're keeping</li>
 </ul>
 <p>four kinds of compaction (probably at least two simultaneously):</p>
 <ul class="simple">
@@ -1255,10 +1248,10 @@ priority: size or duration??</p>
 <li>removing unused messages from within a message line</li>
 </ul>
 <dl class="docutils">
-<dt>&#8220;unused messages&#8221;</dt>
+<dt>&quot;unused messages&quot;</dt>
 <dd>messages for which all records have been expunged for longer
 than the retention period</dd>
-<dt>&#8220;unused chunks&#8221;</dt>
+<dt>&quot;unused chunks&quot;</dt>
 <dd>chunks which contain only unused messages</dd>
 </dl>
 <p>algorithm:</p>
@@ -1268,13 +1261,13 @@ than the retention period</dd>
 <li>create a chunk in backup.new</li>
 <li>foreach chunk we still need:</li>
 <li>foreach line in the chunk:</li>
-<li>next line if we don&#8217;t need to keep it</li>
+<li>next line if we don't need to keep it</li>
 <li>create new line</li>
 <li>foreach message in line:</li>
-<li>if we still need the message, or if we&#8217;re not doing message granularity</li>
+<li>if we still need the message, or if we're not doing message granularity</li>
 <li>add the message to the new line</li>
 <li>write and index tmp line to backup.new</li>
-<li>if the new chunk is big enough, or if we&#8217;re not combining</li>
+<li>if the new chunk is big enough, or if we're not combining</li>
 <li>end chunk and start a new one</li>
 <li>end the new chunk</li>
 <li>rename backup-&gt;backup.old, backup.new-&gt;backup</li>
@@ -1297,11 +1290,11 @@ $ctl_backups lock -f /path/to/backup
 OK locked
 [waits for its stdin to close, then unlocks and exits]</p>
 <p>if you need to rummage around in backup.index, run this program in another
-shell, do your work, then ^D it when you&#8217;re finished.</p>
+shell, do your work, then ^D it when you're finished.</p>
 <p>you could also call this from e.g. perl over a bidirectional pipe - wait to
-read &#8220;OK locked&#8221;, then you&#8217;ve got your lock.  close the pipe to unlock when
-you&#8217;re finished working.  if you don&#8217;t read &#8220;OK locked&#8221; before the pipe closes
-then something went wrong and you didn&#8217;t get the lock.</p>
+read &quot;OK locked&quot;, then you've got your lock.  close the pipe to unlock when
+you're finished working.  if you don't read &quot;OK locked&quot; before the pipe closes
+then something went wrong and you didn't get the lock.</p>
 <p>specify backups by -f filename, -m mailbox, -u userid
 default run mode as above
 -s to fork an sqlite of the index (and unlock when it exits)
@@ -1322,21 +1315,21 @@ default run mode as above
 </ul>
 </dd>
 </dl>
-<p>what&#8217;s the correct procedure for repopulating a cyrus database?
+<p>what's the correct procedure for repopulating a cyrus database?
 keep copy of the previous (presumably broken) one?</p>
 <p>trim off mkstemp suffix (if any) to find userid
 can we use a recognisable character to delimit the mkstemp suffix?</p>
-<p>what if there&#8217;s multiple backup files for a given userid? precedence?</p>
+<p>what if there's multiple backup files for a given userid? precedence?</p>
 <p>verify found backups before recording.  reindex?</p>
 <p>locking? what if something has a filename and does stuff with it while
 reconstruct runs?</p>
 <p>backupd always uses db for opens, so as long as reconstruct keeps the db
-locked while it works, the db won&#8217;t clash.  but backupd might have backups
+locked while it works, the db won't clash.  but backupd might have backups
 still open from before reconstruct started, which it will write to quite
 happily, even though reconstruct might decide that some other file is the
 correct one for that user...</p>
 <p>a backup server would generally be used only for backups, and sync_client
-is quite resilient when the destination isn&#8217;t there, so it&#8217;s actually
+is quite resilient when the destination isn't there, so it's actually
 no problem to just shut down cyrus while reconstruct runs.  no outage to
 user-facing services, just maybe some sync backlog to catch up on once
 cyrus is restarted.</p>
@@ -1351,7 +1344,7 @@ cyrus is restarted.</p>
 <li>list backups/info</li>
 <li>rename a backup</li>
 <li>delete a backup</li>
-<li>verify a backup (check all sha1&#8217;s, not just most recent)</li>
+<li>verify a backup (check all sha1's, not just most recent)</li>
 </ul>
 </dd>
 <dt>not sure if these should be included, or separate tools:</dt>
@@ -1390,7 +1383,7 @@ ctl_backups [options] lock [lock_opts] [mode] backup    # lock specified backup<
 <td># verbose</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-w</span></kbd></td>
-<td># wait for locks (i.e. don&#8217;t skip locked backups)</td></tr>
+<td># wait for locks (i.e. don't skip locked backups)</td></tr>
 </tbody>
 </table>
 </dd>
@@ -1441,7 +1434,7 @@ ctl_backups [options] lock [lock_opts] [mode] backup    # lock specified backup<
 </table>
 </dd>
 <dt>list_opts:</dt>
-<dd>-t [hours]          # &#8220;stale&#8221; (no update in hours) backups only (default: 24)</dd>
+<dd>-t [hours]          # &quot;stale&quot; (no update in hours) backups only (default: 24)</dd>
 </dl>
 </div>
 <div class="section" id="cyr-backup">
@@ -1523,38 +1516,38 @@ json: indexed details of listed items in json format</dd>
 <h2>partitions<a class="headerlink" href="#partitions" title="Permalink to this headline">¶</a></h2>
 <p>not enough information in sync protocol to handle partitions easily?</p>
 <p>we know what the partition is when we do an APPLY operation (mailbox, message,
-etc), but the initial GET operations don&#8217;t include it.  so we need to already
+etc), but the initial GET operations don't include it.  so we need to already
 know where the appropriate backup is partitioned in order to find the backup
 file in order to look inside it to respond to the GET request</p>
 <p>if we have a mailboxes database (indexed by mboxname, uniqueid and userid) then
-maybe that would make it feasible?  if it&#8217;s not in the mailboxes database then
-we don&#8217;t have a backup for it yet, so we respond accordingly, and get sent
+maybe that would make it feasible?  if it's not in the mailboxes database then
+we don't have a backup for it yet, so we respond accordingly, and get sent
 enough information to create it.</p>
 <p>does that mean the backup api needs to take an mbname on open, and it handles
 the job of looking it up in the mailboxes database to find the appropriate
 thing to open?</p>
 <p>can we use sqlite for such a database, or is the load on it going to be too
 heavy?  locking?  we have lots of database formats up our sleeves here, so
-even though we use sqlite for the backup index there isn&#8217;t any particular
-reason we&#8217;re beholden to it for the mailboxes db too</p>
+even though we use sqlite for the backup index there isn't any particular
+reason we're beholden to it for the mailboxes db too</p>
 <p>if we have a mailboxes db then we need a reconstruct tool for that, too</p>
-<p>what if we support multiple backup partitions, but don&#8217;t expect these
-to necessarily correspond with mailbox partitions.  they&#8217;re just for spreading
+<p>what if we support multiple backup partitions, but don't expect these
+to necessarily correspond with mailbox partitions.  they're just for spreading
 disk usage around.</p>
 <ul class="simple">
-<li>when creating a backup for a previously-unseen user we&#8217;d pick a random
+<li>when creating a backup for a previously-unseen user we'd pick a random
 partition to put them on</li>
 <li>ctl_backups would need a command to move an existing backup to a
 given partition</li>
 <li>ctl_backups would need a command to pre-create a user backup on a
 given partition for initial distribution</li>
-<li>instead of &#8220;backup_data_path&#8221; setting, have one-or-more
-&#8220;backuppartition-&lt;name&gt;&#8221; settings, ala partition- and friends</li>
+<li>instead of &quot;backup_data_path&quot; setting, have one-or-more
+&quot;backuppartition-&lt;name&gt;&quot; settings, ala partition- and friends</li>
 </ul>
-<p>see imap/partlist.[ch] for partition list management stuff.  it&#8217;s complicated
-and doesn&#8217;t have a test suite, so maybe save this implementation until needed.</p>
+<p>see imap/partlist.[ch] for partition list management stuff.  it's complicated
+and doesn't have a test suite, so maybe save this implementation until needed.</p>
 <p>but... maybe rename backup_data_path to backuppartition-default in the meantime,
-so that when we do add this it&#8217;s not a complicated reconfig to update?</p>
+so that when we do add this it's not a complicated reconfig to update?</p>
 <p>partlist_local_select (and lazy-loaded partlist_local_init) are where the
 mailbox partitions come from (see also mboxlist_create_partition), do something
 similar for backup partitions</p>
@@ -1576,41 +1569,41 @@ similar for backup partitions</p>
 </dd>
 <dt>backup data:</dt>
 <dd><ul class="first last simple">
-<li>what&#8217;s zlib&#8217;s failure mode? do we lose the entire chunk or just the corrupt bit?</li>
+<li>what's zlib's failure mode? do we lose the entire chunk or just the corrupt bit?</li>
 <li>verify will notice sha1sum mismatches</li>
 <li>dlist format will reject some kinds of corruption (but not all)</li>
 <li>reindex: should skip unparseable dlist lines</li>
 <li>message data has its own checksums (guid)</li>
-<li>reindex: should skip messages that don&#8217;t match their own checksums</li>
-<li>compact: &#8220;full&#8221; compact will only keep useful data according to index</li>
-<li>backupd: will sync anything that&#8217;s in user mailbox but not in backup index</li>
+<li>reindex: should skip messages that don't match their own checksums</li>
+<li>compact: &quot;full&quot; compact will only keep useful data according to index</li>
+<li>backupd: will sync anything that's in user mailbox but not in backup index</li>
 </ul>
 </dd>
 </dl>
 <p>i think this means that if a message or mailbox state becomes corrupted in
-the backup data file, and it still exists in the user&#8217;s real mailbox, you
+the backup data file, and it still exists in the user's real mailbox, you
 recover from the corruption by reindexing and then letting the sync process
 copy the missing data back in again.  and you can tidy up the data file by
 running a compact over it.</p>
 <p>you detect data corruption in most recent chunk reactively as soon as the
 backup system needs to open it again (quick verify on open)</p>
 <p>you detect data corruption in older chunks reactively by trying to restore from
-it.  may be too late: if a message needs restoring it&#8217;s because user mailbox no
+it.  may be too late: if a message needs restoring it's because user mailbox no
 longer has it</p>
 <p>you detect data corruption preemptively by running the verify tool over it.
 recommend scheduling this in EVENTS/cron?</p>
-<p>if data corruption occurs in message that&#8217;s no longer in user&#8217;s mailbox, that
+<p>if data corruption occurs in message that's no longer in user's mailbox, that
 message is lost.  it was going to be deleted from the backup after $retention
 period anyway (by compact), but if it needs restoring in the meantime, sorry</p>
 </div>
 <div class="section" id="installation-instructions">
 <h2>installation instructions<a class="headerlink" href="#installation-instructions" title="Permalink to this headline">¶</a></h2>
-<p>(obviously, most of this won&#8217;t work at this point, because the code doesn&#8217;t
+<p>(obviously, most of this won't work at this point, because the code doesn't
 exist.  but this is, approximately, where things are heading.)</p>
 <dl class="docutils">
 <dt>on your backup server:</dt>
 <dd><ul class="first last simple">
-<li>compile with &#8211;enable-backup configure option and install</li>
+<li>compile with --enable-backup configure option and install</li>
 <li><dl class="first docutils">
 <dt>imapd.conf:</dt>
 <dd>backuppartition-default: /var/spool/backup  # FIXME better example
@@ -1622,14 +1615,14 @@ backup_retention_days: 7</dd>
 </li>
 <li><dl class="first docutils">
 <dt>cyrus.conf SERVICES:</dt>
-<dd>backupd cmd=&#8221;backupd&#8221; listen=&#8221;csync&#8221; prefork=0
+<dd>backupd cmd=&quot;backupd&quot; listen=&quot;csync&quot; prefork=0
 (remove other services, most likely)
 (should i create a master/conf/backup.conf example file?)</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt>cyrus.conf EVENTS:</dt>
-<dd>compact cmd=&#8221;ctl_backups compact -A&#8221; at=0400</dd>
+<dd>compact cmd=&quot;ctl_backups compact -A&quot; at=0400</dd>
 </dl>
 </li>
 <li>start server as usual</li>
@@ -1652,12 +1645,12 @@ backup_sync_shutdown_file: ....</dd>
 </li>
 <li><dl class="first docutils">
 <dt>cyrus.conf STARTUP:</dt>
-<dd>backup_sync cmd=&#8221;sync_client -r -n backup&#8221;</dd>
+<dd>backup_sync cmd=&quot;sync_client -r -n backup&quot;</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt>cyrus.conf SERVICES:</dt>
-<dd>restored cmd=&#8221;restored&#8221; [...]</dd>
+<dd>restored cmd=&quot;restored&quot; [...]</dd>
 </dl>
 </li>
 <li>start/restart master</li>
@@ -1666,11 +1659,11 @@ backup_sync_shutdown_file: ....</dd>
 <dt>files and such:</dt>
 <dd>{configdirectory}/backups.db                        - database mapping userids to backup locations
 {backuppartition-name}/&lt;hash&gt;/&lt;userid&gt;_XXXXXX       - backup data stream for userid
-{backuppartition-name}/&lt;hash&gt;/&lt;userid&gt;_XXXXXX.index - index into userid&#8217;s backup data stream</dd>
+{backuppartition-name}/&lt;hash&gt;/&lt;userid&gt;_XXXXXX.index - index into userid's backup data stream</dd>
 <dt>do i want rhost in the path?</dt>
 <dd><ul class="first last simple">
 <li>protects from issue if multiple servers are trying to back up their own version of same user
-(though this is its own problem that the backup system shouldn&#8217;t have to compensate for)</li>
+(though this is its own problem that the backup system shouldn't have to compensate for)</li>
 <li>but makes location of undifferentiated user unpredictable</li>
 <li>so probably not, actually</li>
 </ul>
@@ -1767,12 +1760,12 @@ i think for now, first stage implementation will be to stream the reserve/messag
 <ul class="simple">
 <li>clean up error handling</li>
 <li>perl tool to anonymise sync proto talk</li>
-<li>verification step to check entire data stream for errors (even chunks that aren&#8217;t indexed)</li>
+<li>verification step to check entire data stream for errors (even chunks that aren't indexed)</li>
 <li>prot_fill_cb: extra argument to pass back an error string to prot_fill</li>
 <li>ctl_backups verify: set level</li>
-<li>backupd: don&#8217;t block on locked backups, return mailbox locked &#8211; but sync_client doesn&#8217;t handle this</li>
+<li>backupd: don't block on locked backups, return mailbox locked -- but sync_client doesn't handle this</li>
 <li>test multiple backup partitions</li>
-<li>configure: error if backups requested and we don&#8217;t have zlib</li>
+<li>configure: error if backups requested and we don't have zlib</li>
 <li>valgrind</li>
 <li>finish reconstruct</li>
 <li>compact: split before append?</li>
@@ -1825,7 +1818,7 @@ i think for now, first stage implementation will be to stream the reserve/messag
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
