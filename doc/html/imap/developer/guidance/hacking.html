@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Cyrus IMAP Server: Hacking &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>Cyrus IMAP Server: Hacking &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../index.html"/>
         <link rel="up" title="Developer Guidance" href="../guidance.html"/>
         <link rel="next" title="Cyrus IMAP Server: Internationalization" href="internationalization.html"/>
         <link rel="prev" title="Developer Guidance" href="../guidance.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../../index.html">
-      <img src="../../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../../index.html">
  
 
-  
           
-          <img src="../../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../../developers.html">Developers</a> &raquo;</li>
       
@@ -789,7 +782,7 @@
   <span class="target" id="imap-developer-guidance-hacking"></span><div class="section" id="cyrus-imap-server-hacking">
 <h1>Cyrus IMAP Server: Hacking<a class="headerlink" href="#cyrus-imap-server-hacking" title="Permalink to this headline">¶</a></h1>
 <p>This file aims to be a guide to Cyrus coding style/conventions/useful
-utilities for people trying to approach the code in a sane way.  It&#8217;s
+utilities for people trying to approach the code in a sane way.  It's
 not well organized right now but hopefully that will improve with time
 ;)</p>
 <div class="section" id="memory-allocation">
@@ -827,7 +820,7 @@ NULL TERMINATED:</li>
 </div>
 <ul class="simple">
 <li>you should try to avoid <code class="docutils literal"><span class="pre">strncpy</span></code>, since it is much slower than
-<code class="docutils literal"><span class="pre">memcpy</span></code> (it zero-fills the rest of the buffer) and isn&#8217;t as safe
+<code class="docutils literal"><span class="pre">memcpy</span></code> (it zero-fills the rest of the buffer) and isn't as safe
 as <code class="docutils literal"><span class="pre">strlcpy</span></code>.</li>
 <li>Use of the functions in this way will reduce the confusion involved
 in their various behaviors. In other words, this avoids things that
@@ -841,7 +834,7 @@ look like:</li>
 <h2>map_refresh and map_free<a class="headerlink" href="#map-refresh-and-map-free" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>In many cases, it is far more effective to read a file via the
-operating system&#8217;s mmap facility than it is to via the traditional
+operating system's mmap facility than it is to via the traditional
 <code class="docutils literal"><span class="pre">read()</span></code> and <code class="docutils literal"><span class="pre">lseek</span></code> system calls.  To this end, Cyrus provides
 an operating system independent wrapper around the <code class="docutils literal"><span class="pre">mmap()</span></code>
 services (or lack thereof) of the operating system.</li>
@@ -863,7 +856,7 @@ code. Some operating systems REQUIRE file descriptors that are
 <h2>Network Functions<a class="headerlink" href="#network-functions" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Cyrus abstracts socket stream access to a concept we refer to as
-&#8220;prot streams&#8221;  Prot Streams take care of all of the necessary
+&quot;prot streams&quot;  Prot Streams take care of all of the necessary
 SASL and TLS/SSL encryption that may need to happen before data
 goes out/comes in from the network.  The API is documented in
 lib/prot.h</li>
@@ -884,10 +877,10 @@ do something unique.</li>
 you exit.</li>
 <li>No one should ever call <code class="docutils literal"><span class="pre">DB-&gt;init()</span></code> or <code class="docutils literal"><span class="pre">DB-&gt;done()</span></code> cyrusdb
 functions except for in <code class="docutils literal"><span class="pre">libcyrus_init()</span></code>.</li>
-<li>I&#8217;ve been trying to keep <code class="docutils literal"><span class="pre">#include</span></code> statements for libcyrus and
+<li>I've been trying to keep <code class="docutils literal"><span class="pre">#include</span></code> statements for libcyrus and
 libimap alphabetical, and below any system includes, but this is
 merely my personal style</li>
-<li>Don&#8217;t exit at the bottom of <code class="docutils literal"><span class="pre">main</span></code> with <code class="docutils literal"><span class="pre">exit(x)</span></code> use
+<li>Don't exit at the bottom of <code class="docutils literal"><span class="pre">main</span></code> with <code class="docutils literal"><span class="pre">exit(x)</span></code> use
 <code class="docutils literal"><span class="pre">return</span></code> instead.</li>
 <li>For all the command line utilities that need to be sure that they
 are running as the cyrus user, it should be the first thing they
@@ -896,7 +889,7 @@ do, and they should exit with an appropriate <code class="docutils literal"><spa
 ONLY way of exiting the application.  <code class="docutils literal"><span class="pre">fatal()</span></code> should always
 make an attempt to call <code class="docutils literal"><span class="pre">shut_down()</span></code> if it can (though it should
 have a recursive <code class="docutils literal"><span class="pre">fatal()</span></code> trap just in case).  Similarly,
-command line utilities probably don&#8217;t need a <code class="docutils literal"><span class="pre">shut_down()</span></code>.</li>
+command line utilities probably don't need a <code class="docutils literal"><span class="pre">shut_down()</span></code>.</li>
 </ul>
 </div>
 <div class="section" id="coding-standards">
@@ -906,17 +899,17 @@ out on the cyrus-devel list in June 2010.</p>
 <ul class="simple">
 <li>Spacing is 4 characters with soft tabs at 8 - mixed tabs and spaces
 This corresponds to the vi settings <cite>sw=4 sts=4 ts=8</cite> etc.</li>
-<li>Group the &#8216;*&#8217; character with the variable not the type, i.e.</li>
+<li>Group the '*' character with the variable not the type, i.e.</li>
 </ul>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">char</span> <span class="o">*</span><span class="n">foo</span><span class="p">;</span>  <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
 <span class="n">char</span><span class="o">*</span> <span class="n">foo</span><span class="p">;</span>  <span class="o">/*</span> <span class="n">WRONG</span> <span class="o">*/</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li>The keywords &#8216;if&#8217;, &#8216;for&#8217;, and &#8216;while&#8217; take a space after the keyword.
+<li>The keywords 'if', 'for', and 'while' take a space after the keyword.
 The parentheses around the following expression are not closely
-connected to the expression without any spaces.  The &#8216;;&#8217; inside
-the &#8216;for&#8217; expression have a space after them and not before.
+connected to the expression without any spaces.  The ';' inside
+the 'for' expression have a space after them and not before.
 For example:</li>
 </ul>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">condition</span><span class="p">)</span>              <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
@@ -935,8 +928,8 @@ For example:</li>
 </div>
 <ul class="simple">
 <li>Use spaces around the double-character logical operator
-&#8216;||&#8217; but don&#8217;t use spaces around single-character bitwise
-operator &#8216;|&#8217;.</li>
+'||' but don't use spaces around single-character bitwise
+operator '|'.</li>
 </ul>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="nb">int</span> <span class="n">flags</span> <span class="o">=</span> <span class="n">FOO</span><span class="o">|</span><span class="n">BAR</span><span class="p">;</span>        <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
 <span class="nb">int</span> <span class="n">flags</span> <span class="o">=</span> <span class="n">FOO</span> <span class="o">|</span> <span class="n">BAR</span><span class="p">;</span>      <span class="o">/*</span> <span class="n">WRONG</span> <span class="o">*/</span>
@@ -1020,18 +1013,18 @@ line up with the start of the first line of arguments.</li>
 <li>Within a function, braces are used in old-fashioned K&amp;R style.
 Specifically:<ul>
 <li>open braces are placed at the end of the line containing the
-statement (such as an &#8216;if&#8217;) to which they belong, after a
+statement (such as an 'if') to which they belong, after a
 single space.</li>
 <li>closing braces are placed on a line by themselves, aligned
 with the start of the statement to which their matching
 open brace belongs.</li>
 <li>this applies even when the closing brace is followed by
-an &#8216;else&#8217; keyword.</li>
+an 'else' keyword.</li>
 </ul>
 </li>
 </ul>
 <blockquote>
-<div>Yes, it&#8217;s ugly and hard to read, but you get used to it and
+<div>Yes, it's ugly and hard to read, but you get used to it and
 most of the code is currently like that.  Deal with it.</div></blockquote>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">while</span> <span class="p">(</span><span class="n">cond</span><span class="p">)</span> <span class="p">{</span>              <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
     <span class="o">...</span><span class="n">body</span><span class="o">...</span>              <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
@@ -1089,7 +1082,7 @@ most of the code is currently like that.  Deal with it.</div></blockquote>
 </pre></div>
 </div>
 <ul class="simple">
-<li>The braces around a block used in an &#8216;if&#8217;...&#8217;else if&#8217;...&#8217;else&#8217;
+<li>The braces around a block used in an 'if'...'else if'...'else'
 may be omitted if the statement is very simple and clear, such
 as a single function call.  This is a judgement call though,
 so play it safe and use braces.</li>
@@ -1101,7 +1094,7 @@ so play it safe and use braces.</li>
 </pre></div>
 </div>
 <ul class="simple">
-<li>The &#8216;goto&#8217; keyword needs to be used very very sparingly and only
+<li>The 'goto' keyword needs to be used very very sparingly and only
 with forethought.  The only clearly good example is to goto
 a label at the end of a function to do cleanup under error
 conditions.</li>
@@ -1123,12 +1116,12 @@ conditions.</li>
 </pre></div>
 </div>
 <blockquote>
-<div>Very occasionally, it may be permissable to use &#8216;goto&#8217; from within
+<div>Very occasionally, it may be permissable to use 'goto' from within
 a complicated or multiply-nested loop, to the top of a loop, but
 only if using another control structure is <em>less</em> clear.</div></blockquote>
 <ul class="simple">
 <li>Generally, zero return is SUCCESS and integer return is an error code.</li>
-<li>Use &#8220;<code class="docutils literal"><span class="pre">const</span> <span class="pre">char</span> <span class="pre">*</span></code>&#8221; where possible.</li>
+<li>Use &quot;<code class="docutils literal"><span class="pre">const</span> <span class="pre">char</span> <span class="pre">*</span></code>&quot; where possible.</li>
 </ul>
 <div class="highlight-default"><div class="highlight"><pre><span></span>int is_tacky(const char *name)              /* correct */
 {                                           /* correct */
@@ -1142,23 +1135,23 @@ int is_tacky(char *name)                    /* WRONG */
 </pre></div>
 </div>
 <ul class="simple">
-<li>Use &#8220;<code class="docutils literal"><span class="pre">struct</span> <span class="pre">buf</span></code>&#8221; for variable length strings where possible.</li>
+<li>Use &quot;<code class="docutils literal"><span class="pre">struct</span> <span class="pre">buf</span></code>&quot; for variable length strings where possible.</li>
 <li>RAII <a class="reference external" href="http://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization">http://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization</a>
 In practice, this means each structure should have a single cleanup
 function which handles all possible states of the structure and
 is called whenever the structure needs cleaning up.  Likewise,
 any resources allocated during a function should be cleaned up
 in the same function, in a single code block at the end of the
-function (see the comments on &#8216;goto&#8217;).</li>
+function (see the comments on 'goto').</li>
 <li>If you find yourself passing the same multiple parameters through many
 functions, create a struct and pass around a pointer to that instead.</li>
-<li>DON&#8217;T EVER REUSE THE SAME VARIABLE FOR TWO DIFFERENT PURPOSES IN THE SAME
-FUNCTION.  IN FACT, DON&#8217;T REUSE THE SAME VARIABLE _NAME_ FOR DIFFERENT
-PURPOSES.  KTHXBYE.  (note: this doesn&#8217;t apply to &#8216;i&#8217;, &#8216;n&#8217;, etc which are
+<li>DON'T EVER REUSE THE SAME VARIABLE FOR TWO DIFFERENT PURPOSES IN THE SAME
+FUNCTION.  IN FACT, DON'T REUSE THE SAME VARIABLE _NAME_ FOR DIFFERENT
+PURPOSES.  KTHXBYE.  (note: this doesn't apply to 'i', 'n', etc which are
 used in multiple loops.  It applies to using the same name for an absolute
-offset and a &#8220;within this mmap&#8221; offset though, and it also applies to
+offset and a &quot;within this mmap&quot; offset though, and it also applies to
 using the same variable name for native order and network order numbers,
-which is where I&#8217;ve seen it a few times and been super frustrated!)</li>
+which is where I've seen it a few times and been super frustrated!)</li>
 </ul>
 </div>
 </div>
@@ -1201,7 +1194,7 @@ which is where I&#8217;ve seen it a few times and been super frustrated!)</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Cyrus Murder: Concepts &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>Cyrus Murder: Concepts &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../../index.html"/>
         <link rel="up" title="Cyrus Murder" href="murder.html"/>
         <link rel="next" title="Cyrus Murder: Installation and Administration" href="murder-installation.html"/>
         <link rel="prev" title="Cyrus Murder" href="murder.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../../../index.html">
-      <img src="../../../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../../../index.html">
  
 
-  
           
-          <img src="../../../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -859,12 +852,12 @@ are available on that server.</p>
 <p>The imapd processes on a backend server can stand by themselves, so that
 each backend IMAP server can be used in isolation, without a MUPDATE
 server or any frontend servers. However, they are configured so that
-they won&#8217;t process any mailbox operations (CREATE, DELETE, RENAME,
+they won't process any mailbox operations (CREATE, DELETE, RENAME,
 SETACL, etc) unless the master MUPDATE server can be contacted and
 authorizes the transaction.</p>
 <p>In this mode, the imapd processes update the local mailboxes database
 themselves. Additionally, on a CREATE they need to reserve a place with
-the MUPDATE server to insure that other backend servers aren&#8217;t creating
+the MUPDATE server to insure that other backend servers aren't creating
 the same mailbox before proceeding. Once the local aspects of mailbox
 creation are complete, the mailbox is activated on the MUPDATE server,
 and is considered available to any client through the frontends.</p>
@@ -873,7 +866,7 @@ and is considered available to any client through the frontends.</p>
 <h3>Frontend Servers<a class="headerlink" href="#frontend-servers" title="Permalink to this headline">¶</a></h3>
 <p>The frontend servers, unlike the backend servers, are fully
 interchangeable with each other and the frontend servers can be
-considered &#8216;dataless&#8217;; any loss of a proxy results in no loss of data.
+considered 'dataless'; any loss of a proxy results in no loss of data.
 The only persistent data that is needed (the mailbox list) is kept on
 the MUPDATE master server. This list is synchronized between the
 frontend and the MUPDATE master when the frontend comes up.</p>
@@ -897,12 +890,12 @@ otherwise fails to accept the message), then the LMTP proxy returns a
 failure to the connected MTA.</p>
 <p>If a sieve script is present, the lmtp proxy server must do the
 processing as the end result of the processing may result in the mail
-message going to a different backend server than where the user&#8217;s INBOX
+message going to a different backend server than where the user's INBOX
 is.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The current implementation runs SIEVE on the backend servers, and
-holds the requirement that all of a user&#8217;s mailboxes live on the
+holds the requirement that all of a user's mailboxes live on the
 same backend.</p>
 </div>
 </div>
@@ -947,7 +940,7 @@ operations against the master to a very low level.</p>
 <li><p class="first">IMAP clients are not sensitive to somewhat loose mailbox tree
 consistency, and some amount of consistency can be sacrificed for
 speed. As is, IMAP gives no guarantees about the state of the mailbox
-tree from one command to the next. However, it&#8217;s important to note
+tree from one command to the next. However, it's important to note
 that different IMAP sessions do communicate out of band: two sessions
 for the same client should see sensible results. In the Murder case,
 this means that the same client talking to two different frontends
@@ -987,12 +980,12 @@ changes.</p>
 <h3>Subscriptions<a class="headerlink" href="#subscriptions" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal"><span class="pre">[LSUB,</span> <span class="pre">SUBSCRIBE,</span> <span class="pre">UNSUBSCRIBE]</span></code></p>
 <p>The frontend server directs the LSUB to the backend server that has
-the user&#8217;s INBOX. As such, the backend server may have entries in the
+the user's INBOX. As such, the backend server may have entries in the
 subscription database that do not exist on that server. The frontend
 server needs to process the list returned by the backend server and
 either remove or tag with \NoSelect the entries which are not currently
 active within the murder.</p>
-<p>If the user&#8217;s INBOX server is down and the LSUB fails, then the
+<p>If the user's INBOX server is down and the LSUB fails, then the
 aggregator replies with NO with an appropriate error message. Clients
 should not assume that the user has no subscriptions (though apparently
 some clients do this).</p>
@@ -1013,14 +1006,14 @@ At least, not with the semantics that it will be inclusive across the murder.</p
 <li>if no, proxyd -&gt; mupdate slave -&gt; mupdate master: send a ping
 along the UPDATE channel in order to ensure that we have received
 the latest data from the MUPDATE master.</li>
-<li>if mailbox still doesn&#8217;t exist, fail operation</li>
+<li>if mailbox still doesn't exist, fail operation</li>
 <li>if mailbox does exist, and the client supports referrals, refer
 the client. Otherwise continue as a proxy with a selected mailbox.</li>
 </ol>
 <p>SELECT on mailboxes that do not exist are much more expensive but
 the assumption is that this does not frequently occur (or if it
 does, it is just after the mailbox has been created and the
-frontend hasn&#8217;t seen the update yet).</p>
+frontend hasn't seen the update yet).</p>
 </div></blockquote>
 </div>
 <div class="section" id="operations-within-a-mailbox">
@@ -1033,7 +1026,7 @@ before sending them to the backend server.</p>
 <div class="section" id="copy">
 <h3>COPY<a class="headerlink" href="#copy" title="Permalink to this headline">¶</a></h3>
 <p>COPY is somewhat special as it acts upon messages in the currently
-SELECT&#8217;d mailbox but then interacts with another mailbox.</p>
+SELECT'd mailbox but then interacts with another mailbox.</p>
 <p>In the case where the destination mailbox is on the same backend server
 as the the source folder, the COPY command is issued to the backend
 server and the backend server takes care of the command.</p>
@@ -1066,7 +1059,7 @@ after the mailbox name. This argument specifies the specific host
 name on which the mailbox is to be created.</p>
 <p>The following operations occur for CREATE on the frontend:</p>
 <ul class="simple">
-<li>proxyd: verify that mailbox doesn&#8217;t exist in MUPDATE mailbox list.</li>
+<li>proxyd: verify that mailbox doesn't exist in MUPDATE mailbox list.</li>
 <li>proxyd: decide where to send CREATE (the server of the parent
 mailbox, as top level mailboxes cannot be created by the proxies).</li>
 <li>proxyd -&gt; back end: duplicate CREATE command and verifies that
@@ -1077,7 +1070,7 @@ the CREATE does not create an inconsistency in the mailbox list
 <ul class="simple">
 <li>imapd: verify ACLs to best of ability (CRASH: aborted)</li>
 <li>imapd: start mailboxes transaction (CRASH: aborted)</li>
-<li>imapd may have to open an MUPDATE connection here if one doesn&#8217;t
+<li>imapd may have to open an MUPDATE connection here if one doesn't
 already exist</li>
 <li>imapd -&gt; MUPDATE: set foo.bar reserved (CRASH: MUPDATE externally
 inconsistent)</li>
@@ -1103,7 +1096,7 @@ up.</p>
 <div>RENAME is only interesting in the cross-server case. In this case
 it issues a (non-standard) XFER command to the backend that
 currently hosts the mailbox, which performs a binary transfer of
-the mailbox (and in the case of a user&#8217;s inbox, their associated
+the mailbox (and in the case of a user's inbox, their associated
 seen state and subscription list) to the new backend. During this
 time the mailbox is marked as RESERVED in mupdate, and when it is
 complete it is activated on the new server in MUPDATE. The
@@ -1137,9 +1130,9 @@ backend server.</p>
 </div>
 <div class="section" id="pop">
 <h3>POP<a class="headerlink" href="#pop" title="Permalink to this headline">¶</a></h3>
-<p>POP is easy given that POP only allows access to the user&#8217;s INBOX. When
+<p>POP is easy given that POP only allows access to the user's INBOX. When
 it comes to POP, the IMAP Aggregator acts just like a <a class="reference internal" href="#appendix-b-imap-multiplexing"><span class="std std-ref">multiplexor</span></a>. The user authenticates to frontend
-server. The frontend determines where the user&#8217;s INBOX is located and
+server. The frontend determines where the user's INBOX is located and
 does a direct pass through of the POP commands from the client to the
 appropriate backend server.</p>
 </div>
@@ -1158,7 +1151,7 @@ the local copy of the mailboxes database.</p>
 <p>A benefit of having the mailbox information on the frontend is that
 LIST is very cheap. The frontend servers can process this request
 without having to contact each backend server.</p>
-<p>We&#8217;re also assuming that LIST is a much more frequent operation than any
+<p>We're also assuming that LIST is a much more frequent operation than any
 of the mailbox operations and thus should be the case to optimize. (In
 addition to the fact that any operation that needs to be forwarded to a
 backend needs to know to which backend it is being forwarded, so lookups
@@ -1183,7 +1176,7 @@ to the MUPDATE server, issue an UPDATE command, and resynchronize
 its local database copy with the copy on the master server.</div></blockquote>
 </div>
 <div class="section" id="where-s-the-true-mailboxes-file">
-<h4>Where&#8217;s the true mailboxes file?<a class="headerlink" href="#where-s-the-true-mailboxes-file" title="Permalink to this headline">¶</a></h4>
+<h4>Where's the true mailboxes file?<a class="headerlink" href="#where-s-the-true-mailboxes-file" title="Permalink to this headline">¶</a></h4>
 <blockquote>
 <div>The MUPDATE master contains authoritative information as to the
 location of any mailbox (in the case of a conflict), but the
@@ -1222,15 +1215,15 @@ performance problems beyond when running a single machine,
 but handling about 20% more concurrent users, this is a success.</p>
 </li>
 <li><p class="first"><strong>Management benefits</strong> - As with AFS, administrators have the
-flexibility of placement of data on the servers, &#8220;live&#8221; move of data
+flexibility of placement of data on the servers, &quot;live&quot; move of data
 between servers,</p>
 </li>
 <li><p class="first"><strong>User benefits</strong> - The user only needs to know a single server name
 for configuration. The same name can be handed out to all users.</p>
 <blockquote>
 <div><ul class="simple">
-<li>Users don&#8217;t lose the ability to share their folders and those
-folders are visible to other users. A user&#8217;s INBOX folder
+<li>Users don't lose the ability to share their folders and those
+folders are visible to other users. A user's INBOX folder
 hierarchy can also exist across multiple machines.</li>
 </ul>
 </div></blockquote>
@@ -1244,7 +1237,7 @@ hierarchy can also exist across multiple machines.</li>
 among multiple servers and not just do partitioning for availability.</p>
 <p>We are also evaluating using the aggregator to be able to provide
 mailboxes to the user with a different backup policy or even different
-&#8220;quality of service.&#8221; For example, we are looking to give users a
+&quot;quality of service.&quot; For example, we are looking to give users a
 larger quota than default but not back up the servers where these
 mailboxes exist.</p>
 <p>There is possibility that LDAP could be used instead of MUPDATE.
@@ -1262,18 +1255,18 @@ apply across servers).</p>
 multiple machines.</p>
 <p>One method is to create a DNS CNAME for each letter of the alphabet.
 Then, each user sets their IMAP server to be the first letter of their
-userid. For example, the userid &#8216;tom&#8217; would set his IMAP server to be
+userid. For example, the userid 'tom' would set his IMAP server to be
 <code class="docutils literal"><span class="pre">T.IMAP.ANDREW.CMU.EDU</span></code> and <code class="docutils literal"><span class="pre">T.IMAP.ANDREW.CMU.EDU</span></code> would resolve to
 an actual mail server.</p>
 <p>Given that this does not provide a good distribution, another option is
 to create a DNS CNAME for each user. Using the previous example, the
-user &#8216;tom&#8217; would set his IMAP server to be <code class="docutils literal"><span class="pre">TOM.IMAP.ANDREW.CMU.EDU</span></code>
+user 'tom' would set his IMAP server to be <code class="docutils literal"><span class="pre">TOM.IMAP.ANDREW.CMU.EDU</span></code>
 which then points to an actual mail server.</p>
-<p>The good part is that you don&#8217;t have all your users on one machine and
+<p>The good part is that you don't have all your users on one machine and
 growth can be accommodated without any user reconfiguration.</p>
 <p>The drawback is with shared folders. The mail client now must support
 multiple servers and users must potentially configure a server for each
-user with a shared folder he wishes to view. Also, the user&#8217;s INBOX
+user with a shared folder he wishes to view. Also, the user's INBOX
 hierarchy must also reside on a single machine.</p>
 </div>
 <div class="section" id="appendix-b-imap-multiplexing">
@@ -1292,7 +1285,7 @@ a different backend server.</p>
 <blockquote>
 <div><ul class="simple">
 <li><a class="reference external" href="http://docs.oracle.com/cd/E19079-01/nscp.mes.svr40/816-6037-10/">Netscape Messaging Multiplexor</a></li>
-<li><a class="reference external" href="http://www.siumed.edu/~pfleming/development/email/">Paul Fleming&#8217;s IMAP Proxy</a></li>
+<li><a class="reference external" href="http://www.siumed.edu/~pfleming/development/email/">Paul Fleming's IMAP Proxy</a></li>
 <li><a class="reference external" href="http://horms.net/projects/perdition/">Perdition IMAP Proxy</a></li>
 <li><a class="reference external" href="http://owmessaging.com/Mirapoint_Message_Server">Mirapoint Message Director</a> - This is a hardware solution that
 also does content filtering.</li>
@@ -1304,7 +1297,7 @@ also does content filtering.</li>
 <dl class="docutils">
 <dt>IMAP connection</dt>
 <dd>A single IMAP TCP/IP session with a single IMAP server is a
-&#8220;connection&#8221;.</dd>
+&quot;connection&quot;.</dd>
 <dt>client</dt>
 <dd>A client is a process on a remote computer that communicates with
 the set of servers distributing mail data, be they ACAP, IMAP,
@@ -1312,16 +1305,16 @@ LDAP, or IMSP servers. A client opens one or more connections to
 various servers.</dd>
 <dt>mailbox tree</dt>
 <dd>The collection of all mailboxes at a given site in a namespace is
-called the mailbox tree. Generally, the user Bovik&#8217;s personal data
+called the mailbox tree. Generally, the user Bovik's personal data
 is found in <code class="docutils literal"><span class="pre">user.bovik</span></code>.</dd>
 <dt>mailboxes database</dt>
 <dd>A local database containing a list of mailboxes known to a
 particular server.</dd>
 <dt>mailbox dataset</dt>
-<dd>The store of mailbox information on the ACAP server is the &#8220;mailbox
-dataset&#8221;.</dd>
+<dd>The store of mailbox information on the ACAP server is the &quot;mailbox
+dataset&quot;.</dd>
 <dt>mailbox operation</dt>
-<dd>The following IMAP commands are &#8220;mailbox operations&#8221;: CREATE,
+<dd>The following IMAP commands are &quot;mailbox operations&quot;: CREATE,
 RENAME, DELETE, and SETACL.</dd>
 <dt>MTA</dt>
 <dd>The mail transport agent (e.g. sendmail, postfix).</dd>
@@ -1379,7 +1372,7 @@ xxx.</dd>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

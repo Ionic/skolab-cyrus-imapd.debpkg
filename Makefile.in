@@ -429,6 +429,7 @@ am__aclocal_m4_deps =  \
 	$(top_srcdir)/cmulocal/ax_python_module.m4 \
 	$(top_srcdir)/cmulocal/bsd_sockets.m4 \
 	$(top_srcdir)/cmulocal/common.m4 \
+	$(top_srcdir)/cmulocal/cyr_inttype.m4 \
 	$(top_srcdir)/cmulocal/cyrus.m4 $(top_srcdir)/cmulocal/ipv6.m4 \
 	$(top_srcdir)/cmulocal/libtool.m4 \
 	$(top_srcdir)/cmulocal/libwrap.m4 \
@@ -1718,7 +1719,8 @@ am__DIST_COMMON = $(dist_man1_MANS) $(dist_man3_MANS) \
 	$(top_srcdir)/cunit/cert.pem $(top_srcdir)/cunit/key.pem \
 	$(top_srcdir)/lib/ftruncate.c \
 	$(top_srcdir)/lib/getdtablesize.c $(top_srcdir)/lib/memmem.c \
-	$(top_srcdir)/lib/memmove.c $(top_srcdir)/lib/posix_fadvise.c \
+	$(top_srcdir)/lib/memmove.c $(top_srcdir)/lib/memrchr.c \
+	$(top_srcdir)/lib/posix_fadvise.c \
 	$(top_srcdir)/lib/strcasecmp.c $(top_srcdir)/lib/strerror.c \
 	$(top_srcdir)/lib/strsep.c \
 	$(top_srcdir)/perl/annotator/AnnotateInlinedCIDs.pm \
@@ -4767,6 +4769,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@lib/$(DEPDIR)/mappedfile.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@lib/$(DEPDIR)/memmem.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@lib/$(DEPDIR)/memmove.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@lib/$(DEPDIR)/memrchr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@lib/$(DEPDIR)/mkgmtime.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@lib/$(DEPDIR)/mpool.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@lib/$(DEPDIR)/murmurhash.Plo@am__quote@

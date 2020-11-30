@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Storage Considerations &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>Storage Considerations &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../index.html"/>
         <link rel="up" title="Configuration Guide" href="../deployment.html"/>
         <link rel="next" title="Supported Platforms and System Requirements" href="supported-platforms.html"/>
         <link rel="prev" title="Performance Recommendations" href="performance_recommendations.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../../index.html">
-      <img src="../../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../../index.html">
  
 
-  
           
-          <img src="../../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../../setup.html">Setup</a> &raquo;</li>
       
@@ -789,7 +782,7 @@
   <div class="section" id="storage-considerations">
 <span id="imap-deployment-storage"></span><h1>Storage Considerations<a class="headerlink" href="#storage-considerations" title="Permalink to this headline">¶</a></h1>
 <p>Storage considerations are a complex matter, as the various options
-provide or restrict one&#8217;s ability to adjust the necessary parameters as
+provide or restrict one's ability to adjust the necessary parameters as
 the need arises. It is foremost a challenge to clearly articulate and
 prioritize the criteria for storage, and map the theory on to a
 practical implementation design.</p>
@@ -816,7 +809,7 @@ waiting.</div></blockquote>
 <div>because your data must be available, backed up and archived.</div></blockquote>
 <p><a class="reference internal" href="#imap-deployment-storage-cost"><span class="std std-ref">Cost</span></a>,</p>
 <blockquote>
-<div>because you can&#8217;t buy a beer or feed a family with an empty wallet.</div></blockquote>
+<div>because you can't buy a beer or feed a family with an empty wallet.</div></blockquote>
 <p>Storage is not a part of Cyrus IMAP, in that Cyrus IMAP does not ship
 a particular storage solution as part of the product, and it has no
 particular requirements for storage either.</p>
@@ -847,15 +840,15 @@ attendance).</li>
 <a class="reference internal" href="#imap-deployment-storage-scalability"><span class="std std-ref">Scalability</span></a>,
 <a class="reference internal" href="#imap-deployment-storage-capacity"><span class="std std-ref">Capacity</span></a> and
 <a class="reference internal" href="#imap-deployment-storage-cost"><span class="std std-ref">Cost</span></a>
-are not all of them equally important &#8211; not to all organizations, and
+are not all of them equally important -- not to all organizations, and
 not to all requirements when the priorities are set out against the
 implied cost of the supposed ideal solution.</p>
 <p>They are also not mutually exclusive in that, for example, redundancy
-may partly address some of the availability concerns &#8211; depending on the
+may partly address some of the availability concerns -- depending on the
 exact nature of the final deployment of course, and backup/recovery
 capabilities in turn may partly address redundancy requirements. Neither
 necessarily directly addresses availability concerns, however.</p>
-<p>What is deemed acceptable is another culprit &#8211; more often then not,
+<p>What is deemed acceptable is another culprit -- more often then not,
 operational cost, familiarity of staff with a particular storage
 solution, or flexibility of a storage solution (or lack thereof) may get
 in the way of an otherwise appropriate storage solution.</p>
@@ -872,17 +865,17 @@ redundancy does not in and by itself provide increased availability.</p>
 implementation, and the various options for practical implementation
 each have their own set of implications for cases of failure and the
 need to, under certain circumstances, failover and/or recover.</p>
-<p>How redundancy is achieved in an &#8220;acceptable&#8221; manner is another subject
+<p>How redundancy is achieved in an &quot;acceptable&quot; manner is another subject
 open to interpretation; it is sometimes deemed acceptable to create
 backups daily, and therefore potentially accept the loss of up to one
-day&#8217;s worth of information from live spools &#8211; which may or may not be
+day's worth of information from live spools -- which may or may not be
 recoverable through different means. More commonly however is to not
 settle for anything less than real-time replication of data.</p>
 <p>While storage ultimately amounts to disks, it is important to understand
 that a number of (virtual) devices, channels, links and interfaces exist
 between an application operating data on disk <a class="footnote-reference" href="#id7" id="id1">[1]</a>, and the physical
 sectors and blocks or cells of storage on that disk. In a way, this
-number of layers can be compared with the <a class="reference external" href="http://en.wikipedia.org/wiki/OSI_model">OSI model for networking</a> &#8211;
+number of layers can be compared with the <a class="reference external" href="http://en.wikipedia.org/wiki/OSI_model">OSI model for networking</a> --
 but it is not the same at all.</p>
 <p>This section addresses the most commonly used levels at which
 replication can be applied.</p>
@@ -933,7 +926,7 @@ fashion that it can be compared with a distributed version of a RAID-1
 array. This incurs limitations that need to be evaluated carefully.</p>
 <p>In a hardware RAID-1 array, storage is physically constrained to a
 single node, and pairs of replicated disks are treated as one. In a
-software RAID-1 array, it is the operating system&#8217;s software RAID driver
+software RAID-1 array, it is the operating system's software RAID driver
 that can (must) address the individual disks, but makes the array appear
 as a single disk to all higher-level software. Here too, the disks are
 physically constrained to one physical node.</p>
@@ -946,12 +939,12 @@ individual disk volumes that make up the RAID-1 array are not hidden
 from the rest of the operating system, but more importantly, direct
 access to the underlying device is not prohibited. With an example pair
 <code class="docutils literal"><span class="pre">sda2</span></code> and <code class="docutils literal"><span class="pre">sdb2</span></code>, nothing prevents you from executing <code class="docutils literal"><span class="pre">mkfs.ext4</span></code>
-on <code class="docutils literal"><span class="pre">/dev/sdb2</span></code> thereby corrupting the array &#8211; other than perhaps not
+on <code class="docutils literal"><span class="pre">/dev/sdb2</span></code> thereby corrupting the array -- other than perhaps not
 having the necessary administrative privileges.</p>
 <p>To further illustrate, position one disk in the RAID-1 array on the
 other side of a network (such as is a <a class="reference external" href="http://www.drbd.org/">DRBD</a> topology, as illustrated).
 Since now two nodes participate in nurturing the mirrored volume, two
-points of control exist &#8211; each node controls the access to its local
+points of control exist -- each node controls the access to its local
 disk device(s).</p>
 <p>Participating nodes are <strong>required</strong> to successfully coordinate their
 I/O with one another, which on the level of entire storage volumes is a
@@ -962,7 +955,7 @@ more than one node be allowed to access the replicated device <a class="footnote
 <li>Only one side of the mirrored volume can be active (master), and the
 other side must remain passive (slave),</li>
 <li>The active and passive nodes therefore have a cluster solution
-implemented to manage application&#8217;s failover and management of the
+implemented to manage application's failover and management of the
 change in replication topology (a slave becomes the I/O master, the
 former master becomes the replication slave, and other slaves, if
 any, learn about the new master to replicate from),</li>
@@ -973,15 +966,15 @@ any given time.</li>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">Storage volume level replication does not protect against filesystem
-or payload corruption &#8211; the replication happily mirrors the
-&#8220;faulty&#8221; bits as it is completely agnostic to the bits&#8217; meaning and
+or payload corruption -- the replication happily mirrors the
+&quot;faulty&quot; bits as it is completely agnostic to the bits' meaning and
 relevance.</p>
 </div>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">For the reasons outlined in this section, storage volume level
 replication has only a limited number of Cyrus IMAP deployment
-scenarios for which it would be recommended &#8211; such as <em>Disaster
+scenarios for which it would be recommended -- such as <em>Disaster
 Recovery Failover</em>.</p>
 </div>
 </div>
@@ -990,15 +983,15 @@ Recovery Failover</em>.</p>
 <p>Integrated storage protocol level replication is a different approach to
 making storage volumes redundant, applying the replication on a
 different level.</p>
-<p>Integrated storage protocol level replication isn&#8217;t necessarily limited
+<p>Integrated storage protocol level replication isn't necessarily limited
 to replication for the purposes of redundancy only, as it may already
 include parallel access controls, distribution across multiple storage
 nodes (each providing a part of the total storage volume available),
 enabling the use of cheap commodity hardware to provide the individual
-parts (called &#8220;bricks&#8221;) that make up the larger volume.</p>
+parts (called &quot;bricks&quot;) that make up the larger volume.</p>
 <p>Additional features may include the use of a geographically oriented set
 of parameters for the calculation and assignment of replicated chunks of
-data (ie. &#8220;brick replication topology&#8221;).</p>
+data (ie. &quot;brick replication topology&quot;).</p>
 <img src="../../../_images/graphviz-1e5092951b8d8570deb56c2558baebf233fbcc91.png" alt="digraph {
         rankdir = TB;
         splines = true;
@@ -1051,7 +1044,7 @@ if they are mounted directly from the storage clients. They are
 particularly feasible if not too many parallel write operations to
 individual objects (files) are likely to occur (think, for example, of
 web application servers and (asset-)caching proxies).</p>
-<p>Alternatively, fewer larger objects could be stored &#8211; such as disk
+<p>Alternatively, fewer larger objects could be stored -- such as disk
 images for a virtualization environment. The I/O patterns internal to
 the virtual machine would remain the same, but the I/O pattern of the
 storage client (the hypervisor) is the equivalent of a single
@@ -1134,13 +1127,13 @@ that multiple backends hold the payload served to your users.</p>
 </div>
 <div class="section" id="shared-storage-generic">
 <h3>Shared Storage (Generic)<a class="headerlink" href="#shared-storage-generic" title="Permalink to this headline">¶</a></h3>
-<p>Contrary to popular belief, all shared storage &#8211; NFS, iSCSI and FC
-alike &#8211; are <strong>not</strong> storage devices. They are <em>network protocols</em> for
-which the application just so happens to be storage &#8211; with perhaps the
+<p>Contrary to popular belief, all shared storage -- NFS, iSCSI and FC
+alike -- are <strong>not</strong> storage devices. They are <em>network protocols</em> for
+which the application just so happens to be storage -- with perhaps the
 exception to the rule being Fiber-Channel not strictly cohering to the
 <a class="reference external" href="http://en.wikipedia.org/wiki/OSI_model">OSI model for networking</a>, although its own 5-layer model equates.</p>
 <p>iSCSI and Fiber-Channel LUNs however are <em>mapped</em> to storage devices by
-your favorite operating system&#8217;s drivers for each technology, or
+your favorite operating system's drivers for each technology, or
 possibly by a hardware device (an <a class="reference internal" href="#term-hba"><span class="xref std std-term">HBA</span></a>, or in iSCSI, an
 <em>initiator</em>).</p>
 <p>As such, use of these network protocols for which the purpose just so
@@ -1157,12 +1150,12 @@ replicated.</p>
 <p>For a variety of reasons, the use of <a class="reference external" href="http://www.time-travellers.org/shane/papers/NFS_considered_harmful.html">NFS is considered harmful</a> and is
 therefore, and for other reasons,  most definitely not recommended for
 Cyrus IMAP IMAP spool storage, or any other storage related to
-functional components of Cyrus IMAP itself &#8211; IMAP, LDAP, SQL, etc.</p>
+functional components of Cyrus IMAP itself -- IMAP, LDAP, SQL, etc.</p>
 <p>Most individual concerns can be addressed separately, and some should or
 must already be resolved to address other potentially problematic areas
 of a given infrastructure, regardless of the use of NFS.</p>
-<p>A couple of concerns however only have <em>workarounds</em>, not solutions &#8211;
-such as disabling locking &#8211; and a number of concerns have no solution
+<p>A couple of concerns however only have <em>workarounds</em>, not solutions --
+such as disabling locking -- and a number of concerns have no solution
 at all.</p>
 <p>One penalty to address is the inability for NFS mounted volumes to cache
 I/O, known as in-memory buffer caching.</p>
@@ -1170,7 +1163,7 @@ I/O, known as in-memory buffer caching.</p>
 incurred network-latency, but is still a filesystem-backed solution
 (for which filesystem the local kernel applies buffer caching), requires
 yet another daemon, and introduces yet another layer of synchronicity to
-be maintained &#8211; aside from <a class="reference external" href="https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Storage_Administration_Guide/fscachelimitnfs.html">other limitations</a>.</p>
+be maintained -- aside from <a class="reference external" href="https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Storage_Administration_Guide/fscachelimitnfs.html">other limitations</a>.</p>
 <p>An NFS-backed storage volume can still be used for fewer, larger files,
 such as guest disk images.</p>
 </div>
@@ -1179,7 +1172,7 @@ such as guest disk images.</p>
 <p>Both iSCSI LUNs and Fiber-Channel LUNs facilitate attaching a networked
 block storage device as if it were a local disk (creating devices
 similar to <code class="docutils literal"><span class="pre">/dev/sd{a,b,c,d}</span></code> etc.).</p>
-<p>Since such a LUN is available over a &#8220;network&#8221; infrastructure, it may be
+<p>Since such a LUN is available over a &quot;network&quot; infrastructure, it may be
 shared between multiple nodes but when it is, nodes need to coordinate
 their I/O on some other level.</p>
 <p>With an example case of hypervisors, either <a class="reference external" href="https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Logical_Volume_Manager_Administration/LVM_Cluster_Overview.html">Cluster LVM</a> <a class="footnote-reference" href="#id9" id="id4">[3]</a> or
@@ -1203,7 +1196,7 @@ a diesel generator (you start up once a month, right?).</p>
 <p>The availability features of a data center are beyond the scope of this
 document, but when we speak of availability with regards to storage, we
 intend to speak of immediate, instant, online availability with
-automated failover (such as the RAID array) &#8211; and more prominently,
+automated failover (such as the RAID array) -- and more prominently,
 without interruption.</p>
 <div class="section" id="multipath">
 <h3>Multipath<a class="headerlink" href="#multipath" title="Permalink to this headline">¶</a></h3>
@@ -1247,9 +1240,9 @@ individual target (that is unique). However, the system maintains a list
 of potential paths, and continuously monitors all paths for their
 viability.</p>
 <p>In the example, for <em>Node</em> attaching to <em>iSCSI Target #1</em> results in up
-to 4 paths to <em>iSCSI Target #1</em> &#8211; <em>4</em> paths, not <em>8</em>, because the
+to 4 paths to <em>iSCSI Target #1</em> -- <em>4</em> paths, not <em>8</em>, because the
 networking of <em>Switch #1</em> and <em>Switch #2</em> is not considered a path with
-iSCSI &#8211; <em>two nodes</em> and <em>two send targets each</em>.</p>
+iSCSI -- <em>two nodes</em> and <em>two send targets each</em>.</p>
 <p>Multipath chooses one path to the available storage:</p>
 <img src="../../../_images/graphviz-19762385ec79073fedffa36dbe07aecace4b4b44.png" alt="digraph {
         rankdir = TB;
@@ -1344,11 +1337,11 @@ your storage.</p>
 <a class="reference internal" href="../../../glossary.html#term-operating-system-disks"><span class="xref std std-term">operating system disks</span></a> and <a class="reference internal" href="../../../glossary.html#term-payload-disks"><span class="xref std std-term">payload disks</span></a>; the operating
 system disk could hold your base installation of a node, including
 everything in the root (<code class="docutils literal"><span class="pre">/</span></code>) filesystem, while your payload disk(s)
-hold the files and directories that contain the system&#8217;s service(s)
+hold the files and directories that contain the system's service(s)
 payload (such as <code class="docutils literal"><span class="pre">/var/lib/mysql/</span></code>, <code class="docutils literal"><span class="pre">/var/spool/cyrus/</span></code>,
 <code class="docutils literal"><span class="pre">/var/lib/imap/</span></code>, <code class="docutils literal"><span class="pre">/var/lib/dirsrv/</span></code>, etc.).</p>
 <p>Distributing what is and what is not frequently used may be a cumbersome
-task for administrators. Some storage vendor&#8217;s appliances offer
+task for administrators. Some storage vendor's appliances offer
 automated storage tiering, where some disks in the appliance are SSDs,
 while others are SATA or SAS HDDs, and the appliance itself tiers the
 storage.</p>
@@ -1358,13 +1351,13 @@ provided they run a recent kernel.</p>
 <div class="section" id="disk-buffering">
 <h3>Disk Buffering<a class="headerlink" href="#disk-buffering" title="Permalink to this headline">¶</a></h3>
 <p>Reading from a disk is considered very, very slow when compared to
-accessing a node&#8217;s (real) memory. While dependent on the particular I/O
+accessing a node's (real) memory. While dependent on the particular I/O
 pattern of an application, it is not uncommon at all for an application
 to read the same part of a disk volume several times during a relatively
 short period of time.</p>
 <p>In Cyrus IMAP, for example, while a user is logged in, a mail
-folder&#8217;s <code class="file docutils literal"><span class="pre">cyrus.index</span></code> is read more frequently than it is
-written to &#8211; such as when refreshing the folder view, when opening a
+folder's <code class="file docutils literal"><span class="pre">cyrus.index</span></code> is read more frequently than it is
+written to -- such as when refreshing the folder view, when opening a
 message in the folder, when replying to a message, etc.</p>
 <p>It is important to appreciate the impact of <a class="reference external" href="http://www.tldp.org/LDP/sag/html/buffer-cache.html">memory-based buffer cache</a>
 for this type of I/O on the overall performance of the environment.</p>
@@ -1375,14 +1368,14 @@ performance expectations.</p>
 </div>
 <div class="section" id="readahead">
 <h3>Readahead<a class="headerlink" href="#readahead" title="Permalink to this headline">¶</a></h3>
-<p>Reading ahead is a feature in which &#8211; in a future-predicting,
-anticipatory fashion &#8211; a chunk of storage is read in addition to the
+<p>Reading ahead is a feature in which -- in a future-predicting,
+anticipatory fashion -- a chunk of storage is read in addition to the
 chunk of storage actually being requested.</p>
 <p>A common application of read-ahead is to record all files accessed
 during the boot process of a node, such that later boot sequences can
 read files from disk, and insert them in to the
 <a class="reference external" href="http://www.tldp.org/LDP/sag/html/buffer-cache.html">memory-based buffer cache</a> ahead of software actually issuing the call
-to read the file. The file&#8217;s contents can now be reproduced from the
+to read the file. The file's contents can now be reproduced from the
 faster (real) memory rather then from the slow disk.</p>
 <p>Readahead generally does not matter for small files, unless read
 operations work on a collective of aggregate message files. It does
@@ -1397,19 +1390,19 @@ the setting (followed by some more monitoring).</p>
 <div class="section" id="scalability">
 <span id="imap-deployment-storage-scalability"></span><h2>Scalability<a class="headerlink" href="#scalability" title="Permalink to this headline">¶</a></h2>
 <p>When originally planning for storage capacity, a few things are to be
-taken in to account. We&#8217;ll point these out and address them later in
+taken in to account. We'll point these out and address them later in
 this section.</p>
 <p>Generically speaking, when storage capacity is planned for initially,
 a certain period of time is used to establish how much storage might be
 required (for that duration).</p>
-<p>However, let&#8217;s suppose regulatory provisions dictate a period of 10
+<p>However, let's suppose regulatory provisions dictate a period of 10
 years of business communications need to be preserved. How does one
 accurately predict the volume of communications over the next 10 years?</p>
-<p>Let&#8217;s suppose your organization is in flux, expanding or contracting as
+<p>Let's suppose your organization is in flux, expanding or contracting as
 businesses do at times, or budget cuts and unexpected extra tasks to
 your organization might incur. Or when the organization takes over or
 otherwise incorporates another.</p>
-<p>Today&#8217;s storage coming with a certain price-tag, and tomorrow&#8217;s with a
+<p>Today's storage coming with a certain price-tag, and tomorrow's with a
 different one, it can be an interesting exercise to plan for storage to
 grow organically as needed, rather than make large investments to provide
 capacity that may only be used years from today, or not be used at all,
@@ -1431,8 +1424,8 @@ towards quota.</p>
 folder that many users read messages from and respond to (such as might
 be the case for an <a class="reference external" href="mailto:info&#37;&#52;&#48;example&#46;org">info<span>&#64;</span>example<span>&#46;</span>org</a> email address), then around triple
 the amount of traffic per month will continue to be stored on disk, plus
-what you decide is still current and not deleted by users (the &#8220;live
-size&#8221;).</p>
+what you decide is still current and not deleted by users (the &quot;live
+size&quot;).</p>
 </div>
 <div class="section" id="shared-folders">
 <h3>Shared Folders<a class="headerlink" href="#shared-folders" title="Permalink to this headline">¶</a></h3>
@@ -1441,18 +1434,18 @@ default, have any quota on them. They are also not purged by default. As
 such, they could grow infinitely (until disks run out of space).</p>
 <p>A busy mailing list used for human communications, such as
 <a class="reference external" href="mailto:devel&#37;&#52;&#48;lists&#46;fedoraproject&#46;org">devel<span>&#64;</span>lists<span>&#46;</span>fedoraproject<span>&#46;</span>org</a>, can be expected to grow to as much as 1
-GB of data foot print on disk over a period of 3 years &#8211; at a message
+GB of data foot print on disk over a period of 3 years -- at a message
 rate of less than ~100 a day and without purging.</p>
 <p>A mailing list with automated messages generated from applications, such
-as <a class="reference external" href="mailto:bugs-list&#37;&#52;&#48;kde&#46;org">bugs-list<span>&#64;</span>kde<span>&#46;</span>org</a>, which is notified of all ticket changes for KDE&#8217;s
+as <a class="reference external" href="mailto:bugs-list&#37;&#52;&#48;kde&#46;org">bugs-list<span>&#64;</span>kde<span>&#46;</span>org</a>, which is notified of all ticket changes for KDE's
 upstream Bugzilla, can be expected to grow to up to 3.5 GB over the same
-period &#8211; at a message rate of ~300 per day and without purging.</p>
+period -- at a message rate of ~300 per day and without purging.</p>
 </div>
 <div class="section" id="user-s-groupware-folders">
-<h3>User&#8217;s Groupware Folders<a class="headerlink" href="#user-s-groupware-folders" title="Permalink to this headline">¶</a></h3>
+<h3>User's Groupware Folders<a class="headerlink" href="#user-s-groupware-folders" title="Permalink to this headline">¶</a></h3>
 <p>Users tend not to clean up their calendars, removing old appointments
-that have no bearing on today&#8217;s views/operations any longer. They do
-count towards a user&#8217;s quota.</p>
+that have no bearing on today's views/operations any longer. They do
+count towards a user's quota.</p>
 </div>
 </div>
 <div class="section" id="capacity">
@@ -1467,7 +1460,7 @@ spools.</p>
 <p>Let each individual IMAP spool be considered a volume, or part of a
 volume if you feel inclined to share volumes across Cyrus IMAP backend
 instances. Regardless, you need a filesystem <strong>somewhere</strong> (even if the
-bricks building the volume are distributed) &#8211; the recommended
+bricks building the volume are distributed) -- the recommended
 restrictions you should put forth to the individual chunks of storage
 lay therein.</p>
 <p>Saturating the argument to make a point, imagine, if you will, a million
@@ -1477,7 +1470,7 @@ footprint is now around and about one petabyte.</p>
 single one petabyte volume will be prohibitively expensive simply
 considering the duration of the command to complete execution, let alone
 successful execution, for your <strong>million</strong> users will not have access to
-their data while the command has not finished &#8211; again, let alone it
+their data while the command has not finished -- again, let alone it
 finished successfully.</p>
 <p><strong>Solely therefore</strong> would you require a second copy of the groupware
 payload, now establishing a minimal data footprint to <strong>two</strong> petabyte.</p>
@@ -1485,7 +1478,7 @@ payload, now establishing a minimal data footprint to <strong>two</strong> petab
 <p class="first admonition-title">Note</p>
 <p class="last">Also note that the two replicas of one petabyte would, if the
 replication occurs at the storage volume level, run the risk of
-corrupting both replicas&#8217; filesystems.</p>
+corrupting both replicas' filesystems.</p>
 </div>
 <p>Your requirements for data redundancy aside, filesystem checks needing
 to be performed at least regularly <a class="footnote-reference" href="#id11" id="id6">[5]</a>, if not for the level of
@@ -1500,7 +1493,7 @@ use Logical Volume Management (LVM) for example, and not allocate 100%
 of the volume group to the logical volume that holds the IMAP spool,
 than intermediate filesystem checks can be executed on a snapshot of
 said logical volume instead, and while the node remains online, to give
-you a generic impression of the filesystem&#8217;s health. Given this
+you a generic impression of the filesystem's health. Given this
 information, you can schedule a service window should you feel the need
 to check the actual filesystem.</p>
 <p>A good article on filesystems, the corruption of data and their causes
@@ -1512,13 +1505,13 @@ to be ran after either a certain amount of delay or number of mounts.</p>
 <div class="section" id="cost">
 <span id="imap-deployment-storage-cost"></span><h2>Cost<a class="headerlink" href="#cost" title="Permalink to this headline">¶</a></h2>
 <p>When cost is of no concern, multiple vendors of storage solutions will
-tell you precisely what you need to hear &#8211; I think we&#8217;ve all been
+tell you precisely what you need to hear -- I think we've all been
 there.</p>
 <p>When cost is a concern, however, cheaper disks are often slower, fail
 faster, and sometimes also do not provide the
 <a class="reference internal" href="#imap-deployment-storage-capacity"><span class="std std-ref">Capacity</span></a> desired.</p>
 <p>On the other hand, stuffing many consumer-grade SATA III disks in to
-some commodity hardware likely raises run-time costs &#8211; energy.</p>
+some commodity hardware likely raises run-time costs -- energy.</p>
 <p>However, a chassis of a storage solution usually comes at a higher
 price point, and therefore expands capacity with relatively large
 chunks, which may not be what you require at that moment.</p>
@@ -1528,7 +1521,7 @@ chunks, which may not be what you require at that moment.</p>
 <tbody valign="top">
 <tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>Applications may also operate on data not stored on disk at all,
 which is another common avenue potentially resulting in loss of data
-&#8211; or <em>corruption</em>, which is merely a type of data-loss.</td></tr>
+-- or <em>corruption</em>, which is merely a type of data-loss.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id8" rules="none">
@@ -1614,7 +1607,7 @@ recover (in time) from the underlying disk failing (partly).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

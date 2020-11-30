@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mailbox Distribution &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>Mailbox Distribution &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../index.html"/>
         <link rel="up" title="Features" href="../features.html"/>
         <link rel="next" title="Delayed Delete" href="delayed-delete.html"/>
         <link rel="prev" title="Mailbox Annotations (METADATA)" href="mailbox-annotations.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../../index.html">
-      <img src="../../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../../index.html">
  
 
-  
           
-          <img src="../../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../../overview.html">Overview</a> &raquo;</li>
       
@@ -980,7 +973,7 @@ appears listed in your <a class="reference internal" href="../../reference/manpa
 <div><p>Partitions listed in the <code class="docutils literal"><span class="pre">partition_select_exclude</span></code> setting in
 <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> are permanently excluded from being
 selected.</p>
-<p>Listed partition&#8217;s names are separated by spaces and/or commas. Only
+<p>Listed partition's names are separated by spaces and/or commas. Only
 configured partition names (and not paths) are expected.</p>
 <p>With the following configuration in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>,
 <code class="docutils literal"><span class="pre">parta</span></code> and <code class="docutils literal"><span class="pre">partb</span></code> would be permanently excluded from being
@@ -1024,13 +1017,13 @@ partition as the parent folder.</p>
 </div>
 </div>
 <div class="section" id="partition-s-usage-information-reset">
-<h3>Partition&#8217;s Usage Information Reset<a class="headerlink" href="#partition-s-usage-information-reset" title="Permalink to this headline">¶</a></h3>
-<p>By default, partition&#8217;s usage information is retrieved only once &#8211; when
+<h3>Partition's Usage Information Reset<a class="headerlink" href="#partition-s-usage-information-reset" title="Permalink to this headline">¶</a></h3>
+<p>By default, partition's usage information is retrieved only once -- when
 the service first initializes.</p>
 <p>If you tend to use the same service instance for a long lapse of time
 and performs a large amount of mailbox creations, it may be useful to
 configure the <code class="docutils literal"><span class="pre">partition_select_usage_reinit</span></code> setting so that
-each partition&#8217;s usage information is refreshed after the configured
+each partition's usage information is refreshed after the configured
 number of creation requests.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -1206,7 +1199,7 @@ automatically excluded if their considered usage percentage is beyond
 the <code class="docutils literal"><span class="pre">serverlist_select_soft_usage_limit</span></code> integer setting.</p>
 </div>
 <div class="section" id="backend-s-usage-information-reset">
-<h3>Backend&#8217;s Usage Information Reset<a class="headerlink" href="#backend-s-usage-information-reset" title="Permalink to this headline">¶</a></h3>
+<h3>Backend's Usage Information Reset<a class="headerlink" href="#backend-s-usage-information-reset" title="Permalink to this headline">¶</a></h3>
 <p>By default backends usage data are retrieved only once upon service
 initialization.</p>
 <div class="admonition note">
@@ -1215,7 +1208,7 @@ initialization.</p>
 </div>
 <p>If you tend to use the same service instance for a long lapse of time
 and performs a large amounts of mailbox creations, it may be useful to
-configure the <code class="docutils literal"><span class="pre">serverlist_select_usage_reinit</span></code> so that the backend&#8217;s
+configure the <code class="docutils literal"><span class="pre">serverlist_select_usage_reinit</span></code> so that the backend's
 disk usage information is refreshed after the configured number of
 creation requests.</p>
 <p>Back to <a class="reference internal" href="../features.html#imap-features"><span class="std std-ref">Features</span></a></p>
@@ -1261,7 +1254,7 @@ creation requests.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

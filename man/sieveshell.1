@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "SIEVESHELL" "1" "October 05, 2020" "3.2.4" "Cyrus IMAP"
+.TH "SIEVESHELL" "1" "November 30, 2020" "3.2.5" "Cyrus IMAP"
 .SH NAME
 sieveshell \- Cyrus IMAP documentation
 .
@@ -36,7 +36,8 @@ sieveshell \- remotely manipulate sieve scripts
 .SH SYNOPSIS
 .sp
 sieveshell [\fB\-\-user\fP=\fIuser\fP] [\fB\-\-authname\fP=\fIauthname\fP]
-[\fB\-\-realm\fP=\fIrealm\fP] [\fB\-\-exec\fP=\fIscript\fP] \fIserver\fP[\fB:\fP\fIport\fP]
+[\fB\-\-realm\fP=\fIrealm\fP] [\fB\-\-password\fP=\fIpassword\fP]
+[\fB\-\-exec\fP=\fIscript\fP] [\fB\-\-execfile\fP=\fIfile\fP] \fIserver\fP[\fB:\fP\fIport\fP]
 .sp
 sieveshell \fB\-\-help\fP
 .SH DESCRIPTION
@@ -82,10 +83,26 @@ The realm to attempt authentication in.
 .UNINDENT
 .UNINDENT
 .sp
+\fB\-p\fP \fIpassword\fP, \fB\-\-password\fP=\fIpassword\fP
+.INDENT 0.0
+.INDENT 3.5
+The password to use when authenticating to server. Note that this
+parameter can be seen in the process list. \fBUse with caution!\fP
+.UNINDENT
+.UNINDENT
+.sp
 \fB\-e\fP \fIscript\fP, \fB\-\-exec\fP=\fIscript\fP
 .INDENT 0.0
 .INDENT 3.5
 Instead of working interactively, run commands from \fIscript\fP, and
+exit when done.
+.UNINDENT
+.UNINDENT
+.sp
+\fB\-f\fP \fIfile\fP, \fB\-\-execfile\fP=\fIfile\fP
+.INDENT 0.0
+.INDENT 3.5
+Instead of working interactively, run commands from file \fIfile\fP and
 exit when done.
 .UNINDENT
 .UNINDENT

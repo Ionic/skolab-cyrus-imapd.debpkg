@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Concepts &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>Concepts &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../index.html"/>
         <link rel="up" title="Overview" href="../../overview.html"/>
         <link rel="next" title="Setup" href="../../setup.html"/>
         <link rel="prev" title="Cyrus IMAP Murder (Server Aggregation)" href="features/server-aggregation.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../index.html">
-      <img src="../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../index.html">
  
 
-  
           
-          <img src="../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../overview.html">Overview</a> &raquo;</li>
       
@@ -867,11 +860,11 @@ List entry.</p>
 <dt>r</dt>
 <dd>The user may read the mailbox (<strong>read</strong>).</dd>
 <dt>s</dt>
-<dd>Keep per-user seen state (i.e. modify the &#8220;Seen&#8221; flag)
+<dd>Keep per-user seen state (i.e. modify the &quot;Seen&quot; flag)
 (<strong>setseen</strong>).</dd>
 <dt>w</dt>
-<dd>The user may modify flags and keywords other than &#8220;Seen&#8221; and
-&#8220;Deleted&#8221;. (<strong>write</strong>)</dd>
+<dd>The user may modify flags and keywords other than &quot;Seen&quot; and
+&quot;Deleted&quot;. (<strong>write</strong>)</dd>
 <dt>i</dt>
 <dd>The user may insert (append) new messages into the mailbox
 (<strong>insert</strong>).</dd>
@@ -886,13 +879,13 @@ current mailbox, or rename the mailbox (<strong>create</strong>).</dd>
 <dt>x</dt>
 <dd>The user may delete the mailbox itself. (<strong>deletembox</strong>)</dd>
 <dt>t</dt>
-<dd>The user may store the &#8220;Deleted&#8221; flag.  In other words, delete
+<dd>The user may store the &quot;Deleted&quot; flag.  In other words, delete
 messages.</dd>
 <dt>e</dt>
-<dd>The user may Expunge messages which have the &#8220;Deleted&#8221; flag already
+<dd>The user may Expunge messages which have the &quot;Deleted&quot; flag already
 set (<strong>expunge</strong>).</dd>
 <dt>d</dt>
-<dd>This &#8220;legacy&#8221; right is treated by the software as a macro for <code class="docutils literal"><span class="pre">te</span></code>
+<dd>This &quot;legacy&quot; right is treated by the software as a macro for <code class="docutils literal"><span class="pre">te</span></code>
 (<strong>deletemsg</strong> &amp;&amp; <strong>expunge</strong>).</dd>
 <dt>n</dt>
 <dd>The user may store annotations for a message (<strong>annotatemsg</strong>)</dd>
@@ -943,12 +936,12 @@ mailboxes have the following default privileges:</p>
 </div>
 <div class="section" id="initial-acls-for-newly-created-mailboxes">
 <h4>Initial ACLs for Newly Created Mailboxes<a class="headerlink" href="#initial-acls-for-newly-created-mailboxes" title="Permalink to this headline">¶</a></h4>
-<p>When a mailbox is created, its ACL starts off with a copy of the ACL of its closest parent mailbox. When a user is created, the ACL on the user&#8217;s <code class="docutils literal"><span class="pre">INBOX</span></code> starts off with a single entry granting all rights to the user. When a non-user mailbox is created and does not have a parent, its ACL is initialized to the value of the <code class="docutils literal"><span class="pre">defaultacl</span></code> option in <a class="reference internal" href="../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.</p>
+<p>When a mailbox is created, its ACL starts off with a copy of the ACL of its closest parent mailbox. When a user is created, the ACL on the user's <code class="docutils literal"><span class="pre">INBOX</span></code> starts off with a single entry granting all rights to the user. When a non-user mailbox is created and does not have a parent, its ACL is initialized to the value of the <code class="docutils literal"><span class="pre">defaultacl</span></code> option in <a class="reference internal" href="../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.</p>
 </div>
 <div class="section" id="other-implicit-rights">
 <h4>Other Implicit Rights<a class="headerlink" href="#other-implicit-rights" title="Permalink to this headline">¶</a></h4>
-<p>Note that some rights are available implicitly, for example &#8216;anonymous&#8217;
-always has &#8216;p&#8217; on user INBOXes, and users always have <code class="docutils literal"><span class="pre">la</span></code> rights on
+<p>Note that some rights are available implicitly, for example 'anonymous'
+always has 'p' on user INBOXes, and users always have <code class="docutils literal"><span class="pre">la</span></code> rights on
 mailboxes within their INBOX hierarchy.</p>
 </div>
 </div>
@@ -956,8 +949,8 @@ mailboxes within their INBOX hierarchy.</p>
 <h3>Access Control Identifier (ACI)<a class="headerlink" href="#access-control-identifier-aci" title="Permalink to this headline">¶</a></h3>
 <p>The Access Control Identifier (ACI) part of an ACL entry specifies the
 user or group for which the entry applies.  Group identifiers are
-distinguished be the prefix &#8220;group:&#8221;.  For example, &#8220;group:accounting&#8221;.</p>
-<p>There are two special identifiers, &#8220;anonymous&#8221;, and &#8220;anyone&#8221;, which are
+distinguished be the prefix &quot;group:&quot;.  For example, &quot;group:accounting&quot;.</p>
+<p>There are two special identifiers, &quot;anonymous&quot;, and &quot;anyone&quot;, which are
 explained below. The meaning of other identifiers usually depends on
 the authorization mechanism being used (selected by <code class="docutils literal"><span class="pre">--with-auth</span></code> at
 compile time, defaulting to Unix).</p>
@@ -1002,7 +995,7 @@ a non-/etc/passwd backend. Note that using unix groups in this way
 <p class="first admonition-title">Note</p>
 <p>Cyrus requires the getgrent(3) POSIX sysctl. As such, NSS needs to
 be configured to have the groups available, one of which includes
-&#8220;files&#8221;, but could also include &#8220;ldap&#8221;.</p>
+&quot;files&quot;, but could also include &quot;ldap&quot;.</p>
 <p class="last">NSS augmentations, such as <code class="docutils literal"><span class="pre">nss_ldap</span></code>, <code class="docutils literal"><span class="pre">pam_ldap</span></code> or <code class="docutils literal"><span class="pre">sssd</span></code>
 may be used to provide Cyrus access to group information via NSS.</p>
 </div>
@@ -1041,7 +1034,7 @@ character. The associated rights are then removed from that identifier.
 These are referred to as <em>negative rights</em>.</p>
 </div>
 <div class="section" id="calculating-a-users-rights">
-<h3>Calculating a Users&#8217; Rights<a class="headerlink" href="#calculating-a-users-rights" title="Permalink to this headline">¶</a></h3>
+<h3>Calculating a Users' Rights<a class="headerlink" href="#calculating-a-users-rights" title="Permalink to this headline">¶</a></h3>
 <p>To calculate the set of rights granted to a user, the server first
 calculates the union of all of the rights granted to the user and to
 all groups the user is a member of. The server then calculates and
@@ -1059,7 +1052,7 @@ anonymous user will be granted the rights <code class="docutils literal"><span c
 <div class="section" id="login-authentication">
 <span id="imap-concepts-login-authentication"></span><h2>Login Authentication<a class="headerlink" href="#login-authentication" title="Permalink to this headline">¶</a></h2>
 <p>This section discusses different types of authentication (ways of logging in) that can be used with Cyrus IMAP.</p>
-<p>The Cyrus IMAP server uses the Cyrus SASL library for authentication. This section describes how to configure SASL with use with Cyrus imapd. Please consult the <a class="reference external" href="https://www.cyrusimap.org/sasl/index.html#sasl-index" title="(in Cyrus SASL v2.1.27)"><span class="xref std std-ref">Cyrus SASL System Administrator&#8217;s Guide</span></a> for more detailed, up-to-date information.</p>
+<p>The Cyrus IMAP server uses the Cyrus SASL library for authentication. This section describes how to configure SASL with use with Cyrus imapd. Please consult the <a class="reference external" href="https://www.cyrusimap.org/sasl/index.html#sasl-index" title="(in Cyrus SASL v2.1.27)"><span class="xref std std-ref">Cyrus SASL System Administrator's Guide</span></a> for more detailed, up-to-date information.</p>
 <div class="section" id="anonymous-login">
 <h3>Anonymous Login<a class="headerlink" href="#anonymous-login" title="Permalink to this headline">¶</a></h3>
 <p>Regardless of the SASL mechanism used by an individual connection, the
@@ -1074,19 +1067,19 @@ password.</p>
 <p>The SASL library has several ways of verifying plaintext passwords. Plaintext passwords are passed either by the IMAP <code class="docutils literal"><span class="pre">LOGIN</span></code> command or by the SASL <code class="docutils literal"><span class="pre">PLAIN</span></code> mechanism (under a TLS layer).</p>
 <ul class="simple">
 <li>PAM</li>
-<li>Kerberos v4: Plaintext passwords are verified by obtaining a ticket for the server&#8217;s Kerberos identity, to protect against Kerberos server spoofing attacks.</li>
+<li>Kerberos v4: Plaintext passwords are verified by obtaining a ticket for the server's Kerberos identity, to protect against Kerberos server spoofing attacks.</li>
 <li><code class="docutils literal"><span class="pre">/etc/passwd</span></code></li>
 <li><code class="docutils literal"><span class="pre">/etc/shadow</span></code>: <code class="docutils literal"><span class="pre">sasl_auto_transition</span></code> automatically creates secrets for shared secret authentication when given a password.</li>
 </ul>
-<p>The method of plaintext password verification is always through the SASL library, even in the case of the internal LOGIN command. This is to allow the SASL library to be the only source of authentication information. You&#8217;ll want to look at the <code class="docutils literal"><span class="pre">sasl_pwcheck_method</span></code> option in the SASL documentation to understand how to configure a plaintext password verifier for your system.</p>
+<p>The method of plaintext password verification is always through the SASL library, even in the case of the internal LOGIN command. This is to allow the SASL library to be the only source of authentication information. You'll want to look at the <code class="docutils literal"><span class="pre">sasl_pwcheck_method</span></code> option in the SASL documentation to understand how to configure a plaintext password verifier for your system.</p>
 <p>To disallow the use of plaintext passwords for authentication, you can set <code class="docutils literal"><span class="pre">allowplaintext:</span> <span class="pre">no</span></code> in imapd.conf. This will still allow PLAIN under TLS, but IMAP LOGIN commands will now fail.</p>
 </div>
 <div class="section" id="kerberos-logins">
 <h3>Kerberos Logins<a class="headerlink" href="#kerberos-logins" title="Permalink to this headline">¶</a></h3>
-<p>The Kerberos SASL mechanism supports the <code class="docutils literal"><span class="pre">KERBEROS_V4</span></code> authentication mechanism. The mechanism requires that a <code class="docutils literal"><span class="pre">srvtab</span></code> file exist in the location given in the <code class="docutils literal"><span class="pre">srvtab</span></code> configuration option. The <code class="docutils literal"><span class="pre">srvtab</span></code> file must be readable by the Cyrus server and must contain a <code class="docutils literal"><span class="pre">imap.$host&#64;$realm</span></code> service key, where <code class="docutils literal"><span class="pre">$host</span></code> is the first component of the server&#8217;s host name and <code class="docutils literal"><span class="pre">$realm</span></code> is the server&#8217;s Kerberos realm.</p>
+<p>The Kerberos SASL mechanism supports the <code class="docutils literal"><span class="pre">KERBEROS_V4</span></code> authentication mechanism. The mechanism requires that a <code class="docutils literal"><span class="pre">srvtab</span></code> file exist in the location given in the <code class="docutils literal"><span class="pre">srvtab</span></code> configuration option. The <code class="docutils literal"><span class="pre">srvtab</span></code> file must be readable by the Cyrus server and must contain a <code class="docutils literal"><span class="pre">imap.$host&#64;$realm</span></code> service key, where <code class="docutils literal"><span class="pre">$host</span></code> is the first component of the server's host name and <code class="docutils literal"><span class="pre">$realm</span></code> is the server's Kerberos realm.</p>
 <p>The server will permit logins by identities in the local realm and identities in the realms listed in the <code class="docutils literal"><span class="pre">loginrealms</span></code> option in <a class="reference internal" href="../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.</p>
 <p>The file <code class="docutils literal"><span class="pre">/etc/krb.equiv</span></code> contains mappings between Kerberos principals. The file contains zero or more lines, each containing two fields. Any identity matching the first field of a line is permitted to log in as the identity in the second field.</p>
-<p>If the <code class="docutils literal"><span class="pre">loginuseacl</span></code> configuration option is turned on, than any Kerberos identity that is granted the <code class="docutils literal"><span class="pre">a</span></code> right on the user&#8217;s <code class="docutils literal"><span class="pre">INBOX</span></code> is permitted to log in as that user.</p>
+<p>If the <code class="docutils literal"><span class="pre">loginuseacl</span></code> configuration option is turned on, than any Kerberos identity that is granted the <code class="docutils literal"><span class="pre">a</span></code> right on the user's <code class="docutils literal"><span class="pre">INBOX</span></code> is permitted to log in as that user.</p>
 </div>
 <div class="section" id="shared-secrets-logins">
 <h3>Shared Secrets Logins<a class="headerlink" href="#shared-secrets-logins" title="Permalink to this headline">¶</a></h3>
@@ -1194,7 +1187,7 @@ already be over the limit <em>in the default configuration</em>.</p>
 regardless of size, unless <code class="docutils literal"><span class="pre">lmtp_strict_quota:</span> <span class="pre">on</span></code> is set in
 <a class="reference internal" href="../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.  In that case, delivery of messages will be
 rejected would such delivery exceed quota.</p>
-<p>If a delivery puts the mailbox&#8217;s usage over the quota, the server will
+<p>If a delivery puts the mailbox's usage over the quota, the server will
 issue an alert notifying the user that usage is close to or over the
 limit, permitting them to correct it. If delivery were not permitted in
 this case, the user would have no practical way of knowing that there
@@ -1259,12 +1252,12 @@ specified by the Sieve action)</li>
 <h2>Partitions<a class="headerlink" href="#partitions" title="Permalink to this headline">¶</a></h2>
 <p>Partitions allow administrators to store different mailboxes in different parts of the Unix filesystem.  This is intended to be used to allow hierarchies of mailboxes to be spread across multiple disks.</p>
 <div class="section" id="specifying-partitions-with-create">
-<h3>Specifying Partitions with &#8220;create&#8221;<a class="headerlink" href="#specifying-partitions-with-create" title="Permalink to this headline">¶</a></h3>
-<p>When an administrator creates a new mailbox, the name of the partition for the mailbox may be specified using an optional second argument to the &#8220;create&#8221; command.  Non-administrators are not permitted to specify the partition of a mailbox.  If the partition is not specified, then the mailbox inherits the partition of its most immediate parent mailbox.  If the mailbox has no parent, it gets the partition specified in the &#8220;defaultpartition&#8221; configuration option.</p>
-<p>The optional second argument to the &#8220;create&#8221; command can usually be given only when using a specialized Cyrus-aware administrative client such as <code class="docutils literal"><span class="pre">cyradm</span></code>.</p>
+<h3>Specifying Partitions with &quot;create&quot;<a class="headerlink" href="#specifying-partitions-with-create" title="Permalink to this headline">¶</a></h3>
+<p>When an administrator creates a new mailbox, the name of the partition for the mailbox may be specified using an optional second argument to the &quot;create&quot; command.  Non-administrators are not permitted to specify the partition of a mailbox.  If the partition is not specified, then the mailbox inherits the partition of its most immediate parent mailbox.  If the mailbox has no parent, it gets the partition specified in the &quot;defaultpartition&quot; configuration option.</p>
+<p>The optional second argument to the &quot;create&quot; command can usually be given only when using a specialized Cyrus-aware administrative client such as <code class="docutils literal"><span class="pre">cyradm</span></code>.</p>
 </div>
 <div class="section" id="changing-partitions-with-rename">
-<h3>Changing Partitions with &#8220;rename&#8221;<a class="headerlink" href="#changing-partitions-with-rename" title="Permalink to this headline">¶</a></h3>
+<h3>Changing Partitions with &quot;rename&quot;<a class="headerlink" href="#changing-partitions-with-rename" title="Permalink to this headline">¶</a></h3>
 <p>An administrator may change the partition of a mailbox by using the
 rename command with an optional third argument.  When a third argument
 to rename is given, the first and second arguments can be the
@@ -1285,17 +1278,17 @@ IMAP mailboxes via an NNTP server which is included with Cyrus.</p>
 <h2>POP3 Server<a class="headerlink" href="#pop3-server" title="Permalink to this headline">¶</a></h2>
 <p>The Cyrus IMAP server software comes with a compatibility POP3 server.
 Due to limitations in the POP3 protocol, the server can only access a
-user&#8217;s <code class="docutils literal"><span class="pre">INBOX</span></code> and only one instance of a POP3 server may exist for any
-one user at any time.  While a POP3 server has a user&#8217;s <code class="docutils literal"><span class="pre">INBOX</span></code> open,
+user's <code class="docutils literal"><span class="pre">INBOX</span></code> and only one instance of a POP3 server may exist for any
+one user at any time.  While a POP3 server has a user's <code class="docutils literal"><span class="pre">INBOX</span></code> open,
 expunge operations from any concurrent IMAP session will fail.</p>
 <p>When Kerberos login authentication is being used, the POP3 server
 uses the server identity
 <code class="docutils literal"><span class="pre">pop.host&#64;realm</span></code> instead of
 <code class="docutils literal"><span class="pre">imap.host&#64;realm</span></code>, where
-<code class="docutils literal"><span class="pre">host</span></code> is the first component of the server&#8217;s host
-name and <code class="docutils literal"><span class="pre">realm</span></code> is the server&#8217;s Kerberos realm.
+<code class="docutils literal"><span class="pre">host</span></code> is the first component of the server's host
+name and <code class="docutils literal"><span class="pre">realm</span></code> is the server's Kerberos realm.
 When the POP3 server is invoked with the <code class="docutils literal"><span class="pre">-k</span></code> switch, the
-server exports MIT&#8217;s KPOP protocol instead of generic POP3.</p>
+server exports MIT's KPOP protocol instead of generic POP3.</p>
 </div>
 <div class="section" id="the-syslog-facility">
 <h2>The syslog facility<a class="headerlink" href="#the-syslog-facility" title="Permalink to this headline">¶</a></h2>
@@ -1320,7 +1313,7 @@ inconsistencies in these databases.</p>
 mailbox directory contains the following files:</p>
 <dl class="docutils">
 <dt>message files</dt>
-<dd><p class="first">There is one file per message, containing the message in <span class="target" id="index-2"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc822.html"><strong>RFC 822</strong></a> format.  Lines in the message are separated by CRLF, not just LF.  The file name of each message is the message&#8217;s UID followed by a dot (.).</p>
+<dd><p class="first">There is one file per message, containing the message in <span class="target" id="index-2"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc822.html"><strong>RFC 822</strong></a> format.  Lines in the message are separated by CRLF, not just LF.  The file name of each message is the message's UID followed by a dot (.).</p>
 <p class="last">In netnews newsgroups, the message files instead follow the format and naming conventions imposed by the netnews software.</p>
 </dd>
 <dt><code class="docutils literal"><span class="pre">cyrus.header</span></code></dt>
@@ -1385,7 +1378,7 @@ usage of each quota root.</p>
 </div>
 <div class="section" id="removing-quota-roots">
 <h3>Removing Quota Roots<a class="headerlink" href="#removing-quota-roots" title="Permalink to this headline">¶</a></h3>
-<p>To remove a quota root, remove the quota root&#8217;s file.  Then run
+<p>To remove a quota root, remove the quota root's file.  Then run
 <code class="docutils literal"><span class="pre">quota</span> <span class="pre">-f</span></code> to make the quota files consistent again.</p>
 </div>
 <div class="section" id="subscriptions">
@@ -1441,8 +1434,8 @@ client.</p>
 <h3>Local Mail Transfer Protocol (lmtp)<a class="headerlink" href="#local-mail-transfer-protocol-lmtp" title="Permalink to this headline">¶</a></h3>
 <p>LMTP, the Local Mail Transfer Protocol, is a variant of SMTP design for
 transferring mail to the final message store.  LMTP allows MTAs to deliver
-&#8220;local&#8221; mail over a network.  This is an easy optimization so that the
-IMAP server doesn&#8217;t need to maintain a queue of messages or run an
+&quot;local&quot; mail over a network.  This is an easy optimization so that the
+IMAP server doesn't need to maintain a queue of messages or run an
 MTA.</p>
 <p>The Cyrus server implements LMTP via the <code class="docutils literal"><span class="pre">lmtpd</span></code> daemon.  LMTP
 can either be used over a network via TCP or local via a UNIX domain
@@ -1469,7 +1462,7 @@ store as few copies of a message as possible.  It will store one copy
 of the message per partition, and create hard links for all other
 recipients of the message.</p>
 <p>Single instance store can be turned off by using the
-&#8220;singleinstancestore&#8221; flag in the configuration file.</p>
+&quot;singleinstancestore&quot; flag in the configuration file.</p>
 </div>
 <div class="section" id="duplicate-delivery-suppression">
 <h3>Duplicate Delivery Suppression<a class="headerlink" href="#duplicate-delivery-suppression" title="Permalink to this headline">¶</a></h3>
@@ -1478,7 +1471,7 @@ the same message-id and the same envelope recipient are received.
 Cyrus uses the duplicate delivery database to hold this information,
 and it looks approximately 3 days back in the default install.</p>
 <p>Duplicate delivery suppression can be turned off by using the
-&#8220;duplicatesuppression&#8221; flag in the configuration file.</p>
+&quot;duplicatesuppression&quot; flag in the configuration file.</p>
 </div>
 </div>
 <div class="section" id="sieve-a-mail-filtering-language">
@@ -1531,7 +1524,7 @@ servers to allow for horizontal scalability.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

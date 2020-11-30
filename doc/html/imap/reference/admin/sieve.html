@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Cyrus Sieve &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>Cyrus Sieve &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../index.html"/>
         <link rel="up" title="Administrator Guide" href="../admin.html"/>
         <link rel="next" title="Cyrus Backups" href="backups.html"/>
         <link rel="prev" title="Supported Quota Types" href="quotas/quotatypes.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../../index.html">
-      <img src="../../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../../index.html">
  
 
-  
           
-          <img src="../../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../../operations.html">Operations</a> &raquo;</li>
       
@@ -819,14 +812,14 @@
 <p>Cyrus Sieve is an implementation of the Sieve mail filtering language ( <span class="target" id="index-0"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc3028.html"><strong>RFC 3028</strong></a> ). It allows a series of tests to be applied against an incoming message, with actions to take place if there is a match.</p>
 <p>Mail filtering occurs on delivery of the message (within lmtpd).</p>
 <p>Cyrus compiles sieve scripts to bytecode to reduce the overhead of parsing the scripts fully inside of lmtpd. This occurs automatically if <a class="reference internal" href="../manpages/usercommands/sieveshell.html#std:cyrusman-sieveshell(1)">sieveshell(1)</a> is used to place the scripts on the server.</p>
-<p>Sieve scripts can be placed either by the <a class="reference internal" href="../manpages/systemcommands/timsieved.html#std:cyrusman-timsieved(8)">timsieved(8)</a> daemon (implementing the ManageSieve protocol <span class="target" id="index-1"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5804.html"><strong>RFC 5804</strong></a>; this is the preferred options since it allows for syntax checking) or in the user&#8217;s home directory as a .sieve file.</p>
+<p>Sieve scripts can be placed either by the <a class="reference internal" href="../manpages/systemcommands/timsieved.html#std:cyrusman-timsieved(8)">timsieved(8)</a> daemon (implementing the ManageSieve protocol <span class="target" id="index-1"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5804.html"><strong>RFC 5804</strong></a>; this is the preferred options since it allows for syntax checking) or in the user's home directory as a .sieve file.</p>
 </div>
 <div class="section" id="installing-sieve">
 <h2><a class="toc-backref" href="#id4">Installing Sieve</a><a class="headerlink" href="#installing-sieve" title="Permalink to this headline">¶</a></h2>
 <p>This section assumes that you <a class="reference internal" href="../../developer/compiling.html#compiling"><span class="std std-ref">compiled Cyrus</span></a> with sieve support. If you specified <code class="docutils literal"><span class="pre">--disable-sieve</span></code> when running <code class="docutils literal"><span class="pre">./configure</span></code>, you did NOT compile the server with sieve support.</p>
 <div class="section" id="configure-sieve">
 <h3><a class="toc-backref" href="#id5">Configure sieve</a><a class="headerlink" href="#configure-sieve" title="Permalink to this headline">¶</a></h3>
-<p>Depending on what&#8217;s in your <code class="docutils literal"><span class="pre">/etc/services</span></code> file, sieve will usually be set to listen on port 2000 (old convention) or port 4190 (as specified by <span class="target" id="index-2"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5804.html"><strong>RFC 5804</strong></a>).</p>
+<p>Depending on what's in your <code class="docutils literal"><span class="pre">/etc/services</span></code> file, sieve will usually be set to listen on port 2000 (old convention) or port 4190 (as specified by <span class="target" id="index-2"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5804.html"><strong>RFC 5804</strong></a>).</p>
 <p>Add lines to the SERVICES section of <a class="reference internal" href="../manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a> to make the
 server listen to the right ports for sieveshell commands:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sieve</span>         <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;timsieved&quot;</span> <span class="n">listen</span><span class="o">=</span><span class="s2">&quot;servername:sieve&quot;</span> <span class="n">prefork</span><span class="o">=</span><span class="mi">0</span>
@@ -841,11 +834,11 @@ to function, so organise that now.</p>
 <div class="section" id="configure-outgoing-mail">
 <h3><a class="toc-backref" href="#id6">Configure outgoing mail</a><a class="headerlink" href="#configure-outgoing-mail" title="Permalink to this headline">¶</a></h3>
 <p>Some Sieve actions (redirect, vacation) can send outgoing mail.</p>
-<p>You&#8217;ll need to make sure that lmtpd can send outgoing messages. Currently, it invokes <code class="docutils literal"><span class="pre">/usr/lib/sendmail</span></code> by default to send messages. Change this by adding a line like:</p>
+<p>You'll need to make sure that lmtpd can send outgoing messages. Currently, it invokes <code class="docutils literal"><span class="pre">/usr/lib/sendmail</span></code> by default to send messages. Change this by adding a line like:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sendmail</span><span class="p">:</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">sbin</span><span class="o">/</span><span class="n">sendmail</span>
 </pre></div>
 </div>
-<p>in your <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>. If you&#8217;re using Postfix or another MTA, make sure that the sendmail referenced in &#8220;/etc/imapd.conf&#8221; is Sendmail-compatible.</p>
+<p>in your <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>. If you're using Postfix or another MTA, make sure that the sendmail referenced in &quot;/etc/imapd.conf&quot; is Sendmail-compatible.</p>
 </div>
 </div>
 <div class="section" id="managing-sieve-scripts">
@@ -886,11 +879,11 @@ utility, in communication with the <a class="reference internal" href="../manpag
 <div class="section" id="testing-the-sieve-server">
 <h2><a class="toc-backref" href="#id9">Testing the sieve server</a><a class="headerlink" href="#testing-the-sieve-server" title="Permalink to this headline">¶</a></h2>
 <p>The Sieve server, <a class="reference internal" href="../manpages/systemcommands/timsieved.html#std:cyrusman-timsieved(8)">timsieved(8)</a>, is used for transporting user Sieve scripts to the sealed IMAP server. It is incompatible with the <strong>sieveusehomedir</strong> option. It is named after the principal author, Tim Martin, who desperately wanted something named after him in the Cyrus distribution.</p>
-<p>From your normal account, telnet to the sieve port on the server you&#8217;re setting up:</p>
+<p>From your normal account, telnet to the sieve port on the server you're setting up:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">telnet</span> <span class="n">servername</span> <span class="n">sieve</span>
 </pre></div>
 </div>
-<p>If your server is running, you&#8217;ll get a message similar to the following one:</p>
+<p>If your server is running, you'll get a message similar to the following one:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Trying</span> <span class="mf">128.2</span><span class="o">.</span><span class="mf">10.192</span><span class="o">...</span>
 <span class="n">Connected</span> <span class="n">to</span> <span class="n">servername</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">tld</span><span class="o">.</span>
 <span class="n">Escape</span> <span class="n">character</span> <span class="ow">is</span> <span class="s1">&#39;^]&#39;</span><span class="o">.</span>
@@ -900,18 +893,18 @@ utility, in communication with the <a class="reference internal" href="../manpag
 <span class="n">OK</span>
 </pre></div>
 </div>
-<p>Any message other than one similar to the one above means there is a problem. Make sure all of authentication methods you wish to support are listed. This list should be identical to the one listed by &#8220;imapd&#8221; earlier. Next terminate the connection, by typing:</p>
+<p>Any message other than one similar to the one above means there is a problem. Make sure all of authentication methods you wish to support are listed. This list should be identical to the one listed by &quot;imapd&quot; earlier. Next terminate the connection, by typing:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">logout</span>
 </pre></div>
 </div>
-<p>Next test authenticating to the sieve server. To do this run the <a class="reference internal" href="../manpages/usercommands/sieveshell.html#std:cyrusman-sieveshell(1)">sieveshell(1)</a> utility. You must specify the server. If you run this utility from a different machine without the &#8220;sieve&#8221; entry in &#8220;/etc/services&#8221;, port 2000 will be used.</p>
+<p>Next test authenticating to the sieve server. To do this run the <a class="reference internal" href="../manpages/usercommands/sieveshell.html#std:cyrusman-sieveshell(1)">sieveshell(1)</a> utility. You must specify the server. If you run this utility from a different machine without the &quot;sieve&quot; entry in &quot;/etc/services&quot;, port 2000 will be used.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sieveshell</span> <span class="n">servername</span>
 <span class="n">Please</span> <span class="n">enter</span> <span class="n">your</span> <span class="n">password</span><span class="p">:</span> <span class="o">******</span>
 <span class="o">&gt;</span> <span class="n">quit</span>
 </pre></div>
 </div>
-<p>This should produce the message &#8220;Authentication failed&#8221; with a description of the failure if there was a problem.</p>
-<p>Next you should attempt to place a sieve script on the server. To do this create a file named <code class="docutils literal"><span class="pre">myscript.script</span></code> with the following lines. Replace &#8220;<a class="reference external" href="mailto:foo&#37;&#52;&#48;example&#46;org">foo<span>&#64;</span>example<span>&#46;</span>org</a>&#8221; with an email address you can send mail from, but that is not the one you are working on now.</p>
+<p>This should produce the message &quot;Authentication failed&quot; with a description of the failure if there was a problem.</p>
+<p>Next you should attempt to place a sieve script on the server. To do this create a file named <code class="docutils literal"><span class="pre">myscript.script</span></code> with the following lines. Replace &quot;<a class="reference external" href="mailto:foo&#37;&#52;&#48;example&#46;org">foo<span>&#64;</span>example<span>&#46;</span>org</a>&quot; with an email address you can send mail from, but that is not the one you are working on now.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">require</span> <span class="p">[</span><span class="s2">&quot;reject&quot;</span><span class="p">,</span><span class="s2">&quot;fileinto&quot;</span><span class="p">];</span>
 <span class="k">if</span> <span class="n">address</span> <span class="p">:</span><span class="ow">is</span> <span class="p">:</span><span class="nb">all</span> <span class="s2">&quot;From&quot;</span> <span class="s2">&quot;foo@example.org&quot;</span>
 <span class="p">{</span>
@@ -928,8 +921,8 @@ utility, in communication with the <a class="reference internal" href="../manpag
 </pre></div>
 </div>
 <p>This should place your script on the server and make it the active script.</p>
-<p>Test that the sieve script is actually run. Send a message to the address you&#8217;re working on from the address mentioned in the sieve script. The message should be rejected.</p>
-<p>When you&#8217;re done, don&#8217;t forget to delete your testing script:</p>
+<p>Test that the sieve script is actually run. Send a message to the address you're working on from the address mentioned in the sieve script. The message should be rejected.</p>
+<p>When you're done, don't forget to delete your testing script:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sieveshell</span> <span class="n">servername</span>
 <span class="n">Please</span> <span class="n">enter</span> <span class="n">your</span> <span class="n">password</span><span class="p">:</span> <span class="o">******</span>
 <span class="o">&gt;</span> <span class="n">delete</span> <span class="n">myscript</span><span class="o">.</span><span class="n">script</span>
@@ -994,7 +987,7 @@ utility, in communication with the <a class="reference internal" href="../manpag
 <div class="section" id="writing-sieve">
 <h2><a class="toc-backref" href="#id14">Writing Sieve</a><a class="headerlink" href="#writing-sieve" title="Permalink to this headline">¶</a></h2>
 <p>Sieve scripts can be used to automatically delete or forward messages; to send autoreplies; to sort them in folders; to mark messages as read or flagged; to test messages for spam or viruses; or to reject messages at or after delivery. <a class="reference external" href="http://sieve.info">Sieve.info</a> has more information on sieve and its uses.</p>
-<p>There&#8217;s a <a class="reference external" href="http://thsmi.github.io/sieve-reference/en/index.html">good sieve reference</a> online which describes the language.</p>
+<p>There's a <a class="reference external" href="http://thsmi.github.io/sieve-reference/en/index.html">good sieve reference</a> online which describes the language.</p>
 <p>For those who prefer a client to write code in, Sieve.info has a <a class="reference external" href="http://sieve.info/clients">list of desktop, web and command line clients</a>.</p>
 </div>
 </div>
@@ -1037,7 +1030,7 @@ utility, in communication with the <a class="reference internal" href="../manpag
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

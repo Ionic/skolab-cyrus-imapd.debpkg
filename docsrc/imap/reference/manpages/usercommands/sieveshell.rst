@@ -26,7 +26,8 @@ SYNOPSIS
 
 
 sieveshell [\ **--user**\ =\ *user*\ ] [\ **--authname**\ =\ *authname*\ ]
-[\ **--realm**\ =\ *realm*\ ] [\ **--exec**\ =\ *script*\ ] \ *server*\ [\ **:**\ \ *port*\ ]
+[\ **--realm**\ =\ *realm*\ ] [\ **--password**\ =\ *password*\ ]
+[\ **--exec**\ =\ *script*\ ] [\ **--execfile**\ =\ *file*\ ] \ *server*\ [\ **:**\ \ *port*\ ]
 
 sieveshell \ **--help**\ 
 
@@ -81,9 +82,23 @@ OPTIONS
  
 
 
+\ **-p**\  \ *password*\ , \ **--password**\ =\ *password*\ 
+ 
+ The password to use when authenticating to server. Note that this
+ parameter can be seen in the process list. \ **Use with caution!**\ 
+ 
+
+
 \ **-e**\  \ *script*\ , \ **--exec**\ =\ *script*\ 
  
  Instead of working interactively, run commands from \ *script*\ , and
+ exit when done.
+ 
+
+
+\ **-f**\  \ *file*\ , \ **--execfile**\ =\ *file*\ 
+ 
+ Instead of working interactively, run commands from file \ *file*\  and
  exit when done.
  
 

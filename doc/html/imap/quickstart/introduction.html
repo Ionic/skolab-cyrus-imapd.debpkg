@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Introduction to Cyrus IMAP &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>Introduction to Cyrus IMAP &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../index.html"/>
         <link rel="up" title="Quickstart Guide" href="../../quickstart.html"/>
         <link rel="next" title="Overview" href="../../overview.html"/>
         <link rel="prev" title="Quickstart Guide" href="../../quickstart.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../index.html">
-      <img src="../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../index.html">
  
 
-  
           
-          <img src="../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../quickstart.html">Quickstart Guide</a> &raquo;</li>
       
@@ -789,12 +782,12 @@
 <p>Cyrus IMAP is a <a class="reference external" href="http://www.cmu.edu">Carnegie Mellon University</a> (<abbr title="Carnegie Mellon University">CMU</abbr>) software
 development project for a highly scalable enterprise mail system.</p>
 <p>Cyrus IMAP is one of two primary software development projects
-undertaken by the Cyrus project &#8211; the other one being <a class="reference external" href="https://www.cyrusimap.org/sasl/index.html#sasl-index" title="(in Cyrus SASL v2.1.27)"><span>Cyrus SASL</span></a>.</p>
+undertaken by the Cyrus project -- the other one being <a class="reference external" href="https://www.cyrusimap.org/sasl/index.html#sasl-index" title="(in Cyrus SASL v2.1.27)"><span>Cyrus SASL</span></a>.</p>
 <p>The project as a whole started in 1994 and has its roots in replacing
 the Andrew Mail System (<abbr title="Andrew Mail System">AMS</abbr>) that <abbr title="Carnegie Mellon University">CMU</abbr> had been using, and has
 replaced <abbr title="Andrew Mail System">AMS</abbr> between 1998 and 2002.</p>
 <p>The project name, Cyrus, comes from the inventor of the first modern
-&#8220;packet-switching&#8221;-based mail system, the forerunner of every major
+&quot;packet-switching&quot;-based mail system, the forerunner of every major
 communication system we have today.</p>
 <p>Cyrus the Great (c. 585-529 BC) founded the ancient Persian Empire,
 and then needed superb messaging in order to run it. It is his famous
@@ -819,7 +812,7 @@ from hand to hand along the whole line...</p>
 message store using a client application, and is the de-facto standard
 protocol for mailstore access.</p>
 <p>Contrary to the Post Office Protocol (POP), IMAP by default maintains a
-copy of the message on the server &#8211; until it is explicitly deleted.</p>
+copy of the message on the server -- until it is explicitly deleted.</p>
 <p>Cyrus IMAP supports both POP3 and IMAP4 access to the mail store.</p>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
@@ -871,7 +864,7 @@ out <a class="reference internal" href="../rfc-support.html#imap-rfc-support"><s
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Cyrus CalDAV Scheduling Flowchart &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>Cyrus CalDAV Scheduling Flowchart &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../index.html"/>
         <link rel="up" title="Developer Thoughts &amp; Notes" href="../thoughts.html"/>
         <link rel="next" title="Enabling improved_mboxlist_sort" href="improved_mboxlist_sort.html"/>
         <link rel="prev" title="Cyrus IMAP Server: Sieve Bytecode" href="bytecode.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../../index.html">
-      <img src="../../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../../index.html">
  
 
-  
           
-          <img src="../../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../../developers.html">Developers</a> &raquo;</li>
       
@@ -821,8 +814,8 @@ Schedule-Tag). If not, we are done.</li>
 <div class="section" id="caldav-post-busytime-query-via-http-post-on-scheduling-outbox">
 <h2>caldav_post() - busytime query via HTTP POST on Scheduling Outbox<a class="headerlink" href="#caldav-post-busytime-query-via-http-post-on-scheduling-outbox" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li>Check the ACL on the owner&#8217;s Scheduling Outbox. If the authenticated
-user doesn&#8217;t have the DACL_SCHEDFB right, fail.</li>
+<li>Check the ACL on the owner's Scheduling Outbox. If the authenticated
+user doesn't have the DACL_SCHEDFB right, fail.</li>
 <li><a class="reference external" href="#sched_busytime_query">sched_busytime_query()</a>.</li>
 </ol>
 </div>
@@ -836,8 +829,8 @@ user doesn&#8217;t have the DACL_SCHEDFB right, fail.</li>
 <hr class="docutils" />
 <div class="section" id="sched-request-perform-an-organizer-request-attendee-status-update">
 <h2>sched_request() - perform an organizer request / attendee status update<a class="headerlink" href="#sched-request-perform-an-organizer-request-attendee-status-update" title="Permalink to this headline">¶</a></h2>
-<p>Check the ACL on the owner&#8217;s Scheduling Outbox. If the authenticated
-user doesn&#8217;t have the DACL_INVITE right, fail.</p>
+<p>Check the ACL on the owner's Scheduling Outbox. If the authenticated
+user doesn't have the DACL_INVITE right, fail.</p>
 <p>If the request includes a resource, then set METHOD:REQUEST, otherwise
 set METHOD:CANCEL.</p>
 <p>Create an iTIP message template, copying over any CALSCALE property and
@@ -875,21 +868,21 @@ and set PROPSTAT=NEEDS-ACTION if required.</p>
 <li>Check the CalDAV Scheduling parameters. If SCHEDULE-AGENT != SERVER,
 skip to the next attendee.</li>
 <li>Lookup attendee in our hash table.</li>
-<li>If it doesn&#8217;t exist, create a clone of our iTIP template and insert
+<li>If it doesn't exist, create a clone of our iTIP template and insert
 it into our hash table of attendees.</li>
-<li>Add the component to the attendee&#8217;s iTIP message.</li>
+<li>Add the component to the attendee's iTIP message.</li>
 <li>Add the component “number” to our mask of new components appearing in
-the attendee&#8217;s iTIP message.</li>
+the attendee's iTIP message.</li>
 </ol>
-<p>If the component is not the &#8220;master&#8221;, foreach attendee do
+<p>If the component is not the &quot;master&quot;, foreach attendee do
 <a class="reference external" href="#sched_exclude">sched_exclude()</a>.</p>
 </div>
 <div class="section" id="sched-exclude-exclude-an-attendee-from-a-recurrence-instance">
 <h2>sched_exclude() - exclude an attendee from a recurrence instance<a class="headerlink" href="#sched-exclude-exclude-an-attendee-from-a-recurrence-instance" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li>If the component did not appear in the attendee&#8217;s iTIP message, add
+<li>If the component did not appear in the attendee's iTIP message, add
 an EXDATE property (based on the RECURRENCE-ID of the component) to
-the master component of the attendee&#8217;s iTIP message.</li>
+the master component of the attendee's iTIP message.</li>
 </ol>
 </div>
 <div class="section" id="sched-cancel-cancel-an-organizer-event-task">
@@ -904,14 +897,14 @@ the master component of the attendee&#8217;s iTIP message.</li>
 <h2>sched_reply() - perform an attendee reply<a class="headerlink" href="#sched-reply-perform-an-attendee-reply" title="Permalink to this headline">¶</a></h2>
 <p>Check the CalDAV Scheduling parameters on ORGANIZER. If SCHEDULE-AGENT
 != SERVER, we are done.</p>
-<p>Check the ACL on the owner&#8217;s Scheduling Outbox. If the authenticated
-user doesn&#8217;t have the DACL_REPLY right, fail.</p>
+<p>Check the ACL on the owner's Scheduling Outbox. If the authenticated
+user doesn't have the DACL_REPLY right, fail.</p>
 <p>Create a new iTIP (METHOD:REPLY) message, copying over any CALSCALE
 property and VTIMEZONE components.</p>
 <p>Foreach component in the existing resource:</p>
 <ol class="loweralpha simple">
 <li><a class="reference external" href="#trim_attendees">trim_attendees()</a>.</li>
-<li>Add the trimmed component and the attendee&#8217;s PARTSTAT to our hash
+<li>Add the trimmed component and the attendee's PARTSTAT to our hash
 table keyed by RECURRENCE-ID (for comparison against new/modified
 resource).</li>
 </ol>
@@ -984,17 +977,17 @@ ORGANIZER.</li>
 <hr class="docutils" />
 <div class="section" id="sched-deliver-local-deliver-an-itip-message-to-a-local-user">
 <h2>sched_deliver_local() - deliver an iTIP message to a local user<a class="headerlink" href="#sched-deliver-local-deliver-an-itip-message-to-a-local-user" title="Permalink to this headline">¶</a></h2>
-<p>Check the ACL on the owner&#8217;s Scheduling Inbox. If the sender doesn&#8217;t
+<p>Check the ACL on the owner's Scheduling Inbox. If the sender doesn't
 have the proper right (DACL_INVITE for request/cancel, DACL_REPLY for
 reply), fail.</p>
-<p>Search the recipient&#8217;s calendars for a resource having the specified
+<p>Search the recipient's calendars for a resource having the specified
 UID.</p>
-<p>If the resource doesn&#8217;t exist:</p>
+<p>If the resource doesn't exist:</p>
 <ol class="loweralpha simple">
 <li>If the iTIP method is REPLY, fail (we are done).</li>
 <li>If the iTIP method is CANCEL, ignore it (we are done).</li>
 <li>Otherwise, create a new (empty) attendee object and target the
-recipient&#8217;s Default calendar.</li>
+recipient's Default calendar.</li>
 </ol>
 <p>Otherwise, load the existing resource.</p>
 <p>Update the new/existing resource:</p>
@@ -1008,10 +1001,10 @@ components.</li>
 <li>If the iTIP method is POLLSTATUS, do
 <a class="reference external" href="#deliver_merge_pollstatus">deliver_merge_pollstatus()</a>.</li>
 </ol>
-<p>Store the new/updated resource in the recipient&#8217;s target calendar.</p>
+<p>Store the new/updated resource in the recipient's target calendar.</p>
 <p>Record the delivery status (SCHEDULE-STATUS).</p>
 <p>If the iTIP message is something other than just a PARTSTAT update from
-an attendee, store the iTIP message as a new resource in the recipient&#8217;s
+an attendee, store the iTIP message as a new resource in the recipient's
 Inbox.</p>
 <p>If the iTIP method is REPLY, send an update other attendees via
 <a class="reference external" href="#sched_pollstatus">sched_pollstatus()</a> (VPOLL only) or
@@ -1024,7 +1017,7 @@ keyed by RECURRENCE-ID (for comparison against iTIP message).</p>
 <p>Foreach component in the iTIP message:</p>
 <p>Lookup (by RECURRENCE-ID) the component from the hash table of existing
 components.</p>
-<p>If the component doesn&#8217;t exist (new recurrence overridden by ATTENDEE)
+<p>If the component doesn't exist (new recurrence overridden by ATTENDEE)
 create a new recurring component:</p>
 <ol class="lowerroman simple">
 <li>Clone the existing master component.</li>
@@ -1163,7 +1156,7 @@ iTIP message:<ol class="lowerroman">
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

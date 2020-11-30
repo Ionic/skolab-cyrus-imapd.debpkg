@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Cyrus IMAP Murder (Server Aggregation) &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>Cyrus IMAP Murder (Server Aggregation) &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../index.html"/>
         <link rel="up" title="Features" href="../features.html"/>
         <link rel="next" title="Concepts" href="../overview_and_concepts.html"/>
         <link rel="prev" title="Single-Instance Store" href="single-instance-store.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../../index.html">
-      <img src="../../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../../index.html">
  
 
-  
           
-          <img src="../../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../../overview.html">Overview</a> &raquo;</li>
       
@@ -792,12 +785,12 @@
 functioning as one large, transparent IMAP cluster.</p>
 <p>In a Cyrus IMAP Murder, one or more servers with a <em>frontend</em> role
 receive client connections, and proxy connections through to one of the
-servers with a <em>backend</em> role &#8211; these host the payload for the cluster
-&#8211; on the basis of where the current mailbox selected resides.</p>
+servers with a <em>backend</em> role -- these host the payload for the cluster
+-- on the basis of where the current mailbox selected resides.</p>
 <p>This makes access to mailboxes transparent to the client, even though
 different mailboxes to which the user has access reside on different
 servers.</p>
-<p>To illustrate, let John&#8217;s IMAP client connect to <code class="docutils literal"><span class="pre">imap.example.org</span></code>:</p>
+<p>To illustrate, let John's IMAP client connect to <code class="docutils literal"><span class="pre">imap.example.org</span></code>:</p>
 <img src="../../../_images/graphviz-a580b8819035e9b4da261789b06642271baa7a26.png" alt="digraph john {
         rankdir = LR;
         splines = true;
@@ -808,8 +801,8 @@ servers.</p>
 
         &quot;Desktop Client&quot; -&gt; &quot;imap.example.org&quot; [label=&quot;Client Connection&quot;];
     }" />
-<p>John&#8217;s mailbox may not reside on the node that the client connects to,
-though, and instead be located on a <a class="reference internal" href="#term-backend"><span class="xref std std-term">backend</span></a> node &#8211; as is
+<p>John's mailbox may not reside on the node that the client connects to,
+though, and instead be located on a <a class="reference internal" href="#term-backend"><span class="xref std std-term">backend</span></a> node -- as is
 typical for larger deployments.</p>
 <p>The client connection is therefore to be proxied to the appropriate
 <a class="reference internal" href="#term-backend"><span class="xref std std-term">backend</span></a> node.</p>
@@ -849,7 +842,7 @@ application processing needs <em>separately</em> from the few web servers
 typically needed to serve static files such as images and scripts (that
 require no server-side processing).</p>
 <p>In the case of IMAP, a commonly used IMAP proxy is NGINX. However,
-NGINX can proxy John&#8217;s connection to only one backend at a time. NGINX
+NGINX can proxy John's connection to only one backend at a time. NGINX
 allows an external script to respond with a target backend address
 based on the authentication of the user <a class="footnote-reference" href="#id4" id="id1">[1]</a>.</p>
 <p>As such, NGINX is a socket proxy, and not a fully-featured
@@ -873,11 +866,11 @@ application proxy:</p>
 the same backend node his client connection is proxied to, and John nor
 Jane can share their mailboxes with one another <a class="footnote-reference" href="#id5" id="id2">[2]</a>.</p>
 <p>For the proxy to be fully-featured, the proxy would need to catch all
-IMAP commands that John&#8217;s client issues <a class="footnote-reference" href="#id6" id="id3">[3]</a>, and determine what is the
-most appropriate backend to serve the request &#8211; not unlike the
+IMAP commands that John's client issues <a class="footnote-reference" href="#id6" id="id3">[3]</a>, and determine what is the
+most appropriate backend to serve the request -- not unlike the
 aforementioned web proxies.</p>
-<p>So, when John&#8217;s client issues a <code class="docutils literal"><span class="pre">SELECT</span> <span class="pre">INBOX</span></code>, the connection is to
-be proxied to <code class="docutils literal"><span class="pre">backend1.example.org</span></code>, but when John&#8217;s client is to
+<p>So, when John's client issues a <code class="docutils literal"><span class="pre">SELECT</span> <span class="pre">INBOX</span></code>, the connection is to
+be proxied to <code class="docutils literal"><span class="pre">backend1.example.org</span></code>, but when John's client is to
 issue a <code class="docutils literal"><span class="pre">SELECT</span> <span class="pre">&quot;Other</span> <span class="pre">Users/jane&quot;</span></code>, the connection is to be proxied
 to <code class="docutils literal"><span class="pre">backend2.example.org</span></code>.</p>
 <p><strong>This</strong> is where the Cyrus IMAP Murder functionality kicks in:</p>
@@ -896,7 +889,7 @@ protocol level and decide where the connection needs to be proxied
 to</p>
 </li>
 <li><p class="first">Nodes with a <a class="reference internal" href="#term-frontend"><span class="xref std std-term">frontend</span></a> role also arbiter between backends
-when a message is moved from John&#8217;s <code class="docutils literal"><span class="pre">INBOX</span></code> to Jane&#8217;s <code class="docutils literal"><span class="pre">INBOX</span></code> or
+when a message is moved from John's <code class="docutils literal"><span class="pre">INBOX</span></code> to Jane's <code class="docutils literal"><span class="pre">INBOX</span></code> or
 vice-versa.</p>
 </li>
 </ul>
@@ -914,16 +907,16 @@ encryption and backends spend CPU cycles on mailboxes.</li>
 </ul>
 <p>Administrators of larger infrastructures will be aware of the fact that
 vertical scaling a single node only stretches so far.</p>
-<p>When mail environments are to serve many thousands of users&#8217; mailboxes
+<p>When mail environments are to serve many thousands of users' mailboxes
 (or more), multiple nodes are put to purpose, effectively scaling
 horizontally rather than vertically.</p>
 <p>In such environments it is likely that multiple backends are used to
 store mailboxes, and depending on the requirements for the environment,
 users with mailboxes distributed over these backends may be required to
-share content with one another &#8211; shared folders.</p>
+share content with one another -- shared folders.</p>
 <p>Should John be required to be able to share one or more of his mailboxes
-with Jane, or vice-versa, one could attempt to ensure both users&#8217;
-mailboxes reside on the same backend node (read: both users&#8217; client
+with Jane, or vice-versa, one could attempt to ensure both users'
+mailboxes reside on the same backend node (read: both users' client
 connections are proxied to the same backend node).</p>
 <p>In larger environments however (again), users that are required to be
 able to share content often results in groups of several dozens,
@@ -943,7 +936,7 @@ role.</p>
 <p>All backends have access to all mailboxes.</p>
 </li>
 <li><p class="first"><a class="reference internal" href="#imap-features-murder-unified"><span class="std std-ref">Unified Murder</span></a></p>
-<p>There&#8217;s no distinction between backends and frontends, and all
+<p>There's no distinction between backends and frontends, and all
 backends perform frontend roles, but not all frontends are
 automatically also backends.</p>
 </li>
@@ -1169,7 +1162,7 @@ etc.</td></tr>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
