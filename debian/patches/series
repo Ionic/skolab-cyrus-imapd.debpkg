@@ -3,13 +3,9 @@
 0003-Fix-syslog-prefix.patch
 0005-Updates-calling-of-the-perl-interpreter-to-what-we-e.patch
 0006-Fix-paths-on-Debian-in-tools-rehash.patch
-0007-Adds-some-enhancements-to-sieveshell-and-fixes-some-.patch
 0009-Normalize-the-authentication-ID.patch
-0010-Fix-PATH_MAX-on-GNU-Hurd.patch
 0011-Fix-extra-libpci-in-SNMP_LIBS.patch
 0012-Use-UnicodeData.txt-from-system.patch
 0018-increase-test-timeout.patch
 #0019-fix-tests.patch
 #0020-disable-some-tests.patch
-fix-http2.diff
-experimental-patch.diff

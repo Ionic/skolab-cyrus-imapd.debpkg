@@ -18,7 +18,7 @@ Last-Update: 2020-02-10
 
 --- a/imap/fud.c
 +++ b/imap/fud.c
-@@ -143,6 +143,15 @@
+@@ -145,6 +145,15 @@
      seen_done();
      closelog();
      cyrus_done();
@@ -49,7 +49,7 @@ Last-Update: 2020-02-10
  
 --- a/imap/lmtpd.c
 +++ b/imap/lmtpd.c
-@@ -1035,6 +1035,9 @@
+@@ -1041,6 +1041,9 @@
  
      cyrus_done();
  
