@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Automatic Creation of Mailboxes &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>Automatic Creation of Mailboxes &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../index.html"/>
         <link rel="up" title="Features" href="../features.html"/>
         <link rel="next" title="Mailbox Namespaces" href="namespaces.html"/>
         <link rel="prev" title="Sealed System Design" href="sealed-system.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../../index.html">
-      <img src="../../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../../index.html">
  
 
-  
           
-          <img src="../../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../../overview.html">Overview</a> &raquo;</li>
       
@@ -792,15 +785,15 @@
 <ul class="simple">
 <li>for successful login events,</li>
 <li>for email messages that arrive for a user,</li>
-<li>when a Sieve script uses the &#8220;fileinto&#8221; action.</li>
+<li>when a Sieve script uses the &quot;fileinto&quot; action.</li>
 </ul>
 <p>When operating an IT infrastructure, Cyrus IMAP may only be one part of
 such larger environment. When adding a user
 <em>John Doe &lt;john.doe&#64;example.org&gt;</em>, several pieces may need to fall or
 put in place to ensure the account is fully functional.</p>
-<p>Cyrus IMAP allows the automatic creation of John&#8217;s INBOX, and selected
+<p>Cyrus IMAP allows the automatic creation of John's INBOX, and selected
 sub-folders, either when John first logs in to Cyrus IMAP, or when the
-first message is to be delivered to John&#8217;s INBOX.</p>
+first message is to be delivered to John's INBOX.</p>
 <p>Additional features of this functionality include;</p>
 <ul class="simple">
 <li>the automatic creation of a Sieve script for
@@ -814,8 +807,8 @@ first message is to be delivered to John&#8217;s INBOX.</p>
 <p class="first admonition-title">Important</p>
 <p>Third party solutions incorporating Cyrus IMAP, and distributors of
 Cyrus IMAP (such as your Linux distribution) may have disabled this
-functionality altogether, during the building of the packages &#8211;
-most likely because they employ different means to get user&#8217;s
+functionality altogether, during the building of the packages --
+most likely because they employ different means to get user's
 mailboxes created.</p>
 <p class="last">Cyrus IMAP does not currently strip options from man-pages that are
 rendered irrelevant by the functionality not being built in, so
@@ -831,7 +824,7 @@ in <a class="reference internal" href="../../reference/manpages/configs/imapd.co
 created upon a successful login event or upon <em>lmtpd(8)</em>
 message delivery if <em>autocreate_post</em> is enabled, provided their
 INBOX did not yet already exist.</p>
-<p>The user&#8217;s quota is set to the value if it is greater than zero,
+<p>The user's quota is set to the value if it is greater than zero,
 otherwise the user has unlimited quota.</p>
 <p>Note that quota is specified in kilobytes.</p>
 </div></blockquote>
@@ -852,11 +845,11 @@ options.</p>
 <blockquote>
 <div><p>If a user does not have an INBOX already, and the INBOX is to be
 created, create the list of folders in this setting as well.
-<em>autocreate_inbox_folders</em> is a list of INBOX&#8217;s subfolders
-separated by a &#8220;|&#8221;, that are automatically created by the server
+<em>autocreate_inbox_folders</em> is a list of INBOX's subfolders
+separated by a &quot;|&quot;, that are automatically created by the server
 under the following two scenarios. Leading and trailing whitespace is
-stripped, so &#8220;Junk | Trash&#8221; results in two folders: &#8220;Junk&#8221; and
-&#8220;Trash&#8221;.  See also the <em>xlist-flag</em> option, for setting
+stripped, so &quot;Junk | Trash&quot; results in two folders: &quot;Junk&quot; and
+&quot;Trash&quot;.  See also the <em>xlist-flag</em> option, for setting
 special-use flags on autocreated folders.</p>
 <p>INBOX folders are created under both the following conditions:</p>
 <ol class="arabic simple">
@@ -889,20 +882,20 @@ as unlimited message quota, rather than a message quota of zero.</p>
 <blockquote>
 <div><p><code class="docutils literal"><span class="pre">autocreate_sieve_folders:</span></code> &lt;none&gt;</p>
 <blockquote>
-<div><p>A &#8220;|&#8221; separated list of subfolders of INBOX that will be
+<div><p>A &quot;|&quot; separated list of subfolders of INBOX that will be
 automatically created, if requested by a sieve filter, through the
-&#8220;fileinto&#8221; action. The default is to create no folders
+&quot;fileinto&quot; action. The default is to create no folders
 automatically.</p>
 <p>Leading and trailing whitespace is stripped from each folder, so a
-setting of &#8220;Junk | Trash&#8221; will create two folders: &#8220;Junk&#8221; and
-&#8220;Trash&#8221;.</p>
+setting of &quot;Junk | Trash&quot; will create two folders: &quot;Junk&quot; and
+&quot;Trash&quot;.</p>
 </div></blockquote>
 </div></blockquote>
 <blockquote>
 <div><p><code class="docutils literal"><span class="pre">autocreate_sieve_script:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div><p>The full path of a file that contains a sieve script. This script
-automatically becomes a user&#8217;s initial default sieve filter script.</p>
+automatically becomes a user's initial default sieve filter script.</p>
 <p>When this option is not defined, no default sieve filter is created.
 The file must be readable by the Cyrus daemon.</p>
 </div></blockquote>
@@ -919,9 +912,9 @@ autocreate_sieve_compiledscript must have valid values</div></blockquote>
 <div><p><code class="docutils literal"><span class="pre">autocreate_sieve_script_compiled:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>The full path of a file that contains a compiled in bytecode sieve script. This script
-automatically becomes a user&#8217;s initial default sieve filter script.  If this option is
-not specified, or the filename doesn&#8217;t exist then the script defined by
-autocreate_sieve_script is compiled on the fly and installed as the user&#8217;s default
+automatically becomes a user's initial default sieve filter script.  If this option is
+not specified, or the filename doesn't exist then the script defined by
+autocreate_sieve_script is compiled on the fly and installed as the user's default
 sieve script</div></blockquote>
 </div></blockquote>
 </div>
@@ -930,14 +923,14 @@ sieve script</div></blockquote>
 <blockquote>
 <div><p><code class="docutils literal"><span class="pre">autocreate_subscribe_folders:</span></code> &lt;none&gt;</p>
 <blockquote>
-<div>A list of folder names, separated by &#8220;|&#8221;, that the users get automatically subscribed to,
+<div>A list of folder names, separated by &quot;|&quot;, that the users get automatically subscribed to,
 when their INBOX is created. These folder names must have been included in the
 autocreateinboxfolders option of the imapd.conf.</div></blockquote>
 </div></blockquote>
 <blockquote>
 <div><p><code class="docutils literal"><span class="pre">autocreate_subscribe_sharedfolders:</span></code> &lt;none&gt;</p>
 <blockquote>
-<div>A list of shared folders (bulletin boards), separated by &#8220;|&#8221;, that the users get
+<div>A list of shared folders (bulletin boards), separated by &quot;|&quot;, that the users get
 automatically subscribed to, after their INBOX is created. The shared folder must
 have been created and the user must have the required permissions to get subscribed
 to it. Otherwise, subscribing to the shared folder fails.</div></blockquote>
@@ -983,11 +976,11 @@ created;</p>
 </ul>
 </li>
 <li><p class="first">When a user <em>Jane Gi &lt;jane.gi&#64;example.org&gt;</em> marries <em>John Doe</em> and
-adopts her new husband&#8217;s surname, her primary recipient email
+adopts her new husband's surname, her primary recipient email
 address may change to become <code class="docutils literal"><span class="pre">jane.doe&#64;example.org</span></code>.</p>
 <p>Note that <em>John Doe</em> does not need to be an <code class="docutils literal"><span class="pre">example.org</span></code> user for
 such event to occur, and that many countries allow the husband to
-take the maiden name of their spouse instead &#8211; so even if the
+take the maiden name of their spouse instead -- so even if the
 employees and/or associates of an organization running Cyrus IMAP
 are exclusively male, this may still apply to that organization.</p>
 <p>The functionality stated in this document does <strong>not</strong> rename
@@ -1038,7 +1031,7 @@ are exclusively male, this may still apply to that organization.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

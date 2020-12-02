@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>cyr_dbtool &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>cyr_dbtool &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../../index.html"/>
         <link rel="up" title="Man pages" href="../commands.html"/>
         <link rel="next" title="cyr_deny" href="cyr_deny.html"/>
         <link rel="prev" title="cyr_buildinfo" href="cyr_buildinfo.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../../../index.html">
-      <img src="../../../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../../../index.html">
  
 
-  
           
-          <img src="../../../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -812,9 +805,9 @@ Keys are terminated by tab or newline, values are terminated by newline.</p>
 <p>Running without any options will list the available database backends and
 usable actions.</p>
 <p>The <em>consistency</em> action runs a consistency check on the DB by calling
-&#8216;myconsistent&#8217; on it.</p>
+'myconsistent' on it.</p>
 <p>The <em>repack</em> action will compress the database by removing stale data
-on backends which support it.  It&#8217;s a NOOP otherwise.</p>
+on backends which support it.  It's a NOOP otherwise.</p>
 <p><strong>cyr_dbtool</strong> reads its configuration options out of the <a class="reference internal" href="../configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> file unless specified otherwise by <strong>-C</strong>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -845,7 +838,7 @@ details.</p>
 <dl class="option">
 <dt id="cmdoption-cyr_dbtool-n">
 <code class="descname">-n</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-cyr_dbtool-n" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create the database file if it doesn&#8217;t already exist.</p>
+<dd><p>Create the database file if it doesn't already exist.</p>
 </dd></dl>
 
 <dl class="option">
@@ -858,7 +851,7 @@ is completed.</p>
 <dl class="option">
 <dt id="cmdoption-cyr_dbtool-T">
 <code class="descname">-T</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-cyr_dbtool-T" title="Permalink to this definition">¶</a></dt>
-<dd><p>Use a transaction to do the action (most especially for &#8216;show&#8217;) - the
+<dd><p>Use a transaction to do the action (most especially for 'show') - the
 default used to be transactions.</p>
 </dd></dl>
 
@@ -867,9 +860,9 @@ default used to be transactions.</p>
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>This series of examples address manipulating the <em>user_deny.db</em>
 database, which is used to deny users access to specific services.  This
-is typically a Cyrus &#8220;flat&#8221; format database.</p>
+is typically a Cyrus &quot;flat&quot; format database.</p>
 <p><em>user_deny.db</em> is indexed by userid and each record contains the
-database version number (currently 2), a list of &#8220;wildmat&#8221; patterns
+database version number (currently 2), a list of &quot;wildmat&quot; patterns
 specifying Cyrus services to be denied, and a text message to be
 displayed to the user upon denial. The service names to be matched are
 those as used in <a class="reference internal" href="../configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a>.  <a class="reference internal" href="cyr_deny.html#std:cyrusman-cyr_deny(8)">cyr_deny(8)</a>
@@ -879,14 +872,14 @@ provides more convenient way to manage <em>user_deny.db</em>.</p>
 <p class="last">Given that <em>keys</em> are tab-delimited, these examples use the notation
 &lt;tab&gt; to indicate the tab character.  When entering this via the
 command line, remember to escape tabs.  In a normal shell, one can
-do so with &lt;ctrl-v&gt; (^v).  The sequence &#8220;&lt;ctrl-v&gt;&lt;ctrl-i&gt;&#8221; (^v^i)
+do so with &lt;ctrl-v&gt; (^v).  The sequence &quot;&lt;ctrl-v&gt;&lt;ctrl-i&gt;&quot; (^v^i)
 works well to enter tab characters.</p>
 </div>
 <pre class="literal-block">
 <strong>cyr_dbtool</strong> /var/lib/imap/user_deny.db flat baduser &quot;2&lt;tab&gt;pop3,imap&lt;tab&gt;Denied&quot;
 </pre>
 <blockquote>
-<div>Deny the user &#8216;baduser&#8217; access to imap and pop3.</div></blockquote>
+<div>Deny the user 'baduser' access to imap and pop3.</div></blockquote>
 <p>Subsequent login attempts by this user would result in authentication
 failures, and log entries like this:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># grep baduser /var/log/mail.log</span>
@@ -908,7 +901,7 @@ failures, and log entries like this:</p>
 <strong>cyr_dbtool</strong> /var/lib/imap/user_deny.db flat get baduser
 </pre>
 <blockquote>
-<div>Get the current database record(s) for user &#8216;baduser&#8217;.</div></blockquote>
+<div>Get the current database record(s) for user 'baduser'.</div></blockquote>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="mi">2</span>       <span class="n">pop3</span><span class="p">,</span><span class="n">imap</span>       <span class="n">Denied</span>
 </pre></div>
 </div>
@@ -961,7 +954,7 @@ failures, and log entries like this:</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

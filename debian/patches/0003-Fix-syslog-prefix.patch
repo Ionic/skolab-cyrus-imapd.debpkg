@@ -2,7 +2,7 @@ Description: Fix syslog prefix
  Make sure all programs log (to syslog) with "cyrus/<program>" as the
  log prefix.
 Author: Sven Mueller <debian@incase.de>
-Forwarded: no
+Forwarded: https://github.com/cyrusimap/cyrus-imapd/pull/3279
 Rewieved-By: Xavier Guimard <yadd@debian.org>
 Last-Update: 2020-02-10
 

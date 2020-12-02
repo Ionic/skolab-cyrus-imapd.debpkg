@@ -50,7 +50,7 @@ Build-Depends: bison,
                unicode-data,
                vim-common,
                xutils-dev
-Standards-Version: 4.5.0
+Standards-Version: 4.5.1
 Vcs-Browser: https://salsa.debian.org/debian/cyrus-imapd
 Vcs-Git: https://salsa.debian.org/debian/cyrus-imapd.git
 Homepage: https://www.cyrusimap.org/
@@ -297,6 +297,7 @@ Depends: ${misc:Depends},
          ${perl:Depends},
          ${shlibs:Depends}
 Pre-Depends: ${misc:Pre-Depends}
+Recommends: libterm-readline-gnu-perl
 Description: Interface to Cyrus imap client imclient library
  The Cyrus::IMAP module provides an interface to the Cyrus imclient
  library.  These are primarily useful for implementing cyradm operations

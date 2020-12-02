@@ -28,7 +28,7 @@ msgid ""
 "removed when the package is purged."
 msgstr ""
 "Gli spool di posta e news di Cyrus, oltre agli script sieve degli utenti, "
-"possono essere rimossi quando il pacchetto sar‡ rimosso."
+"possono essere rimossi quando il pacchetto sar√† rimosso."
 
 #. Type: boolean
 #. Description
@@ -39,6 +39,6 @@ msgid ""
 "locations will not be removed; just the old ones in /var."
 msgstr ""
 "Questa domanda si riferisce solo agli spool predefiniti e alle directory "
-"degli script sieve in /var.  Se la posizione di questi file Ë stata "
+"degli script sieve in /var.  Se la posizione di questi file √® stata "
 "modificata in imapd.conf, essi non saranno rimossi; saranno rimossi solo i "
 "file in /var."

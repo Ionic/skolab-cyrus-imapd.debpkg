@@ -5,7 +5,7 @@ Description: Updates calling of the perl interpreter to what we expect in Debian
  NOTE: only some script use the "-w" or even the "-T" flag for perl.
  This should be the default actually.
 Author: Sven Mueller <debian@incase.de>
-Forwarded: no
+Forwarded: not-needed
 Reviewed-By: Xavier Guimard <yadd@debian.org
 Last-Update: 2020-02-10
 

@@ -208,6 +208,7 @@ static int begin_headers_cb(nghttp2_session *session,
     if (config_getswitch(IMAPOPT_HTTPALLOWCOMPRESS)) {
         txn->zstrm = zlib_init();
         txn->brotli = brotli_init();
+        txn->zstd = zstd_init();
     }
 
 
@@ -324,7 +325,7 @@ static int frame_recv_cb(nghttp2_session *session,
         logbuf = &txn->conn->logbuf;
 
         buf_reset(logbuf);
-        buf_printf(logbuf, "<%ld<", time(NULL));   /* timestamp */
+        buf_printf(logbuf, "<" TIME_T_FMT "<", time(NULL));   /* timestamp */
         write(txn->conn->logfd, buf_base(logbuf), buf_len(logbuf));
     }
 
@@ -448,11 +449,32 @@ static int frame_not_send_cb(nghttp2_session *session,
                              int lib_error_code,
                              void *user_data __attribute__((unused)))
 {
-    syslog(LOG_DEBUG, "http2_frame_not_send_cb(id=%d)", frame->hd.stream_id);
+    syslog(LOG_DEBUG, "http2_frame_not_send_cb(id=%d, type=%d, flags=%#x)",
+           frame->hd.stream_id, frame->hd.type, frame->hd.flags);
 
     /* Issue RST_STREAM so that stream does not hang around. */
     nghttp2_submit_rst_stream(session, NGHTTP2_FLAG_NONE,
                               frame->hd.stream_id, lib_error_code);
+
+    return 0;
+}
+
+static int frame_send_cb(nghttp2_session *session __attribute__((unused)),
+                         const nghttp2_frame *frame,
+                         void *user_data __attribute__((unused)))
+{
+    syslog(LOG_DEBUG, "http2_frame_send_cb(id=%d, type=%d, flags=%#x)",
+           frame->hd.stream_id, frame->hd.type, frame->hd.flags);
+
+    return 0;
+}
+
+static int begin_frame_cb(nghttp2_session *session __attribute__((unused)),
+                         const nghttp2_frame_hd *hd,
+                         void *user_data __attribute__((unused)))
+{
+    syslog(LOG_DEBUG, "http2_begin_frame_cb(id=%d, type=%d, flags=%#x)",
+           hd->stream_id, hd->type, hd->flags);
 
     return 0;
 }
@@ -487,6 +509,13 @@ HIDDEN void http2_init(struct buf *serverinfo)
                                                            &stream_close_cb);
     nghttp2_session_callbacks_set_on_frame_not_send_callback(http2_callbacks,
                                                              &frame_not_send_cb);
+
+    if (config_getswitch(IMAPOPT_DEBUG)) {
+        nghttp2_session_callbacks_set_on_begin_frame_callback(http2_callbacks,
+                                                              &begin_frame_cb);
+        nghttp2_session_callbacks_set_on_frame_send_callback(http2_callbacks,
+                                                             &frame_send_cb);
+    }
 
     /* Setup for ALPN */
     alpn_select_cb = &_alpn_select_cb;
@@ -653,6 +682,12 @@ HIDDEN void http2_output(struct transaction_t *txn)
             txn->flags.conn = CONN_CLOSE;
         }
     }
+    else if (!nghttp2_session_want_read(ctx->session)) {
+        /* We're done */
+        syslog(LOG_DEBUG, "closing connection");
+        txn->flags.conn = CONN_CLOSE;
+        return;
+    }
 }
 
 
@@ -662,9 +697,11 @@ HIDDEN void http2_input(struct transaction_t *txn)
     int want_read = nghttp2_session_want_read(ctx->session);
     int goaway = txn->flags.conn & CONN_CLOSE;
     nghttp2_error_code err = goaway ? NGHTTP2_REFUSED_STREAM : NGHTTP2_NO_ERROR;
+    struct protstream *pin = txn->conn->pin;
 
     syslog(LOG_DEBUG, "http2_input()  goaway: %d, eof: %d, want read: %d",
-           goaway, txn->conn->pin->eof, want_read);
+           goaway, prot_IS_EOF(pin), want_read);
+
 
     if (want_read && !goaway) {
         /* Read frame(s) */
@@ -682,12 +719,12 @@ HIDDEN void http2_input(struct transaction_t *txn)
         else {
             /* Failure */
             syslog(LOG_DEBUG, "nghttp2_session_recv: %s (%s)",
-                   nghttp2_strerror(r), prot_error(txn->conn->pin));
+                   nghttp2_strerror(r), prot_error(pin));
             goaway = 1;
 
             if (r == NGHTTP2_ERR_CALLBACK_FAILURE) {
                 /* Client timeout */
-                txn->error.desc = prot_error(txn->conn->pin);
+                txn->error.desc = prot_error(pin);
                 err = NGHTTP2_REFUSED_STREAM;
             }
             else {
@@ -740,7 +777,7 @@ HIDDEN void http2_begin_headers(struct transaction_t *txn)
         struct buf *logbuf = &txn->conn->logbuf;
 
         buf_reset(logbuf);
-        buf_printf(logbuf, ">%ld>", time(NULL));  /* timestamp */
+        buf_printf(logbuf, ">" TIME_T_FMT ">", time(NULL));  /* timestamp */
         write(txn->conn->logfd, buf_base(logbuf), buf_len(logbuf));
     }
 }
@@ -878,7 +915,7 @@ HIDDEN int http2_data_chunk(struct transaction_t *txn,
         int niov = 0;
 
         buf_reset(logbuf);
-        buf_printf(logbuf, ">%ld>", time(NULL));  /* timestamp */
+        buf_printf(logbuf, ">" TIME_T_FMT ">", time(NULL));  /* timestamp */
         WRITEV_ADD_TO_IOVEC(iov, niov,
                             buf_base(logbuf), buf_len(logbuf));
         WRITEV_ADD_TO_IOVEC(iov, niov, data, datalen);
@@ -1025,4 +1062,3 @@ HIDDEN int32_t http2_get_streamid(void *http2_strm __attribute__((unused)))
 HIDDEN void http2_end_stream(void *http2_strm __attribute__((unused))) {}
 
 #endif /* HAVE_NGHTTP2 */
-

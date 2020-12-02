@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>squatter &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>squatter &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../../index.html"/>
         <link rel="up" title="Man pages" href="../commands.html"/>
         <link rel="next" title="sync_client" href="sync_client.html"/>
         <link rel="prev" title="smmapd" href="smmapd.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../../../index.html">
-      <img src="../../../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../../../index.html">
  
 
-  
           
-          <img src="../../../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -808,11 +801,11 @@ i.e.:
 <h2>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The name &#8220;<strong>squatter</strong>&#8221; once referred both to the SQUAT indexing
+<p class="last">The name &quot;<strong>squatter</strong>&quot; once referred both to the SQUAT indexing
 engine and to the command used to create indexes.  Now that Cyrus
-supports more than one index type &#8211; SQUAT and Xapian, as of this
-writing &#8211; the name &#8220;<strong>squatter</strong>&#8221; refers to the command used to
-control index creation.  The terms &#8220;SQUAT&#8221; or &#8220;SQUAT index(es)&#8221;
+supports more than one index type -- SQUAT and Xapian, as of this
+writing -- the name &quot;<strong>squatter</strong>&quot; refers to the command used to
+control index creation.  The terms &quot;SQUAT&quot; or &quot;SQUAT index(es)&quot;
 refers to the indexes used by the older SQUAT indexing engine.
 Post v3 the <em>search_engine</em> setting in <em>imapd.conf</em> determines
 which search engine is used.</p>
@@ -837,7 +830,7 @@ mailbox(es).</p>
 <p>For the latter two index modes (mailbox, user) one
 may optionally specify <strong>-r</strong> to recurse from the specified start, or
 <strong>-a</strong> to limit action only to mailboxes which have the shared
-<em>/vendor/cmu/cyrus-imapd/squat</em> annotation set to &#8220;true&#8221;.</p>
+<em>/vendor/cmu/cyrus-imapd/squat</em> annotation set to &quot;true&quot;.</p>
 <p>In the fourth synopsis, <strong>squatter</strong> runs in rolling mode.  In this
 mode <strong>squatter</strong> backgrounds itself and runs as a daemon (unless
 <strong>-d</strong> is set), listening to a sync log channel chosen using the <strong>-n</strong>
@@ -863,7 +856,7 @@ may be used to restrict operation to the specified user(s).</p>
 pause <em>seconds</em> seconds after each mailbox, to smooth loads.</p>
 <p>When using the Xapian engine the <strong>-Z</strong> option may be specified, for
 the indexing modes.  This tells <strong>squatter</strong> to consult the Xapian
-internally indexed GUIDs, rather than relying on what&#8217;s stored in
+internally indexed GUIDs, rather than relying on what's stored in
 <cite>cyrus.indexed.db</cite>, allowing for recovery from broken
 <cite>cyrus.indexed.db</cite> at the sacrifice of efficiency.</p>
 <div class="admonition note">
@@ -891,15 +884,15 @@ SEARCHed, just not as quickly as those with an index.</p>
 <dt id="cmdoption-squatter-a">
 <code class="descname">-a</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-squatter-a" title="Permalink to this definition">¶</a></dt>
 <dd><p>Only create indexes for mailboxes which have the shared
-<em>/vendor/cmu/cyrus-imapd/squat</em> annotation set to &#8220;true&#8221;.</p>
+<em>/vendor/cmu/cyrus-imapd/squat</em> annotation set to &quot;true&quot;.</p>
 <p>The value of the <em>/vendor/cmu/cyrus-imapd/squat</em> annotation is
 inherited by all children of the given mailbox, so an entire
 mailbox tree can be indexed (or not indexed) by setting a single
-annotation on the root of that tree with a value of &#8220;true&#8221; (or
-&#8220;false&#8221;).  If a mailbox does not have a
+annotation on the root of that tree with a value of &quot;true&quot; (or
+&quot;false&quot;).  If a mailbox does not have a
 <em>/vendor/cmu/cyrus-imapd/squat</em> annotation set on it (or does not
 inherit one), then the mailbox is not indexed. In other words, the
-implicit value of <em>/vendor/cmu/cyrus-imapd/squat</em> is &#8220;false&#8221;.</p>
+implicit value of <em>/vendor/cmu/cyrus-imapd/squat</em> is &quot;false&quot;.</p>
 </dd></dl>
 
 <dl class="option">
@@ -912,7 +905,7 @@ This feature is only available on the master branch.</p>
 <dl class="option">
 <dt id="cmdoption-squatter-d">
 <code class="descname">-d</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-squatter-d" title="Permalink to this definition">¶</a></dt>
-<dd><p>In rolling mode, don&#8217;t background and do emit log messages on
+<dd><p>In rolling mode, don't background and do emit log messages on
 standard error.  Useful for debugging.
 This feature was introduced in version 3.0.</p>
 </dd></dl>
@@ -957,7 +950,7 @@ the mailbox list derived from other options.</p>
 <dt id="cmdoption-squatter-n">
 <code class="descname">-n</code><code class="descclassname"> channel</code><a class="headerlink" href="#cmdoption-squatter-n" title="Permalink to this definition">¶</a></dt>
 <dd><p>In rolling mode, specify the name of the sync log <em>channel</em> that
-<strong>squatter</strong> will listen to.  The default is &#8220;squatter&#8221;.  This
+<strong>squatter</strong> will listen to.  The default is &quot;squatter&quot;.  This
 channel <strong>must</strong> be defined in <a class="reference internal" href="../configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> before
 being used.
 This feature was introduced in version 3.0.</p>
@@ -997,7 +990,7 @@ mailboxes or mailbox prefixes given as arguments.</p>
 <dl class="option">
 <dt id="cmdoption-squatter-S">
 <code class="descname">-S</code><code class="descclassname"> seconds</code><a class="headerlink" href="#cmdoption-squatter-S" title="Permalink to this definition">¶</a></dt>
-<dd><p>After processing each mailbox, sleep for &#8220;seconds&#8221; before
+<dd><p>After processing each mailbox, sleep for &quot;seconds&quot; before
 continuing. Can be used to provide some load balancing.  Accepts
 fractional amounts. This feature was introduced in version 3.0.</p>
 </dd></dl>
@@ -1008,7 +1001,7 @@ fractional amounts. This feature was introduced in version 3.0.</p>
 <dd><p>When indexing, work on a temporary copy of the search engine
 databases in <em>directory</em>.  That directory would typically be on
 some very fast filesystem, like an SSD or tmpfs.  This option may
-not work with all search engines, but it&#8217;s only effect is to speed
+not work with all search engines, but it's only effect is to speed
 up initial indexing.
 Xapian only.
 This feature was introduced in version 3.0.</p>
@@ -1123,7 +1116,7 @@ setting, and MUST define a sync_log channel via the
 <cite>sync_log_channels:</cite> setting.  If also using replication, you must
 either explicitly specify your replication sync_log channel via the
 <cite>sync_log_channels</cite> directive with a name, or specify the default
-empty name with &#8220;&#8221; (the two-character string U+22 U+22).  [Please
+empty name with &quot;&quot; (the two-character string U+22 U+22).  [Please
 see <a class="reference internal" href="../configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> for details].</p>
 </div>
 <div class="admonition note">
@@ -1131,7 +1124,7 @@ see <a class="reference internal" href="../configs/imapd.conf.html#std:cyrusman-
 <p class="last">When configuring rolling search indexing on a <strong>replica</strong>, one must
 consider whether sync_logs will be written at all.  In this case,
 please consider the setting <cite>sync_log_unsuppressable_channels</cite> to
-ensure that the sync_log channel upon which one&#8217;s squatter instance
+ensure that the sync_log channel upon which one's squatter instance
 depends will continue to be written.  See <a class="reference internal" href="../configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>
 for details.</p>
 </div>
@@ -1209,7 +1202,7 @@ Xapian documentation in this release before using Xapian.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

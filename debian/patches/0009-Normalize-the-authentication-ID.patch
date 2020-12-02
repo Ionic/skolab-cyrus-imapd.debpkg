@@ -4,7 +4,7 @@ Description: Normalize the authentication ID
        comparison without being volatile to, say, user error, and
     2) Any leading or trailing blank space can be stripped
 Author: "Jeroen van Meeuwen (Kolab Systems)" <vanmeeuwen@kolabsys.com>
-Forwarded: no
+Forwarded: https://github.com/cyrusimap/cyrus-imapd/pull/3283
 Reviewed-By: Xavier Guimard <yadd@debian.org
 Last-Update: 2020-02-10
 

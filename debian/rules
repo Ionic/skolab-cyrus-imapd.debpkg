@@ -97,8 +97,7 @@ override_dh_auto_configure:
 	 --with-gss_impl=mit \
 	 --with-sasl \
 	 --with-perl=/usr/bin/perl \
-	 --with-snmp \
-	 --without-nghttp2
+	 --with-snmp
 	echo 'To build this package, configure was called as follows:' \
 		> debian/README.configure-options
 	grep '^ac_cs_config=' config.status \

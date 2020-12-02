@@ -1,3 +1,33 @@
+cyrus-imapd (3.2.5-1) unstable; urgency=medium
+
+  * New upstream version 3.2.5
+  * Patches (all were pushed to upstream):
+    + Refresh patches
+    + Remove GUID patch, upstream fixed that somewhere else
+    + Drop patch 0008-Accept-invalid-From-header-in-email
+      (see upstream #3382)
+    + Drop patch 0004-silence-erroneous-RLIMIT_NUMFDS-related-log-messages
+      (see upstream #3280)
+    + Drop patch 0007-Adds-some-enhancements-to-sieveshell, accepted
+    + Drop HTTP/2 patch, now included
+    + Drop GUID patch, upstream fixed that somewhere else
+    + Drop patch 0010-Fix-PATH_MAX-on-GNU-Hurd, fixed elsewhere
+  * Set upstream metadata fields: Bug-Submit
+  * Remove obsolete field Name from debian/upstream/metadata
+    (already present in machine-readable debian/copyright).
+  * Declare complicance with policy 4.5.1
+
+ -- Xavier Guimard <yadd@debian.org>  Mon, 30 Nov 2020 06:07:34 +0100
+
+cyrus-imapd (3.2.4-4) experimental; urgency=medium
+
+  * Fix cron job (Closes: #935431)
+  * Add recommended dependency to libterm-readline-gnu-perl (Closes: #797789)
+  * Import upstream fix to close properly HTTP/2 connections (Closes: #969222)
+    and re-enable HTTP/2
+
+ -- Xavier Guimard <yadd@debian.org>  Sun, 25 Oct 2020 07:35:51 +0100
+
 cyrus-imapd (3.2.4-3~bpo10+1) buster-backports; urgency=medium
 
   * Rebuild for buster-backports.

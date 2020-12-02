@@ -2551,12 +2551,6 @@ Sitemap
 
       * Mailing lists
 
-        * Archives
-
-        * Subscribe/Unsubscribe
-
-        * Digest Lists
-
       * IRC
 
       * Weekly meetings

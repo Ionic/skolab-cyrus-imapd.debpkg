@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Upgrading to 3.2 &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>Upgrading to 3.2 &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../index.html"/>
         <link rel="up" title="Setup" href="../../setup.html"/>
         <link rel="next" title="Configuration Guide" href="../concepts/deployment.html"/>
         <link rel="prev" title="Virus Scanner" href="installation/virus.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../index.html">
-      <img src="../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../index.html">
  
 
-  
           
-          <img src="../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../setup.html">Setup</a> &raquo;</li>
       
@@ -822,7 +815,7 @@ use the upgrade instructions from the package provider.</p>
 <p class="first admonition-title">Note</p>
 <p class="last">For those upgrading from 2.3.X; newer releases of Cyrus IMAP will use
 significantly more memory per selected mailbox.  This is not an error
-or bug; it&#8217;s a feature.  The newer code is holding more data and
+or bug; it's a feature.  The newer code is holding more data and
 metadata in memory for purposes of faster access to more of the
 mailbox.  This is not a memory leak.</p>
 </div>
@@ -831,16 +824,16 @@ mailbox.  This is not a memory leak.</p>
 <p>Things to consider <strong>before</strong> you begin:</p>
 <div class="section" id="installation-from-tarball">
 <h3><a class="toc-backref" href="#id2">Installation from tarball</a><a class="headerlink" href="#installation-from-tarball" title="Permalink to this headline">¶</a></h3>
-<p>You will need to install from our packaged tarball. We provide a full list of libraries that Debian requires, but we aren&#8217;t able to test all platforms: you may find you need to install additional or different libraries to support v3.2.</p>
+<p>You will need to install from our packaged tarball. We provide a full list of libraries that Debian requires, but we aren't able to test all platforms: you may find you need to install additional or different libraries to support v3.2.</p>
 </div>
 <div class="section" id="how-are-you-planning-on-upgrading">
 <h3><a class="toc-backref" href="#id3">How are you planning on upgrading?</a><a class="headerlink" href="#how-are-you-planning-on-upgrading" title="Permalink to this headline">¶</a></h3>
 <p>Ideally, you will do a sandboxed test installation of 3.2 using a snapshot of your existing data before you switch off your existing installation. The rest of the instructions are assuming a sandboxed 3.2 installation.</p>
 <div class="section" id="upgrade-by-replicating">
 <h4><a class="toc-backref" href="#id4">Upgrade by replicating</a><a class="headerlink" href="#upgrade-by-replicating" title="Permalink to this headline">¶</a></h4>
-<p>If you&#8217;re familiar with replication, and your current installation is 2.4 or
+<p>If you're familiar with replication, and your current installation is 2.4 or
 newer, you can set up your existing installation to replicate data to a new
-3.2 installation and failover to the new installation when you&#8217;re ready. The
+3.2 installation and failover to the new installation when you're ready. The
 replication protocol has been kept backwards compatible.</p>
 <p>If your old installation contains mailboxes or messages that are older than
 2.4, they may not have GUID fields in their indexes (index version too old),
@@ -850,15 +843,15 @@ old installation first.</p>
 <p>You can check for affected mailboxes by examining the output from the
 <a class="reference internal" href="../reference/manpages/systemcommands/mbexamine.html#std:cyrusman-mbexamine(8)">mbexamine(8)</a> tool:</p>
 <ul class="simple">
-<li>mailboxes that report a &#8216;Minor Version:&#8217; less than 10 will need to have
+<li>mailboxes that report a 'Minor Version:' less than 10 will need to have
 their index upgraded using <a class="reference internal" href="../reference/manpages/systemcommands/reconstruct.html#std:cyrusman-reconstruct(8)">reconstruct(8)</a> with the
 <cite>-V &lt;version&gt;</cite> parameter to be at least 10.</li>
-<li>mailboxes containing messages that report &#8216;GUID:0&#8217; will need to have
+<li>mailboxes containing messages that report 'GUID:0' will need to have
 their GUIDs recalculated using <a class="reference internal" href="../reference/manpages/systemcommands/reconstruct.html#std:cyrusman-reconstruct(8)">reconstruct(8)</a> with the <cite>-G</cite>
 parameter.</li>
 </ul>
 <p>If you have a large amount of data, these reconstructs will take a long time,
-so it&#8217;s better to identify the mailboxes needing attention and target them
+so it's better to identify the mailboxes needing attention and target them
 specifically.  But if you have a small amount of data, it might be less work
 to just <cite>reconstruct -G -V max</cite> everything.</p>
 </div>
@@ -882,7 +875,7 @@ unixhierarchysep: yes
 <p>then you will not be able to upgrade-in-place.  This is due to
 a change in how directory hashes are calculated for users whose
 localpart contains a dot, which was introduced in 3.0.0.  After
-an in-place upgrade, Cyrus will not be able to find these users&#8217;
+an in-place upgrade, Cyrus will not be able to find these users'
 metadata and/or mailboxes.</p>
 <p class="last">If you have this configuration, you will need to upgrade by
 replicating, not in place.</p>
@@ -895,8 +888,8 @@ replicating, not in place.</p>
 must be readable and writable as the <code class="docutils literal"><span class="pre">cyrus</span></code> user, please make sure
 to <strong>always</strong> perform Cyrus commands <em>as</em> the <code class="docutils literal"><span class="pre">cyrus</span></code> user, and not
 as <code class="docutils literal"><span class="pre">root</span></code>.  In our documentation, we will always reference Cyrus
-commands in this form &#8211; <a class="reference internal" href="../reference/manpages/systemcommands/cyr_info.html#std:cyrusman-cyr_info(8)">cyr_info(8)</a> &#8211; before using
-examples of them, so you&#8217;ll know that those commands <strong>must</strong> be run as
+commands in this form -- <a class="reference internal" href="../reference/manpages/systemcommands/cyr_info.html#std:cyrusman-cyr_info(8)">cyr_info(8)</a> -- before using
+examples of them, so you'll know that those commands <strong>must</strong> be run as
 the <code class="docutils literal"><span class="pre">cyrus</span></code> user.</p>
 <p>Doing so in most systems is as simple as using either the <code class="docutils literal"><span class="pre">su</span></code> or
 <code class="docutils literal"><span class="pre">sudo</span></code> commands, like so:</p>
@@ -925,12 +918,12 @@ net-tools perl php-cli php-curl pkg-config po-debconf tcl-dev \
 transfig uuid-dev vim wamerican wget xutils-dev zlib1g-dev sasl2-bin rsyslog sudo acl telnet
 </pre></div>
 </div>
-<p>If you&#8217;re on another platform and can provide the list of dependencies, please
+<p>If you're on another platform and can provide the list of dependencies, please
 let us know via a <a class="reference external" href="https://github.com/cyrusimap/cyrus-imapd/issues">GitHub issue</a> or documentation pull request or send mail to the <a class="reference internal" href="../support/feedback-mailing-lists.html#feedback-mailing-lists"><span class="std std-ref">developer list</span></a>.</p>
 <p>Follow the <a class="reference internal" href="../installing.html#installing"><span class="std std-ref">general install instructions</span></a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>It&#8217;s best to ensure your new Cyrus <em>will not</em> start up automatically
+<p>It's best to ensure your new Cyrus <em>will not</em> start up automatically
 if your server restarts in the middle of the upgrade.</p>
 <p class="last">How this is best achieved will depend upon your OS and distro, but may involve
 something like <code class="docutils literal"><span class="pre">systemctl</span> <span class="pre">disable</span> <span class="pre">cyrus-imapd</span></code> or <code class="docutils literal"><span class="pre">update-rc.d</span> <span class="pre">cyrus-imapd</span> <span class="pre">disable</span></code></p>
@@ -951,7 +944,7 @@ whatever method you normally use.</p>
 <li>Mail spool</li>
 <li><a class="reference internal" href="../concepts/deployment/databases.html#databases"><span class="std std-ref">Cyrus Databases</span></a></li>
 </ul>
-<p>(You do already have a backup strategy in place, right? Once you&#8217;re on 3.2, you can
+<p>(You do already have a backup strategy in place, right? Once you're on 3.2, you can
 consider using the experimental <a class="reference internal" href="../reference/admin/backups.html#cyrus-backups"><span class="std std-ref">backup tools</span></a>.)</p>
 <p>Copy all of this to the new instance, using <code class="docutils literal"><span class="pre">rsync</span></code> or similar tools.</p>
 <div class="admonition note">
@@ -963,13 +956,13 @@ current installation.</p>
 </div>
 <p>For example, to copy from an existing Debian or Ubuntu installation
 using their standard locations, you might execute this series of
-commands on the <em>new</em> server (where &#8220;oldimap&#8221; is the name of the old
+commands on the <em>new</em> server (where &quot;oldimap&quot; is the name of the old
 server):</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>rsync -aHv oldimap:/var/lib/cyrus/. /var/lib/cyrus/.
 rsync -aHv oldimap:/var/spool/cyrus/. /var/spool/cyrus/.
 </pre></div>
 </div>
-<p>You don&#8217;t need to copy the following databases as Cyrus 3.2 will
+<p>You don't need to copy the following databases as Cyrus 3.2 will
 recreate these for you automatically:</p>
 <ul class="simple">
 <li>duplicate delivery (deliver.db),</li>
@@ -1011,7 +1004,7 @@ the new server:</p>
 </div>
 <p>You need to provide both imapd.conf and cyrus.conf so that conf-lint knows
 the names of all your services and can check service-specific overrides.</p>
-<p>To check your entire system&#8217;s configuration you can use the conf-all
+<p>To check your entire system's configuration you can use the conf-all
 action. This command takes all the system defaults, along with anything
 you have provided overrides for in your config files:</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>cyr_info conf-all -C &lt;path to imapd.conf&gt; -M &lt;path to cyrus.conf&gt;
@@ -1021,7 +1014,7 @@ you have provided overrides for in your config files:</p>
 defaults in <a class="reference internal" href="../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> changed in 3.0, which will affect you
 if you are upgrading to 3.2 from something earlier than 3.0. Implications
 are outlined in the Note in <a class="reference internal" href="../concepts/features/namespaces.html#imap-admin-namespaces-mode"><span class="std std-ref">User Namespace Mode</span></a> and
-<a class="reference internal" href="../reference/admin/sop/altnamespace.html#imap-switching-alt-namespace-mode"><span class="std std-ref">Switching the Alternative Namespace</span></a>.  Please also see &#8220;Sieve Scripts,&#8221;
+<a class="reference internal" href="../reference/admin/sop/altnamespace.html#imap-switching-alt-namespace-mode"><span class="std std-ref">Switching the Alternative Namespace</span></a>.  Please also see &quot;Sieve Scripts,&quot;
 below.</p>
 <ul class="simple">
 <li>unixhierarchysep: on</li>
@@ -1029,7 +1022,7 @@ below.</p>
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">If your installation is using groups, don&#8217;t turn <code class="docutils literal"><span class="pre">reverseacls:</span></code> on. Reverseacl support
+<p class="last">If your installation is using groups, don't turn <code class="docutils literal"><span class="pre">reverseacls:</span></code> on. Reverseacl support
 only works well for sites without groups.</p>
 </div>
 <p>In <a class="reference internal" href="../reference/manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a> move idled from the START section to the
@@ -1049,16 +1042,16 @@ in your new install with the <a class="reference internal" href="../reference/ma
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p><strong>Berkeley db format no longer supported since 3.0</strong></p>
-<p>If you have any databases using Berkeley db, they&#8217;ll need to be
+<p>If you have any databases using Berkeley db, they'll need to be
 converted to skiplist or flat <em>in your existing installation</em>. And
-then optionally converted to whatever final format you&#8217;d like in
+then optionally converted to whatever final format you'd like in
 your 3.2 installation.</p>
 <p>Databases potentially affected: mailboxes, annotations, conversations, quotas.</p>
 <p>On old install, prior to migration:</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>cvt_cyrusdb /&lt;configdirectory&gt;mailboxes.db berkeley /tmp/new-mailboxes.db skiplist
 </pre></div>
 </div>
-<p>If you don&#8217;t want to use flat or skiplist for 3.2, you can use the
+<p>If you don't want to use flat or skiplist for 3.2, you can use the
 new 3.2 <a class="reference internal" href="../reference/manpages/systemcommands/cvt_cyrusdb.html#std:cyrusman-cvt_cyrusdb(8)">cvt_cyrusdb(8)</a> to swap to new format:</p>
 <div class="last highlight-none"><div class="highlight"><pre><span></span>cvt_cyrusdb /tmp/new-mailboxes.db skiplist /&lt;configdirectory&gt;/mailboxes.db &lt;new file format&gt;
 </pre></div>
@@ -1075,14 +1068,14 @@ new 3.2 <a class="reference internal" href="../reference/manpages/systemcommands
 </pre></div>
 </div>
 <p>Check <code class="docutils literal"><span class="pre">/var/log/syslog</span></code> for errors so you can quickly understand potential problems.</p>
-<p>When you&#8217;re satisfied version 3.2 is running and can see all its data correctly,
+<p>When you're satisfied version 3.2 is running and can see all its data correctly,
 start the new Cyrus up with your regular init script.</p>
 <p>If something has gone wrong, contact us on the <a class="reference internal" href="../support/feedback-mailing-lists.html#feedback-mailing-lists"><span class="std std-ref">mailing list</span></a>.
 You can revert to backups and keep processing mail using your old version
-until you&#8217;re able to finish your 3.2 installation.</p>
+until you're able to finish your 3.2 installation.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">If you&#8217;ve disable your system startup scripts, as recommended in
+<p class="last">If you've disable your system startup scripts, as recommended in
 step 2, remember to re-enable them.  Use something like <code class="docutils literal"><span class="pre">systemctl</span>
 <span class="pre">enable</span> <span class="pre">cyrus-imapd</span></code> or <code class="docutils literal"><span class="pre">update-rc.d</span> <span class="pre">cyrus-imapd</span> <span class="pre">enable</span></code></p>
 </div>
@@ -1104,7 +1097,7 @@ running them one at a time (to reduce locking contention and high I/O load).</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>quota -f
 </pre></div>
 </div>
-<p>If you&#8217;ve been using CalDAV/CardDAV/all of the DAV from earlier releases, then the user.dav
+<p>If you've been using CalDAV/CardDAV/all of the DAV from earlier releases, then the user.dav
 databases need to be reconstructed due to format changes.:</p>
 <div class="highlight-none"><div class="highlight"><pre><span></span>dav_reconstruct -a
 </pre></div>
@@ -1145,7 +1138,7 @@ I'll fill in the survey right now</a> (opens in a new window)</p>
 <div class="section" id="special-note-for-murder-configurations">
 <h2><a class="toc-backref" href="#id16">Special note for Murder configurations</a><a class="headerlink" href="#special-note-for-murder-configurations" title="Permalink to this headline">¶</a></h2>
 <p>If you upgrade murder frontends before you upgrade all the backends,
-they may advertise features to clients which the backends don&#8217;t support,
+they may advertise features to clients which the backends don't support,
 which will cause the commands to fail when they are proxied to the backend.</p>
 <p>Generally accepted wisdom when upgrading a Murder configuration is to
 upgrade all your back end servers first. This can be done one at a time.</p>
@@ -1198,7 +1191,7 @@ downgrade mailbox versions in transit.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

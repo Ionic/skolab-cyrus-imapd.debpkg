@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>What annotations are available? &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>What annotations are available? &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../index.html"/>
         <link rel="up" title="Frequently Asked Questions" href="../faq.html"/>
         <link rel="next" title="Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?" href="o-configdir-tempfs.html"/>
         <link rel="prev" title="How do I view ACLs on a mailbox?" href="o-acls.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../../index.html">
-      <img src="../../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../../index.html">
  
 
-  
           
-          <img src="../../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../../operations.html">Operations</a> &raquo;</li>
       
@@ -794,15 +787,15 @@
 <ul class="simple">
 <li><strong>/admin</strong> - Sets the administrator email address for the server. (See
 <a class="reference internal" href="../manpages/systemcommands/cyradm.html#std:cyrusman-cyradm(8)">cyradm(8)</a>)</li>
-<li><strong>/check</strong> - Boolean value &#8220;true&#8221; or &#8220;false&#8221; that indicates whether this
+<li><strong>/check</strong> - Boolean value &quot;true&quot; or &quot;false&quot; that indicates whether this
 mailbox should be checked at regular intervals by the client. The interval
 in minutes is specified by the <code class="docutils literal"><span class="pre">/checkperiod</span></code> entry. (Draft RFC)</li>
 <li><strong>/checkperiod</strong> - Numeric value indicating a period of minutes that the
-client uses to determine the interval of regular &#8216;new mail&#8217; checks for the
+client uses to determine the interval of regular 'new mail' checks for the
 corresponding mailbox. (Draft RFC)</li>
 <li><strong>/comment</strong> - Sets a comment or description associated with the mailbox.
 (cyradm(8))</li>
-<li><strong>/motd</strong> - Sets a &#8220;message of the day&#8221;. The message gets displayed
+<li><strong>/motd</strong> - Sets a &quot;message of the day&quot;. The message gets displayed
 as an ALERT after authentication.</li>
 <li><strong>/sort</strong> - Defines the default sort criteria [I-D.ietf-imapext-sort] to use
 when first displaying the mailbox contents to the user, or NIL if sorting is
@@ -813,7 +806,7 @@ threading is not required. If both sort and thread are not NIL, then
 threading should take precedence over sorting. (Draft RFC)</li>
 <li><strong>/vendor/cmu/cyrus-imapd/condstore</strong> - Enables the IMAP CONDSTORE extension
 (modification sequences) on the mailbox. (See <a class="reference internal" href="../manpages/systemcommands/cyradm.html#std:cyrusman-cyradm(8)">cyradm(8)</a>)</li>
-<li><strong>vendor/cmu/cyrus-imapd/duplicatedeliver</strong> - Flag signalling that we&#8217;re
+<li><strong>vendor/cmu/cyrus-imapd/duplicatedeliver</strong> - Flag signalling that we're
 allowing duplicate delivery of messages to the mailbox, overriding
 system-wide duplicate suppression.
 (<a class="reference internal" href="../../developer/guidance/mailbox-format.html#imap-developer-guidance-mailbox-format"><span class="std std-ref">Cyrus IMAP Server: Mailbox File Formats</span></a>)</li>
@@ -825,7 +818,7 @@ messages will be archived from the mailbox. (cyradm(8))</li>
 messages will be deleted from the mailbox. (cyradm(8))</li>
 <li><strong>/vendor/cmu/cyrus-imapd/freespace</strong> - Undocumented.</li>
 <li><strong>/vendor/cmu/cyrus-imapd/lastpop</strong> - (time_t) of the last pop3 login to
-this INBOX, used to enforce the &#8220;poptimeout&#8221; imapd.conf option.
+this INBOX, used to enforce the &quot;poptimeout&quot; imapd.conf option.
 (<a class="reference internal" href="../../developer/guidance/mailbox-format.html#imap-developer-guidance-mailbox-format"><span class="std std-ref">Cyrus IMAP Server: Mailbox File Formats</span></a>)</li>
 <li><strong>vendor/cmu/cyrus-imapd/lastupdate</strong> - (time_t) of the last time a message
 was appended
@@ -833,8 +826,8 @@ was appended
 <li><strong>/vendor/cmu/cyrus-imapd/news2mail</strong> - Sets an email address to which
 messages injected into the server via NNTP will be sent. (cyradm(8))</li>
 <li><strong>/vendor/cmu/cyrus-imapd/partition</strong> - Undocumented.</li>
-<li><strong>/vendor/cmu/cyrus-imapd/pop3newuidl</strong> - Flag signalling that we&#8217;re using
-&#8220;uidvalidity.uid&#8221; instead of just &#8220;uid&#8221; for the output of the POP3 UIDL
+<li><strong>/vendor/cmu/cyrus-imapd/pop3newuidl</strong> - Flag signalling that we're using
+&quot;uidvalidity.uid&quot; instead of just &quot;uid&quot; for the output of the POP3 UIDL
 command.
 (<a class="reference internal" href="../../developer/guidance/mailbox-format.html#imap-developer-guidance-mailbox-format"><span class="std std-ref">Cyrus IMAP Server: Mailbox File Formats</span></a>)</li>
 <li><strong>/vendor/cmu/cyrus-imapd/serve</strong> - Undocumented.</li>
@@ -892,7 +885,7 @@ indexed. (See <a class="reference internal" href="../manpages/systemcommands/squ
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Replication: Installation and Administration &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>Replication: Installation and Administration &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../../index.html"/>
         <link rel="up" title="Standard Operating Procedures" href="../sop.html"/>
         <link rel="next" title="Mailbox Operations" href="mailbox-operations.html"/>
         <link rel="prev" title="Standard Operating Procedures" href="../sop.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../../../index.html">
-      <img src="../../../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../../../index.html">
  
 
-  
           
-          <img src="../../../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -800,7 +793,7 @@
 <dt>Host</dt>
 <dd>A computer chassis, slot or cabinet.  A machine.</dd>
 <dt>Server or Service</dt>
-<dd>A program or process which &#8220;serves&#8221; a particular protocol.
+<dd>A program or process which &quot;serves&quot; a particular protocol.
 Typically a server will listen on a network port or Unix socket
 for communications from a client (local or remote).</dd>
 <dt>Client</dt>
@@ -843,7 +836,7 @@ start over again on the next log.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Any unsuccessful run of sync_client will result in the incomplete
-remains of the original log file being left behind as &#8220;log-&lt;$PID&gt;&#8221;.
+remains of the original log file being left behind as &quot;log-&lt;$PID&gt;&quot;.
 This may be re-run as needed.</p>
 </div>
 <div class="admonition note">
@@ -863,7 +856,7 @@ doing so via <code class="docutils literal"><span class="pre">cron</span></code>
 <div class="section" id="idempotency">
 <h3>Idempotency<a class="headerlink" href="#idempotency" title="Permalink to this headline">¶</a></h3>
 <p>Synchronization itself is idempotent in either mode, so log files may
-be &#8220;replayed&#8221; without concern of damage to the replica&#8217;s mail spools.</p>
+be &quot;replayed&quot; without concern of damage to the replica's mail spools.</p>
 </div>
 <div class="section" id="sync-chains">
 <h3>Sync Chains<a class="headerlink" href="#sync-chains" title="Permalink to this headline">¶</a></h3>
@@ -874,7 +867,7 @@ use this approach, please see the <code class="docutils literal"><span class="pr
 <div><p><code class="docutils literal"><span class="pre">sync_log_chain:</span></code> 0</p>
 <blockquote>
 <div>Enable replication action logging by sync_server as well, allowing
-chaining of replicas.  Use this on &#8216;B&#8217; for A =&gt; B =&gt; C replication layout</div></blockquote>
+chaining of replicas.  Use this on 'B' for A =&gt; B =&gt; C replication layout</div></blockquote>
 </div></blockquote>
 <p>Note that sync_log_chain is to be set on the middle server(s) in a
 chain, not on the first or last.</p>
@@ -883,8 +876,8 @@ chain, not on the first or last.</p>
 <div class="section" id="transport">
 <h2>Transport<a class="headerlink" href="#transport" title="Permalink to this headline">¶</a></h2>
 <p>Older versions (pre-3.0) of Cyrus used the dedicated <code class="docutils literal"><span class="pre">csync</span></code>
-transport &#8211; typically over TCP port 2005 &#8211; and server process &#8211;
-<a class="reference internal" href="../../manpages/systemcommands/sync_server.html#std:cyrusman-sync_server(8)">sync_server(8)</a> &#8211; for replication. This is no longer
+transport -- typically over TCP port 2005 -- and server process --
+<a class="reference internal" href="../../manpages/systemcommands/sync_server.html#std:cyrusman-sync_server(8)">sync_server(8)</a> -- for replication. This is no longer
 necessary.</p>
 <p>From v3.0 forward, the <a class="reference internal" href="../../manpages/systemcommands/sync_client.html#std:cyrusman-sync_client(8)">sync_client(8)</a> will default to using
 IMAP protocol for transport, and an IMAP instance on the replica will
@@ -895,7 +888,7 @@ override this by setting the <code class="docutils literal"><span class="pre">sy
 <div><p><code class="docutils literal"><span class="pre">sync_try_imap:</span></code> 1</p>
 <blockquote>
 <div>Whether sync_client should try to perform an IMAP connection
-before falling back to csync.  If this is set to &#8220;no&#8221;,
+before falling back to csync.  If this is set to &quot;no&quot;,
 sync_client will only use csync.  Prefix with a channel name to
 apply only for that channel</div></blockquote>
 </div></blockquote>
@@ -907,7 +900,7 @@ apply only for that channel</div></blockquote>
 client/server applications and utilities.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Those using their distribution&#8217;s packages may need to install a
+<p class="last">Those using their distribution's packages may need to install a
 separate package for replication support.  For example, on Debian
 and derived distros, install the <code class="docutils literal"><span class="pre">cyrus-replication</span></code> package.</p>
 </div>
@@ -919,7 +912,7 @@ and derived distros, install the <code class="docutils literal"><span class="pre
 </ol>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Sample configurations for both &#8220;master&#8221; and &#8220;replica&#8221; instances are
+<p class="last">Sample configurations for both &quot;master&quot; and &quot;replica&quot; instances are
 included in the standard distribution.</p>
 </div>
 </div>
@@ -1016,7 +1009,7 @@ these settings to control syncing to multiple replicas.</p>
 <p class="last">If using sync_log_channels for any other purpose, such as
 specifying the sync_log used by <a class="reference internal" href="../../manpages/systemcommands/squatter.html#std:cyrusman-squatter(8)">squatter(8)</a> command,
 you must <em>also</em> either specify a sync_log channel for replication,
-or specify the default &#8220;&#8221; (the two-character string U+22 U+22).</p>
+or specify the default &quot;&quot; (the two-character string U+22 U+22).</p>
 </div>
 <p>Add invocation specifications to <a class="reference internal" href="../../manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a> to spawn
 <a class="reference internal" href="../../manpages/systemcommands/sync_client.html#std:cyrusman-sync_client(8)">sync_client(8)</a> as desired (for each channel used) as
@@ -1068,7 +1061,7 @@ sync_client:</p>
 <div class="admonition hint">
 <p class="first admonition-title">Hint</p>
 <p>In a multi-channel mesh, the channel to be used by a given
-sync_client must be specified via the &#8220;-n &lt;channel&gt;&#8221; argument on
+sync_client must be specified via the &quot;-n &lt;channel&gt;&quot; argument on
 the command line:</p>
 <div class="last highlight-default"><div class="highlight"><pre><span></span><span class="n">syncclient</span>       <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;/usr/cyrus/bin/sync_client -r -n channel1&quot;</span>
 </pre></div>
@@ -1090,7 +1083,7 @@ shutdown of a <a class="reference internal" href="../../manpages/systemcommands/
 <p>The default frequency of replication runs is 3 seconds.  Lengthening
 this produces higher efficiency at the cost of slightly more stale data
 on the replica.  Alter this via the sync_repeat_interval in
-<a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> or by using the &#8220;-d&#8221; argument in the
+<a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> or by using the &quot;-d&quot; argument in the
 invocation of <a class="reference internal" href="../../manpages/systemcommands/sync_client.html#std:cyrusman-sync_client(8)">sync_client(8)</a>.</p>
 </div>
 <div class="section" id="periodic-replication-configuration">
@@ -1114,10 +1107,10 @@ EVENTS section of <a class="reference internal" href="../../manpages/configs/cyr
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">When using the &#8220;-A&#8221; flag (sync all users) no non-user
+<p class="last">When using the &quot;-A&quot; flag (sync all users) no non-user
 mailboxes are synced.  As the man page <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>
-notes, &#8221;... this could be considered a bug and maybe it should do
-those mailboxes independently.&#8221;</p>
+notes, &quot;... this could be considered a bug and maybe it should do
+those mailboxes independently.&quot;</p>
 </div>
 </div>
 <div class="section" id="tweaking-replication">
@@ -1141,7 +1134,7 @@ other hosts.  This is achieved by use of the Channels feature of the
 replication system.</p>
 <p>To employ channels, prefix any of the following sync_ configuration
 options in <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> with the channel name and an
-underscore &#8220;_&#8221; character as needed:</p>
+underscore &quot;_&quot; character as needed:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sync_authname</span>
 <span class="n">sync_password</span>
 <span class="n">sync_realm</span>
@@ -1274,7 +1267,7 @@ record into the rolling replication log.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

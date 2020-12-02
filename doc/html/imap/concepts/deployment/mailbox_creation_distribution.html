@@ -8,12 +8,10 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mailbox Creation Distribution &mdash; Cyrus IMAP 3.2.4 documentation</title>
+  <title>Mailbox Creation Distribution &mdash; Cyrus IMAP 3.2.5 documentation</title>
   
 
   
-  
-    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
   
 
   
@@ -37,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.4 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../index.html"/>
         <link rel="up" title="Configuration Guide" href="../deployment.html"/>
         <link rel="next" title="Known Protocol Limitations" href="known_protocol_limitations.html"/>
         <link rel="prev" title="Databases" href="databases.html"/> 
@@ -63,7 +61,8 @@
   </ul>
   <div>
     <a href="../../../index.html">
-      <img src="../../../_static/logo.gif" alt="CYRUS" />
+      <h1>Cyrus IMAP</h1>
+      <!-- <img src="../../../_static/logo.gif" alt="CYRUS" /> -->
     </a>
   </div>
 </div>
@@ -82,10 +81,9 @@
           <a href="../../../index.html">
  
 
-  
           
-          <img src="../../../_static/logo.gif"  />
-     
+          <h1>Cyrus IMAP</h1>
+          
         </a>
 
         
@@ -238,7 +236,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users&#8217; Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -261,8 +259,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &#8220;create&#8221;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &#8220;rename&#8221;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#news">News</a></li>
@@ -574,13 +572,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&#8220;unable to join environment&#8221; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to &#8216;&lt;&gt;&#8217;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &#8220;bare newlines&#8221;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -696,12 +694,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#archives">Archives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#subscribe-unsubscribe">Subscribe/Unsubscribe</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../support/feedback-mailing-lists.html#digest-lists">Digest Lists</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
@@ -767,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.2.4</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.2.5</a> &raquo;</li>
       
           <li><a href="../../../setup.html">Setup</a> &raquo;</li>
       
@@ -949,7 +942,7 @@ partition-partb: /path/to/partb</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>Example of partition exclusion using <code class="docutils literal"><span class="pre">partition_mode_soft_usage_limit</span></code></p>
-<p>In the same conditions than &lt;xref linkend=&#8221;exam-Deployment_Guide-Available_Selection_Modes_on_Backend-Example_of_freespace_most_Selection_on_Backend&#8221; /&gt;, setting <code class="docutils literal"><span class="pre">partition_mode_soft_usage_limit</span></code> to <code class="docutils literal"><span class="pre">50</span></code> would exclude partitions <code class="docutils literal"><span class="pre">part1</span></code> and <code class="docutils literal"><span class="pre">part3</span></code> since their disk usage is respectively 60% and 70%.</p>
+<p>In the same conditions than &lt;xref linkend=&quot;exam-Deployment_Guide-Available_Selection_Modes_on_Backend-Example_of_freespace_most_Selection_on_Backend&quot; /&gt;, setting <code class="docutils literal"><span class="pre">partition_mode_soft_usage_limit</span></code> to <code class="docutils literal"><span class="pre">50</span></code> would exclude partitions <code class="docutils literal"><span class="pre">part1</span></code> and <code class="docutils literal"><span class="pre">part3</span></code> since their disk usage is respectively 60% and 70%.</p>
 <p class="last">But setting the option to <code class="docutils literal"><span class="pre">20</span></code> would have no effect, since the usage of all partitions is beyond 20%.</p>
 </div>
 <div class="admonition warning">
@@ -978,7 +971,7 @@ partition-partb: /path/to/partb</p>
 <div class="section" id="id1">
 <h3>Selection Mode<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <p>Among the backends, how the most fitting one is selected depends on the configured selection mode: <code class="docutils literal"><span class="pre">serverlist_mode</span></code> setting in <code class="docutils literal"><span class="pre">/etc/imapd.conf</span></code>.</p>
-<p>The principle is similar to the mailbox creation distribution on backend (see &lt;xref linkend=&#8221;sect-Deployment_Guide-Mailbox_Creation_Distribution-On_backend&#8221; /&gt;).</p>
+<p>The principle is similar to the mailbox creation distribution on backend (see &lt;xref linkend=&quot;sect-Deployment_Guide-Mailbox_Creation_Distribution-On_backend&quot; /&gt;).</p>
 </div>
 <div class="section" id="available-selection-modes-on-frontend">
 <h3>Available Selection Modes on Frontend<a class="headerlink" href="#available-selection-modes-on-frontend" title="Permalink to this headline">¶</a></h3>
@@ -1031,7 +1024,7 @@ partition-partb: /path/to/partb</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>Example of <code class="docutils literal"><span class="pre">freespace-percent-most</span></code> Selection on Frontend</p>
-<p class="last">In the same conditions than &lt;xref linkend=&#8221;exam-Deployment_Guide-Available_Selection_Modes_on_Frontend-Example_of_freespace_most_Selection_on_Frontend&#8221; /&gt; <code class="docutils literal"><span class="pre">backend3</span></code> would be selected as most fitting, since it has a partition with 80% of free space which is the biggest of all backends.</p>
+<p class="last">In the same conditions than &lt;xref linkend=&quot;exam-Deployment_Guide-Available_Selection_Modes_on_Frontend-Example_of_freespace_most_Selection_on_Frontend&quot; /&gt; <code class="docutils literal"><span class="pre">backend3</span></code> would be selected as most fitting, since it has a partition with 80% of free space which is the biggest of all backends.</p>
 </div>
 </div></blockquote>
 </li>
@@ -1041,7 +1034,7 @@ partition-partb: /path/to/partb</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>Example of <code class="docutils literal"><span class="pre">freespace-percent-weighted</span></code> Selection on Frontend</p>
-<p>In the same conditions than &lt;xref linkend=&#8221;exam-Deployment_Guide-Available_Selection_Modes_on_Frontend-Example_of_freespace_most_Selection_on_Frontend&#8221; /&gt;, the weight of each backend would be:</p>
+<p>In the same conditions than &lt;xref linkend=&quot;exam-Deployment_Guide-Available_Selection_Modes_on_Frontend-Example_of_freespace_most_Selection_on_Frontend&quot; /&gt;, the weight of each backend would be:</p>
 <blockquote>
 <div><ul class="simple">
 <li>50 for <code class="docutils literal"><span class="pre">backend1</span></code></li>
@@ -1069,7 +1062,7 @@ partition-partb: /path/to/partb</p>
 <div><div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p><strong>Example of ``freespace-percent-weighted-delta`` Selection on Frontend</strong></p>
-<p>In the same conditions than &lt;xref linkend=&#8221;exam-Deployment_Guide-Available_Selection_Modes_on_Frontend-Example_of_freespace_most_Selection_on_Frontend&#8221; /&gt;, the weight of each backend would be:</p>
+<p>In the same conditions than &lt;xref linkend=&quot;exam-Deployment_Guide-Available_Selection_Modes_on_Frontend-Example_of_freespace_most_Selection_on_Frontend&quot; /&gt;, the weight of each backend would be:</p>
 <ul class="simple">
 <li>50 - 50 + 0.5 = 0.5 for <code class="docutils literal"><span class="pre">backend1</span></code></li>
 <li>70 - 50 + 0.5 = 20.5 for <code class="docutils literal"><span class="pre">backend2</span></code></li>
@@ -1096,7 +1089,7 @@ partition-partb: /path/to/partb</p>
 <div><div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>Example of partition exclusion using <code class="docutils literal"><span class="pre">serverlist_mode_soft_usage_limit</span></code></p>
-<p class="last">In the same conditions than &lt;xref linkend=&#8221;exam-Deployment_Guide-Available_Selection_Modes_on_Frontend-Example_of_freespace_most_Selection_on_Frontend&#8221; /&gt;, using <code class="docutils literal"><span class="pre">freespace-most</span></code> selection mode, setting <code class="docutils literal"><span class="pre">serverlist_mode_soft_usage_limit</span></code> to <code class="docutils literal"><span class="pre">49</span></code> would exclude <code class="docutils literal"><span class="pre">backend1</span></code> and <code class="docutils literal"><span class="pre">backend2</span></code> since in that mode they have a disk usage of 50% and 55%. In other modes it would however only exclude <code class="docutils literal"><span class="pre">backend1</span></code> whose considered partition has a disk usage of 50%, while on <code class="docutils literal"><span class="pre">backend2</span></code> the considered partition has a disk usage of 30%.</p>
+<p class="last">In the same conditions than &lt;xref linkend=&quot;exam-Deployment_Guide-Available_Selection_Modes_on_Frontend-Example_of_freespace_most_Selection_on_Frontend&quot; /&gt;, using <code class="docutils literal"><span class="pre">freespace-most</span></code> selection mode, setting <code class="docutils literal"><span class="pre">serverlist_mode_soft_usage_limit</span></code> to <code class="docutils literal"><span class="pre">49</span></code> would exclude <code class="docutils literal"><span class="pre">backend1</span></code> and <code class="docutils literal"><span class="pre">backend2</span></code> since in that mode they have a disk usage of 50% and 55%. In other modes it would however only exclude <code class="docutils literal"><span class="pre">backend1</span></code> whose considered partition has a disk usage of 50%, while on <code class="docutils literal"><span class="pre">backend2</span></code> the considered partition has a disk usage of 30%.</p>
 </div>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
@@ -1152,7 +1145,7 @@ partition-partb: /path/to/partb</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.2.4',
+            VERSION:'3.2.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
