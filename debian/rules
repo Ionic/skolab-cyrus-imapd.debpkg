@@ -74,6 +74,7 @@ override_dh_auto_configure:
 	 --enable-nntp \
 	 --enable-murder \
 	 --enable-http \
+	 --enable-jmap \
 	 --enable-replication \
 	 --enable-xapian \
 	 --enable-backup \
