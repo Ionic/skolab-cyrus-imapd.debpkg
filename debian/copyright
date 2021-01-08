@@ -46,11 +46,6 @@ Files: lib/crc32.c
 Copyright: 2011-2015 Stephan Brumme
 License: CRC-License
 
-Files: lib/crc32c.c
-Copyright: 2013 Mark Adler
- 2011-2015 Stephan Brumme
-License: CRC-License
-
 Files: perl/imap/Cyrus/*
 Copyright: 2008-2017 FastMail
 License: CMU
