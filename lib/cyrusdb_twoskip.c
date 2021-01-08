@@ -54,7 +54,7 @@
 
 #include "assert.h"
 #include "bsearch.h"
-#include "byteorder64.h"
+#include "byteorder.h"
 #include "cyrusdb.h"
 #include "crc32.h"
 #include "libcyr_cfg.h"
@@ -513,13 +513,16 @@ static int read_header(struct dbengine *db)
 
     crc = ntohl(*((uint32_t *)(BASE(db) + OFFSET_CRC32)));
 
+    db->end = db->header.current_size;
+
+    if ((db->open_flags & CYRUSDB_NOCRC))
+        return 0;
+
     if (crc32_map(BASE(db), OFFSET_CRC32) != crc) {
         syslog(LOG_ERR, "DBERROR: %s: twoskip header CRC failure",
                FNAME(db));
         return CYRUSDB_IOERROR;
     }
-
-    db->end = db->header.current_size;
 
     return 0;
 }
@@ -528,7 +531,6 @@ static int read_header(struct dbengine *db)
 static int write_header(struct dbengine *db)
 {
     char *buf = scratchspace.s;
-    int n;
 
     /* format one buffer */
     memcpy(buf, HEADER_MAGIC, HEADER_MAGIC_SIZE);
@@ -541,8 +543,8 @@ static int write_header(struct dbengine *db)
     *((uint32_t *)(buf + OFFSET_CRC32)) = htonl(crc32_map(buf, OFFSET_CRC32));
 
     /* write it out */
-    n = mappedfile_pwrite(db->mf, buf, HEADER_SIZE, 0);
-    if (n < 0) return CYRUSDB_IOERROR;
+    if (mappedfile_pwrite(db->mf, buf, HEADER_SIZE, 0) < 0)
+        return CYRUSDB_IOERROR;
 
     return 0;
 }
@@ -559,10 +561,11 @@ static int commit_header(struct dbengine *db)
 
 static int check_tailcrc(struct dbengine *db, struct skiprecord *record)
 {
-    uint32_t crc;
+    if ((db->open_flags & CYRUSDB_NOCRC))
+        return 0;
 
-    crc = crc32_map(BASE(db) + record->keyoffset,
-                    roundup(record->keylen + record->vallen, 8));
+    uint32_t crc = crc32_map(BASE(db) + record->keyoffset,
+                             roundup(record->keylen + record->vallen, 8));
     if (crc != record->crc32_tail) {
         syslog(LOG_ERR, "DBERROR: invalid tail crc %s at %llX",
                FNAME(db), (LLU)record->offset);
@@ -573,6 +576,11 @@ static int check_tailcrc(struct dbengine *db, struct skiprecord *record)
 }
 
 /* read a single skiprecord at the given offset */
+#ifdef HAVE_DECLARE_OPTIMIZE
+static int read_onerecord(struct dbengine *db, size_t offset,
+           struct skiprecord *record)
+    __attribute__((optimize("-O3")));
+#endif
 static int read_onerecord(struct dbengine *db, size_t offset,
                           struct skiprecord *record)
 {
@@ -637,17 +645,19 @@ static int read_onerecord(struct dbengine *db, size_t offset,
 
     base = BASE(db) + offset;
     record->crc32_head = ntohl(*((uint32_t *)base));
-    if (crc32_map(BASE(db) + record->offset, (offset - record->offset))
-        != record->crc32_head) {
+    record->crc32_tail = ntohl(*((uint32_t *)(base+4)));
+    record->keyoffset = offset + 8;
+    record->valoffset = record->keyoffset + record->keylen;
+
+    if ((db->open_flags & CYRUSDB_NOCRC))
+        return 0;
+
+    uint32_t crc = crc32_map(BASE(db) + record->offset, (offset - record->offset));
+    if (crc != record->crc32_head) {
         syslog(LOG_ERR, "DBERROR: twoskip checksum head error for %s at %08llX",
                FNAME(db), (LLU)offset);
         return CYRUSDB_IOERROR;
     }
-
-    record->crc32_tail = ntohl(*((uint32_t *)(base+4)));
-
-    record->keyoffset = offset + 8;
-    record->valoffset = record->keyoffset + record->keylen;
 
     return 0;
 
@@ -720,7 +730,6 @@ static int rewrite_record(struct dbengine *db, struct skiprecord *record)
 {
     char *buf = scratchspace.s;
     size_t len;
-    int n;
 
     /* we must already be in a transaction before updating records */
     assert(db->header.flags & DIRTY);
@@ -728,8 +737,8 @@ static int rewrite_record(struct dbengine *db, struct skiprecord *record)
 
     prepare_record(record, buf, &len);
 
-    n = mappedfile_pwrite(db->mf, buf, len, record->offset);
-    if (n < 0) return CYRUSDB_IOERROR;
+    if (mappedfile_pwrite(db->mf, buf, len, record->offset) < 0)
+        return CYRUSDB_IOERROR;
 
     return 0;
 }
@@ -843,6 +852,11 @@ static int append_record(struct dbengine *db, struct skiprecord *record,
 
 /* find the next record at a given level, encapsulating the
  * level 0 magic */
+#ifdef HAVE_DECLARE_OPTIMIZE
+static size_t _getloc(struct dbengine *db, struct skiprecord *record,
+                      uint8_t level)
+    __attribute__((optimize("-O3")));
+#endif
 static size_t _getloc(struct dbengine *db, struct skiprecord *record,
                       uint8_t level)
 {
@@ -852,18 +866,22 @@ static size_t _getloc(struct dbengine *db, struct skiprecord *record,
     /* if one is past, must be the other */
     if (record->nextloc[0] >= db->end)
         return record->nextloc[1];
-    else if (record->nextloc[1] >= db->end)
+    if (record->nextloc[1] >= db->end)
         return record->nextloc[0];
 
     /* highest remaining */
-    else if (record->nextloc[0] > record->nextloc[1])
+    if (record->nextloc[0] > record->nextloc[1])
         return record->nextloc[0];
-    else
-        return record->nextloc[1];
+    return record->nextloc[1];
 }
 
 /* set the next record at a given level, encapsulating the
  * level 0 magic */
+#ifdef HAVE_DECLARE_OPTIMIZE
+static void _setloc(struct dbengine *db, struct skiprecord *record,
+                    uint8_t level, size_t offset)
+    __attribute__((optimize("-O3")));
+#endif
 static void _setloc(struct dbengine *db, struct skiprecord *record,
                     uint8_t level, size_t offset)
 {
@@ -887,6 +905,10 @@ static void _setloc(struct dbengine *db, struct skiprecord *record,
 
 /* finds a record, either an exact match or the record
  * immediately before */
+#ifdef HAVE_DECLARE_OPTIMIZE
+static int relocate(struct dbengine *db)
+    __attribute__((optimize("-O3")));
+#endif
 static int relocate(struct dbengine *db)
 {
     struct skiploc *loc = &db->loc;
@@ -1018,10 +1040,7 @@ static int find_loc(struct dbengine *db, const char *key, size_t keylen)
                     loc->forwardloc[i] = _getloc(db, &newrecord, i);
 
                 /* make sure this record is complete */
-                r = check_tailcrc(db, &loc->record);
-                if (r) return r;
-
-                return 0;
+                return check_tailcrc(db, &loc->record);
             }
 
             /* or in the gap */
@@ -1530,7 +1549,7 @@ static int myfetch(struct dbengine *db,
     if (foundkey) *foundkey = db->loc.keybuf.s;
     if (foundkeylen) *foundkeylen = db->loc.keybuf.len;
 
-    if (!r && db->loc.is_exactmatch) {
+    if (db->loc.is_exactmatch) {
         if (data) *data = VAL(db, &db->loc.record);
         if (datalen) *datalen = db->loc.record.vallen;
     }
@@ -1812,7 +1831,6 @@ static int mystore(struct dbengine *db,
 {
     struct txn *localtid = NULL;
     int r = 0;
-    int r2 = 0;
 
     assert(db);
     assert(key && keylen);
@@ -1834,15 +1852,16 @@ static int mystore(struct dbengine *db,
     r = skipwrite(db, key, keylen, data, datalen, force);
 
     if (r) {
-        r2 = myabort(db, *tidptr);
+        int r2 = myabort(db, *tidptr);
         *tidptr = NULL;
+        return r2 ? r2 : r;
     }
-    else if (localtid) {
+    if (localtid) {
         /* commit the store, which releases the write lock */
         r = mycommit(db, localtid);
     }
 
-    return r2 ? r2 : r;
+    return r;
 }
 
 /* compress 'db', closing at the end.  Uses foreach to copy into a new
@@ -1975,8 +1994,21 @@ static int dump(struct dbengine *db, int detail)
         r = read_onerecord(db, offset, &record);
 
         if (r) {
-            printf("ERROR\n");
+            if (record.keyoffset)
+                printf("ERROR [HEADCRC %08lX %08lX]\n",
+                        (long unsigned) record.crc32_head,
+                        (long unsigned) crc32_map(BASE(db) + record.offset,
+                                                 record.keyoffset - 8));
+            else
+                printf("ERROR\n");
             break;
+        }
+
+        if (check_tailcrc(db, &record)) {
+            printf("ERROR [TAILCRC %08lX %08lX] ",
+                    (long unsigned) record.crc32_tail,
+                    (long unsigned) crc32_map(BASE(db) + record.keyoffset,
+                        roundup(record.keylen + record.vallen, 8)));
         }
 
         switch (record.type) {
@@ -2066,11 +2098,13 @@ static int myconsistent(struct dbengine *db, struct txn *tid)
         cmp = db->compar(KEY(db, &record), record.keylen,
                          KEY(db, &prevrecord), prevrecord.keylen);
         if (cmp <= 0) {
-            syslog(LOG_ERR, "DBERROR: twoskip out of order %s: %.*s (%08llX) <= %.*s (%08llX)",
-                   FNAME(db), (int)record.keylen, KEY(db, &record),
-                   (LLU)record.offset,
-                   (int)prevrecord.keylen, KEY(db, &prevrecord),
-                   (LLU)prevrecord.offset);
+            xsyslog(LOG_ERR, "DBERROR: twoskip out of order",
+                    "fname=<%s> key=<%.*s> offset=<%08llX>"
+                    " prevkey=<%.*s> prevoffset=<%08llX)",
+                    FNAME(db), (int)record.keylen, KEY(db, &record),
+                    (LLU)record.offset,
+                    (int)prevrecord.keylen, KEY(db, &prevrecord),
+                    (LLU)prevrecord.offset);
             return CYRUSDB_INTERNAL;
         }
 
@@ -2147,10 +2181,7 @@ static int _copy_commit(struct dbengine *db, struct dbengine *newdb,
         }
     }
 
-    if (tid) r = mycommit(newdb, tid);
-    if (r) return r;
-
-    return 0;
+    return tid ? mycommit(newdb, tid) : 0;
 
 err:
     if (tid) myabort(newdb, tid);

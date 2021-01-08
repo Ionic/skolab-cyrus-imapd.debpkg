@@ -126,6 +126,7 @@
 #include <assert.h>
 #include <string.h>
 #include "xmalloc.h"
+#include "sieve/bytecode.h"
 #include "sieve/comparator.h"
 #include "sieve/interp.h"
 #include "sieve/script.h"
@@ -134,7 +135,6 @@
 #include "sieve/grammar.h"
 #include "sieve/sieve_err.h"
 
-#include "lib/gmtoff.h"
 #include "util.h"
 #include "imparse.h"
 #include "libconfig.h"
@@ -143,9 +143,15 @@
 
 #define ERR_BUF_SIZE 1024
 
-int encoded_char = 0;  /* used to send encoded-character feedback to lexer */
-int getdatepart = 0;   /* used to send start state feedback to lexer */
-static comp_t *ctags;  /* used for accessing comp_t* in a test/command union */
+int encoded_char = 0;    /* used to send encoded-character feedback to lexer */
+static comp_t *ctags;    /* used for accessing comp_t* in a test/command union */
+static int *copy;        /* used for accessing copy flag in a command union */
+static int *create;      /* used for accessing create flag in a command union */
+static strarray_t **flags; /* used for accessing imap flags in a command union */
+static char **specialuse; /* used for accessing special-use flag in a command */
+static char **mailboxid; /* used for accessing mailboxid in a command */
+static char **fccfolder; /* used for accessing fcc.folder in a command */
+static unsigned bctype;  /* used to set the bytecode command type in mtags */
 
 extern int addrparse(sieve_script_t*);
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
@@ -158,6 +164,8 @@ void sieveerror_c(sieve_script_t*, int code, ...);
 
 static int check_reqs(sieve_script_t*, strarray_t *sl);
 static int chk_match_vars(sieve_script_t*, char *s);
+
+static unsigned bc_precompile(cmdarg_t args[], const char *fmt, ...);
 
 /* construct/canonicalize action commands */
 static commandlist_t *build_keep(sieve_script_t*, commandlist_t *c);
@@ -199,12 +207,12 @@ static test_t *build_stringt(sieve_script_t*, test_t *t,
 static test_t *build_hasflag(sieve_script_t*, test_t *t,
                              strarray_t *sl, strarray_t *pl);
 static test_t *build_date(sieve_script_t*, test_t *t,
-                          char *hn, int part, strarray_t *kl);
+                          char *hn, char *part, strarray_t *kl);
 static test_t *build_ihave(sieve_script_t*, strarray_t *sa);
 static test_t *build_mbox_meta(sieve_script_t*, test_t *t, char *extname,
                                char *keyname, strarray_t *keylist);
 static test_t *build_duplicate(sieve_script_t*, test_t *t);
-static test_t *build_jmapquery(sieve_script_t*, test_t *t, const char *json);
+static test_t *build_jmapquery(sieve_script_t*, test_t *t, char *json);
 
 static int verify_weekday(sieve_script_t *sscript, char *day);
 static int verify_time(sieve_script_t *sscript, char *time);
@@ -224,7 +232,7 @@ extern void sieverestart(FILE *f);
    larger to support big sieve scripts (see Bug #3461) */
 #define YYSTACKSIZE 10000
 
-#line 228 "sieve/sieve.c" /* yacc.c:339  */
+#line 236 "sieve/sieve.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -337,78 +345,65 @@ extern int sievedebug;
     CURRENTDATE = 333,
     ORIGINALZONE = 334,
     ZONE = 335,
-    TIMEZONE = 336,
-    YEARP = 337,
-    MONTHP = 338,
-    DAYP = 339,
-    DATEP = 340,
-    JULIAN = 341,
-    HOURP = 342,
-    MINUTEP = 343,
-    SECONDP = 344,
-    TIMEP = 345,
-    ISO8601 = 346,
-    STD11 = 347,
-    ZONEP = 348,
-    WEEKDAYP = 349,
-    INDEX = 350,
-    LAST = 351,
-    ADDHEADER = 352,
-    DELETEHEADER = 353,
-    REJCT = 354,
-    EREJECT = 355,
-    METHOD = 356,
-    OPTIONS = 357,
-    MESSAGE = 358,
-    IMPORTANCE = 359,
-    VALIDNOTIFYMETHOD = 360,
-    NOTIFYMETHODCAPABILITY = 361,
-    NOTIFY = 362,
-    ENOTIFY = 363,
-    ENCODEURL = 364,
-    DENOTIFY = 365,
-    ID = 366,
-    ANY = 367,
-    LOW = 368,
-    NORMAL = 369,
-    HIGH = 370,
-    IHAVE = 371,
-    ERROR = 372,
-    MAILBOXEXISTS = 373,
-    CREATE = 374,
-    METADATA = 375,
-    METADATAEXISTS = 376,
-    SERVERMETADATA = 377,
-    SERVERMETADATAEXISTS = 378,
-    BYTIMEREL = 379,
-    BYTIMEABS = 380,
-    BYMODE = 381,
-    BYTRACE = 382,
-    DSNNOTIFY = 383,
-    DSNRET = 384,
-    VALIDEXTLIST = 385,
-    LIST = 386,
-    INCLUDE = 387,
-    OPTIONAL = 388,
-    ONCE = 389,
-    RETURN = 390,
-    PERSONAL = 391,
-    GLOBAL = 392,
-    DUPLICATE = 393,
-    HEADER = 394,
-    UNIQUEID = 395,
-    SPECIALUSEEXISTS = 396,
-    SPECIALUSE = 397,
-    FCC = 398,
-    MAILBOXID = 399,
-    MAILBOXIDEXISTS = 400,
-    LOG = 401,
-    JMAPQUERY = 402,
-    SNOOZE = 403,
-    MAILBOX = 404,
-    ADDFLAGS = 405,
-    REMOVEFLAGS = 406,
-    WEEKDAYS = 407
+    INDEX = 336,
+    LAST = 337,
+    ADDHEADER = 338,
+    DELETEHEADER = 339,
+    REJCT = 340,
+    EREJECT = 341,
+    METHOD = 342,
+    OPTIONS = 343,
+    MESSAGE = 344,
+    IMPORTANCE = 345,
+    VALIDNOTIFYMETHOD = 346,
+    NOTIFYMETHODCAPABILITY = 347,
+    NOTIFY = 348,
+    ENOTIFY = 349,
+    ENCODEURL = 350,
+    DENOTIFY = 351,
+    ID = 352,
+    ANY = 353,
+    LOW = 354,
+    NORMAL = 355,
+    HIGH = 356,
+    IHAVE = 357,
+    ERROR = 358,
+    MAILBOXEXISTS = 359,
+    CREATE = 360,
+    METADATA = 361,
+    METADATAEXISTS = 362,
+    SERVERMETADATA = 363,
+    SERVERMETADATAEXISTS = 364,
+    BYTIMEREL = 365,
+    BYTIMEABS = 366,
+    BYMODE = 367,
+    BYTRACE = 368,
+    DSNNOTIFY = 369,
+    DSNRET = 370,
+    VALIDEXTLIST = 371,
+    LIST = 372,
+    INCLUDE = 373,
+    OPTIONAL = 374,
+    ONCE = 375,
+    RETURN = 376,
+    PERSONAL = 377,
+    GLOBAL = 378,
+    DUPLICATE = 379,
+    HEADER = 380,
+    UNIQUEID = 381,
+    SPECIALUSEEXISTS = 382,
+    SPECIALUSE = 383,
+    FCC = 384,
+    MAILBOXID = 385,
+    MAILBOXIDEXISTS = 386,
+    LOG = 387,
+    JMAPQUERY = 388,
+    SNOOZE = 389,
+    MAILBOX = 390,
+    ADDFLAGS = 391,
+    REMOVEFLAGS = 392,
+    WEEKDAYS = 393,
+    TZID = 394
   };
 #endif
 /* Tokens.  */
@@ -490,85 +485,72 @@ extern int sievedebug;
 #define CURRENTDATE 333
 #define ORIGINALZONE 334
 #define ZONE 335
-#define TIMEZONE 336
-#define YEARP 337
-#define MONTHP 338
-#define DAYP 339
-#define DATEP 340
-#define JULIAN 341
-#define HOURP 342
-#define MINUTEP 343
-#define SECONDP 344
-#define TIMEP 345
-#define ISO8601 346
-#define STD11 347
-#define ZONEP 348
-#define WEEKDAYP 349
-#define INDEX 350
-#define LAST 351
-#define ADDHEADER 352
-#define DELETEHEADER 353
-#define REJCT 354
-#define EREJECT 355
-#define METHOD 356
-#define OPTIONS 357
-#define MESSAGE 358
-#define IMPORTANCE 359
-#define VALIDNOTIFYMETHOD 360
-#define NOTIFYMETHODCAPABILITY 361
-#define NOTIFY 362
-#define ENOTIFY 363
-#define ENCODEURL 364
-#define DENOTIFY 365
-#define ID 366
-#define ANY 367
-#define LOW 368
-#define NORMAL 369
-#define HIGH 370
-#define IHAVE 371
-#define ERROR 372
-#define MAILBOXEXISTS 373
-#define CREATE 374
-#define METADATA 375
-#define METADATAEXISTS 376
-#define SERVERMETADATA 377
-#define SERVERMETADATAEXISTS 378
-#define BYTIMEREL 379
-#define BYTIMEABS 380
-#define BYMODE 381
-#define BYTRACE 382
-#define DSNNOTIFY 383
-#define DSNRET 384
-#define VALIDEXTLIST 385
-#define LIST 386
-#define INCLUDE 387
-#define OPTIONAL 388
-#define ONCE 389
-#define RETURN 390
-#define PERSONAL 391
-#define GLOBAL 392
-#define DUPLICATE 393
-#define HEADER 394
-#define UNIQUEID 395
-#define SPECIALUSEEXISTS 396
-#define SPECIALUSE 397
-#define FCC 398
-#define MAILBOXID 399
-#define MAILBOXIDEXISTS 400
-#define LOG 401
-#define JMAPQUERY 402
-#define SNOOZE 403
-#define MAILBOX 404
-#define ADDFLAGS 405
-#define REMOVEFLAGS 406
-#define WEEKDAYS 407
+#define INDEX 336
+#define LAST 337
+#define ADDHEADER 338
+#define DELETEHEADER 339
+#define REJCT 340
+#define EREJECT 341
+#define METHOD 342
+#define OPTIONS 343
+#define MESSAGE 344
+#define IMPORTANCE 345
+#define VALIDNOTIFYMETHOD 346
+#define NOTIFYMETHODCAPABILITY 347
+#define NOTIFY 348
+#define ENOTIFY 349
+#define ENCODEURL 350
+#define DENOTIFY 351
+#define ID 352
+#define ANY 353
+#define LOW 354
+#define NORMAL 355
+#define HIGH 356
+#define IHAVE 357
+#define ERROR 358
+#define MAILBOXEXISTS 359
+#define CREATE 360
+#define METADATA 361
+#define METADATAEXISTS 362
+#define SERVERMETADATA 363
+#define SERVERMETADATAEXISTS 364
+#define BYTIMEREL 365
+#define BYTIMEABS 366
+#define BYMODE 367
+#define BYTRACE 368
+#define DSNNOTIFY 369
+#define DSNRET 370
+#define VALIDEXTLIST 371
+#define LIST 372
+#define INCLUDE 373
+#define OPTIONAL 374
+#define ONCE 375
+#define RETURN 376
+#define PERSONAL 377
+#define GLOBAL 378
+#define DUPLICATE 379
+#define HEADER 380
+#define UNIQUEID 381
+#define SPECIALUSEEXISTS 382
+#define SPECIALUSE 383
+#define FCC 384
+#define MAILBOXID 385
+#define MAILBOXIDEXISTS 386
+#define LOG 387
+#define JMAPQUERY 388
+#define SNOOZE 389
+#define MAILBOX 390
+#define ADDFLAGS 391
+#define REMOVEFLAGS 392
+#define WEEKDAYS 393
+#define TZID 394
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 
 union YYSTYPE
 {
-#line 170 "sieve/sieve.y" /* yacc.c:355  */
+#line 178 "sieve/sieve.y" /* yacc.c:355  */
 
     int nval;
     char *sval;
@@ -579,7 +561,7 @@ union YYSTYPE
     testlist_t *testl;
     commandlist_t *cl;
 
-#line 583 "sieve/sieve.c" /* yacc.c:355  */
+#line 565 "sieve/sieve.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -595,7 +577,7 @@ int sieveparse (sieve_script_t *sscript);
 
 /* Copy the second part of user declarations.  */
 
-#line 599 "sieve/sieve.c" /* yacc.c:358  */
+#line 581 "sieve/sieve.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -837,21 +819,21 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  10
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   722
+#define YYLAST   717
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  161
+#define YYNTOKENS  148
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  119
+#define YYNNTS  86
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  321
+#define YYNRULES  280
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  438
+#define YYNSTATES  400
 
 /* YYTRANSLATE[YYX] -- Symbol number corresponding to YYX as returned
    by yylex, with out-of-bounds checking.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   407
+#define YYMAXUTOK   394
 
 #define YYTRANSLATE(YYX)                                                \
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -864,15 +846,15 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-     159,   160,     2,     2,   156,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,   153,
+     146,   147,     2,     2,   143,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,   140,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,   154,     2,   155,     2,     2,     2,     2,     2,     2,
+       2,   141,     2,   142,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,   157,     2,   158,     2,     2,     2,     2,
+       2,     2,     2,   144,     2,   145,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -899,47 +881,42 @@ static const yytype_uint8 yytranslate[] =
      105,   106,   107,   108,   109,   110,   111,   112,   113,   114,
      115,   116,   117,   118,   119,   120,   121,   122,   123,   124,
      125,   126,   127,   128,   129,   130,   131,   132,   133,   134,
-     135,   136,   137,   138,   139,   140,   141,   142,   143,   144,
-     145,   146,   147,   148,   149,   150,   151,   152
+     135,   136,   137,   138,   139
 };
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   358,   358,   359,   363,   364,   369,   370,   374,   375,
-     376,   388,   389,   393,   394,   398,   399,   403,   410,   417,
-     421,   422,   423,   427,   438,   439,   440,   444,   445,   452,
-     453,   454,   455,   456,   458,   461,   465,   467,   470,   474,
-     475,   478,   481,   482,   483,   484,   486,   491,   492,   497,
-     531,   532,   533,   534,   535,   536,   541,   562,   591,   624,
-     662,   663,   664,   676,   683,   693,   707,   720,   732,   748,
-     760,   776,   777,   786,   795,   804,   813,   826,   827,   830,
-     831,   834,   835,   845,   854,   859,   860,   869,   883,   893,
-     904,   915,   924,   934,   938,   964,   965,   966,   971,   972,
-     973,   978,   979,   998,   999,  1004,  1005,  1018,  1019,  1019,
-    1020,  1020,  1021,  1021,  1022,  1022,  1027,  1028,  1039,  1042,
-    1053,  1063,  1066,  1076,  1086,  1097,  1108,  1123,  1124,  1125,
-    1130,  1131,  1141,  1141,  1150,  1151,  1160,  1169,  1182,  1183,
-    1188,  1189,  1199,  1201,  1212,  1223,  1236,  1237,  1241,  1242,
-    1246,  1250,  1251,  1255,  1256,  1260,  1267,  1274,  1278,  1279,
-    1283,  1284,  1285,  1286,  1287,  1288,  1292,  1298,  1301,  1303,
-    1306,  1308,  1312,  1319,  1321,  1325,  1325,  1328,  1330,  1335,
-    1339,  1341,  1348,  1352,  1359,  1363,  1371,  1376,  1378,  1385,
-    1392,  1399,  1404,  1409,  1410,  1415,  1416,  1416,  1417,  1417,
-    1418,  1418,  1419,  1419,  1424,  1433,  1455,  1456,  1457,  1458,
-    1469,  1470,  1475,  1476,  1477,  1478,  1479,  1480,  1485,  1504,
-    1518,  1519,  1520,  1532,  1552,  1576,  1577,  1578,  1578,  1579,
-    1579,  1580,  1580,  1581,  1581,  1586,  1601,  1602,  1603,  1604,
-    1615,  1616,  1621,  1622,  1623,  1623,  1624,  1624,  1625,  1625,
-    1630,  1631,  1631,  1632,  1632,  1637,  1638,  1648,  1661,  1661,
-    1662,  1662,  1667,  1668,  1673,  1674,  1674,  1675,  1675,  1676,
-    1676,  1681,  1682,  1682,  1683,  1683,  1688,  1689,  1690,  1699,
-    1699,  1700,  1700,  1701,  1701,  1706,  1723,  1724,  1725,  1725,
-    1726,  1726,  1731,  1732,  1733,  1734,  1735,  1736,  1737,  1738,
-    1739,  1740,  1741,  1742,  1743,  1748,  1749,  1749,  1750,  1750,
-    1755,  1756,  1756,  1757,  1757,  1762,  1763,  1775,  1785,  1794,
-    1807,  1808
+       0,   362,   362,   363,   367,   368,   373,   374,   378,   379,
+     380,   392,   393,   397,   398,   402,   403,   407,   414,   421,
+     425,   426,   427,   428,   430,   434,   445,   446,   447,   451,
+     452,   457,   458,   467,   476,   489,   490,   497,   498,   499,
+     500,   501,   503,   506,   510,   515,   518,   522,   523,   526,
+     529,   530,   531,   536,   540,   545,   565,   573,   574,   575,
+     576,   577,   582,   599,   616,   634,   654,   658,   659,   671,
+     678,   688,   702,   715,   727,   743,   755,   771,   772,   781,
+     790,   799,   808,   821,   822,   825,   826,   829,   830,   842,
+     853,   858,   866,   875,   889,   899,   910,   921,   930,   940,
+     944,   960,   961,   962,   963,   968,   969,   970,   975,   976,
+     995,   996,  1001,  1002,  1015,  1019,  1020,  1021,  1022,  1027,
+    1028,  1039,  1049,  1060,  1070,  1073,  1083,  1093,  1104,  1115,
+    1130,  1131,  1132,  1137,  1141,  1151,  1160,  1166,  1176,  1177,
+    1178,  1180,  1196,  1212,  1222,  1235,  1236,  1240,  1241,  1245,
+    1249,  1250,  1254,  1255,  1259,  1266,  1273,  1277,  1278,  1282,
+    1283,  1284,  1285,  1286,  1287,  1293,  1302,  1305,  1307,  1310,
+    1312,  1316,  1323,  1325,  1328,  1331,  1334,  1341,  1345,  1347,
+    1354,  1354,  1358,  1365,  1365,  1369,  1377,  1384,  1386,  1393,
+    1400,  1407,  1412,  1417,  1418,  1423,  1427,  1428,  1429,  1430,
+    1435,  1445,  1467,  1468,  1469,  1470,  1483,  1484,  1489,  1490,
+    1491,  1492,  1493,  1494,  1499,  1519,  1534,  1535,  1536,  1550,
+    1561,  1576,  1595,  1599,  1600,  1601,  1602,  1603,  1608,  1623,
+    1624,  1625,  1626,  1637,  1638,  1643,  1647,  1648,  1649,  1650,
+    1655,  1659,  1660,  1665,  1669,  1679,  1692,  1693,  1698,  1699,
+    1704,  1708,  1709,  1710,  1715,  1719,  1720,  1725,  1729,  1730,
+    1739,  1740,  1741,  1746,  1763,  1767,  1768,  1769,  1774,  1779,
+    1780,  1785,  1790,  1791,  1796,  1797,  1809,  1819,  1828,  1841,
+    1842
 };
 #endif
 
@@ -959,9 +936,7 @@ static const char *const yytname[] =
   "DAYS", "SUBJECT", "FROM", "ADDRESSES", "MIME", "HANDLE", "SECONDS",
   "COUNT", "VALUE", "GT", "GE", "LT", "LE", "EQ", "NE", "FLAGS", "HASFLAG",
   "SETFLAG", "ADDFLAG", "REMOVEFLAG", "MARK", "UNMARK", "USER", "DETAIL",
-  "DATE", "CURRENTDATE", "ORIGINALZONE", "ZONE", "TIMEZONE", "YEARP",
-  "MONTHP", "DAYP", "DATEP", "JULIAN", "HOURP", "MINUTEP", "SECONDP",
-  "TIMEP", "ISO8601", "STD11", "ZONEP", "WEEKDAYP", "INDEX", "LAST",
+  "DATE", "CURRENTDATE", "ORIGINALZONE", "ZONE", "INDEX", "LAST",
   "ADDHEADER", "DELETEHEADER", "REJCT", "EREJECT", "METHOD", "OPTIONS",
   "MESSAGE", "IMPORTANCE", "VALIDNOTIFYMETHOD", "NOTIFYMETHODCAPABILITY",
   "NOTIFY", "ENOTIFY", "ENCODEURL", "DENOTIFY", "ID", "ANY", "LOW",
@@ -972,24 +947,21 @@ static const char *const yytname[] =
   "PERSONAL", "GLOBAL", "DUPLICATE", "HEADER", "UNIQUEID",
   "SPECIALUSEEXISTS", "SPECIALUSE", "FCC", "MAILBOXID", "MAILBOXIDEXISTS",
   "LOG", "JMAPQUERY", "SNOOZE", "MAILBOX", "ADDFLAGS", "REMOVEFLAGS",
-  "WEEKDAYS", "';'", "'['", "']'", "','", "'{'", "'}'", "'('", "')'",
-  "$accept", "start", "reqs", "commands", "command", "optstringlist",
-  "stringlist", "strings", "string1", "string", "require", "control",
-  "thenelse", "elsif", "block", "action", "ktags", "flags", "ftags",
-  "copy", "create", "specialuse", "mailboxid", "rtags", "delbytags",
-  "dsntags", "stags", "mod40", "mod30", "mod20", "mod15", "mod10", "vtags",
-  "fcctags", "flagaction", "flagtags", "flagmark", "ahtags", "dhtags",
-  "$@1", "$@2", "$@3", "$@4", "reject", "ntags", "priority", "dtags",
-  "$@5", "itags", "location", "sntags", "weekdaylist", "weekdays",
-  "weekday", "timelist", "times", "time1", "time", "testlist", "tests",
-  "test", "$@6", "sizetag", "htags", "$@7", "$@8", "$@9", "$@10",
-  "matchtype", "matchtag", "relmatch", "relation", "listmatch",
-  "comparator", "collation", "idxtags", "atags", "$@11", "$@12", "$@13",
-  "$@14", "addrpart", "addrparttag", "subaddress", "etags", "$@15", "$@16",
-  "$@17", "envtags", "$@18", "$@19", "btags", "$@20", "$@21", "transform",
-  "strtags", "$@22", "$@23", "$@24", "hftags", "$@25", "$@26", "dttags",
-  "$@27", "$@28", "$@29", "zone", "cdtags", "$@30", "$@31", "datepart",
-  "methtags", "$@32", "$@33", "mtags", "$@34", "$@35", "duptags", "idtype", YY_NULLPTR
+  "WEEKDAYS", "TZID", "';'", "'['", "']'", "','", "'{'", "'}'", "'('",
+  "')'", "$accept", "start", "reqs", "commands", "command",
+  "optstringlist", "stringlist", "strings", "string1", "string", "require",
+  "control", "thenelse", "elsif", "block", "itags", "location", "action",
+  "ktags", "flags", "ftags", "copy", "create", "specialuse", "mailboxid",
+  "rtags", "delbytags", "dsntags", "stags", "mod40", "mod30", "mod20",
+  "mod15", "mod10", "vtags", "fcctags", "flagaction", "flagtags",
+  "flagmark", "ahtags", "dhtags", "reject", "ntags", "priority", "dtags",
+  "sntags", "weekdaylist", "weekdays", "weekday", "timelist", "times",
+  "time1", "time", "testlist", "tests", "test", "$@1", "$@2", "sizetag",
+  "htags", "matchtype", "matchtag", "relmatch", "relation", "listmatch",
+  "comparator", "collation", "indexext", "index", "atags", "addrpart",
+  "addrparttag", "subaddress", "etags", "envtags", "btags", "transform",
+  "strtags", "hftags", "dttags", "zone", "cdtags", "methtags", "mtags",
+  "duptags", "idtype", YY_NULLPTR
 };
 #endif
 
@@ -1012,18 +984,16 @@ static const yytype_uint16 yytoknum[] =
      365,   366,   367,   368,   369,   370,   371,   372,   373,   374,
      375,   376,   377,   378,   379,   380,   381,   382,   383,   384,
      385,   386,   387,   388,   389,   390,   391,   392,   393,   394,
-     395,   396,   397,   398,   399,   400,   401,   402,   403,   404,
-     405,   406,   407,    59,    91,    93,    44,   123,   125,    40,
-      41
+      59,    91,    93,    44,   123,   125,    40,    41
 };
 # endif
 
-#define YYPACT_NINF -346
+#define YYPACT_NINF -350
 
 #define yypact_value_is_default(Yystate) \
-  (!!((Yystate) == (-346)))
+  (!!((Yystate) == (-350)))
 
-#define YYTABLE_NINF -314
+#define YYTABLE_NINF -18
 
 #define yytable_value_is_error(Yytable_value) \
   0
@@ -1032,50 +1002,46 @@ static const yytype_uint16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int16 yypact[] =
 {
-      29,     1,    13,   430,    29,  -346,    38,  -109,  -346,  -346,
-    -346,  -102,   495,   -80,  -346,  -346,  -346,  -346,  -346,  -346,
-    -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,
-    -346,    38,  -346,  -346,    38,  -346,  -346,   270,  -346,   -77,
-    -346,  -346,    38,  -346,   -87,  -346,  -346,  -346,  -346,   -81,
-     -81,     1,   495,  -346,  -346,    76,  -346,  -346,  -346,  -346,
-    -346,  -346,  -346,  -346,  -346,     1,  -346,     1,     1,  -346,
-      38,  -346,     1,     1,  -346,     1,     1,    38,  -346,   -76,
-    -346,    17,    45,   105,   360,   253,     0,     2,   148,   -22,
-     -49,    62,  -346,    23,  -346,  -346,     1,  -346,  -346,    38,
-     495,  -346,  -346,  -346,  -346,  -346,  -346,   104,    -1,     4,
-      11,     6,    37,     5,    30,    32,   561,  -346,    48,  -346,
-    -346,    66,     1,    66,  -346,  -346,   160,  -346,     1,  -346,
-    -346,   349,   119,     1,  -346,  -346,  -346,    38,    38,  -346,
-    -346,  -346,  -346,  -346,  -346,   111,    38,    38,  -346,    38,
-      38,  -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,
-    -346,  -346,  -346,  -346,    38,  -346,  -346,  -346,  -346,  -346,
-     120,    38,    38,     1,  -346,    38,   134,    38,  -346,  -346,
-    -346,  -346,  -346,  -346,    38,     1,   108,    35,   137,    51,
-      38,    38,     1,    38,   -95,    38,  -346,  -346,  -346,  -346,
-    -346,  -346,  -346,   108,  -346,  -346,  -346,  -346,  -346,  -346,
-    -346,  -346,    38,     1,     1,     3,   174,  -346,  -346,  -346,
-    -346,  -346,    28,  -346,    25,    44,  -346,     1,   108,    35,
-     137,    51,  -346,  -346,  -346,  -346,  -346,     1,   108,    35,
-     137,    51,  -346,  -346,  -346,     1,  -346,   108,    35,   137,
-    -346,  -346,     1,  -346,   108,   137,  -346,     1,   108,   137,
-       1,   108,    35,   137,     1,   108,   137,  -346,   107,  -346,
-     108,   137,    51,  -346,  -346,  -346,  -346,  -346,  -346,  -346,
-    -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,   108,   137,
-       1,    38,   108,   137,    38,   108,   137,  -346,     1,    38,
-     190,  -346,  -346,  -346,    38,  -346,  -346,    49,   495,   -76,
-    -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,
-    -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,
-    -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,   222,  -346,
-    -346,   157,  -346,   199,  -346,  -346,  -346,  -346,  -346,  -346,
-    -346,  -346,    38,  -346,  -346,  -346,  -346,   216,  -346,  -346,
-      -6,  -346,  -346,   495,  -346,  -346,  -346,  -346,  -346,  -346,
-    -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,
-    -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,
-    -346,  -346,   616,  -346,  -346,  -346,  -346,  -346,  -346,     1,
-    -346,  -346,     1,  -346,  -346,  -346,  -346,  -346,  -346,  -346,
-    -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,
-    -346,  -346,  -346,  -346,  -346,    56,  -346,  -346,   174,  -346,
-       1,  -346,  -346,  -346,   216,  -346,  -346,  -346
+       6,     2,    16,   472,     6,  -350,    14,  -117,  -350,  -350,
+    -350,  -102,   566,   -95,  -350,  -350,  -350,  -350,  -350,  -350,
+    -350,  -350,  -350,  -350,  -350,  -350,  -350,  -350,  -350,  -350,
+    -350,    14,  -350,   -91,    14,  -350,  -350,   277,  -350,   -81,
+    -350,  -350,    14,  -350,  -122,  -350,  -350,  -350,  -350,  -103,
+    -103,     2,   566,  -350,  -350,    42,  -350,  -350,  -350,  -350,
+    -350,  -350,  -350,  -350,  -350,     2,  -350,     2,     2,  -350,
+      14,  -350,     2,     2,  -350,     2,     2,    14,  -350,   -55,
+    -350,    -3,    89,   279,   247,   558,     5,   567,   399,   478,
+     -59,    60,  -350,  -350,   122,  -350,  -350,     2,  -350,  -350,
+      14,   566,  -350,  -350,  -350,  -350,  -350,  -350,    95,    70,
+     132,   296,   400,   403,    79,   307,   635,   489,  -350,   403,
+    -350,  -350,  -350,     2,  -350,  -350,  -350,   -34,  -350,     2,
+    -350,  -350,   373,    71,     2,  -350,  -350,  -350,    14,    14,
+    -350,  -350,  -350,  -350,  -350,  -350,   109,    14,    14,  -350,
+      14,    14,  -350,  -350,  -350,  -350,  -350,  -350,  -350,  -350,
+    -350,  -350,  -350,  -350,  -350,    14,  -350,  -350,  -350,  -350,
+    -350,   110,    14,    14,     2,  -350,    14,   111,    14,  -350,
+    -350,  -350,  -350,  -350,  -350,  -350,    14,     7,  -350,  -350,
+    -350,  -350,  -350,  -350,   115,  -350,  -350,     2,  -350,  -350,
+     468,  -350,  -350,  -350,    14,    14,     2,    14,   -38,    14,
+    -350,  -350,  -350,  -350,  -350,  -350,  -350,    14,  -350,  -350,
+    -350,  -350,  -350,   -18,  -350,  -350,    14,     2,     2,     3,
+      14,   119,  -350,  -350,  -350,  -350,  -350,  -350,  -350,   -16,
+    -350,   -22,   -15,  -350,     2,  -350,  -350,  -350,  -350,  -350,
+    -350,  -350,  -350,  -350,  -350,     2,  -350,  -350,  -350,  -350,
+    -350,  -350,  -350,     2,  -350,  -350,  -350,  -350,  -350,  -350,
+       2,  -350,  -350,  -350,  -350,     2,  -350,  -350,     2,  -350,
+    -350,  -350,     2,  -350,  -350,  -350,    14,    14,  -350,  -350,
+    -350,  -350,     2,  -350,  -350,  -350,    14,  -350,  -350,   403,
+    -350,   403,    14,   126,  -350,  -350,  -350,    14,  -350,  -350,
+     -13,   566,   -55,  -350,  -350,  -350,  -350,  -350,  -350,  -350,
+    -350,  -350,  -350,  -350,  -350,  -350,  -350,  -350,  -350,  -350,
+    -350,  -350,  -350,  -350,  -350,  -350,  -350,  -350,  -350,  -350,
+    -350,  -350,  -350,  -350,  -350,  -350,  -350,  -350,  -350,  -350,
+    -350,  -350,  -350,  -350,  -350,  -350,  -350,   129,  -350,  -350,
+    -350,   -63,  -350,  -350,   566,  -350,  -350,  -350,  -350,  -350,
+    -350,  -350,  -350,     2,  -350,     2,    14,  -350,  -350,     2,
+    -350,  -350,  -350,  -350,  -350,  -350,   -46,  -350,  -350,   119,
+    -350,  -350,  -350,     2,  -350,  -350,   129,  -350,  -350,  -350
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -1084,83 +1050,73 @@ static const yytype_int16 yypact[] =
 static const yytype_uint16 yydefact[] =
 {
        4,     0,     0,     0,     4,    18,     0,     0,    13,    17,
-       1,     0,     0,     0,    32,    47,    50,    60,    71,    85,
-      98,    99,   100,   103,   104,   105,   107,   116,   117,   118,
-     130,     0,   134,    46,     0,   140,     3,     0,     8,     0,
-     101,    36,     0,     5,     0,    15,    19,    10,   192,     0,
-       0,     0,     0,   163,   164,     0,   195,   225,   242,   255,
-     250,   264,   271,   276,   286,     0,   305,     0,     0,   310,
-       0,   310,     0,     0,   315,     0,     0,     0,    20,     0,
-      21,    29,     0,     0,     0,     0,     0,   108,    41,   132,
-       0,     0,    44,     0,     7,     9,     0,    39,    14,     0,
-       0,   160,   161,   165,   162,   193,   194,     0,   196,   227,
-     244,   258,   251,   265,   272,   279,   288,   178,   306,   180,
-     181,   311,     0,   311,   185,   186,   187,   188,    17,   190,
-     191,     0,    24,     0,    48,    56,    57,     0,     0,    30,
-      52,    51,    53,    54,    55,     0,     0,     0,    68,     0,
-       0,    62,    31,    61,    63,    64,    82,    77,    78,    79,
-      80,    81,    84,    83,     0,    72,    73,    74,    75,    76,
-       0,     0,     0,     0,    91,     0,     0,     0,    34,    96,
-      95,    97,    93,   106,     0,    11,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,   127,   128,   129,    40,
-     121,   124,   131,     0,    22,   137,   136,   138,   139,    43,
-     135,   156,     0,     0,     0,     0,     0,   142,    45,   151,
-     155,    35,   102,    16,     0,   158,   166,     0,     0,     0,
-       0,     0,   236,   237,   238,   240,   241,     0,     0,     0,
-       0,     0,   226,   235,   239,     0,   243,     0,     0,     0,
-     262,   263,     0,   170,     0,     0,   256,     0,     0,     0,
-       0,     0,     0,     0,   174,     0,     0,   278,     0,   175,
-       0,     0,     0,   277,   292,   293,   294,   295,   296,   297,
-     298,   299,   300,   301,   302,   303,   304,   287,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,   183,     0,     0,
-       0,   319,   320,   321,     0,   189,    28,     0,     0,     0,
-      23,    49,    58,    59,    65,    66,    67,    69,    70,    33,
-      86,    88,    89,    90,    92,    87,    94,    37,    38,    12,
-     206,   207,   208,   209,   210,   211,   109,   204,     0,   218,
-     111,     0,   113,     0,   224,   115,   119,   123,   126,   125,
-     120,   122,     0,   141,   143,   144,   150,     0,   145,   146,
-       0,   153,   157,     0,   167,   197,   199,   201,   203,   168,
-     228,   230,   232,   234,   169,   245,   247,   249,   257,   259,
-     261,   171,   252,   254,   172,   266,   268,   270,   173,   273,
-     275,   285,     0,   280,   282,   284,   289,   291,   177,     0,
-     307,   309,     0,   312,   314,   184,   317,   318,   316,    27,
-      25,    26,   214,   215,   216,   217,   212,   213,   205,   220,
-     221,   222,   219,   223,   133,     0,   148,   152,     0,   159,
-       0,   179,   182,   147,     0,   154,   176,   149
+       1,     0,     0,     0,    40,    53,    56,    66,    77,    91,
+     105,   106,   107,   110,   111,   112,   114,   119,   120,   121,
+     133,     0,    31,     0,     0,   136,     3,     0,     8,     0,
+     108,    44,     0,     5,     0,    15,    19,    10,   192,     0,
+       0,     0,     0,   162,   163,     0,   195,   222,   235,   243,
+     240,   250,   254,   257,   264,     0,   268,     0,     0,   180,
+       0,   183,     0,     0,   274,     0,     0,     0,    20,     0,
+      21,    37,     0,     0,     0,     0,     0,     0,    49,    50,
+       0,     0,    24,    51,     0,     7,     9,     0,    47,    14,
+       0,     0,   159,   160,   164,   161,   193,   194,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,   176,     0,
+     178,   179,   271,     0,   271,   185,   186,   187,   188,    17,
+     190,   191,     0,    26,     0,    54,    62,    63,     0,     0,
+      38,    58,    57,    59,    60,    61,     0,     0,     0,    74,
+       0,     0,    68,    39,    67,    69,    70,    88,    83,    84,
+      85,    86,    87,    90,    89,     0,    78,    79,    80,    81,
+      82,     0,     0,     0,     0,    97,     0,     0,     0,    42,
+     102,   101,   103,   104,    99,   113,     0,     0,   202,   203,
+     204,   205,   206,   207,     0,   221,   214,    11,   115,   200,
+       0,   116,   117,   118,     0,     0,     0,     0,     0,     0,
+     130,   131,   132,    48,   124,   127,   134,     0,    22,    34,
+      33,    35,    36,     0,    32,   155,     0,     0,     0,     0,
+       0,     0,   138,   139,   140,    52,   150,   154,    43,   109,
+      16,     0,   157,   165,     0,   196,   197,   198,   199,   219,
+     229,   230,   231,   233,   234,     0,   224,   225,   226,   227,
+     223,   228,   232,     0,   237,   238,   239,   236,   248,   249,
+       0,   169,   246,   247,   244,     0,   241,   242,     0,   251,
+     252,   253,   173,   255,   256,   259,     0,     0,   260,   261,
+     262,   258,     0,   266,   267,   265,     0,   269,   270,     0,
+     182,     0,     0,     0,   278,   279,   280,     0,   189,    30,
+       0,     0,     0,    25,    55,    64,    65,    71,    72,    73,
+      75,    76,    41,    92,    94,    95,    96,    98,    93,   100,
+      45,   216,   217,   218,   215,   220,    46,    12,   210,   211,
+     212,   213,   208,   209,   201,   122,   126,   129,   128,   123,
+     125,   135,    23,   137,   141,   142,   149,     0,   143,   145,
+     144,     0,   152,   156,     0,   166,   167,   168,   245,   170,
+     171,   172,   263,     0,   175,     0,     0,   272,   273,     0,
+     276,   277,   275,    29,    27,    28,     0,   147,   151,     0,
+     158,   174,   177,     0,   184,   146,     0,   153,   181,   148
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int16 yypgoto[] =
 {
-    -346,  -346,   217,   -26,  -346,  -346,   -51,  -346,   219,    33,
-    -346,  -346,   -86,  -346,   -82,  -346,  -346,   133,  -346,   152,
-     155,   156,   147,  -346,  -346,  -346,  -346,  -346,  -346,  -346,
-    -346,  -346,  -346,   153,  -346,  -346,  -346,  -346,  -346,  -346,
-    -346,  -346,  -346,  -346,  -346,   -88,  -346,  -346,  -346,  -346,
-    -346,  -346,  -346,  -345,  -346,  -346,    26,  -185,   194,  -117,
-     -50,  -346,  -346,  -346,  -346,  -346,  -346,  -346,   332,  -346,
-    -346,  -346,  -174,   426,  -346,  -188,  -346,  -346,  -346,  -346,
-    -346,   138,  -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,
-    -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,  -346,
-    -346,  -346,  -346,  -346,  -346,  -346,   139,  -346,  -346,  -346,
-    -139,  -346,  -346,  -346,   183,  -346,  -346,  -346,  -346
+    -350,  -350,   133,   -33,  -350,  -350,   -39,  -350,   140,   -31,
+    -350,  -350,  -173,  -350,  -164,  -350,  -350,  -350,  -350,    23,
+    -350,    66,   -77,   -72,   -67,  -350,  -350,  -350,  -350,  -350,
+    -350,  -350,  -350,  -350,  -350,    62,  -350,  -350,  -350,  -350,
+    -350,  -350,  -350,   -87,  -350,  -350,  -350,  -350,  -349,  -350,
+    -350,   -78,  -235,   116,  -199,   -51,  -350,  -350,  -350,  -350,
+     591,  -350,  -350,  -350,   -79,   193,  -350,   -97,    82,  -350,
+      59,  -350,  -350,  -350,  -350,  -350,  -350,  -350,  -350,  -350,
+      54,  -350,  -350,    48,  -350,  -350
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int16 yydefgoto[] =
 {
-      -1,     2,     3,    36,    37,   328,     7,    44,     8,     9,
-       4,    38,    78,   310,   132,    39,    81,   179,    82,   141,
-     180,   181,   144,    83,   154,   155,    84,   165,   166,   167,
-     168,   169,    85,   182,    40,    96,    41,    86,    87,   186,
-     187,   188,   189,    42,    88,   201,    89,   203,    91,   210,
-      93,   358,   425,   359,   218,   360,   219,   220,   101,   224,
-      79,   392,   107,   108,   228,   229,   230,   231,   336,   337,
-     338,   418,   340,   342,   422,   345,   109,   238,   239,   240,
-     241,   242,   243,   244,   110,   247,   248,   249,   112,   258,
-     259,   111,   254,   255,   256,   113,   261,   262,   263,   114,
-     265,   266,   115,   270,   271,   272,   273,   116,   288,   289,
-     290,   118,   292,   293,   121,   295,   296,   126,   304
+      -1,     2,     3,    36,    37,   336,     7,    44,     8,     9,
+       4,    38,    78,   313,   133,    91,   224,    39,    81,   180,
+      82,   142,   181,   182,   183,    83,   155,   156,    84,   166,
+     167,   168,   169,   170,    85,   184,    40,    97,    41,    86,
+      87,    42,    88,   215,    89,    94,   358,   386,   359,   235,
+     361,   236,   237,   102,   241,    79,   122,   124,   108,   109,
+     377,   199,   200,   344,   201,   378,   334,   248,   249,   110,
+     260,   261,   262,   111,   113,   112,   274,   114,   115,   116,
+     291,   117,   119,   299,   127,   307
 };
 
   /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -1168,244 +1124,234 @@ static const yytype_int16 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int16 yytable[] =
 {
-     103,   202,   104,     5,     5,     5,     5,   356,     5,     5,
-       5,    94,   426,    10,   117,     5,   119,   120,   196,   197,
-     198,   124,   125,  -200,   127,   129,  -112,   211,  -231,  -269,
-    -260,   232,   233,   234,     5,  -248,     5,     1,   232,   233,
-     234,     5,     5,   368,    46,   221,   250,   251,   252,     5,
-     225,    47,     5,   373,  -274,   366,  -281,   227,   237,   245,
-     253,  -253,   260,   264,    90,   371,     5,    92,    98,    99,
-       5,   297,  -308,    80,   376,    97,    95,   305,   100,   235,
-     236,   131,   311,   135,   395,   133,   235,   236,   386,   437,
-    -313,   196,   197,   198,  -202,  -202,   183,  -114,  -114,  -233,
-    -233,   105,   106,   122,   204,   307,   350,   226,   128,     5,
-     130,   267,   268,   133,   314,   139,   152,   164,   178,   184,
-     185,   199,   323,   320,   209,   308,   309,  -283,  -283,   222,
-    -198,   -42,   223,  -110,   329,  -229,  -267,   325,   330,   331,
-     332,   348,  -246,   135,   333,   257,   343,   344,   269,   427,
-     428,   291,     5,     6,   294,     6,   298,   357,     6,     6,
-       6,   341,   354,   355,   136,     6,   339,   138,   334,   335,
-     312,   313,   212,   213,   214,   215,   364,   216,   211,   315,
-     316,   -17,   317,   318,     6,   362,   369,   137,   391,   138,
-     419,   420,   421,   407,   374,   205,   206,   319,   207,   208,
-     363,   378,   423,   190,   321,   322,   381,   409,   324,   384,
-     326,   433,   434,   388,   134,   140,   133,   327,   299,   300,
-     356,    43,   410,   346,   347,    45,   349,   411,   351,   145,
-     146,   147,   148,   149,   150,   153,   151,   142,   143,   398,
-     217,   200,   361,   435,   102,   353,   429,   405,   246,   191,
-     192,   193,   194,   430,   123,   287,   301,     5,     0,   195,
-       0,   196,   197,   198,     0,     0,     0,   136,     0,     0,
-      -6,    11,     0,     0,     0,    12,     0,     0,     0,    13,
-      14,    15,    16,    17,   412,   413,   414,   415,   416,   417,
-     137,   177,     0,     0,     0,     0,     0,     0,     0,   302,
-     303,     0,     0,     0,     0,     0,   170,   171,   172,   173,
-     174,   175,   176,   225,     0,    18,     0,     0,     0,     0,
-       0,   133,    19,     0,   399,     0,     0,   402,     0,     0,
-       0,     0,   406,     0,     0,     0,     0,   408,     0,     0,
-      20,    21,    22,    23,    24,     0,     0,     0,   431,     0,
-      11,   432,     0,     0,    12,     0,     0,     0,    13,    14,
-      15,    16,    17,     0,     5,     0,     0,    25,    26,    27,
-      28,     0,   136,     0,     0,     0,     0,    29,     0,   436,
-      30,     0,     0,     0,     0,   424,     0,    31,     0,     0,
-       0,     0,     0,     0,    18,   137,   177,   156,     0,     0,
-       0,    19,    32,     0,     0,    33,   157,   158,   159,   160,
-     161,   162,     0,     0,     0,     0,    34,     0,    35,    20,
-      21,    22,    23,    24,     0,     0,     0,     0,    -6,     0,
-      -2,    11,     0,     0,     0,    12,     0,     0,     0,    13,
-      14,    15,    16,    17,     0,     0,    25,    26,    27,    28,
-       0,     0,     0,     0,     0,     0,    29,     0,     0,    30,
-       0,     0,     0,     0,     0,     0,    31,     0,     0,   163,
-       0,     0,     0,     0,     0,    18,     0,     0,     0,     0,
-       0,    32,    19,     0,    33,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,    34,    48,    35,     0,     0,
-      20,    21,    22,    23,    24,     0,     0,   306,     0,    49,
-      50,    51,    52,    53,    54,    55,    56,    57,    58,     0,
-       0,     0,     0,     0,     0,     0,     0,    25,    26,    27,
-      28,     0,     0,     0,    59,   352,     0,    29,    60,    61,
-      30,     0,     0,     0,     0,     0,     0,    31,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-     365,     0,    32,     0,    62,    33,     0,     0,     0,     0,
-     370,     0,    63,    64,     0,     0,    34,     0,    35,   375,
-       0,     0,     0,     0,     0,  -290,   379,     0,     0,     0,
-     382,     0,     0,   385,     0,     0,     0,   389,     0,     0,
-      65,    66,   393,     0,     0,     0,     0,     0,     0,     0,
-       0,    67,     0,    68,     0,    69,    70,    71,    72,     0,
-     396,     0,     0,     0,   400,    73,     0,   403,     0,     0,
-       0,     0,     0,    74,     0,     0,    75,     0,     0,     0,
-      76,   268,    77,   274,   275,   276,   277,   278,   279,   280,
-     281,   282,   283,   284,   285,   286,   367,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,   372,     0,     0,     0,
-       0,     0,     0,     0,     0,   377,     0,     0,     0,     0,
-       0,   380,     0,     0,     0,   383,     0,     0,     0,   387,
-       0,     0,   390,     0,     0,     0,     0,   394,   274,   275,
-     276,   277,   278,   279,   280,   281,   282,   283,   284,   285,
-     286,     0,     0,     0,     0,   397,     0,     0,     0,   401,
-       0,     0,   404
+      90,   105,   216,    93,    95,   143,     5,   356,   387,     5,
+     144,    98,   104,   259,     1,   145,    10,   232,     5,   290,
+      99,   100,   233,    46,   302,   303,   118,   234,   120,   121,
+     246,   257,   265,   125,   126,   280,   128,   130,    47,   123,
+     331,   332,   333,   101,   129,    80,   131,   399,   304,    92,
+     242,   140,   153,   165,   179,   186,   197,   213,   238,    96,
+     223,   210,   211,   212,     5,   134,   239,   106,   107,   240,
+     244,   255,   263,   271,     5,   278,   282,   311,   312,   388,
+     389,   218,   275,     5,   300,   287,   292,   185,   296,   132,
+     308,   305,   306,     5,   187,   314,   395,   396,   243,   310,
+     188,   189,   190,   187,   135,   141,   191,   315,   316,   188,
+     189,   190,   317,   323,   328,   191,   318,   319,   335,   320,
+     321,   349,   352,   225,   -17,   363,   225,   136,   364,   381,
+     192,   193,   383,   356,   322,   326,     5,    43,   384,   192,
+     193,   324,   325,     6,   357,   327,    45,   329,   385,   154,
+     214,   194,   195,   362,   397,   330,   187,   134,   337,   250,
+     251,   252,   188,   189,   190,   390,   103,   347,   191,   203,
+     267,   295,   301,   345,   346,     0,   348,     0,   350,   219,
+     220,     0,   221,   222,     0,     0,   351,   196,   354,   355,
+       0,     0,   192,   193,   137,   353,   196,     0,     0,   360,
+       0,     0,     0,     0,     0,   365,     0,   253,   254,     0,
+       0,     6,     0,   194,   195,     0,   366,   138,     0,   139,
+       6,     0,     0,     0,   367,     0,     0,   137,     0,     0,
+       0,   368,     0,     0,     0,     0,   369,     0,     0,   370,
+       0,     0,     0,   371,     0,     0,     0,     0,     0,   196,
+     138,     5,   139,   374,     0,   372,   373,   226,   227,   228,
+     229,   230,     0,   231,     0,   375,     0,     0,   376,     0,
+     379,   380,     0,     6,     0,     0,   382,    -6,    11,     0,
+     202,     0,    12,     5,   157,     0,    13,    14,    15,    16,
+      17,     0,     0,   158,   159,   160,   161,   162,   163,     0,
+       5,     0,   247,   258,   266,   273,   277,   281,   284,   289,
+     294,     5,   298,   242,     0,     0,     0,   136,     0,     0,
+     187,     0,    18,   250,   251,   252,   188,   189,   190,    19,
+       0,   187,   191,     0,   391,     0,   392,   188,   189,   190,
+     394,     0,   164,   191,     0,   393,     0,    20,    21,    22,
+      23,    24,     0,     0,   398,     0,   192,   193,     0,     0,
+      25,    26,    27,    28,     0,     0,     0,   192,   193,     0,
+      29,   253,   254,    30,    11,     0,     0,     0,    12,     0,
+      31,     0,    13,    14,    15,    16,    17,     0,     0,   146,
+     147,   148,   149,   150,   151,    32,   152,     0,    33,     0,
+       0,     0,     0,     5,     5,     0,     0,     5,     0,    34,
+       0,    35,     0,   196,     0,     0,     0,     0,    18,     0,
+       0,     0,    -6,     0,   187,    19,     0,   187,     0,     0,
+     188,   189,   190,   188,   189,   190,   191,     6,     0,   191,
+     268,   269,   270,    20,    21,    22,    23,    24,     6,     0,
+       0,     0,     0,     0,   204,     0,    25,    26,    27,    28,
+     192,   193,     0,   192,   193,     0,    29,   134,     0,    30,
+       0,     0,    -2,    11,     0,     0,    31,    12,     0,     0,
+       0,    13,    14,    15,    16,    17,   205,   206,   207,   208,
+       0,    32,     0,     5,    33,     0,   209,     0,   210,   211,
+     212,     0,     0,     0,   137,    34,     0,    35,   188,   189,
+     190,     0,     0,   187,   191,     0,     0,    18,   309,   188,
+     189,   190,     0,     0,    19,   191,     0,   138,   178,   139,
+     338,   339,   340,   341,   342,   343,     0,     0,   192,   193,
+       0,     6,    20,    21,    22,    23,    24,     0,     0,   192,
+     193,     0,     0,     0,     0,    25,    26,    27,    28,     0,
+       0,     0,     5,     0,     0,    29,     0,    48,    30,   286,
+       0,     5,     0,     0,     0,    31,     0,   210,   211,   212,
+      49,    50,    51,    52,    53,    54,    55,    56,    57,    58,
+      32,   187,     0,    33,     0,     0,     0,   188,   189,   190,
+       0,     0,     0,   191,    34,    59,    35,     0,     0,    60,
+      61,   171,   172,   173,   174,   175,   176,   177,     0,     0,
+       0,     0,     0,     0,     0,     0,   134,   192,   193,     0,
+       0,     0,     0,     0,     0,    62,     0,     0,     0,     5,
+       0,     0,     0,    63,    64,     0,     0,     0,   194,   195,
+       0,     0,     0,     0,     0,     0,     0,    65,    66,   187,
+       0,     0,     0,   137,     0,   188,   189,   190,    67,     0,
+      68,   191,    69,    70,    71,    72,     0,     0,   198,     0,
+     217,     0,    73,     0,   196,     0,   138,   178,   139,     0,
+      74,     0,     0,    75,     0,   192,   193,    76,     0,    77,
+     245,   256,   264,   272,   276,   279,   283,   288,   293,     0,
+     297,     0,     0,     0,   285,   286,   194,   195
 };
 
 static const yytype_int16 yycheck[] =
 {
-      51,    89,    52,     4,     4,     4,     4,     4,     4,     4,
-       4,    37,   357,     0,    65,     4,    67,    68,   113,   114,
-     115,    72,    73,    24,    75,    76,    24,     4,    24,    24,
-      24,    27,    28,    29,     4,    24,     4,     8,    27,    28,
-      29,     4,     4,   231,   153,    96,    40,    41,    42,     4,
-     100,   153,     4,   241,    24,   229,    24,   108,   109,   110,
-     111,    24,   113,   114,    31,   239,     4,    34,   155,   156,
-       4,   122,    24,   153,   248,    42,   153,   128,   159,    75,
-      76,   157,   133,    38,   272,    68,    75,    76,   262,   434,
-      24,   113,   114,   115,    95,    96,    96,    95,    96,    95,
-      96,    25,    26,    70,   153,   131,   194,     3,    75,     4,
-      77,    79,    80,    68,     3,    82,    83,    84,    85,    86,
-      87,    88,   173,     3,    91,     6,     7,    95,    96,    96,
-     131,   153,    99,   131,   185,   131,   131,     3,    30,    31,
-      32,   192,   131,    38,    36,   112,    95,    96,   115,   155,
-     156,   118,     4,   154,   121,   154,   123,   154,   154,   154,
-     154,    24,   213,   214,   119,   154,   131,   144,    60,    61,
-     137,   138,   149,   150,   151,   152,   227,   154,     4,   146,
-     147,   153,   149,   150,   154,   160,   237,   142,    81,   144,
-      33,    34,    35,     3,   245,   133,   134,   164,   136,   137,
-     156,   252,     3,    55,   171,   172,   257,   158,   175,   260,
-     177,   155,   156,   264,    81,    82,    68,   184,    58,    59,
-       4,     4,   308,   190,   191,     6,   193,   309,   195,   124,
-     125,   126,   127,   128,   129,    83,   131,    82,    82,   290,
-      93,    88,   216,   428,    50,   212,   363,   298,   110,   101,
-     102,   103,   104,   392,    71,   116,    96,     4,    -1,   111,
-      -1,   113,   114,   115,    -1,    -1,    -1,   119,    -1,    -1,
-       0,     1,    -1,    -1,    -1,     5,    -1,    -1,    -1,     9,
-      10,    11,    12,    13,    62,    63,    64,    65,    66,    67,
-     142,   143,    -1,    -1,    -1,    -1,    -1,    -1,    -1,   139,
-     140,    -1,    -1,    -1,    -1,    -1,    53,    54,    55,    56,
-      57,    58,    59,   363,    -1,    45,    -1,    -1,    -1,    -1,
-      -1,    68,    52,    -1,   291,    -1,    -1,   294,    -1,    -1,
-      -1,    -1,   299,    -1,    -1,    -1,    -1,   304,    -1,    -1,
-      70,    71,    72,    73,    74,    -1,    -1,    -1,   399,    -1,
-       1,   402,    -1,    -1,     5,    -1,    -1,    -1,     9,    10,
-      11,    12,    13,    -1,     4,    -1,    -1,    97,    98,    99,
-     100,    -1,   119,    -1,    -1,    -1,    -1,   107,    -1,   430,
-     110,    -1,    -1,    -1,    -1,   352,    -1,   117,    -1,    -1,
-      -1,    -1,    -1,    -1,    45,   142,   143,    37,    -1,    -1,
-      -1,    52,   132,    -1,    -1,   135,    46,    47,    48,    49,
-      50,    51,    -1,    -1,    -1,    -1,   146,    -1,   148,    70,
-      71,    72,    73,    74,    -1,    -1,    -1,    -1,   158,    -1,
-       0,     1,    -1,    -1,    -1,     5,    -1,    -1,    -1,     9,
-      10,    11,    12,    13,    -1,    -1,    97,    98,    99,   100,
-      -1,    -1,    -1,    -1,    -1,    -1,   107,    -1,    -1,   110,
-      -1,    -1,    -1,    -1,    -1,    -1,   117,    -1,    -1,   109,
-      -1,    -1,    -1,    -1,    -1,    45,    -1,    -1,    -1,    -1,
-      -1,   132,    52,    -1,   135,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,   146,     1,   148,    -1,    -1,
-      70,    71,    72,    73,    74,    -1,    -1,   158,    -1,    14,
-      15,    16,    17,    18,    19,    20,    21,    22,    23,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    97,    98,    99,
-     100,    -1,    -1,    -1,    39,   203,    -1,   107,    43,    44,
-     110,    -1,    -1,    -1,    -1,    -1,    -1,   117,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-     228,    -1,   132,    -1,    69,   135,    -1,    -1,    -1,    -1,
-     238,    -1,    77,    78,    -1,    -1,   146,    -1,   148,   247,
-      -1,    -1,    -1,    -1,    -1,    24,   254,    -1,    -1,    -1,
-     258,    -1,    -1,   261,    -1,    -1,    -1,   265,    -1,    -1,
-     105,   106,   270,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,   116,    -1,   118,    -1,   120,   121,   122,   123,    -1,
-     288,    -1,    -1,    -1,   292,   130,    -1,   295,    -1,    -1,
-      -1,    -1,    -1,   138,    -1,    -1,   141,    -1,    -1,    -1,
-     145,    80,   147,    82,    83,    84,    85,    86,    87,    88,
-      89,    90,    91,    92,    93,    94,   230,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,   240,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,   249,    -1,    -1,    -1,    -1,
-      -1,   255,    -1,    -1,    -1,   259,    -1,    -1,    -1,   263,
-      -1,    -1,   266,    -1,    -1,    -1,    -1,   271,    82,    83,
-      84,    85,    86,    87,    88,    89,    90,    91,    92,    93,
-      94,    -1,    -1,    -1,    -1,   289,    -1,    -1,    -1,   293,
-      -1,    -1,   296
+      31,    52,    89,    34,    37,    82,     4,     4,   357,     4,
+      82,    42,    51,   110,     8,    82,     0,    94,     4,   116,
+     142,   143,    94,   140,    58,    59,    65,    94,    67,    68,
+     109,   110,   111,    72,    73,   114,    75,    76,   140,    70,
+      33,    34,    35,   146,    75,   140,    77,   396,    82,   140,
+     101,    82,    83,    84,    85,    86,    87,    88,    97,   140,
+      91,    99,   100,   101,     4,    68,    97,    25,    26,   100,
+     109,   110,   111,   112,     4,   114,   115,     6,     7,   142,
+     143,   140,   113,     4,   123,   116,   117,    82,   119,   144,
+     129,   125,   126,     4,    24,   134,   142,   143,     3,   132,
+      30,    31,    32,    24,    81,    82,    36,   138,   139,    30,
+      31,    32,     3,     3,     3,    36,   147,   148,     3,   150,
+     151,   208,   140,     4,   140,   147,     4,    38,   143,     3,
+      60,    61,   145,     4,   165,   174,     4,     4,   311,    60,
+      61,   172,   173,   141,   141,   176,     6,   178,   312,    83,
+      88,    81,    82,   231,   389,   186,    24,    68,   197,    27,
+      28,    29,    30,    31,    32,   364,    50,   206,    36,    87,
+     111,   117,   124,   204,   205,    -1,   207,    -1,   209,   119,
+     120,    -1,   122,   123,    -1,    -1,   217,   117,   227,   228,
+      -1,    -1,    60,    61,   105,   226,   117,    -1,    -1,   230,
+      -1,    -1,    -1,    -1,    -1,   244,    -1,    75,    76,    -1,
+      -1,   141,    -1,    81,    82,    -1,   255,   128,    -1,   130,
+     141,    -1,    -1,    -1,   263,    -1,    -1,   105,    -1,    -1,
+      -1,   270,    -1,    -1,    -1,    -1,   275,    -1,    -1,   278,
+      -1,    -1,    -1,   282,    -1,    -1,    -1,    -1,    -1,   117,
+     128,     4,   130,   292,    -1,   286,   287,   135,   136,   137,
+     138,   139,    -1,   141,    -1,   296,    -1,    -1,   299,    -1,
+     301,   302,    -1,   141,    -1,    -1,   307,     0,     1,    -1,
+      87,    -1,     5,     4,    37,    -1,     9,    10,    11,    12,
+      13,    -1,    -1,    46,    47,    48,    49,    50,    51,    -1,
+       4,    -1,   109,   110,   111,   112,   113,   114,   115,   116,
+     117,     4,   119,   364,    -1,    -1,    -1,    38,    -1,    -1,
+      24,    -1,    45,    27,    28,    29,    30,    31,    32,    52,
+      -1,    24,    36,    -1,   373,    -1,   375,    30,    31,    32,
+     379,    -1,    95,    36,    -1,   376,    -1,    70,    71,    72,
+      73,    74,    -1,    -1,   393,    -1,    60,    61,    -1,    -1,
+      83,    84,    85,    86,    -1,    -1,    -1,    60,    61,    -1,
+      93,    75,    76,    96,     1,    -1,    -1,    -1,     5,    -1,
+     103,    -1,     9,    10,    11,    12,    13,    -1,    -1,   110,
+     111,   112,   113,   114,   115,   118,   117,    -1,   121,    -1,
+      -1,    -1,    -1,     4,     4,    -1,    -1,     4,    -1,   132,
+      -1,   134,    -1,   117,    -1,    -1,    -1,    -1,    45,    -1,
+      -1,    -1,   145,    -1,    24,    52,    -1,    24,    -1,    -1,
+      30,    31,    32,    30,    31,    32,    36,   141,    -1,    36,
+      40,    41,    42,    70,    71,    72,    73,    74,   141,    -1,
+      -1,    -1,    -1,    -1,    55,    -1,    83,    84,    85,    86,
+      60,    61,    -1,    60,    61,    -1,    93,    68,    -1,    96,
+      -1,    -1,     0,     1,    -1,    -1,   103,     5,    -1,    -1,
+      -1,     9,    10,    11,    12,    13,    87,    88,    89,    90,
+      -1,   118,    -1,     4,   121,    -1,    97,    -1,    99,   100,
+     101,    -1,    -1,    -1,   105,   132,    -1,   134,    30,    31,
+      32,    -1,    -1,    24,    36,    -1,    -1,    45,   145,    30,
+      31,    32,    -1,    -1,    52,    36,    -1,   128,   129,   130,
+      62,    63,    64,    65,    66,    67,    -1,    -1,    60,    61,
+      -1,   141,    70,    71,    72,    73,    74,    -1,    -1,    60,
+      61,    -1,    -1,    -1,    -1,    83,    84,    85,    86,    -1,
+      -1,    -1,     4,    -1,    -1,    93,    -1,     1,    96,    80,
+      -1,     4,    -1,    -1,    -1,   103,    -1,    99,   100,   101,
+      14,    15,    16,    17,    18,    19,    20,    21,    22,    23,
+     118,    24,    -1,   121,    -1,    -1,    -1,    30,    31,    32,
+      -1,    -1,    -1,    36,   132,    39,   134,    -1,    -1,    43,
+      44,    53,    54,    55,    56,    57,    58,    59,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    68,    60,    61,    -1,
+      -1,    -1,    -1,    -1,    -1,    69,    -1,    -1,    -1,     4,
+      -1,    -1,    -1,    77,    78,    -1,    -1,    -1,    81,    82,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    91,    92,    24,
+      -1,    -1,    -1,   105,    -1,    30,    31,    32,   102,    -1,
+     104,    36,   106,   107,   108,   109,    -1,    -1,    87,    -1,
+      89,    -1,   116,    -1,   117,    -1,   128,   129,   130,    -1,
+     124,    -1,    -1,   127,    -1,    60,    61,   131,    -1,   133,
+     109,   110,   111,   112,   113,   114,   115,   116,   117,    -1,
+     119,    -1,    -1,    -1,    79,    80,    81,    82
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
      symbol of state STATE-NUM.  */
-static const yytype_uint16 yystos[] =
+static const yytype_uint8 yystos[] =
 {
-       0,     8,   162,   163,   171,     4,   154,   167,   169,   170,
+       0,     8,   149,   150,   158,     4,   141,   154,   156,   157,
        0,     1,     5,     9,    10,    11,    12,    13,    45,    52,
-      70,    71,    72,    73,    74,    97,    98,    99,   100,   107,
-     110,   117,   132,   135,   146,   148,   164,   165,   172,   176,
-     195,   197,   204,   163,   168,   169,   153,   153,     1,    14,
+      70,    71,    72,    73,    74,    83,    84,    85,    86,    93,
+      96,   103,   118,   121,   132,   134,   151,   152,   159,   165,
+     184,   186,   189,   150,   155,   156,   140,   140,     1,    14,
       15,    16,    17,    18,    19,    20,    21,    22,    23,    39,
-      43,    44,    69,    77,    78,   105,   106,   116,   118,   120,
-     121,   122,   123,   130,   138,   141,   145,   147,   173,   221,
-     153,   177,   179,   184,   187,   193,   198,   199,   205,   207,
-     170,   209,   170,   211,   164,   153,   196,   170,   155,   156,
-     159,   219,   219,   167,   221,    25,    26,   223,   224,   237,
-     245,   252,   249,   256,   260,   263,   268,   167,   272,   167,
-     167,   275,   170,   275,   167,   167,   278,   167,   170,   167,
-     170,   157,   175,    68,   178,    38,   119,   142,   144,   170,
-     178,   180,   181,   182,   183,   124,   125,   126,   127,   128,
-     129,   131,   170,   180,   185,   186,    37,    46,    47,    48,
-      49,    50,    51,   109,   170,   188,   189,   190,   191,   192,
-      53,    54,    55,    56,    57,    58,    59,   143,   170,   178,
-     181,   182,   194,    96,   170,   170,   200,   201,   202,   203,
-      55,   101,   102,   103,   104,   111,   113,   114,   115,   170,
-     194,   206,   206,   208,   153,   133,   134,   136,   137,   170,
-     210,     4,   149,   150,   151,   152,   154,   183,   215,   217,
-     218,   167,   170,   170,   220,   221,     3,   167,   225,   226,
-     227,   228,    27,    28,    29,    75,    76,   167,   238,   239,
-     240,   241,   242,   243,   244,   167,   242,   246,   247,   248,
-      40,    41,    42,   167,   253,   254,   255,   170,   250,   251,
-     167,   257,   258,   259,   167,   261,   262,    79,    80,   170,
-     264,   265,   266,   267,    82,    83,    84,    85,    86,    87,
-      88,    89,    90,    91,    92,    93,    94,   267,   269,   270,
-     271,   170,   273,   274,   170,   276,   277,   167,   170,    58,
-      59,    96,   139,   140,   279,   167,   158,   164,     6,     7,
-     174,   167,   170,   170,     3,   170,   170,   170,   170,   170,
-       3,   170,   170,   167,   170,     3,   170,   170,   166,   167,
-      30,    31,    32,    36,    60,    61,   229,   230,   231,   131,
-     233,    24,   234,    95,    96,   236,   170,   170,   167,   170,
-     206,   170,   229,   170,   167,   167,     4,   154,   212,   214,
-     216,   217,   160,   156,   167,   229,   233,   234,   236,   167,
-     229,   233,   234,   236,   167,   229,   233,   234,   167,   229,
-     234,   167,   229,   234,   167,   229,   233,   234,   167,   229,
-     234,    81,   222,   229,   234,   236,   229,   234,   167,   170,
-     229,   234,   170,   229,   234,   167,   170,     3,   170,   158,
-     173,   175,    62,    63,    64,    65,    66,    67,   232,    33,
-      34,    35,   235,     3,   170,   213,   214,   155,   156,   220,
-     271,   167,   167,   155,   156,   218,   167,   214
+      43,    44,    69,    77,    78,    91,    92,   102,   104,   106,
+     107,   108,   109,   116,   124,   127,   131,   133,   160,   203,
+     140,   166,   168,   173,   176,   182,   187,   188,   190,   192,
+     157,   163,   140,   157,   193,   151,   140,   185,   157,   142,
+     143,   146,   201,   201,   154,   203,    25,    26,   206,   207,
+     217,   221,   223,   222,   225,   226,   227,   229,   154,   230,
+     154,   154,   204,   157,   205,   154,   154,   232,   154,   157,
+     154,   157,   144,   162,    68,   167,    38,   105,   128,   130,
+     157,   167,   169,   170,   171,   172,   110,   111,   112,   113,
+     114,   115,   117,   157,   169,   174,   175,    37,    46,    47,
+      48,    49,    50,    51,    95,   157,   177,   178,   179,   180,
+     181,    53,    54,    55,    56,    57,    58,    59,   129,   157,
+     167,   170,   171,   172,   183,    82,   157,    24,    30,    31,
+      32,    36,    60,    61,    81,    82,   117,   157,   208,   209,
+     210,   212,   213,   216,    55,    87,    88,    89,    90,    97,
+      99,   100,   101,   157,   183,   191,   191,   208,   140,   119,
+     120,   122,   123,   157,   164,     4,   135,   136,   137,   138,
+     139,   141,   170,   171,   172,   197,   199,   200,   154,   157,
+     157,   202,   203,     3,   154,   208,   212,   213,   215,   216,
+      27,    28,    29,    75,    76,   154,   208,   212,   213,   215,
+     218,   219,   220,   154,   208,   212,   213,   218,    40,    41,
+      42,   154,   208,   213,   224,   157,   208,   213,   154,   208,
+     212,   213,   154,   208,   213,    79,    80,   157,   208,   213,
+     215,   228,   157,   208,   213,   228,   157,   208,   213,   231,
+     154,   231,    58,    59,    82,   125,   126,   233,   154,   145,
+     151,     6,     7,   161,   154,   157,   157,     3,   157,   157,
+     157,   157,   157,     3,   157,   157,   154,   157,     3,   157,
+     157,    33,    34,    35,   214,     3,   153,   154,    62,    63,
+      64,    65,    66,    67,   211,   157,   157,   154,   157,   191,
+     157,   157,   140,   157,   154,   154,     4,   141,   194,   196,
+     157,   198,   199,   147,   143,   154,   154,   154,   154,   154,
+     154,   154,   157,   157,   154,   157,   157,   208,   213,   157,
+     157,     3,   157,   145,   160,   162,   195,   196,   142,   143,
+     202,   154,   154,   157,   154,   142,   143,   200,   154,   196
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
-static const yytype_uint16 yyr1[] =
+static const yytype_uint8 yyr1[] =
 {
-       0,   161,   162,   162,   163,   163,   164,   164,   165,   165,
-     165,   166,   166,   167,   167,   168,   168,   169,   170,   171,
-     172,   172,   172,   173,   174,   174,   174,   175,   175,   176,
-     176,   176,   176,   176,   176,   176,   176,   176,   176,   176,
-     176,   176,   176,   176,   176,   176,   176,   177,   177,   178,
-     179,   179,   179,   179,   179,   179,   180,   181,   182,   183,
-     184,   184,   184,   184,   184,   185,   185,   185,   185,   186,
-     186,   187,   187,   187,   187,   187,   187,   188,   188,   189,
-     189,   190,   190,   191,   192,   193,   193,   193,   193,   193,
-     193,   193,   193,   193,   194,   194,   194,   194,   195,   195,
-     195,   196,   196,   197,   197,   198,   198,   199,   200,   199,
-     201,   199,   202,   199,   203,   199,   204,   204,   205,   205,
-     205,   205,   205,   205,   205,   205,   205,   206,   206,   206,
-     207,   207,   208,   207,   209,   209,   209,   209,   210,   210,
-     211,   211,   211,   211,   211,   211,   212,   212,   213,   213,
-     214,   215,   215,   216,   216,   217,   218,   219,   220,   220,
-     221,   221,   221,   221,   221,   221,   221,   221,   221,   221,
-     221,   221,   221,   221,   221,   222,   221,   221,   221,   221,
-     221,   221,   221,   221,   221,   221,   221,   221,   221,   221,
-     221,   221,   221,   223,   223,   224,   225,   224,   226,   224,
-     227,   224,   228,   224,   229,   229,   230,   230,   230,   230,
-     231,   231,   232,   232,   232,   232,   232,   232,   233,   234,
-     235,   235,   235,   236,   236,   237,   237,   238,   237,   239,
-     237,   240,   237,   241,   237,   242,   243,   243,   243,   243,
-     244,   244,   245,   245,   246,   245,   247,   245,   248,   245,
-     249,   250,   249,   251,   249,   252,   252,   252,   253,   252,
-     254,   252,   255,   255,   256,   257,   256,   258,   256,   259,
-     256,   260,   261,   260,   262,   260,   263,   263,   263,   264,
-     263,   265,   263,   266,   263,   267,   268,   268,   269,   268,
-     270,   268,   271,   271,   271,   271,   271,   271,   271,   271,
-     271,   271,   271,   271,   271,   272,   273,   272,   274,   272,
-     275,   276,   275,   277,   275,   278,   278,   278,   278,   278,
-     279,   279
+       0,   148,   149,   149,   150,   150,   151,   151,   152,   152,
+     152,   153,   153,   154,   154,   155,   155,   156,   157,   158,
+     159,   159,   159,   159,   159,   160,   161,   161,   161,   162,
+     162,   163,   163,   163,   163,   164,   164,   165,   165,   165,
+     165,   165,   165,   165,   165,   165,   165,   165,   165,   165,
+     165,   165,   165,   166,   166,   167,   168,   168,   168,   168,
+     168,   168,   169,   170,   171,   172,   173,   173,   173,   173,
+     173,   174,   174,   174,   174,   175,   175,   176,   176,   176,
+     176,   176,   176,   177,   177,   178,   178,   179,   179,   180,
+     181,   182,   182,   182,   182,   182,   182,   182,   182,   182,
+     183,   183,   183,   183,   183,   184,   184,   184,   185,   185,
+     186,   186,   187,   187,   188,   188,   188,   188,   188,   189,
+     189,   190,   190,   190,   190,   190,   190,   190,   190,   190,
+     191,   191,   191,   192,   192,   192,   193,   193,   193,   193,
+     193,   193,   193,   193,   193,   194,   194,   195,   195,   196,
+     197,   197,   198,   198,   199,   200,   201,   202,   202,   203,
+     203,   203,   203,   203,   203,   203,   203,   203,   203,   203,
+     203,   203,   203,   203,   203,   203,   203,   203,   203,   203,
+     204,   203,   203,   205,   203,   203,   203,   203,   203,   203,
+     203,   203,   203,   206,   206,   207,   207,   207,   207,   207,
+     208,   208,   209,   209,   209,   209,   210,   210,   211,   211,
+     211,   211,   211,   211,   212,   213,   214,   214,   214,   215,
+     216,   216,   217,   217,   217,   217,   217,   217,   218,   219,
+     219,   219,   219,   220,   220,   221,   221,   221,   221,   221,
+     222,   222,   222,   223,   223,   223,   223,   223,   224,   224,
+     225,   225,   225,   225,   226,   226,   226,   227,   227,   227,
+     227,   227,   227,   228,   229,   229,   229,   229,   230,   230,
+     230,   231,   231,   231,   232,   232,   232,   232,   232,   233,
+     233
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
@@ -1413,37 +1359,33 @@ static const yytype_uint8 yyr2[] =
 {
        0,     2,     1,     2,     0,     2,     1,     2,     1,     2,
        2,     0,     1,     1,     3,     1,     3,     1,     1,     3,
-       2,     2,     3,     3,     0,     2,     2,     3,     2,     2,
-       3,     3,     1,     4,     3,     3,     1,     4,     4,     2,
-       3,     2,     2,     3,     2,     3,     1,     0,     2,     2,
-       0,     2,     2,     2,     2,     2,     1,     1,     2,     2,
-       0,     2,     2,     2,     2,     2,     2,     2,     1,     2,
-       2,     0,     2,     2,     2,     2,     2,     1,     1,     1,
-       1,     1,     1,     1,     1,     0,     3,     3,     3,     3,
-       3,     2,     3,     2,     2,     1,     1,     1,     1,     1,
-       1,     0,     2,     1,     1,     0,     2,     0,     0,     3,
-       0,     3,     0,     3,     0,     3,     1,     1,     0,     3,
-       3,     2,     3,     3,     2,     3,     3,     1,     1,     1,
-       0,     2,     0,     4,     0,     2,     2,     2,     1,     1,
-       0,     3,     2,     3,     3,     3,     1,     3,     1,     3,
-       1,     1,     3,     1,     3,     1,     1,     3,     1,     3,
-       2,     2,     2,     1,     1,     2,     3,     4,     4,     4,
-       3,     4,     4,     4,     3,     0,     6,     4,     2,     5,
-       2,     2,     5,     3,     4,     2,     2,     2,     2,     3,
-       2,     2,     1,     1,     1,     0,     0,     3,     0,     3,
-       0,     3,     0,     3,     1,     2,     1,     1,     1,     1,
-       1,     1,     1,     1,     1,     1,     1,     1,     1,     2,
-       1,     1,     1,     2,     1,     0,     2,     0,     3,     0,
-       3,     0,     3,     0,     3,     1,     1,     1,     1,     1,
-       1,     1,     0,     2,     0,     3,     0,     3,     0,     3,
-       0,     0,     3,     0,     3,     0,     2,     3,     0,     3,
-       0,     3,     1,     1,     0,     0,     3,     0,     3,     0,
-       3,     0,     0,     3,     0,     3,     0,     2,     2,     0,
-       3,     0,     3,     0,     3,     2,     0,     2,     0,     3,
-       0,     3,     1,     1,     1,     1,     1,     1,     1,     1,
-       1,     1,     1,     1,     1,     0,     0,     3,     0,     3,
-       0,     0,     3,     0,     3,     0,     3,     3,     3,     2,
-       1,     1
+       2,     2,     3,     4,     2,     3,     0,     2,     2,     3,
+       2,     0,     2,     2,     2,     1,     1,     2,     3,     3,
+       1,     4,     3,     3,     1,     4,     4,     2,     3,     2,
+       2,     2,     3,     0,     2,     2,     0,     2,     2,     2,
+       2,     2,     1,     1,     2,     2,     0,     2,     2,     2,
+       2,     2,     2,     2,     1,     2,     2,     0,     2,     2,
+       2,     2,     2,     1,     1,     1,     1,     1,     1,     1,
+       1,     0,     3,     3,     3,     3,     3,     2,     3,     2,
+       2,     1,     1,     1,     1,     1,     1,     1,     0,     2,
+       1,     1,     0,     2,     0,     2,     2,     2,     2,     1,
+       1,     0,     3,     3,     2,     3,     3,     2,     3,     3,
+       1,     1,     1,     0,     2,     3,     0,     3,     2,     2,
+       2,     3,     3,     3,     3,     1,     3,     1,     3,     1,
+       1,     3,     1,     3,     1,     1,     3,     1,     3,     2,
+       2,     2,     1,     1,     2,     3,     4,     4,     4,     3,
+       4,     4,     4,     3,     5,     4,     2,     5,     2,     2,
+       0,     6,     3,     0,     5,     2,     2,     2,     2,     3,
+       2,     2,     1,     1,     1,     0,     2,     2,     2,     2,
+       1,     2,     1,     1,     1,     1,     1,     1,     1,     1,
+       1,     1,     1,     1,     1,     2,     1,     1,     1,     1,
+       2,     1,     0,     2,     2,     2,     2,     2,     1,     1,
+       1,     1,     1,     1,     1,     0,     2,     2,     2,     2,
+       0,     2,     2,     0,     2,     3,     2,     2,     1,     1,
+       0,     2,     2,     2,     0,     2,     2,     0,     2,     2,
+       2,     2,     2,     2,     0,     2,     2,     2,     0,     2,
+       2,     0,     2,     2,     0,     3,     3,     3,     2,     1,
+       1
 };
 
 
@@ -1869,117 +1811,123 @@ yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, sieve_script_t *ss
   switch (yytype)
     {
           case 4: /* STRING  */
-#line 164 "sieve/sieve.y" /* yacc.c:1257  */
+#line 172 "sieve/sieve.y" /* yacc.c:1257  */
       { free(((*yyvaluep).sval));          }
-#line 1875 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1817 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
-    case 164: /* commands  */
-#line 160 "sieve/sieve.y" /* yacc.c:1257  */
+    case 151: /* commands  */
+#line 168 "sieve/sieve.y" /* yacc.c:1257  */
       { free_tree(((*yyvaluep).cl));     }
-#line 1881 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1823 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
-    case 165: /* command  */
-#line 160 "sieve/sieve.y" /* yacc.c:1257  */
+    case 152: /* command  */
+#line 168 "sieve/sieve.y" /* yacc.c:1257  */
       { free_tree(((*yyvaluep).cl));     }
-#line 1887 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1829 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
-    case 166: /* optstringlist  */
-#line 163 "sieve/sieve.y" /* yacc.c:1257  */
+    case 153: /* optstringlist  */
+#line 171 "sieve/sieve.y" /* yacc.c:1257  */
       { strarray_free(((*yyvaluep).sl)); }
-#line 1893 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1835 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
-    case 167: /* stringlist  */
-#line 163 "sieve/sieve.y" /* yacc.c:1257  */
+    case 154: /* stringlist  */
+#line 171 "sieve/sieve.y" /* yacc.c:1257  */
       { strarray_free(((*yyvaluep).sl)); }
-#line 1899 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1841 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
-    case 168: /* strings  */
-#line 163 "sieve/sieve.y" /* yacc.c:1257  */
+    case 155: /* strings  */
+#line 171 "sieve/sieve.y" /* yacc.c:1257  */
       { strarray_free(((*yyvaluep).sl)); }
-#line 1905 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1847 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
-    case 169: /* string1  */
-#line 163 "sieve/sieve.y" /* yacc.c:1257  */
+    case 156: /* string1  */
+#line 171 "sieve/sieve.y" /* yacc.c:1257  */
       { strarray_free(((*yyvaluep).sl)); }
-#line 1911 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1853 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
-    case 170: /* string  */
-#line 164 "sieve/sieve.y" /* yacc.c:1257  */
+    case 157: /* string  */
+#line 172 "sieve/sieve.y" /* yacc.c:1257  */
       { free(((*yyvaluep).sval));          }
-#line 1917 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1859 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
-    case 172: /* control  */
-#line 160 "sieve/sieve.y" /* yacc.c:1257  */
+    case 159: /* control  */
+#line 168 "sieve/sieve.y" /* yacc.c:1257  */
       { free_tree(((*yyvaluep).cl));     }
-#line 1923 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1865 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
-    case 173: /* thenelse  */
-#line 160 "sieve/sieve.y" /* yacc.c:1257  */
+    case 160: /* thenelse  */
+#line 168 "sieve/sieve.y" /* yacc.c:1257  */
       { free_tree(((*yyvaluep).cl));     }
-#line 1929 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1871 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
-    case 174: /* elsif  */
-#line 160 "sieve/sieve.y" /* yacc.c:1257  */
+    case 161: /* elsif  */
+#line 168 "sieve/sieve.y" /* yacc.c:1257  */
       { free_tree(((*yyvaluep).cl));     }
-#line 1935 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1877 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
-    case 175: /* block  */
-#line 160 "sieve/sieve.y" /* yacc.c:1257  */
+    case 162: /* block  */
+#line 168 "sieve/sieve.y" /* yacc.c:1257  */
       { free_tree(((*yyvaluep).cl));     }
-#line 1941 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1883 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
-    case 176: /* action  */
-#line 160 "sieve/sieve.y" /* yacc.c:1257  */
+    case 165: /* action  */
+#line 168 "sieve/sieve.y" /* yacc.c:1257  */
       { free_tree(((*yyvaluep).cl));     }
-#line 1947 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1889 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
-    case 215: /* timelist  */
-#line 165 "sieve/sieve.y" /* yacc.c:1257  */
+    case 168: /* ftags  */
+#line 168 "sieve/sieve.y" /* yacc.c:1257  */
+      { free_tree(((*yyvaluep).cl));     }
+#line 1895 "sieve/sieve.c" /* yacc.c:1257  */
+        break;
+
+    case 197: /* timelist  */
+#line 173 "sieve/sieve.y" /* yacc.c:1257  */
       { arrayu64_free(((*yyvaluep).nl)); }
-#line 1953 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1901 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
-    case 216: /* times  */
-#line 165 "sieve/sieve.y" /* yacc.c:1257  */
+    case 198: /* times  */
+#line 173 "sieve/sieve.y" /* yacc.c:1257  */
       { arrayu64_free(((*yyvaluep).nl)); }
-#line 1959 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1907 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
-    case 217: /* time1  */
-#line 165 "sieve/sieve.y" /* yacc.c:1257  */
+    case 199: /* time1  */
+#line 173 "sieve/sieve.y" /* yacc.c:1257  */
       { arrayu64_free(((*yyvaluep).nl)); }
-#line 1965 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1913 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
-    case 219: /* testlist  */
-#line 161 "sieve/sieve.y" /* yacc.c:1257  */
+    case 201: /* testlist  */
+#line 169 "sieve/sieve.y" /* yacc.c:1257  */
       { free_testlist(((*yyvaluep).testl)); }
-#line 1971 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1919 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
-    case 220: /* tests  */
-#line 161 "sieve/sieve.y" /* yacc.c:1257  */
+    case 202: /* tests  */
+#line 169 "sieve/sieve.y" /* yacc.c:1257  */
       { free_testlist(((*yyvaluep).testl)); }
-#line 1977 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1925 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
-    case 221: /* test  */
-#line 162 "sieve/sieve.y" /* yacc.c:1257  */
+    case 203: /* test  */
+#line 170 "sieve/sieve.y" /* yacc.c:1257  */
       { free_test(((*yyvaluep).test));     }
-#line 1983 "sieve/sieve.c" /* yacc.c:1257  */
+#line 1931 "sieve/sieve.c" /* yacc.c:1257  */
         break;
 
 
@@ -2245,96 +2193,108 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 358 "sieve/sieve.y" /* yacc.c:1646  */
+#line 362 "sieve/sieve.y" /* yacc.c:1646  */
     { sscript->cmds = NULL; }
-#line 2251 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2199 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 359 "sieve/sieve.y" /* yacc.c:1646  */
+#line 363 "sieve/sieve.y" /* yacc.c:1646  */
     { sscript->cmds = (yyvsp[0].cl); }
-#line 2257 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2205 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 370 "sieve/sieve.y" /* yacc.c:1646  */
+#line 374 "sieve/sieve.y" /* yacc.c:1646  */
     { (yyval.cl) = (yyvsp[-1].cl); (yyval.cl)->next = (yyvsp[0].cl); }
-#line 2263 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2211 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 376 "sieve/sieve.y" /* yacc.c:1646  */
+#line 380 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      struct buf buf = BUF_INITIALIZER;
                                      buf_printf(&buf, "%s: line %d",
                                                 error_message(SIEVE_UNSUPP_EXT),
                                                 sievelineno);
                                      sscript->support |= SIEVE_CAPA_IHAVE;
-                                     (yyval.cl) = build_rej_err(sscript, ERROR,
+                                     (yyval.cl) = build_rej_err(sscript, B_ERROR,
                                                         buf_release(&buf));
                                  }
-#line 2277 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2225 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 388 "sieve/sieve.y" /* yacc.c:1646  */
+#line 392 "sieve/sieve.y" /* yacc.c:1646  */
     { (yyval.sl) = strarray_new(); }
-#line 2283 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2231 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 394 "sieve/sieve.y" /* yacc.c:1646  */
+#line 398 "sieve/sieve.y" /* yacc.c:1646  */
     { (yyval.sl) = (yyvsp[-1].sl); }
-#line 2289 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2237 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 399 "sieve/sieve.y" /* yacc.c:1646  */
+#line 403 "sieve/sieve.y" /* yacc.c:1646  */
     { (yyval.sl) = (yyvsp[-2].sl); strarray_appendm((yyval.sl), (yyvsp[0].sval)); }
-#line 2295 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2243 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 403 "sieve/sieve.y" /* yacc.c:1646  */
+#line 407 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      (yyval.sl) = strarray_new();
                                      strarray_appendm((yyval.sl), (yyvsp[0].sval));
                                  }
-#line 2304 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2252 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 410 "sieve/sieve.y" /* yacc.c:1646  */
+#line 414 "sieve/sieve.y" /* yacc.c:1646  */
     { (yyval.sval) = (yyvsp[0].sval); chk_match_vars(sscript, (yyval.sval)); }
-#line 2310 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2258 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 417 "sieve/sieve.y" /* yacc.c:1646  */
+#line 421 "sieve/sieve.y" /* yacc.c:1646  */
     { check_reqs(sscript, (yyvsp[-1].sl)); }
-#line 2316 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2264 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 421 "sieve/sieve.y" /* yacc.c:1646  */
+#line 425 "sieve/sieve.y" /* yacc.c:1646  */
     { (yyval.cl) = (yyvsp[0].cl); }
-#line 2322 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2270 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 422 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = new_command(STOP, sscript); }
-#line 2328 "sieve/sieve.c" /* yacc.c:1646  */
+#line 426 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = new_command(B_STOP, sscript); }
+#line 2276 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 423 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = build_rej_err(sscript, ERROR, (yyvsp[-1].sval)); }
-#line 2334 "sieve/sieve.c" /* yacc.c:1646  */
+#line 427 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = build_rej_err(sscript, B_ERROR, (yyvsp[-1].sval)); }
+#line 2282 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 427 "sieve/sieve.y" /* yacc.c:1646  */
+#line 429 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = build_include(sscript, (yyvsp[-2].cl), (yyvsp[-1].sval)); }
+#line 2288 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 24:
+#line 430 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = new_command(B_RETURN, sscript); }
+#line 2294 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 25:
+#line 434 "sieve/sieve.y" /* yacc.c:1646  */
     { 
                                      if ((yyvsp[-2].test)->ignore_err) {
                                          /* end of block - decrement counter */
@@ -2343,175 +2303,215 @@ yyreduce:
 
                                      (yyval.cl) = new_if((yyvsp[-2].test), (yyvsp[-1].cl), (yyvsp[0].cl));
                                  }
-#line 2347 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 24:
-#line 438 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = NULL; }
-#line 2353 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 25:
-#line 439 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = (yyvsp[0].cl); }
-#line 2359 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2307 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 440 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = (yyvsp[0].cl); }
-#line 2365 "sieve/sieve.c" /* yacc.c:1646  */
+#line 445 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = NULL; }
+#line 2313 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 444 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = (yyvsp[-1].cl); }
-#line 2371 "sieve/sieve.c" /* yacc.c:1646  */
+#line 446 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = (yyvsp[0].cl); }
+#line 2319 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 445 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = NULL; }
-#line 2377 "sieve/sieve.c" /* yacc.c:1646  */
+#line 447 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = (yyvsp[0].cl); }
+#line 2325 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 452 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = build_keep(sscript, (yyvsp[0].cl)); }
-#line 2383 "sieve/sieve.c" /* yacc.c:1646  */
+#line 451 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = (yyvsp[-1].cl); }
+#line 2331 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 453 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = build_fileinto(sscript, (yyvsp[-1].cl), (yyvsp[0].sval)); }
-#line 2389 "sieve/sieve.c" /* yacc.c:1646  */
+#line 452 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = NULL; }
+#line 2337 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 454 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = build_redirect(sscript, (yyvsp[-1].cl), (yyvsp[0].sval)); }
-#line 2395 "sieve/sieve.c" /* yacc.c:1646  */
+#line 457 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = new_command(B_INCLUDE, sscript); }
+#line 2343 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 455 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = new_command(DISCARD, sscript); }
-#line 2401 "sieve/sieve.c" /* yacc.c:1646  */
+#line 458 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     if ((yyval.cl)->u.inc.location != -1) {
+                                         sieveerror_c(sscript,
+                                                      SIEVE_DUPLICATE_TAG,
+                                                      "location");
+                                     }
+
+                                     (yyval.cl)->u.inc.location = (yyvsp[0].nval);
+                                 }
+#line 2357 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 457 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = build_set(sscript, (yyvsp[-2].cl), (yyvsp[-1].sval), (yyvsp[0].sval)); }
-#line 2407 "sieve/sieve.c" /* yacc.c:1646  */
+#line 467 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     if ((yyval.cl)->u.inc.once != -1) {
+                                         sieveerror_c(sscript,
+                                                      SIEVE_DUPLICATE_TAG,
+                                                      ":once");
+                                     }
+
+                                     (yyval.cl)->u.inc.once = INC_ONCE_MASK;
+                                 }
+#line 2371 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 458 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = build_vacation(sscript, (yyvsp[-1].cl), (yyvsp[0].sval)); }
-#line 2413 "sieve/sieve.c" /* yacc.c:1646  */
+#line 476 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     if ((yyval.cl)->u.inc.optional != -1) {
+                                         sieveerror_c(sscript,
+                                                      SIEVE_DUPLICATE_TAG,
+                                                      ":optional");
+                                     }
+
+                                     (yyval.cl)->u.inc.optional = INC_OPTIONAL_MASK;
+                                 }
+#line 2385 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 462 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = build_flag(sscript, (yyvsp[-1].cl), (yyvsp[0].sl)); }
-#line 2419 "sieve/sieve.c" /* yacc.c:1646  */
+#line 489 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_PERSONAL; }
+#line 2391 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 465 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = new_command((yyvsp[0].nval), sscript); }
-#line 2425 "sieve/sieve.c" /* yacc.c:1646  */
+#line 490 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_GLOBAL;   }
+#line 2397 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 468 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = build_addheader(sscript,
-                                                        (yyvsp[-2].cl), (yyvsp[-1].sval), (yyvsp[0].sval)); }
-#line 2432 "sieve/sieve.c" /* yacc.c:1646  */
+#line 497 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = build_keep(sscript, (yyvsp[0].cl)); }
+#line 2403 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 471 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = build_deleteheader(sscript,
-                                                           (yyvsp[-2].cl), (yyvsp[-1].sval), (yyvsp[0].sl)); }
-#line 2439 "sieve/sieve.c" /* yacc.c:1646  */
+#line 498 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = build_fileinto(sscript, (yyvsp[-1].cl), (yyvsp[0].sval)); }
+#line 2409 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 474 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = build_rej_err(sscript, (yyvsp[-1].nval), (yyvsp[0].sval)); }
-#line 2445 "sieve/sieve.c" /* yacc.c:1646  */
+#line 499 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = build_redirect(sscript, (yyvsp[-1].cl), (yyvsp[0].sval)); }
+#line 2415 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 475 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = build_notify(sscript,
-                                                     ENOTIFY, (yyvsp[-1].cl), (yyvsp[0].sval)); }
-#line 2452 "sieve/sieve.c" /* yacc.c:1646  */
+#line 500 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = new_command(B_DISCARD, sscript); }
+#line 2421 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 478 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = build_notify(sscript,
-                                                     NOTIFY, (yyvsp[0].cl), NULL); }
-#line 2459 "sieve/sieve.c" /* yacc.c:1646  */
+#line 502 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = build_set(sscript, (yyvsp[-2].cl), (yyvsp[-1].sval), (yyvsp[0].sval)); }
+#line 2427 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 481 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = build_denotify(sscript, (yyvsp[0].cl)); }
-#line 2465 "sieve/sieve.c" /* yacc.c:1646  */
+#line 503 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = build_vacation(sscript, (yyvsp[-1].cl), (yyvsp[0].sval)); }
+#line 2433 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 482 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = build_include(sscript, (yyvsp[-1].cl), (yyvsp[0].sval)); }
-#line 2471 "sieve/sieve.c" /* yacc.c:1646  */
+#line 507 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = build_flag(sscript, (yyvsp[-1].cl), (yyvsp[0].sl)); }
+#line 2439 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 483 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = build_log(sscript, (yyvsp[0].sval)); }
-#line 2477 "sieve/sieve.c" /* yacc.c:1646  */
+#line 510 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = build_flag(sscript,
+                                                   new_command((yyvsp[0].nval), sscript),
+                                                   strarray_split("\\Flagged",
+                                                                  NULL, 0)); }
+#line 2448 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 485 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = build_snooze(sscript, (yyvsp[-1].cl), (yyvsp[0].nl)); }
-#line 2483 "sieve/sieve.c" /* yacc.c:1646  */
+#line 516 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = build_addheader(sscript,
+                                                        (yyvsp[-2].cl), (yyvsp[-1].sval), (yyvsp[0].sval)); }
+#line 2455 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 486 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = new_command(RETURN, sscript); }
-#line 2489 "sieve/sieve.c" /* yacc.c:1646  */
+#line 519 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = build_deleteheader(sscript,
+                                                           (yyvsp[-2].cl), (yyvsp[-1].sval), (yyvsp[0].sl)); }
+#line 2462 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 491 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = new_command(KEEP, sscript); }
-#line 2495 "sieve/sieve.c" /* yacc.c:1646  */
+#line 522 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = build_rej_err(sscript, (yyvsp[-1].nval), (yyvsp[0].sval)); }
+#line 2468 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 48:
+#line 523 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = build_notify(sscript,
+                                                     B_ENOTIFY, (yyvsp[-1].cl), (yyvsp[0].sval)); }
+#line 2475 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 497 "sieve/sieve.y" /* yacc.c:1646  */
+#line 526 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = build_notify(sscript,
+                                                     B_NOTIFY, (yyvsp[0].cl), NULL); }
+#line 2482 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 50:
+#line 529 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = build_denotify(sscript, (yyvsp[0].cl)); }
+#line 2488 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 51:
+#line 530 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = build_log(sscript, (yyvsp[0].sval)); }
+#line 2494 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 52:
+#line 531 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = build_snooze(sscript, (yyvsp[-1].cl), (yyvsp[0].nl)); }
+#line 2500 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 53:
+#line 536 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     /* $0 refers to ktags, ftags, or vtags */
-                                     commandlist_t *c = (yyvsp[-2].cl);
-                                     strarray_t **flags = NULL;
+                                     (yyval.cl) = new_command(B_KEEP, sscript);
+                                     flags = &((yyval.cl)->u.k.flags);
+                                 }
+#line 2509 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
 
-                                     switch (c->type) {
-                                     case KEEP:
-                                         flags = &c->u.k.flags; break;
-                                     case FILEINTO:
-                                         flags = &c->u.f.flags; break;
-                                     case VACATION:
-                                         flags = &c->u.v.fcc.flags; break;
-                                     case ENOTIFY:
-                                         flags = &c->u.n.fcc.flags; break;
-                                     }
-
+  case 55:
+#line 545 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     /* **flags assigned by the calling rule */
                                      if (*flags != NULL) {
                                          sieveerror_c(sscript,
                                                       SIEVE_DUPLICATE_TAG,
@@ -2529,20 +2529,23 @@ yyreduce:
 #line 2530 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 50:
-#line 531 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = new_command(FILEINTO, sscript); }
-#line 2536 "sieve/sieve.c" /* yacc.c:1646  */
+  case 56:
+#line 565 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     (yyval.cl) = new_command(B_FILEINTO, sscript);
+                                     copy = &((yyval.cl)->u.f.copy);
+                                     flags = &((yyval.cl)->u.f.flags);
+                                     create = &((yyval.cl)->u.f.create);
+                                     specialuse = &((yyval.cl)->u.f.specialuse);
+                                     mailboxid = &((yyval.cl)->u.f.mailboxid);
+                                 }
+#line 2543 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 56:
-#line 541 "sieve/sieve.y" /* yacc.c:1646  */
+  case 62:
+#line 582 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     /* $0 refers to ftags or rtags */
-                                     commandlist_t *c = (yyvsp[-1].cl);
-                                     int *copy = (c->type == FILEINTO) ?
-                                         &c->u.f.copy : &c->u.r.copy;
-
+                                     /* *copy assigned by the calling rule */
                                      if ((*copy)++) {
                                          sieveerror_c(sscript,
                                                       SIEVE_DUPLICATE_TAG,
@@ -2554,25 +2557,13 @@ yyreduce:
                                                       "copy");
                                      }
                                  }
-#line 2558 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2561 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 57:
-#line 562 "sieve/sieve.y" /* yacc.c:1646  */
+  case 63:
+#line 599 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     /* $0 refers to ftags or vtags */
-                                     commandlist_t *c = (yyvsp[-1].cl);
-                                     int *create = NULL;
-
-                                     switch (c->type) {
-                                     case FILEINTO:
-                                         create = &c->u.f.create; break;
-                                     case VACATION:
-                                         create = &c->u.v.fcc.create; break;
-                                     case ENOTIFY:
-                                         create = &c->u.n.fcc.create; break;
-                                     }
-
+                                     /* *create assigned by the calling rule */
                                      if ((*create)++) {
                                          sieveerror_c(sscript,
                                                       SIEVE_DUPLICATE_TAG,
@@ -2584,28 +2575,13 @@ yyreduce:
                                                       "mailbox");
                                      }
                                  }
-#line 2588 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2579 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 58:
-#line 591 "sieve/sieve.y" /* yacc.c:1646  */
+  case 64:
+#line 616 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     /* $0 refers to ftags or vtags */
-                                     commandlist_t *c = (yyvsp[-2].cl);
-                                     char **specialuse = NULL;
-
-                                     switch (c->type) {
-                                     case FILEINTO:
-                                         specialuse = &c->u.f.specialuse;
-                                         break;
-                                     case VACATION:
-                                         specialuse = &c->u.v.fcc.specialuse;
-                                         break;
-                                     case ENOTIFY:
-                                         specialuse = &c->u.n.fcc.specialuse;
-                                         break;
-                                     }
-
+                                     /* **specialuse assigned by calling rule */
                                      if (*specialuse != NULL) {
                                          sieveerror_c(sscript,
                                                       SIEVE_DUPLICATE_TAG,
@@ -2620,31 +2596,13 @@ yyreduce:
 
                                      *specialuse = (yyvsp[0].sval);
                                  }
-#line 2624 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2600 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 59:
-#line 624 "sieve/sieve.y" /* yacc.c:1646  */
+  case 65:
+#line 634 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     /* $0 refers to ftags, sntags or vtags */
-                                     commandlist_t *c = (yyvsp[-2].cl);
-                                     char **mailboxid = NULL;
-
-                                     switch (c->type) {
-                                     case FILEINTO:
-                                         mailboxid = &c->u.f.mailboxid;
-                                         break;
-                                     case SNOOZE:
-                                         mailboxid = &c->u.sn.mailbox;
-                                         break;
-                                     case VACATION:
-                                         mailboxid = &c->u.v.fcc.mailboxid;
-                                         break;
-                                     case ENOTIFY:
-                                         mailboxid = &c->u.n.fcc.mailboxid;
-                                         break;
-                                     }
-
+                                     /* **mailboxid assigned by the calling rule */
                                      if (*mailboxid != NULL) {
                                          sieveerror_c(sscript,
                                                       SIEVE_DUPLICATE_TAG,
@@ -2659,17 +2617,20 @@ yyreduce:
 
                                      *mailboxid = (yyvsp[0].sval);
                                  }
-#line 2663 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2621 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 60:
-#line 662 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = new_command(REDIRECT, sscript); }
-#line 2669 "sieve/sieve.c" /* yacc.c:1646  */
+  case 66:
+#line 654 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     (yyval.cl) = new_command(B_REDIRECT, sscript);
+                                     copy = &((yyval.cl)->u.r.copy);
+                                 }
+#line 2630 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 62:
-#line 664 "sieve/sieve.y" /* yacc.c:1646  */
+  case 68:
+#line 659 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.r.list++) {
                                          sieveerror_c(sscript,
@@ -2682,11 +2643,11 @@ yyreduce:
                                                       "extlists");
                                      }
                                  }
-#line 2686 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2647 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 63:
-#line 676 "sieve/sieve.y" /* yacc.c:1646  */
+  case 69:
+#line 671 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if (!supported(SIEVE_CAPA_REDIR_DELBY)) {
                                          sieveerror_c(sscript,
@@ -2694,11 +2655,11 @@ yyreduce:
                                                       "redirect-deliverby");
                                      }
                                  }
-#line 2698 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2659 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 64:
-#line 683 "sieve/sieve.y" /* yacc.c:1646  */
+  case 70:
+#line 678 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if (!supported(SIEVE_CAPA_REDIR_DSN)) {
                                          sieveerror_c(sscript,
@@ -2706,11 +2667,11 @@ yyreduce:
                                                       "redirect-dsn");
                                      }
                                  }
-#line 2710 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2671 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 65:
-#line 693 "sieve/sieve.y" /* yacc.c:1646  */
+  case 71:
+#line 688 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      /* $0 refers to rtags */
                                      commandlist_t *c = (yyvsp[-2].cl);
@@ -2725,11 +2686,11 @@ yyreduce:
                                      buf_printf(&buf, "+%d", (yyvsp[0].nval));
                                      c->u.r.bytime = buf_release(&buf);
                                  }
-#line 2729 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2690 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 66:
-#line 707 "sieve/sieve.y" /* yacc.c:1646  */
+  case 72:
+#line 702 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      /* $0 refers to rtags */
                                      commandlist_t *c = (yyvsp[-2].cl);
@@ -2743,11 +2704,11 @@ yyreduce:
 
                                      c->u.r.bytime = (yyvsp[0].sval);
                                  }
-#line 2747 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2708 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 67:
-#line 720 "sieve/sieve.y" /* yacc.c:1646  */
+  case 73:
+#line 715 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      /* $0 refers to rtags */
                                      commandlist_t *c = (yyvsp[-2].cl);
@@ -2760,11 +2721,11 @@ yyreduce:
 
                                      c->u.r.bymode = (yyvsp[0].sval);
                                  }
-#line 2764 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2725 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 68:
-#line 732 "sieve/sieve.y" /* yacc.c:1646  */
+  case 74:
+#line 727 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      /* $0 refers to rtags */
                                      commandlist_t *c = (yyvsp[-1].cl);
@@ -2777,11 +2738,11 @@ yyreduce:
 
                                      c->u.r.bytrace = 1;
                                  }
-#line 2781 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2742 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 69:
-#line 748 "sieve/sieve.y" /* yacc.c:1646  */
+  case 75:
+#line 743 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      /* $0 refers to rtags */
                                      commandlist_t *c = (yyvsp[-2].cl);
@@ -2794,11 +2755,11 @@ yyreduce:
 
                                      c->u.r.dsn_notify = (yyvsp[0].sval);
                                  }
-#line 2798 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2759 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 70:
-#line 760 "sieve/sieve.y" /* yacc.c:1646  */
+  case 76:
+#line 755 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      /* $0 refers to rtags */
                                      commandlist_t *c = (yyvsp[-2].cl);
@@ -2811,117 +2772,164 @@ yyreduce:
 
                                      c->u.r.dsn_ret = (yyvsp[0].sval);
                                  }
-#line 2815 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2776 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 71:
-#line 776 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = new_command(SET, sscript); }
-#line 2821 "sieve/sieve.c" /* yacc.c:1646  */
+  case 77:
+#line 771 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = new_command(B_SET, sscript); }
+#line 2782 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 72:
-#line 777 "sieve/sieve.y" /* yacc.c:1646  */
+  case 78:
+#line 772 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     if ((yyval.cl)->u.s.mod40) {
+                                     if ((yyval.cl)->u.s.modifiers & BFV_MOD40_MASK) {
                                          sieveerror_c(sscript,
                                                       SIEVE_DUPLICATE_TAG,
                                                       "precedence 40 modifier");
                                      }
 
-                                     (yyval.cl)->u.s.mod40 = (yyvsp[0].nval);
+                                     (yyval.cl)->u.s.modifiers |= (yyvsp[0].nval);
                                  }
-#line 2835 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2796 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 73:
-#line 786 "sieve/sieve.y" /* yacc.c:1646  */
+  case 79:
+#line 781 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     if ((yyval.cl)->u.s.mod30) {
+                                     if ((yyval.cl)->u.s.modifiers & BFV_MOD30_MASK) {
                                          sieveerror_c(sscript,
                                                       SIEVE_DUPLICATE_TAG,
                                                       "precedence 30 modifier");
                                      }
 
-                                     (yyval.cl)->u.s.mod30 = (yyvsp[0].nval);
+                                     (yyval.cl)->u.s.modifiers |= (yyvsp[0].nval);
                                  }
-#line 2849 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2810 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 74:
-#line 795 "sieve/sieve.y" /* yacc.c:1646  */
+  case 80:
+#line 790 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     if ((yyval.cl)->u.s.mod20) {
+                                     if ((yyval.cl)->u.s.modifiers & BFV_MOD20_MASK) {
                                          sieveerror_c(sscript,
                                                       SIEVE_DUPLICATE_TAG,
                                                       "precedence 20 modifier");
                                      }
 
-                                     (yyval.cl)->u.s.mod20 = (yyvsp[0].nval);
+                                     (yyval.cl)->u.s.modifiers |= (yyvsp[0].nval);
                                  }
-#line 2863 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2824 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 75:
-#line 804 "sieve/sieve.y" /* yacc.c:1646  */
+  case 81:
+#line 799 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     if ((yyval.cl)->u.s.mod15) {
+                                     if ((yyval.cl)->u.s.modifiers & BFV_MOD15_MASK) {
                                          sieveerror_c(sscript,
                                                       SIEVE_DUPLICATE_TAG,
                                                       "precedence 15 modifier");
                                      }
 
-                                     (yyval.cl)->u.s.mod15 = (yyvsp[0].nval);
+                                     (yyval.cl)->u.s.modifiers |= (yyvsp[0].nval);
                                  }
-#line 2877 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2838 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 76:
-#line 813 "sieve/sieve.y" /* yacc.c:1646  */
+  case 82:
+#line 808 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     if ((yyval.cl)->u.s.mod10) {
+                                     if ((yyval.cl)->u.s.modifiers & BFV_MOD10_MASK) {
                                          sieveerror_c(sscript,
                                                       SIEVE_DUPLICATE_TAG,
                                                       "precedence 10 modifier");
                                      }
 
-                                     (yyval.cl)->u.s.mod10 = (yyvsp[0].nval);
+                                     (yyval.cl)->u.s.modifiers |= (yyvsp[0].nval);
                                  }
-#line 2891 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2852 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 82:
-#line 835 "sieve/sieve.y" /* yacc.c:1646  */
+  case 83:
+#line 821 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = BFV_LOWER; }
+#line 2858 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 84:
+#line 822 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = BFV_UPPER; }
+#line 2864 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 85:
+#line 825 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = BFV_LOWERFIRST; }
+#line 2870 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 86:
+#line 826 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = BFV_UPPERFIRST; }
+#line 2876 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 87:
+#line 829 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = BFV_QUOTEWILDCARD; }
+#line 2882 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 88:
+#line 830 "sieve/sieve.y" /* yacc.c:1646  */
     { 
                                      if (!supported(SIEVE_CAPA_REGEX)) {
                                          sieveerror_c(sscript,
                                                       SIEVE_MISSING_REQUIRE,
                                                       "regex");
                                      }
+
+                                     (yyval.nval) = BFV_QUOTEREGEX;
                                  }
-#line 2903 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2896 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 83:
-#line 845 "sieve/sieve.y" /* yacc.c:1646  */
+  case 89:
+#line 842 "sieve/sieve.y" /* yacc.c:1646  */
     { 
                                      if (!supported(SIEVE_CAPA_ENOTIFY)) {
                                          sieveerror_c(sscript,
                                                       SIEVE_MISSING_REQUIRE,
                                                       "enotify");
                                      }
+
+                                     (yyval.nval) = BFV_ENCODEURL;
                                  }
-#line 2915 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2910 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 85:
-#line 859 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = new_command(VACATION, sscript); }
-#line 2921 "sieve/sieve.c" /* yacc.c:1646  */
+  case 90:
+#line 853 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = BFV_LENGTH; }
+#line 2916 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 86:
-#line 860 "sieve/sieve.y" /* yacc.c:1646  */
+  case 91:
+#line 858 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     (yyval.cl) = new_command(B_VACATION, sscript);
+                                     flags = &((yyval.cl)->u.v.fcc.flags);
+                                     create = &((yyval.cl)->u.v.fcc.create);
+                                     specialuse = &((yyval.cl)->u.v.fcc.specialuse);
+                                     mailboxid = &((yyval.cl)->u.v.fcc.mailboxid);
+                                     fccfolder = &((yyval.cl)->u.v.fcc.folder);
+                                 }
+#line 2929 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 92:
+#line 866 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.v.seconds != -1) {
                                          sieveerror_c(sscript,
@@ -2931,11 +2939,11 @@ yyreduce:
 
                                      (yyval.cl)->u.v.seconds = (yyvsp[0].nval) * DAY2SEC;
                                  }
-#line 2935 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2943 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 87:
-#line 869 "sieve/sieve.y" /* yacc.c:1646  */
+  case 93:
+#line 875 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if (!supported(SIEVE_CAPA_VACATION_SEC)) {
                                          sieveerror_c(sscript,
@@ -2950,11 +2958,11 @@ yyreduce:
 
                                      (yyval.cl)->u.v.seconds = (yyvsp[0].nval);
                                  }
-#line 2954 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2962 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 88:
-#line 883 "sieve/sieve.y" /* yacc.c:1646  */
+  case 94:
+#line 889 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.v.subject != NULL) {
                                          sieveerror_c(sscript,
@@ -2965,11 +2973,11 @@ yyreduce:
 
                                      (yyval.cl)->u.v.subject = (yyvsp[0].sval);
                                  }
-#line 2969 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2977 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 89:
-#line 893 "sieve/sieve.y" /* yacc.c:1646  */
+  case 95:
+#line 899 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.v.from != NULL) {
                                          sieveerror_c(sscript,
@@ -2980,11 +2988,11 @@ yyreduce:
 
                                      (yyval.cl)->u.v.from = (yyvsp[0].sval);
                                  }
-#line 2984 "sieve/sieve.c" /* yacc.c:1646  */
+#line 2992 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 90:
-#line 905 "sieve/sieve.y" /* yacc.c:1646  */
+  case 96:
+#line 911 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.v.addresses != NULL) {
                                          sieveerror_c(sscript,
@@ -2995,11 +3003,11 @@ yyreduce:
 
                                      (yyval.cl)->u.v.addresses = (yyvsp[0].sl);
                                  }
-#line 2999 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3007 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 91:
-#line 915 "sieve/sieve.y" /* yacc.c:1646  */
+  case 97:
+#line 921 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.v.mime != -1) {
                                          sieveerror_c(sscript,
@@ -3009,11 +3017,11 @@ yyreduce:
 
                                      (yyval.cl)->u.v.mime = 1;
                                  }
-#line 3013 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3021 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 92:
-#line 924 "sieve/sieve.y" /* yacc.c:1646  */
+  case 98:
+#line 930 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.v.handle != NULL) {
                                          sieveerror_c(sscript,
@@ -3024,28 +3032,18 @@ yyreduce:
 
                                      (yyval.cl)->u.v.handle = (yyvsp[0].sval);
                                  }
-#line 3028 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3036 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 94:
-#line 938 "sieve/sieve.y" /* yacc.c:1646  */
+  case 100:
+#line 944 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     /* $0 refers to vtags or ntags */
-                                     commandlist_t *c = (yyvsp[-2].cl);
-                                     char **folder = NULL;
-
-                                     switch (c->type) {
-                                     case VACATION:
-                                         folder = &c->u.v.fcc.folder; break;
-                                     case ENOTIFY:
-                                         folder = &c->u.n.fcc.folder; break;
-                                     }
-
-                                     if (*folder != NULL) {
+                                     /* **fccfolder assigned by the calling rule */
+                                     if (*fccfolder != NULL) {
                                          sieveerror_c(sscript,
                                                       SIEVE_DUPLICATE_TAG,
                                                       ":fcc");
-                                         free(*folder);
+                                         free(*fccfolder);
                                      }
                                      else if (!supported(SIEVE_CAPA_FCC)) {
                                          sieveerror_c(sscript,
@@ -3053,19 +3051,37 @@ yyreduce:
                                                       "fcc");
                                      }
 
-                                     *folder = (yyvsp[0].sval);
+                                     *fccfolder = (yyvsp[0].sval);
                                  }
-#line 3059 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3057 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 101:
-#line 978 "sieve/sieve.y" /* yacc.c:1646  */
+  case 105:
+#line 968 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_SETFLAG;    }
+#line 3063 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 106:
+#line 969 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_ADDFLAG;    }
+#line 3069 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 107:
+#line 970 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_REMOVEFLAG; }
+#line 3075 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 108:
+#line 975 "sieve/sieve.y" /* yacc.c:1646  */
     { (yyval.cl) = new_command((yyvsp[0].nval), sscript); }
-#line 3065 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3081 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 102:
-#line 979 "sieve/sieve.y" /* yacc.c:1646  */
+  case 109:
+#line 976 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.fl.variable != NULL) {
                                          sieveerror_c(sscript,
@@ -3081,17 +3097,29 @@ yyreduce:
 
                                      (yyval.cl)->u.fl.variable = (yyvsp[0].sval);
                                  }
-#line 3085 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3101 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 105:
-#line 1004 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = new_command(ADDHEADER, sscript); }
-#line 3091 "sieve/sieve.c" /* yacc.c:1646  */
+  case 110:
+#line 995 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_ADDFLAG;   }
+#line 3107 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 106:
-#line 1005 "sieve/sieve.y" /* yacc.c:1646  */
+  case 111:
+#line 996 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_REMOVEFLAG; }
+#line 3113 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 112:
+#line 1001 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.cl) = new_command(B_ADDHEADER, sscript); }
+#line 3119 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 113:
+#line 1002 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.ah.index < 0) {
                                          sieveerror_c(sscript,
@@ -3101,47 +3129,45 @@ yyreduce:
 
                                      (yyval.cl)->u.ah.index = -1;
                                  }
-#line 3105 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 107:
-#line 1018 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = new_command(DELETEHEADER, sscript);}
-#line 3111 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 108:
-#line 1019 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].cl)->u.dh.comp); }
-#line 3117 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 110:
-#line 1020 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].cl)->u.dh.comp); }
-#line 3123 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 112:
-#line 1021 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].cl)->u.dh.comp); }
-#line 3129 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3133 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 114:
-#line 1022 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].cl)->u.dh.comp); }
-#line 3135 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 118:
-#line 1039 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = new_command(ENOTIFY, sscript); }
-#line 3141 "sieve/sieve.c" /* yacc.c:1646  */
+#line 1015 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     (yyval.cl) = new_command(B_DELETEHEADER, sscript);
+                                     ctags = &((yyval.cl)->u.dh.comp);
+                                 }
+#line 3142 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 119:
-#line 1042 "sieve/sieve.y" /* yacc.c:1646  */
+#line 1027 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_REJECT;  }
+#line 3148 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 120:
+#line 1028 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_EREJECT; }
+#line 3154 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 121:
+#line 1039 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     (yyval.cl) = new_command(B_ENOTIFY, sscript);
+                                     flags = &((yyval.cl)->u.n.fcc.flags);
+                                     create = &((yyval.cl)->u.n.fcc.create);
+                                     specialuse = &((yyval.cl)->u.n.fcc.specialuse);
+                                     mailboxid = &((yyval.cl)->u.n.fcc.mailboxid);
+                                     fccfolder = &((yyval.cl)->u.n.fcc.folder);
+                                 }
+#line 3167 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 122:
+#line 1049 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.n.from != NULL) {
                                          sieveerror_c(sscript,
@@ -3152,11 +3178,11 @@ yyreduce:
 
                                      (yyval.cl)->u.n.from = (yyvsp[0].sval);
                                  }
-#line 3156 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3182 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 120:
-#line 1054 "sieve/sieve.y" /* yacc.c:1646  */
+  case 123:
+#line 1061 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.n.priority != -1) {
                                          sieveerror_c(sscript,
@@ -3166,11 +3192,11 @@ yyreduce:
 
                                      (yyval.cl)->u.n.priority = (yyvsp[0].nval);
                                  }
-#line 3170 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3196 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 122:
-#line 1066 "sieve/sieve.y" /* yacc.c:1646  */
+  case 125:
+#line 1073 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.n.id != NULL) {
                                          sieveerror_c(sscript,
@@ -3181,11 +3207,11 @@ yyreduce:
 
                                      (yyval.cl)->u.n.id = (yyvsp[0].sval);
                                  }
-#line 3185 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3211 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 123:
-#line 1076 "sieve/sieve.y" /* yacc.c:1646  */
+  case 126:
+#line 1083 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.n.method != NULL) {
                                          sieveerror_c(sscript,
@@ -3196,11 +3222,11 @@ yyreduce:
 
                                      (yyval.cl)->u.n.method = (yyvsp[0].sval);
                                  }
-#line 3200 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3226 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 124:
-#line 1086 "sieve/sieve.y" /* yacc.c:1646  */
+  case 127:
+#line 1093 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.n.priority != -1) {
                                          sieveerror_c(sscript,
@@ -3210,11 +3236,11 @@ yyreduce:
 
                                      (yyval.cl)->u.n.priority = (yyvsp[0].nval);
                                  }
-#line 3214 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3240 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 125:
-#line 1097 "sieve/sieve.y" /* yacc.c:1646  */
+  case 128:
+#line 1104 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.n.message != NULL) {
                                          sieveerror_c(sscript,
@@ -3225,11 +3251,11 @@ yyreduce:
 
                                      (yyval.cl)->u.n.message = (yyvsp[0].sval);
                                  }
-#line 3229 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3255 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 126:
-#line 1109 "sieve/sieve.y" /* yacc.c:1646  */
+  case 129:
+#line 1116 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.n.options != NULL) {
                                          sieveerror_c(sscript,
@@ -3240,17 +3266,38 @@ yyreduce:
 
                                      (yyval.cl)->u.n.options = (yyvsp[0].sl);
                                  }
-#line 3244 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3270 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 130:
 #line 1130 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = new_command(DENOTIFY, sscript); }
-#line 3250 "sieve/sieve.c" /* yacc.c:1646  */
+    { (yyval.nval) = B_LOW;    }
+#line 3276 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 131:
 #line 1131 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_NORMAL; }
+#line 3282 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 132:
+#line 1132 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_HIGH;   }
+#line 3288 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 133:
+#line 1137 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     (yyval.cl) = new_command(B_DENOTIFY, sscript);
+                                     ctags = &((yyval.cl)->u.d.comp);
+                                 }
+#line 3297 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 134:
+#line 1141 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.d.priority != -1) {
                                          sieveerror_c(sscript,
@@ -3260,101 +3307,46 @@ yyreduce:
 
                                      (yyval.cl)->u.d.priority = (yyvsp[0].nval);
                                  }
-#line 3264 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3311 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 132:
-#line 1141 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].cl)->u.d.comp); }
-#line 3270 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 133:
-#line 1142 "sieve/sieve.y" /* yacc.c:1646  */
+  case 135:
+#line 1152 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.d.pattern) free((yyval.cl)->u.d.pattern);
                                      (yyval.cl)->u.d.pattern = (yyvsp[0].sval);
                                  }
-#line 3279 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 134:
-#line 1150 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = new_command(INCLUDE, sscript); }
-#line 3285 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 135:
-#line 1151 "sieve/sieve.y" /* yacc.c:1646  */
-    {
-                                     if ((yyval.cl)->u.inc.location != -1) {
-                                         sieveerror_c(sscript,
-                                                      SIEVE_DUPLICATE_TAG,
-                                                      "location");
-                                     }
-
-                                     (yyval.cl)->u.inc.location = (yyvsp[0].nval);
-                                 }
-#line 3299 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3320 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 136:
 #line 1160 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     if ((yyval.cl)->u.inc.once != -1) {
-                                         sieveerror_c(sscript,
-                                                      SIEVE_DUPLICATE_TAG,
-                                                      ":once");
-                                     }
-
-                                     (yyval.cl)->u.inc.once = 1;
+                                     (yyval.cl) = new_command(B_SNOOZE, sscript);
+                                     create = &((yyval.cl)->u.sn.f.create);
+                                     specialuse = &((yyval.cl)->u.sn.f.specialuse);
+                                     mailboxid = &((yyval.cl)->u.sn.f.mailboxid);
                                  }
-#line 3313 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3331 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 137:
-#line 1169 "sieve/sieve.y" /* yacc.c:1646  */
+#line 1166 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     if ((yyval.cl)->u.inc.optional != -1) {
-                                         sieveerror_c(sscript,
-                                                      SIEVE_DUPLICATE_TAG,
-                                                      ":optional");
-                                     }
-
-                                     (yyval.cl)->u.inc.optional = 1;
-                                 }
-#line 3327 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 140:
-#line 1188 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl) = new_command(SNOOZE, sscript); }
-#line 3333 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 141:
-#line 1189 "sieve/sieve.y" /* yacc.c:1646  */
-    {
-                                     if ((yyval.cl)->u.sn.mailbox != NULL) {
+                                     if ((yyval.cl)->u.sn.f.folder != NULL) {
                                          sieveerror_c(sscript,
                                                       SIEVE_DUPLICATE_TAG,
                                                       ":mailbox");
-                                         free((yyval.cl)->u.sn.mailbox);
+                                         free((yyval.cl)->u.sn.f.folder);
                                      }
 
-                                     (yyval.cl)->u.sn.mailbox = (yyvsp[0].sval);
+                                     (yyval.cl)->u.sn.f.folder = (yyvsp[0].sval);
                                  }
-#line 3348 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3346 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 142:
-#line 1199 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.cl)->u.sn.is_mboxid = 1; }
-#line 3354 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 143:
-#line 1202 "sieve/sieve.y" /* yacc.c:1646  */
+  case 141:
+#line 1181 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.sn.addflags != NULL) {
                                          sieveerror_c(sscript,
@@ -3362,14 +3354,19 @@ yyreduce:
                                                       ":addflags");
                                          free((yyval.cl)->u.sn.addflags);
                                      }
+                                     else if (!supported(SIEVE_CAPA_IMAP4FLAGS)) {
+                                         sieveerror_c(sscript,
+                                                      SIEVE_MISSING_REQUIRE,
+                                                      "imap4flags");
+                                     }
 
                                      (yyval.cl)->u.sn.addflags = (yyvsp[0].sl);
                                  }
-#line 3369 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3366 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 144:
-#line 1213 "sieve/sieve.y" /* yacc.c:1646  */
+  case 142:
+#line 1197 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.sn.removeflags != NULL) {
                                          sieveerror_c(sscript,
@@ -3377,14 +3374,19 @@ yyreduce:
                                                       ":removeflags");
                                          free((yyval.cl)->u.sn.removeflags);
                                      }
+                                     else if (!supported(SIEVE_CAPA_IMAP4FLAGS)) {
+                                         sieveerror_c(sscript,
+                                                      SIEVE_MISSING_REQUIRE,
+                                                      "imap4flags");
+                                     }
 
                                      (yyval.cl)->u.sn.removeflags = (yyvsp[0].sl);
                                  }
-#line 3384 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3386 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 145:
-#line 1224 "sieve/sieve.y" /* yacc.c:1646  */
+  case 143:
+#line 1213 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.cl)->u.sn.days != 0) {
                                          sieveerror_c(sscript,
@@ -3394,348 +3396,370 @@ yyreduce:
 
                                      (yyval.cl)->u.sn.days = (yyvsp[0].nval);
                                  }
-#line 3398 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3400 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 147:
-#line 1237 "sieve/sieve.y" /* yacc.c:1646  */
+  case 144:
+#line 1222 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     if ((yyval.cl)->u.sn.tzid != NULL) {
+                                         sieveerror_c(sscript,
+                                                      SIEVE_DUPLICATE_TAG,
+                                                      ":tzid");
+                                         free((yyval.cl)->u.sn.tzid);
+                                     }
+
+                                     (yyval.cl)->u.sn.tzid = (yyvsp[0].sval);
+                                 }
+#line 3415 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 146:
+#line 1236 "sieve/sieve.y" /* yacc.c:1646  */
     { (yyval.nval) = (yyvsp[-1].nval); }
-#line 3404 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3421 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 148:
+#line 1241 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = (yyvsp[-2].nval) | (yyvsp[0].nval); }
+#line 3427 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 149:
-#line 1242 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.nval) = (yyvsp[-2].nval) | (yyvsp[0].nval); }
-#line 3410 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 150:
-#line 1246 "sieve/sieve.y" /* yacc.c:1646  */
+#line 1245 "sieve/sieve.y" /* yacc.c:1646  */
     { (yyval.nval) = verify_weekday(sscript, (yyvsp[0].sval)); }
-#line 3416 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3433 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 152:
-#line 1251 "sieve/sieve.y" /* yacc.c:1646  */
+  case 151:
+#line 1250 "sieve/sieve.y" /* yacc.c:1646  */
     { (yyval.nl) = (yyvsp[-1].nl); }
-#line 3422 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3439 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 153:
+#line 1255 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nl) = (yyvsp[-2].nl); arrayu64_add((yyval.nl), (yyvsp[0].nval)); }
+#line 3445 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 154:
-#line 1256 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.nl) = (yyvsp[-2].nl); arrayu64_add((yyval.nl), (yyvsp[0].nval)); }
-#line 3428 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 155:
-#line 1260 "sieve/sieve.y" /* yacc.c:1646  */
+#line 1259 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      (yyval.nl) = arrayu64_new();
                                      arrayu64_add((yyval.nl), (yyvsp[0].nval));
                                  }
-#line 3437 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3454 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 155:
+#line 1266 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = verify_time(sscript, (yyvsp[0].sval)); }
+#line 3460 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 156:
-#line 1267 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.nval) = verify_time(sscript, (yyvsp[0].sval)); }
-#line 3443 "sieve/sieve.c" /* yacc.c:1646  */
+#line 1273 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.testl) = (yyvsp[-1].testl); }
+#line 3466 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 157:
-#line 1274 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.testl) = (yyvsp[-1].testl); }
-#line 3449 "sieve/sieve.c" /* yacc.c:1646  */
+#line 1277 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.testl) = new_testlist((yyvsp[0].test), NULL); }
+#line 3472 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 158:
 #line 1278 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.testl) = new_testlist((yyvsp[0].test), NULL); }
-#line 3455 "sieve/sieve.c" /* yacc.c:1646  */
+    { (yyval.testl) = new_testlist((yyvsp[-2].test), (yyvsp[0].testl)); }
+#line 3478 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 159:
-#line 1279 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.testl) = new_testlist((yyvsp[-2].test), (yyvsp[0].testl)); }
-#line 3461 "sieve/sieve.c" /* yacc.c:1646  */
+#line 1282 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.test) = build_anyof(sscript, (yyvsp[0].testl)); }
+#line 3484 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 160:
 #line 1283 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = build_anyof(sscript, (yyvsp[0].testl)); }
-#line 3467 "sieve/sieve.c" /* yacc.c:1646  */
+    { (yyval.test) = build_allof(sscript, (yyvsp[0].testl)); }
+#line 3490 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 161:
 #line 1284 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = build_allof(sscript, (yyvsp[0].testl)); }
-#line 3473 "sieve/sieve.c" /* yacc.c:1646  */
+    { (yyval.test) = build_not(sscript, (yyvsp[0].test));   }
+#line 3496 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 162:
 #line 1285 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = build_not(sscript, (yyvsp[0].test));   }
-#line 3479 "sieve/sieve.c" /* yacc.c:1646  */
+    { (yyval.test) = new_test(BC_FALSE, sscript); }
+#line 3502 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 163:
 #line 1286 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = new_test(SFALSE, sscript); }
-#line 3485 "sieve/sieve.c" /* yacc.c:1646  */
+    { (yyval.test) = new_test(BC_TRUE, sscript);  }
+#line 3508 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 164:
 #line 1287 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = new_test(STRUE, sscript);  }
-#line 3491 "sieve/sieve.c" /* yacc.c:1646  */
+    {
+                                     (yyval.test) = new_test(BC_EXISTS, sscript);
+                                     (yyval.test)->u.sl = (yyvsp[0].sl);
+                                     (yyval.test)->nargs = bc_precompile((yyval.test)->args, "S",
+                                                               (yyval.test)->u.sl);
+                                 }
+#line 3519 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 165:
-#line 1288 "sieve/sieve.y" /* yacc.c:1646  */
+#line 1293 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     (yyval.test) = new_test(EXISTS, sscript);
-                                     (yyval.test)->u.sl = (yyvsp[0].sl);
+                                     (yyval.test) = new_test(BC_SIZE, sscript);
+                                     (yyval.test)->u.sz.t = (yyvsp[-1].nval);
+                                     (yyval.test)->u.sz.n = (yyvsp[0].nval);
+                                     (yyval.test)->nargs = bc_precompile((yyval.test)->args, "ii",
+                                                               (yyval.test)->u.sz.t,
+                                                               (yyval.test)->u.sz.n);
                                  }
-#line 3500 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3532 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 166:
-#line 1292 "sieve/sieve.y" /* yacc.c:1646  */
-    {
-                                     (yyval.test) = new_test(SIZE, sscript);
-                                     (yyval.test)->u.sz.t = (yyvsp[-1].nval);
-                                     (yyval.test)->u.sz.n = (yyvsp[0].nval);
-                                 }
-#line 3510 "sieve/sieve.c" /* yacc.c:1646  */
+#line 1303 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.test) = build_header(sscript, (yyvsp[-2].test), (yyvsp[-1].sl), (yyvsp[0].sl)); }
+#line 3538 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 167:
-#line 1299 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = build_header(sscript, (yyvsp[-2].test), (yyvsp[-1].sl), (yyvsp[0].sl)); }
-#line 3516 "sieve/sieve.c" /* yacc.c:1646  */
+#line 1306 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.test) = build_address(sscript, (yyvsp[-2].test), (yyvsp[-1].sl), (yyvsp[0].sl)); }
+#line 3544 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 168:
-#line 1302 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = build_address(sscript, (yyvsp[-2].test), (yyvsp[-1].sl), (yyvsp[0].sl)); }
-#line 3522 "sieve/sieve.c" /* yacc.c:1646  */
+#line 1308 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.test) = build_envelope(sscript, (yyvsp[-2].test), (yyvsp[-1].sl), (yyvsp[0].sl)); }
+#line 3550 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 169:
-#line 1304 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = build_envelope(sscript, (yyvsp[-2].test), (yyvsp[-1].sl), (yyvsp[0].sl)); }
-#line 3528 "sieve/sieve.c" /* yacc.c:1646  */
+#line 1310 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.test) = build_body(sscript, (yyvsp[-1].test), (yyvsp[0].sl)); }
+#line 3556 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 170:
-#line 1306 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = build_body(sscript, (yyvsp[-1].test), (yyvsp[0].sl)); }
-#line 3534 "sieve/sieve.c" /* yacc.c:1646  */
+#line 1313 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.test) = build_mbox_meta(sscript,
+                                                        (yyvsp[-2].test), NULL, (yyvsp[-1].sval), (yyvsp[0].sl)); }
+#line 3563 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 171:
-#line 1309 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = build_mbox_meta(sscript,
-                                                        (yyvsp[-2].test), NULL, (yyvsp[-1].sval), (yyvsp[0].sl)); }
-#line 3541 "sieve/sieve.c" /* yacc.c:1646  */
+#line 1317 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.test) = build_stringt(sscript, (yyvsp[-2].test), (yyvsp[-1].sl), (yyvsp[0].sl)); }
+#line 3569 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 172:
-#line 1313 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = build_stringt(sscript, (yyvsp[-2].test), (yyvsp[-1].sl), (yyvsp[0].sl)); }
-#line 3547 "sieve/sieve.c" /* yacc.c:1646  */
+#line 1324 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.test) = build_hasflag(sscript, (yyvsp[-2].test), (yyvsp[-1].sl), (yyvsp[0].sl)); }
+#line 3575 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 173:
-#line 1320 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = build_hasflag(sscript, (yyvsp[-2].test), (yyvsp[-1].sl), (yyvsp[0].sl)); }
-#line 3553 "sieve/sieve.c" /* yacc.c:1646  */
+#line 1326 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.test) = build_hasflag(sscript, (yyvsp[-1].test), NULL, (yyvsp[0].sl)); }
+#line 3581 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 174:
-#line 1322 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = build_hasflag(sscript, (yyvsp[-1].test), NULL, (yyvsp[0].sl)); }
-#line 3559 "sieve/sieve.c" /* yacc.c:1646  */
+#line 1329 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.test) = build_date(sscript, (yyvsp[-3].test), (yyvsp[-2].sval), (yyvsp[-1].sval), (yyvsp[0].sl)); }
+#line 3587 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 175:
-#line 1325 "sieve/sieve.y" /* yacc.c:1646  */
-    { getdatepart = 1; }
-#line 3565 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 176:
-#line 1326 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = build_date(sscript, (yyvsp[-4].test), (yyvsp[-3].sval), (yyvsp[-1].nval), (yyvsp[0].sl)); }
-#line 3571 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 177:
-#line 1329 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = build_date(sscript, (yyvsp[-2].test), NULL, (yyvsp[-1].nval), (yyvsp[0].sl)); }
-#line 3577 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 178:
-#line 1331 "sieve/sieve.y" /* yacc.c:1646  */
-    {
-                                     (yyval.test) = new_test(VALIDNOTIFYMETHOD, sscript);
-                                     (yyval.test)->u.sl = (yyvsp[0].sl);
-                                 }
-#line 3586 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 179:
-#line 1336 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = build_mbox_meta(sscript,
-                                                        (yyvsp[-3].test), (yyvsp[-2].sval), (yyvsp[-1].sval), (yyvsp[0].sl)); }
+#line 1332 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.test) = build_date(sscript, (yyvsp[-2].test), NULL, (yyvsp[-1].sval), (yyvsp[0].sl)); }
 #line 3593 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 180:
-#line 1339 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = build_ihave(sscript, (yyvsp[0].sl)); }
-#line 3599 "sieve/sieve.c" /* yacc.c:1646  */
+  case 176:
+#line 1335 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     (yyval.test) = new_test(BC_VALIDNOTIFYMETHOD, sscript);
+                                     (yyval.test)->u.sl = (yyvsp[0].sl);
+                                     (yyval.test)->nargs = bc_precompile((yyval.test)->args, "S",
+                                                               (yyval.test)->u.sl);
+                                 }
+#line 3604 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 181:
+  case 177:
 #line 1342 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.test) = build_mbox_meta(sscript,
+                                                        (yyvsp[-3].test), (yyvsp[-2].sval), (yyvsp[-1].sval), (yyvsp[0].sl)); }
+#line 3611 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 178:
+#line 1345 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.test) = build_ihave(sscript, (yyvsp[0].sl)); }
+#line 3617 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 179:
+#line 1348 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     (yyval.test) = new_test(MAILBOXEXISTS, sscript);
+                                     (yyval.test) = new_test(BC_MAILBOXEXISTS, sscript);
                                      (yyval.test) = build_mbox_meta(sscript,
                                                           (yyval.test), NULL, NULL, (yyvsp[0].sl));
                                  }
-#line 3609 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3627 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 182:
-#line 1349 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = build_mbox_meta(sscript,
-                                                        (yyvsp[-3].test), (yyvsp[-2].sval), (yyvsp[-1].sval), (yyvsp[0].sl)); }
-#line 3616 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 183:
-#line 1353 "sieve/sieve.y" /* yacc.c:1646  */
-    {
-                                     (yyval.test) = new_test(METADATAEXISTS, sscript);
-                                     (yyval.test) = build_mbox_meta(sscript,
-                                                          (yyval.test), (yyvsp[-1].sval), NULL, (yyvsp[0].sl));
-                                 }
-#line 3626 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 184:
-#line 1360 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = build_mbox_meta(sscript,
-                                                        (yyvsp[-2].test), NULL, (yyvsp[-1].sval), (yyvsp[0].sl)); }
+  case 180:
+#line 1354 "sieve/sieve.y" /* yacc.c:1646  */
+    { bctype = BC_METADATA; }
 #line 3633 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 185:
-#line 1364 "sieve/sieve.y" /* yacc.c:1646  */
+  case 181:
+#line 1355 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.test) = build_mbox_meta(sscript,
+                                                        (yyvsp[-3].test), (yyvsp[-2].sval), (yyvsp[-1].sval), (yyvsp[0].sl)); }
+#line 3640 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 182:
+#line 1359 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     (yyval.test) = new_test(SERVERMETADATAEXISTS,
+                                     (yyval.test) = new_test(BC_METADATAEXISTS, sscript);
+                                     (yyval.test) = build_mbox_meta(sscript,
+                                                          (yyval.test), (yyvsp[-1].sval), NULL, (yyvsp[0].sl));
+                                 }
+#line 3650 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 183:
+#line 1365 "sieve/sieve.y" /* yacc.c:1646  */
+    { bctype = BC_SERVERMETADATA; }
+#line 3656 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 184:
+#line 1366 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.test) = build_mbox_meta(sscript,
+                                                        (yyvsp[-2].test), NULL, (yyvsp[-1].sval), (yyvsp[0].sl)); }
+#line 3663 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 185:
+#line 1370 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     (yyval.test) = new_test(BC_SERVERMETADATAEXISTS,
                                                    sscript);
                                      (yyval.test) = build_mbox_meta(sscript,
                                                           (yyval.test), NULL, NULL, (yyvsp[0].sl));
                                  }
-#line 3644 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3674 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 186:
-#line 1372 "sieve/sieve.y" /* yacc.c:1646  */
+#line 1378 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     (yyval.test) = new_test(VALIDEXTLIST, sscript);
+                                     (yyval.test) = new_test(BC_VALIDEXTLIST, sscript);
                                      (yyval.test)->u.sl = (yyvsp[0].sl);
+                                     (yyval.test)->nargs = bc_precompile((yyval.test)->args, "S",
+                                                               (yyval.test)->u.sl);
                                  }
-#line 3653 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3685 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 187:
-#line 1376 "sieve/sieve.y" /* yacc.c:1646  */
+#line 1384 "sieve/sieve.y" /* yacc.c:1646  */
     { (yyval.test) = build_duplicate(sscript, (yyvsp[0].test)); }
-#line 3659 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3691 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 188:
-#line 1379 "sieve/sieve.y" /* yacc.c:1646  */
+#line 1387 "sieve/sieve.y" /* yacc.c:1646  */
     { 
-                                     (yyval.test) = new_test(SPECIALUSEEXISTS, sscript);
+                                     (yyval.test) = new_test(BC_SPECIALUSEEXISTS, sscript);
                                      (yyval.test) = build_mbox_meta(sscript,
                                                           (yyval.test), NULL, NULL, (yyvsp[0].sl));
                                  }
-#line 3669 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3701 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 189:
-#line 1386 "sieve/sieve.y" /* yacc.c:1646  */
+#line 1394 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     (yyval.test) = new_test(SPECIALUSEEXISTS, sscript);
+                                     (yyval.test) = new_test(BC_SPECIALUSEEXISTS, sscript);
                                      (yyval.test) = build_mbox_meta(sscript,
                                                           (yyval.test), (yyvsp[-1].sval), NULL, (yyvsp[0].sl));
                                  }
-#line 3679 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3711 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 190:
-#line 1393 "sieve/sieve.y" /* yacc.c:1646  */
+#line 1401 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     (yyval.test) = new_test(MAILBOXIDEXISTS, sscript);
+                                     (yyval.test) = new_test(BC_MAILBOXIDEXISTS, sscript);
                                      (yyval.test) = build_mbox_meta(sscript,
                                                           (yyval.test), NULL, NULL, (yyvsp[0].sl));
                                  }
-#line 3689 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3721 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 191:
-#line 1399 "sieve/sieve.y" /* yacc.c:1646  */
+#line 1407 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     (yyval.test) = new_test(JMAPQUERY, sscript);
+                                     (yyval.test) = new_test(BC_JMAPQUERY, sscript);
                                      (yyval.test) = build_jmapquery(sscript, (yyval.test), (yyvsp[0].sval));
                                  }
-#line 3698 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3730 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 192:
-#line 1404 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = new_test(SFALSE, sscript); }
-#line 3704 "sieve/sieve.c" /* yacc.c:1646  */
+#line 1412 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.test) = new_test(BC_FALSE, sscript); }
+#line 3736 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 193:
+#line 1417 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_OVER;  }
+#line 3742 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 194:
+#line 1418 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_UNDER; }
+#line 3748 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 195:
-#line 1415 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = new_test(HEADERT, sscript); }
-#line 3710 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 196:
-#line 1416 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.hhs.comp); }
-#line 3716 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 198:
-#line 1417 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.hhs.comp); }
-#line 3722 "sieve/sieve.c" /* yacc.c:1646  */
+#line 1423 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     (yyval.test) = new_test(BC_HEADER, sscript);
+                                     ctags = &((yyval.test)->u.hhs.comp);
+                                 }
+#line 3757 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 200:
-#line 1418 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.hhs.comp); }
-#line 3728 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 202:
-#line 1419 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.hhs.comp); }
-#line 3734 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 204:
-#line 1424 "sieve/sieve.y" /* yacc.c:1646  */
+#line 1435 "sieve/sieve.y" /* yacc.c:1646  */
     {
+                                     /* *ctags assigned by the calling rule */
                                      if (ctags->match != -1) {
                                          sieveerror_c(sscript,
                                                       SIEVE_DUPLICATE_TAG,
@@ -3744,14 +3768,14 @@ yyreduce:
 
                                      ctags->match = (yyvsp[0].nval);
                                  }
-#line 3748 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3772 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 205:
-#line 1434 "sieve/sieve.y" /* yacc.c:1646  */
+  case 201:
+#line 1446 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     if (ctags->match != COUNT &&
-                                         ctags->match != VALUE &&
+                                     if (ctags->match != B_COUNT &&
+                                         ctags->match != B_VALUE &&
                                          !supported(SIEVE_CAPA_RELATIONAL)) {
                                          sieveerror_c(sscript,
                                                       SIEVE_MISSING_REQUIRE,
@@ -3766,25 +3790,94 @@ yyreduce:
                                      ctags->match = (yyvsp[-1].nval);
                                      ctags->relation = (yyvsp[0].nval);
                                  }
-#line 3770 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3794 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 209:
-#line 1458 "sieve/sieve.y" /* yacc.c:1646  */
+  case 202:
+#line 1467 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_IS;       }
+#line 3800 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 203:
+#line 1468 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_CONTAINS; }
+#line 3806 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 204:
+#line 1469 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_MATCHES;  }
+#line 3812 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 205:
+#line 1470 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if (!supported(SIEVE_CAPA_REGEX)) {
                                          sieveerror_c(sscript,
                                                       SIEVE_MISSING_REQUIRE,
                                                       "regex");
                                      }
+
+                                     (yyval.nval) = B_REGEX;
                                  }
-#line 3782 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3826 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 218:
-#line 1485 "sieve/sieve.y" /* yacc.c:1646  */
+  case 206:
+#line 1483 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_COUNT; }
+#line 3832 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 207:
+#line 1484 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_VALUE; }
+#line 3838 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 208:
+#line 1489 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_EQ; }
+#line 3844 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 209:
+#line 1490 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_NE; }
+#line 3850 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 210:
+#line 1491 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_GT; }
+#line 3856 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 211:
+#line 1492 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_GE; }
+#line 3862 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 212:
+#line 1493 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_LT; }
+#line 3868 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 213:
+#line 1494 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_LE; }
+#line 3874 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 214:
+#line 1499 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     if (ctags->match != LIST &&
+                                     /* *ctags assigned by the calling rule */
+                                     if (ctags->match != B_LIST &&
                                          !supported(SIEVE_CAPA_EXTLISTS)) {
                                          sieveerror_c(sscript,
                                                       SIEVE_MISSING_REQUIRE,
@@ -3796,14 +3889,15 @@ yyreduce:
                                                       "match-type");
                                      }
 
-                                     ctags->match = LIST;
+                                     ctags->match = B_LIST;
                                  }
-#line 3802 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3895 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 219:
-#line 1505 "sieve/sieve.y" /* yacc.c:1646  */
+  case 215:
+#line 1520 "sieve/sieve.y" /* yacc.c:1646  */
     {
+                                     /* *ctags assigned by the calling rule */
                                      if (ctags->collation != -1) {
                                          sieveerror_c(sscript,
                                                       SIEVE_DUPLICATE_TAG,
@@ -3812,11 +3906,23 @@ yyreduce:
 
                                      ctags->collation = (yyvsp[0].nval);
                                  }
-#line 3816 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3910 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 222:
-#line 1520 "sieve/sieve.y" /* yacc.c:1646  */
+  case 216:
+#line 1534 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_OCTET;        }
+#line 3916 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 217:
+#line 1535 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_ASCIICASEMAP; }
+#line 3922 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 218:
+#line 1536 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if (!supported(SIEVE_CAPA_COMP_NUMERIC)) {
                                          sieveerror_c(sscript,
@@ -3824,15 +3930,32 @@ yyreduce:
                                                       "comparator-"
                                                       "i;ascii-numeric");
                                      }
+
+                                     (yyval.nval) = B_ASCIINUMERIC;
                                  }
-#line 3829 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3937 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 223:
-#line 1532 "sieve/sieve.y" /* yacc.c:1646  */
+  case 219:
+#line 1550 "sieve/sieve.y" /* yacc.c:1646  */
     {
+                                     /* *ctags assigned by the calling rule */
+                                     if (ctags->index != 0 &&
+                                         !supported(SIEVE_CAPA_INDEX)) {
+                                         sieveerror_c(sscript,
+                                                      SIEVE_MISSING_REQUIRE,
+                                                      "index");
+                                     }
+                                 }
+#line 3951 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 220:
+#line 1561 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     /* *ctags assigned by the calling rule */
                                      if (ctags->index == INT_MIN) {
-                                         /* :last before :index */
+                                         /* parsed :last before :index */
                                          ctags->index = -(yyvsp[0].nval);
                                      }
                                      else if (ctags->index != 0) {
@@ -3841,20 +3964,14 @@ yyreduce:
                                                       ":index");
                                      }
                                      else {
-                                       if (!supported(SIEVE_CAPA_INDEX)) {
-                                             sieveerror_c(sscript,
-                                                          SIEVE_MISSING_REQUIRE,
-                                                          "index");
-                                         }
-
                                          ctags->index = (yyvsp[0].nval);
                                      }
                                  }
-#line 3854 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3971 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 224:
-#line 1552 "sieve/sieve.y" /* yacc.c:1646  */
+  case 221:
+#line 1576 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if (ctags->index > 0) {
                                          ctags->index *= -1;
@@ -3864,52 +3981,26 @@ yyreduce:
                                                       SIEVE_DUPLICATE_TAG,
                                                       ":last");
                                      }
-                                     else if (ctags->index == 0) {
-                                       if (!supported(SIEVE_CAPA_INDEX)) {
-                                             sieveerror_c(sscript,
-                                                          SIEVE_MISSING_REQUIRE,
-                                                          "index");
-                                         }
-
-                                         /* :last before :index */
+                                     else {
+                                         /* special value to indicate that
+                                            we parsed :last before :index */
                                          ctags->index = INT_MIN;
                                      }
                                  }
-#line 3879 "sieve/sieve.c" /* yacc.c:1646  */
+#line 3991 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 225:
-#line 1576 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = new_test(ADDRESS, sscript); }
-#line 3885 "sieve/sieve.c" /* yacc.c:1646  */
+  case 222:
+#line 1595 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     (yyval.test) = new_test(BC_ADDRESS, sscript);
+                                     ctags = &((yyval.test)->u.ae.comp);
+                                 }
+#line 4000 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 227:
-#line 1578 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.ae.comp); }
-#line 3891 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 229:
-#line 1579 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.ae.comp); }
-#line 3897 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 231:
-#line 1580 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.ae.comp); }
-#line 3903 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 233:
-#line 1581 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.ae.comp); }
-#line 3909 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 235:
-#line 1586 "sieve/sieve.y" /* yacc.c:1646  */
+  case 228:
+#line 1608 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      /* $0 refers to a test_t* (ADDR/ENV)*/
                                      test_t *test = (yyvsp[-1].test);
@@ -3922,11 +4013,29 @@ yyreduce:
 
                                      test->u.ae.addrpart = (yyvsp[0].nval);
                                  }
-#line 3926 "sieve/sieve.c" /* yacc.c:1646  */
+#line 4017 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 239:
-#line 1604 "sieve/sieve.y" /* yacc.c:1646  */
+  case 229:
+#line 1623 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_ALL;       }
+#line 4023 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 230:
+#line 1624 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_LOCALPART; }
+#line 4029 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 231:
+#line 1625 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_DOMAIN;    }
+#line 4035 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 232:
+#line 1626 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if (!supported(SIEVE_CAPA_SUBADDRESS)) {
                                          sieveerror_c(sscript,
@@ -3934,59 +4043,50 @@ yyreduce:
                                                       "subaddress");
                                      }
                                  }
-#line 3938 "sieve/sieve.c" /* yacc.c:1646  */
+#line 4047 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 242:
-#line 1621 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = new_test(ENVELOPE, sscript); }
-#line 3944 "sieve/sieve.c" /* yacc.c:1646  */
+  case 233:
+#line 1637 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_USER;   }
+#line 4053 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 234:
+#line 1638 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_DETAIL; }
+#line 4059 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 235:
+#line 1643 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     (yyval.test) = new_test(BC_ENVELOPE, sscript);
+                                     ctags = &((yyval.test)->u.ae.comp);
+                                 }
+#line 4068 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 240:
+#line 1655 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     (yyval.test) = new_test(BC_ENVIRONMENT, sscript);
+                                     ctags = &((yyval.test)->u.mm.comp);
+                                 }
+#line 4077 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 243:
+#line 1665 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     (yyval.test) = new_test(BC_BODY, sscript);
+                                     ctags = &((yyval.test)->u.b.comp);
+                                 }
+#line 4086 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
   case 244:
-#line 1623 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.ae.comp); }
-#line 3950 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 246:
-#line 1624 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.ae.comp); }
-#line 3956 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 248:
-#line 1625 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.ae.comp); }
-#line 3962 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 250:
-#line 1630 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = new_test(ENVIRONMENT, sscript); }
-#line 3968 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 251:
-#line 1631 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.mm.comp); }
-#line 3974 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 253:
-#line 1632 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.mm.comp); }
-#line 3980 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 255:
-#line 1637 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = new_test(BODY, sscript); }
-#line 3986 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 256:
-#line 1638 "sieve/sieve.y" /* yacc.c:1646  */
+#line 1669 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.test)->u.b.transform != -1) {
                                          sieveerror_c(sscript,
@@ -3996,11 +4096,11 @@ yyreduce:
 
                                      (yyval.test)->u.b.transform = (yyvsp[0].nval);
                                  }
-#line 4000 "sieve/sieve.c" /* yacc.c:1646  */
+#line 4100 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 257:
-#line 1649 "sieve/sieve.y" /* yacc.c:1646  */
+  case 245:
+#line 1680 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.test)->u.b.transform != -1) {
                                          sieveerror_c(sscript,
@@ -4009,184 +4109,120 @@ yyreduce:
                                          strarray_free((yyval.test)->u.b.content_types);
                                      }
 
-                                     (yyval.test)->u.b.transform = CONTENT;
+                                     (yyval.test)->u.b.transform = B_CONTENT;
                                      (yyval.test)->u.b.content_types = (yyvsp[0].sl);
                                  }
-#line 4016 "sieve/sieve.c" /* yacc.c:1646  */
+#line 4116 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 258:
-#line 1661 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.b.comp); }
-#line 4022 "sieve/sieve.c" /* yacc.c:1646  */
+  case 248:
+#line 1698 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_RAW;  }
+#line 4122 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 260:
-#line 1662 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.b.comp); }
-#line 4028 "sieve/sieve.c" /* yacc.c:1646  */
+  case 249:
+#line 1699 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_TEXT; }
+#line 4128 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 264:
-#line 1673 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = new_test(STRINGT, sscript); }
-#line 4034 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 265:
-#line 1674 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.hhs.comp); }
-#line 4040 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 267:
-#line 1675 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.hhs.comp); }
-#line 4046 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 269:
-#line 1676 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.hhs.comp); }
-#line 4052 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 271:
-#line 1681 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = new_test(HASFLAG, sscript); }
-#line 4058 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 272:
-#line 1682 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.hhs.comp); }
-#line 4064 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 274:
-#line 1683 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.hhs.comp); }
-#line 4070 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 276:
-#line 1688 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = new_test(DATE, sscript); }
-#line 4076 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 278:
-#line 1690 "sieve/sieve.y" /* yacc.c:1646  */
+  case 250:
+#line 1704 "sieve/sieve.y" /* yacc.c:1646  */
     {
-                                     if ((yyval.test)->u.dt.zonetag != -1) {
+                                     (yyval.test) = new_test(BC_STRING, sscript);
+                                     ctags = &((yyval.test)->u.hhs.comp);
+                                 }
+#line 4137 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 254:
+#line 1715 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     (yyval.test) = new_test(BC_HASFLAG, sscript);
+                                     ctags = &((yyval.test)->u.hhs.comp);
+                                 }
+#line 4146 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 257:
+#line 1725 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     (yyval.test) = new_test(BC_DATE, sscript);
+                                     ctags = &((yyval.test)->u.dt.comp);
+                                 }
+#line 4155 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 259:
+#line 1730 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     if ((yyval.test)->u.dt.zone.tag != -1) {
                                          sieveerror_c(sscript,
                                                       SIEVE_DUPLICATE_TAG,
                                                       ":originalzone");
                                      }
 
-                                     (yyval.test)->u.dt.zonetag = ORIGINALZONE;
+                                     (yyval.test)->u.dt.zone.tag = B_ORIGINALZONE;
                                  }
-#line 4090 "sieve/sieve.c" /* yacc.c:1646  */
+#line 4169 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 279:
-#line 1699 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.dt.comp); }
-#line 4096 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 281:
-#line 1700 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.dt.comp); }
-#line 4102 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 283:
-#line 1701 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.dt.comp); }
-#line 4108 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 285:
-#line 1706 "sieve/sieve.y" /* yacc.c:1646  */
+  case 263:
+#line 1746 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      /* $0 refers to a test_t* ([CURRENT]DATE)*/
                                      test_t *test = (yyvsp[-2].test);
 
-                                     if (test->u.dt.zonetag != -1) {
+                                     if (test->u.dt.zone.tag != -1) {
                                          sieveerror_c(sscript,
                                                       SIEVE_DUPLICATE_TAG,
                                                       ":zone");
                                      }
 
-                                     test->u.dt.zonetag = ZONE;
-                                     test->u.dt.zone = (yyvsp[0].nval);
+                                     test->u.dt.zone.tag = B_TIMEZONE;
+                                     test->u.dt.zone.offset = (yyvsp[0].sval);
                                  }
-#line 4126 "sieve/sieve.c" /* yacc.c:1646  */
+#line 4187 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 286:
-#line 1723 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = new_test(CURRENTDATE, sscript); }
-#line 4132 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 288:
-#line 1725 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.dt.comp); }
-#line 4138 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 290:
-#line 1726 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.dt.comp); }
-#line 4144 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 305:
-#line 1748 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = new_test(NOTIFYMETHODCAPABILITY, sscript); }
-#line 4150 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 306:
-#line 1749 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.mm.comp); }
-#line 4156 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 308:
-#line 1750 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.mm.comp); }
-#line 4162 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 310:
-#line 1755 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = new_test((yyvsp[0].nval), sscript); }
-#line 4168 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 311:
-#line 1756 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.mm.comp); }
-#line 4174 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 313:
-#line 1757 "sieve/sieve.y" /* yacc.c:1646  */
-    { ctags = &((yyvsp[0].test)->u.mm.comp); }
-#line 4180 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 315:
-#line 1762 "sieve/sieve.y" /* yacc.c:1646  */
-    { (yyval.test) = new_test(DUPLICATE, sscript); }
-#line 4186 "sieve/sieve.c" /* yacc.c:1646  */
-    break;
-
-  case 316:
+  case 264:
 #line 1763 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     (yyval.test) = new_test(BC_CURRENTDATE, sscript);
+                                     ctags = &((yyval.test)->u.dt.comp);
+                                 }
+#line 4196 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 268:
+#line 1774 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     (yyval.test) = new_test(BC_NOTIFYMETHODCAPABILITY,
+                                                   sscript);
+                                     ctags = &((yyval.test)->u.mm.comp);
+                                 }
+#line 4206 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 271:
+#line 1785 "sieve/sieve.y" /* yacc.c:1646  */
+    {
+                                     /* bctype assigned by the calling rule */
+                                     (yyval.test) = new_test(bctype, sscript);
+                                     ctags = &((yyval.test)->u.mm.comp);
+                                 }
+#line 4216 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 274:
+#line 1796 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.test) = new_test(BC_DUPLICATE, sscript); }
+#line 4222 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 275:
+#line 1797 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.test)->u.dup.idtype != -1) {
                                          sieveerror_c(sscript,
@@ -4199,11 +4235,11 @@ yyreduce:
                                      (yyval.test)->u.dup.idtype = (yyvsp[-1].nval);
                                      (yyval.test)->u.dup.idval = (yyvsp[0].sval);
                                  }
-#line 4203 "sieve/sieve.c" /* yacc.c:1646  */
+#line 4239 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 317:
-#line 1775 "sieve/sieve.y" /* yacc.c:1646  */
+  case 276:
+#line 1809 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.test)->u.dup.handle != NULL) {
                                          sieveerror_c(sscript,
@@ -4214,11 +4250,11 @@ yyreduce:
 
                                      (yyval.test)->u.dup.handle = (yyvsp[0].sval);
                                  }
-#line 4218 "sieve/sieve.c" /* yacc.c:1646  */
+#line 4254 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 318:
-#line 1785 "sieve/sieve.y" /* yacc.c:1646  */
+  case 277:
+#line 1819 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.test)->u.dup.seconds != -1) {
                                          sieveerror_c(sscript,
@@ -4228,11 +4264,11 @@ yyreduce:
 
                                      (yyval.test)->u.dup.seconds = (yyvsp[0].nval);
                                  }
-#line 4232 "sieve/sieve.c" /* yacc.c:1646  */
+#line 4268 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
-  case 319:
-#line 1794 "sieve/sieve.y" /* yacc.c:1646  */
+  case 278:
+#line 1828 "sieve/sieve.y" /* yacc.c:1646  */
     {
                                      if ((yyval.test)->u.dup.last != 0) {
                                          sieveerror_c(sscript,
@@ -4242,11 +4278,23 @@ yyreduce:
 
                                      (yyval.test)->u.dup.last = 1;
                                  }
-#line 4246 "sieve/sieve.c" /* yacc.c:1646  */
+#line 4282 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 279:
+#line 1841 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_HEADER;   }
+#line 4288 "sieve/sieve.c" /* yacc.c:1646  */
+    break;
+
+  case 280:
+#line 1842 "sieve/sieve.y" /* yacc.c:1646  */
+    { (yyval.nval) = B_UNIQUEID; }
+#line 4294 "sieve/sieve.c" /* yacc.c:1646  */
     break;
 
 
-#line 4250 "sieve/sieve.c" /* yacc.c:1646  */
+#line 4298 "sieve/sieve.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -4474,7 +4522,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 1812 "sieve/sieve.y" /* yacc.c:1906  */
+#line 1846 "sieve/sieve.y" /* yacc.c:1906  */
 
 
 
@@ -4705,7 +4753,7 @@ static int verify_regexlist(sieve_script_t *sscript,
     cflags |= REG_UTF8;
 #endif
 
-    if (collation == ASCIICASEMAP) {
+    if (collation == B_ASCIICASEMAP) {
         cflags |= REG_ICASE;
     }
 
@@ -4751,7 +4799,7 @@ static int verify_patternlist(sieve_script_t *sscript,
 
     canon_comptags(c, sscript);
 
-    return (c->match == REGEX) ?
+    return (c->match == B_REGEX) ?
         verify_regexlist(sscript, sa, c->collation) : 1;
 }
 
@@ -4782,22 +4830,18 @@ static int verify_mailbox(sieve_script_t *sscript, char *s)
     return 1;
 }
 
-static int verify_headername(sieve_script_t *sscript, char *hdr)
+static int verify_header(sieve_script_t *sscript, char *hdr)
 {
     char *h = hdr;
 
     while (*h) {
-        /*
-           field-name      =       1*ftext
+        /* field-name      =       1*ftext
            ftext           =       %d33-57 / %d59-126
            ; Any character except
            ;  controls, SP, and
-           ;  ":".
-        */
+           ;  ":". */
         if (!((*h >= 33 && *h <= 57) || (*h >= 59 && *h <= 126))) {
-            sieveerror_f(sscript, "header field name '%s':"
-                         " not a valid header field name"
-                         " per RFC 5322, Section 3.6.8", hdr);
+            sieveerror_f(sscript, "header '%s': not a valid header", hdr);
             return 0;
         }
         h++;
@@ -4805,42 +4849,18 @@ static int verify_headername(sieve_script_t *sscript, char *hdr)
     return 1;
 }
 
-static int verify_headerbody(sieve_script_t *sscript, char *val)
-{
-    char *v = val + strlen(val);
-
-    /* trim any trailing CR/LF */
-    while (--v >= val && (*v == '\r' || *v == '\n')) {
-        *v = '\0';
-    }
-
-    /* make sure any other CRLF is folding whitespace */
-    for (v = val; *v; v++) {
-        if (*v == '\r' && *++v != '\n') break;
-        if (*v == '\n' && *++v != ' ' && *v != '\t') break;
-    }
-    if (*v != '\0') {
-        sieveerror_f(sscript, "header field body '%s':"
-                     " not a valid header field body"
-                     " per RFC 5322, Section 3.2.5", val);
-        return 0;
-    }
-
-    return verify_utf8(sscript, val);
-}
-
 static int verify_addrheader(sieve_script_t *sscript, char *hdr)
 {
     const char **h, *hdrs[] = {
-        "from", "sender", "reply-to",   /* RFC5322 originator fields */
-        "to", "cc", "bcc",              /* RFC5322 destination fields */
-        "message-id", "in-reply-to",    /* RFC5322 identification fields */
-        "references"
-        "resent-from", "resent-sender", /* RFC5322 resent fields */
+        "from", "sender", "reply-to",   /* RFC 5322 originator fields */
+        "to", "cc", "bcc",              /* RFC 5322 destination fields */
+        "message-id", "in-reply-to",    /* RFC 5322 identification fields */
+        "references",
+        "resent-from", "resent-sender", /* RFC 5322 resent fields */
         "resent-to", "resent-cc", "resent-bcc",
-        "return-path",                  /* RFC5322 trace fields */
-        "disposition-notification-to",  /* RFC8098 MDN request fields */
-        "approved",                     /* RFC5536 moderator/control fields */
+        "return-path",                  /* RFC 5322 trace fields */
+        "disposition-notification-to",  /* RFC 8098 MDN request fields */
+        "approved",                     /* RFC 5536 moderator/control fields */
         "delivered-to",                 /* non-standard (loop detection) */
         NULL
     };
@@ -4848,7 +4868,7 @@ static int verify_addrheader(sieve_script_t *sscript, char *hdr)
     if (contains_variable(sscript, hdr)) return 1;
 
     if (!config_getswitch(IMAPOPT_RFC3028_STRICT))
-        return verify_headername(sscript, hdr);
+        return verify_header(sscript, hdr);
 
     for (lcase(hdr), h = hdrs; *h; h++) {
         if (!strcmp(*h, hdr)) return 1;
@@ -4914,13 +4934,78 @@ static int check_reqs(sieve_script_t *sscript, strarray_t *sa)
     return ret;
 }
 
+/* take a format string and a variable list of arguments
+   and populate the command arguments array */
+static unsigned bc_precompile(cmdarg_t args[], const char *fmt, ...)
+{
+    va_list ap;
+    unsigned n = 0;
+
+    va_start(ap, fmt);
+    for (n = 0; *fmt; fmt++, n++) {
+        args[n].type = *fmt;
+
+        switch (*fmt) {
+        case 'i':
+            args[n].u.i = va_arg(ap, int);
+            break;
+        case 's':
+            args[n].u.s = va_arg(ap, const char *);
+            break;
+        case 'S':
+            args[n].u.sa = va_arg(ap, const strarray_t *);
+            break;
+        case 'U':
+            args[n].u.ua = va_arg(ap, const arrayu64_t *);
+            break;
+        case 't':
+            args[n].u.t = va_arg(ap, const test_t *);
+            break;
+        case 'T':
+            args[n].u.tl = va_arg(ap, const testlist_t *);
+            break;
+        case 'C': {
+            /* Expand the comparator into its component parts */
+            const comp_t *c = va_arg(ap, const comp_t *);
+
+            args[n].type = AT_INT;
+            args[n].u.i = c->match;
+            args[++n].type = AT_INT;
+            args[n].u.i = c->relation;
+            args[++n].type = AT_INT;
+            args[n].u.i = c->collation;
+            break;
+        }
+        case 'Z': {
+            /* Expand the zone into its component parts */
+            const zone_t *z = va_arg(ap, const zone_t *);
+
+            args[n].type = AT_INT;
+            args[n].u.i = z->tag;
+
+            if (z->tag == B_TIMEZONE) {
+                args[++n].type = AT_STR;
+                args[n].u.s = z->offset;
+            }
+            break;
+        }
+        default: assert(*fmt);
+        }
+    }
+    va_end(ap);
+
+    return n;
+}
+
 static commandlist_t *build_keep(sieve_script_t *sscript, commandlist_t *c)
 {
-    assert(c && c->type == KEEP);
+    assert(c && c->type == B_KEEP);
 
     if (c->u.k.flags && !_verify_flaglist(c->u.k.flags)) {
         strarray_add(c->u.k.flags, "");
     }
+
+    c->nargs = bc_precompile(c->args, "S", c->u.k.flags);
 
     return c;
 }
@@ -4928,7 +5013,7 @@ static commandlist_t *build_keep(sieve_script_t *sscript, commandlist_t *c)
 static commandlist_t *build_fileinto(sieve_script_t *sscript,
                                      commandlist_t *c, char *folder)
 {
-    assert(c && c->type == FILEINTO);
+    assert(c && c->type == B_FILEINTO);
 
     if (c->u.f.flags && !_verify_flaglist(c->u.f.flags)) {
         strarray_add(c->u.f.flags, "");
@@ -4936,13 +5021,21 @@ static commandlist_t *build_fileinto(sieve_script_t *sscript,
     verify_mailbox(sscript, folder);
     c->u.f.folder = folder;
 
+    c->nargs = bc_precompile(c->args, "ssiSis",
+                             c->u.f.mailboxid,
+                             c->u.f.specialuse,
+                             c->u.f.create,
+                             c->u.f.flags,
+                             c->u.f.copy,
+                             c->u.f.folder);
+
     return c;
 }
 
 static commandlist_t *build_redirect(sieve_script_t *sscript,
                                      commandlist_t *c, char *address)
 {
-    assert(c && c->type == REDIRECT);
+    assert(c && c->type == B_REDIRECT);
 
     if (c->u.r.list) verify_list(sscript, address);
     else verify_address(sscript, address);
@@ -5008,6 +5101,16 @@ static commandlist_t *build_redirect(sieve_script_t *sscript,
 
     c->u.r.address = address;
 
+    c->nargs = bc_precompile(c->args, "ssissiis",
+                             c->u.r.bytime,
+                             c->u.r.bymode,
+                             c->u.r.bytrace,
+                             c->u.r.dsn_notify,
+                             c->u.r.dsn_ret,
+                             c->u.r.list,
+                             c->u.r.copy,
+                             c->u.r.address);
+
     return c;
 }
 
@@ -5026,13 +5129,18 @@ static int verify_identifier(sieve_script_t *sscript, char *s)
 static commandlist_t *build_set(sieve_script_t *sscript,
                                 commandlist_t *c, char *variable, char *value)
 {
-    assert(c && c->type == SET);
+    assert(c && c->type == B_SET);
 
     verify_identifier(sscript, variable);
     verify_utf8(sscript, value);
 
     c->u.s.variable = variable;
     c->u.s.value = value;
+
+    c->nargs = bc_precompile(c->args, "iss",
+                             c->u.s.modifiers,
+                             c->u.s.variable,
+                             c->u.s.value);
 
     return c;
 }
@@ -5043,10 +5151,10 @@ static commandlist_t *build_vacation(sieve_script_t *sscript,
     int min = sscript->interp.vacation->min_response;
     int max = sscript->interp.vacation->max_response;
 
-    assert(c && c->type == VACATION);
+    assert(c && c->type == B_VACATION);
 
     if (c->u.v.handle) verify_utf8(sscript, c->u.v.handle);
-    if (c->u.v.subject) verify_headerbody(sscript, c->u.v.subject);
+    if (c->u.v.subject) verify_utf8(sscript, c->u.v.subject);
     if (c->u.v.from) verify_address(sscript, c->u.v.from);
     if (c->u.v.addresses)
         verify_stringlist(sscript, c->u.v.addresses, verify_address);
@@ -5060,7 +5168,8 @@ static commandlist_t *build_vacation(sieve_script_t *sscript,
             strarray_add(c->u.v.fcc.flags, "");
         }
     }
-    else if (c->u.v.fcc.create || c->u.v.fcc.flags || c->u.v.fcc.specialuse) {
+    else if (c->u.v.fcc.create || c->u.v.fcc.flags ||
+             c->u.v.fcc.specialuse || c->u.v.fcc.mailboxid) {
         sieveerror_c(sscript, SIEVE_MISSING_TAG, ":fcc");
     }
 
@@ -5070,14 +5179,30 @@ static commandlist_t *build_vacation(sieve_script_t *sscript,
     if (c->u.v.seconds < min) c->u.v.seconds = min;
     if (c->u.v.seconds > max) c->u.v.seconds = max;
 
+    c->nargs = bc_precompile(c->args,
+                             c->u.v.fcc.folder ? "SssiisssiSss" : "Sssiisss",
+                             c->u.v.addresses,
+                             c->u.v.subject,
+                             c->u.v.message,
+                             c->u.v.seconds,
+                             c->u.v.mime,
+                             c->u.v.from,
+                             c->u.v.handle,
+                             c->u.v.fcc.folder,
+                             c->u.v.fcc.create,
+                             c->u.v.fcc.flags,
+                             c->u.v.fcc.specialuse,
+                             c->u.v.fcc.mailboxid);
+
     return c;
 }
 
 static commandlist_t *build_flag(sieve_script_t *sscript,
                                  commandlist_t *c, strarray_t *flags)
 {
-    assert(c &&
-           (c->type == SETFLAG || c->type == ADDFLAG || c->type == REMOVEFLAG));
+    assert(c && (c->type == B_SETFLAG ||
+                 c->type == B_ADDFLAG ||
+                 c->type == B_REMOVEFLAG));
 
     if (!_verify_flaglist(flags)) {
         strarray_add(flags, "");
@@ -5089,20 +5214,29 @@ static commandlist_t *build_flag(sieve_script_t *sscript,
         sieveerror_c(sscript, SIEVE_INVALID_VALUE, "variablename");
     }
 
+    c->nargs = bc_precompile(c->args, "sS",
+                             c->u.fl.variable,
+                             c->u.fl.flags);
+
     return c;
 }
 
 static commandlist_t *build_addheader(sieve_script_t *sscript,
                                       commandlist_t *c, char *name, char *value)
 {
-    assert(c && c->type == ADDHEADER);
+    assert(c && c->type == B_ADDHEADER);
 
-    verify_headername(sscript, name);
-    verify_headerbody(sscript, value);
+    verify_header(sscript, name);
+    verify_utf8(sscript, value);
 
     if (c->u.ah.index == 0) c->u.ah.index = 1;
     c->u.ah.name = name;
     c->u.ah.value = value;
+
+    c->nargs = bc_precompile(c->args, "iss",
+                             c->u.ah.index,
+                             c->u.ah.name,
+                             c->u.ah.value);
 
     return c;
 }
@@ -5111,18 +5245,27 @@ static commandlist_t *build_deleteheader(sieve_script_t *sscript,
                                          commandlist_t *c,
                                          char *name, strarray_t *values)
 {
-    assert(c && c->type == DELETEHEADER);
+    assert(c && c->type == B_DELETEHEADER);
 
     if (!strcasecmp("Received", name) || !strcasecmp("Auto-Submitted", name)) {
         sieveerror_f(sscript,
                      "MUST NOT delete Received or Auto-Submitted headers");
     }
+    else if (c->u.dh.comp.index == INT_MIN) {
+        sieveerror_c(sscript, SIEVE_MISSING_TAG, ":index");
+    }
 
-    verify_headername(sscript, name);
+    verify_header(sscript, name);
     verify_patternlist(sscript, values, &c->u.dh.comp, verify_utf8);
 
     c->u.dh.name = name;
     c->u.dh.values = values;
+
+    c->nargs = bc_precompile(c->args, "iCsS",
+                             c->u.dh.comp.index,
+                             &c->u.dh.comp,
+                             c->u.dh.name,
+                             c->u.dh.values);
 
     return c;
 }
@@ -5142,22 +5285,27 @@ static int verify_weekday(sieve_script_t *sscript, char *day)
 static int verify_time(sieve_script_t *sscript, char *time)
 {
     struct tm tm;
+    int t = 0;
     char *r = strptime(time, "%T", &tm);
 
     if (r && *r == '\0') {
-        return (3600 * tm.tm_hour + 60 * tm.tm_min + tm.tm_sec);
+        t = 3600 * tm.tm_hour + 60 * tm.tm_min + tm.tm_sec;
+    }
+    else {
+        sieveerror_f(sscript, "'%s': not a valid time for snooze", time);
     }
 
-    sieveerror_f(sscript, "'%s': not a valid time for snooze", time);
-    return 0;
+    free(time);  /* done with this string */
+
+    return t;
 }
 
 static commandlist_t *build_snooze(sieve_script_t *sscript,
                                    commandlist_t *c, arrayu64_t *times)
 {
-    assert(c && c->type == SNOOZE);
+    assert(c && c->type == B_SNOOZE);
 
-    if (c->u.sn.mailbox) verify_mailbox(sscript, c->u.sn.mailbox);
+    if (c->u.sn.f.folder) verify_mailbox(sscript, c->u.sn.f.folder);
     if (c->u.sn.addflags && !_verify_flaglist(c->u.sn.addflags)) {
         strarray_add(c->u.sn.addflags, "");
     }
@@ -5170,6 +5318,17 @@ static commandlist_t *build_snooze(sieve_script_t *sscript,
     arrayu64_sort(times, NULL/*ascending*/);
     c->u.sn.times = times;
 
+    c->nargs = bc_precompile(c->args, "sssiSSisU",
+                             c->u.sn.f.folder,
+                             c->u.sn.f.mailboxid,
+                             c->u.sn.f.specialuse,
+                             c->u.sn.f.create,
+                             c->u.sn.addflags,
+                             c->u.sn.removeflags,
+                             c->u.sn.days,
+                             c->u.sn.tzid,
+                             c->u.sn.times);
+
     return c;
 }
 
@@ -5178,12 +5337,14 @@ static commandlist_t *build_rej_err(sieve_script_t *sscript,
 {
     commandlist_t *c;
 
-    assert(t == REJCT || t == EREJECT || t == ERROR);
+    assert(t == B_REJECT || t == B_EREJECT || t == B_ERROR);
 
     verify_utf8(sscript, message);
 
     c = new_command(t, sscript);
     c->u.str = message;
+
+    c->nargs = bc_precompile(c->args, "s", c->u.str);
 
     return c;
 }
@@ -5191,9 +5352,9 @@ static commandlist_t *build_rej_err(sieve_script_t *sscript,
 static commandlist_t *build_notify(sieve_script_t *sscript, int t,
                                    commandlist_t *c, char *method)
 {
-    assert(c && (t == NOTIFY || t == ENOTIFY));
+    assert(c && (t == B_NOTIFY || t == B_ENOTIFY));
 
-    if (t == ENOTIFY) {
+    if (t == B_ENOTIFY) {
         if (!supported(SIEVE_CAPA_ENOTIFY)) {
             sieveerror_c(sscript, SIEVE_MISSING_REQUIRE, "enotify");
         }
@@ -5209,7 +5370,8 @@ static commandlist_t *build_notify(sieve_script_t *sscript, int t,
                 strarray_add(c->u.n.fcc.flags, "");
             }
         }
-        else if (c->u.n.fcc.create || c->u.n.fcc.flags || c->u.n.fcc.specialuse) {
+        else if (c->u.n.fcc.create || c->u.n.fcc.flags ||
+                 c->u.n.fcc.specialuse || c->u.n.fcc.mailboxid) {
             sieveerror_c(sscript, SIEVE_MISSING_TAG, ":fcc");
         }
 
@@ -5239,8 +5401,15 @@ static commandlist_t *build_notify(sieve_script_t *sscript, int t,
     }
 
     c->type = t;
-    if (c->u.n.priority == -1) c->u.n.priority = NORMAL;
+    if (c->u.n.priority == -1) c->u.n.priority = B_NORMAL;
     if (!c->u.n.message) c->u.n.message = xstrdup("$from$: $subject$");
+
+    c->nargs = bc_precompile(c->args, "ssSis",
+                             c->u.n.method,
+                             (c->type == B_ENOTIFY) ? c->u.n.from : c->u.n.id,
+                             c->u.n.options,
+                             c->u.n.priority,
+                             c->u.n.message);
 
     return c;
 }
@@ -5248,10 +5417,11 @@ static commandlist_t *build_notify(sieve_script_t *sscript, int t,
 static commandlist_t *build_denotify(sieve_script_t *sscript,
                                      commandlist_t *t)
 {
-    assert(t && t->type == DENOTIFY);
+    assert(t && t->type == B_DENOTIFY);
 
     canon_comptags(&t->u.d.comp, sscript);
-    if (t->u.d.priority == -1) t->u.d.priority = ANY;
+
+    if (t->u.d.priority == -1) t->u.d.priority = B_ANY;
     if (t->u.d.pattern) {
         strarray_t sa = STRARRAY_INITIALIZER;
 
@@ -5261,13 +5431,19 @@ static commandlist_t *build_denotify(sieve_script_t *sscript,
         strarray_fini(&sa);
     }
 
+    t->nargs = bc_precompile(t->args, "iiis",
+                             t->u.d.priority,
+                             t->u.d.comp.match,
+                             t->u.d.comp.relation,
+                             t->u.d.pattern);
+
     return t;
 }
 
 static commandlist_t *build_include(sieve_script_t *sscript,
                                     commandlist_t *c, char *script)
 {
-    assert(c && c->type == INCLUDE);
+    assert(c && c->type == B_INCLUDE);
 
     if (strchr(script, '/')) {
         sieveerror_c(sscript, SIEVE_INVALID_VALUE, "script-name");
@@ -5275,8 +5451,13 @@ static commandlist_t *build_include(sieve_script_t *sscript,
 
     c->u.inc.script = script;
     if (c->u.inc.once == -1) c->u.inc.once = 0;
-    if (c->u.inc.location == -1) c->u.inc.location = PERSONAL;
+    if (c->u.inc.location == -1) c->u.inc.location = B_PERSONAL;
     if (c->u.inc.optional == -1) c->u.inc.optional = 0;
+
+    c->nargs = bc_precompile(c->args, "is",
+                             c->u.inc.location |
+                                 (c->u.inc.once | c->u.inc.optional),
+                             c->u.inc.script);
 
     return c;
 }
@@ -5285,14 +5466,12 @@ static commandlist_t *build_log(sieve_script_t *sscript, char *text)
 {
     commandlist_t *c;
 
-    if (!supported(SIEVE_CAPA_LOG)) {
-          sieveerror_c(sscript, SIEVE_MISSING_REQUIRE, "x-cyrus-log");
-    }
-
     verify_utf8(sscript, text);
 
-    c = new_command(LOG, sscript);
+    c = new_command(B_LOG, sscript);
     c->u.l.text = text;
+
+    c->nargs = bc_precompile(c->args, "s", c->u.l.text);
 
     return c;
 }
@@ -5312,7 +5491,7 @@ static test_t *build_anyof(sieve_script_t *sscript, testlist_t *tl)
         test_t *fail = NULL, *maybe = NULL;
 
         /* create ANYOF test */
-        t = new_test(ANYOF, sscript);
+        t = new_test(BC_ANYOF, sscript);
         t->u.tl = tl;
 
         /* find first test that did/didn't set ignore_err */
@@ -5333,6 +5512,8 @@ static test_t *build_anyof(sieve_script_t *sscript, testlist_t *tl)
                 sscript->ignore_err = t->ignore_err = fail->ignore_err;
             }
         }
+
+        t->nargs = bc_precompile(t->args, "T", t->u.tl);
     }
 
     return t;
@@ -5351,7 +5532,7 @@ static test_t *build_allof(sieve_script_t *sscript, testlist_t *tl)
     }
     else {
         /* create ALLOF test */
-        t = new_test(ALLOF, sscript);
+        t = new_test(BC_ALLOF, sscript);
         t->u.tl = tl;
 
         /* find first test that set ignore_err and revert to that value */
@@ -5361,6 +5542,8 @@ static test_t *build_allof(sieve_script_t *sscript, testlist_t *tl)
                 break;
             }
         }
+
+        t->nargs = bc_precompile(t->args, "T", t->u.tl);
     }
 
     return t;
@@ -5377,8 +5560,10 @@ static test_t *build_not(sieve_script_t *sscript, test_t *t)
         sscript->ignore_err = --t->ignore_err;
     }
 
-    n = new_test(NOT, sscript);
+    n = new_test(BC_NOT, sscript);
     n->u.t = t;
+
+    n->nargs = bc_precompile(n->args, "t", n->u.t);
 
     return n;
 }
@@ -5393,15 +5578,26 @@ static test_t *build_hhs(sieve_script_t *sscript, test_t *t,
     t->u.hhs.sl = sl;
     t->u.hhs.pl = pl;
 
+    t->nargs += bc_precompile(t->args + t->nargs, "CSS",
+                              &t->u.hhs.comp,
+                              t->u.hhs.sl,
+                              t->u.hhs.pl);
+
     return t;
 }
 
 static test_t *build_header(sieve_script_t *sscript, test_t *t,
                             strarray_t *sl, strarray_t *pl)
 {
-    assert(t && t->type == HEADERT);
+    assert(t && t->type == BC_HEADER);
 
-    verify_stringlist(sscript, sl, verify_headername);
+    if (t->u.hhs.comp.index == INT_MIN) {
+        sieveerror_c(sscript, SIEVE_MISSING_TAG, ":index");
+    }
+
+    verify_stringlist(sscript, sl, verify_header);
+
+    t->nargs = bc_precompile(t->args, "i", t->u.hhs.comp.index);
 
     return build_hhs(sscript, t, sl, pl);
 }
@@ -5409,7 +5605,7 @@ static test_t *build_header(sieve_script_t *sscript, test_t *t,
 static test_t *build_stringt(sieve_script_t *sscript, test_t *t,
                              strarray_t *sl, strarray_t *pl)
 {
-    assert(t && t->type == STRINGT);
+    assert(t && t->type == BC_STRING);
 
     verify_stringlist(sscript, sl, verify_utf8);
 
@@ -5419,7 +5615,7 @@ static test_t *build_stringt(sieve_script_t *sscript, test_t *t,
 static test_t *build_hasflag(sieve_script_t *sscript, test_t *t,
                              strarray_t *sl, strarray_t *pl)
 {
-    assert(t && t->type == HASFLAG);
+    assert(t && t->type == BC_HASFLAG);
 
     if (sl) {
         if (!supported(SIEVE_CAPA_VARIABLES)) {
@@ -5439,9 +5635,15 @@ static test_t *build_ae(sieve_script_t *sscript, test_t *t,
 
     verify_patternlist(sscript, pl, &t->u.ae.comp, NULL);
 
-    if (t->u.ae.addrpart == -1) t->u.ae.addrpart = ALL;
+    if (t->u.ae.addrpart == -1) t->u.ae.addrpart = B_ALL;
     t->u.ae.sl = sl;
     t->u.ae.pl = pl;
+
+    t->nargs += bc_precompile(t->args + t->nargs, "CiSS",
+                              &t->u.ae.comp,
+                              t->u.ae.addrpart,
+                              t->u.ae.sl,
+                              t->u.ae.pl);
 
     return t;
 }
@@ -5449,9 +5651,15 @@ static test_t *build_ae(sieve_script_t *sscript, test_t *t,
 static test_t *build_address(sieve_script_t *sscript, test_t *t,
                              strarray_t *sl, strarray_t *pl)
 {
-    assert(t && t->type == ADDRESS);
+    assert(t && t->type == BC_ADDRESS);
+
+    if (t->u.ae.comp.index == INT_MIN) {
+        sieveerror_c(sscript, SIEVE_MISSING_TAG, ":index");
+    }
 
     verify_stringlist(sscript, sl, verify_addrheader);
+
+    t->nargs = bc_precompile(t->args, "i", t->u.ae.comp.index);
 
     return build_ae(sscript, t, sl, pl);
 }
@@ -5459,7 +5667,7 @@ static test_t *build_address(sieve_script_t *sscript, test_t *t,
 static test_t *build_envelope(sieve_script_t *sscript, test_t *t,
                               strarray_t *sl, strarray_t *pl)
 {
-    assert(t && t->type == ENVELOPE);
+    assert(t && t->type == BC_ENVELOPE);
 
     verify_stringlist(sscript, sl, verify_envelope);
 
@@ -5469,43 +5677,101 @@ static test_t *build_envelope(sieve_script_t *sscript, test_t *t,
 static test_t *build_body(sieve_script_t *sscript,
                           test_t *t, strarray_t *pl)
 {
-    assert(t && (t->type == BODY));
+    assert(t && (t->type == BC_BODY));
 
     verify_patternlist(sscript, pl, &t->u.b.comp, verify_utf8);
 
     if (t->u.b.offset == -1) t->u.b.offset = 0;
-    if (t->u.b.transform == -1) t->u.b.transform = TEXT;
+    if (t->u.b.transform == -1) t->u.b.transform = B_TEXT;
     if (t->u.b.content_types == NULL) {
         t->u.b.content_types = strarray_new();
         strarray_append(t->u.b.content_types,
-                        (t->u.b.transform == RAW) ? "" : "text");
+                        (t->u.b.transform == B_RAW) ? "" : "text");
     }
     t->u.b.pl = pl;
+
+    t->nargs = bc_precompile(t->args, "CiiSS",
+                             &t->u.b.comp,
+                             t->u.b.transform,
+                             t->u.b.offset,
+                             t->u.b.content_types,
+                             t->u.b.pl);
 
     return t;
 }
 
-static test_t *build_date(sieve_script_t *sscript,
-                          test_t *t, char *hn, int part, strarray_t *kl)
+static const struct {
+    const char *name;
+    unsigned bytecode;
+} date_parts[] = {
+    { "year",    B_YEAR    },
+    { "month",   B_MONTH   },
+    { "day",     B_DAY     },
+    { "date",    B_DATE    },
+    { "julian",  B_JULIAN  },
+    { "hour",    B_HOUR    },
+    { "minute",  B_MINUTE  },
+    { "second",  B_SECOND  },
+    { "time",    B_TIME    },
+    { "iso8601", B_ISO8601 },
+    { "std11",   B_STD11   },
+    { "zone",    B_ZONE    },
+    { "weekday", B_WEEKDAY },
+    { NULL,      0         }
+};
+
+static int verify_date_part(sieve_script_t *sscript, char *part)
 {
-    assert(t && (t->type == DATE || t->type == CURRENTDATE));
+    int i;
 
-    if (hn) verify_headername(sscript, hn);
-    verify_patternlist(sscript, kl, &t->u.dt.comp, NULL);
+    for (i = 0; date_parts[i].name && strcasecmp(date_parts[i].name, part); i++);
 
-    if (t->u.dt.comp.index == 0) t->u.dt.comp.index = 1;
-    if (t->u.dt.zonetag == -1) {
-        struct tm tm;
-        time_t now = time(NULL);
-
-        localtime_r(&now, &tm);
-        t->u.dt.zone = gmtoff_of(&tm, now) / 60;
-        t->u.dt.zonetag = ZONE;
+    if (!date_parts[i].name) {
+        sieveerror_f(sscript, "invalid date-part '%s'", part);
     }
 
-    t->u.dt.date_part = part;
+    return date_parts[i].bytecode;
+}
+
+static test_t *build_date(sieve_script_t *sscript,
+                          test_t *t, char *hn, char *part, strarray_t *kl)
+{
+    assert(t && (t->type == BC_DATE || t->type == BC_CURRENTDATE));
+
+    if (hn) verify_header(sscript, hn);
+    verify_patternlist(sscript, kl, &t->u.dt.comp, NULL);
+
+    if (t->u.dt.comp.index == 0) {
+        t->u.dt.comp.index = 1;
+    }
+    else if (t->u.dt.comp.index == INT_MIN) {
+        sieveerror_c(sscript, SIEVE_MISSING_TAG, ":index");
+    }
+
+    if (t->u.dt.zone.tag == -1) {
+        t->u.dt.zone.tag = B_TIMEZONE;
+    }
+
+    t->u.dt.date_part = verify_date_part(sscript, part);
     t->u.dt.header_name = hn;
     t->u.dt.kl = kl;
+
+    if (t->type == BC_DATE) {
+        t->nargs = bc_precompile(t->args, "iZCisS",
+                                 t->u.dt.comp.index,
+                                 &t->u.dt.zone,
+                                 &t->u.dt.comp,
+                                 t->u.dt.date_part,
+                                 t->u.dt.header_name,
+                                 t->u.dt.kl);
+    }
+    else {
+        t->nargs = bc_precompile(t->args, "ZCiS",
+                                 &t->u.dt.zone,
+                                 &t->u.dt.comp,
+                                 t->u.dt.date_part,
+                                 t->u.dt.kl);
+    }
 
     return t;
 }
@@ -5515,7 +5781,7 @@ static test_t *build_ihave(sieve_script_t *sscript, strarray_t *sa)
     test_t *t;
     int i;
 
-    t = new_test(IHAVE, sscript);
+    t = new_test(BC_IHAVE, sscript);
     t->u.sl = sa;
 
     /* check if we support all listed extensions */
@@ -5535,6 +5801,8 @@ static test_t *build_ihave(sieve_script_t *sscript, strarray_t *sa)
         }
     }
 
+    t->nargs = bc_precompile(t->args, "S", t->u.sl);
+
     return t;
 }
 
@@ -5542,35 +5810,68 @@ static test_t *build_mbox_meta(sieve_script_t *sscript,
                                test_t *t, char *extname,
                                char *keyname, strarray_t *keylist)
 {
-    assert(t && (t->type == MAILBOXEXISTS || t->type == MAILBOXIDEXISTS ||
-                 t->type == METADATA || t->type == METADATAEXISTS ||
-                 t->type == SERVERMETADATA || t->type == SERVERMETADATAEXISTS ||
-                 t->type == ENVIRONMENT || t->type == SPECIALUSEEXISTS ||
-                 t->type == NOTIFYMETHODCAPABILITY));
+    assert(t);
 
     canon_comptags(&t->u.mm.comp, sscript);
     t->u.mm.extname = extname;
     t->u.mm.keyname = keyname;
     t->u.mm.keylist = keylist;
 
+    switch (t->type) {
+    case BC_MAILBOXEXISTS:
+    case BC_MAILBOXIDEXISTS:
+    case BC_SERVERMETADATAEXISTS:
+        t->nargs = bc_precompile(t->args, "S",
+                                 t->u.mm.keylist);
+        break;
+
+    case BC_METADATAEXISTS:
+    case BC_SPECIALUSEEXISTS:
+        t->nargs = bc_precompile(t->args, "sS",
+                                 t->u.mm.extname,
+                                 t->u.mm.keylist);
+        break;
+
+    case BC_SERVERMETADATA:
+    case BC_ENVIRONMENT:
+        t->nargs = bc_precompile(t->args, "CsS",
+                                 &t->u.mm.comp,
+                                 t->u.mm.keyname,
+                                 t->u.mm.keylist);
+        break;
+
+    case BC_METADATA:
+    case BC_NOTIFYMETHODCAPABILITY:
+        t->nargs = bc_precompile(t->args, "CssS",
+                                 &t->u.mm.comp,
+                                 t->u.mm.extname,
+                                 t->u.mm.keyname,
+                                 t->u.mm.keylist);
+        break;
+
+    default:
+        assert(0);
+        break;
+    }
+
     return t;
 }
 
 static test_t *build_duplicate(sieve_script_t *sscript, test_t *t)
 {
-    assert(t && t->type == DUPLICATE);
+    assert(t && t->type == BC_DUPLICATE);
 
     switch (t->u.dup.idtype) {
-    case HEADER:
-        verify_headername(sscript, t->u.dup.idval);
+    case B_HEADER:
+        verify_header(sscript, t->u.dup.idval);
         break;
 
-    case UNIQUEID:
+    case B_UNIQUEID:
         verify_utf8(sscript, t->u.dup.idval);
         break;
 
     default:
-        t->u.dup.idtype = HEADER;
+        t->u.dup.idtype = B_HEADER;
         t->u.dup.idval = xstrdup("Message-ID");
         break;
     }
@@ -5580,157 +5881,108 @@ static test_t *build_duplicate(sieve_script_t *sscript, test_t *t)
 
     if (t->u.dup.seconds == -1) t->u.dup.seconds = 7 * 86400; /* 7 days */
 
+    t->nargs = bc_precompile(t->args, "issii",
+                             t->u.dup.idtype,
+                             t->u.dup.idval,
+                             t->u.dup.handle,
+                             t->u.dup.seconds,
+                             t->u.dup.last);
+
     return t;
 }
 
 #ifdef WITH_JMAP
-#include "imap/json_support.h"
+#include "imap/jmap_api.h"
+#include "imap/jmap_mail_query_parse.h"
 
-static int jmap_parse_condition(json_t *cond, strarray_t *path)
+struct filter_rock {
+    strarray_t *path;
+    unsigned is_invalid;
+};
+
+static void filter_parser_invalid(const char *field, void *rock)
 {
-    json_t *val;
-    const char *field;
+    struct filter_rock *frock = (struct filter_rock *) rock;
 
-    json_object_foreach(cond, field, val) {
-        /* inMailbox* and *InThreadHaveKeywords properties are incompatible */
-        if (!strcmp(field, "before") ||
-            !strcmp(field, "after")) {
-            if (!json_is_utcdate(val)) break;
-        }
-        else if (!strcmp(field, "minSize") ||
-                 !strcmp(field, "maxSize")) {
-            if (!json_is_integer(val)) break;
-        }
-        else if (!strcmp(field, "hasAttachment")) {
-            if (!json_is_boolean(val)) break;
-        }
-        else if (!strcmp(field, "text") ||
-                 !strcmp(field, "from") ||
-                 !strcmp(field, "to") ||
-                 !strcmp(field, "cc") ||
-                 !strcmp(field, "bcc") ||
-                 !strcmp(field, "subject") ||
-                 !strcmp(field, "body")) {
-            if (!json_is_string(val)) break;
-        }
-        else if (!strcmp(field, "header")) {
-            size_t n = json_array_size(val);
-
-            if (n == 0 || n > 2) break;
-
-            do {
-                const char *s = json_string_value(json_array_get(val, --n));
-
-                if (!s || !strlen(s)) {
-                    struct buf buf = BUF_INITIALIZER;
-
-                    buf_printf(&buf, "header[%lu]", n);
-                    strarray_pushm(path, buf_release(&buf));
-                    return 0;
-                }
-            } while (n);
-        }
-        /* JMAP Search Extension: https://cyrusimap.org/ns/jmap/search */
-        else if (!strcmp(field, "attachmentBody")) {
-            if (!json_is_string(val)) break;
-        }
-        /* JMAP Mail Extension: https://cyrusimap.org/ns/jmap/mail */
-        else if (!strcmp(field, "attachmentName") ||
-                 !strcmp(field, "attachmentType")) {
-            if (!json_is_string(val)) break;
-        }
-        /* JMAP Mail Extension: https://cyrusimap.org/ns/jmap/mail */
-        else if (!strcmp(field, "fromContactGroupId") ||
-                 !strcmp(field, "toContactGroupId") ||
-                 !strcmp(field, "ccContactGroupId") ||
-                 !strcmp(field, "bccContactGroupId")) {
-            if (!json_is_string(val)) break;
-        }
-        /* JMAP Mail Extension: https://cyrusimap.org/ns/jmap/mail */
-        else if (!strcmp(field, "fromAnyContact") ||
-                 !strcmp(field, "toAnyContact") ||
-                 !strcmp(field, "ccAnyContact") ||
-                 !strcmp(field, "bccAnyContact")) {
-            if (!json_is_boolean(val)) break;
-        }
-        else break;
-    }
-
-    if (field) {
-        strarray_push(path, field);
-        return 0;
-    }
-
-    return 1;
+    if (!frock->is_invalid++) strarray_push(frock->path, field);
 }
 
-static int jmap_parse_filter(json_t *filter, strarray_t *path)
+static void filter_parser_push_index(const char *field, size_t index,
+                                     const char *name, void *rock)
 {
-    json_t *arg, *val;
-    const char *s;
-    size_t i;
+    struct filter_rock *frock = (struct filter_rock *) rock;
+    struct buf buf = BUF_INITIALIZER;
 
-    if (!JNOTNULL(filter) || !json_is_object(filter)) return 0;
-
-    arg = json_object_get(filter, "operator");
-    if (!arg) return jmap_parse_condition(filter, path);
-
-    strarray_push(path, "operator");
-    if (!json_is_string(arg)) return 0;
-
-    s = json_string_value(arg);
-    if (strcmp("AND", s) && strcmp("OR", s) && strcmp("NOT", s)) return 0;
-    free(strarray_pop(path));
-
-    arg = json_object_get(filter, "conditions");
-    if (!json_array_size(arg)) {
-        strarray_push(path, "conditions");
-        return 0;
+    if (!frock->is_invalid) {
+        if (name) buf_printf(&buf, "%s[%zu:%s]", field, index, name);
+        else buf_printf(&buf, "%s[%zu]", field, index);
+        strarray_pushm(frock->path, buf_release(&buf));
     }
-
-    json_array_foreach(arg, i, val) {
-        struct buf buf = BUF_INITIALIZER;
-
-        buf_printf(&buf, "conditions[%lu]", i);
-        strarray_pushm(path, buf_release(&buf));
-        if (!jmap_parse_filter(val, path)) return 0;
-        free(strarray_pop(path));
-    }
-
-    return 1;
 }
 
-static test_t *build_jmapquery(sieve_script_t *sscript,
-                               test_t *t, const char *json)
+static void filter_parser_pop(void *rock)
 {
-    strarray_t path = STRARRAY_INITIALIZER;
+    struct filter_rock *frock = (struct filter_rock *) rock;
+
+    if (!frock->is_invalid) free(strarray_pop(frock->path));
+}
+
+static test_t *build_jmapquery(sieve_script_t *sscript, test_t *t, char *json)
+{
     json_t *jquery;
     json_error_t jerr;
 
-    assert(t && t->type == JMAPQUERY);
+    assert(t && t->type == BC_JMAPQUERY);
 
     /* validate query */
     jquery = json_loads(json, 0, &jerr);
-    if (!jmap_parse_filter(jquery, &path)) {
-        char *s = strarray_join(&path, "/");
+    if (jquery) {
+        strarray_t path = STRARRAY_INITIALIZER;
+        strarray_t capabilities = STRARRAY_INITIALIZER;
+        struct filter_rock frock = { &path, 0 };
+        jmap_email_filter_parse_ctx_t parse_ctx = {
+            NULL,
+            &filter_parser_invalid,
+            &filter_parser_push_index,
+            &filter_parser_pop,
+            &capabilities,
+            &frock
+        };
 
-        if (s) sieveerror_f(sscript, "invalid jmapquery argument: '%s'", s);
-        else sieveerror_f(sscript, "invalid jmapquery format");
+        strarray_append(&capabilities, JMAP_URN_MAIL);
+        strarray_append(&capabilities, JMAP_MAIL_EXTENSION);
 
-        free(s);
+        jmap_email_filter_parse(jquery, &parse_ctx);
+
+        if (frock.is_invalid) {
+            char *s = strarray_join(&path, "/");
+
+            sieveerror_f(sscript, "invalid jmapquery argument: '%s'", s);
+            free(s);
+        }
+
+        strarray_fini(&path);
+        strarray_fini(&capabilities);
     }
-    strarray_fini(&path);
+    else {
+        sieveerror_f(sscript, "invalid jmapquery format");
+    }
 
     t->u.jquery = json_dumps(jquery, JSON_COMPACT);
     json_decref(jquery);
 
+    free(json);  /* done with this string */
+
+    t->nargs = bc_precompile(t->args, "s", t->u.jquery);
+
     return t;
 }
 #else
-static test_t *build_jmapquery(sieve_script_t *sscript, test_t *t,
-                               const char *json __attribute__((unused)))
+static test_t *build_jmapquery(sieve_script_t *sscript, test_t *t, char *json)
 {
-    sieveerror_c(sscript, SIEVE_UNSUPP_EXT, "x-cyrus-jmapquery");
+    sieveerror_c(sscript, SIEVE_UNSUPP_EXT, "vnd.cyrus.jmapquery");
+
+    free(json);  /* done with this string */
 
     return t;
 }

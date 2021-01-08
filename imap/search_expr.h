@@ -38,8 +38,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
  * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * $Id: search_engines.h,v 1.4 2010/01/06 17:01:40 murch Exp $
  */
 
 #ifndef __CYRUS_SEARCH_EXPR_H__
@@ -151,6 +149,7 @@ extern void search_expr_split_by_folder_and_index(search_expr_t *e,
                                                    search_expr_t *scan,
                                                    void *rock),
                                         void *rock);
+extern char *search_expr_firstmailbox(const search_expr_t *);
 
 enum search_cost {
     SEARCH_COST_NONE = 0,

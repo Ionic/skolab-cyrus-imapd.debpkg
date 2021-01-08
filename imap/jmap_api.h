@@ -44,6 +44,7 @@
 #ifndef JMAP_API_H
 #define JMAP_API_H
 
+#include "acl.h"
 #include "auth.h"
 #include "conversations.h"
 #include "hash.h"
@@ -60,6 +61,7 @@
 #define JMAP_URN_SUBMISSION "urn:ietf:params:jmap:submission"
 #define JMAP_URN_VACATION   "urn:ietf:params:jmap:vacationresponse"
 #define JMAP_URN_WEBSOCKET  "urn:ietf:params:jmap:websocket"
+#define JMAP_URN_MDN        "urn:ietf:params:jmap:mdn"
 
 #define JMAP_BLOB_EXTENSION          "https://cyrusimap.org/ns/jmap/blob"
 #define JMAP_CONTACTS_EXTENSION      "https://cyrusimap.org/ns/jmap/contacts"
@@ -68,7 +70,10 @@
 #define JMAP_PERFORMANCE_EXTENSION   "https://cyrusimap.org/ns/jmap/performance"
 #define JMAP_DEBUG_EXTENSION         "https://cyrusimap.org/ns/jmap/debug"
 #define JMAP_QUOTA_EXTENSION         "https://cyrusimap.org/ns/jmap/quota"
-#define JMAP_SEARCH_EXTENSION        "https://cyrusimap.org/ns/jmap/search"
+#define JMAP_BACKUP_EXTENSION        "https://cyrusimap.org/ns/jmap/backup"
+#define JMAP_NOTES_EXTENSION         "https://cyrusimap.org/ns/jmap/notes"
+#define JMAP_SIEVE_EXTENSION         "https://cyrusimap.org/ns/jmap/sieve"
+#define JMAP_USERCOUNTERS_EXTENSION  "https://cyrusimap.org/ns/jmap/usercounters"
 
 enum {
     MAX_SIZE_REQUEST = 0,
@@ -78,8 +83,39 @@ enum {
     MAX_OBJECTS_IN_SET,
     MAX_SIZE_UPLOAD,
     MAX_CONCURRENT_UPLOAD,
+    MAX_SIZE_BLOB_SET,
     JMAP_NUM_LIMITS  /* MUST be last */
 };
+
+/* JMAP Mail (RFC 8621) privileges */
+#define JACL_READITEMS      (ACL_READ|ACL_LOOKUP)
+#define JACL_ADDITEMS       ACL_INSERT
+#define JACL_REMOVEITEMS    (ACL_DELETEMSG|ACL_EXPUNGE)
+#define JACL_SETSEEN        ACL_SETSEEN
+#define JACL_SETKEYWORDS    ACL_WRITE
+#define JACL_CREATECHILD    ACL_CREATE
+#define JACL_DELETE         ACL_DELETEMBOX
+#define JACL_RENAME         (JACL_CREATECHILD|JACL_DELETE)
+#define JACL_SUBMIT         ACL_POST
+
+/* JMAP Calendar (draft-ietf-jmap-calendars) privileges */
+#define JACL_READFB         ACL_USER9      /* Keep sync'd with DACL_READFB */
+#define JACL_RSVP           ACL_USER7      /* Keep sync'd with DACL_REPLY */
+#define JACL_UPDATEPRIVATE  
+#define JACL_UPDATEOWN
+#define JACL_UPDATEALL
+#define JACL_REMOVEOWN
+#define JACL_REMOVEALL
+
+/* Cyrus-specific privileges */
+#define JACL_LOOKUP         ACL_LOOKUP
+#define JACL_ADMIN          ACL_ADMIN
+#define JACL_SETPROPERTIES  ACL_ANNOTATEMSG
+#define JACL_UPDATEITEMS    (JACL_ADDITEMS|JACL_REMOVEITEMS)
+#define JACL_SETMETADATA    (JACL_SETKEYWORDS|JACL_SETPROPERTIES)
+#define JACL_WRITE          (JACL_UPDATEITEMS|JACL_SETSEEN|JACL_SETMETADATA)
+#define JACL_ALL            (JACL_READITEMS|JACL_WRITE|JACL_RENAME|JACL_SUBMIT\
+                             |JACL_ADMIN|JACL_READFB|JACL_RSVP)
 
 typedef struct jmap_req {
     const char           *method;
@@ -112,8 +148,9 @@ typedef struct jmap_req {
 
     /* Internal state */
     ptrarray_t *mboxes;
-    hash_table *mboxrights;
+    hash_table *mbstates;
     hash_table *created_ids;
+    hash_table *inmemory_blobs;
     hash_table *mbentry_byid;
     ptrarray_t *method_calls;
     const strarray_t *using_capabilities;
@@ -139,11 +176,17 @@ typedef struct {
     ptrarray_t getblob_handlers; // array of jmap_getblob_handler
 } jmap_settings_t;
 
+enum jmap_method_flags {
+    JMAP_READ_WRITE  = (1 << 0),  /* user can change state with this method */
+    JMAP_NEED_CSTATE = (1 << 1),  /* conv.db is required for this method
+                                     (lock type determined by r/w flag) */
+};
+
 typedef struct {
     const char *name;
     const char *capability;
     int (*proc)(struct jmap_req *req);
-    int flags;
+    enum jmap_method_flags flags;
 } jmap_method_t;
 
 extern int jmap_api(struct transaction_t *txn, json_t **res,
@@ -154,22 +197,28 @@ extern void jmap_finireq(jmap_req_t *req);
 
 extern int jmap_is_using(jmap_req_t *req, const char *capa);
 
-#define JMAP_SHARED_CSTATE 1 << 0
-
 /* Protocol implementations */
 extern void jmap_core_init(jmap_settings_t *settings);
 extern void jmap_mail_init(jmap_settings_t *settings);
+extern void jmap_mdn_init(jmap_settings_t *settings);
 extern void jmap_contact_init(jmap_settings_t *settings);
 extern void jmap_calendar_init(jmap_settings_t *settings);
 extern void jmap_vacation_init(jmap_settings_t *settings);
+extern void jmap_backup_init(jmap_settings_t *settings);
+extern void jmap_notes_init(jmap_settings_t *settings);
+extern void jmap_sieve_init(jmap_settings_t *settings);
 
 extern void jmap_core_capabilities(json_t *account_capabilities);
 extern void jmap_mail_capabilities(json_t *account_capabilities, int mayCreateTopLevel);
 extern void jmap_emailsubmission_capabilities(json_t *account_capabilities);
+extern void jmap_mdn_capabilities(json_t *account_capabilities);
 extern void jmap_vacation_capabilities(json_t *account_capabilities);
 extern void jmap_contact_capabilities(json_t *account_capabilities);
 extern void jmap_calendar_capabilities(json_t *account_capabilities);
 extern void jmap_vacation_capabilities(json_t *account_capabilities);
+extern void jmap_backup_capabilities(json_t *account_capabilities);
+extern void jmap_notes_capabilities(json_t *account_capabilities);
+extern void jmap_sieve_capabilities(json_t *account_capabilities);
 
 extern void jmap_accounts(json_t *accounts, json_t *primary_accounts);
 
@@ -199,13 +248,15 @@ extern int jmap_is_valid_id(const char *id);
 
 /* Request-scoped cache of mailbox rights for authenticated user */
 
-extern int  jmap_myrights(jmap_req_t *req, const mbentry_t *mbentry);
-extern int  jmap_hasrights(jmap_req_t *req, const mbentry_t *mbentry,
+extern int  jmap_myrights_mbentry(jmap_req_t *req, const mbentry_t *mbentry);
+extern int  jmap_hasrights_mbentry(jmap_req_t *req, const mbentry_t *mbentry,
                            int rights);
-extern int  jmap_myrights_byname(jmap_req_t *req, const char *mboxname);
-extern int  jmap_hasrights_byname(jmap_req_t *req, const char *mboxname,
-                                  int rights);
+extern int  jmap_myrights(jmap_req_t *req, const char *mboxname);
+extern int  jmap_hasrights(jmap_req_t *req, const char *mboxname, int rights);
+extern int  jmap_myrights_mboxid(jmap_req_t *req, const char *mboxid);
+extern int  jmap_hasrights_mboxid(jmap_req_t *req, const char *mboxid, int rights);
 extern void jmap_myrights_delete(jmap_req_t *req, const char *mboxname);
+extern int  jmap_mbtype(jmap_req_t *req, const char *mboxname);
 
 /* Blob services */
 extern int jmap_findblob(jmap_req_t *req, const char *accountid,
@@ -215,7 +266,8 @@ extern int jmap_findblob(jmap_req_t *req, const char *accountid,
                          struct buf *blob);
 extern int jmap_findblob_exact(jmap_req_t *req, const char *accountid,
                                const char *blobid,
-                               struct mailbox **mbox, msgrecord_t **mr);
+                               struct mailbox **mbox, msgrecord_t **mr,
+                               struct buf *blob);
 
 extern const struct body *jmap_contact_findblob(struct message_guid *content_guid,
                                                 const char *part_id,
@@ -338,6 +390,7 @@ struct jmap_changes {
 };
 
 extern void jmap_changes_parse(jmap_req_t *req, struct jmap_parser *parser,
+                               modseq_t minmodseq,
                                jmap_args_parse_cb args_parse, void *args_rock,
                                struct jmap_changes *changes, json_t **err);
 extern void jmap_changes_fini(struct jmap_changes *changes);
@@ -472,6 +525,29 @@ extern void jmap_querychanges_parse(jmap_req_t *req,
 extern void jmap_querychanges_fini(struct jmap_querychanges *query);
 
 extern json_t *jmap_querychanges_reply(struct jmap_querychanges *query);
+
+
+/* Foo/parse */
+
+struct jmap_parse {
+    /* Request arguments */
+    const json_t *blob_ids;
+
+    /* Response fields */
+    json_t *parsed;
+    json_t *not_parsable;
+    json_t *not_found;
+};
+
+extern void jmap_parse_parse(jmap_req_t *req, struct jmap_parser *parser,
+                                 jmap_args_parse_cb args_parse, void *args_rock,
+                                 struct jmap_parse *parse,
+                                 json_t **err);
+
+extern void jmap_parse_fini(struct jmap_parse *parse);
+
+extern json_t *jmap_parse_reply(struct jmap_parse *parse);
+
 
 extern json_t *jmap_get_sharewith(const mbentry_t *mbentry);
 extern int jmap_set_sharewith(struct mailbox *mbox,

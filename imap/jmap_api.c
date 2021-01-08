@@ -118,7 +118,7 @@ static json_t *extract_array_value(json_t *val, const char *idx,
 
 /* Extract the JSON value at position path from val.
  *
- * Return NULL, if the the value does not exist or if
+ * Return NULL, if the value does not exist or if
  * path is erroneous.
  */
 static json_t *extract_value(json_t *val, const char *path, ptrarray_t *pool)
@@ -269,7 +269,9 @@ static int parse_json_body(struct transaction_t *txn, json_t **req)
     }
 
     /* Parse the JSON request */
-    *req = json_loads(buf_cstring(&txn->req_body.payload), 0, &jerr);
+    *req = json_loadb(buf_base(&txn->req_body.payload),
+                      buf_len(&txn->req_body.payload),
+                      0, &jerr);
     if (!*req) {
         buf_reset(&txn->buf);
         buf_printf(&txn->buf,
@@ -318,6 +320,7 @@ static int validate_request(struct transaction_t *txn, json_t *req,
         mname = strchr(mname, '/');
         if (!mname) continue;
 
+        mname++;
         if (!strcmp(mname, "get")) {
             json_t *ids = json_object_get(json_array_get(val, 1), "ids");
             if (json_array_size(ids) >
@@ -348,6 +351,9 @@ static int validate_request(struct transaction_t *txn, json_t *req,
             syslog(LOG_DEBUG, "old capability %s used", s);
         }
         else if (!json_object_get(settings->server_capabilities, s))  {
+            buf_printf(&txn->buf, "The Request object used capability '%s',"
+                       " which is not supported by this server.", s);
+            txn->error.desc = buf_cstring(&txn->buf);
             return JMAP_UNKNOWN_CAPABILITY;
         }
     }
@@ -462,7 +468,11 @@ HIDDEN void jmap_finireq(jmap_req_t *req)
         free(rec);
     }
     /* Fail after cleaning up open mailboxes */
-    assert(!req->mboxes->count);
+    if (req->mboxes->count) {
+        json_t *jdebug = json_pack("[s,s,s,o,o]", req->method, req->userid, req->accountid, req->args, req->response);
+        char *debug = json_dumps(jdebug, JSON_INDENT(2));
+        assert(!debug);
+    }
 
     ptrarray_free(req->mboxes);
     req->mboxes = NULL;
@@ -478,19 +488,20 @@ static jmap_method_t *find_methodproc(const char *name, hash_table *jmap_methods
     return hash_lookup(name, jmap_methods);
 }
 
-/* Return the ACL for mbentry for the authstate of userid.
- * Lookup and store ACL rights in the mboxrights cache. */
-static int _rights_for_mbentry(struct auth_state *authstate,
-                               const mbentry_t *mbentry,
-                               hash_table *mboxrights)
+struct mbstate {
+    int mbtype;
+    int rights; // ACL for current user
+};
+
+static struct mbstate *_mbstate_getoradd(struct auth_state *authstate,
+                                         const mbentry_t *mbentry,
+                                         hash_table *mbstates)
 {
-    if (!mbentry) return 0;
+    struct mbstate *mbstate = hash_lookup(mbentry->name, mbstates);
+    if (mbstate) return mbstate;
 
-    /* Lookup cached rights */
-    int *rightsptr = hash_lookup(mbentry->name, mboxrights);
-    if (rightsptr) return *rightsptr;
-
-    int rights = 0;
+    mbstate = xmalloc(sizeof(struct mbstate));
+    mbstate->mbtype = mbentry->mbtype;
 
     /* Lookup ACL */
     mbname_t *mbname = mbname_from_intname(mbentry->name);
@@ -498,20 +509,28 @@ static int _rights_for_mbentry(struct auth_state *authstate,
         // if it's an intermediate mailbox, we get rights from the parent
         mbentry_t *parententry = NULL;
         if (mboxlist_findparent(mbentry->name, &parententry))
-            rights = 0;
+            mbstate->rights = 0;
         else
-            rights = httpd_myrights(authstate, parententry);
+            mbstate->rights = httpd_myrights(authstate, parententry);
         mboxlist_entry_free(&parententry);
     }
-    else rights = httpd_myrights(authstate, mbentry);
-
-    /* Cache rights */
-    rightsptr = xmalloc(sizeof(int));
-    *rightsptr = rights;
-    hash_insert(mbentry->name, rightsptr, mboxrights);
-
+    else mbstate->rights = httpd_myrights(authstate, mbentry);
     mbname_free(&mbname);
-    return rights;
+
+    hash_insert(mbentry->name, mbstate, mbstates);
+    return mbstate;
+}
+
+
+/* Return the ACL for mbentry for the authstate of userid.
+ * Lookup and store ACL rights in the cached mailbox state. */
+static int _rights_for_mbentry(struct auth_state *authstate,
+                               const mbentry_t *mbentry,
+                               hash_table *mbstates)
+{
+    if (!mbentry) return 0;
+    struct mbstate *mbstate =_mbstate_getoradd(authstate, mbentry, mbstates);
+    return mbstate->rights;
 }
 
 struct capabilities_rock {
@@ -539,7 +558,7 @@ static int capabilities_cb(const mbentry_t *mbentry, void *vrock)
     }
 
     int rights = _rights_for_mbentry(rock->authstate, mbentry, rock->mboxrights);
-    if (!(rights & ACL_LOOKUP)) return 0;
+    if (!(rights & JACL_LOOKUP)) return 0;
     rock->is_visible = 1;
 
     mbname_t *mbname = mbname_from_intname(mbentry->name);
@@ -582,16 +601,22 @@ static json_t *lookup_capabilities(const char *accountid,
 
     json_t *capas = json_object();
 
-    int mayCreateTopLevel = (inboxrights & ACL_CREATE) ? 1 : 0;
+    int mayCreateTopLevel = (inboxrights & JACL_CREATECHILD) ? 1 : 0;
 
     if (!strcmp(authuserid, accountid)) {
         /* Primary account has all capabilities */
         jmap_core_capabilities(capas);
         jmap_mail_capabilities(capas, mayCreateTopLevel);
         jmap_emailsubmission_capabilities(capas);
+        jmap_mdn_capabilities(capas);
         jmap_vacation_capabilities(capas);
         jmap_contact_capabilities(capas);
         jmap_calendar_capabilities(capas);
+        jmap_backup_capabilities(capas);
+        jmap_notes_capabilities(capas);
+#ifdef USE_SIEVE
+        jmap_sieve_capabilities(capas);
+#endif
     }
     else {
         /* Lookup capabilities for shared account */
@@ -613,6 +638,7 @@ static json_t *lookup_capabilities(const char *accountid,
             if (rock.has_calendars) {
                 jmap_calendar_capabilities(capas);
             }
+            // should we offer Backup/restoreXxx for shared accounts?
         }
     }
 
@@ -628,6 +654,11 @@ static void _free_json(void *val)
     json_decref((json_t *)val);
 }
 
+static void _free_buf(void *val)
+{
+    buf_destroy((struct buf *)val);
+}
+
 /* Perform an API request */
 HIDDEN int jmap_api(struct transaction_t *txn, json_t **res,
                     jmap_settings_t *settings)
@@ -638,8 +669,9 @@ HIDDEN int jmap_api(struct transaction_t *txn, json_t **res,
     char *account_inboxname = NULL;
     int return_created_ids = 0;
     hash_table created_ids = HASH_TABLE_INITIALIZER;
+    hash_table inmemory_blobs = HASH_TABLE_INITIALIZER;
     hash_table capabilities_by_accountid = HASH_TABLE_INITIALIZER;
-    hash_table mboxrights = HASH_TABLE_INITIALIZER;
+    hash_table mbstates = HASH_TABLE_INITIALIZER;
     strarray_t methods = STRARRAY_INITIALIZER;
     ptrarray_t method_calls = PTRARRAY_INITIALIZER;
     ptrarray_t processed_methods = PTRARRAY_INITIALIZER;
@@ -664,7 +696,8 @@ HIDDEN int jmap_api(struct transaction_t *txn, json_t **res,
 
     /* Set up request-internal state */
     construct_hash_table(&capabilities_by_accountid, 8, 0);
-    construct_hash_table(&mboxrights, 64, 0);
+    construct_hash_table(&inmemory_blobs, 64, 0);
+    construct_hash_table(&mbstates, 64, 0);
     construct_hash_table(&created_ids, 1024, 0);
 
     /* Parse client-supplied creation ids */
@@ -698,6 +731,7 @@ HIDDEN int jmap_api(struct transaction_t *txn, json_t **res,
     for (i = 0; i < json_array_size(jusing); i++) {
         strarray_add(&using_capabilities, json_string_value(json_array_get(jusing, i)));
     }
+
     /* Push client method calls on call stack */
     json_t *jmethod_calls = json_object_get(jreq, "methodCalls");
     for (i = json_array_size(jmethod_calls); i > 0; i--) {
@@ -753,7 +787,7 @@ HIDDEN int jmap_api(struct transaction_t *txn, json_t **res,
         json_t *account_capas = hash_lookup(accountid, &capabilities_by_accountid);
         if (!account_capas) {
             account_capas = lookup_capabilities(accountid, httpd_userid,
-                                                httpd_authstate, &mboxrights);
+                                                httpd_authstate, &mbstates);
             hash_insert(accountid, account_capas, &capabilities_by_accountid);
         }
         if (json_is_null(account_capas)) {
@@ -777,14 +811,25 @@ HIDDEN int jmap_api(struct transaction_t *txn, json_t **res,
             continue;
         }
 
-        struct conversations_state *cstate = NULL;
-        r = conversations_open_user(accountid, mp->flags & JMAP_SHARED_CSTATE, &cstate);
+        if (config_getswitch(IMAPOPT_READONLY) && (mp->flags & JMAP_READ_WRITE)) {
+            if (!err) err = json_pack("{s:s}", "type", "accountReadOnly");
 
-        if (r) {
-            txn->error.desc = error_message(r);
-            ret = HTTP_SERVER_ERROR;
+            json_array_append_new(resp, json_pack("[s,o,s]", "error", err, tag));
             json_decref(args);
-            goto done;
+            continue;
+        }
+
+        struct conversations_state *cstate = NULL;
+        if (mp->flags & JMAP_NEED_CSTATE) {
+            r = conversations_open_user(accountid,
+                                        !(mp->flags & JMAP_READ_WRITE), &cstate);
+
+            if (r) {
+                txn->error.desc = error_message(r);
+                ret = HTTP_SERVER_ERROR;
+                json_decref(args);
+                goto done;
+            }
         }
 
         /* Initialize request context */
@@ -801,9 +846,10 @@ HIDDEN int jmap_api(struct transaction_t *txn, json_t **res,
         req.tag = tag;
         req.created_ids = &created_ids;
         req.txn = txn;
-        req.mboxrights = &mboxrights;
+        req.mbstates = &mbstates;
         req.method_calls = &method_calls;
         req.using_capabilities = &using_capabilities;
+        req.inmemory_blobs = &inmemory_blobs;
 
         if (do_perf) {
             struct rusage usage;
@@ -847,11 +893,6 @@ HIDDEN int jmap_api(struct transaction_t *txn, json_t **res,
         json_decref(args);
     }
 
-    /* tell syslog which methods were called */
-    spool_replace_header(xstrdup(":jmap"),
-                         strarray_join(&methods, ","), txn->req_hdrs);
-
-
     /* Build response */
     if (txn->meth == METH_UNKNOWN) {
         /* API request over WebSocket */
@@ -874,6 +915,30 @@ HIDDEN int jmap_api(struct transaction_t *txn, json_t **res,
     buf_free(&state);
 
   done:
+    /* tell syslog which methods were called */
+    spool_replace_header(xstrdup(":jmap"),
+                         strarray_join(&methods, ","), txn->req_hdrs);
+
+    if ((txn->meth == METH_UNKNOWN) && strarray_size(httpd_log_headers)) {
+        /* API request over WebSocket - add logheaders */
+        json_t *jlogHeaders = json_object_get(jreq, "logHeaders");
+        struct buf logbuf = BUF_INITIALIZER;
+        const char *hdrname;
+        json_t *jval;
+
+        json_object_foreach(jlogHeaders, hdrname, jval) {
+            const char *val = json_string_value(jval);
+
+            if (val &&
+                strarray_find_case(httpd_log_headers, hdrname, 0) >= 0) {
+                buf_printf(&logbuf, "; %s=\"%s\"", hdrname, val);
+            }
+        }
+
+        spool_replace_header(xstrdup(":logheaders"),
+                             buf_release(&logbuf), txn->req_hdrs);
+    }
+
     {
         /* Clean up call stack */
         json_t *jval;
@@ -887,8 +952,9 @@ HIDDEN int jmap_api(struct transaction_t *txn, json_t **res,
         ptrarray_fini(&method_calls);
     }
     free_hash_table(&created_ids, free);
+    free_hash_table(&inmemory_blobs, _free_buf);
     free_hash_table(&capabilities_by_accountid, _free_json);
-    free_hash_table(&mboxrights, free);
+    free_hash_table(&mbstates, free);
     free(account_inboxname);
     json_decref(jreq);
     json_decref(resp);
@@ -910,12 +976,14 @@ static void findaccounts_add(struct findaccounts_rock *rock)
     if (!buf_len(&rock->current_accountid))
         return;
 
-    if (!(rock->current_rights & (ACL_LOOKUP|ACL_READ)))
+    if (!(rock->current_rights & JACL_READITEMS))
         return;
 
     const char *accountid = buf_cstring(&rock->current_accountid);
-    int is_rw = rock->current_rights & ACL_READ_WRITE;
+    int is_rw = rock->current_rights & JACL_WRITE;
     int is_primary = !strcmp(rock->authuserid, accountid);
+
+    if (config_getswitch(IMAPOPT_READONLY)) is_rw = 0;
 
     json_t *account = json_object();
     json_object_set_new(account, "name", json_string(accountid));
@@ -966,7 +1034,7 @@ HIDDEN void jmap_accounts(json_t *accounts, json_t *primary_accounts)
 
     /* Add primary accout */
     buf_setcstr(&rock.current_accountid, httpd_userid);
-    rock.current_rights = ACL_FULL;
+    rock.current_rights = JACL_ALL;
     findaccounts_add(&rock);
 
     /* Determine account capabilities */
@@ -984,9 +1052,13 @@ HIDDEN void jmap_accounts(json_t *accounts, json_t *primary_accounts)
     json_t *jprimary = json_string(httpd_userid);
     json_object_set(primary_accounts, JMAP_URN_MAIL, jprimary);
     json_object_set(primary_accounts, JMAP_URN_SUBMISSION, jprimary);
-    json_object_set(primary_accounts, JMAP_URN_VACATION, jprimary);
     json_object_set(primary_accounts, JMAP_CONTACTS_EXTENSION, jprimary);
     json_object_set(primary_accounts, JMAP_CALENDARS_EXTENSION, jprimary);
+    json_object_set(primary_accounts, JMAP_BACKUP_EXTENSION, jprimary);
+#ifdef USE_SIEVE
+    json_object_set(primary_accounts, JMAP_URN_VACATION, jprimary);
+    json_object_set(primary_accounts, JMAP_SIEVE_EXTENSION, jprimary);
+#endif
     json_decref(jprimary);
 
     /* Clean up */
@@ -1025,6 +1097,7 @@ void jmap_add_id(jmap_req_t *req, const char *creation_id, const char *id)
      * request. If a creation id is reused, the server MUST map the creation
      * id to the most recently created item with that id."
      */
+    free(hash_del(creation_id, req->created_ids));
     hash_insert(creation_id, xstrdup(id), req->created_ids);
 }
 
@@ -1133,6 +1206,7 @@ struct findblob_data {
     struct mailbox *mbox;
     msgrecord_t *mr;
     char *part_id;
+    unsigned exact : 1;
 };
 
 static int findblob_cb(const conv_guidrec_t *rec, void *rock)
@@ -1140,6 +1214,11 @@ static int findblob_cb(const conv_guidrec_t *rec, void *rock)
     struct findblob_data *d = (struct findblob_data*) rock;
     jmap_req_t *req = d->req;
     int r = 0;
+
+    if (d->exact) {
+        // we only want top-level blobs
+        if (rec->part) return 0;
+    }
 
     /* Check ACL */
     if (d->is_shared_account) {
@@ -1149,9 +1228,9 @@ static int findblob_cb(const conv_guidrec_t *rec, void *rock)
             syslog(LOG_ERR, "jmap_findblob: no mbentry for %s", rec->mboxname);
             return r;
         }
-        int rights = jmap_myrights(req, mbentry);
+        int rights = jmap_myrights_mbentry(req, mbentry);
         mboxlist_entry_free(&mbentry);
-        if ((rights & (ACL_LOOKUP|ACL_READ)) != (ACL_LOOKUP|ACL_READ)) {
+        if ((rights & JACL_READITEMS) != JACL_READITEMS) {
             return 0;
         }
     }
@@ -1170,11 +1249,11 @@ static int findblob_cb(const conv_guidrec_t *rec, void *rock)
     return IMAP_OK_COMPLETED;
 }
 
-HIDDEN int jmap_findblob(jmap_req_t *req, const char *from_accountid,
-                         const char *blobid,
-                         struct mailbox **mbox, msgrecord_t **mr,
-                         struct body **body, const struct body **part,
-                         struct buf *blob)
+static int _jmap_findblob(jmap_req_t *req, const char *from_accountid,
+                          const char *blobid, unsigned exact,
+                          struct mailbox **mbox, msgrecord_t **mr,
+                          struct body **body, const struct body **part,
+                          struct buf *blob)
 {
     const char *accountid = from_accountid ? from_accountid : req->accountid;
     struct findblob_data data = {
@@ -1188,12 +1267,29 @@ HIDDEN int jmap_findblob(jmap_req_t *req, const char *from_accountid,
         /* mr */
         NULL,
         /* part_id */
-        NULL
+        NULL,
+        exact
     };
     struct body *mybody = NULL;
     const struct body *mypart = NULL;
     int i, r;
     struct conversations_state *cstate, *mycstate = NULL;
+
+    syslog(LOG_DEBUG, "jmap_findblob (%s, %s)", from_accountid, blobid);
+
+    if (blob) {
+        /* We check for an empty buf below, so we better start with one */
+        buf_free(blob);
+    }
+
+    if (!exact && blob && req->inmemory_blobs) {
+        const struct buf *inmem = hash_lookup(blobid, req->inmemory_blobs);
+        if (inmem) {
+            buf_init_ro(blob, buf_base(inmem), buf_len(inmem));
+            r = 0;
+            goto done;
+        }
+    }
 
     if (blobid[0] != 'G')
         return IMAP_NOTFOUND;
@@ -1258,10 +1354,6 @@ HIDDEN int jmap_findblob(jmap_req_t *req, const char *from_accountid,
         if (r) goto done;
     }
 
-    *mbox = data.mbox;
-    *mr = data.mr;
-    *part = mypart;
-    *body = mybody;
     r = 0;
 
 done:
@@ -1270,105 +1362,43 @@ done:
     }
     if (r) {
         if (data.mbox) jmap_closembox(req, &data.mbox);
-        if (mybody) message_free_body(mybody);
+        if (mybody) {
+            message_free_body(mybody);
+            free(mybody);
+        }
+    }
+    else {
+        *mbox = data.mbox;
+        *mr = data.mr;
+        if (part) *part = mypart;
+        if (body) *body = mybody;
+        else if (mybody) {
+            message_free_body(mybody);
+            free(mybody);
+        }
     }
     if (data.part_id) free(data.part_id);
     return r;
 }
 
-static int findblob_exact_cb(const conv_guidrec_t *rec, void *rock)
+HIDDEN int jmap_findblob(jmap_req_t *req, const char *from_accountid,
+                         const char *blobid,
+                         struct mailbox **mbox, msgrecord_t **mr,
+                         struct body **body, const struct body **part,
+                         struct buf *blob)
 {
-    struct findblob_data *d = (struct findblob_data*) rock;
-    jmap_req_t *req = d->req;
-    int r = 0;
-
-    // we only want top-level blobs
-    if (rec->part) return 0;
-
-    /* Check ACL */
-    if (d->is_shared_account) {
-        mbentry_t *mbentry = NULL;
-        r = mboxlist_lookup(rec->mboxname, &mbentry, NULL);
-        if (r) {
-            syslog(LOG_ERR, "jmap_findblob: no mbentry for %s", rec->mboxname);
-            return r;
-        }
-        int rights = jmap_myrights(req, mbentry);
-        mboxlist_entry_free(&mbentry);
-        if ((rights & (ACL_LOOKUP|ACL_READ)) != (ACL_LOOKUP|ACL_READ)) {
-            return 0;
-        }
-    }
-
-    r = jmap_openmbox(req, rec->mboxname, &d->mbox, 0);
-    if (r) return r;
-
-    r = msgrecord_find(d->mbox, rec->uid, &d->mr);
-    if (r) {
-        jmap_closembox(req, &d->mbox);
-        d->mr = NULL;
-        return r;
-    }
-
-    return IMAP_OK_COMPLETED;
+    return _jmap_findblob(req, from_accountid, blobid, 0 /*exact*/,
+                          mbox, mr, body, part, blob);
 }
 
 // we need to pass mbox so we can keep it open until the file has been used
 HIDDEN int jmap_findblob_exact(jmap_req_t *req, const char *from_accountid,
                                const char *blobid,
-                               struct mailbox **mbox, msgrecord_t **mr)
+                               struct mailbox **mbox, msgrecord_t **mr,
+                               struct buf *blob)
 {
-    const char *accountid = from_accountid ? from_accountid : req->accountid;
-    struct findblob_data data = {
-        req,
-        /* from_accountid */
-        accountid,
-        /* is_shared_account */
-        strcmp(req->userid, accountid),
-        /* mbox */
-        NULL,
-        /* mr */
-        NULL,
-        /* part_id */
-        NULL,
-    };
-    int r;
-    struct conversations_state *cstate, *mycstate = NULL;
-
-    if (blobid[0] != 'G')
-        return IMAP_NOTFOUND;
-
-    if (strcmp(req->accountid, accountid)) {
-        cstate = conversations_get_user(accountid);
-        if (!cstate) {
-            r = conversations_open_user(accountid, 1/*shared*/, &mycstate);
-            if (r) goto done;
-
-            cstate = mycstate;
-        }
-    }
-    else {
-        cstate = req->cstate;
-    }
-
-    r = conversations_guid_foreach(cstate, blobid+1, findblob_exact_cb, &data);
-    if (r != IMAP_OK_COMPLETED) {
-        if (!r) r = IMAP_NOTFOUND;
-        goto done;
-    }
-
-    *mbox = data.mbox;
-    *mr = data.mr;
-    r = 0;
-
-done:
-    if (mycstate) {
-        conversations_commit(&mycstate);
-    }
-    if (r) {
-        if (data.mbox) jmap_closembox(req, &data.mbox);
-    }
-    return r;
+    return _jmap_findblob(req, from_accountid, blobid, 1 /*exact*/,
+                          mbox, mr, NULL /*body*/, NULL /*part*/, blob);
 }
 
 HIDDEN int jmap_cmpstate(jmap_req_t* req, json_t *state, int mbtype)
@@ -1495,49 +1525,83 @@ HIDDEN char *jmap_xhref(const char *mboxname, const char *resource)
     return buf_release(&buf);
 }
 
-HIDDEN int jmap_myrights(jmap_req_t *req, const mbentry_t *mbentry)
+HIDDEN int jmap_myrights_mbentry(jmap_req_t *req, const mbentry_t *mbentry)
 {
-    return _rights_for_mbentry(req->authstate, mbentry, req->mboxrights);
+    return _rights_for_mbentry(req->authstate, mbentry, req->mbstates);
+}
+
+HIDDEN int jmap_mbtype(jmap_req_t *req, const char *mboxname)
+{
+    struct mbstate *mbstate = hash_lookup(mboxname, req->mbstates);
+    int mbtype;
+
+    if (!mbstate) {
+        mbentry_t *mbentry = NULL;
+        if (!jmap_mboxlist_lookup(mboxname, &mbentry, NULL)) {
+            mbstate = _mbstate_getoradd(req->authstate, mbentry, req->mbstates);
+            mbtype = mbstate->mbtype;
+        }
+        else mbtype = MBTYPE_UNKNOWN;
+        mboxlist_entry_free(&mbentry);
+    }
+    else mbtype = mbstate->mbtype;
+
+    return mbtype;
 }
 
 // gotta have them all
-HIDDEN int jmap_hasrights(jmap_req_t *req, const mbentry_t *mbentry, int rights)
+HIDDEN int jmap_hasrights_mbentry(jmap_req_t *req, const mbentry_t *mbentry, int rights)
 {
-    int myrights = jmap_myrights(req, mbentry);
+    int myrights = jmap_myrights_mbentry(req, mbentry);
     if ((myrights & rights) == rights) return 1;
     return 0;
 }
 
-HIDDEN int jmap_myrights_byname(jmap_req_t *req, const char *mboxname)
+HIDDEN int jmap_myrights(jmap_req_t *req, const char *mboxname)
 {
-    int *rightsptr = hash_lookup(mboxname, req->mboxrights);
-    if (rightsptr) return *rightsptr;
+    struct mbstate *mbstate = hash_lookup(mboxname, req->mbstates);
+    if (mbstate) return mbstate->rights;
 
     // if unable to read, that means no rights
     int rights = 0;
 
     mbentry_t *mbentry = NULL;
     if (!jmap_mboxlist_lookup(mboxname, &mbentry, NULL)) {
-        rights = _rights_for_mbentry(req->authstate, mbentry, req->mboxrights);
+        rights = _rights_for_mbentry(req->authstate, mbentry, req->mbstates);
     }
     mboxlist_entry_free(&mbentry);
 
     return rights;
 }
 
-// gotta have them all
-HIDDEN int jmap_hasrights_byname(jmap_req_t *req, const char *mboxname,
-                                 int rights)
+HIDDEN int jmap_myrights_mboxid(jmap_req_t *req, const char *mboxid)
 {
-    int myrights = jmap_myrights_byname(req, mboxname);
+    int rights = 0;
+    const mbentry_t *mbentry = jmap_mbentry_by_uniqueid(req, mboxid);
+    if (mbentry) {
+        rights = jmap_myrights_mbentry(req, mbentry);
+    }
+    return rights;
+}
+
+HIDDEN int jmap_hasrights_mboxid(jmap_req_t *req, const char *mboxid, int rights)
+{
+    const mbentry_t *mbentry = jmap_mbentry_by_uniqueid(req, mboxid);
+    return mbentry ? jmap_hasrights_mbentry(req, mbentry, rights) : 0;
+}
+
+// gotta have them all
+HIDDEN int jmap_hasrights(jmap_req_t *req, const char *mboxname, int rights)
+{
+    int myrights = jmap_myrights(req, mboxname);
     if ((myrights & rights) == rights) return 1;
     return 0;
 }
 
 HIDDEN void jmap_myrights_delete(jmap_req_t *req, const char *mboxname)
 {
-    int *rightsptr = hash_del(mboxname, req->mboxrights);
-    free(rightsptr);
+    struct mbstate *mbstate = hash_del(mboxname, req->mbstates);
+    free(mbstate);
 }
 
 /* Add performance stats to method response */
@@ -2003,6 +2067,7 @@ HIDDEN json_t *jmap_set_reply(struct jmap_set *set)
 
 HIDDEN void jmap_changes_parse(jmap_req_t *req,
                                struct jmap_parser *parser,
+                               modseq_t minmodseq,
                                jmap_args_parse_cb args_parse,
                                void *args_rock,
                                struct jmap_changes *changes,
@@ -2011,6 +2076,7 @@ HIDDEN void jmap_changes_parse(jmap_req_t *req,
     json_t *jargs = req->args;
     const char *key;
     json_t *arg;
+    int have_sincemodseq = 0;
 
     memset(changes, 0, sizeof(struct jmap_changes));
     changes->created = json_array();
@@ -2025,6 +2091,7 @@ HIDDEN void jmap_changes_parse(jmap_req_t *req,
         /* sinceState */
         else if (!strcmp(key, "sinceState")) {
             if (json_is_string(arg) && imparse_isnumber(json_string_value(arg))) {
+                have_sincemodseq = 1;
                 changes->since_modseq = atomodseq_t(json_string_value(arg));
             }
             else {
@@ -2050,7 +2117,7 @@ HIDDEN void jmap_changes_parse(jmap_req_t *req,
         *err = json_pack("{s:s s:O}", "type", "invalidArguments",
                 "arguments", parser->invalid);
     }
-    else if (!changes->since_modseq) {
+    else if (!have_sincemodseq || changes->since_modseq < minmodseq) {
         *err = json_pack("{s:s}", "type", "cannotCalculateChanges");
     }
 }
@@ -2662,13 +2729,78 @@ HIDDEN json_t *jmap_querychanges_reply(struct jmap_querychanges *query)
     return res;
 }
 
+
+/* Foo/parse */
+
+HIDDEN void jmap_parse_parse(jmap_req_t *req,
+                             struct jmap_parser *parser,
+                             jmap_args_parse_cb args_parse,
+                             void *args_rock,
+                             struct jmap_parse *parse,
+                             json_t **err)
+{
+    json_t *jargs = req->args;
+    const char *key;
+    json_t *arg;
+
+    memset(parse, 0, sizeof(struct jmap_parse));
+
+    parse->parsed = json_object();
+    parse->not_parsable = json_array();
+    parse->not_found = json_array();
+
+    json_object_foreach(jargs, key, arg) {
+        if (!strcmp(key, "accountId")) {
+            /* already handled in jmap_api() */
+        }
+
+        else if (!strcmp(key, "blobIds")) {
+            jmap_parse_strings(arg, parser, "blobIds");
+            parse->blob_ids = arg;
+        }
+
+        else if (!args_parse || !args_parse(req, parser, key, arg, args_rock)) {
+            jmap_parser_invalid(parser, key);
+        }
+    }
+
+    if (json_array_size(parser->invalid)) {
+        *err = json_pack("{s:s s:O}", "type", "invalidArguments",
+                "arguments", parser->invalid);
+    }
+}
+
+HIDDEN void jmap_parse_fini(struct jmap_parse *parse)
+{
+    json_decref(parse->parsed);
+    json_decref(parse->not_parsable);
+    json_decref(parse->not_found);
+}
+
+HIDDEN json_t *jmap_parse_reply(struct jmap_parse *parse)
+{
+    json_t *res = json_object();
+
+    if (json_object_size(parse->parsed))
+        json_object_set(res, "parsed", parse->parsed);
+    else
+        json_object_set_new(res, "parsed", json_null());
+    if (json_array_size(parse->not_parsable))
+        json_object_set(res, "notParsable", parse->not_parsable);
+    else
+        json_object_set_new(res, "notParsable", json_null());
+    if (json_array_size(parse->not_found))
+        json_object_set(res, "notFound", parse->not_found);
+    else
+        json_object_set_new(res, "notFound", json_null());
+    return res;
+}
+
+
 static json_t *_json_has(int rights, int need)
 {
   return (((rights & need) == need) ? json_true() : json_false());
 }
-
-/* create, update, delete */
-#define WRITERIGHTS  (ACL_WRITE|ACL_INSERT|ACL_SETSEEN|ACL_DELETEMSG|ACL_EXPUNGE|ACL_ANNOTATEMSG)
 
 HIDDEN json_t *jmap_get_sharewith(const mbentry_t *mbentry)
 {
@@ -2707,13 +2839,13 @@ HIDDEN json_t *jmap_get_sharewith(const mbentry_t *mbentry)
 
         if (iscalendar)
             json_object_set_new(obj, "mayReadFreeBusy",
-                                _json_has(rights, DACL_READFB));
+                                _json_has(rights, JACL_READFB));
         json_object_set_new(obj, "mayRead",
-                                _json_has(rights, ACL_READ|ACL_LOOKUP));
+                            _json_has(rights, JACL_READITEMS));
         json_object_set_new(obj, "mayWrite",
-                                _json_has(rights, WRITERIGHTS));
+                                _json_has(rights, JACL_WRITE));
         json_object_set_new(obj, "mayAdmin",
-                                _json_has(rights, ACL_ADMIN));
+                                _json_has(rights, JACL_ADMIN));
     }
 
     free(aclstr);
@@ -2750,15 +2882,15 @@ static unsigned access_from_acl_item(struct acl_item *item)
     unsigned access = 0;
 
     if (item->mayReadFreeBusy)
-        access |= DACL_READFB;
+        access |= JACL_READFB;
     if (item->mayRead)
-        access |= ACL_READ|ACL_LOOKUP|ACL_SETSEEN;
+        access |= JACL_READITEMS|JACL_SETSEEN;
     if (item->mayWrite)
-        access |= WRITERIGHTS;
+        access |= JACL_WRITE;
     if (item->mayPost)
-        access |= ACL_POST;
+        access |= JACL_SUBMIT;
     if (item->mayAdmin)
-        access |= ACL_ADMIN|ACL_CREATE|ACL_DELETEMBOX;
+        access |= JACL_ADMIN|JACL_RENAME;
 
     return access;
 }
@@ -2868,13 +3000,13 @@ HIDDEN int jmap_set_sharewith(struct mailbox *mbox,
             /* Add regular user to our table */
             change = xzmalloc(sizeof(struct acl_change));
 
-            if (oldrights & DACL_READFB)
+            if (oldrights & JACL_READFB)
                 change->old.mayReadFreeBusy = 1;
-            if (oldrights & (ACL_READ|ACL_LOOKUP))
+            if (oldrights & JACL_READITEMS)
                 change->old.mayRead = 1;
-            if ((oldrights & WRITERIGHTS) == WRITERIGHTS)
+            if ((oldrights & JACL_WRITE) == JACL_WRITE)
                 change->old.mayWrite = 1;
-            if (oldrights & ACL_ADMIN)
+            if (oldrights & JACL_ADMIN)
                 change->old.mayAdmin = 1;
             if (isdav) change->old.mayPost = change->old.mayWrite;
 

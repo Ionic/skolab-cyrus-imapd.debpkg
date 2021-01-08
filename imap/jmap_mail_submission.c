@@ -86,37 +86,37 @@ static jmap_method_t jmap_emailsubmission_methods_standard[] = {
         "EmailSubmission/get",
         JMAP_URN_SUBMISSION,
         &jmap_emailsubmission_get,
-        JMAP_SHARED_CSTATE
+        JMAP_NEED_CSTATE
     },
     {
         "EmailSubmission/set",
         JMAP_URN_SUBMISSION,
         &jmap_emailsubmission_set,
-       /*flags*/0
+        JMAP_NEED_CSTATE | JMAP_READ_WRITE
     },
     {
         "EmailSubmission/changes",
         JMAP_URN_SUBMISSION,
         &jmap_emailsubmission_changes,
-        JMAP_SHARED_CSTATE
+        JMAP_NEED_CSTATE
     },
     {
         "EmailSubmission/query",
         JMAP_URN_SUBMISSION,
         &jmap_emailsubmission_query,
-        JMAP_SHARED_CSTATE
+        JMAP_NEED_CSTATE
     },
     {
         "EmailSubmission/queryChanges",
         JMAP_URN_SUBMISSION,
         &jmap_emailsubmission_querychanges,
-        JMAP_SHARED_CSTATE
+        JMAP_NEED_CSTATE
     },
     {
         "Identity/get",
         JMAP_URN_SUBMISSION,
         &jmap_identity_get,
-        JMAP_SHARED_CSTATE
+        /*flags*/0
     },
     { NULL, NULL, NULL, 0}
 };
@@ -268,12 +268,12 @@ static int lookup_submission_collection(const char *accountid,
 
     /* Locate the mailbox */
     submissionname = mbname_intname(mbname);
-    r = http_mlookup(submissionname, mbentry, NULL);
+    r = proxy_mlookup(submissionname, mbentry, NULL, NULL);
     if (r == IMAP_MAILBOX_NONEXISTENT) {
         /* Find location of INBOX */
         char *inboxname = mboxname_user_mbox(accountid, NULL);
 
-        int r1 = http_mlookup(inboxname, mbentry, NULL);
+        int r1 = proxy_mlookup(inboxname, mbentry, NULL, NULL);
         free(inboxname);
         if (r1 == IMAP_MAILBOX_NONEXISTENT) {
             r = IMAP_INVALID_USER;
@@ -281,7 +281,7 @@ static int lookup_submission_collection(const char *accountid,
         }
 
         int rights = httpd_myrights(httpd_authstate, *mbentry);
-        if (!(rights & ACL_CREATE)) {
+        if ((rights & JACL_CREATECHILD) != JACL_CREATECHILD) {
             r = IMAP_PERMISSION_DENIED;
             goto done;
         }
@@ -292,7 +292,7 @@ static int lookup_submission_collection(const char *accountid,
     }
     else if (!r) {
         int rights = httpd_myrights(httpd_authstate, *mbentry);
-        if (!(rights & ACL_INSERT)) {
+        if ((rights & JACL_ADDITEMS) != JACL_ADDITEMS) {
             r = IMAP_PERMISSION_DENIED;
             goto done;
         }
@@ -606,7 +606,7 @@ static void _emailsubmission_create(jmap_req_t *req,
     }
 
     /* Check ACL */
-    if (!jmap_hasrights_byname(req, mboxname, ACL_READ)) {
+    if (!jmap_hasrights(req, mboxname, JACL_READITEMS)) {
         *set_err = json_pack("{s:s}", "type", "emailNotFound");
         goto done;
     }
@@ -1203,16 +1203,20 @@ static int jmap_emailsubmission_get(jmap_req_t *req)
         goto done;
     }
 
-    int r = ensure_submission_collection(req->accountid,
-                                         &mbentry, &created);
-    if (r) {
+    /* submission collection */
+    int r = lookup_submission_collection(req->accountid, &mbentry);
+    if (r == IMAP_MAILBOX_NONEXISTENT) {
+        r = 0; // that's OK, we'll skip trying to open the mailbox
+    }
+    else if (r) {
         syslog(LOG_ERR,
-               "jmap_emailsubmission_get: ensure_submission_collection(%s): %s",
+               "jmap_emailsubmission_get: lookup_submission_collection(%s): %s",
                req->accountid, error_message(r));
         goto done;
     }
-
-    r = jmap_openmbox(req, mbentry->name, &mbox, 0);
+    else {
+        r = jmap_openmbox(req, mbentry->name, &mbox, 0);
+    }
     mboxlist_entry_free(&mbentry);
     if (r) goto done;
 
@@ -1223,7 +1227,7 @@ static int jmap_emailsubmission_get(jmap_req_t *req)
 
         json_array_foreach(get.ids, i, val) {
             const char *id = json_string_value(val);
-            message_t *msg = msg_from_subid(mbox, id);
+            message_t *msg = mbox ? msg_from_subid(mbox, id) : NULL;
 
             if (!msg) {
                 /* Not a valid id */
@@ -1235,7 +1239,7 @@ static int jmap_emailsubmission_get(jmap_req_t *req)
             message_unref(&msg);
         }
     }
-    else {
+    else if (mbox) {
         struct mailbox_iter *iter = mailbox_iter_init(mbox, 0, ITER_SKIP_EXPUNGED);
         const message_t *msg;
         while ((msg = mailbox_iter_step(iter))) {
@@ -1252,7 +1256,7 @@ static int jmap_emailsubmission_get(jmap_req_t *req)
         mailbox_iter_done(&iter);
     }
 
-    jmap_closembox(req, &mbox);
+    if (mbox) jmap_closembox(req, &mbox);
 
     /* Build response */
     json_t *jstate = jmap_getstate(req, MBTYPE_SUBMISSION, /*refresh*/ created);
@@ -1542,16 +1546,24 @@ static int jmap_emailsubmission_changes(jmap_req_t *req)
     mbentry_t *mbentry = NULL;
 
     json_t *err = NULL;
-    jmap_changes_parse(req, &parser, NULL, NULL, &changes, &err);
+    jmap_changes_parse(req, &parser, req->counters.submissiondeletedmodseq,
+                       NULL, NULL, &changes, &err);
     if (err) {
         jmap_error(req, err);
         return 0;
     }
 
-    int r = ensure_submission_collection(req->accountid, &mbentry, NULL);
+    int r = lookup_submission_collection(req->accountid, &mbentry);
+    if (r == IMAP_MAILBOX_NONEXISTENT) {
+        mboxlist_entry_free(&mbentry);
+        r = 0;
+        changes.new_modseq = jmap_highestmodseq(req, MBTYPE_SUBMISSION);
+        jmap_ok(req, jmap_changes_reply(&changes));
+        goto done;
+    }
     if (r) {
         syslog(LOG_ERR,
-               "jmap_emailsubmission_changes: ensure_submission_collection(%s): %s",
+               "jmap_emailsubmission_changes: lookup_submission_collection(%s): %s",
                req->accountid, error_message(r));
         goto done;
     }
@@ -1963,10 +1975,22 @@ static int jmap_emailsubmission_query(jmap_req_t *req)
         goto done;
     }
 
-    int r = ensure_submission_collection(req->accountid, &mbentry, &created);
+    int r = lookup_submission_collection(req->accountid, &mbentry);
+    if (r == IMAP_MAILBOX_NONEXISTENT) {
+        mboxlist_entry_free(&mbentry);
+        r = 0;
+        /* Build response */
+        json_t *jstate = jmap_getstate(req, MBTYPE_SUBMISSION, /*refresh*/ created);
+        query.query_state = xstrdup(json_string_value(jstate));
+        json_decref(jstate);
+        query.result_position = 0;
+        query.can_calculate_changes = 0;
+        jmap_ok(req, jmap_query_reply(&query));
+        goto done;
+    }
     if (r) {
         syslog(LOG_ERR,
-               "jmap_emailsubmission_changes: ensure_submission_collection(%s): %s",
+               "jmap_emailsubmission_changes: lookup_submission_collection(%s): %s",
                req->accountid, error_message(r));
         goto done;
     }

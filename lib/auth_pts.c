@@ -122,7 +122,7 @@ static int timeout_select(int sock, int op, int sec)
 
 static int nb_connect(int s, struct sockaddr *sa, socklen_t slen, int sec)
 {
-  int flags, r, rc=0;
+  int flags, rc=0;
 
   if ((flags = fcntl(s, F_GETFL,0)) == -1) {
     syslog(LOG_ERR, "unable to get socket flags");
@@ -134,7 +134,7 @@ static int nb_connect(int s, struct sockaddr *sa, socklen_t slen, int sec)
     return -1;
   }
 
-  if ((r = connect(s, sa, slen)) < 0) {
+  if (connect(s, sa, slen) < 0) {
     if (errno != EINPROGRESS) {
       rc = -1;
       goto done;

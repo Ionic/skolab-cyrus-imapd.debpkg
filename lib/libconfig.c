@@ -456,6 +456,7 @@ EXPORTED void config_reset(void)
 {
     enum imapopt opt;
 
+    /* XXX this gate should probably use config_loaded, not config_filename */
     if (!config_filename)
         return;
 
@@ -494,6 +495,9 @@ EXPORTED void config_reset(void)
 
     /* free the overflow table */
     free_hash_table(&confighash, free);
+
+    /* we no longer have loaded config */
+    config_loaded = 0;
 }
 
 static const unsigned char qos[] = {
@@ -678,6 +682,19 @@ static void config_add_overflowstring(const char *key, const char *value, int li
                 key, lineno);
         fatal(errbuf, EX_CONFIG);
     }
+}
+
+EXPORTED int config_parse_switch(const char *p)
+{
+    if (*p == '0' || *p == 'n' ||
+            (*p == 'o' && p[1] == 'f') || *p == 'f') {
+        return 0;
+    }
+    else if (*p == '1' || *p == 'y' ||
+            (*p == 'o' && p[1] == 'n') || *p == 't') {
+        return 1;
+    }
+    return -1;
 }
 
 static void config_read_file(const char *filename)
@@ -902,20 +919,14 @@ static void config_read_file(const char *filename)
             }
             case OPT_SWITCH:
             {
-                if (*p == '0' || *p == 'n' ||
-                    (*p == 'o' && p[1] == 'f') || *p == 'f') {
-                    imapopts[opt].val.b = 0;
-                }
-                else if (*p == '1' || *p == 'y' ||
-                         (*p == 'o' && p[1] == 'n') || *p == 't') {
-                    imapopts[opt].val.b = 1;
-                }
-                else {
+                int b = config_parse_switch(p);
+                if (b < 0) {
                     /* error during conversion */
                     sprintf(errbuf, "non-switch value for %s in line %d",
                             imapopts[opt].optname, lineno);
                     fatal(errbuf, EX_CONFIG);
                 }
+                imapopts[opt].val.b = b;
                 break;
             }
             case OPT_ENUM:
@@ -963,8 +974,19 @@ static void config_read_file(const char *filename)
                         imapopts[opt].val.s = e->name;
                     else if (imapopts[opt].t == OPT_ENUM)
                         imapopts[opt].val.e = e->val;
-                    else
+                    else {
+                        const struct enum_option_s *pref = e;
+                        for (; pref > imapopts[opt].enum_options &&
+                                 pref[-1].val == e->val; pref--);
+                        if (pref != e) {
+                            syslog(LOG_WARNING,
+                                   "Value '%s' for option '%s'"
+                                   " is deprecated in favor of value '%s'",
+                                   e->name, imapopts[opt].optname, pref->name);
+                        }
+
                         imapopts[opt].val.x |= e->val;
+                    }
 
                     /* find the start of the next value */
                     for (p = q; *p && Uisspace(*p); p++);

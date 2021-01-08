@@ -100,6 +100,7 @@
 #include "proc.h"
 #include "retry.h"
 #include "seen.h"
+#include "user.h"
 #include "util.h"
 #include "sequence.h"
 #include "statuscache.h"
@@ -177,6 +178,7 @@ static bit32 mailbox_index_record_to_buf(struct index_record *record, int versio
                                          unsigned char *buf);
 
 #ifdef WITH_DAV
+static struct webdav_db *mailbox_open_webdav(struct mailbox *);
 static int mailbox_commit_dav(struct mailbox *mailbox);
 static int mailbox_abort_dav(struct mailbox *mailbox);
 static int mailbox_delete_dav(struct mailbox *mailbox);
@@ -220,12 +222,11 @@ EXPORTED int open_mailboxes_exist()
 
 static struct mailboxlist *create_listitem(const char *name)
 {
-    struct mailboxlist *item = xmalloc(sizeof(struct mailboxlist));
+    struct mailboxlist *item = xzmalloc(sizeof(struct mailboxlist));
     item->next = open_mailboxes;
     open_mailboxes = item;
 
     item->nopen = 1;
-    item->l = NULL;
     zeromailbox(item->m);
     item->m.name = xstrdup(name);
     /* ensure we never print insane times */
@@ -472,17 +473,22 @@ static int cache_parserecord(struct mappedfile *cachefile, uint64_t cache_offset
 
         /* bounds checking */
         if (offset >= buf_size) {
-            syslog(LOG_ERR, "IOERROR: offset greater than cache size "
-                   SIZE_T_FMT " " SIZE_T_FMT "(%d)",
-                   offset, buf_size, cache_ent);
+            xsyslog(LOG_ERR, "IOERROR: offset greater than cache size",
+                             "offset=<" SIZE_T_FMT "> "
+                             "buf_size=<" SIZE_T_FMT "> "
+                             "cache_ent=<%d>",
+                             offset, buf_size, cache_ent);
             return IMAP_IOERROR;
         }
 
         if (offset + CACHE_ITEM_SIZE_SKIP + CACHE_ITEM_LEN(cacheitem) > buf_size) {
-            syslog(LOG_ERR, "IOERROR: cache entry truncated "
-                   SIZE_T_FMT " %u " SIZE_T_FMT "(%d)",
-                   offset, CACHE_ITEM_LEN(cacheitem),
-                   buf_size, cache_ent);
+            xsyslog(LOG_ERR, "IOERROR: cache entry truncated",
+                             "offset=<" SIZE_T_FMT "> "
+                             "length=<%u> "
+                             "buf_size=<" SIZE_T_FMT "> "
+                             "cache_ent=<%d>",
+                             offset, CACHE_ITEM_LEN(cacheitem),
+                             buf_size, cache_ent);
             return IMAP_IOERROR;
         }
 
@@ -493,7 +499,7 @@ static int cache_parserecord(struct mappedfile *cachefile, uint64_t cache_offset
         /* moving on */
         next = CACHE_ITEM_NEXT(cacheitem);
         if (next < cacheitem) {
-            syslog(LOG_ERR, "IOERROR: cache offset negative");
+            xsyslog(LOG_ERR, "IOERROR: cache offset negative", NULL);
             return IMAP_IOERROR;
         }
 
@@ -580,7 +586,9 @@ static struct mappedfile *cache_getfile(ptrarray_t *list, const char *fname,
     /* guess we didn't find it - open a new one */
     cachefile = NULL;
     if (mappedfile_open(&cachefile, fname, openflags)) {
-        syslog(LOG_ERR, "IOERROR: failed to open cache file %s", fname);
+        xsyslog(LOG_ERR, "IOERROR: failed to open cache file",
+                         "fname=<%s>",
+                         fname);
         return NULL;
     }
 
@@ -639,8 +647,9 @@ static int mailbox_append_cache(struct mailbox *mailbox,
     if (!record->crec.len) {
         /* make one! */
         const char *fname = mailbox_record_fname(mailbox, record);
-        syslog(LOG_ERR, "IOERROR: no cache for %s %u, parsing and saving",
-               mailbox->name, record->uid);
+        xsyslog(LOG_ERR, "IOERROR: no cache content, parsing and saving",
+                         "mailbox=<%s> record=<%u>",
+                         mailbox->name, record->uid);
         r = message_parse(fname, record);
         if (r) return r;
         mailbox_index_dirty(mailbox);
@@ -712,14 +721,18 @@ static int mailbox_cacherecord_internal(struct mailbox *mailbox,
 
 err:
     if (!cachefile)
-        syslog(LOG_ERR, "IOERROR: missing cache file for %s uid %u",
-               mailbox->name, record->uid);
+        xsyslog(LOG_ERR, "IOERROR: missing cache file",
+                         "mailbox=<%s> uid=<%u>",
+                         mailbox->name, record->uid);
     else if (!record->cache_offset)
-        syslog(LOG_ERR, "IOERROR: missing cache offset for %s uid %u",
-               mailbox->name, record->uid);
+        xsyslog(LOG_ERR, "IOERROR: missing cache offset",
+                         "mailbox=<%s> uid=<%u>",
+                         mailbox->name, record->uid);
     else if (r)
-        syslog(LOG_ERR, "IOERROR: invalid cache record for %s uid %u (%s) %d at %llu",
-               mailbox->name, record->uid, error_message(r), crc, (long long unsigned)record->cache_offset);
+        xsyslog(LOG_ERR, "IOERROR invalid cache record",
+                         "mailbox=<%s> uid=<%u> error=<%s> crc=<%d> cache_offset=<%llu>",
+                         mailbox->name, record->uid, error_message(r),
+                         crc, (unsigned long long) record->cache_offset);
 
     if (rewrite == MBCACHE_NOPARSE)
         return r;
@@ -729,16 +742,18 @@ err:
     /* parse directly into the cache for this record */
     const char *fname = mailbox_record_fname(mailbox, record);
     if (!fname) {
-        syslog(LOG_ERR, "IOERROR: no spool file for %s uid %u",
-               mailbox->name, record->uid);
+        xsyslog(LOG_ERR, "IOERROR: no spool file",
+                         "mailbox=<%s> uid=<%u>",
+                         mailbox->name, record->uid);
         return IMAP_IOERROR;
     }
 
     /* parse into the file and zero the cache offset */
     r = message_parse(fname, backdoor);
     if (r) {
-        syslog(LOG_ERR, "IOERROR: failed to parse message for %s uid %u",
-               mailbox->name, record->uid);
+        xsyslog(LOG_ERR, "IOERROR: failed to parse message",
+                         "mailbox=<%s> uid=<%u>",
+                         mailbox->name, record->uid);
         return r;
     }
     backdoor->cache_offset = 0;
@@ -746,8 +761,9 @@ err:
     if (rewrite == MBCACHE_REWRITE) {
         r = mailbox_append_cache(mailbox, backdoor);
         if (r) {
-            syslog(LOG_ERR, "IOERROR: failed to append cache for %s uid %u",
-                   mailbox->name, record->uid);
+            xsyslog(LOG_ERR, "IOERROR: failed to append cache",
+                             "mailbox=<%s> uid=<%u>",
+                             mailbox->name, record->uid);
             return r;
         }
     }
@@ -830,7 +846,9 @@ static int _map_local_record(const struct mailbox *mailbox, const char *fname, s
     if (msgfd == -1) return errno;
 
     if (fstat(msgfd, &sbuf) == -1) {
-        syslog(LOG_ERR, "IOERROR: fstat on %s: %m", fname);
+        xsyslog(LOG_ERR, "IOERROR: fstat failed",
+                         "fname=<%s>",
+                         fname);
         fatal("can't fstat message file", EX_OSFILE);
     }
 
@@ -919,7 +937,7 @@ static int mailbox_open_index(struct mailbox *mailbox)
     return 0;
 }
 
-static int mailbox_mboxlock_reopen(struct mailboxlist *listitem, int locktype)
+static int mailbox_mboxlock_reopen(struct mailboxlist *listitem, int locktype, int index_locktype)
 {
     struct mailbox *mailbox = &listitem->m;
     int r;
@@ -927,6 +945,20 @@ static int mailbox_mboxlock_reopen(struct mailboxlist *listitem, int locktype)
     mailbox_release_resources(mailbox);
 
     mboxname_release(&listitem->l);
+    mboxname_release(&mailbox->local_namespacelock);
+
+    char *userid = mboxname_to_userid(mailbox->name);
+    if (userid) {
+        int haslock = user_isnamespacelocked(userid);
+        if (haslock) {
+            if (index_locktype != LOCK_SHARED) assert(haslock != LOCK_SHARED);
+        }
+        else {
+            mailbox->local_namespacelock = user_namespacelock_full(userid, index_locktype);
+        }
+        free(userid);
+    }
+
     r = mboxname_lock(mailbox->name, &listitem->l, locktype);
     if (r) return r;
 
@@ -971,12 +1003,27 @@ static int mailbox_open_advanced(const char *name,
     listitem = create_listitem(name);
     mailbox = &listitem->m;
 
+    // lock the user namespace FIRST before the mailbox namespace
+    char *userid = mboxname_to_userid(name);
+    if (userid) {
+        int haslock = user_isnamespacelocked(userid);
+        if (haslock) {
+            if (index_locktype != LOCK_SHARED) assert(haslock != LOCK_SHARED);
+        }
+        else {
+            int locktype = index_locktype;
+            mailbox->local_namespacelock = user_namespacelock_full(userid, locktype);
+        }
+        free(userid);
+    }
+
     r = mboxname_lock(name, &listitem->l, locktype);
     if (r) {
         /* locked is not an error - just means we asked for NONBLOCKING */
         if (r != IMAP_MAILBOX_LOCKED)
-            syslog(LOG_ERR, "IOERROR: locking %s: %s",
-                   mailbox->name, error_message(r));
+            xsyslog(LOG_ERR, "IOERROR: lock failed",
+                             "mailbox=<%s> error=<%s>",
+                             mailbox->name, error_message(r));
         goto done;
     }
 
@@ -1011,8 +1058,9 @@ static int mailbox_open_advanced(const char *name,
 
     r = mailbox_open_index(mailbox);
     if (r) {
-        syslog(LOG_ERR, "IOERROR: opening index %s: %s",
-               mailbox->name, error_message(r));
+        xsyslog(LOG_ERR, "IOERROR: opening index failed",
+                         "mailbox=<%s> error=<%s>",
+                         mailbox->name, error_message(r));
         goto done;
     }
 
@@ -1067,13 +1115,16 @@ EXPORTED modseq_t mailbox_modseq_dirty(struct mailbox *mailbox)
 {
     assert(mailbox_index_islocked(mailbox, 1));
 
-    if (mailbox->silentchanges)
+    if (mailbox->silentchanges) {
+        mailbox->modseq_dirty = 1;
+        mailbox_index_dirty(mailbox);
         return mailbox->i.highestmodseq;
+    }
 
     if (!mailbox->modseq_dirty) {
         mailbox->i.highestmodseq = mboxname_setmodseq(mailbox->name,
                                    mailbox->i.highestmodseq,
-                                   mailbox->mbtype, /*dofolder*/0);
+                                   mailbox->mbtype, /*flags*/0);
         mailbox->last_updated = time(0);
         mailbox->modseq_dirty = 1;
         mailbox_index_dirty(mailbox);
@@ -1098,7 +1149,7 @@ EXPORTED int mailbox_setversion(struct mailbox *mailbox, int version)
         /* we need an exclusive lock on the listitem because we're renaming
          * index files, so release locks and then go full exclusive */
         mailbox_unlock_index(mailbox, NULL);
-        r = mailbox_mboxlock_reopen(listitem, LOCK_EXCLUSIVE);
+        r = mailbox_mboxlock_reopen(listitem, LOCK_EXCLUSIVE, LOCK_EXCLUSIVE);
 
         /* we need to re-open the index because we dropped the mboxname lock,
          * so the file may have changed */
@@ -1147,30 +1198,44 @@ EXPORTED void mailbox_close(struct mailbox **mailboxptr)
         return;
     }
 
+    int was_ro = !mailbox_index_islocked(mailbox, /*write*/1);
+
     /* get a re-read of the options field for cleanup purposes */
     if (mailbox->index_fd != -1) {
-        if (!mailbox->index_locktype)
-            mailbox_lock_index(mailbox, LOCK_SHARED);
         /* drop the index lock here because we'll lose our right to it
          * when try to upgrade the mboxlock anyway. */
         mailbox_unlock_index(mailbox, NULL);
     }
 
+    int need_cleanup = 0;
+    if (mailbox->i.options & OPT_MAILBOX_DELETED) {
+        // we ALWAYS cleanup deleted
+        need_cleanup = 1;
+    }
+    else if (!was_ro && !in_shutdown && (mailbox->i.options & MAILBOX_CLEANUP_MASK)) {
+        need_cleanup = 1;
+    }
+
     /* do we need to try and clean up? (not if doing a shutdown,
      * speed is probably more important!) */
-    if (!in_shutdown && (mailbox->i.options & MAILBOX_CLEANUP_MASK)) {
-        int r = mailbox_mboxlock_reopen(listitem, LOCK_NONBLOCKING);
+    if (need_cleanup) {
+        int locktype = LOCK_NONBLOCKING;
+        /* if we deleted the mailbox we MUST clean it up or the files will leak,
+         * so wait until the other locks are cleared */
+        if (mailbox->i.options & OPT_MAILBOX_DELETED) locktype = LOCK_EXCLUSIVE;
+        int r = mailbox_mboxlock_reopen(listitem, locktype, LOCK_EXCLUSIVE);
         /* we need to re-open the index because we dropped the mboxname lock,
          * so the file may have changed */
         if (!r) r = mailbox_open_index(mailbox);
         /* lock_internal so DELETED doesn't cause it to appear to be
-         * NONEXISTENT */
+         * NONEXISTENT - but we still need conversations so we can write changes! */
         if (!r) r = mailbox_lock_index_internal(mailbox, LOCK_EXCLUSIVE);
         if (!r) {
             /* finish cleaning up */
             if (mailbox->i.options & OPT_MAILBOX_DELETED)
                 mailbox_delete_cleanup(mailbox, mailbox->part, mailbox->name, mailbox->uniqueid);
             else if (mailbox->i.options & OPT_MAILBOX_NEEDS_REPACK)
+
                 mailbox_index_repack(mailbox, mailbox->i.minor_version);
             else if (mailbox->i.options & OPT_MAILBOX_NEEDS_UNLINK)
                 mailbox_index_unlink(mailbox);
@@ -1197,6 +1262,9 @@ EXPORTED void mailbox_close(struct mailbox **mailboxptr)
     }
 
     if (listitem->l) mboxname_release(&listitem->l);
+
+    if (mailbox->local_namespacelock)
+        mboxname_release(&mailbox->local_namespacelock);
 
     remove_listitem(listitem);
 }
@@ -1391,8 +1459,9 @@ EXPORTED int mailbox_user_flag(struct mailbox *mailbox, const char *flag,
 
         /* stop imapd exhausting flags */
         if (emptyflag >= 100 && create == 1) {
-            syslog(LOG_ERR, "IOERROR: out of flags on %s (%s)",
-                   mailbox->name, flag);
+            xsyslog(LOG_ERR, "IOERROR: out of flags",
+                             "mailbox=<%s> flag=<%s>",
+                             mailbox->name, flag);
             return IMAP_USERFLAG_EXHAUSTED;
         }
 
@@ -1558,6 +1627,7 @@ static int mailbox_buf_to_index_header(const char *buf, size_t len,
     case 14:
     case 15:
     case 16:
+    case 17:
         headerlen = 160;
         break;
     default:
@@ -1610,6 +1680,10 @@ static int mailbox_buf_to_index_header(const char *buf, size_t len,
 
     i->createdmodseq = align_ntohll(buf+OFFSET_MAILBOX_CREATEDMODSEQ);
 
+    if (i->minor_version < 17) goto crc;
+
+    i->changes_epoch = ntohl(*((bit32 *)(buf+OFFSET_CHANGES_EPOCH)));
+
 crc:
     /* CRC is always the last 4 bytes */
     crc = ntohl(*((bit32 *)(buf+headerlen-4)));
@@ -1626,6 +1700,10 @@ done:
     if (i->minor_version < 12) {
         i->deletedmodseq = i->highestmodseq;
         i->exists = i->num_records;
+    }
+
+    if (i->minor_version < 17) {
+        i->changes_epoch = i->last_repack_time ? i->last_repack_time : time(0);
     }
 
     return 0;
@@ -1696,6 +1774,11 @@ static int mailbox_read_index_header(struct mailbox *mailbox)
 /*
  * Read an index record from a mapped index file
  */
+#ifdef HAVE_DECLARE_OPTIMIZE
+static int mailbox_buf_to_index_record(const char *buf, int version,
+                                       struct index_record *record, int dirty)
+    __attribute__((optimize("-O3")));
+#endif
 static int mailbox_buf_to_index_record(const char *buf, int version,
                                        struct index_record *record, int dirty)
 {
@@ -1870,14 +1953,18 @@ static int _commit_one(struct mailbox *mailbox, struct index_change *change)
 
     /* any failure here is a disaster! */
     if (lseek(mailbox->index_fd, offset, SEEK_SET) == -1) {
-        syslog(LOG_ERR, "IOERROR: seeking index record %u for %s: %m",
-               recno, mailbox->name);
+        xsyslog(LOG_ERR, "IOERROR: seeking index record failed",
+                         "mailbox=<%s> record=<%u>",
+                         mailbox->name, recno);
         return IMAP_IOERROR;
     }
 
-    if (retry_write(mailbox->index_fd, buf, mailbox->i.record_size) != mailbox->i.record_size) {
-        syslog(LOG_ERR, "IOERROR: writing index record %u for %s: %m",
-               recno, mailbox->name);
+    if (retry_write(mailbox->index_fd, buf, mailbox->i.record_size)
+        != mailbox->i.record_size)
+    {
+        xsyslog(LOG_ERR, "IOERROR: writing index record failed",
+                         "mailbox=<%s> record=<%u>",
+                         mailbox->name, recno);
         return IMAP_IOERROR;
     }
 
@@ -1977,9 +2064,9 @@ EXPORTED int mailbox_reload_index_record_dirty(struct mailbox *mailbox,
     unsigned offset = mailbox->i.start_offset + (recno-1) * mailbox->i.record_size;
 
     if (offset + mailbox->i.record_size > mailbox->index_size) {
-        syslog(LOG_ERR,
-               "IOERROR: index record %u for %s past end of file",
-               recno, mailbox->name);
+        xsyslog(LOG_ERR, "IOERROR: index record past end of file",
+                         "mailbox=<%s> record=<%u>",
+                         mailbox->name, recno);
         return IMAP_IOERROR;
     }
 
@@ -2011,9 +2098,9 @@ static int mailbox_read_index_record(struct mailbox *mailbox,
     offset = mailbox->i.start_offset + (recno-1) * mailbox->i.record_size;
 
     if (offset + mailbox->i.record_size > mailbox->index_size) {
-        syslog(LOG_ERR,
-               "IOERROR: index record %u for %s past end of file",
-               recno, mailbox->name);
+        xsyslog(LOG_ERR, "IOERROR: index record past end of file",
+                         "mailbox=<%s> record=<%u>",
+                         mailbox->name, recno);
         return IMAP_IOERROR;
     }
 
@@ -2068,33 +2155,8 @@ EXPORTED int mailbox_has_conversations(struct mailbox *mailbox)
     return 1;
 }
 
-static int mailbox_lock_conversations(struct mailbox *mailbox, int locktype)
-{
-    /* does this mailbox have conversations? */
-    if (!mailbox_has_conversations(mailbox))
-        return 0;
-
-    /* already locked */
-    struct conversations_state *cstate = conversations_get_mbox(mailbox->name);
-    if (cstate) {
-        if (locktype == LOCK_EXCLUSIVE) assert (!cstate->is_shared);
-        return 0;
-    }
-
-    if (locktype == LOCK_EXCLUSIVE) {
-        return conversations_open_mbox(mailbox->name, 0/*shared*/, &mailbox->local_cstate);
-    }
-    else if (locktype == LOCK_SHARED) {
-        return conversations_open_mbox(mailbox->name, 1/*shared*/, &mailbox->local_cstate);
-    }
-    else {
-        /* this function does not support nonblocking locks */
-        fatal("invalid locktype for conversations", EX_SOFTWARE);
-    }
-}
-
 #ifdef WITH_DAV
-EXPORTED struct caldav_db *mailbox_open_caldav(struct mailbox *mailbox)
+HIDDEN struct caldav_db *mailbox_open_caldav(struct mailbox *mailbox)
 {
     if (!mailbox->local_caldav) {
         mailbox->local_caldav = caldav_open_mailbox(mailbox);
@@ -2108,7 +2170,7 @@ EXPORTED struct caldav_db *mailbox_open_caldav(struct mailbox *mailbox)
     return mailbox->local_caldav;
 }
 
-EXPORTED struct carddav_db *mailbox_open_carddav(struct mailbox *mailbox)
+HIDDEN struct carddav_db *mailbox_open_carddav(struct mailbox *mailbox)
 {
     if (!mailbox->local_carddav) {
         mailbox->local_carddav = carddav_open_mailbox(mailbox);
@@ -2122,7 +2184,7 @@ EXPORTED struct carddav_db *mailbox_open_carddav(struct mailbox *mailbox)
     return mailbox->local_carddav;
 }
 
-EXPORTED struct webdav_db *mailbox_open_webdav(struct mailbox *mailbox)
+static struct webdav_db *mailbox_open_webdav(struct mailbox *mailbox)
 {
     if (!mailbox->local_webdav) {
         mailbox->local_webdav = webdav_open_mailbox(mailbox);
@@ -2209,7 +2271,20 @@ static int mailbox_lock_index_internal(struct mailbox *mailbox, int locktype)
     assert(mailbox->index_fd != -1);
     assert(!mailbox->index_locktype);
 
-    r = 0;
+    char *userid = mboxname_to_userid(mailbox->name);
+    if (userid) {
+        if (!user_isnamespacelocked(userid)) {
+            struct mailboxlist *listitem = find_listitem(mailbox->name);
+            assert(listitem);
+            assert(&listitem->m == mailbox);
+            r = mailbox_mboxlock_reopen(listitem, LOCK_SHARED, locktype);
+            if (locktype == LOCK_SHARED)
+                mailbox->is_readonly = 1;
+            if (!r) r = mailbox_open_index(mailbox);
+        }
+        free(userid);
+        if (r) return r;
+    }
 
     if (locktype == LOCK_EXCLUSIVE) {
         /* handle read-only case cleanly - we need to re-open read-write first! */
@@ -2239,8 +2314,9 @@ static int mailbox_lock_index_internal(struct mailbox *mailbox, int locktype)
     }
 
     if (r) {
-        syslog(LOG_ERR, "IOERROR: locking index for %s: %s",
-               mailbox->name, error_message(r));
+        xsyslog(LOG_ERR, "IOERROR: lock index failed",
+                         "mailbox=<%s> error=<%s>",
+                         mailbox->name, error_message(r));
         return IMAP_IOERROR;
     }
 
@@ -2249,8 +2325,9 @@ static int mailbox_lock_index_internal(struct mailbox *mailbox, int locktype)
 
     r = stat(header_fname, &sbuf);
     if (r == -1) {
-        syslog(LOG_ERR, "IOERROR: stating header %s for %s: %m",
-               header_fname, mailbox->name);
+        xsyslog(LOG_ERR, "IOERROR: stat header failed",
+                         "mailbox=<%s> header=<%s>",
+                         mailbox->name, header_fname);
         mailbox_unlock_index(mailbox, NULL);
         return IMAP_IOERROR;
     }
@@ -2259,8 +2336,9 @@ static int mailbox_lock_index_internal(struct mailbox *mailbox, int locktype)
     if (sbuf.st_ino != mailbox->header_file_ino) {
         r = mailbox_read_header(mailbox, NULL);
         if (r) {
-            syslog(LOG_ERR, "IOERROR: reading header for %s: %s",
-                   mailbox->name, error_message(r));
+            xsyslog(LOG_ERR, "IOERROR: read header failed",
+                             "mailbox=<%s> error=<%s>",
+                             mailbox->name, error_message(r));
             mailbox_unlock_index(mailbox, NULL);
             return r;
         }
@@ -2279,8 +2357,9 @@ static int mailbox_lock_index_internal(struct mailbox *mailbox, int locktype)
      * we're safe to just extend the map if needed */
     r = mailbox_read_index_header(mailbox);
     if (r) {
-        syslog(LOG_ERR, "IOERROR: refreshing index for %s: %s",
-               mailbox->name, error_message(r));
+        xsyslog(LOG_ERR, "IOERROR: refreshing index failed",
+                         "mailbox=<%s> error=<%s>",
+                         mailbox->name, error_message(r));
         mailbox_unlock_index(mailbox, NULL);
         return r;
     }
@@ -2299,11 +2378,6 @@ static int mailbox_lock_index_internal(struct mailbox *mailbox, int locktype)
 EXPORTED int mailbox_lock_index(struct mailbox *mailbox, int locktype)
 {
     int r = 0;
-
-    /* always lock the conversations DB, since if we have the index file
-     * locked at all, we can't open it later */
-    r = mailbox_lock_conversations(mailbox, locktype);
-    if (r) return r;
 
     r = mailbox_lock_index_internal(mailbox, locktype);
     if (r) return r;
@@ -2338,9 +2412,10 @@ EXPORTED void mailbox_unlock_index(struct mailbox *mailbox, struct statusdata *s
     /* naughty - you can't unlock a dirty mailbox! */
     r = mailbox_commit(mailbox);
     if (r) {
-        syslog(LOG_ERR, "IOERROR: failed to commit mailbox %s, "
-               "probably need to reconstruct",
-               mailbox->name);
+        xsyslog(LOG_ERR, "IOERROR: failed to commit mailbox, "
+                            "probably need to reconstruct",
+                         "mailbox=<%s>",
+                         mailbox->name);
         abort();
     }
 
@@ -2362,16 +2437,17 @@ EXPORTED void mailbox_unlock_index(struct mailbox *mailbox, struct statusdata *s
 
     if (mailbox->index_locktype) {
         if (lock_unlock(mailbox->index_fd, index_fname))
-            syslog(LOG_ERR, "IOERROR: unlocking index of %s: %m",
-                mailbox->name);
+            xsyslog(LOG_ERR, "IOERROR: unlocking index failed",
+                             "mailbox=<%s>",
+                             mailbox->name);
         mailbox->index_locktype = 0;
-    }
 
-    gettimeofday(&endtime, 0);
-    timediff = timesub(&mailbox->starttime, &endtime);
-    if (timediff > 1.0) {
-        syslog(LOG_NOTICE, "mailbox: longlock %s for %0.1f seconds",
-               mailbox->name, timediff);
+        gettimeofday(&endtime, 0);
+        timediff = timesub(&mailbox->starttime, &endtime);
+        if (timediff > 1.0) {
+            syslog(LOG_NOTICE, "mailbox: longlock %s for %0.1f seconds",
+                mailbox->name, timediff);
+        }
     }
 
     if (mailbox->local_cstate) {
@@ -2379,6 +2455,11 @@ EXPORTED void mailbox_unlock_index(struct mailbox *mailbox, struct statusdata *s
         if (r)
             syslog(LOG_ERR, "Error committing to conversations database for mailbox %s: %s",
                    mailbox->name, error_message(r));
+    }
+
+    // release the namespacelock here
+    if (mailbox->local_namespacelock) {
+        mboxname_release(&mailbox->local_namespacelock);
     }
 }
 
@@ -2406,7 +2487,9 @@ static int mailbox_commit_header(struct mailbox *mailbox)
 
     fd = open(newfname, O_CREAT | O_TRUNC | O_RDWR, 0666);
     if (fd == -1) {
-        syslog(LOG_ERR, "IOERROR: opening %s: %m", newfname);
+        xsyslog(LOG_ERR, "IOERROR: open failed",
+                         "newfname=<%s>",
+                         newfname);
         return IMAP_IOERROR;
     }
 
@@ -2445,7 +2528,9 @@ static int mailbox_commit_header(struct mailbox *mailbox)
     }
 
     if (r == -1 || fsync(fd)) {
-        syslog(LOG_ERR, "IOERROR: writing %s: %m", newfname);
+        xsyslog(LOG_ERR, "IOERROR: write failed",
+                         "newfname=<%s>",
+                         newfname);
         close(fd);
         unlink(newfname);
         return IMAP_IOERROR;
@@ -2549,6 +2634,10 @@ static bit32 mailbox_index_header_to_buf(struct index_header *i, unsigned char *
         align_htonll(buf+OFFSET_MAILBOX_CREATEDMODSEQ, i->createdmodseq);
     }
 
+    if (i->minor_version > 16) {
+        *((bit32 *)(buf+OFFSET_CHANGES_EPOCH)) = htonl(i->changes_epoch);
+    }
+
     /* Update checksum */
     crc = htonl(crc32_map((char *)buf, headerlen-4));
     *((bit32 *)(buf+headerlen-4)) = crc;
@@ -2611,6 +2700,9 @@ EXPORTED int mailbox_abort(struct mailbox *mailbox)
 
     annotate_state_abort(&mailbox->annot_state);
 
+    if (mailbox->local_cstate)
+        conversations_abort(&mailbox->local_cstate);
+
     if (!mailbox->i.dirty)
         return 0;
 
@@ -2667,7 +2759,7 @@ EXPORTED int mailbox_commit(struct mailbox *mailbox)
 
     mboxname_setmodseq(mailbox->name,
                        mailbox->i.highestmodseq,
-                       mailbox->mbtype, /*dofolder*/0);
+                       mailbox->mbtype, /*flags*/0);
 
     assert(mailbox_index_islocked(mailbox, 1));
 
@@ -2683,16 +2775,18 @@ EXPORTED int mailbox_commit(struct mailbox *mailbox)
     lseek(mailbox->index_fd, 0, SEEK_SET);
     n = retry_write(mailbox->index_fd, buf, mailbox->i.start_offset);
     if (n < 0 || fsync(mailbox->index_fd)) {
-        syslog(LOG_ERR, "IOERROR: writing index header for %s: %m",
-               mailbox->name);
+        xsyslog(LOG_ERR, "IOERROR: writing index header failed",
+                         "mailbox=<%s>",
+                         mailbox->name);
         return IMAP_IOERROR;
     }
 
     if (config_auditlog && mailbox->modseq_dirty)
         syslog(LOG_NOTICE, "auditlog: modseq sessionid=<%s> "
-               "mailbox=<%s> uniqueid=<%s> highestmodseq=<" MODSEQ_FMT ">",
+               "mailbox=<%s> uniqueid=<%s> highestmodseq=<" MODSEQ_FMT
+               "> deletedmodseq=<" MODSEQ_FMT ">",
             session_id(), mailbox->name, mailbox->uniqueid,
-            mailbox->i.highestmodseq);
+            mailbox->i.highestmodseq, mailbox->i.deletedmodseq);
 
     if (mailbox->modseq_dirty) {
         struct mboxevent *mboxevent = mboxevent_new(EVENT_MAILBOX_MODSEQ);
@@ -2936,7 +3030,7 @@ static int mailbox_is_virtannot(struct mailbox *mailbox, const char *entry)
     if (!strcmp(entry, IMAP_ANNOT_NS "savedate")) return 1;
 
     if (mailbox->i.minor_version < 16) return 0;
-    // createdmodseq was introduced in v15
+    // createdmodseq was introduced in v16
     if (!strcmp(entry, IMAP_ANNOT_NS "createdmodseq")) return 1;
 
     return 0;
@@ -3325,7 +3419,7 @@ static int mailbox_update_caldav(struct mailbox *mailbox,
             /* remove associated alarms */
             caldav_alarm_delete_record(cdata->dav.mailbox, cdata->dav.imap_uid);
         }
-        else if (!new->silent) {
+        else if (!new->silentupdate) {
             /* make sure record is up to date - see add below for description of
              * why we don't touch silent records */
             caldav_alarm_touch_record(mailbox, new);
@@ -3369,7 +3463,7 @@ static int mailbox_update_caldav(struct mailbox *mailbox,
          * because the lastalarm annotation won't be set yet -
          * instead, we have an explicit sync from the annotation
          * which is done after the annotations are written in sync_support.c */
-        if (cdata->dav.alive && !new->silent) {
+        if (cdata->dav.alive && !new->silentupdate) {
             r = caldav_alarm_add_record(mailbox, new, ical);
             if (r) goto alarmdone;
         }
@@ -3618,9 +3712,24 @@ EXPORTED struct conversations_state *mailbox_get_cstate(struct mailbox *mailbox)
     if (!mailbox_has_conversations(mailbox))
         return NULL;
 
-    mailbox_lock_conversations(mailbox, mailbox->is_readonly ? LOCK_SHARED : LOCK_EXCLUSIVE);
+    /* we already own it? */
+    if (mailbox->local_cstate)
+        return mailbox->local_cstate;
 
-    return conversations_get_mbox(mailbox->name);
+    /* already exists, use that one */
+    struct conversations_state *cstate = conversations_get_mbox(mailbox->name);
+    if (cstate) {
+        /* but make sure it's not read-only unless we are */
+        if (!mailbox->is_readonly) assert (!cstate->is_shared);
+        return cstate;
+    }
+
+    /* open the conversations DB - don't bother checking return code since it'll
+     * only be set if it opens successfully, and we can only return NULL or an
+     * object */
+    conversations_open_mbox(mailbox->name, mailbox->is_readonly, &mailbox->local_cstate);
+
+    return mailbox->local_cstate;
 }
 
 static int mailbox_update_conversations(struct mailbox *mailbox,
@@ -3639,7 +3748,9 @@ static int mailbox_update_conversations(struct mailbox *mailbox,
     if (!old && !new)
         return 0;
 
-    return conversations_update_record(cstate, mailbox, old, new, /*allowrenumber*/1);
+    int ignorelimits = new ? new->ignorelimits : 1;
+    return conversations_update_record(cstate, mailbox, old, new,
+                                       /*allowrenumber*/1, ignorelimits);
 }
 
 
@@ -3743,8 +3854,9 @@ EXPORTED int mailbox_rewrite_index_record(struct mailbox *mailbox,
 
     r = mailbox_read_index_record(mailbox, record->recno, &oldrecord);
     if (r) {
-        syslog(LOG_ERR, "IOERROR: re-reading: %s %u",
-               mailbox->name, record->uid);
+        xsyslog(LOG_ERR, "IOERROR: re-reading record failed",
+                         "mailbox=<%s> record=<%u>",
+                         mailbox->name, record->uid);
         return r;
     }
     mailbox_read_basecid(mailbox, &oldrecord);
@@ -3781,8 +3893,9 @@ EXPORTED int mailbox_rewrite_index_record(struct mailbox *mailbox,
          * the very odd case of a reconstruct.  So let's see about
          * that */
         if (!(record->internal_flags & FLAG_INTERNAL_ARCHIVED))
-            syslog(LOG_ERR, "IOERROR: bogus removal of archived flag for %s %u",
-                   mailbox->name, record->uid);
+            xsyslog(LOG_ERR, "IOERROR: bogus removal of archived flag",
+                             "mailbox=<%s> record=<%u>",
+                             mailbox->name, record->uid);
     }
 
     /* handle immediate expunges here... */
@@ -3794,7 +3907,7 @@ EXPORTED int mailbox_rewrite_index_record(struct mailbox *mailbox,
      * being silent about it (i.e. marking an already EXPUNGED
      * message as UNLINKED, or just updating the content_lines
      * field or cache_offset) */
-    if (record->silent) {
+    if (record->silentupdate) {
         mailbox_index_dirty(mailbox);
     }
     else {
@@ -3870,6 +3983,40 @@ EXPORTED int mailbox_append_index_record(struct mailbox *mailbox,
     /* GUID must not be null */
     assert(!message_guid_isnull(&record->guid));
 
+    /* Check mailbox type size limits */
+    if (mailbox->i.exists && !record->ignorelimits) {
+        if (mailbox->mbtype & MBTYPE_ADDRESSBOOK) {
+            int limit = config_getint(IMAPOPT_MAILBOX_MAXMESSAGES_ADDRESSBOOK);
+            if (limit > 0 && limit <= (int)mailbox->i.exists) {
+                xsyslog(LOG_ERR, "IOERROR: client hit per-addressbook exists limit",
+                                 "mailbox=<%s>",
+                                 mailbox->name);
+                return IMAP_NO_OVERQUOTA;
+            }
+        }
+        else if (mailbox->mbtype & MBTYPE_CALENDAR) {
+            int limit = config_getint(IMAPOPT_MAILBOX_MAXMESSAGES_CALENDAR);
+            if (limit > 0 && limit <= (int)mailbox->i.exists) {
+                xsyslog(LOG_ERR, "IOERROR: client hit per-calendar exists limit",
+                                 "mailbox=<%s>",
+                                 mailbox->name);
+                return IMAP_NO_OVERQUOTA;
+            }
+        }
+        else if (!mailbox->mbtype) { // default == email
+            int limit = config_getint(IMAPOPT_MAILBOX_MAXMESSAGES_EMAIL);
+            if (limit > 0 && limit <= (int)mailbox->i.exists) {
+                xsyslog(LOG_ERR, "IOERROR: client hit per-mailbox exists limit",
+                                 "mailbox=<%s>",
+                                 mailbox->name);
+                return IMAP_NO_OVERQUOTA;
+            }
+        }
+        else {
+            /* no limits for other types defined yet */
+        }
+    }
+
     /* belt AND suspenders - check the previous record too */
     if (mailbox->i.num_records) {
         struct index_record prev;
@@ -3897,7 +4044,7 @@ EXPORTED int mailbox_append_index_record(struct mailbox *mailbox,
     }
 
     /* update the highestmodseq if needed */
-    if (record->silent) {
+    if (record->silentupdate) {
         mailbox_index_dirty(mailbox);
     }
     else {
@@ -4000,14 +4147,16 @@ static void mailbox_record_cleanup(struct mailbox *mailbox,
 
         int r = mailbox_get_annotate_state(mailbox, record->uid, NULL);
         if (r) {
-            syslog(LOG_ERR, "IOERROR: failed to open annotations %s %u: %s",
-                   mailbox->name, record->uid, error_message(r));
+            xsyslog(LOG_ERR, "IOERROR: failed to open annotations",
+                             "mailbox=<%s> record=<%u> error=<%s>",
+                             mailbox->name, record->uid, error_message(r));
         }
 
         r = annotate_msg_cleanup(mailbox, record->uid);
         if (r) {
-            syslog(LOG_ERR, "IOERROR: failed to cleanup annotations %s %u: %s",
-                   mailbox->name, record->uid, error_message(r));
+            xsyslog(LOG_ERR, "IOERROR: failed to cleanup annotations",
+                             "mailbox=<%s> record=<%u> error=<%s>",
+                             mailbox->name, record->uid, error_message(r));
         }
 
         return;
@@ -4054,7 +4203,8 @@ static int mailbox_index_unlink(struct mailbox *mailbox)
             struct index_record copyrecord = *record;
             mailbox_record_cleanup(mailbox, &copyrecord);
             copyrecord.internal_flags &= ~FLAG_INTERNAL_NEEDS_CLEANUP;
-            copyrecord.silent = 1;
+            copyrecord.silentupdate = 1;
+            copyrecord.ignorelimits = 1;
             /* XXX - error handling */
             mailbox_rewrite_index_record(mailbox, &copyrecord);
         }
@@ -4100,7 +4250,9 @@ static int mailbox_repack_setup(struct mailbox *mailbox, int version,
     fname = mailbox_meta_newfname(mailbox, META_INDEX);
     repack->newmailbox.index_fd = open(fname, O_RDWR|O_TRUNC|O_CREAT, 0666);
     if (repack->newmailbox.index_fd == -1) {
-        syslog(LOG_ERR, "IOERROR: failed to create %s: %m", fname);
+        xsyslog(LOG_ERR, "IOERROR: create failed",
+                         "fname=<%s>",
+                         fname);
         goto fail;
     }
 
@@ -4146,6 +4298,7 @@ static int mailbox_repack_setup(struct mailbox *mailbox, int version,
         repack->newmailbox.i.record_size = 104;
         break;
     case 16:
+    case 17:
         repack->newmailbox.i.start_offset = 160;
         repack->newmailbox.i.record_size = 112;
         break;
@@ -4307,10 +4460,12 @@ HIDDEN int mailbox_repack_commit(struct mailbox_repack **repackptr)
     if (repack->newmailbox.i.minor_version >= 10 &&
             repack->mailbox->i.minor_version >= 10 &&
             !mailbox_crceq(repack->newmailbox.i.synccrcs, repack->crcs)) {
-        syslog(LOG_ERR, "IOERROR: CRC mismatch on repack commit: %s (%u %u) (%u %u)",
-               repack->mailbox->name,
-               repack->crcs.basic, repack->newmailbox.i.synccrcs.basic,
-               repack->crcs.annot, repack->newmailbox.i.synccrcs.annot);
+        xsyslog(LOG_ERR, "IOERROR: CRC mismatch on repack commit",
+                         "mailbox=<%s> oldbasic=<%u> newbasic=<%u> "
+                             "oldannot=<%u> newannot=<%u>",
+                         repack->mailbox->name,
+                         repack->crcs.basic, repack->newmailbox.i.synccrcs.basic,
+                         repack->crcs.annot, repack->newmailbox.i.synccrcs.annot);
         r = IMAP_MAILBOX_CHECKSUM;
         goto fail;
     }
@@ -4463,8 +4618,10 @@ static int mailbox_index_repack(struct mailbox *mailbox, int version)
         /* we aren't keeping unlinked files, that's kind of the point */
         if (copyrecord.internal_flags & FLAG_INTERNAL_UNLINKED) {
             /* track the modseq for QRESYNC purposes */
-            if (copyrecord.modseq > repack->newmailbox.i.deletedmodseq)
+            if (copyrecord.modseq > repack->newmailbox.i.deletedmodseq) {
                 repack->newmailbox.i.deletedmodseq = copyrecord.modseq;
+                repack->newmailbox.i.changes_epoch = copyrecord.last_updated;
+            }
             continue;
         }
 
@@ -4476,8 +4633,9 @@ static int mailbox_index_repack(struct mailbox *mailbox, int version)
                 copyrecord.crec.len = 0;
                 /* and the record is expunged too! */
                 copyrecord.internal_flags |= FLAG_INTERNAL_EXPUNGED | FLAG_INTERNAL_UNLINKED;
-                syslog(LOG_ERR, "IOERROR: FATAL - failed to parse file for %s %u, expunging",
-                       repack->mailbox->name, copyrecord.uid);
+                xsyslog(LOG_ERR, "IOERROR: FATAL - failed to parse file, expunging",
+                                 "mailbox=<%s> record=<%u>",
+                                 repack->mailbox->name, copyrecord.uid);
             }
         }
 
@@ -4564,7 +4722,16 @@ done:
     mailbox_iter_done(&iter);
     buf_free(&buf);
     if (r) mailbox_repack_abort(&repack);
-    else r = mailbox_repack_commit(&repack);
+    else {
+        modseq_t deletedmodseq = repack->newmailbox.i.deletedmodseq;
+
+        r = mailbox_repack_commit(&repack);
+        if (!r) {
+            mboxname_setmodseq(mailbox->name, deletedmodseq, mailbox->mbtype,
+                               MBOXMODSEQ_ISDELETE);
+        }
+    }       
+
     return r;
 }
 
@@ -4619,10 +4786,6 @@ EXPORTED unsigned mailbox_should_archive(struct mailbox *mailbox,
 
     /* archive everything in DELETED mailboxes */
     if (mboxname_isdeletedmailbox(mailbox->name, NULL))
-        return 1;
-
-    /* anything already deleted */
-    if (record->internal_flags & FLAG_INTERNAL_EXPUNGED)
         return 1;
 
     /* Calendar and Addressbook are small files and need to be hot */
@@ -4687,8 +4850,9 @@ EXPORTED void mailbox_archive(struct mailbox *mailbox,
             /* load cache before changing the flags */
             r = mailbox_cacherecord(mailbox, &copyrecord);
             if (r) {
-                syslog(LOG_ERR, "IOERROR archive %s %u failed to read cache: %s",
-                       mailbox->name, copyrecord.uid, error_message(r));
+                xsyslog(LOG_ERR, "IOERROR: failed to read cache",
+                                 "mailbox=<%s> record=<%u> error=<%s>",
+                                 mailbox->name, copyrecord.uid, error_message(r));
                 continue;
             }
 #if defined ENABLE_OBJECTSTORE
@@ -4696,8 +4860,11 @@ EXPORTED void mailbox_archive(struct mailbox *mailbox,
                 /* upload on the blob store */
                 r = objectstore_put(mailbox, &copyrecord, srcname);
                 if (r) {
-                    syslog(LOG_ERR, "IOERROR archive %s %u failed to objectstorage put file (%s): %s",
-                           mailbox->name, copyrecord.uid, srcname, error_message(r));
+                    xsyslog(LOG_ERR, "IOERROR: objectstorage put failed",
+                                     "mailbox=<%s> record=<%u> "
+                                        "srcname=<%s> error=<%s>",
+                                     mailbox->name, copyrecord.uid,
+                                     srcname, error_message(r));
                     // didn't manage to store it, so remove the ARCHIVED flag
                     continue;
                 }
@@ -4720,8 +4887,9 @@ EXPORTED void mailbox_archive(struct mailbox *mailbox,
             /* load cache before changing the flags */
             r = mailbox_cacherecord(mailbox, &copyrecord);
             if (r) {
-                syslog(LOG_ERR, "IOERROR archive %s %u failed to read cache: %s",
-                       mailbox->name, copyrecord.uid, error_message(r));
+                xsyslog(LOG_ERR, "IOERROR: failed to read cache",
+                                 "mailbox=<%s> record=<%u> error=<%s>",
+                                 mailbox->name, copyrecord.uid, error_message(r));
                 continue;
             }
 
@@ -4730,8 +4898,11 @@ EXPORTED void mailbox_archive(struct mailbox *mailbox,
                 /* recover from the blob store */
                 r = objectstore_get(mailbox, &copyrecord, destname);
                 if (r) {
-                    syslog(LOG_ERR, "IOERROR archive %s %u failed to objectstorage get file (%s): %s",
-                          mailbox->name, copyrecord.uid, destname, error_message(r));
+                    xsyslog(LOG_ERR, "IOERROR: objectstorage get failed",
+                                     "mailbox=<%s> record=<%u> "
+                                        "destname=<%s> error=<%s>",
+                                     mailbox->name, copyrecord.uid,
+                                     destname, error_message(r));
                     continue;
                 }
                 objectstore_delete(mailbox, &copyrecord); // this should only lower ref count.
@@ -4748,8 +4919,11 @@ EXPORTED void mailbox_archive(struct mailbox *mailbox,
             if (strcmp(srcname, destname)) {
                 r = cyrus_copyfile(srcname, destname, COPYFILE_MKDIR|COPYFILE_KEEPTIME);
                 if (r) {
-                    syslog(LOG_ERR, "IOERROR archive %s %u failed to copyfile (%s => %s): %s",
-                           mailbox->name, copyrecord.uid, srcname, destname, error_message(r));
+                    xsyslog(LOG_ERR, "IOERROR: copyfile failed",
+                                     "mailbox=<%s> record=<%u> "
+                                        "srcname=<%s> destname=<%s> error=<%s>",
+                                     mailbox->name, copyrecord.uid,
+                                     srcname, destname, error_message(r));
                     continue;
                 }
             }
@@ -4765,7 +4939,8 @@ EXPORTED void mailbox_archive(struct mailbox *mailbox,
         }
 
         /* rewrite the index record */
-        copyrecord.silent = 1;
+        copyrecord.silentupdate = 1;
+        copyrecord.ignorelimits = 1;
         if (mailbox_rewrite_index_record(mailbox, &copyrecord))
             continue;
         mailbox->i.options |= OPT_MAILBOX_NEEDS_UNLINK;
@@ -4920,10 +5095,12 @@ EXPORTED int mailbox_expunge_cleanup(struct mailbox *mailbox, time_t expunge_mar
 
         struct index_record copyrecord = *record;
         copyrecord.internal_flags |= FLAG_INTERNAL_UNLINKED;
-        copyrecord.silent = 1;
+        copyrecord.silentupdate = 1;
+        copyrecord.ignorelimits = 1;
         if (mailbox_rewrite_index_record(mailbox, &copyrecord)) {
-            syslog(LOG_ERR, "IOERROR: failed to mark unlinked %s %u (recno %d)",
-                   mailbox->name, copyrecord.uid, copyrecord.recno);
+            xsyslog(LOG_ERR, "IOERROR: failed to mark unlinked",
+                             "mailbox=<%s> uid=<%u> recno=<%u>",
+                             mailbox->name, copyrecord.uid, copyrecord.recno);
             break;
         }
     }
@@ -5015,14 +5192,20 @@ EXPORTED int mailbox_create(const char *name,
     listitem = create_listitem(name);
     mailbox = &listitem->m;
 
-    /* if we can't get an exclusive lock first try, there's something
-     * racy going on! */
-    /* an exclusive lock around the non-exclusive lock to avoid create
-     * races on fixed names like calendar Inbox and Outbox */
-    struct mboxlock *mblock = NULL;
-    r = mboxname_lock("$CREATE", &mblock, LOCK_EXCLUSIVE);
-    if (!r) r = mboxname_lock(name, &listitem->l, LOCK_NONBLOCKING);
-    mboxname_release(&mblock);
+    /* needs to be an exclusive namelock to create a mailbox */
+    char *userid = mboxname_to_userid(name);
+    if (userid) {
+        int haslock = user_isnamespacelocked(userid);
+        if (haslock) {
+            assert(haslock != LOCK_SHARED);
+        }
+        else {
+            mailbox->local_namespacelock = user_namespacelock_full(userid, LOCK_EXCLUSIVE);
+        }
+        free(userid);
+    }
+
+    r = mboxname_lock(name, &listitem->l, LOCK_EXCLUSIVE);
     if (r) goto done;
 
     mailbox->part = xstrdup(part);
@@ -5038,12 +5221,16 @@ EXPORTED int mailbox_create(const char *name,
     for (n = 0; createfnames[n]; n++) {
         fname = mailbox_meta_fname(mailbox, createfnames[n]);
         if (!fname) {
-            syslog(LOG_ERR, "IOERROR: Mailbox name too long (%s)", mailbox->name);
+            xsyslog(LOG_ERR, "IOERROR: Mailbox name too long",
+                             "mailbox=<%s>",
+                             mailbox->name);
             r = IMAP_MAILBOX_BADNAME;
             goto done;
         }
         if (cyrus_mkdir(fname, 0755) == -1) {
-            syslog(LOG_ERR, "IOERROR: creating %s: %m", fname);
+            xsyslog(LOG_ERR, "IOERROR: mkdir failed",
+                             "fname=<%s>",
+                             fname);
             r = IMAP_IOERROR;
             goto done;
         }
@@ -5052,41 +5239,42 @@ EXPORTED int mailbox_create(const char *name,
     /* ensure we can fit the longest possible file name */
     fname = mailbox_datapath(mailbox, 0);
     if (!fname) {
-        syslog(LOG_ERR, "IOERROR: Mailbox name too long (%s)", mailbox->name);
+        xsyslog(LOG_ERR, "IOERROR: Mailbox name too long",
+                         "mailbox=<%s>",
+                         mailbox->name);
         r = IMAP_MAILBOX_BADNAME;
         goto done;
     }
     /* and create the directory too :) */
     if (cyrus_mkdir(fname, 0755) == -1) {
-        syslog(LOG_ERR, "IOERROR: creating %s: %m", fname);
-        r = IMAP_IOERROR;
-        goto done;
-    }
-
-    /* open conversations FIRST */
-    r = mailbox_lock_conversations(mailbox, LOCK_EXCLUSIVE);
-    if (r) {
-        syslog(LOG_ERR, "IOERROR: locking conversations %s %s",
-               mailbox->name, error_message(r));
+        xsyslog(LOG_ERR, "IOERROR: mkdir failed",
+                         "fname=<%s>",
+                         fname);
         r = IMAP_IOERROR;
         goto done;
     }
 
     fname = mailbox_meta_fname(mailbox, META_INDEX);
     if (!fname) {
-        syslog(LOG_ERR, "IOERROR: Mailbox name too long (%s)", mailbox->name);
+        xsyslog(LOG_ERR, "IOERROR: Mailbox name too long",
+                         "mailbox=<%s>",
+                         mailbox->name);
         r = IMAP_MAILBOX_BADNAME;
         goto done;
     }
     mailbox->index_fd = open(fname, O_RDWR|O_TRUNC|O_CREAT, 0666);
     if (mailbox->index_fd == -1) {
-        syslog(LOG_ERR, "IOERROR: creating %s: %m", fname);
+        xsyslog(LOG_ERR, "IOERROR: create index failed",
+                         "fname=<%s>",
+                         fname);
         r = IMAP_IOERROR;
         goto done;
     }
     r = lock_blocking(mailbox->index_fd, fname);
     if (r) {
-        syslog(LOG_ERR, "IOERROR: locking %s: %m", fname);
+        xsyslog(LOG_ERR, "IOERROR: lock index failed",
+                         "fname=<%s>",
+                         fname);
         r = IMAP_IOERROR;
         goto done;
     }
@@ -5106,9 +5294,11 @@ EXPORTED int mailbox_create(const char *name,
 
     /* and highest modseq */
     if (!highestmodseq)
-        highestmodseq = mboxname_nextmodseq(mailbox->name, 0, mbtype, /*dofolder*/1);
+        highestmodseq = mboxname_nextmodseq(mailbox->name, 0, mbtype,
+                                            MBOXMODSEQ_ISFOLDER);
     else
-        mboxname_setmodseq(mailbox->name, highestmodseq, mbtype, /*dofolder*/1);
+        mboxname_setmodseq(mailbox->name, highestmodseq, mbtype,
+                           MBOXMODSEQ_ISFOLDER);
 
     /* and created modseq */
     if (!createdmodseq || createdmodseq > highestmodseq)
@@ -5123,6 +5313,7 @@ EXPORTED int mailbox_create(const char *name,
     mailbox->i.uidvalidity = uidvalidity;
     mailbox->i.createdmodseq = createdmodseq;
     mailbox->i.highestmodseq = highestmodseq;
+    mailbox->i.changes_epoch = time(0);
     mailbox->i.synccrcs.basic = CRC_INIT_BASIC;
     mailbox->i.synccrcs.annot = CRC_INIT_ANNOT;
 
@@ -5180,8 +5371,10 @@ static void mailbox_delete_files(const char *path)
 
     strlcpy(buf, path, sizeof(buf));
 
-    if(strlen(buf) >= sizeof(buf) - 2) {
-        syslog(LOG_ERR, "IOERROR: Path too long (%s)", buf);
+    if (strlen(buf) >= sizeof(buf) - 2) {
+        xsyslog(LOG_ERR, "IOERROR: path too long",
+                         "buf=<%s>",
+                         buf);
         fatal("path too long", EX_OSFILE);
     }
 
@@ -5202,8 +5395,9 @@ static void mailbox_delete_files(const char *path)
             }
 
             if(strlen(buf) + strlen(f->d_name) >= sizeof(buf)) {
-                syslog(LOG_ERR, "IOERROR: Path too long (%s + %s)",
-                       buf, f->d_name);
+                xsyslog(LOG_ERR, "IOERROR: path too long",
+                                 "buf=<%s> d_name=<%s>",
+                                 buf, f->d_name);
                 fatal("Path too long", EX_OSFILE);
             }
             strcpy(tail, f->d_name);
@@ -5276,8 +5470,9 @@ EXPORTED int mailbox_add_conversations(struct mailbox *mailbox, int silent)
             continue;
 
         struct index_record copyrecord = *record;
-        copyrecord.silent = silent;
-        r = conversations_update_record(cstate, mailbox, NULL, &copyrecord, 1);
+        copyrecord.silentupdate = silent;
+        r = conversations_update_record(cstate, mailbox, NULL, &copyrecord, 1,
+                                        /*ignorelimits*/1);
         if (r) break;
 
         if (copyrecord.cid == record->cid)
@@ -5286,14 +5481,16 @@ EXPORTED int mailbox_add_conversations(struct mailbox *mailbox, int silent)
         assert(!silent); // can't change cid if silent!
 
         /* remove this record again */
-        r = conversations_update_record(cstate, mailbox, &copyrecord, NULL, 0);
+        r = conversations_update_record(cstate, mailbox, &copyrecord, NULL, 0,
+                                        /*ignorelimits*/1);
         if (r) break;
 
         /* we had a cid change, so rewrite will try to correct the counts, so we
          * need to add this one in again */
         struct index_record oldrecord = *record;
         /* add the old record that's going away */
-        r = conversations_update_record(cstate, mailbox, NULL, &oldrecord, 0);
+        r = conversations_update_record(cstate, mailbox, NULL, &oldrecord, 0,
+                                        /*ignorelimits*/1);
         if (r) break;
 
         /* and finally to the update that will reverse those two actions again */
@@ -5320,7 +5517,8 @@ static int mailbox_delete_conversations(struct mailbox *mailbox)
         if (!record->cid)
             continue;
 
-        r = conversations_update_record(cstate, mailbox, record, NULL, 0);
+        r = conversations_update_record(cstate, mailbox, record, NULL,
+                                        /*allowrenumber*/0, /*ignorelimits*/1);
         if (r) break;
     }
     mailbox_iter_done(&iter);
@@ -5746,12 +5944,12 @@ HIDDEN int mailbox_rename_copy(struct mailbox *oldmailbox,
      * the records in the target user.  Sorry, was too complex
      * otherwise handling all the special cases */
     if (mailbox_has_conversations(oldmailbox)) {
-        oldcstate = conversations_get_mbox(oldmailbox->name);
+        oldcstate = mailbox_get_cstate(oldmailbox);
         assert(oldcstate);
     }
 
     if (mailbox_has_conversations(newmailbox)) {
-        newcstate = conversations_get_mbox(newmailbox->name);
+        newcstate = mailbox_get_cstate(newmailbox);
         assert(newcstate);
     }
 
@@ -5849,6 +6047,7 @@ EXPORTED int mailbox_copyfile(const char *from, const char *to, int nolink)
 struct found_uid {
     uint32_t uid;
     unsigned isarchive:1;
+    unsigned issnoozed:1;
 };
 
 struct found_uids {
@@ -5878,6 +6077,7 @@ static void add_found(struct found_uids *ff, uint32_t uid, int isarchive)
     }
     ff->found[ff->nused].uid = uid;
     ff->found[ff->nused].isarchive = !!isarchive;
+    ff->found[ff->nused].issnoozed = 0;
     ff->nused++;
 }
 
@@ -6071,9 +6271,23 @@ static int mailbox_reconstruct_create(const char *name, struct mailbox **mbptr)
     listitem = create_listitem(name);
     mailbox = &listitem->m;
 
+    // lock the user namespace FIRST before the mailbox namespace
+    char *userid = mboxname_to_userid(name);
+    if (userid) {
+        int haslock = user_isnamespacelocked(userid);
+        if (haslock) {
+            assert(haslock != LOCK_SHARED);
+        }
+        else {
+            int locktype = LOCK_EXCLUSIVE;
+            mailbox->local_namespacelock = user_namespacelock_full(userid, locktype);
+        }
+        free(userid);
+    }
+
     /* if we can't get an exclusive lock first try, there's something
      * racy going on! */
-    r = mboxname_lock(name, &listitem->l, LOCK_NONBLOCKING);
+    r = mboxname_lock(name, &listitem->l, LOCK_EXCLUSIVE);
     if (r) goto done;
 
     /* Start by looking up current data in mailbox list */
@@ -6242,6 +6456,11 @@ static int records_match(const char *mboxname,
                mboxname, new->uid);
         match = 0;
     }
+    if (old->internal_flags != new->internal_flags) {
+        printf("%s uid %u mismatch: internalflags\n",
+               mboxname, new->uid);
+        match = 0;
+    }
     for (i = 0; i < MAX_USER_FLAGS/32; i++) {
         if (old->user_flags[i] != new->user_flags[i])
             userflags_dirty = 1;
@@ -6285,6 +6504,7 @@ static int mailbox_reconstruct_compare_update(struct mailbox *mailbox,
                                               struct index_record *record,
                                               bit32 *valid_user_flags,
                                               int flags, int have_file,
+                                              int has_snoozedannot,
                                               struct found_uids *discovered)
 {
     const char *fname = mailbox_record_fname(mailbox, record);
@@ -6460,7 +6680,7 @@ static int mailbox_reconstruct_compare_update(struct mailbox *mailbox,
         mailbox_index_dirty(mailbox);
         mailbox->i.highestmodseq = mboxname_setmodseq(mailbox->name,
                                                       record->modseq,
-                                                      mailbox->mbtype, /*dofolder*/0);
+                                                      mailbox->mbtype, /*flags*/0);
     }
 
     if (record->uid > mailbox->i.last_uid) {
@@ -6476,6 +6696,15 @@ static int mailbox_reconstruct_compare_update(struct mailbox *mailbox,
     for (i = 0; i < MAX_USER_FLAGS/32; i++) {
         record->user_flags[i] &= valid_user_flags[i];
     }
+
+    /* check if the snoozed status matches */
+    if (!!(record->internal_flags & FLAG_INTERNAL_SNOOZED) != !!has_snoozedannot) {
+        printf("%s uid %u snoozed mismatch\n", mailbox->name, record->uid);
+        syslog(LOG_ERR, "%s uid %u snoozed mismatch", mailbox->name, record->uid);
+        if (has_snoozedannot) record->internal_flags |= FLAG_INTERNAL_SNOOZED;
+        else record->internal_flags &= ~FLAG_INTERNAL_SNOOZED;
+    }
+
 
     /* after all this - if it still matches in every respect, we don't need
      * to rewrite the record - just return */
@@ -6519,7 +6748,7 @@ out:
 
 
 static int mailbox_reconstruct_append(struct mailbox *mailbox, uint32_t uid, int isarchive,
-                                      int flags)
+                                      int has_snoozedannot, int flags)
 {
     /* XXX - support archived */
     const char *fname;
@@ -6590,6 +6819,9 @@ static int mailbox_reconstruct_append(struct mailbox *mailbox, uint32_t uid, int
     if (isarchive)
         record.internal_flags |= FLAG_INTERNAL_ARCHIVED;
 
+    if (has_snoozedannot)
+        record.internal_flags |= FLAG_INTERNAL_SNOOZED;
+
     /* copy the timestamp from the file if not calculated */
     if (!record.internaldate)
         record.internaldate = sbuf.st_mtime;
@@ -6629,6 +6861,9 @@ static int mailbox_reconstruct_append(struct mailbox *mailbox, uint32_t uid, int
         r = 0 ;
         goto out;
     }
+
+    /* always allow reconstruct to add records, even if we'd hit GUID limits */
+    record.ignorelimits = 1;
 
     r = mailbox_append_index_record(mailbox, &record);
 
@@ -6732,15 +6967,17 @@ static int mailbox_wipe_index_record(struct mailbox *mailbox,
 
     off_t p = lseek(mailbox->index_fd, offset, SEEK_SET);
     if (p == -1) {
-        syslog(LOG_ERR, "IOERROR: seeking index record %u for %s: %m",
-               record->recno, mailbox->name);
+        xsyslog(LOG_ERR, "IOERROR: seeking index record failed",
+                         "mailbox=<%s> record=<%u>",
+                         mailbox->name, record->recno);
         return IMAP_IOERROR;
     }
 
     n = retry_write(mailbox->index_fd, buf, mailbox->i.record_size);
     if (n < 0) {
-        syslog(LOG_ERR, "IOERROR: writing index record %u for %s: %m",
-               record->recno, mailbox->name);
+        xsyslog(LOG_ERR, "IOERROR: writing index record failed",
+                         "mailbox=<%s> record=<%u>",
+                         mailbox->name, record->recno);
         return IMAP_IOERROR;
     }
 
@@ -6749,9 +6986,9 @@ static int mailbox_wipe_index_record(struct mailbox *mailbox,
 
 static int addannot_uid(const char *mailbox __attribute__((unused)),
                         uint32_t uid,
-                        const char *entry __attribute__((unused)),
-                        const char *userid __attribute__((unused)),
-                        const struct buf *value __attribute__((unused)),
+                        const char *entry,
+                        const char *userid,
+                        const struct buf *value,
                         const struct annotate_metadata *mdata __attribute__((unused)),
                         void *rock)
 {
@@ -6762,6 +6999,12 @@ static int addannot_uid(const char *mailbox __attribute__((unused)),
     if (!annots->nused || annots->found[annots->nused-1].uid != uid) {
         /* we don't support an archive annotations DB yet */
         add_found(annots, uid, /*isarchive*/0);
+    }
+
+    /* the last item will be for this UID regardless, check if we have the snoozed annotation */
+    if (!strcmpsafe(userid, "") && buf_len(value) &&
+        !strcmp(entry, IMAP_ANNOT_NS "snoozed")) {
+        annots->found[annots->nused-1].issnoozed = 1;
     }
 
     return 0;
@@ -6822,7 +7065,6 @@ EXPORTED int mailbox_reconstruct(const char *name, int flags)
 
     int r = 0;
     int i, flag;
-    struct mailbox_iter *iter = NULL;
     struct mailbox *mailbox = NULL;
     struct found_uids files = FOUND_UIDS_INITIALIZER;
     struct found_uids discovered = FOUND_UIDS_INITIALIZER;
@@ -6907,14 +7149,16 @@ EXPORTED int mailbox_reconstruct(const char *name, int flags)
 
         last_seen_uid = record.uid;
 
-        /* bogus annotations? */
+        /* bogus annotations? XXX: should we try to keep them if we found a file? */
         while (annots.pos < annots.nused && annots.found[annots.pos].uid < record.uid) {
             add_found(&delannots, annots.found[annots.pos].uid, /*isarchive*/0);
             annots.pos++;
         }
 
         /* skip over current */
+        int has_snoozedannot = 0;
         while (annots.pos < annots.nused && annots.found[annots.pos].uid == record.uid) {
+            if (annots.found[annots.pos].issnoozed) has_snoozedannot = 1;
             annots.pos++;
         }
 
@@ -6959,6 +7203,7 @@ EXPORTED int mailbox_reconstruct(const char *name, int flags)
         r = mailbox_reconstruct_compare_update(mailbox, &record,
                                                valid_user_flags,
                                                flags, have_file,
+                                               has_snoozedannot,
                                                &discovered);
         if (r) goto close;
 
@@ -7012,12 +7257,6 @@ EXPORTED int mailbox_reconstruct(const char *name, int flags)
      * from lost .index file) - so don't bother moving those */
     while (files.pos < files.nused) {
         uint32_t uid = files.found[files.pos].uid;
-        r = mailbox_reconstruct_append(mailbox, files.found[files.pos].uid,
-                                       files.found[files.pos].isarchive, flags);
-        if (r) goto close;
-        files.pos++;
-
-        /* we can keep this annotation too... */
 
         /* bogus annotations? */
         while (annots.pos < annots.nused && annots.found[annots.pos].uid < uid) {
@@ -7025,10 +7264,20 @@ EXPORTED int mailbox_reconstruct(const char *name, int flags)
             annots.pos++;
         }
 
-        /* skip over current */
+        int has_snoozedannot = 0;
+        /* we can keep this annotation too... */
         while (annots.pos < annots.nused && annots.found[annots.pos].uid == uid) {
+            if (annots.found[annots.pos].issnoozed) has_snoozedannot = 1;
             annots.pos++;
         }
+
+
+        r = mailbox_reconstruct_append(mailbox, files.found[files.pos].uid,
+                                       files.found[files.pos].isarchive,
+                                       has_snoozedannot, flags);
+        if (r) goto close;
+        files.pos++;
+
     }
 
     /* bogus annotations after the end? */
@@ -7040,7 +7289,8 @@ EXPORTED int mailbox_reconstruct(const char *name, int flags)
     /* handle new list - note, we don't copy annotations for these */
     while (discovered.pos < discovered.nused) {
         r = mailbox_reconstruct_append(mailbox, discovered.found[discovered.pos].uid,
-                                       discovered.found[discovered.pos].isarchive, flags);
+                                       discovered.found[discovered.pos].isarchive,
+                                       /*has_snoozedannot*/0, flags);
         if (r) goto close;
         discovered.pos++;
     }
@@ -7073,7 +7323,8 @@ EXPORTED int mailbox_reconstruct(const char *name, int flags)
     if (!mailbox->i.highestmodseq) {
         if (make_changes) {
             mailbox_index_dirty(mailbox);
-            mailbox->i.highestmodseq = mboxname_nextmodseq(mailbox->name, 0, mailbox->mbtype, /*dofolder*/1);
+            mailbox->i.highestmodseq = mboxname_nextmodseq(mailbox->name, 0, mailbox->mbtype,
+                                                           MBOXMODSEQ_ISFOLDER);
         }
         syslog(LOG_ERR, "%s:  zero highestmodseq", mailbox->name);
     }
@@ -7086,7 +7337,6 @@ EXPORTED int mailbox_reconstruct(const char *name, int flags)
     }
 
 close:
-    mailbox_iter_done(&iter);
     free_found(&files);
     free_found(&discovered);
     free_found(&annots);

@@ -120,10 +120,13 @@ char *mbname_pop_boxes(mbname_t *mbname); /* free it yourself punk */
 void mbname_truncate_boxes(mbname_t *mbname, size_t len);
 void mbname_free(mbname_t **mbnamep);
 
+char *mboxname_from_externalUTF8(const char *extname,
+                                 const struct namespace *ns, const char *userid);
 char *mboxname_from_external(const char *extname, const struct namespace *ns, const char *userid);
 char *mboxname_to_external(const char *intname, const struct namespace *ns, const char *userid);
 
 
+int open_mboxlocks_exist(void);
 int mboxname_lock(const char *mboxname, struct mboxlock **mboxlockptr,
                   int locktype);
 void mboxname_release(struct mboxlock **mboxlockptr);
@@ -301,12 +304,32 @@ struct mboxname_counters {
     modseq_t raclmodseq;
     modseq_t submissionmodseq;
     modseq_t submissionfoldersmodseq;
+    modseq_t maildeletedmodseq;
+    modseq_t caldavdeletedmodseq;
+    modseq_t carddavdeletedmodseq;
+    modseq_t notesdeletedmodseq;
+    modseq_t submissiondeletedmodseq;
+    modseq_t mailfoldersdeletedmodseq;
+    modseq_t caldavfoldersdeletedmodseq;
+    modseq_t carddavfoldersdeletedmodseq;
+    modseq_t notesfoldersdeletedmodseq;
+    modseq_t submissionfoldersdeletedmodseq;
+    modseq_t davnotificationmodseq;
+    modseq_t davnotificationdeletedmodseq;
+    modseq_t davnotificationfoldersmodseq;
+    modseq_t davnotificationfoldersdeletedmodseq;
+    modseq_t jmapnotificationmodseq;
+    modseq_t jmapnotificationdeletedmodseq;
+    modseq_t jmapnotificationfoldersmodseq;
+    modseq_t jmapnotificationfoldersdeletedmodseq;
     uint32_t uidvalidity;
 };
 
 int mboxname_read_counters(const char *mboxname, struct mboxname_counters *vals);
-modseq_t mboxname_nextmodseq(const char *mboxname, modseq_t last, int mbtype, int dofolder);
-modseq_t mboxname_setmodseq(const char *mboxname, modseq_t val, int mbtype, int dofolder);
+#define MBOXMODSEQ_ISFOLDER (1<<0)
+#define MBOXMODSEQ_ISDELETE (1<<1)
+modseq_t mboxname_nextmodseq(const char *mboxname, modseq_t last, int mbtype, int flags);
+modseq_t mboxname_setmodseq(const char *mboxname, modseq_t val, int mbtype, int flags);
 uint32_t mboxname_readuidvalidity(const char *mboxname);
 uint32_t mboxname_nextuidvalidity(const char *mboxname, uint32_t last);
 uint32_t mboxname_setuidvalidity(const char *mboxname, uint32_t val);

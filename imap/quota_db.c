@@ -89,15 +89,15 @@ static const char * const quota_db_names[QUOTA_NUMRESOURCES] = {
 
 /* IMAP atoms for various quota resources */
 EXPORTED const char * const quota_names[QUOTA_NUMRESOURCES] = {
-    "STORAGE",                  /* QUOTA_STORAGE -- RFC2087 */
-    "MESSAGE",                  /* QUOTA_MESSAGE -- RFC2087 */
+    "STORAGE",                  /* QUOTA_STORAGE -- RFC 2087 */
+    "MESSAGE",                  /* QUOTA_MESSAGE -- RFC 2087 */
     "X-ANNOTATION-STORAGE",     /* QUOTA_ANNOTSTORAGE */
     "X-NUM-FOLDERS"             /* QUOTA_NUMFOLDERS */
 };
 
 EXPORTED const quota_t quota_units[QUOTA_NUMRESOURCES] = {
-    1024,               /* QUOTA_STORAGE -- RFC2087 */
-    1,                  /* QUOTA_MESSAGE -- RFC2087 */
+    1024,               /* QUOTA_STORAGE -- RFC 2087 */
+    1,                  /* QUOTA_MESSAGE -- RFC 2087 */
     1024,               /* QUOTA_ANNOTSTORAGE */
     1                   /* QUOTA_NUMFOLDERS */
 };
@@ -228,6 +228,29 @@ done:
 out:
     dlist_free(&dl);
     strarray_free(fields);
+    return r;
+}
+
+EXPORTED int quota_read_withconversations(struct quota *quota)
+{
+    int r = quota_read(quota, NULL, 0);
+
+    if (config_getswitch(IMAPOPT_QUOTA_USE_CONVERSATIONS)) {
+        struct conversations_state *local_cstate = NULL;
+        struct conversations_state *cstate = conversations_get_mbox(quota->root);
+        if (!cstate) {
+            conversations_open_mbox(quota->root, /*shared*/1, &local_cstate);
+            cstate = local_cstate;
+        }
+        if (cstate) {
+            struct conv_quota q = CONV_QUOTA_INIT;
+            conversations_read_quota(cstate, &q);
+            quota->useds[QUOTA_STORAGE] = q.storage;
+            quota->useds[QUOTA_MESSAGE] = q.emails;
+        }
+        if (local_cstate) conversations_commit(&local_cstate);
+    }
+
     return r;
 }
 
@@ -563,7 +586,7 @@ EXPORTED int quota_check_useds(const char *quotaroot,
         return 0;           /* all negative */
 
     quota_init(&q, quotaroot);
-    r = quota_read(&q, NULL, /*wrlock*/0);
+    r = quota_read_withconversations(&q);
 
     if (r == IMAP_QUOTAROOT_NONEXISTENT) {
         r = 0;

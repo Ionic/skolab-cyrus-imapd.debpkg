@@ -104,16 +104,12 @@ DISTCLEANFILES = \
 	imap/jmap_err.h \
 	imap/lmtp_err.c \
 	imap/lmtp_err.h \
-	imap/lmtpstats.c \
-	imap/lmtpstats.h \
 	imap/mupdate_err.c \
 	imap/mupdate_err.h \
 	imap/nntp_err.c \
 	imap/nntp_err.h \
 	imap/promdata.c \
 	imap/promdata.h \
-	imap/pushstats.c \
-	imap/pushstats.h \
 	imap/tz_err.c \
 	imap/tz_err.h \
 	perl/sieve/scripts/installsieve \
@@ -156,12 +152,8 @@ BUILT_SOURCES += \
 	imap/imap_err.h \
 	imap/lmtp_err.c \
 	imap/lmtp_err.h \
-	imap/lmtpstats.c \
-	imap/lmtpstats.h \
 	imap/mupdate_err.c \
 	imap/mupdate_err.h \
-	imap/pushstats.c \
-	imap/pushstats.h \
 	imap/promdata.c \
 	imap/promdata.h \
 	lib/htmlchar.c \
@@ -333,17 +325,6 @@ EXTRA_DIST = \
 	contrib/deliver-notify-zephyr.patch \
 	contrib/add-cyrus-user \
 	contrib/README \
-	contrib/cyrus-graphtools.1.0 \
-	contrib/cyrus-graphtools.1.0/cgi-bin/cyrus_master.pl \
-	contrib/cyrus-graphtools.1.0/cgi-bin/graph_cyrus_db.pl \
-	contrib/cyrus-graphtools.1.0/cgi-bin/graph_cyrus_db-sum.pl \
-	contrib/cyrus-graphtools.1.0/html \
-	contrib/cyrus-graphtools.1.0/html/index.html \
-	contrib/cyrus-graphtools.1.0/README \
-	contrib/cyrus-graphtools.1.0/script \
-	contrib/cyrus-graphtools.1.0/script/cyrus.pl \
-	contrib/cyrus-graphtools.1.0/script/run \
-	contrib/cyrus-graphtools.1.0/script/cyrusrc \
 	contrib/cyrusv2.mc \
 	contrib/dkim_canon_ischedule.patch \
 	contrib/notify_unix/notify \
@@ -391,7 +372,6 @@ EXTRA_DIST = \
 	lib/test/cyrusdbtxn.OUTPUT \
 	lib/test/pool.c \
 	lib/test/rnddb.c \
-	master/CYRUS-MASTER.mib \
 	master/README \
 	netnews/inn.diffs \
 	perl/annotator/Daemon.pm \
@@ -519,8 +499,6 @@ TEXINFO_TEX = com_err/et/texinfo.tex
 dist_noinst_SCRIPTS = \
 	com_err/et/compile_et.sh \
 	com_err/et/config_script \
-	imap/lmtpstats.snmp \
-	imap/pushstats.snmp \
 	imap/promdatagen \
 	lib/mkchartable.pl \
 	lib/test/run \
@@ -539,8 +517,7 @@ dist_noinst_SCRIPTS = \
 	tools/mknewsgroups \
 	tools/perl2rst \
 	tools/rehash \
-	tools/translatesieve \
-	snmp/snmpgen
+	tools/translatesieve
 noinst_MAN = \
 	com_err/et/com_err.3 \
 	com_err/et/compile_et.1
@@ -567,6 +544,17 @@ com_err/et/compile_et: com_err/et/compile_et.sh com_err/et/config_script \
 
 # ---- Libraries ----
 
+# SIEVE is the libraries that sieve-using components need to link with
+#
+# This is empty if sieve is not enabled, so it can be used unconditionally
+# elsewhere.
+
+if SIEVE
+LD_SIEVE_ADD = sieve/libcyrus_sieve.la $(LD_BASIC_ADD)
+else
+LD_SIEVE_ADD =
+endif
+
 # BASIC is the libraries that every Cyrus program (except master) will
 # need to link with.
 #
@@ -579,7 +567,7 @@ LD_BASIC_ADD = lib/libcyrus.la lib/libcyrus_min.la ${LIBS} \
 # UTILITY is the libraries that utility programs which use Cyrus'
 # mailbox and message handling code need to link with.
 
-LD_UTILITY_ADD = imap/libcyrus_imap.la $(LD_BASIC_ADD) $(COM_ERR_LIBS)
+LD_UTILITY_ADD = imap/libcyrus_imap.la $(LD_BASIC_ADD) $(LD_SIEVE_ADD) $(COM_ERR_LIBS)
 
 # SERVER is the libraries that network-facing servers need to link with
 #
@@ -587,17 +575,6 @@ LD_UTILITY_ADD = imap/libcyrus_imap.la $(LD_BASIC_ADD) $(COM_ERR_LIBS)
 # so that even utilities which never open a socket need to link against
 # the SASL library.
 LD_SERVER_ADD = $(LD_UTILITY_ADD) $(LIB_WRAP)
-
-# SIEVE is the libraries that sieve-using components need to link with
-#
-# This is empty if sieve is not enabled, so it can be used unconditionally
-# elsewhere.
-
-if SIEVE
-LD_SIEVE_ADD = sieve/libcyrus_sieve.la $(LD_BASIC_ADD)
-else
-LD_SIEVE_ADD =
-endif
 
 # ----
 
@@ -639,7 +616,7 @@ cunit_TESTS = \
 	cunit/binhex.testc \
 	cunit/bitvector.testc \
 	cunit/buf.testc \
-	cunit/byteorder64.testc \
+	cunit/byteorder.testc \
 	cunit/charset.testc \
 	cunit/command.testc \
 	cunit/conversations.testc \
@@ -661,6 +638,7 @@ cunit_TESTS = \
 	cunit/msgid.testc \
 	cunit/parseaddr.testc \
 	cunit/parse.testc \
+	cunit/procinfo.testc \
 	cunit/prot.testc \
 	cunit/ptrarray.testc \
 	cunit/quota.testc \
@@ -725,6 +703,33 @@ check-local:
 		fi ; \
 		exit $$retval
 
+# Run every test individually, as if you had run them one at a time as
+# `make check-suitename:testname` manually.  Mainly useful for detecting
+# abstraction failures within our testing infrastructure -- if tests
+# succeed with `make check` but fail with `make check-discrete`, or
+# vice-versa, some state is leaking between tests!
+#
+# This assumes your sh supports arithmetic and process substitutions.
+# Sorry <3
+check-discrete: cunit/unit
+	@echo "Running unit tests, one at a time"
+	@vg= ; \
+		test -z "$$VG" || vg="$(VALGRIND)" ; \
+		cd cunit ; \
+		fails=0 ; \
+		tests=0 ; \
+		while read t ; do \
+			tests=$$(($$tests + 1)) ; \
+			if $$vg ./unit -v $$t >/dev/null 2>/dev/null ; then \
+				echo "[  OK  ] $$t" ; \
+			else \
+				fails=$$(($$fails + 1)) ; \
+				echo "[FAILED] $$t" ; \
+			fi ; \
+		done < <( ./unit -l ) ; \
+		echo "$$fails/$$tests tests failed" ; \
+		exit $$fails
+
 check-%: cunit/unit
 	@echo "Running unit tests for $*"
 	@vg= ; \
@@ -774,6 +779,7 @@ include_HEADERS = \
 	lib/murmurhash2.h \
 	lib/nonblock.h \
 	lib/parseaddr.h \
+	lib/procinfo.h \
 	lib/retry.h \
 	lib/rfc822tok.h \
 	lib/signals.h \
@@ -794,7 +800,7 @@ nobase_include_HEADERS = sieve/sieve_interface.h
 nobase_nodist_include_HEADERS = sieve/sieve_err.h
 
 noinst_HEADERS += \
-	lib/byteorder64.h \
+	lib/byteorder.h \
 	lib/gai.h \
 	lib/libconfig.h \
 	lib/md5.h \
@@ -917,7 +923,7 @@ imap_deliver_SOURCES = \
 	imap/proxy.c \
 	imap/spool.c
 
-nodist_imap_deliver_SOURCES = imap/lmtp_err.c imap/lmtpstats.c
+nodist_imap_deliver_SOURCES = imap/lmtp_err.c
 
 imap_deliver_LDADD = $(LD_UTILITY_ADD)
 
@@ -944,8 +950,6 @@ imap_imapd_SOURCES = \
 	imap/sync_support.c \
 	imap/sync_support.h \
 	master/service.c
-
-nodist_imap_imapd_SOURCES = imap/pushstats.c
 
 if AUTOCREATE
 imap_imapd_SOURCES += \
@@ -1057,6 +1061,8 @@ imap_libcyrus_imap_la_SOURCES = \
 	imap/sequence.c \
 	imap/sequence.h \
 	imap/setproctitle.c \
+        imap/sievedir.c \
+	imap/sievedir.h \
 	imap/spool.c \
 	imap/spool.h \
 	imap/statuscache.h \
@@ -1144,6 +1150,11 @@ imap_libcyrus_imap_la_SOURCES += \
 imap_libcyrus_imap_la_LIBADD += $(XAPIAN_LIBS)
 imap_libcyrus_imap_la_CXXFLAGS += $(XAPIAN_CXXFLAGS)
 
+if HAVE_CLD2
+imap_libcyrus_imap_la_LIBADD += $(CLD2_LIBS)
+imap_libcyrus_imap_la_CXXFLAGS += $(CLD2_CFLAGS)
+endif
+
 endif
 
 imap_lmtpd_SOURCES = \
@@ -1154,9 +1165,11 @@ imap_lmtpd_SOURCES = \
 	imap/mutex_fake.c \
 	imap/proxy.c \
 	imap/spool.c \
+	imap/sync_support.c \
+	imap/sync_support.h \
 	master/service.c
 
-nodist_imap_lmtpd_SOURCES = imap/lmtp_err.c imap/lmtpstats.c
+nodist_imap_lmtpd_SOURCES = imap/lmtp_err.c
 
 if AUTOCREATE
 imap_lmtpd_SOURCES += \
@@ -1168,17 +1181,13 @@ if SIEVE
 imap_lmtpd_SOURCES += imap/lmtp_sieve.c imap/lmtp_sieve.h imap/smtpclient.c
 
 if JMAP
-imap_lmtpd_SOURCES += imap/jmap_util.c imap/jmap_mail_query.c
+imap_lmtpd_SOURCES += \
+	imap/jmap_util.c imap/jmap_mail_query.c imap/jmap_mail_query_parse.c
 endif # JMAP
 
 endif # SIEVE
 
 imap_lmtpd_LDADD = $(LD_SIEVE_ADD) $(LD_SERVER_ADD)
-
-SNMPGEN = $(abs_top_srcdir)/snmp/snmpgen
-
-imap/%stats.h imap/%stats.c: imap/%stats.snmp $(SNMPGEN)
-	$(AM_V_GEN)(cd $(@D) && $(SNMPGEN) $(realpath $<))
 
 imap_mbexamine_SOURCES = imap/cli_fatal.c imap/mbexamine.c imap/mutex_fake.c
 imap_mbexamine_LDADD = $(LD_UTILITY_ADD)
@@ -1212,8 +1221,10 @@ imap_nntpd_SOURCES = \
 	imap/smtpclient.h \
 	imap/spool.c \
 	imap/spool.h \
+	imap/sync_support.c \
+	imap/sync_support.h \
 	master/service.c
-imap_nntpd_LDADD = $(LD_SERVER_ADD)
+imap_nntpd_LDADD = $(LD_SIEVE_ADD) $(LD_SERVER_ADD)
 
 nodist_imap_httpd_SOURCES = \
 	imap/http_caldav_js.h \
@@ -1260,6 +1271,8 @@ imap_httpd_SOURCES = \
 	imap/proxy.c \
 	imap/smtpclient.c \
 	imap/spool.c \
+	imap/sync_support.c \
+        imap/sync_support.h \
 	imap/xcal.c \
 	imap/xcal.h \
 	imap/xml_support.c \
@@ -1269,7 +1282,7 @@ imap_httpd_SOURCES = \
 	master/masterconf.c \
 	master/service.c
 
-imap_httpd_LDADD = $(LD_SERVER_ADD)
+imap_httpd_LDADD = $(LD_SIEVE_ADD) $(LD_SERVER_ADD)
 
 if JMAP
 BUILT_SOURCES += \
@@ -1281,6 +1294,7 @@ imap_httpd_SOURCES += \
 	imap/http_jmap.h \
 	imap/jmap_api.c \
 	imap/jmap_api.h \
+	imap/jmap_backup.c \
 	imap/jmap_calendar.c \
 	imap/jmap_contact.c \
 	imap/jmap_core.c \
@@ -1290,13 +1304,20 @@ imap_httpd_SOURCES += \
 	imap/jmap_mail.h \
 	imap/jmap_mail_query.c \
 	imap/jmap_mail_query.h \
+	imap/jmap_mail_query_parse.c \
+	imap/jmap_mail_query_parse.h \
 	imap/jmap_mail_submission.c \
 	imap/jmap_mailbox.c \
+	imap/jmap_mdn.c \
+	imap/jmap_notes.c \
 	imap/jmap_util.c \
 	imap/jmap_util.h \
-	imap/jmap_vacation.c \
-	imap/sync_support.c \
-        imap/sync_support.h
+	imap/jmap_vacation.c
+
+if SIEVE
+imap_httpd_SOURCES += \
+	imap/jmap_sieve.c
+endif
 
 nodist_imap_httpd_SOURCES += \
 	imap/jmap_err.c \
@@ -1322,6 +1343,8 @@ imap_pop3d_SOURCES = \
 	imap/mutex_fake.c \
 	imap/pop3d.c \
 	imap/proxy.c \
+	imap/sync_support.c \
+	imap/sync_support.h \
 	master/service.c
 
 if AUTOCREATE
@@ -1449,6 +1472,7 @@ lib_libcyrus_la_SOURCES = \
 	lib/murmurhash.c \
 	lib/mkgmtime.c \
 	lib/parseaddr.c \
+	lib/procinfo.c \
 	lib/prot.c \
 	lib/ptrarray.c \
 	lib/rfc822tok.c \
@@ -1494,7 +1518,7 @@ lib_libcyrus_min_la_SOURCES = \
 	lib/arrayu64.c \
 	lib/assert.c \
 	lib/bufarray.c \
-	lib/byteorder64.c \
+	lib/byteorder.c \
 	lib/hash.c \
 	lib/hashset.c \
 	lib/hashu64.c \
@@ -1644,14 +1668,12 @@ dist_man8_MANS += \
 endif
 
 master_master_SOURCES = \
-	master/cyrusMasterMIB.c \
-	master/cyrusMasterMIB.h \
 	master/master.c \
 	master/master.h \
 	master/masterconf.c \
 	master/masterconf.h \
 	master/service.h
-master_master_LDADD = lib/libcyrus_min.la $(LIB_UCDSNMP) $(LIBS) $(GCOV_LIBS) -lm
+master_master_LDADD = lib/libcyrus_min.la $(LIBS) $(GCOV_LIBS) -lm
 
 
 netnews_remotepurge_SOURCES = \
@@ -1772,6 +1794,8 @@ sieve_libcyrus_sieve_la_SOURCES = \
 
 if JMAP
 sieve_libcyrus_sieve_la_SOURCES += \
+	imap/jmap_mail_query_parse.c \
+	imap/jmap_mail_query_parse.h \
 	imap/json_support.c \
 	imap/json_support.h
 endif
@@ -1786,13 +1810,20 @@ sieve_libcyrus_sieve_la_CFLAGS = $(AM_CFLAGS) $(CFLAG_VISIBILITY)
 sieve_sievec_LDADD = $(LD_SIEVE_ADD)
 sieve_sieved_LDADD = $(LD_SIEVE_ADD)
 
-sieve_test_SOURCES = sieve/test.c imap/mutex_fake.c
+sieve_test_SOURCES = \
+    sieve/test.c \
+    imap/mutex_fake.c \
+    sieve/sieve_interface.h
 if JMAP
-sieve_test_SOURCES += imap/jmap_util.c imap/jmap_mail_query.c
+sieve_test_SOURCES += \
+	imap/jmap_util.c imap/jmap_mail_query.c imap/jmap_mail_query_parse.c
 endif
 sieve_test_LDADD = $(LD_SIEVE_ADD) $(LD_UTILITY_ADD)
 
-sieve_test_mailbox_SOURCES = sieve/test_mailbox.c imap/mutex_fake.c
+sieve_test_mailbox_SOURCES = \
+    sieve/test_mailbox.c \
+    imap/mutex_fake.c \
+    sieve/sieve_interface.h
 sieve_test_mailbox_LDADD = $(LD_SIEVE_ADD) $(LD_UTILITY_ADD)
 
 timsieved_timsieved_SOURCES = \

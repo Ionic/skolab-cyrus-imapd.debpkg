@@ -58,7 +58,6 @@
 
 static struct buf buf;   /* buffer for multi-line text and quoted strings */
 extern int encoded_char; /* used to receive encoded-char feedback from parser */
-extern int getdatepart;  /* used to receive start state feedback from parser */
 
 static unsigned long long tonum(const char *str);
 static int decode_string(struct buf *buf);
@@ -77,31 +76,11 @@ CRLF            (\r\n|\r|\n)
     /* non-linebreaking whitespace */
 ws              [ \t]+
 
-    /* UTC offset of timezone +/-hhmm */
-timezone        [-|+][0-1][0-9][0-5][0-9]
-
-    /* case-insensitive date-parts */
-year            [Y|y][E|e][A|a][R|r]
-month           [M|m][O|o][N|n][T|t][H|h]
-day             [D|d][A|a][Y|y]
-date            [D|d][A|a][T|t][E|e]
-julian          [J|j][U|u][L|l][I|i][A|a][N|n]
-hour            [H|h][O|o][U|u][R|r]
-minute          [M|m][I|i][N|n][U|u][T|t][E|e]
-second          [S|s][E|e][C|c][O|o][N|n][D|d]
-time            [T|t][I|i][M|m][E|e]
-iso8601         [I|i][S|s][O|o]8601
-std11           [S|s][T|t][D|d]11
-zone            [Z|z][O|o][N|n][E|e]
-weekday         [W|w][E|e][E|e][K|k][D|d][A|a][Y|y]
-
 %state MULTILINE
 %state QSTRING
 %state QCOLLATION
 %state QRELATION
 %state QIMPORTANCE
-%state QTIMEZONE
-%state QDATEPART
 
 %%
     /* dot stuffing */
@@ -145,15 +124,8 @@ weekday         [W|w][E|e][E|e][K|k][D|d][A|a][Y|y]
 
     /* beginning of quoted string */
 <INITIAL>\"                   {
-                                  if (getdatepart) {
-                                      BEGIN QDATEPART;
-                                      getdatepart = 0;
-                                      yyless(0);
-                                  }
-                                  else {
-                                      BEGIN QSTRING;
-                                      buf_reset(&buf);
-                                  }
+                                  BEGIN QSTRING;
+                                  buf_reset(&buf);
                               }
 
     /* number with optional power of 2 suffix */
@@ -306,41 +278,8 @@ weekday         [W|w][E|e][E|e][K|k][D|d][A|a][Y|y]
     /* date - RFC 5260 */
 <INITIAL>date                 return DATE;
 <INITIAL>:originalzone        return ORIGINALZONE;
-<INITIAL>:zone                { BEGIN QTIMEZONE; return ZONE; }
-<INITIAL>currentdate          { getdatepart = 1; return CURRENTDATE; }
-
-<QTIMEZONE>[ \t\n\r] ;        /* ignore whitespace */
-<QTIMEZONE>\"{timezone}\"     {
-                                  BEGIN INITIAL;
-                                  int tz = atoi(yytext+1); /* skip leading " */
-                                  yylval->nval = 60 * (tz / 100) + (tz % 100);
-                                  return TIMEZONE;
-                              }
-<QTIMEZONE>\"[^\"]*\"         {
-                                  BEGIN INITIAL;
-                                  sieveerror_f(sscript,
-                                               "invalid time-zone %s", yytext);
-                              }
-
-<QDATEPART>\"{year}\"         { BEGIN INITIAL; return yylval->nval = YEARP;    }
-<QDATEPART>\"{month}\"        { BEGIN INITIAL; return yylval->nval = MONTHP;   }
-<QDATEPART>\"{day}\"          { BEGIN INITIAL; return yylval->nval = DAYP;     }
-<QDATEPART>\"{date}\"         { BEGIN INITIAL; return yylval->nval = DATEP;    }
-<QDATEPART>\"{julian}\"       { BEGIN INITIAL; return yylval->nval = JULIAN;   }
-<QDATEPART>\"{hour}\"         { BEGIN INITIAL; return yylval->nval = HOURP;    }
-<QDATEPART>\"{minute}\"       { BEGIN INITIAL; return yylval->nval = MINUTEP;  }
-<QDATEPART>\"{second}\"       { BEGIN INITIAL; return yylval->nval = SECONDP;  }
-<QDATEPART>\"{time}\"         { BEGIN INITIAL; return yylval->nval = TIMEP;    }
-<QDATEPART>\"{iso8601}\"      { BEGIN INITIAL; return yylval->nval = ISO8601;  }
-<QDATEPART>\"{std11}\"        { BEGIN INITIAL; return yylval->nval = STD11;    }
-<QDATEPART>\"{zone}\"         { BEGIN INITIAL; return yylval->nval = ZONEP;    }
-<QDATEPART>\"{weekday}\"      { BEGIN INITIAL; return yylval->nval = WEEKDAYP; }
-<QDATEPART>\"[^\"]*\"         {
-                                  BEGIN INITIAL;
-                                  sieveerror_f(sscript,
-                                               "invalid date-part %s", yytext);
-                              }
-
+<INITIAL>:zone                return ZONE;
+<INITIAL>currentdate          return CURRENTDATE;
 
     /* index - RFC 5260 */
 <INITIAL>:index               return INDEX;
@@ -421,9 +360,9 @@ weekday         [W|w][E|e][E|e][K|k][D|d][A|a][Y|y]
 <INITIAL>duplicate            return DUPLICATE;
 <INITIAL>:header              return yylval->nval = HEADER;
 <INITIAL>:uniqueid            return yylval->nval = UNIQUEID;
-    /*   :handle              defined in 'vacation' */
+    /*   :handle              defined in 'vacation'         */
     /*   :seconds             defined in 'vacation-seconds' */
-    /*   :last                defined in 'index' */
+    /*   :last                defined in 'index'            */
 
     /* special-use - RFC 8579 */
 <INITIAL>specialuse_exists     return SPECIALUSEEXISTS;
@@ -436,19 +375,22 @@ weekday         [W|w][E|e][E|e][K|k][D|d][A|a][Y|y]
 <INITIAL>mailboxidexists       return MAILBOXIDEXISTS;
 <INITIAL>:mailboxid            return MAILBOXID;
 
-    /* x-cyrus-log */
+    /* vnd.cyrus.log */
 <INITIAL>log                   return LOG;
 
-    /* x-cyrus-jmapquery */
+    /* vnd.cyrus.jmapquery */
 <INITIAL>jmapquery             return JMAPQUERY;
 
-    /* x-cyrus-snooze */
+    /* vnd.cyrus.snooze */
 <INITIAL>snooze                return SNOOZE;
 <INITIAL>:mailbox              return MAILBOX;
 <INITIAL>:addflags             return ADDFLAGS;
 <INITIAL>:removeflags          return REMOVEFLAGS;
 <INITIAL>:weekdays             return WEEKDAYS;
-    /*   :mailboxid            defined in draft-gondwana-sieve-mailboxid */
+<INITIAL>:tzid                 return TZID;
+    /*   :create               defined in 'mailbox'     */
+    /*   :mailboxid            defined in 'mailboxid'   */
+    /*   :specialuse           defined in 'special-use' */
 
 <INITIAL>"/*"([^\*]|\*[^\/])*\*?"*/" ;  /* ignore bracketed comments */
 <INITIAL>#.* ;                /* ignore hash comments */

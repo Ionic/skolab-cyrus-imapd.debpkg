@@ -126,7 +126,7 @@ int caladdress_lookup(const char *addr, struct caldav_sched_param *param,
         /* Lookup user's cal-home-set to see if its on this server */
         mbname_t *mbname = mbname_from_userid(userid);
         mbname_push_boxes(mbname, config_getstring(IMAPOPT_CALENDARPREFIX));
-        int r = http_mlookup(mbname_intname(mbname), &mbentry, NULL);
+        int r = proxy_mlookup(mbname_intname(mbname), &mbentry, NULL, NULL);
         mbname_free(&mbname);
 
         if (!r) {
@@ -593,7 +593,6 @@ static int imip_send(struct sched_data *sched_data,
                                   sender, recipient, sched_data->is_update);
     }
 
-    const char *ical_str = icalcomponent_as_ical_string(sched_data->itip);
     json_t *jsevent, *patch;
 
 #ifdef WITH_JMAP
@@ -621,6 +620,10 @@ static int imip_send(struct sched_data *sched_data,
     jsevent = json_null();
     patch = json_null();
 #endif
+
+    /* Don't send a bogus message - check late to not allocate our own copy */
+    const char *ical_str = icalcomponent_as_ical_string(sched_data->itip);
+    if (!ical_str) return 0;
 
     json_t *val = json_pack("{s:s s:s s:s s:o s:o s:b}",
                             "recipient", recipient,
@@ -1767,6 +1770,7 @@ static void sched_deliver_local(const char *sender, const char *recipient,
         goto done;
     }
     free(mailboxname);
+    mailboxname = NULL;
 
     /* Get METHOD of the iTIP message */
     method = icalcomponent_get_method(sched_data->itip);
@@ -1800,7 +1804,9 @@ static void sched_deliver_local(const char *sender, const char *recipient,
     }
     else {
         /* Can't find object belonging to attendee - use default calendar */
-        mailboxname = caldav_mboxname(userid, SCHED_DEFAULT);
+        char *scheddefault = caldav_scheddefault(userid);
+        mailboxname = caldav_mboxname(userid, scheddefault);
+        free(scheddefault);
         buf_reset(&resource);
         /* XXX - sanitize the uid? */
         buf_printf(&resource, "%s.ics",
@@ -3229,4 +3235,67 @@ void sched_param_fini(struct caldav_sched_param *sparam)
     }
 
     memset(sparam, 0, sizeof(struct caldav_sched_param));
+}
+
+
+void get_schedule_addresses(hdrcache_t req_hdrs, const char *mboxname,
+                            const char *userid, strarray_t *addresses)
+{
+    struct buf buf = BUF_INITIALIZER;
+
+    /* allow override of schedule-address per-message (FM specific) */
+    const char **hdr = spool_getheader(req_hdrs, "Schedule-Address");
+
+    if (hdr) {
+        if (!strncasecmp(hdr[0], "mailto:", 7))
+            strarray_add(addresses, hdr[0]+7);
+        else
+            strarray_add(addresses, hdr[0]);
+    }
+    else {
+        /* find schedule address based on the destination calendar's user */
+
+        /* check calendar-user-address-set for target user's mailbox */
+        const char *annotname =
+            DAV_ANNOT_NS "<" XML_NS_CALDAV ">calendar-user-address-set";
+        int r = annotatemore_lookupmask(mboxname, annotname,
+                                        userid, &buf);
+        if (r || !buf.len) {
+            /* check calendar-user-address-set for target user's principal */
+            char *calhomeset = caldav_mboxname(userid, NULL);
+            buf_reset(&buf);
+            r = annotatemore_lookupmask(calhomeset, annotname,
+                                        userid, &buf);
+            free(calhomeset);
+        }
+
+        if (!r && buf.len) {
+            strarray_t *values =
+                strarray_split(buf_cstring(&buf), ",", STRARRAY_TRIM);
+            int i;
+            for (i = 0; i < strarray_size(values); i++) {
+                const char *item = strarray_nth(values, i);
+                if (!strncasecmp(item, "mailto:", 7)) item += 7;
+                strarray_add(addresses, item);
+            }
+            strarray_free(values);
+        }
+        else if (strchr(userid, '@')) {
+            /* userid corresponding to target */
+            strarray_add(addresses, userid);
+        }
+        else {
+            /* append fully qualified userids */
+            struct strlist *domains;
+
+            for (domains = cua_domains; domains; domains = domains->next) {
+                buf_reset(&buf);
+                buf_printf(&buf, "%s@%s", userid, domains->s);
+
+                strarray_add(addresses, buf_cstring(&buf));
+            }
+        }
+    }
+
+    buf_free(&buf);
 }

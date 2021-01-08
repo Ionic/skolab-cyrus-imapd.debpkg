@@ -48,7 +48,7 @@
 #include <limits.h>
 #include <config.h>
 
-#include "byteorder64.h"
+#include "byteorder.h"
 #include "conversations.h"
 #include "message_guid.h"
 #include "message.h"
@@ -73,8 +73,13 @@
  * format changes are made to any mailbox files.  It is also important to
  * make sure all the mailbox upgrade and downgrade code in mailbox.c is
  * changed to be able to convert both backwards and forwards between the
- * new version and all supported previous versions */
-#define MAILBOX_MINOR_VERSION   16
+ * new version and all supported previous versions.
+ * If you change MAILBOX_MINOR_VERSION you MUST also make corresponding
+ * changes to backend_version() in backend.c, AND backport those changes to
+ * all supported older versions, to avoid breaking XFER.  Annoyingly, older
+ * versions placed this function in imapd.c FYI!
+ */
+#define MAILBOX_MINOR_VERSION   17
 #define MAILBOX_CACHE_MINOR_VERSION 10
 
 #define FNAME_HEADER "/cyrus.header"
@@ -168,7 +173,8 @@ struct index_record {
 
     /* metadata */
     uint32_t recno;
-    int silent;
+    unsigned silentupdate:1;
+    unsigned ignorelimits:1;
     bit64 basecid;
     struct cacherecord crec;
 };
@@ -207,6 +213,7 @@ struct index_header {
     uint32_t exists;
     time_t first_expunged;
     time_t last_repack_time;
+    time_t changes_epoch;
 
     modseq_t createdmodseq;
 
@@ -272,6 +279,9 @@ struct mailbox {
 
     /* conversations */
     struct conversations_state *local_cstate;
+
+    /* namespace lock */
+    struct mboxlock *local_namespacelock;
 
 #ifdef WITH_DAV
     struct caldav_db *local_caldav;
@@ -354,7 +364,7 @@ struct mailbox_iter {
  * files. We've created the header space now, but will also need code
  * changes, so holding off */
 #define OFFSET_MAILBOX_CREATEDMODSEQ 128 /* MODSEQ at creation time */
-#define OFFSET_SPARE0 136
+#define OFFSET_CHANGES_EPOCH 136   /* time from which we can calculate changes */
 #define OFFSET_SPARE1 140
 #define OFFSET_SPARE2 144
 #define OFFSET_SPARE3 148
@@ -562,7 +572,6 @@ extern int mailbox_delete(struct mailbox **mailboxptr);
 
 struct caldav_db *mailbox_open_caldav(struct mailbox *mailbox);
 struct carddav_db *mailbox_open_carddav(struct mailbox *mailbox);
-struct webdav_db *mailbox_open_webdav(struct mailbox *mailbox);
 
 /* reading bits and pieces */
 extern int mailbox_refresh_index_header(struct mailbox *mailbox);

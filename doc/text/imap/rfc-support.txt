@@ -128,6 +128,18 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
    IMAP4 UIDPLUS extension, obsoleted by **RFC 4315**
 
+**RFC 2425**
+
+   A MIME Content-Type for Directory Information
+
+   Note: See the comment behind RFC 6352 below.
+
+**RFC 2426**
+
+   vCard MIME Directory Profile
+
+   Note: See the comment behind RFC 6352 below.
+
 **RFC 2444**
 
    The One-Time-Password SASL Mechanism
@@ -416,6 +428,10 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
    Sieve Email Filtering: Subaddress Extension
 
+**RFC 5235**
+
+   Sieve Email Filtering: Spamtest and Virustest Extensions
+
 **RFC 5256**
 
    Internet Message Access Protocol - SORT and THREAD Extensions
@@ -435,6 +451,13 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
    New in version 2.5.0.
 
+**RFC 5267**
+
+   Contexts for IMAP4
+
+   Note: The ESORT capability is implemented.  The CONTEXT=SEARCH
+     and CONTEXT=SORT capabilities are not implemented.
+
 **RFC 5293**
 
    Sieve Email Filtering: Editheader Extension
@@ -446,6 +469,8 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 **RFC 5322**
 
    Internet Message Format
+
+   Note: The JMAP mapping is incomplete.
 
 **RFC 5397**
 
@@ -511,6 +536,11 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
    Extended MKCOL for Web Distributed Authoring and Versioning
    (WebDAV)
 
+**RFC 5703**
+
+   Sieve Email Filtering: MIME Part Tests, Iteration, Extraction,
+   Replacement, and Enclosure
+
 **RFC 5804**
 
    A protocol for Remotely Managing Sieve Scripts
@@ -528,6 +558,11 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
    Using POST to Add Members to Web Distributed Authoring and
    Versioning (WebDAV) Collections
 
+**RFC 6009**
+
+   Sieve Email Filtering: Delivery Status Notifications and Deliver-By
+   Extensions
+
 **RFC 6047**
 
    iCalendar Message-Based Interoperability Protocol (iMIP)
@@ -536,12 +571,16 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
    The Secure Sockets Layer (SSL) Protocol Version 3.0
 
-   Note: SSLv3 is considered inscure as it is vulnerable to
+   Note: SSLv3 is considered insecure as it is vulnerable to
      POODLE.Support for SSLv3 is being deprecated and removed.
 
 **RFC 6131**
 
    Sieve Vacation Extension: "Seconds" Parameter
+
+**RFC 6134**
+
+   Sieve Extension: Externally Stored Lists
 
 **RFC 6154**
 
@@ -551,6 +590,10 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
      unless the "specialusealways" configuration variable is
      explicitly turned off.
 
+**RFC 6203**
+
+   IMAP4 Extension for Fuzzy Search
+
 **RFC 6321**
 
    xCal: The XML Format for iCalendar
@@ -559,14 +602,27 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
    vCard Format Specification
 
+   Note: See the comment behind RFC 6352 below.
+
 **RFC 6352**
 
    CardDAV: vCard Extensions to Web Distributed Authoring and
    Versioning (WebDAV)
 
+   Note: Cyrus IMAP accepts over CardDAV both vCard 3.0 and vCard
+     4.0, but does not advertise over CARDDAV:supported-address-data
+     vCard 4.0 support, announces only vCard 3.0.  Moreover, Cyrus
+     IMAP does not convert between vCard 3.0 and vCard 4.0.  It is
+     applications’ responsibility not to misinterpret the vCard
+     version and damage the data.
+
 **RFC 6376**
 
    DomainKeys Identified Mail (DKIM) Signatures
+
+**RFC 6558**
+
+   Sieve Extension for Converting Messages before Delivery
 
 **RFC 6578**
 
@@ -641,6 +697,10 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
    jCal: The JSON Format for iCalendar
 
+**RFC 7352**
+
+   Sieve Email Filtering: Detecting Duplicate Deliveries
+
 **RFC 7529**
 
    Non-Gregorian Recurrence Rules in the Internet Calendaring and
@@ -662,6 +722,10 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 **RFC 7617**
 
    The 'Basic' HTTP Authentication Scheme
+
+**RFC 7692**
+
+   Compression Extensions for WebSocket
 
 **RFC 7694**
 
@@ -688,10 +752,59 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
    Calendar Availability
 
+**RFC 7986**
+
+   New Properties for iCalendar
+
+   Note: Support here means, that when the iCalendar stream is
+     retrieved with HTTP GET, Cyrus IMAP inserts the color,
+     description and name from the WebDAV properties. IMAGE, SOURCE,
+     multi-lingual calendar DESCRIPTIONs, URL, LAST-MODIFIED,
+     CATEGORIES, and REFRESH- INTERVAL are not exported on iCalendar
+     streams retrieved with GET.Individual iCalendar objects (VEVENT,
+     VTODO, VJOURNAL) can be uploaded and downloaded with the New
+     Properties for iCalendar.
+
 **RFC 8144**
 
    Use of the Prefer Header Field in Web Distributed Authoring and
    Versioning (WebDAV)
+
+**RFC 8246**
+
+   HTTP Immutable Responses
+
+**RFC 8297**
+
+   An HTTP Status Code for Indicating Hints
+
+**RFC 8437**
+
+   IMAP UNAUTHENTICATE Extension for Connection Reuse
+
+**RFC 8438**
+
+   IMAP Extension for STATUS=SIZE
+
+**RFC 8440**
+
+   IMAP4 Extension for Returning MYRIGHTS Information in Extended LIST
+
+**RFC 8478**
+
+   Zstandard Compression and the application/zstd Media Type
+
+**RFC 8579**
+
+   Sieve Email Filtering: Delivering to Special-Use Mailboxes
+
+**RFC 8580**
+
+   Sieve Extension: File Carbon Copy (FCC)
+
+**RFC 8607**
+
+   Calendaring Extensions to WebDAV (CalDAV): Managed Attachments
 
 
 IETF RFC Drafts
@@ -719,6 +832,10 @@ draft-desruisseaux-ischedule
 
    Internet Calendar Scheduling Protocol (iSchedule)
 
+draft-gondwana-sieve-mailboxid
+
+   Sieve Email Filtering: delivery by mailboxid
+
 draft-thomson-hybi-http-timeout
 
    Hypertext Transfer Protocol (HTTP) Keep-Alive Header
@@ -730,28 +847,119 @@ draft-thomson-hybi-http-timeout
 RFC Wishlist
 ============
 
-**RFC 5235**
+**RFC 2221**
 
-   Sieve Email Filtering: Spamtest and Virustest Extensions
+   IMAP4 Login Referrals
+
+**RFC 2295**
+
+   Transparent Content Negotiation in HTTP
+
+**RFC 2369**
+
+   The Use of URLs as Meta-Syntax for Core Mail List Commands and
+   their Transport through Message Header Fields
+
+**RFC 3229**
+
+   Delta encoding in HTTP
+
+**RFC 5182**
+
+   IMAP Extension for Referencing the Last SEARCH Result
+
+**RFC 5255**
+
+   Internet Message Access Protocol Internationalization
+
+**RFC 5259**
+
+   Internet Message Access Protocol - CONVERT Extension
 
 **RFC 5437**
 
    Sieve Notification Mechanism: Extensible Messaging and Presence
    Protocol (XMPP)
 
-**RFC 5703**
+**RFC 5465**
 
-   Sieve Email Filtering: MIME Part Tests, Iteration, Extraction,
-   Replacement, and Enclosure
+   The IMAP NOTIFY Extension
+
+**RFC 5466**
+
+   IMAP4 Extension for Named Searches (Filters)
+
+**RFC 5550**
+
+   The Internet Email to Support Diverse Service Environments
+   (Lemonade) Profile
+
+**RFC 5842**
+
+   Binding Extensions to Web Distributed Authoring and Versioning
+   (WebDAV)
 
 **RFC 6468**
 
    Sieve Notification Mechanism: SIP MESSAGE
 
-**RFC 6558**
-
-   Sieve Extension for Converting Messages before Delivery
-
 **RFC 6785**
 
    Support for Internet Message Access Protocol (IMAP) Events in Sieve
+
+**RFC 6855**
+
+   IMAP Support for UTF-8
+
+**RFC 6901**
+
+   JavaScript Object Notation (JSON) Pointer
+
+**RFC 7162**
+
+   IMAP Extensions: Quick Flag Changes Resynchronization (CONDSTORE)
+   and Quick Mailbox Resynchronization (QRESYNC)
+
+**RFC 7377**
+
+   IMAP4 Multimailbox SEARCH Extension
+
+**RFC 7725**
+
+   An HTTP Status Code to Report Legal Obstacles
+
+**RFC 7888**
+
+   IMAP4 Non-synchronizing Literals
+
+**RFC 7889**
+
+   The IMAP APPENDLIMIT Extension
+
+**RFC 8288**
+
+   Web Linking
+
+**RFC 8470**
+
+   Using Early Data in HTTP
+
+**RFC 8474**
+
+   IMAP Extension for Object Identifiers
+
+   Note: This is implemented as draft-ietf-extra-imap-objectid.
+
+**RFC 8508**
+
+   IMAP REPLACE Extension
+
+**RFC 8514**
+
+   Internet Message Access Protocol (IMAP) - SAVEDATE Extension
+
+   Note: This is implemented as draft-ietf-extra-imap-savedate.
+
+**RFC 8621**
+
+   The JSON Meta Application Protocol (JMAP) for Mail

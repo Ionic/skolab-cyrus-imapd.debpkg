@@ -48,17 +48,8 @@
 
 #include "strarray.h"
 
+#include "jmap_mail_query_parse.h"
 #include "jmap_util.h"
-
-extern void jmap_email_filtercondition_parse(struct jmap_parser *parser,
-                                             json_t *filter,
-                                             json_t *unsupported,
-                                             const strarray_t *capabilities);
-
-extern void jmap_email_filter_parse(struct jmap_parser *parser,
-                                    json_t *filter,
-                                    json_t *unsupported,
-                                    const strarray_t *capabilities);
 
 #ifdef WITH_DAV
 
@@ -69,6 +60,7 @@ extern void jmap_email_filter_parse(struct jmap_parser *parser,
 
 #include "carddav_db.h"
 #include "message.h"
+#include "xapian_wrap.h"
 
 struct email_contactfilter {
     const char *accountid;
@@ -103,6 +95,18 @@ extern void jmap_emailbodies_fini(struct emailbodies *bodies);
 extern int jmap_emailbodies_extract(const struct body *root,
                                     struct emailbodies *bodies);
 
+struct jmap_email_filter_parser_rock {
+    struct jmap_parser *parser;
+    json_t *unsupported;
+};
+
+extern void jmap_filter_parser_invalid(const char *field, void *rock);
+extern void jmap_filter_parser_push_index(const char *field, size_t index,
+                                          const char *name, void *rock);
+extern void jmap_filter_parser_pop(void *rock);
+extern void jmap_email_filtercondition_validate(const char *field, json_t *arg,
+                                                void *rock);
+
 /* Matches MIME message mime against the JMAP Email query
  * filter.
  *
@@ -112,11 +116,21 @@ extern int jmap_emailbodies_extract(const struct body *root,
  *
  * Returns non-zero if filter matches.
  * On error, sets the JMAP error in err. */
-extern int jmap_email_matchmime(struct buf *mime,
+struct matchmime {
+    char *dbpath;
+    xapian_dbw_t *dbw;
+    message_t *m;
+    const struct buf *mime;
+};
+typedef struct matchmime matchmime_t;
+extern matchmime_t *jmap_email_matchmime_init(const struct buf *buf, json_t **err);
+extern void jmap_email_matchmime_free(matchmime_t **matchmimep);
+extern int jmap_email_matchmime(matchmime_t *matchmime,
                                 json_t *jfilter,
                                 const char *accountid,
                                 time_t internaldate,
                                 json_t **err);
+
 
 #endif /* WITH_DAV */
 

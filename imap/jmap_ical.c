@@ -74,7 +74,6 @@
 #include "parseaddr.h"
 #include "seen.h"
 #include "statuscache.h"
-#include "stristr.h"
 #include "times.h"
 #include "util.h"
 #include "vcard_support.h"
@@ -116,17 +115,17 @@ static json_t *calendarevent_from_ical(icalcomponent *comp, hash_table *props, i
 static void calendarevent_to_ical(icalcomponent *comp, icalcomponent *oldical,
                                   struct jmap_parser *parser, json_t *jsevent);
 
-static char *sha1key(const char *val)
+#define JMAPICAL_SHA1KEY_LEN (2*SHA1_DIGEST_LENGTH+1)
+
+static const char *sha1key(const char *val, char *keybuf)
 {
     unsigned char dest[SHA1_DIGEST_LENGTH];
-    char idbuf[2*SHA1_DIGEST_LENGTH+1];
-    int r;
 
     xsha1((const unsigned char *) val, strlen(val), dest);
-    r = bin_to_hex(dest, SHA1_DIGEST_LENGTH, idbuf, BH_LOWER);
+    int r = bin_to_hex(dest, SHA1_DIGEST_LENGTH, keybuf, BH_LOWER);
     assert(r == 2*SHA1_DIGEST_LENGTH);
-    idbuf[2*SHA1_DIGEST_LENGTH] = '\0';
-    return xstrdup(idbuf);
+    keybuf[2*SHA1_DIGEST_LENGTH] = '\0';
+    return keybuf;
 }
 
 static char *mailaddr_from_uri(const char *uri)
@@ -298,7 +297,8 @@ static char *xjmapid_from_ical(icalproperty *prop)
 {
     const char *id = (char *) get_icalxparam_value(prop, JMAPICAL_XPARAM_ID);
     if (id) return xstrdup(id);
-    return sha1key(icalproperty_as_ical_string(prop));
+    char keybuf[JMAPICAL_SHA1KEY_LEN];
+    return xstrdup(sha1key(icalproperty_as_ical_string(prop), keybuf));
 }
 
 static void xjmapid_to_ical(icalproperty *prop, const char *id)
@@ -1433,10 +1433,10 @@ static json_t *participant_from_ical(icalproperty *prop,
          param = icalproperty_get_next_parameter(prop, ICAL_MEMBER_PARAMETER)) {
 
         char *uri = normalized_uri(icalparameter_get_member(param));
-        char *id = xstrdupnull(hash_lookup(uri, id_by_uri));
-        if (!id) id = sha1key(uri);
+        const char *id = hash_lookup(uri, id_by_uri);
+        char keybuf[JMAPICAL_SHA1KEY_LEN];
+        if (!id) id = sha1key(uri, keybuf);
         json_object_set_new(memberOf, id, json_true());
-        free(id);
         free(uri);
     }
     if (json_object_size(memberOf)) {
@@ -1560,9 +1560,10 @@ participants_from_ical(icalcomponent *comp)
         hash_insert(uri, prop, &attendee_by_uri);
 
         /* Map mailto:URI to ID */
-        char *id = xstrdupnull(get_icalxparam_value(prop, JMAPICAL_XPARAM_ID));
-        if (!id) id = sha1key(uri);
-        hash_insert(uri, id, &id_by_uri);
+        const char *id = get_icalxparam_value(prop, JMAPICAL_XPARAM_ID);
+        char keybuf[JMAPICAL_SHA1KEY_LEN];
+        if (!id) id = sha1key(uri, keybuf);
+        hash_insert(uri, xstrdup(id), &id_by_uri);
         free(uri);
     }
 
@@ -1585,11 +1586,11 @@ participants_from_ical(icalcomponent *comp)
         char *uri = normalized_uri(caladdress);
         if (!hash_lookup(uri, &attendee_by_uri)) {
             /* Add a default participant for the organizer. */
-            char *id = xstrdupnull(get_icalxparam_value(orga, JMAPICAL_XPARAM_ID));
-            if (!id) id = sha1key(uri);
+            const char *id = get_icalxparam_value(orga, JMAPICAL_XPARAM_ID);
+            char keybuf[JMAPICAL_SHA1KEY_LEN];
+            if (!id) id = sha1key(uri, keybuf);
             json_t *jorga = participant_from_icalorganizer(orga);
             json_object_set_new(participants, id, jorga);
-            free(id);
         }
         free(uri);
     }
@@ -1683,11 +1684,11 @@ links_from_ical(icalcomponent *comp)
          prop;
          prop = icalcomponent_get_next_property(comp, ICAL_ATTACH_PROPERTY)) {
 
-        char *id = xstrdupnull(get_icalxparam_value(prop, JMAPICAL_XPARAM_ID));
-        if (!id) id = sha1key(icalproperty_get_value_as_string(prop));
+        const char *id = get_icalxparam_value(prop, JMAPICAL_XPARAM_ID);
+        char keybuf[JMAPICAL_SHA1KEY_LEN];
+        if (!id) id = sha1key(icalproperty_get_value_as_string(prop), keybuf);
         json_t *link = link_from_ical(prop);
         if (link) json_object_set_new(ret, id, link);
-        free(id);
     }
 
     /* Read iCalendar URL property. Should only be one. */
@@ -1695,11 +1696,11 @@ links_from_ical(icalcomponent *comp)
          prop;
          prop = icalcomponent_get_next_property(comp, ICAL_URL_PROPERTY)) {
 
-        char *id = xstrdupnull(get_icalxparam_value(prop, JMAPICAL_XPARAM_ID));
-        if (!id) id = sha1key(icalproperty_get_value_as_string(prop));
+        const char *id = get_icalxparam_value(prop, JMAPICAL_XPARAM_ID);
+        char keybuf[JMAPICAL_SHA1KEY_LEN];
+        if (!id) id = sha1key(icalproperty_get_value_as_string(prop), keybuf);
         json_t *link = link_from_ical(prop);
         if (link) json_object_set_new(ret, id, link);
-        free(id);
     }
 
     if (!json_object_size(ret)) {
@@ -1728,12 +1729,9 @@ alerts_from_ical(icalcomponent *comp)
         json_t *alert = json_pack("{s:s}", "@type", "Alert");
 
         /* alert id */
-        char *id = (char *) icalcomponent_get_uid(alarm);
-        if (!id) {
-            id = sha1key(icalcomponent_as_ical_string(alarm));
-        } else {
-            id = xstrdup(id);
-        }
+        const char *id = icalcomponent_get_uid(alarm);
+        char keybuf[JMAPICAL_SHA1KEY_LEN];
+        if (!id) id = sha1key(icalcomponent_as_ical_string(alarm), keybuf);
 
         /* Determine TRIGGER and RELATED parameter */
         struct icaltriggertype trigger = {
@@ -1747,7 +1745,6 @@ alerts_from_ical(icalcomponent *comp)
             if (param) {
                 related = icalparameter_get_related(param);
                 if (related != ICAL_RELATED_START && related != ICAL_RELATED_END) {
-                    free(id);
                     continue;
                 }
             }
@@ -1810,7 +1807,6 @@ alerts_from_ical(icalcomponent *comp)
         }
 
         json_object_set_new(alerts, id, alert);
-        free(id);
     }
 
     if (!json_object_size(alerts)) {
@@ -1933,10 +1929,10 @@ static json_t* location_from_ical(icalproperty *prop, json_t *links)
     param = icalproperty_get_first_parameter(prop, ICAL_ALTREP_PARAMETER);
     if (param) altrep = icalparameter_get_altrep(param);
     if (altrep) {
-        char *tmp = sha1key(altrep);
-        json_object_set_new(links, tmp, json_pack("{s:s}", "href", altrep));
-        json_object_set_new(linkids, tmp, json_true());
-        free(tmp);
+        char keybuf[JMAPICAL_SHA1KEY_LEN];
+        sha1key(altrep, keybuf);
+        json_object_set_new(links, keybuf, json_pack("{s:s}", "href", altrep));
+        json_object_set_new(linkids, keybuf, json_true());
     }
     if (!json_object_size(linkids)) {
         json_decref(linkids);
@@ -2176,6 +2172,7 @@ calendarevent_from_ical(icalcomponent *comp, hash_table *props, icalcomponent *m
     hash_table *wantprops = NULL;
     json_t *event = json_pack("{s:s}", "@type", "jsevent");
     struct buf buf = BUF_INITIALIZER;
+    char *tzid_start = NULL;
 
     if (jmap_wantprop(props, "recurrenceOverrides") && !is_exception) {
         /* Fetch all properties if recurrenceOverrides are requested,
@@ -2185,8 +2182,10 @@ calendarevent_from_ical(icalcomponent *comp, hash_table *props, icalcomponent *m
     }
 
     /* Handle bogus mix of floating and time zoned types */
-    const char *tzid_start = tzid_from_ical(comp, ICAL_DTSTART_PROPERTY);
-    if (!tzid_start) tzid_start = tzid_from_ical(comp, ICAL_DTEND_PROPERTY);
+    tzid_start = xstrdupnull(tzid_from_ical(comp, ICAL_DTSTART_PROPERTY));
+    if (!tzid_start) {
+        tzid_start = xstrdupnull(tzid_from_ical(comp, ICAL_DTEND_PROPERTY));
+    }
 
     /* start */
     if (jmap_wantprop(props, "start")) {
@@ -2463,6 +2462,7 @@ calendarevent_from_ical(icalcomponent *comp, hash_table *props, icalcomponent *m
     }
 
     buf_free(&buf);
+    free(tzid_start);
     return event;
 }
 
@@ -3406,18 +3406,18 @@ static icalproperty* findprop_byid(icalcomponent *comp, const char *id,
                                    icalproperty_kind kind)
 {
     icalproperty *prop = NULL;
-    char *oldid = NULL;
 
     for (prop = icalcomponent_get_first_property(comp, kind);
          prop;
          prop = icalcomponent_get_next_property(comp, kind)) {
 
-        oldid = xstrdupnull(get_icalxparam_value(prop, JMAPICAL_XPARAM_ID));
-        if (!oldid) oldid = sha1key(icalproperty_get_value_as_string(prop));
+        const char *oldid = get_icalxparam_value(prop, JMAPICAL_XPARAM_ID);
+        char keybuf[JMAPICAL_SHA1KEY_LEN];
+        if (!oldid)
+            oldid = sha1key(icalproperty_get_value_as_string(prop), keybuf);
         if (!strcmp(id, oldid)) break;
     }
 
-    free(oldid);
     return prop;
 }
 

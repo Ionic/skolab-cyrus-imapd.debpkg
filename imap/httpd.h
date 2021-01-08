@@ -113,6 +113,7 @@ extern struct namespace_t *http_namespaces[];
 /* Flags for known methods*/
 enum {
     METH_NOBODY =       (1<<0), /* Method does not expect a body */
+    METH_SAFE =         (1<<1), /* Method is "safe" */
 };
 
 
@@ -162,6 +163,8 @@ enum {
     ALLOW_CAL_ATTACH =  (1<<20),/* CalDAV Managed Attachments features */
 
     ALLOW_CARD =        (1<<24),/* CardDAV specific methods/features */
+
+    ALLOW_READONLY =    (1<<30),/* Allow "unsafe" methods when readonly */
 
     ALLOW_ISCHEDULE =   (1<<31) /* iSchedule specific methods/features */
 };
@@ -320,7 +323,7 @@ struct txn_flags_t {
     unsigned long cors     : 3;         /* Cross-Origin Resource Sharing */
     unsigned long mime     : 1;         /* MIME-conformant response */
     unsigned long te       : 3;         /* Transfer-Encoding for resp */
-    unsigned long cc       : 7;         /* Cache-Control directives for resp */
+    unsigned long cc       : 8;         /* Cache-Control directives for resp */
     unsigned long ranges   : 1;         /* Accept range requests for resource */
     unsigned long vary     : 6;         /* Headers on which response can vary */
     unsigned long trailer  : 3;         /* Headers which will be in trailer */
@@ -425,7 +428,8 @@ enum {
     CC_NOTRANSFORM =    (1<<3),
     CC_PUBLIC =         (1<<4),
     CC_PRIVATE =        (1<<5),
-    CC_MAXAGE =         (1<<6)
+    CC_MAXAGE =         (1<<6),
+    CC_IMMUTABLE =      (1<<7), /* RFC 8246 */
 };
 
 /* Vary header flags (headers used in selecting/producing representation) */
@@ -533,6 +537,7 @@ extern struct namespace httpd_namespace;
 extern const char *httpd_localip, *httpd_remoteip;
 extern unsigned long config_httpmodules;
 extern int config_httpprettytelemetry;
+extern strarray_t *httpd_log_headers;
 
 extern int ignorequota;
 extern int apns_enabled;
@@ -543,7 +548,6 @@ extern struct accept *parse_accept(const char **hdr);
 extern void parse_query_params(struct transaction_t *txn, const char *query);
 extern time_t calc_compile_time(const char *time, const char *date);
 extern const char *http_statusline(unsigned ver, long code);
-extern char *rfc3339date_gen(char *buf, size_t len, time_t t);
 extern char *httpdate_gen(char *buf, size_t len, time_t t);
 extern void begin_resp_headers(struct transaction_t *txn, long code);
 extern int end_resp_headers(struct transaction_t *txn, long code);

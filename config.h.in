@@ -88,6 +88,9 @@
 /* Do we have ClamAV? */
 #undef HAVE_CLAMAV
 
+/* Build with cld2 library support */
+#undef HAVE_CLD2
+
 /* Do we have CU_SetUpFunc? */
 #undef HAVE_CU_SETUPFUNC
 
@@ -269,13 +272,6 @@
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 #undef HAVE_NDIR_H
 
-/* Do we have Net-SNMP support? */
-#undef HAVE_NETSNMP
-
-/* Define to 1 if you have the <net-snmp/agent/agent_module_config.h> header
-   file. */
-#undef HAVE_NET_SNMP_AGENT_AGENT_MODULE_CONFIG_H
-
 /* Do we have support for new clone API? */
 #undef HAVE_NEW_CLONE_API
 
@@ -421,9 +417,6 @@
    `tzname'. */
 #undef HAVE_TZNAME
 
-/* Do we have UCD-SNMP support? */
-#undef HAVE_UCDSNMP
-
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
@@ -508,9 +501,6 @@
 
 /* printf formatter for rlim_t */
 #undef RLIM_T_FMT
-
-/* Path to 'rm' binary */
-#undef RM_BIN
 
 /* Path to 'rsync' binary */
 #undef RSYNC_BIN

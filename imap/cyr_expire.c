@@ -109,6 +109,8 @@ struct arguments {
     const char *altconfig;
     const char *mbox_prefix;
     const char *userid;
+
+    char *freeme; /* for mbox_prefix */
 };
 
 struct archive_rock {
@@ -210,6 +212,8 @@ static void cyr_expire_init(const char *progname, struct cyr_expire_ctx *ctx)
 
 static void cyr_expire_cleanup(struct cyr_expire_ctx *ctx)
 {
+    if (ctx->args.freeme) free(ctx->args.freeme);
+
     free_hash_table(&ctx->erock.table, free);
     free_hash_table(&ctx->crock.seen, NULL);
     strarray_fini(&ctx->drock.to_delete);
@@ -746,9 +750,9 @@ static int do_delete(struct cyr_expire_ctx *ctx)
 
         if (ctx->args.userid)
             mboxlist_usermboxtree(ctx->args.userid, NULL, delete,
-                                  &ctx->drock, MBOXTREE_DELETED);
+                                  &ctx->drock, MBOXTREE_DELETED|MBOXTREE_INTERMEDIATES);
         else
-            mboxlist_allmbox(ctx->args.mbox_prefix, delete, &ctx->drock, 0);
+            mboxlist_allmbox(ctx->args.mbox_prefix, delete, &ctx->drock, MBOXTREE_INTERMEDIATES);
 
         for (i = 0 ; i < ctx->drock.to_delete.count ; i++) {
             char *name = ctx->drock.to_delete.data[i];
@@ -758,7 +762,8 @@ static int do_delete(struct cyr_expire_ctx *ctx)
 
             verbosep("Removing: %s\n", name);
 
-            ret = mboxlist_deletemailboxlock(name, 1, NULL, NULL, NULL, 0, 0, 0, 0);
+            ret = mboxlist_deletemailboxlock(name, 1, NULL, NULL, NULL,
+                                             MBOXLIST_DELETE_KEEP_INTERMEDIARIES);
             /* XXX: Ignoring the return from mboxlist_deletemailbox() ??? */
             count++;
         }
@@ -826,6 +831,7 @@ static int parse_args(int argc, char *argv[], struct arguments *args)
             break;
 
         case 'p':
+            if (args->userid) usage();
             args->mbox_prefix = optarg;
             break;
 
@@ -834,6 +840,7 @@ static int parse_args(int argc, char *argv[], struct arguments *args)
             break;
 
         case 'u':
+            if (args->mbox_prefix) usage();
             args->userid = optarg;
             break;
 
@@ -890,6 +897,13 @@ int main(int argc, char *argv[])
     }
 
     mboxevent_setnamespace(&expire_namespace);
+
+    /* now that we have a namespace, convert mbox_prefix to internal ns */
+    if (ctx.args.mbox_prefix) {
+        char *intname = mboxname_from_external(ctx.args.mbox_prefix,
+                                               &expire_namespace, NULL);
+        ctx.args.mbox_prefix = ctx.args.freeme = intname;
+    }
 
     if (duplicate_init(NULL) != 0) {
         fprintf(stderr,

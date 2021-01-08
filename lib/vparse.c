@@ -27,24 +27,12 @@ static char *buf_dup_cstring(struct buf *buf)
     (ch > 0 && ch <= 0x1f && ch != '\r' && ch != '\n' && ch != '\t')
 #define HANDLECTRL(state) \
 { \
-    if (state->ctrl != VPARSE_CTRL_IGNORE && IS_CTRL(*state->p)) { \
-        if (state->ctrl == VPARSE_CTRL_REJECT) \
-            return PE_ILLEGAL_CHAR; \
+    if (IS_CTRL(*state->p)) { \
         while (IS_CTRL(*state->p)) \
             state->p++; \
     } \
     if ((*state->p) == 0) \
         break; \
-}
-
-#define HANDLEBACKR(state) \
-{ \
-    if (state->p[1] != '\n') { \
-        if (state->ctrl == VPARSE_CTRL_REJECT) \
-            return PE_ILLEGAL_CHAR; \
-        if (state->ctrl == VPARSE_CTRL_IGNORE) \
-            PUTC('\r'); \
-    } \
 }
 
 /* just leaves it on the buffer */
@@ -110,7 +98,6 @@ static int _parse_param_quoted(struct vparse_state *state, int multiparam)
             break;
 
         case '\r':
-            HANDLEBACKR(state);
             INC(1);
             break; /* just skip */
         case '\n':
@@ -164,7 +151,6 @@ static int _parse_param_key(struct vparse_state *state, int *haseq)
             return 0;
 
         case '\r':
-            HANDLEBACKR(state);
             INC(1);
             break; /* just skip */
         case '\n':
@@ -290,7 +276,6 @@ repeat:
             goto repeat;
 
         case '\r':
-            HANDLEBACKR(state);
             INC(1);
             break; /* just skip */
         case '\n':
@@ -352,7 +337,6 @@ static int _parse_entry_key(struct vparse_state *state)
             break;
 
         case '\r':
-            HANDLEBACKR(state);
             INC(1);
             break; /* just skip */
         case '\n':
@@ -406,7 +390,6 @@ static int _parse_entry_multivalue(struct vparse_state *state, char splitchar)
             break;
 
         case '\r':
-            HANDLEBACKR(state);
             INC(1);
             break; /* just skip */
         case '\n':
@@ -472,7 +455,6 @@ static int _parse_entry_value(struct vparse_state *state)
             break;
 
         case '\r':
-            HANDLEBACKR(state);
             INC(1);
             break; /* just skip */
         case '\n':
@@ -606,7 +588,27 @@ static int _parse_vcard(struct vparse_state *state, struct vparse_card *card, in
             *subp = sub;
             subp = &sub->next;
             r = _parse_vcard(state, sub, /*only_one*/0);
+
+            /* repair critical property values */
+            struct vparse_entry *version = vparse_get_entry(sub, NULL, "version");
+            if (version) {
+                const char *val;
+                for (val = version->v.value; *val; val++) {
+                    if (isspace(*val)) {
+                        /* rewrite property value */
+                        struct buf buf = BUF_INITIALIZER;
+                        buf_setcstr(&buf, version->v.value);
+                        buf_trim(&buf);
+                        free(version->v.value);
+                        version->v.value = buf_release(&buf);
+                        break;
+                    }
+                }
+            }
+
             if (r) return r;
+
+
             if (only_one) return 0;
         }
         else if (!strcasecmp(state->entry->name, "end")) {
@@ -906,7 +908,7 @@ static void _entry_to_tgt(const struct vparse_entry *entry, struct vparse_target
 {
     struct vparse_param *param;
 
-    // rfc6350 3.3 - it is RECOMMENDED that property and parameter names be upper-case on output.
+    // RFC 6350 3.3 - it is RECOMMENDED that property and parameter names be upper-case on output.
     if (entry->group) {
         _key_to_tgt(entry->group, tgt);
         buf_putc(tgt->buf, '.');

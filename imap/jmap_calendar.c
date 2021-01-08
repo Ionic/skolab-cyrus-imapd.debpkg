@@ -68,7 +68,6 @@
 #include "json_support.h"
 #include "jmap_ical.h"
 #include "search_query.h"
-#include "stristr.h"
 #include "times.h"
 #include "user.h"
 #include "util.h"
@@ -102,49 +101,49 @@ jmap_method_t jmap_calendar_methods_nonstandard[] = {
         "Calendar/get",
         JMAP_CALENDARS_EXTENSION,
         &jmap_calendar_get,
-        JMAP_SHARED_CSTATE
+        JMAP_NEED_CSTATE
     },
     {
         "Calendar/changes",
         JMAP_CALENDARS_EXTENSION,
         &jmap_calendar_changes,
-        JMAP_SHARED_CSTATE
+        JMAP_NEED_CSTATE
     },
     {
         "Calendar/set",
         JMAP_CALENDARS_EXTENSION,
         &jmap_calendar_set,
-        /*flags*/0
+        JMAP_NEED_CSTATE | JMAP_READ_WRITE
     },
     {
         "CalendarEvent/get",
         JMAP_CALENDARS_EXTENSION,
         &jmap_calendarevent_get,
-        JMAP_SHARED_CSTATE
+        JMAP_NEED_CSTATE
     },
     {
         "CalendarEvent/changes",
         JMAP_CALENDARS_EXTENSION,
         &jmap_calendarevent_changes,
-        JMAP_SHARED_CSTATE
+        JMAP_NEED_CSTATE
     },
     {
         "CalendarEvent/query",
         JMAP_CALENDARS_EXTENSION,
         &jmap_calendarevent_query,
-        JMAP_SHARED_CSTATE
+        JMAP_NEED_CSTATE
     },
     {
         "CalendarEvent/set",
         JMAP_CALENDARS_EXTENSION,
         &jmap_calendarevent_set,
-        /*flags*/0
+        JMAP_NEED_CSTATE | JMAP_READ_WRITE
     },
     {
         "CalendarEvent/copy",
         JMAP_CALENDARS_EXTENSION,
         &jmap_calendarevent_copy,
-        /*flags*/0
+        JMAP_NEED_CSTATE | JMAP_READ_WRITE
     },
     { NULL, NULL, NULL, 0}
 };
@@ -258,11 +257,11 @@ static int getcalendars_cb(const mbentry_t *mbentry, void *vrock)
     if (!(mbentry->mbtype & MBTYPE_CALENDAR)) return 0;
 
     /* ...which are at least readable or visible... */
-    if (!jmap_hasrights(rock->req, mbentry, DACL_READ))
+    if (!jmap_hasrights_mbentry(rock->req, mbentry, JACL_READITEMS))
         return rock->skip_hidden ? 0 : IMAP_PERMISSION_DENIED;
 
     // needed for some fields
-    int rights = jmap_myrights(rock->req, mbentry);
+    int rights = jmap_myrights_mbentry(rock->req, mbentry);
 
     /* ...and contain VEVENTs. */
     struct buf attrib = BUF_INITIALIZER;
@@ -350,9 +349,9 @@ static int getcalendars_cb(const mbentry_t *mbentry, void *vrock)
     if (jmap_wantprop(rock->get->props, "isVisible")) {
         int is_visible = 1;
         buf_reset(&attrib);
-        static const char *color_annot =
+        static const char *visible_annot =
             DAV_ANNOT_NS "<" XML_NS_CALDAV ">X-FM-isVisible";
-        r = annotatemore_lookupmask(mbentry->name, color_annot,
+        r = annotatemore_lookupmask(mbentry->name, visible_annot,
                                     httpd_userid, &attrib);
         if (!r && attrib.len) {
             const char *val = buf_cstring(&attrib);
@@ -384,16 +383,16 @@ static int getcalendars_cb(const mbentry_t *mbentry, void *vrock)
         json_object_set_new(obj, "isSubscribed", json_boolean(is_subscribed));
     }
 
-    int writerights = DACL_WRITECONT|DACL_WRITEPROPS;
+    int writerights = JACL_ADDITEMS|JACL_SETMETADATA;
 
     if (jmap_wantprop(rock->get->props, "mayReadFreeBusy")) {
         json_object_set_new(obj, "mayReadFreeBusy",
-                            ((rights & DACL_READFB) == DACL_READFB) ? json_true() : json_false());
+                            ((rights & JACL_READFB) == JACL_READFB) ? json_true() : json_false());
     }
 
     if (jmap_wantprop(rock->get->props, "mayReadItems")) {
         json_object_set_new(obj, "mayReadItems",
-                            ((rights & DACL_READ) == DACL_READ) ? json_true() : json_false());
+                            ((rights & JACL_READITEMS) == JACL_READITEMS) ? json_true() : json_false());
     }
 
     if (jmap_wantprop(rock->get->props, "mayAddItems")) {
@@ -408,22 +407,22 @@ static int getcalendars_cb(const mbentry_t *mbentry, void *vrock)
 
     if (jmap_wantprop(rock->get->props, "mayRemoveItems")) {
         json_object_set_new(obj, "mayRemoveItems",
-                            ((rights & DACL_RMRSRC) == DACL_RMRSRC) ? json_true() : json_false());
+                            ((rights & JACL_REMOVEITEMS) == JACL_REMOVEITEMS) ? json_true() : json_false());
     }
 
     if (jmap_wantprop(rock->get->props, "mayRename")) {
         json_object_set_new(obj, "mayRename",
-                            ((rights & (DACL_RMCOL|DACL_MKCOL)) == (DACL_RMCOL|DACL_MKCOL)) ? json_true() : json_false());
+                            ((rights & JACL_RENAME) == JACL_RENAME) ? json_true() : json_false());
     }
 
     if (jmap_wantprop(rock->get->props, "mayDelete")) {
         json_object_set_new(obj, "mayDelete",
-                            ((rights & DACL_RMCOL) == DACL_RMCOL) ? json_true() : json_false());
+                            ((rights & JACL_DELETE) == JACL_DELETE) ? json_true() : json_false());
     }
 
     if (jmap_wantprop(rock->get->props, "mayAdmin")) {
         json_object_set_new(obj, "mayAdmin",
-                            ((rights & ACL_ADMIN) == ACL_ADMIN) ? json_true() : json_false());
+                            ((rights & JACL_ADMIN) == JACL_ADMIN) ? json_true() : json_false());
     }
 
     if (jmap_wantprop(rock->get->props, "shareWith")) {
@@ -566,6 +565,26 @@ static const jmap_property_t calendar_props[] = {
     { NULL, NULL, 0 }
 };
 
+static int has_calendars_cb(const mbentry_t *mbentry, void *rock)
+{
+    jmap_req_t *req = rock;
+    if (mbentry->mbtype == MBTYPE_CALENDAR &&
+            jmap_hasrights_mbentry(req, mbentry, JACL_READITEMS)) {
+        return CYRUSDB_DONE;
+    }
+    return 0;
+}
+
+static int has_calendars(jmap_req_t *req)
+{
+    mbname_t *mbname = mbname_from_userid(req->accountid);
+    mbname_push_boxes(mbname, config_getstring(IMAPOPT_CALENDARPREFIX));
+    int r = mboxlist_mboxtree(mbname_intname(mbname), has_calendars_cb,
+                              req, MBOXTREE_SKIP_ROOT);
+    mbname_free(&mbname);
+    return r == CYRUSDB_DONE;
+}
+
 static int jmap_calendar_get(struct jmap_req *req)
 {
     struct jmap_parser parser = JMAP_PARSER_INITIALIZER;
@@ -573,12 +592,10 @@ static int jmap_calendar_get(struct jmap_req *req)
     json_t *err = NULL;
     int r = 0;
 
-    r = caldav_create_defaultcalendars(req->accountid);
-    if (r == IMAP_MAILBOX_NONEXISTENT) {
-        /* The account exists but does not have a root mailbox. */
+    if (!has_calendars(req)) {
         jmap_error(req, json_pack("{s:s}", "type", "accountNoCalendars"));
         return 0;
-    } else if (r) return r;
+    }
 
     /* Parse request */
     jmap_get_parse(req, &parser, calendar_props, /*allow_null_ids*/1,
@@ -664,7 +681,7 @@ static int getcalendarchanges_cb(const mbentry_t *mbentry, void *vrock)
      * if they ever could be read by the authenticated user. We
      * need to leak these deleted entries to not mess up client state. */
     if (!(mbentry->mbtype & MBTYPE_DELETED) || strcmpsafe(mbentry->acl, "")) {
-        if (!jmap_hasrights(req, mbentry, DACL_READ)) return 0;
+        if (!jmap_hasrights_mbentry(req, mbentry, JACL_READITEMS)) return 0;
     }
 
     /* Ignore special-purpose calendar mailboxes. */
@@ -715,15 +732,14 @@ static int jmap_calendar_changes(struct jmap_req *req)
     json_t *err = NULL;
     int r = 0;
 
-    r = caldav_create_defaultcalendars(req->accountid);
-    if (r == IMAP_MAILBOX_NONEXISTENT) {
-        /* The account exists but does not have a root mailbox. */
+    if (!has_calendars(req)) {
         jmap_error(req, json_pack("{s:s}", "type", "accountNoCalendars"));
         return 0;
-    } else if (r) goto done;
+    }
 
     /* Parse request */
-    jmap_changes_parse(req, &parser, NULL, NULL, &changes, &err);
+    jmap_changes_parse(req, &parser, req->counters.caldavfoldersdeletedmodseq,
+                       NULL, NULL, &changes, &err);
     if (err) {
         jmap_error(req, err);
         goto done;
@@ -778,14 +794,15 @@ struct setcalendar_props {
  * NULL values and negative integers are ignored. Return 0 on success. */
 static int setcalendars_update(jmap_req_t *req,
                                const char *mboxname,
-                               struct setcalendar_props *props)
+                               struct setcalendar_props *props,
+                               int ignore_acl)
 {
     struct mailbox *mbox = NULL;
     annotate_state_t *astate = NULL;
     struct buf val = BUF_INITIALIZER;
     int r;
 
-    if (!jmap_hasrights_byname(req, mboxname, DACL_READ))
+    if (!jmap_hasrights(req, mboxname, JACL_READITEMS) && !ignore_acl)
         return IMAP_MAILBOX_NONEXISTENT;
 
     r = jmap_openmbox(req, mboxname, &mbox, 1);
@@ -922,9 +939,9 @@ static int setcalendars_update(jmap_req_t *req,
 /* Delete the calendar mailbox named mboxname for the userid in req. */
 static int setcalendars_destroy(jmap_req_t *req, const char *mboxname)
 {
-    if (!jmap_hasrights_byname(req, mboxname, DACL_READ))
+    if (!jmap_hasrights(req, mboxname, JACL_READITEMS))
         return IMAP_NOTFOUND;
-    if (!jmap_hasrights_byname(req, mboxname, DACL_RMCOL))
+    if (!jmap_hasrights(req, mboxname, JACL_DELETE))
         return IMAP_PERMISSION_DENIED;
 
     char *userid = mboxname_to_userid(mboxname);
@@ -962,14 +979,12 @@ static int setcalendars_destroy(jmap_req_t *req, const char *mboxname)
         r = mboxlist_delayed_deletemailbox(mboxname,
                 httpd_userisadmin || httpd_userisproxyadmin,
                 httpd_userid, req->authstate, mboxevent,
-                1 /* checkacl */, 0 /* local_only */, 0 /* force */,
-                0 /* keep_intermediaries */);
+                MBOXLIST_DELETE_CHECKACL);
     } else {
         r = mboxlist_deletemailbox(mboxname,
                 httpd_userisadmin || httpd_userisproxyadmin,
                 httpd_userid, req->authstate, mboxevent,
-                1 /* checkacl */, 0 /* local_only */, 0 /* force */,
-                0 /* keep_intermediaries */);
+                MBOXLIST_DELETE_CHECKACL);
     }
     mboxevent_free(&mboxevent);
 
@@ -1128,24 +1143,60 @@ static int jmap_calendar_set(struct jmap_req *req)
         mbentry_t *mbparent = NULL;
         mboxlist_lookup(parentname, &mbparent, NULL);
         free(parentname);
-        if (!jmap_hasrights(req, mbparent, DACL_MKCOL)) {
+        if (!jmap_hasrights_mbentry(req, mbparent, JACL_CREATECHILD)) {
             json_t *err = json_pack("{s:s}", "type", "accountReadOnly");
             json_object_set_new(set.not_created, key, err);
             mboxlist_entry_free(&mbparent);
             continue;
         }
+        char *newacl = xstrdup("");
+        char *acl = xstrdup(mbparent->acl);
         mboxlist_entry_free(&mbparent);
+
+        /* keep just the owner and admin parts of the new ACL!  Everything
+         * else will be added from share.With.  All this crap should be
+         * modularised some more rather than open-coded, but here we go */
+        char *userid;
+        char *nextid = NULL;
+        for (userid = acl; userid; userid = nextid) {
+            char *rightstr;
+            int access;
+
+            rightstr = strchr(userid, '\t');
+            if (!rightstr) break;
+            *rightstr++ = '\0';
+
+            nextid = strchr(rightstr, '\t');
+            if (!nextid) break;
+            *nextid++ = '\0';
+
+            if (!strcmp(userid, req->accountid) || is_system_user(userid)) {
+                /* owner or system */
+                cyrus_acl_strtomask(rightstr, &access);
+                r = cyrus_acl_set(&newacl, userid,
+                                  ACL_MODE_SET, access, NULL, NULL);
+                if (r) {
+                    free(acl);
+                    free(newacl);
+                    syslog(LOG_ERR, "IOERROR: failed to set_acl for calendar create (%s, %s) %s",
+                                    userid, req->accountid, error_message(r));
+                    goto done;
+                }
+            }
+        }
+        free(acl);
 
         /* Create the calendar */
         char *uid = xstrdup(makeuuid());
         char *mboxname = caldav_mboxname(req->accountid, uid);
-        r = mboxlist_createmailbox(mboxname, MBTYPE_CALENDAR,
-                                   NULL /* partition */,
-                                   httpd_userisadmin || httpd_userisproxyadmin,
-                                   httpd_userid, httpd_authstate,
-                                   /*localonly*/0, /*forceuser*/0,
-                                   /*dbonly*/0, /*notify*/0,
-                                   /*mailboxptr*/NULL);
+        r = mboxlist_createsync(mboxname, MBTYPE_CALENDAR,
+                                NULL /* partition */,
+                                httpd_userid, httpd_authstate,
+                                /*options*/0, /*uidvalidity*/0,
+                                0, 0, 0, newacl, /*uniqueid*/NULL,
+                                /*localonly*/0, /*keep_intermediaries*/0,
+                                /*mailboxptr*/NULL);
+        free(newacl);
         if (r) {
             syslog(LOG_ERR, "IOERROR: failed to create %s (%s)",
                    mboxname, error_message(r));
@@ -1153,6 +1204,7 @@ static int jmap_calendar_set(struct jmap_req *req)
                 json_t *err = json_pack("{s:s}", "type", "accountReadOnly");
                 json_object_set_new(set.not_created, key, err);
             }
+            free(uid);
             free(mboxname);
             goto done;
         }
@@ -1160,7 +1212,7 @@ static int jmap_calendar_set(struct jmap_req *req)
             name, color, sortOrder, isVisible, isSubscribed, scheduleAddressSet,
             { shareWith, /*overwrite_acl*/ 1}, config_types_to_caldav_types()
         };
-        r = setcalendars_update(req, mboxname, &props);
+        r = setcalendars_update(req, mboxname, &props, /*ignore_acl*/1);
         if (r) {
             free(uid);
             int rr = mboxlist_delete(mboxname);
@@ -1246,7 +1298,7 @@ static int jmap_calendar_set(struct jmap_req *req)
             json_object_set_new(arg, "shareWith", shareWith);
         }
         pe = jmap_readprop(arg, "shareWith", 0,  invalid, "o", &shareWith);
-        if (pe > 0 && !jmap_hasrights_byname(req, mboxname, ACL_ADMIN)) {
+        if (pe > 0 && !jmap_hasrights(req, mboxname, JACL_ADMIN)) {
             json_array_append_new(invalid, json_string("shareWith"));
         }
 
@@ -1309,7 +1361,7 @@ static int jmap_calendar_set(struct jmap_req *req)
             name, color, sortOrder, isVisible, isSubscribed, scheduleAddressSet,
             { shareWith, overwrite_acl}, /*comp_types*/ -1
         };
-        r = setcalendars_update(req, mboxname, &props);
+        r = setcalendars_update(req, mboxname, &props, /*ignore_acl*/0);
         free(mboxname);
         if (r == IMAP_NOTFOUND || r == IMAP_MAILBOX_NONEXISTENT) {
             json_t *err = json_pack("{s:s}", "type", "notFound");
@@ -1351,28 +1403,18 @@ static int jmap_calendar_set(struct jmap_req *req)
         }
 
         /* Do not allow to remove the default calendar. */
-        char *mboxname = caldav_mboxname(req->accountid, NULL);
-        static const char *defaultcal_annot =
-            DAV_ANNOT_NS "<" XML_NS_CALDAV ">schedule-default-calendar";
-        struct buf attrib = BUF_INITIALIZER;
-        r = annotatemore_lookupmask(mboxname, defaultcal_annot,
-                                    req->accountid, &attrib);
-        free(mboxname);
-        const char *defaultcal = "Default";
-        if (!r && attrib.len) {
-            defaultcal = buf_cstring(&attrib);
-        }
-        if (!strcmp(uid, defaultcal)) {
+        char *defaultname = caldav_scheddefault(req->accountid);
+        if (!strcmp(uid, defaultname)) {
             /* XXX - The isDefault set error is not documented in the spec. */
             json_t *err = json_pack("{s:s}", "type", "isDefault");
             json_object_set_new(set.not_destroyed, uid, err);
-            buf_free(&attrib);
+            free(defaultname);
             continue;
         }
-        buf_free(&attrib);
+        free(defaultname);
 
         /* Make sure we don't delete special calendars */
-        mboxname = caldav_mboxname(req->accountid, uid);
+        char *mboxname = caldav_mboxname(req->accountid, uid);
         mbname_t *mbname = mbname_from_intname(mboxname);
         if (!mbname || jmap_calendar_isspecial(mbname)) {
             json_t *err = json_pack("{s:s}", "type", "notFound");
@@ -1587,7 +1629,7 @@ static int jmap_calendarevent_getblob(jmap_req_t *req,
         res = HTTP_NOT_FOUND;
         goto done;
     }
-    if (!jmap_hasrights_byname(req, cdata->dav.mailbox, DACL_READ)) {
+    if (!jmap_hasrights(req, cdata->dav.mailbox, JACL_READITEMS)) {
         res = HTTP_NOT_FOUND;
         goto done;
     }
@@ -1976,7 +2018,7 @@ static int getcalendarevents_cb(void *vrock, struct caldav_data *cdata)
 
     /* Check component type and ACL */
     if (cdata->comp_type != CAL_COMP_VEVENT ||
-       !jmap_hasrights_byname(req, cdata->dav.mailbox, DACL_READ)) {
+       !jmap_hasrights(req, cdata->dav.mailbox, JACL_READITEMS)) {
         return 0;
     }
 
@@ -2326,12 +2368,10 @@ static int jmap_calendarevent_get(struct jmap_req *req)
     json_t *err = NULL;
     int r = 0;
 
-    r = caldav_create_defaultcalendars(req->accountid);
-    if (r == IMAP_MAILBOX_NONEXISTENT) {
-        /* The account exists but does not have a root mailbox. */
+    if (!has_calendars(req)) {
         jmap_error(req, json_pack("{s:s}", "type", "accountNoCalendars"));
         return 0;
-    } else if (r) return r;
+    }
 
     /* Build callback data */
     int checkacl = strcmp(req->accountid, req->userid);
@@ -2443,6 +2483,7 @@ done:
 }
 
 static int setcalendarevents_schedule(jmap_req_t *req,
+                                      const char *mboxname,
                                       strarray_t *schedule_addresses,
                                       icalcomponent *oldical,
                                       icalcomponent *ical,
@@ -2459,37 +2500,9 @@ static int setcalendarevents_schedule(jmap_req_t *req,
     if (!organizer) return 0;
     if (!strncasecmp(organizer, "mailto:", 7)) organizer += 7;
 
-    const char **hdr =
-        spool_getheader(req->txn->req_hdrs, "Schedule-Address");
-    if (hdr) strarray_append(schedule_addresses, hdr[0]);
+    get_schedule_addresses(req->txn->req_hdrs, mboxname,
+                           req->userid, schedule_addresses);
 
-    if (!strarray_size(schedule_addresses)) {
-        const char *annotname =
-            DAV_ANNOT_NS "<" XML_NS_CALDAV ">calendar-user-address-set";
-        char *mailboxname = caldav_mboxname(req->userid, NULL);
-        struct buf attrib = BUF_INITIALIZER;
-        int r = annotatemore_lookupmask(mailboxname, annotname,
-                                        req->userid, &attrib);
-        if (!r && buf_len(&attrib)) {
-            strarray_t *values = strarray_split(buf_cstring(&attrib), ",", STRARRAY_TRIM);
-            int i;
-            for (i = 0; i < strarray_size(values); i++) {
-                const char *item = strarray_nth(values, i);
-                if (!strncasecmp(item, "mailto:", 7)) item += 7;
-                strarray_append(schedule_addresses, item);
-            }
-            strarray_free(values);
-        }
-        else if (strchr(req->userid, '@')) {
-            strarray_append(schedule_addresses, req->userid);
-        }
-        else {
-            const char *domain = httpd_extradomain ? httpd_extradomain : config_defdomain;
-            strarray_appendm(schedule_addresses, strconcat(req->userid, "@", domain, NULL));
-        }
-        free(mailboxname);
-        buf_free(&attrib);
-    }
     /* Validate create/update. */
     if (oldical && (mode & (JMAP_CREATE|JMAP_UPDATE))) {
         /* Don't allow ORGANIZER to be updated */
@@ -2566,7 +2579,7 @@ static int setcalendarevents_create(jmap_req_t *req,
                                     json_t *create)
 {
     int r, pe;
-    int needrights = DACL_WRITEPROPS|DACL_WRITECONT;
+    int needrights = JACL_ADDITEMS|JACL_SETMETADATA;
     char *uid = NULL;
 
     struct mailbox *mbox = NULL;
@@ -2624,7 +2637,7 @@ static int setcalendarevents_create(jmap_req_t *req,
     buf_free(&buf);
 
     /* Check permissions. */
-    if (!jmap_hasrights_byname(req, mboxname, needrights)) {
+    if (!jmap_hasrights(req, mboxname, needrights)) {
         json_array_append_new(invalid, json_string("calendarId"));
         r = 0; goto done;
     }
@@ -2681,7 +2694,7 @@ static int setcalendarevents_create(jmap_req_t *req,
     }
 
     /* Handle scheduling. */
-    r = setcalendarevents_schedule(req, &schedule_addresses,
+    r = setcalendarevents_schedule(req, mboxname, &schedule_addresses,
                                    NULL, ical, JMAP_CREATE);
     if (r) goto done;
 
@@ -2695,7 +2708,7 @@ static int setcalendarevents_create(jmap_req_t *req,
     /* XXX - fix userid */
 
     /* Locate the mailbox */
-    r = http_mlookup(mbox->name, &txn.req_tgt.mbentry, NULL);
+    r = proxy_mlookup(mbox->name, &txn.req_tgt.mbentry, NULL, NULL);
     if (r) {
         syslog(LOG_ERR, "mlookup(%s) failed: %s", mbox->name, error_message(r));
     }
@@ -3101,7 +3114,7 @@ static int setcalendarevents_update(jmap_req_t *req,
                                     json_t **err)
 {
     int r, pe;
-    int needrights = DACL_RMRSRC|DACL_WRITEPROPS|DACL_WRITECONT;
+    int needrights = JACL_UPDATEITEMS|JACL_SETMETADATA;
 
     struct caldav_data *cdata = NULL;
     struct mailbox *mbox = NULL;
@@ -3147,7 +3160,7 @@ static int setcalendarevents_update(jmap_req_t *req,
     resource = xstrdup(cdata->dav.resource);
 
     /* Check permissions. */
-    if (!jmap_hasrights_byname(req, mboxname, needrights)) {
+    if (!jmap_hasrights(req, mboxname, needrights)) {
         json_array_append_new(invalid, json_string("calendarId"));
         r = 0;
         goto done;
@@ -3200,7 +3213,7 @@ static int setcalendarevents_update(jmap_req_t *req,
         dstmboxname = caldav_mboxname(req->accountid, calendarId);
         if (strcmp(mbox->name, dstmboxname)) {
             /* Check permissions */
-            if (!jmap_hasrights_byname(req, dstmboxname, needrights)) {
+            if (!jmap_hasrights(req, dstmboxname, needrights)) {
                 json_array_append_new(invalid, json_string("calendarId"));
                 r = 0;
                 goto done;
@@ -3220,7 +3233,7 @@ static int setcalendarevents_update(jmap_req_t *req,
     }
 
     /* Handle scheduling. */
-    r = setcalendarevents_schedule(req, &schedule_addresses,
+    r = setcalendarevents_schedule(req, mboxname, &schedule_addresses,
                                    oldical, ical, JMAP_UPDATE);
     if (r) goto done;
 
@@ -3262,7 +3275,7 @@ static int setcalendarevents_update(jmap_req_t *req,
     memset(&txn, 0, sizeof(struct transaction_t));
     txn.req_hdrs = spool_new_hdrcache();
     /* XXX - fix userid */
-    r = http_mlookup(mbox->name, &txn.req_tgt.mbentry, NULL);
+    r = proxy_mlookup(mbox->name, &txn.req_tgt.mbentry, NULL, NULL);
     if (r) {
         syslog(LOG_ERR, "mlookup(%s) failed: %s", mbox->name, error_message(r));
     }
@@ -3295,7 +3308,7 @@ static int setcalendarevents_destroy(jmap_req_t *req,
                                      struct caldav_db *db)
 {
     int r;
-    int needrights = DACL_RMRSRC;
+    int needrights = JACL_REMOVEITEMS;
 
     struct caldav_data *cdata = NULL;
     struct mailbox *mbox = NULL;
@@ -3337,11 +3350,11 @@ static int setcalendarevents_destroy(jmap_req_t *req,
     resource = xstrdup(cdata->dav.resource);
 
     /* Check permissions. */
-    if (!jmap_hasrights_byname(req, mboxname, DACL_READ)) {
+    if (!jmap_hasrights(req, mboxname, JACL_READITEMS)) {
         r = IMAP_NOTFOUND;
         goto done;
     }
-    if (!jmap_hasrights_byname(req, mboxname, needrights)) {
+    if (!jmap_hasrights(req, mboxname, needrights)) {
         r = IMAP_PERMISSION_DENIED;
         goto done;
     }
@@ -3372,7 +3385,7 @@ static int setcalendarevents_destroy(jmap_req_t *req,
     }
 
     /* Handle scheduling. */
-    r = setcalendarevents_schedule(req, &schedule_addresses,
+    r = setcalendarevents_schedule(req, mboxname, &schedule_addresses,
                                    oldical, ical, JMAP_DESTROY);
     if (r) goto done;
 
@@ -3684,7 +3697,7 @@ static int geteventchanges_cb(void *vrock, struct caldav_data *cdata)
     struct jmap_changes *changes = rock->changes;
 
     /* Check permissions */
-    if (!jmap_hasrights_byname(req, cdata->dav.mailbox, DACL_READ))
+    if (!jmap_hasrights(req, cdata->dav.mailbox, JACL_READITEMS))
         return 0;
 
     if (cdata->comp_type != CAL_COMP_VEVENT)
@@ -3738,7 +3751,8 @@ static int jmap_calendarevent_changes(struct jmap_req *req)
     }
 
     /* Parse request */
-    jmap_changes_parse(req, &parser, NULL, NULL, &changes, &err);
+    jmap_changes_parse(req, &parser, req->counters.caldavdeletedmodseq,
+                       NULL, NULL, &changes, &err);
     if (err) {
         jmap_error(req, err);
         goto done;
@@ -3941,7 +3955,7 @@ static int eventquery_cb(void *vrock, struct caldav_data *cdata)
     if (!cdata->dav.alive || cdata->comp_type != CAL_COMP_VEVENT) {
         return 0;
     }
-    if (!jmap_hasrights_byname(rock->req, cdata->dav.mailbox, DACL_READ)) {
+    if (!jmap_hasrights(rock->req, cdata->dav.mailbox, JACL_READITEMS)) {
         return 0;
     }
 
@@ -4104,9 +4118,9 @@ static int eventquery_search_run(jmap_req_t *req,
     init.want_mbtype = MBTYPE_CALENDAR;
     init.examine_mode = 1;
 
-    char *inboxname = mboxname_user_mbox(req->accountid, NULL);
-    r = index_open(inboxname, &init, &state);
-    free(inboxname);
+    char *mboxname = mboxname_user_mbox(req->accountid, "#calendars");
+    r = index_open(mboxname, &init, &state);
+    free(mboxname);
     if (r) goto done;
 
     query = search_query_new(state, searchargs);
@@ -4123,7 +4137,7 @@ static int eventquery_search_run(jmap_req_t *req,
         MsgData *md = ptrarray_nth(&query->merged_msgdata, i);
 
         search_folder_t *folder = md->folder;
-        if (!folder || !jmap_hasrights_byname(req, folder->mboxname, DACL_READ)) {
+        if (!folder || !jmap_hasrights(req, folder->mboxname, JACL_READITEMS)) {
             continue;
         }
 
@@ -4203,7 +4217,7 @@ static int eventquery_fastpath_cb(void *rock, struct caldav_data *cdata)
     if (!cdata->dav.alive || cdata->comp_type != CAL_COMP_VEVENT) {
         return 0;
     }
-    if (!jmap_hasrights_byname(req, cdata->dav.mailbox, DACL_READ)) {
+    if (!jmap_hasrights(req, cdata->dav.mailbox, JACL_READITEMS)) {
         return 0;
     }
 
@@ -4666,7 +4680,7 @@ static void _calendarevent_copy(jmap_req_t *req,
         *set_err = json_pack("{s:s}", "type", "notFound");
         goto done;
     }
-    if (!jmap_hasrights_byname(req, cdata->dav.mailbox, DACL_READ)) {
+    if (!jmap_hasrights(req, cdata->dav.mailbox, JACL_READITEMS)) {
         *set_err = json_pack("{s:s}", "type", "notFound");
         goto done;
     }

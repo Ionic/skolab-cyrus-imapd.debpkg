@@ -65,12 +65,13 @@
 #include <stdint.h>
 #endif
 #include <time.h>
+#include <ftw.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
-#include "byteorder64.h"
+#include "byteorder.h"
 #include "libconfig.h"
 #include "map.h"
 #include "retry.h"
@@ -478,6 +479,38 @@ EXPORTED int create_tempfile(const char *path)
 
     free(pattern);
     return fd;
+}
+
+EXPORTED char *create_tempdir(const char *path, const char *subname)
+{
+    struct buf buf = BUF_INITIALIZER;
+    char *dbpath = NULL;
+
+    buf_setcstr(&buf, path);
+    if (!buf.len || buf.s[buf.len-1] != '/') {
+        buf_putc(&buf, '/');
+    }
+    buf_appendcstr(&buf, "cyrus-");
+    buf_appendcstr(&buf, subname && *subname ? subname : "tmpdir");
+    buf_appendcstr(&buf, "-XXXXXX");
+    buf_cstring(&buf);
+    dbpath = xstrdupnull(mkdtemp(buf.s));
+
+    buf_free(&buf);
+    return dbpath;
+}
+
+static int removedir_cb(const char *fpath,
+                        const struct stat *sb __attribute__((unused)),
+                        int typeflag __attribute__((unused)),
+                        struct FTW *ftwbuf __attribute__((unused)))
+{
+    return remove(fpath);
+}
+
+EXPORTED int removedir(const char *path)
+{
+    return nftw(path, removedir_cb, 128, FTW_DEPTH|FTW_PHYS);
 }
 
 /* Create all parent directories for the given path,
@@ -1518,6 +1551,14 @@ EXPORTED void buf_initm(struct buf *buf, char *base, int len)
 }
 
 /*
+ * Initialise a struct buf to point to writable c string str.
+ */
+EXPORTED void buf_initmcstr(struct buf *buf, char *str)
+{
+    buf_initm(buf, str, strlen(str));
+}
+
+/*
  * Initialise a struct buf to point to a read-only C string.
  */
 EXPORTED void buf_init_ro_cstr(struct buf *buf, const char *str)
@@ -1543,6 +1584,8 @@ EXPORTED void buf_refresh_mmap(struct buf *buf, int onceonly, int fd,
 
 EXPORTED void buf_free(struct buf *buf)
 {
+    if (!buf) return;
+
     if (buf->alloc)
         free(buf->s);
     else if (buf->flags & BUF_MMAP)
@@ -2039,4 +2082,36 @@ EXPORTED void tcp_disable_nagle(int fd)
     if (setsockopt(fd, proto->p_proto, TCP_NODELAY, &on, sizeof(on)) != 0) {
         syslog(LOG_ERR, "unable to setsocketopt(TCP_NODELAY): %m");
     }
+}
+
+EXPORTED void xsyslog_fn(int priority, const char *description,
+                         const char *func, const char *extra_fmt, ...)
+{
+    static struct buf buf = BUF_INITIALIZER;
+    int saved_errno = errno;
+
+    buf_reset(&buf);
+    buf_appendcstr(&buf, description);
+    buf_appendmap(&buf, ": ", 2);
+    if (extra_fmt && *extra_fmt) {
+        va_list args;
+
+        va_start(args, extra_fmt);
+        buf_vprintf(&buf, extra_fmt, args);
+        va_end(args);
+
+        buf_putc(&buf, ' ');
+    }
+    if (saved_errno) {
+        buf_appendmap(&buf, "syserror=<", 10);
+        buf_appendcstr(&buf, strerror(saved_errno));
+        buf_appendmap(&buf, "> ", 2);
+    }
+    buf_appendmap(&buf, "func=<", 6);
+    if (func) buf_appendcstr(&buf, func);
+    buf_putc(&buf, '>');
+
+    syslog(priority, "%s", buf_cstring(&buf));
+    buf_free(&buf);
+    errno = saved_errno;
 }

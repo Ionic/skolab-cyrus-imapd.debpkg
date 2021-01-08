@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>master &mdash; Cyrus IMAP 3.2.5 documentation</title>
+  <title>master &mdash; Cyrus IMAP 3.4.0-beta1 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.0-beta1 documentation" href="../../../../index.html"/>
         <link rel="up" title="Man pages" href="../commands.html"/>
         <link rel="next" title="mbexamine" href="mbexamine.html"/>
         <link rel="prev" title="masssievec" href="masssievec.html"/> 
@@ -128,12 +128,15 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#stable-version">Stable Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#development-version">Development Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#supported-product-series">Supported Product Series</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-3-4">Series 3.4</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-3-2">Series 3.2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-3-0">Series 3.0</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-2-5">Series 2.5</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#development-snapshots">Development snapshots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/3.5/index.html">Cyrus IMAP 3.5 Tags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/3.3/index.html">Cyrus IMAP 3.3 Tags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/3.1/index.html">Cyrus IMAP 3.1 Tags</a></li>
 </ul>
 </li>
@@ -331,19 +334,19 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../installing.html#troubleshooting">Troubleshooting</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../../download/upgrade.html">Upgrading to 3.2</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../download/upgrade.html">Upgrading to 3.4</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#preparation">1. Preparation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/upgrade.html#installation-from-tarball">Installation from tarball</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/upgrade.html#how-are-you-planning-on-upgrading">How are you planning on upgrading?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/upgrade.html#do-what-as-who">Do What As Who?</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#install-new-3-2-cyrus">2. Install new 3.2 Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#install-new-3-4-cyrus">2. Install new 3.4 Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#shut-down-existing-cyrus">3. Shut down existing Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#backup-and-copy-existing-data">4. Backup and Copy existing data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#copy-config-files-and-update">5. Copy config files and update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#upgrade-specific-items">6. Upgrade specific items</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#start-new-3-2-cyrus-and-verify">7. Start new 3.2 Cyrus and verify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#start-new-3-4-cyrus-and-verify">7. Start new 3.4 Cyrus and verify</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#reconstruct-databases-and-cache">8. Reconstruct databases and cache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#do-you-want-any-new-features">9. Do you want any new features?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#upgrade-complete">10. Upgrade complete</a></li>
@@ -740,7 +743,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.2: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.2"></a>
+    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -760,7 +763,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.2.5</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.4.0-beta1</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -770,7 +773,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.2/docsrc/imap/reference/manpages/systemcommands/master.rst" class="fa fa-github"> Edit on GitHub</a>
+            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.4/docsrc/imap/reference/manpages/systemcommands/master.rst" class="fa fa-github"> Edit on GitHub</a>
           
         
       </li>
@@ -786,9 +789,8 @@
 <h2>Synopsis<a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
 <pre class="literal-block">
 <strong>master</strong> [ <strong>-C</strong> <em>config-file</em> ] [ <strong>-M</strong> <em>alternate cyrus.conf</em> ]
-    [ <strong>-l</strong> <em>listen queue</em> ] [ <strong>-p</strong> <em>pidfile</em> ] [ <strong>-P</strong> <em>snmp agentx ping interval</em> ]
+    [ <strong>-l</strong> <em>listen queue</em> ] [ <strong>-p</strong> <em>pidfile</em> ]
     [ <strong>-j</strong> <em>janitor period</em> ] [ <strong>-d</strong> | <strong>-D</strong> ] [ <strong>-L</strong> <em>logfile</em> ]
-    [ <strong>-x</strong> <em>snmp agentx socket</em> ]
 </pre>
 </div>
 <div class="section" id="description">
@@ -842,14 +844,6 @@ entries).</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-master-P">
-<code class="descname">-P</code><code class="descclassname">  snmp agentx ping interval</code><a class="headerlink" href="#cmdoption-master-P" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets the amount on time in seconds the subagent will try and
-reconnect to the master agent (snmpd) if it ever becomes (or
-starts) disconnected.  Requires net-snmp 5.0 or higher.</p>
-</dd></dl>
-
-<dl class="option">
 <dt id="cmdoption-master-d">
 <code class="descname">-d</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-master-d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Start in daemon mode (run in background and disconnect from
@@ -868,13 +862,6 @@ Note that <strong>-d</strong> and <strong>-D</strong> cannot be used together; c
 <dt id="cmdoption-master-L">
 <code class="descname">-L</code><code class="descclassname">  logfile</code><a class="headerlink" href="#cmdoption-master-L" title="Permalink to this definition">¶</a></dt>
 <dd><p>Redirect stdout and stderr to the given <em>logfile</em>.</p>
-</dd></dl>
-
-<dl class="option">
-<dt id="cmdoption-master-x">
-<code class="descname">-x</code><code class="descclassname">  snmp agentx socket</code><a class="headerlink" href="#cmdoption-master-x" title="Permalink to this definition">¶</a></dt>
-<dd><p>Address the master agent (most likely snmpd) listens on.
-Requires net-snmp 5.0 or higher.</p>
 </dd></dl>
 
 </div>
@@ -938,7 +925,7 @@ Setting it higher results in more log messages being generated.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Feb 12 2020
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jul 19 2017
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -958,7 +945,7 @@ Setting it higher results in more log messages being generated.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.2.5',
+            VERSION:'3.4.0-beta1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

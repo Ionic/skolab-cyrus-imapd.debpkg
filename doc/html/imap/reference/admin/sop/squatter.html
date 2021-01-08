@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Using Squatter for Faster IMAP SEARCH &mdash; Cyrus IMAP 3.2.5 documentation</title>
+  <title>Using Squatter for Faster IMAP SEARCH &mdash; Cyrus IMAP 3.4.0-beta1 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.0-beta1 documentation" href="../../../../index.html"/>
         <link rel="up" title="Standard Operating Procedures" href="../sop.html"/>
         <link rel="next" title="Splitting Metadata from Partitions" href="splitting-metadata.html"/>
         <link rel="prev" title="Reconstructing Mailboxes" href="reconstructing.html"/> 
@@ -128,12 +128,15 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#stable-version">Stable Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#development-version">Development Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#supported-product-series">Supported Product Series</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-3-4">Series 3.4</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-3-2">Series 3.2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-3-0">Series 3.0</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-2-5">Series 2.5</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#development-snapshots">Development snapshots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/3.5/index.html">Cyrus IMAP 3.5 Tags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/3.3/index.html">Cyrus IMAP 3.3 Tags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/3.1/index.html">Cyrus IMAP 3.1 Tags</a></li>
 </ul>
 </li>
@@ -331,19 +334,19 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../installing.html#troubleshooting">Troubleshooting</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../../download/upgrade.html">Upgrading to 3.2</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../download/upgrade.html">Upgrading to 3.4</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#preparation">1. Preparation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/upgrade.html#installation-from-tarball">Installation from tarball</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/upgrade.html#how-are-you-planning-on-upgrading">How are you planning on upgrading?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/upgrade.html#do-what-as-who">Do What As Who?</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#install-new-3-2-cyrus">2. Install new 3.2 Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#install-new-3-4-cyrus">2. Install new 3.4 Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#shut-down-existing-cyrus">3. Shut down existing Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#backup-and-copy-existing-data">4. Backup and Copy existing data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#copy-config-files-and-update">5. Copy config files and update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#upgrade-specific-items">6. Upgrade specific items</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#start-new-3-2-cyrus-and-verify">7. Start new 3.2 Cyrus and verify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#start-new-3-4-cyrus-and-verify">7. Start new 3.4 Cyrus and verify</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#reconstruct-databases-and-cache">8. Reconstruct databases and cache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#do-you-want-any-new-features">9. Do you want any new features?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#upgrade-complete">10. Upgrade complete</a></li>
@@ -740,7 +743,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.2: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.2"></a>
+    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -760,7 +763,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.2.5</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.4.0-beta1</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -772,7 +775,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.2/docsrc/imap/reference/admin/sop/squatter.rst" class="fa fa-github"> Edit on GitHub</a>
+            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.4/docsrc/imap/reference/admin/sop/squatter.rst" class="fa fa-github"> Edit on GitHub</a>
           
         
       </li>
@@ -783,8 +786,14 @@
             
   <div class="section" id="using-squatter-for-faster-imap-search">
 <h1>Using Squatter for Faster IMAP SEARCH<a class="headerlink" href="#using-squatter-for-faster-imap-search" title="Permalink to this headline">¶</a></h1>
-<p>IMAP SEARCH, as described in <a class="reference external" href="http://tools.ietf.org/html/rfc3501">RFC 3501</a>, is a IMAP4 (Rev1) command issued by the client, but executed on the server. The Cyrus IMAP server will search the mailbox for the content matching the search command issued. This may be an intensive operation if executed on large mailboxes, and may therefor delay the response to the client.</p>
-<p>To significantly speed up the searching, Cyrus IMAP can create a cache of message contents and meta-data using cyrus-squatter(8). This chapter explains how to generate and maintain these caches.</p>
+<p>IMAP SEARCH, as described in <span class="target" id="index-0"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc3501.html"><strong>RFC 3501</strong></a>, is a IMAP4 (Rev1) command issued by
+the client, but executed on the server. The Cyrus IMAP server will search the
+mailbox for the content matching the search command issued. This may be an
+intensive operation if executed on large mailboxes, and may therefor delay the
+response to the client.</p>
+<p>To significantly speed up the searching, Cyrus IMAP can create a cache of
+message contents and meta-data using cyrus-squatter(8). This chapter explains
+how to generate and maintain these caches.</p>
 <div class="section" id="squatter-invocation">
 <h2>Squatter Invocation<a class="headerlink" href="#squatter-invocation" title="Permalink to this headline">¶</a></h2>
 <p>Consider the following implications of running cyrus-squatter;</p>
@@ -798,7 +807,9 @@
 <div class="highlight-default"><div class="highlight"><pre><span></span>$ squatter -v
 </pre></div>
 </div>
-<p>While the Cyrus IMAP server now has the search index available for the mailbox contents, it does not automatically update the search index with new messages coming in.</p>
+<p>While the Cyrus IMAP server now has the search index available for the mailbox
+contents, it does not automatically update the search index with new messages
+coming in.</p>
 </div>
 </div>
 
@@ -820,7 +831,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Aug 26 2016
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jul 17 2020
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -840,7 +851,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.2.5',
+            VERSION:'3.4.0-beta1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

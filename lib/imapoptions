@@ -294,7 +294,7 @@ Blank lines and lines beginning with ``#'' are ignored.
 /* Whether to enable the legacy GETANNOTATION/SETANNOTATION commands.
    These commands are deprecated and will be removed in the future,
    but might be useful in the meantime for supporting old clients that
-   do not implement the RFC5464 IMAP METADATA extension. */
+   do not implement the RFC 5464 IMAP METADATA extension. */
 
 { "aps_topic", NULL, STRING, "3.0.0" }
 /* Topic for Apple Push Service registration. */
@@ -610,6 +610,9 @@ Blank lines and lines beginning with ``#'' are ignored.
    hierarchy will be at the toplevel of the shared namespace.  A
    user's personal calendar hierarchy will be a child of their Inbox. */
 
+{ "calendar_default_displayname", "personal", STRING, "3.3.0" }
+/* The displayname to be used when creating a user's 'Default' calendar. */
+
 { "calendar_user_address_set", NULL, STRING, "2.5.0" }
 /* Space-separated list of domains corresponding to calendar user
    addresses for which the server is responsible.  If not set (the
@@ -633,7 +636,7 @@ Blank lines and lines beginning with ``#'' are ignored.
    If not set (the default), the value of the "servername" option will
    be used.*/
 
-{ "carddav_repair_vcard", 0, SWITCH, "3.0.0" }
+{ "carddav_repair_vcard", 0, SWITCH, "3.0.0", "3.3.1" }
 /* If enabled, VCARDs with invalid content are attempted to be repaired
    during creation. */
 
@@ -698,9 +701,25 @@ Blank lines and lines beginning with ``#'' are ignored.
    For backward compatibility, if no unit is specified, days is
    assumed. */
 
+{ "conversations_keep_existing", 1, SWITCH, "3.3.0" }
+/* during conversations cleanup, don't clean up if there are still existing emails
+   with one of the mentioned CIDs */
+
 { "conversations_max_thread", 100, INT, "3.1.1" }
 /* maximum size for a single thread.  Threads will split if they have this many
- * messages in them and another message arrives */
+   messages in them and another message arrives */
+
+{ "conversations_max_guidrecords", 5000, INT, "3.3.0" }
+/* maximum records with the same guid.  This is just a sanity check to stop the same
+   email being added and removed over and over, so the default is 5000 */
+
+{ "conversations_max_guidexists", 100, INT, "3.3.0" }
+/* maximum records with the same guid.  This maps to "labels", so with the default
+   of 100, you can only have 100 labels on an email in JMAP */
+
+{ "conversations_max_guidinfolder", 10, INT, "3.3.0" }
+/* maximum records with the same guid in the same folder. You can't do this via JMAP,
+   but could via IMAP.  The default of 10 should be heaps normally! */
 
 { "crossdomains", 0, SWITCH, "3.0.0" }
 /* Enable cross domain sharing.  This works best with alt namespace and
@@ -1010,6 +1029,10 @@ Blank lines and lines beginning with ``#'' are ignored.
    For backward compatibility, if no unit is specified, seconds is
    assumed. */
 
+{ "httplogheaders", NULL, STRING, "3.3.1" }
+/* Space-separated list of HTTP header fields that will be included
+   in the requests logged by httpd(8). */
+
 { "httpmodules", "", BITFIELD("admin", "caldav", "carddav", "cgi", "domainkey", "freebusy", "ischedule", "jmap", "prometheus", "rss", "tzdist", "webdav"), "3.1.7" }
 /* Space-separated list of HTTP modules that will be enabled in
    httpd(8).  This option has no effect on modules that are disabled
@@ -1111,7 +1134,7 @@ Blank lines and lines beginning with ``#'' are ignored.
 
 { "jmap_inlinedcids_annot", NULL, STRING, "3.1.1" }
 /* The name of the per-message annotation, if any, that stores a
-   JSON object, mapping RFC2392 Content-IDs referenced in HTML bodies
+   JSON object, mapping RFC 2392 Content-IDs referenced in HTML bodies
    to the respective HTML body part number.
 
    For example, if message part 1.2 contains HTML and references an
@@ -1121,7 +1144,7 @@ Blank lines and lines beginning with ``#'' are ignored.
    { "<foo>" : "1.2" }
 
    Note that the Content-ID key must be URL-unescaped and enclosed in
-   angular brackets, as defined in RFC2392. */
+   angular brackets, as defined in RFC 2392. */
 
 { "jmap_preview_length", 64, INT, "3.1.1" }
 /* The maximum byte length of dynamically generated message previews. Previews
@@ -1132,6 +1155,12 @@ Blank lines and lines beginning with ``#'' are ignored.
    for blob uploads. Returned as the maxSizeUpload property
    value of the JMAP \"urn:ietf:params:jmap:core\" capabilities object.
    Default is 1Gb. */
+
+{ "jmap_max_size_blob_set", 4096, INT, "3.3.0" }
+/* The maximum size (in kilobytes) that the JMAP API accepts
+   for Blob/set. Returned as the maxSizeBlobSet property
+   value of the JMAP \"https://cyrusimap.org/ns/jmap/blob\" capabilities object.
+   Default is 4Mb. */
 
 { "jmap_max_concurrent_upload", 5, INT, "3.1.6" }
 /* The value to return for the maxConcurrentUpload property of
@@ -1424,6 +1453,12 @@ Blank lines and lines beginning with ``#'' are ignored.
    mailbox is over quota.  By default, the failure is temporary,
    causing the MTA to queue the message and retry later. */
 
+{ "lmtp_preparse", 0, SWITCH, "3.3.1" }
+/* If enabled, lmtpd will map in the email and parse the xapian data
+   for jmapsearch.  The advantage is that the parsing is done without
+   holding any locks.  The disadvantage is that the parsing is done
+   even if it winds up not being needed. */
+
 { "lmtp_strict_quota", 0, SWITCH, "2.3.17" }
 /* If enabled, lmtpd returns a failure code when the incoming message
    will cause the user's mailbox to exceed its quota.  By default, the
@@ -1481,11 +1516,32 @@ Blank lines and lines beginning with ``#'' are ignored.
    that fills the entire 128 available slots.  Default is NULL, which is
    no flags.  Example: $Label1 $Label2 $Label3 NotSpam Spam */
 
+{ "mailbox_maxmessages_addressbook", 0, INT, "3.3.0" }
+/* Limit the number of messages that may exist in a single mailbox of
+   "addressbook" type. Default (0) means no limit.  This limit applies
+   after quotas are checked, so if you have both quota limits and this
+   set, then you will be denied if you are either over quota or over
+   this per-mailbox count. */
+
+{ "mailbox_maxmessages_calendar", 0, INT, "3.3.0" }
+/* Limit the number of messages that may exist in a single mailbox of
+   "calendar" type. Default (0) means no limit.  This limit applies
+   after quotas are checked, so if you have both quota limits and this
+   set, then you will be denied if you are either over quota or over
+   this per-mailbox count. */
+
+{ "mailbox_maxmessages_email", 0, INT, "3.3.0" }
+/* Limit the number of messages that may exist in a single mailbox of
+   "email" (normal) type. Default (0) means no limit.  This limit applies
+   after quotas are checked, so if you have both quota limits and this
+   set, then you will be denied if you are either over quota or over
+   this per-mailbox count. */
+
 { "mailnotifier", NULL, STRING, "2.3.17" }
 /* Notifyd(8) method to use for "MAIL" notifications.  If not set, "MAIL"
    notifications are disabled. */
 
-{ "master_bind_errors_fatal", 0, SWITCH, "3.2.0" }
+{ "master_bind_errors_fatal", 0, SWITCH, "3.3.0" }
 /* If enabled, failure to bind a port during startup is treated as a fatal
    error, causing master to shut down immediately.  The default is to keep
    running, with the affected service disabled until the next SIGHUP causes
@@ -1968,6 +2024,11 @@ If all partitions are over that limit, this feature is not used anymore.
    quota DB type - or the base path if you choose quotalegacy).  If
    not specified will be configdirectory/quotas.db or configdirectory/quota/ */
 
+{ "quota_use_conversations", 0, SWITCH, "3.3.0" }
+/* If conversations it enabled and quotaroot is a user folder, use the
+   conversations quota counts, which count multiple copies of exactly the
+   same message (by GUID) as only one */
+
 { "quotawarn", 90, INT, "2.3.17" }
 /* The percent of quota utilization over which the server generates
    warnings. */
@@ -1981,6 +2042,10 @@ If all partitions are over that limit, this feature is not used anymore.
 /* The maximum amount of messages at which to give a quota warning
    (if this value is 0, or if the quota is smaller than this
    amount, then warnings are always given). */
+
+{ "readonly", 0, SWITCH, "3.3.0" }
+/* If enabled, all IMAP, POP and JMAP connections are read-only,
+ * no writes allowed */
 
 { "reject8bit", 0, SWITCH, "2.3.17" }
 /* If enabled, lmtpd rejects messages with 8-bit characters in the
@@ -2001,6 +2066,10 @@ If all partitions are over that limit, this feature is not used anymore.
 { "reverseacls", 0, SWITCH, "3.0.0" }
 /* At startup time, ctl_cyrusdb -r will check this value and it
    will either add or remove reverse ACL pointers from mailboxes.db */
+
+{ "reverseuniqueids", 1, SWITCH, "3.3.0" }
+/* At startup time, ctl_cyrusdb -r will check this value and it
+   will either add or remove reverse UNIQUEID pointers from mailboxes.db */
 
 { "rfc2046_strict", 0, SWITCH, "2.3.17" }
 /* If enabled, imapd will be strict (per RFC 2046) when matching MIME
@@ -2095,14 +2164,43 @@ If all partitions are over that limit, this feature is not used anymore.
 /* The number of messages to be indexed in one batch (default 20).
    Note that long batches may delay user commands or mail delivery. */
 
-{ "search_attachment_extractor_url", NULL, STRING, "3.2.1", "3.2.1" }
-/*
-  Reserved for future use.
+{ "search_attachment_extractor_url", NULL, STRING, "3.3.1" }
+/* A HTTP or HTTPS URL to extract search text from rich text attachments
+   and other media during search indexing. The server at this URL must
+   implement the following protocol:
+
+   1. For each attachment of an email, Cyrus sends a GET request to the
+   URL <extractor-url>/<cyrus-id>, where <extractor-url> is the
+   configured URL and <cyrus-id> is a Cyrus-chosen path segment that
+   uniquely identifies this attachment.
+
+   2. If the extractor already has a cached plain text extract of the
+   attachment identified by <cyrus-id> then it may return HTTP status
+   code 200 (OK) and the plain text extract with a Content-Type
+   "text/plain" header. Otherwise it must return HTTP status 404 (Not Found).
+
+   3. If Cyrus receives the HTTP status code 404 (Not Found), then it sends
+   a PUT request to the same URL as previously. The PUT request body
+   contains the decoded, binary body of the attachment. The Content-Type
+   request header has the same value as declared in the MIME part
+   headers, including any type parameters.
+
+   4. The extractor must return the plain text extract with either HTTP status
+   200 (OK) or 201 (Created) and a Content-Type "text/plain" header.
+   If no text can be extracted, then the extractor may return any return code
+   in the range 4xx, or 200 and an empty response body.
+
+   Any other HTTP status code is treated as an error. For performance
+   reasons, the Cyrus indexer attempts to keep-alive the TCP connection
+   to the extractor.
+   Xapian only.
  */
 
-{ "search_index_language", 0, SWITCH, "3.2.1", "3.2.1" }
+{ "search_index_language", 0, SWITCH, "3.3.1" }
 /*
-  Reserved for future use.
+  If enabled, then messages bodies are stemmed by detected language
+  in addition to the default English stemmer.
+  Xapian only.
  */
 
 { "search_index_parts", 0, SWITCH, "3.2.1", "3.2.1" }
@@ -2110,9 +2208,21 @@ If all partitions are over that limit, this feature is not used anymore.
   Deprecated. No longer used.
  */
 
-{ "search_query_language", 0, SWITCH, "3.2.1", "3.2.1" }
+{ "search_index_skip_domains", NULL, STRING, "3.3.1" }
 /*
-  Reserved for future use.
+ A space separated list of domains - if set, any users in the listed domains
+ will be skipped when indexing.
+ */
+
+{ "search_index_skip_users", NULL, STRING, "3.3.1" }
+/*
+ A space separated list of usernames - if set, any users in the list
+ will be skipped when indexing.
+ */
+
+{ "search_query_language", 0, SWITCH, "3.3.0", "3.3.0" }
+/*
+  Deprecated. No longer used.
  */
 
 { "search_normalisation_max", 1000, INT, "3.0.0" }
@@ -2153,7 +2263,7 @@ If all partitions are over that limit, this feature is not used anymore.
 { "search_skipdiacrit", 1, SWITCH, "2.5.0" }
 /* When searching, should diacriticals be stripped from the search
    terms.  The default is "true", a search for "hav" will match
-   "Håvard".  This is not RFC5051 compliant, but it backwards
+   "Håvard".  This is not RFC 5051 compliant, but it backwards
    compatible, and may be preferred by some sites. */
 
 { "search_skiphtml", 0, SWITCH, "3.0.0" }
@@ -2287,7 +2397,7 @@ product version in the capabilities
    assumed. */
 */
 
-{ "sieve_extensions", "fileinto reject vacation vacation-seconds imapflags notify include envelope environment body relational regex subaddress copy date index imap4flags mailbox mboxmetadata servermetadata variables editheader extlists duplicate ihave fcc special-use redirect-dsn redirect-deliverby mailboxid x-cyrus-log x-cyrus-jmapquery x-cyrus-snooze", BITFIELD("fileinto", "reject", "vacation", "vacation-seconds", "imapflags", "notify", "include", "envelope", "environment", "body", "relational", "regex", "subaddress", "copy", "date", "index", "imap4flags", "mailbox", "mboxmetadata", "servermetadata", "variables", "editheader", "extlists", "duplicate", "ihave", "fcc", "special-use", "redirect-dsn", "redirect-deliverby", "mailboxid", "x-cyrus-log", "x-cyrus-jmapquery", "x-cyrus-snooze"), "3.1.8" }
+{ "sieve_extensions", "fileinto reject vacation vacation-seconds notify include envelope environment body relational regex subaddress copy date index imap4flags mailbox mboxmetadata servermetadata variables editheader extlists duplicate ihave fcc special-use redirect-dsn redirect-deliverby mailboxid vnd.cyrus.log vnd.cyrus.jmapquery snooze", BITFIELD("fileinto", "reject", "vacation", "vacation-seconds", "notify", "include", "envelope", "environment", "body", "relational", "regex", "subaddress", "copy", "date", "index", "imap4flags=imapflags", "mailbox", "mboxmetadata", "servermetadata", "variables", "editheader", "extlists", "duplicate", "ihave", "fcc", "special-use", "redirect-dsn", "redirect-deliverby", "mailboxid", "vnd.cyrus.log=x-cyrus-log", "vnd.cyrus.jmapquery=x-cyrus-jmapquery", "snooze=vnd.cyrus.snooze=x-cyrus-snooze"), "3.3.1" }
 /* Space-separated list of Sieve extensions allowed to be used in
    sieve scripts, enforced at submission by timsieved(8).  Any
    previously installed script will be unaffected by this option and
@@ -2514,6 +2624,14 @@ product version in the capabilities
    Default is 8192.  If there are more than this many messages appended
    to the mailbox, generate a synthetic partial state and send that. */
 
+{ "sync_cache_db", "twoskip", STRINGLIST("skiplist", "sql", "twoskip", "zeroskip"), "3.3.1" }
+/* The cyrusdb backend to use for the replication cache. */
+
+{ "sync_cache_db_path", NULL, STRING, "3.3.1" }
+/* The path for the replication cache.  Prefix with a
+   channel name to apply for that channel.  NOTE, it's
+   quite important to have a different one per backend! */
+
 { "sync_host", NULL, STRING, "2.5.0" }
 /* Name of the host (replica running sync_server(8)) to which
    replication actions will be sent by sync_client(8).
@@ -2567,6 +2685,10 @@ product version in the capabilities
 .PP
    For backward compatibility, if no unit is specified, seconds is
    assumed. */
+
+{ "sync_rightnow_channel", NULL, STRING, "3.3.1" }
+/* if set, run sync_client to this channel immediately.  As with channels,
+   set this value to '""' to sync the default channel! */
 
 { "sync_shutdown_file", NULL, STRING, "2.5.0" }
 /* Simple latch used to tell sync_client(8) that it should shut down at the
@@ -2622,8 +2744,9 @@ product version in the capabilities
    For backward compatibility, if no unit is specified, seconds is
    assumed. */
 
-{ "temp_path", "/tmp", STRING, "2.3.17" }
-/* The pathname to store temporary files in */
+{ "temp_path", "/tmp", STRING, "3.3.0" }
+/* The pathname to store temporary files in. It is recommended to
+   use an in-memory filesystem such as tmpfs for this path. */
 
 { "telemetry_bysessionid", 0, SWITCH, "3.0.0" }
 /* If true, log by sessionid instead of PID for telemetry */

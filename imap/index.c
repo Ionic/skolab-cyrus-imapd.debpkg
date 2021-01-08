@@ -101,6 +101,8 @@
 
 EXPORTED unsigned client_capa;
 
+static struct extractor_ctx *index_text_extractor = NULL;
+
 /* Forward declarations */
 static void index_refresh_locked(struct index_state *state);
 static void index_tellexists(struct index_state *state);
@@ -833,7 +835,7 @@ EXPORTED void index_select(struct index_state *state, struct index_init *init)
     prot_printf(state->out, "* OK [URLMECH INTERNAL] Ok\r\n");
 
     /*
-     * RFC5257.  Note that we must report a maximum size for annotations
+     * RFC 5257.  Note that we must report a maximum size for annotations
      * but we don't enforce any such limit, so pick a "large" number.
      */
     prot_printf(state->out, "* OK [ANNOTATIONS %u] Ok\r\n", 64*1024);
@@ -998,7 +1000,7 @@ struct seqset *index_vanished(struct index_state *state,
         }
 
         const message_t *msg;
-        struct mailbox_iter *iter = mailbox_iter_init(mailbox, params->modseq, ITER_SKIP_EXPUNGED);
+        struct mailbox_iter *iter = mailbox_iter_init(mailbox, 0, ITER_SKIP_EXPUNGED);
         mailbox_iter_startuid(iter, prevuid);
 
         /* possible efficiency improvement - use "seq_getnext" on seq
@@ -1070,7 +1072,7 @@ static int _fetch_setseen(struct index_state *state,
 
     mboxevent_extract_record(mboxevent, state->mailbox, &record);
 
-    /* RFC2060 says:
+    /* RFC 2060 says:
      * The \Seen flag is implicitly set; if this causes
      * the flags to change they SHOULD be included as part
      * of the FETCH responses.   This is handled later by
@@ -1849,6 +1851,61 @@ static int needs_modseq(const struct searchargs *searchargs,
     return 0;
 }
 
+static void begin_esearch_response(struct index_state *state,
+                                   struct searchargs *searchargs,
+                                   int usinguid, search_folder_t *folder,
+                                   int nmsg)
+
+{
+    /*
+     * Implement RFC 4731 return options.
+     */
+    prot_printf(state->out, "* ESEARCH");
+    if (searchargs->tag) {
+        prot_printf(state->out, " (TAG \"%s\")", searchargs->tag);
+    }
+    /* RFC 4731: 3.1
+     * An extended UID SEARCH command MUST cause an ESEARCH response with
+     * the UID indicator present. */
+    if (usinguid) prot_printf(state->out, " UID");
+    if (searchargs->returnopts & SEARCH_RETURN_COUNT) {
+        prot_printf(state->out, " COUNT %u", nmsg);
+    }
+    if (nmsg) {
+        if (searchargs->returnopts & SEARCH_RETURN_MIN) {
+            prot_printf(state->out, " MIN %u", search_folder_get_min(folder));
+        }
+        if (searchargs->returnopts & SEARCH_RETURN_MAX) {
+            prot_printf(state->out, " MAX %u", search_folder_get_max(folder));
+        }
+    }
+}
+
+static void esearch_modseq_response(struct index_state *state,
+                                    struct searchargs *searchargs,
+                                    search_folder_t *folder,
+                                    modseq_t highestmodseq)
+{
+    if (!highestmodseq) return;
+
+    // restrict modseq to the returned items only
+    if (searchargs->returnopts == SEARCH_RETURN_MIN) {
+        highestmodseq = search_folder_get_first_modseq(folder);
+    }
+    if (searchargs->returnopts == SEARCH_RETURN_MAX) {
+        highestmodseq = search_folder_get_last_modseq(folder);
+    }
+    if (searchargs->returnopts == (SEARCH_RETURN_MIN|SEARCH_RETURN_MAX)) {
+        /* special case min and max should be greatest of the two */
+        uint64_t last = search_folder_get_last_modseq(folder);
+        highestmodseq = search_folder_get_first_modseq(folder);
+        if (last > highestmodseq) highestmodseq = last;
+    }
+
+    if (highestmodseq)
+        prot_printf(state->out, " MODSEQ " MODSEQ_FMT, highestmodseq);
+}
+
 /*
  * Performs a SEARCH command.
  * This is a wrapper around the search_query API which simply prints the results.
@@ -1886,34 +1943,9 @@ EXPORTED int index_search(struct index_state *state,
         nmsg = 0;
 
     if (searchargs->returnopts) {
-        /*
-         * Implement RFC 4731 return options.
-         */
-        prot_printf(state->out, "* ESEARCH");
-        if (searchargs->tag) {
-            prot_printf(state->out, " (TAG \"%s\")", searchargs->tag);
-        }
-        /* RFC4731: 3.1
-         * An extended UID SEARCH command MUST cause an ESEARCH response with
-         * the UID indicator present. */
-        if (usinguid) prot_printf(state->out, " UID");
+        begin_esearch_response(state, searchargs, usinguid, folder, nmsg);
+
         if (nmsg) {
-            if (searchargs->returnopts & SEARCH_RETURN_MIN) {
-                prot_printf(state->out, " MIN %u", search_folder_get_min(folder));
-                if (highestmodseq && searchargs->returnopts == SEARCH_RETURN_MIN)
-                     highestmodseq = search_folder_get_first_modseq(folder);
-            }
-            if (searchargs->returnopts & SEARCH_RETURN_MAX) {
-                prot_printf(state->out, " MAX %u", search_folder_get_max(folder));
-                if (highestmodseq && searchargs->returnopts == SEARCH_RETURN_MAX)
-                     highestmodseq = search_folder_get_last_modseq(folder);
-            }
-            if (highestmodseq && searchargs->returnopts == (SEARCH_RETURN_MIN|SEARCH_RETURN_MAX)) {
-                /* special case min and max should be greatest of the two */
-                uint64_t last = search_folder_get_last_modseq(folder);
-                highestmodseq = search_folder_get_first_modseq(folder);
-                if (last > highestmodseq) highestmodseq = last;
-            }
             if (searchargs->returnopts & SEARCH_RETURN_ALL) {
                 struct seqset *seq = search_folder_get_seqset(folder);
 
@@ -1934,11 +1966,8 @@ EXPORTED int index_search(struct index_state *state,
                 }
                 prot_printf(state->out, ")");
             }
-            if (highestmodseq)
-                prot_printf(state->out, " MODSEQ " MODSEQ_FMT, highestmodseq);
-        }
-        if (searchargs->returnopts & SEARCH_RETURN_COUNT) {
-            prot_printf(state->out, " COUNT %u", nmsg);
+
+            esearch_modseq_response(state, searchargs, folder, highestmodseq);
         }
     }
     else {
@@ -1994,19 +2023,54 @@ EXPORTED int index_sort(struct index_state *state,
         nmsg = search_folder_get_count(folder);
     }
 
-    prot_printf(state->out, "* SORT");
+    if (searchargs->returnopts) {
+        begin_esearch_response(state, searchargs, usinguid, folder, nmsg);
 
-    if (nmsg) {
-        /* Output the sorted messages */
-        for (i = 0 ; i < query->merged_msgdata.count ; i++) {
-            MsgData *md = ptrarray_nth(&query->merged_msgdata, i);
-            prot_printf(state->out, " %u",
-                        (usinguid ? md->uid : md->msgno));
+        if (nmsg) {
+            if (searchargs->returnopts & SEARCH_RETURN_ALL) {
+                struct seqset *seq = seqset_init(0, SEQ_SPARSE);
+
+                for (i = 0 ; i < query->merged_msgdata.count ; i++) {
+                    MsgData *md = ptrarray_nth(&query->merged_msgdata, i);
+                    seqset_add(seq, usinguid ? md->uid : md->msgno, 1);
+                }
+
+                if (seq->len) {
+                    char *str = seqset_cstring(seq);
+                    prot_printf(state->out, " ALL %s", str);
+                    free(str);
+                }
+
+                seqset_free(seq);
+            }
+            if (searchargs->returnopts & SEARCH_RETURN_RELEVANCY) {
+                prot_printf(state->out, " RELEVANCY (");
+                for (i = 0; i < nmsg; i++) {
+                    if (i) prot_putc(' ', state->out);
+                    /* for now all messages have relevancy=100 */
+                    prot_printf(state->out, "%u", 100);
+                }
+                prot_printf(state->out, ")");
+            }
+
+            esearch_modseq_response(state, searchargs, folder, highestmodseq);
         }
     }
+    else {
+        prot_printf(state->out, "* SORT");
 
-    if (highestmodseq)
-        prot_printf(state->out, " (MODSEQ " MODSEQ_FMT ")", highestmodseq);
+        if (nmsg) {
+            /* Output the sorted messages */
+            for (i = 0 ; i < query->merged_msgdata.count ; i++) {
+                MsgData *md = ptrarray_nth(&query->merged_msgdata, i);
+                prot_printf(state->out, " %u",
+                            (usinguid ? md->uid : md->msgno));
+            }
+        }
+
+        if (highestmodseq)
+            prot_printf(state->out, " (MODSEQ " MODSEQ_FMT ")", highestmodseq);
+    }
 
     prot_printf(state->out, "\r\n");
 
@@ -2545,7 +2609,7 @@ EXPORTED int index_snippets(struct index_state *state,
             if (state->m) message_set_from_record(mailbox, &record, state->m);
             else state->m = message_new_from_record(mailbox, &record);
 
-            index_getsearchtext(state->m, NULL, rx, /*snippet*/1);
+            index_getsearchtext(state->m, NULL, rx, INDEX_GETSEARCHTEXT_SNIPPET);
         }
 
         r = rx->end_mailbox(rx, mailbox);
@@ -2860,7 +2924,7 @@ index_copy(struct index_state *state,
 {
     struct copyargs copyargs;
     int i;
-    quota_t qdiffs[QUOTA_NUMRESOURCES] = QUOTA_DIFFS_INITIALIZER;
+    quota_t qdiffs[QUOTA_NUMRESOURCES] = QUOTA_DIFFS_DONTCARE_INITIALIZER;
     quota_t *qptr = NULL;
     int r;
     struct appendstate appendstate;
@@ -2914,8 +2978,11 @@ index_copy(struct index_state *state,
     r = insert_into_mailbox_allowed(destmailbox);
     if (r) goto done;
 
+    /* if using conversations, a COPY is the same email, so there's no extra usage */
+    int checkquota = !ismove && !config_getswitch(IMAPOPT_QUOTA_USE_CONVERSATIONS);
+
     /* not moving or different quota root - need to check quota */
-    if (!ismove || strcmpsafe(srcmailbox->quotaroot, destmailbox->quotaroot)) {
+    if (checkquota || strcmpsafe(srcmailbox->quotaroot, destmailbox->quotaroot)) {
         for (i = 0; i < copyargs.nummsg; i++)
             qdiffs[QUOTA_STORAGE] += copyargs.records[i].size;
         qdiffs[QUOTA_MESSAGE] = copyargs.nummsg;
@@ -2979,9 +3046,12 @@ index_copy(struct index_state *state,
         seqset_free(seq);
     }
 
-    /* we log the first name to get GUID-copy magic */
-    if (!r)
+    if (!r) {
+        /* we log the first name to get GUID-copy magic */
         sync_log_mailbox_double(index_mboxname(state), name);
+        /* also want to log an append here, to make sure squatter notices */
+        sync_log_append(name);
+    }
 
 done:
     free(copyargs.records);
@@ -4589,7 +4659,7 @@ EXPORTED int index_urlfetch(struct index_state *state, uint32_t msgno,
         data = charset_decode_mimebody(data, size, encoding,
                                        &decbuf, &size);
 
-        /* update the encoding of this part per RFC5524:3.2 */
+        /* update the encoding of this part per RFC 5524:3.2 */
         if (data && encoding) {
             domain = data_domain(data, size);
             free(body->encoding);
@@ -4833,7 +4903,7 @@ static int index_storeflag(struct index_state *state,
         }
     }
 
-    /* rfc4551:
+    /* RFC 4551:
      * 3.8.  Additional Quality-of-Implementation Issues
      *
      * Server implementations should follow the following rule, which
@@ -4959,9 +5029,10 @@ EXPORTED int index_search_evaluate(struct index_state *state,
 }
 
 struct extractor_ctx {
-    struct backend *be;
     struct protstream *clientin;
-    unsigned failed;
+    char *hostname;
+    char *path;
+    struct backend *be;
 };
 
 struct getsearchtext_rock
@@ -4972,6 +5043,9 @@ struct getsearchtext_rock
     const strarray_t *partids;
     int snippet_iteration; /* 0..no snippet, 1..first run, 2..second run */
     struct extractor_ctx *ext;
+    strarray_t striphtml; /* strip HTML from these plain text body part ids */
+    uint8_t indexlevel;
+    int flags;
 };
 
 static void stuff_part(search_text_receiver_t *receiver,
@@ -5160,7 +5234,7 @@ static int extract_vcardbuf(struct buf *raw, charset_t charset, int encoding,
         vcardbuf = raw;
     }
 
-    vcard = vcard_parse_string(buf_cstring(vcardbuf), /*repair*/1);
+    vcard = vcard_parse_string(buf_cstring(vcardbuf));
     if (!vcard || !vcard->objects) {
         r = IMAP_INTERNAL;
         goto done;
@@ -5204,11 +5278,6 @@ done:
 
 #define IDLE_TIMEOUT (5 * 60)  /* 5 min */
 
-struct backend_ctx {
-    char *path;
-    int timeout;
-};
-
 static int login(struct backend *s __attribute__((unused)),
                  const char *userid __attribute__((unused)),
                  sasl_callback_t *cb __attribute__((unused)),
@@ -5218,51 +5287,10 @@ static int login(struct backend *s __attribute__((unused)),
     return 0;
 }
 
-static int ping(struct backend *s,
+static int ping(struct backend *s __attribute__((unused)),
                 const char *userid __attribute__((unused)))
 {
-    struct backend_ctx *ctx = (struct backend_ctx *) s->context;
-    size_t hostlen = strcspn(s->hostname, "/");
-    hdrcache_t resp_hdrs = NULL;
-    struct body_t resp_body;
-    unsigned statuscode = 0;
-    const char *errstr;
-    int r = 0;
-
-    prot_printf(s->out,
-                "HEAD %s %s\r\n"
-                "Host: %.*s\r\n"
-                "User-Agent: Cyrus/%s\r\n"
-                "Connection: Keep-Alive\r\n"
-                "Keep-Alive: timeout=%u\r\n"
-                "Accept: text/plain\r\n"
-                "\r\n",
-                ctx->path, HTTP_VERSION,
-                (int) hostlen, s->hostname, CYRUS_VERSION, ctx->timeout);
-    prot_flush(s->out);
-
-    /* Read response(s) from backend until final response or error */
-    do {
-        resp_body.flags = BODY_DISCARD;
-        r = http_read_response(s, METH_HEAD, &statuscode,
-                               &resp_hdrs, &resp_body, &errstr);
-        if (r) {
-            break;
-        }
-    } while (statuscode < 200);
-
-    if (r) {
-        syslog(LOG_DEBUG, "extractor_ping: HEAD %s: failed (%s): %s",
-               ctx->path, error_message(r), errstr);
-    }
-    else {
-        syslog(LOG_DEBUG, "extractor_ping: HEAD %s: got status %u",
-               ctx->path, statuscode);
-    }
-
-    if (resp_hdrs) spool_free_hdrcache(resp_hdrs);
-
-    return r;
+    return 0;
 }
 
 static int logout(struct backend *s __attribute__((unused)))
@@ -5270,8 +5298,11 @@ static int logout(struct backend *s __attribute__((unused)))
     return 0;
 }
 
-static void extractor_disconnect(struct backend *be)
+static void extractor_disconnect(struct extractor_ctx *ext)
 {
+    if (!ext) return;
+
+    struct backend *be = ext->be;
     syslog(LOG_DEBUG, "extractor_disconnect(%p)", be);
 
     if (!be || (be->sock == -1)) {
@@ -5293,12 +5324,12 @@ extractor_timeout(struct protstream *s __attribute__((unused)),
                   struct prot_waitevent *ev __attribute__((unused)),
                   void *rock)
 {
-    struct backend *be = (struct backend *) rock;
+    struct extractor_ctx *ext = rock;
 
-    syslog(LOG_DEBUG, "extractor_timeout(%p)", be);
+    syslog(LOG_DEBUG, "extractor_timeout(%p)", ext);
 
     /* too long since we last used the extractor - disconnect */
-    extractor_disconnect(be);
+    extractor_disconnect(ext);
 
     return NULL;
 }
@@ -5306,96 +5337,41 @@ extractor_timeout(struct protstream *s __attribute__((unused)),
 static struct protocol_t http =
 { "http", "HTTP", TYPE_SPEC, { .spec = { &login, &ping, &logout } } };
 
-__attribute__((unused)) // disabled experimental feature
-static int extractor_connect(const char *exturl, struct extractor_ctx *ext)
+static int extractor_connect(struct extractor_ctx *ext)
 {
     struct backend *be;
-    struct backend_ctx *ctx = NULL;
-    struct buf buf = BUF_INITIALIZER;
-    const char *hostname;
-    char path[256];
     time_t now = time(NULL);
-    int r = 0;
 
-    syslog(LOG_DEBUG, "extractor_connect(%s)", exturl);
-
-    if (!ext || ext->failed > 1) return IMAP_INTERNAL;
+    syslog(LOG_DEBUG, "extractor_connect()");
 
     be = ext->be;
-    if (be) {
-        ctx = be->context;
-        hostname = be->hostname;
-    }
-    else {
-        char scheme[6], server[100], *p;
-        unsigned https, port;
-
-        /* Parse URL (cheesy parser without having to use libxml2) */
-        int n = sscanf(exturl, "%5[^:]://%99[^/]%255[^\n]",
-                       scheme, server, path);
-        if (n != 3 ||
-            strncmp(lcase(scheme), "http", 4) || (scheme[4] && scheme[4] != 's')) {
-            syslog(LOG_ERR,
-                   "extract_attachment: unexpected non-HTTP URL %s", exturl);
-            return IMAP_INTERNAL;
-        }
-
-        /* Normalize URL parts */
-        https = (scheme[4] == 's');
-        if (*(p = path + strlen(path) - 1) == '/') *p = '\0';
-        if ((p = strrchr(server, ':'))) {
-            *p++ = '\0';
-            port = atoi(p);
-        }
-        else port = https ? 443 : 80;
-
-        /* Build servername, port, and options */
-        buf_printf(&buf, "%s:%u%s/noauth", server, port, https ? "/tls" : "");
-        hostname = buf_cstring(&buf);
+    if (be && be->sock != -1) {
+        // extend the timeout
+        if (be->timeout) be->timeout->mark = now + IDLE_TIMEOUT;
+        return 0;
     }
 
-    if (be && (be->sock != -1)) {
-        syslog(LOG_DEBUG, "extractor_connect: ping existing connection");
+    // clean up any existing connection
+    extractor_disconnect(ext);
+    be = ext->be = backend_connect(be, ext->hostname,
+                                   &http, NULL, NULL, NULL, -1);
 
-        /* ping the extractor */
-        if (ping(be, NULL)) extractor_disconnect(be);
+    if (!be) {
+        syslog(LOG_ERR, "extract_connect: failed to connect to %s",
+               ext->hostname);
+        return IMAP_IOERROR;
     }
 
-    if (!be || (be->sock == -1)) {
-        /* Connect to extractor service */
-        syslog(LOG_DEBUG, "extractor_connect: %sconnect to %s",
-               be ? "re" : "", hostname);
-
-        be = ext->be = backend_connect(be, hostname,
-                                       &http, NULL, NULL, NULL, -1);
-
-        if (!be) {
-            syslog(LOG_ERR, "extract_connect: failed to connect to %s",
-                   hostname);
-            ext->failed++;
-            r = IMAP_IOERROR;
-        }
-        else if (!ctx) {
-            ctx = be->context = xzmalloc(sizeof(struct backend_ctx));
-            ctx->path = xstrdup(path);
-
-            if (ext->clientin) {
-                /* add a default timeout */
-                be->clientin = ext->clientin;
-                be->timeout = prot_addwaitevent(ext->clientin,
-                                                now + IDLE_TIMEOUT,
-                                                extractor_timeout, be);
-            }
-        }
+    if (ext->clientin) {
+        /* add a default timeout */
+        be->clientin = ext->clientin;
+        be->timeout = prot_addwaitevent(ext->clientin,
+                                        now + IDLE_TIMEOUT,
+                                        extractor_timeout, ext);
     }
 
-    if (be->timeout && ctx->timeout) be->timeout->mark = now + ctx->timeout;
-
-    buf_free(&buf);
-
-    return r;
+    return 0;
 }
-
 
 static int extract_attachment(const char *type, const char *subtype,
                               const struct param *type_params,
@@ -5403,31 +5379,41 @@ static int extract_attachment(const char *type, const char *subtype,
                               const struct message_guid *content_guid,
                               struct getsearchtext_rock *str)
 {
-    struct extractor_ctx *ext = str->ext;
     struct backend *be;
-    struct backend_ctx *ctx;
+    struct buf decbuf = BUF_INITIALIZER;
     struct buf buf = BUF_INITIALIZER;
     hdrcache_t hdrs = NULL;
     struct body_t body = { 0, 0, 0, 0, 0, BUF_INITIALIZER };
     const char *guidstr, *errstr = NULL;
     size_t hostlen;
+    const char **hdr, *p;
     int r = 0;
 
-    if (!ext) return 0;
-
-    be = ext->be;
-    ctx = (struct backend_ctx *) be->context;
-    hostlen = strcspn(be->hostname, "/");
-
-    if (message_guid_isnull(content_guid)) {
-        syslog(LOG_DEBUG, "extract_attachment: ignoring null guid for %s/%s",
-                type ? type : "<null>", subtype ? subtype : "<null>");
+    if (!index_text_extractor) {
+        /* This is a legitimate case for sieve and lmtpd (so we don't need
+         * to spam the logs! */
+        syslog(LOG_DEBUG, "%s: ignoring uninitialized extractor",
+                __func__);
         return 0;
     }
 
-    /* Fetch previously extracted text */
-    unsigned statuscode = 0;
+    if (message_guid_isnull(content_guid)) {
+        syslog(LOG_DEBUG, "extract_attachment: ignoring null guid for %s/%s",
+               type ? type : "<null>", subtype ? subtype : "<null>");
+        return 0;
+    }
+
+    struct extractor_ctx *ext = str->ext = index_text_extractor;
+
+    r = extractor_connect(ext);
+    if (r) return r;
+    be = ext->be;
+
+    hostlen = strcspn(ext->hostname, "/");
     guidstr = message_guid_encode(content_guid);
+
+    /* try to fetch previously extracted text */
+    unsigned statuscode = 0;
     prot_printf(be->out,
                 "GET %s/%s %s\r\n"
                 "Host: %.*s\r\n"
@@ -5436,9 +5422,9 @@ static int extract_attachment(const char *type, const char *subtype,
                 "Keep-Alive: timeout=%u\r\n"
                 "Accept: text/plain\r\n"
                 "\r\n",
-                ctx->path, guidstr, HTTP_VERSION,
+                ext->path, guidstr, HTTP_VERSION,
                 (int) hostlen, be->hostname, CYRUS_VERSION,
-                ctx->timeout ? ctx->timeout : IDLE_TIMEOUT);
+                IDLE_TIMEOUT);
     prot_flush(be->out);
 
     /* Read GET response */
@@ -5448,50 +5434,52 @@ static int extract_attachment(const char *type, const char *subtype,
         if (r) {
             syslog(LOG_ERR,
                    "extract_attachment: failed to read response for GET %s/%s",
-                   ctx->path, guidstr);
-            r = IMAP_IOERROR;
-            goto done;
+                   ext->path, guidstr);
+            statuscode = 599;
         }
     } while (statuscode < 200);
 
     syslog(LOG_DEBUG, "extract_attachment: GET %s/%s: got status %u",
-           ctx->path, guidstr, statuscode);
+           ext->path, guidstr, statuscode);
 
-    /* Abide by server's timeout, if any */
-    if (!ctx->timeout) {
-        const char **hdr, *p;
+    if (statuscode == 200) goto gotdata;
 
-        if ((hdr = spool_getheader(hdrs, "Keep-Alive")) &&
-            (p = strstr(hdr[0], "timeout="))) {
-            ctx->timeout = atoi(p+8);
+    // otherwise we're going to try three times to PUT this request to the server!
+
+    /* Decode data */
+    if (encoding) {
+        if (charset_decode(&decbuf, buf_base(data), buf_len(data), encoding)) {
+            syslog(LOG_ERR, "extract_attachment: failed to decode data");
+            r = IMAP_IOERROR;
+            goto done;
         }
-        else ctx->timeout = IDLE_TIMEOUT;
-
-        if (be->timeout) be->timeout->mark = time(NULL) + ctx->timeout;
+        data = &decbuf;
     }
 
-    if (statuscode == 404) {
-        /* Decode data */
-        struct buf decbuf = BUF_INITIALIZER;
-        if (encoding) {
-            if (charset_decode(&decbuf, buf_base(data), buf_len(data), encoding)) {
-                syslog(LOG_ERR, "extract_attachment: failed to decode data");
-                r = IMAP_IOERROR;
-                goto done;
-            }
-            data = &decbuf;
+    /* Build list of Content-Type parameters */
+    const struct param *param;
+    for (param = type_params; param && param->attribute; param = param->next) {
+        /* Ignore all but select parameters */
+        if (strcmp(param->attribute, "charset")) {
+            continue;
         }
+        buf_putc(&buf, ';');
+        buf_appendcstr(&buf, param->attribute);
+        if (param->value) {
+            buf_putc(&buf, '=');
+            buf_appendcstr(&buf, param->value);
+        }
+    }
 
-        /* Build list of Content-Type parameters */
-        const struct param *param = type_params;
-        while (param && param->attribute) {
-            buf_putc(&buf, ';');
-            buf_appendcstr(&buf, param->attribute);
-            if (param->value) {
-                buf_putc(&buf, '=');
-                buf_appendcstr(&buf, param->value);
-            }
-            param = param->next;
+    int retry;
+    for (retry = 0; retry < 3; retry++) {
+        if (retry) {
+            // second and third time around, sleep and reconnect
+            sleep(retry);
+            extractor_disconnect(ext);
+            r = extractor_connect(ext);
+            if (r) continue;
+            be = ext->be;
         }
 
         /* Send attachment to service for text extraction */
@@ -5505,12 +5493,11 @@ static int extract_attachment(const char *type, const char *subtype,
                     "Content-Type: %s/%s%s\r\n"
                     "Content-Length: " SIZE_T_FMT "\r\n"
                     "\r\n",
-                    ctx->path, guidstr, HTTP_VERSION,
-                    (int) hostlen, be->hostname, CYRUS_VERSION, ctx->timeout,
+                    ext->path, guidstr, HTTP_VERSION,
+                    (int) hostlen, be->hostname, CYRUS_VERSION, IDLE_TIMEOUT,
                     type, subtype, buf_cstring(&buf), buf_len(data));
-        prot_putbuf(be->out, (struct buf *) data);
+        prot_putbuf(be->out, data);
         prot_flush(be->out);
-        buf_free(&decbuf);
 
         /* Read PUT response */
         body.flags = 0;
@@ -5520,26 +5507,39 @@ static int extract_attachment(const char *type, const char *subtype,
             if (r) {
                 syslog(LOG_ERR,
                        "extract_attachment: failed to read response for PUT %s/%s",
-                       ctx->path, guidstr);
-                r = IMAP_IOERROR;
-                goto done;
+                       ext->path, guidstr);
+                statuscode = 599;
             }
         } while (statuscode < 200);
 
         syslog(LOG_DEBUG, "extract_attachment: PUT %s/%s: got status %u",
-               ctx->path, guidstr, statuscode);
-    }
+               ext->path, guidstr, statuscode);
 
-    if (statuscode >= 400 && statuscode <= 499) {
-        /* indexer can't extract this for some reason, never try again */
-        goto done;
-    }
-    if (statuscode != 200 && statuscode != 201) {
+        if (statuscode == 200 || statuscode == 201) {
+            // we got a result, yay
+            goto gotdata;
+        }
+
+        if (statuscode >= 400 && statuscode <= 499) {
+            /* indexer can't extract this for some reason, never try again */
+            goto done;
+        }
+
         /* any other status code is an error */
-        r = IMAP_IOERROR;
-        goto done;
+        syslog(LOG_ERR, "extract GOT STATUSCODE %d with timeout %d: %s", statuscode, IDLE_TIMEOUT, errstr);
     }
 
+    // dropped out of the loop?  Then we failed!
+    r = IMAP_IOERROR;
+    goto done;
+
+gotdata:
+    /* Abide by server's timeout, if any */
+    if ((hdr = spool_getheader(hdrs, "Keep-Alive")) &&
+        (p = strstr(hdr[0], "timeout="))) {
+        int timeout = atoi(p+8);
+        if (be->timeout) be->timeout->mark = time(NULL) + timeout;
+    }
     /* Append extracted text */
     if (buf_len(&body.payload)) {
         str->receiver->begin_part(str->receiver, SEARCH_PART_ATTACHMENTBODY, content_guid);
@@ -5551,17 +5551,48 @@ done:
     spool_free_hdrcache(hdrs);
     buf_free(&body.payload);
     buf_free(&buf);
+    buf_free(&decbuf);
     return r;
 }
 
-static struct extractor_ctx *index_text_extractor = NULL;
-
 EXPORTED void index_text_extractor_init(struct protstream *clientin)
 {
+    const char *exturl =
+         config_getstring(IMAPOPT_SEARCH_ATTACHMENT_EXTRACTOR_URL);
+    if (!exturl) return;
+
     syslog(LOG_DEBUG, "extractor_init(%p)", clientin);
+
+    char scheme[6], server[100], path[256], *p;
+    unsigned https, port;
+
+    /* Parse URL (cheesy parser without having to use libxml2) */
+    int n = sscanf(exturl, "%5[^:]://%99[^/]%255[^\n]",
+                   scheme, server, path);
+    if (n != 3 ||
+        strncmp(lcase(scheme), "http", 4) || (scheme[4] && scheme[4] != 's')) {
+        syslog(LOG_ERR,
+               "extract_attachment: unexpected non-HTTP URL %s", exturl);
+        return;
+    }
+
+    /* Normalize URL parts */
+    https = (scheme[4] == 's');
+    if (*(p = path + strlen(path) - 1) == '/') *p = '\0';
+    if ((p = strrchr(server, ':'))) {
+        *p++ = '\0';
+        port = atoi(p);
+    }
+    else port = https ? 443 : 80;
+
+    /* Build servername, port, and options */
+    struct buf buf = BUF_INITIALIZER;
+    buf_printf(&buf, "%s:%u%s/noauth", server, port, https ? "/tls" : "");
 
     index_text_extractor = xzmalloc(sizeof(struct extractor_ctx));
     index_text_extractor->clientin = clientin;
+    index_text_extractor->path = xstrdup(path);
+    index_text_extractor->hostname = buf_release(&buf);
 }
 
 EXPORTED void index_text_extractor_destroy(void)
@@ -5572,14 +5603,10 @@ EXPORTED void index_text_extractor_destroy(void)
 
     if (!ext) return;
 
-    if (ext->be) {
-        struct backend *be = ext->be;
-
-        extractor_disconnect(be);
-        free(((struct backend_ctx *) be->context)->path);
-        free(be->context);
-        free(be);
-    }
+    extractor_disconnect(ext);
+    free(ext->be);
+    free(ext->hostname);
+    free(ext->path);
     free(ext);
 
     index_text_extractor = NULL;
@@ -5626,7 +5653,7 @@ static int getsearchtext_cb(int isbody, charset_t charset, int encoding,
             /* Look for "Content-Disposition: attachment;filename=" header */
             for (param = disposition_params; param; param = param->next) {
                 if (!strcmp(param->attribute, "FILENAME")) {
-                    char *tmp = charset_decode_mimeheader(param->value, charset_flags);
+                    char *tmp = charset_decode_mimeheader(param->value, str->charset_flags);
                     buf_init_ro_cstr(&text, tmp);
                     stuff_part(str->receiver, SEARCH_PART_ATTACHMENTNAME, NULL, &text);
                     buf_free(&text);
@@ -5636,7 +5663,7 @@ static int getsearchtext_cb(int isbody, charset_t charset, int encoding,
                     char *xval = charset_parse_mimexvalue(param->value, NULL);
                     if (!xval) xval = xstrdup(param->value);
                     if (xval) {
-                        char *tmp = charset_decode_mimeheader(xval, charset_flags|CHARSET_MIME_UTF8);
+                        char *tmp = charset_decode_mimeheader(xval, str->charset_flags|CHARSET_MIME_UTF8);
                         buf_init_ro_cstr(&text, tmp);
                         stuff_part(str->receiver, SEARCH_PART_ATTACHMENTNAME, NULL, &text);
                         buf_free(&text);
@@ -5650,7 +5677,7 @@ static int getsearchtext_cb(int isbody, charset_t charset, int encoding,
             /* Look for "Content-Type: foo;name=" header */
             if (strcmp(param->attribute, "NAME"))
                 continue;
-            char *tmp = charset_decode_mimeheader(param->value, charset_flags);
+            char *tmp = charset_decode_mimeheader(param->value, str->charset_flags);
             buf_init_ro_cstr(&text, tmp);
             stuff_part(str->receiver, SEARCH_PART_ATTACHMENTNAME, NULL, &text);
             buf_free(&text);
@@ -5677,26 +5704,63 @@ static int getsearchtext_cb(int isbody, charset_t charset, int encoding,
         }
         else {
             /* body-like */
+            int mycharset_flags = str->charset_flags;
+            const char *mysubtype = subtype;
+
+            if (!strcmpsafe(subtype, "PLAIN") && part &&
+                    strarray_find(&str->striphtml, part, 0) >= 0) {
+                /* Strip any HTML tags from plain text before indexing */
+                mycharset_flags &= ~(CHARSET_SKIPHTML|CHARSET_KEEPHTML);
+                mysubtype = "HTML";
+            }
+
             str->receiver->begin_part(str->receiver, SEARCH_PART_BODY, content_guid);
-            charset_extract(extract_cb, str, data, charset, encoding, subtype,
-                            str->charset_flags);
+            charset_extract(extract_cb, str, data, charset, encoding, mysubtype,
+                           mycharset_flags);
             str->receiver->end_part(str->receiver, SEARCH_PART_BODY);
         }
     }
     else if (isbody && !strcmp(type, "APPLICATION")) {
 
+#ifdef USE_HTTPD
+        // application/ics is an alias for text/icalendar
+        if (!strcmp(subtype, "ICS")) {
+            extract_icalbuf(data, charset, encoding, content_guid, str);
+            goto done;
+        }
+#endif /* USE_HTTPD */
+
+        // these are encrypted fields which aren't worth indexing
+        if (!strcmp(subtype, "PKCS7-MIME")) goto done;
+        if (!strcmp(subtype, "PKCS7-ENCRYPTED")) goto done;
+        if (!strcmp(subtype, "PKCS7-SIGNATURE")) goto done;
+        if (!strcmp(subtype, "PGP-SIGNATURE")) goto done;
+        if (!strcmp(subtype, "PGP-KEYS")) goto done;
+        if (!strcmp(subtype, "PGP-ENCRYPTED")) goto done;
+
         /* Ignore attachments in first snippet generation pass */
         if (str->snippet_iteration == 1) goto done;
 
-        /* Only generate snippets from named attachmend parts */
+        /* Only generate snippets from named attachment parts */
         if (str->snippet_iteration >= 2 && !str->partids) goto done;
+
+        if (!config_getstring(IMAPOPT_SEARCH_ATTACHMENT_EXTRACTOR_URL)) {
+            /* Message has attachment, but no extractor is configured */
+            str->indexlevel = 1;
+            goto done;
+        }
 
         r = extract_attachment(type, subtype, type_params, data, encoding,
                                content_guid, str);
-        if (r) {
-            syslog(LOG_ERR, "index: can't extract text from attachment: %s",
-                    error_message(r));
-            goto done;
+        if (r == IMAP_IOERROR && (str->flags & INDEX_GETSEARCHTEXT_PARTIALS)) {
+            /* mark message as partially indexed and continue */
+            str->indexlevel |= SEARCH_INDEXLEVEL_PARTIAL;
+            r = 0;
+        }
+        else if (r) {
+            syslog(LOG_ERR, "IOERROR index: can't extract attachment %s (%s/%s): %s",
+                    message_guid_encode(content_guid),
+                    type, subtype, error_message(r));
         }
     }
 
@@ -5704,19 +5768,93 @@ done:
     return r;
 }
 
-static void append_alnum(struct buf *buf, const char *ss)
+static int find_striphtml_parts(message_t *msg, strarray_t *striphtml)
 {
-    const unsigned char *s = (const unsigned char *)ss;
+    const struct body *root;
+    int r = message_get_cachebody(msg, &root);
+    if (r) return r;
 
-    for ( ; *s ; ++s) {
-        if (Uisalnum(*s))
-            buf_putc(buf, *s);
+    ptrarray_t submsgs = PTRARRAY_INITIALIZER;
+    ptrarray_t work = PTRARRAY_INITIALIZER;
+
+    /* Add top-level message and find all rfc822 messages */
+    ptrarray_push(&submsgs, (void*)root);
+    ptrarray_push(&work, (void*) root);
+    const struct body *body;
+    while ((body = ptrarray_pop(&work))) {
+        if (!strcmpsafe(body->type, "MESSAGE") &&
+            !strcmpsafe(body->subtype, "RFC822")) {
+            ptrarray_push(&submsgs, (void*)body);
+        }
+        int i;
+        for (i = 0; i < body->numparts; i++) {
+            ptrarray_push(&work, body->subpart + i);
+        }
     }
+
+    /* Process top-level and each embedded message separately */
+    while ((root = ptrarray_pop(&submsgs))) {
+        /* Check if submsg has any HTML part */
+        int has_htmlpart = 0;
+        int i;
+        for (i = 0; i < root->numparts; i++) {
+            ptrarray_push(&work, root->subpart + i);
+        }
+        while ((body = ptrarray_pop(&work))) {
+            if (!strcmpsafe(body->type, "TEXT") &&
+                !strcmpsafe(body->subtype, "HTML") &&
+                (!body->disposition || !strcmp(body->disposition, "INLINE"))) {
+                has_htmlpart = 1;
+                break;
+            }
+            else if (!strcmpsafe(body->type, "MESSAGE") &&
+                     !strcmpsafe(body->subtype, "RFC822")) {
+                continue;
+            }
+            else if (body->numparts) {
+                for (i = 0; i < body->numparts; i++) {
+                    ptrarray_push(&work, body->subpart + i);
+                }
+            }
+        }
+
+        if (!has_htmlpart) continue;
+
+        /* Keep track of plain text body part ids that
+         * coexist with HTML bodies in the same submsg */
+
+        for (i = 0; i < root->numparts; i++) {
+            ptrarray_push(&work, root->subpart + i);
+        }
+        while ((body = ptrarray_pop(&work))) {
+            if (!strcmpsafe(body->type, "TEXT") &&
+                !strcmpsafe(body->subtype, "PLAIN")) {
+                if (body->part_id) {
+                    strarray_push(striphtml, body->part_id);
+                }
+            }
+            else if (!strcmpsafe(body->type, "MESSAGE") &&
+                     !strcmpsafe(body->subtype, "RFC822")) {
+                continue;
+            }
+            else if (body->numparts) {
+                int i;
+                for (i = 0; i < body->numparts; i++) {
+                    ptrarray_push(&work, body->subpart + i);
+                }
+            }
+        }
+    }
+
+    ptrarray_fini(&submsgs);
+    ptrarray_fini(&work);
+
+    return 0;
 }
 
 EXPORTED int index_getsearchtext(message_t *msg, const strarray_t *partids,
                                  search_text_receiver_t *receiver,
-                                 int snippet)
+                                 int flags)
 {
     struct getsearchtext_rock str;
     struct buf buf = BUF_INITIALIZER;
@@ -5742,15 +5880,23 @@ EXPORTED int index_getsearchtext(message_t *msg, const strarray_t *partids,
     str.charset_flags = charset_flags;
     str.partids = partids;
     str.snippet_iteration = 0;
+    str.flags = flags;
+    str.indexlevel = SEARCH_INDEXLEVEL_ATTACH; // may get downgraded in callback
 
     /* Search receiver can override text conversion */
     if (receiver->index_charset_flags) {
         str.charset_flags = receiver->index_charset_flags(str.charset_flags);
     }
 
-    if (snippet) {
+    if (flags & INDEX_GETSEARCHTEXT_SNIPPET) {
         str.charset_flags |= CHARSET_KEEPCASE;
         format = MESSAGE_SNIPPET;
+    }
+
+    /* Search receiver can override message field conversion */
+    if (receiver->index_message_format) {
+        format = receiver->index_message_format(format,
+                flags & INDEX_GETSEARCHTEXT_SNIPPET);
     }
 
     /* Choose index scheme for Content=Type */
@@ -5775,6 +5921,7 @@ EXPORTED int index_getsearchtext(message_t *msg, const strarray_t *partids,
 #endif
     }
     else {
+
         if (!message_get_field(msg, "From", format, &buf))
             stuff_part(receiver, SEARCH_PART_FROM, NULL, &buf);
 
@@ -5796,39 +5943,38 @@ EXPORTED int index_getsearchtext(message_t *msg, const strarray_t *partids,
         if (!message_get_field(msg, "Mailing-List", format, &buf))
             stuff_part(receiver, SEARCH_PART_LISTID, NULL, &buf);
 
+        if (!message_get_field(msg, "Mailing-List", format, &buf))
+            stuff_part(receiver, SEARCH_PART_LISTID, NULL, &buf);
+
+        if (!message_get_deliveredto(msg, &buf))
+            stuff_part(receiver, SEARCH_PART_DELIVEREDTO, NULL, &buf);
+
+        if (!message_get_priority(msg, &buf))
+            stuff_part(receiver, SEARCH_PART_PRIORITY, NULL, &buf);
+
         if (!message_get_leaf_types(msg, &types) && types.count) {
-            /* We add three search terms: the type, subtype, and a combined
-             * type+subtype string.  We carefully control punctuation to
-             * ensure that each word in indexed as a single term.  For
-             * example if the original message has "application/x-pdf" then
-             * we index "APPLICATION" "XPDF" "APPLICATION_XPDF".  */
-
-            receiver->begin_part(receiver, SEARCH_PART_TYPE, NULL);
             for (i = 0 ; i < types.count ; i+= 2) {
-                buf_reset(&buf);
-
-                if (i) buf_putc(&buf, ' ');
-
-                /* type */
-                append_alnum(&buf, types.data[i]);
-                buf_putc(&buf, ' ');
-                /* subtype */
-                append_alnum(&buf, types.data[i+1]);
-                buf_putc(&buf, ' ');
-                /* combined type_subtype */
-                append_alnum(&buf, types.data[i]);
-                buf_putc(&buf, '_');
-                append_alnum(&buf, types.data[i+1]);
-
+                receiver->begin_part(receiver, SEARCH_PART_TYPE, NULL);
+                buf_setcstr(&buf, types.data[i]);
+                buf_putc(&buf, '/');
+                buf_appendcstr(&buf, types.data[i+1]);
                 receiver->append_text(receiver, &buf);
+                receiver->end_part(receiver, SEARCH_PART_TYPE);
             }
-            receiver->end_part(receiver, SEARCH_PART_TYPE);
         }
 
-        /* A regular message. Generate snippets in two passes. */
-        str.snippet_iteration = snippet ? 1 : 0;
+        /* A regular message. */
+
+        /* Determine when to strip HTML from plain text */
+        find_striphtml_parts(msg, &str.striphtml);
+
+        /* Generate snippets in two passes. */
+        if (flags & INDEX_GETSEARCHTEXT_SNIPPET) {
+            str.snippet_iteration = 1; /* first pass */
+        }
+
         r = message_foreach_section(msg, getsearchtext_cb, &str);
-        if (snippet) {
+        if (!r && str.snippet_iteration) {
             if (receiver->flush) {
                 r = receiver->flush(receiver);
             }
@@ -5841,11 +5987,24 @@ EXPORTED int index_getsearchtext(message_t *msg, const strarray_t *partids,
         if (r) goto done;
     }
 
-    r = receiver->end_message(receiver);
+    /* Finalize message. */
+    r = receiver->end_message(receiver, str.indexlevel);
+
+    /* Log partially indexed message */
+    if (!r && (str.indexlevel & SEARCH_INDEXLEVEL_PARTIAL)) {
+        struct mailbox *mailbox = msg_mailbox(msg);
+        uint32_t uid = 0;
+        message_get_uid(msg, &uid);
+        if (uid && mailbox) {
+            syslog(LOG_ERR, "IOERROR: index: partially indexed %s:%d",
+                    mailbox->name, uid);
+        }
+    }
 
 done:
     buf_free(&buf);
     strarray_fini(&types);
+    strarray_fini(&str.striphtml);
 
     return r;
 }
@@ -5983,6 +6142,8 @@ MsgData **index_msgdata_load(struct index_state *state,
                 assert(cstate);
                 if (conversation_load_advanced(cstate, record.cid, &conv, /*flags*/0))
                     continue;
+                // useful to have for mutable sorts
+                cur->convmodseq = conv.modseq;
                 did_conv++;
             }
 
@@ -6152,7 +6313,7 @@ static char *get_displayname(const char *header)
     if (!addr) return NULL;
 
     if (addr->name && addr->name[0]) {
-        /* pure RFC5255 compatible "searchform" conversion */
+        /* pure RFC 5255 compatible "searchform" conversion */
         ret = charset_utf8_to_searchform(addr->name, /*flags*/0);
     }
     else if (addr->domain && addr->mailbox) {
@@ -7895,7 +8056,22 @@ EXPORTED int index_hasrights(const struct index_state *state, int rights)
 static struct seqset *_parse_sequence(struct index_state *state,
                                       const char *sequence, int usinguid)
 {
-    unsigned maxval = usinguid ? state->last_uid : state->exists;
+    unsigned maxval;
+
+    /* Per RFC 3501, seq-number ABNF:
+       "*" represents the largest number in use.
+       In the case of message sequence numbers,
+       it is the number of messages in a non-empty mailbox.
+       In the case of unique identifiers,
+       it is the unique identifier of the last message in the mailbox
+       or, if the mailbox is empty, the mailbox's current UIDNEXT value.
+    */
+    if (usinguid) {
+        if (state->exists) maxval = index_getuid(state, state->exists);
+        else maxval = state->last_uid + 1;
+    }
+    else maxval = state->exists;
+
     return seqset_parse(sequence, NULL, maxval);
 }
 

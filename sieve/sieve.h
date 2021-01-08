@@ -123,78 +123,65 @@ extern int sievedebug;
     CURRENTDATE = 333,
     ORIGINALZONE = 334,
     ZONE = 335,
-    TIMEZONE = 336,
-    YEARP = 337,
-    MONTHP = 338,
-    DAYP = 339,
-    DATEP = 340,
-    JULIAN = 341,
-    HOURP = 342,
-    MINUTEP = 343,
-    SECONDP = 344,
-    TIMEP = 345,
-    ISO8601 = 346,
-    STD11 = 347,
-    ZONEP = 348,
-    WEEKDAYP = 349,
-    INDEX = 350,
-    LAST = 351,
-    ADDHEADER = 352,
-    DELETEHEADER = 353,
-    REJCT = 354,
-    EREJECT = 355,
-    METHOD = 356,
-    OPTIONS = 357,
-    MESSAGE = 358,
-    IMPORTANCE = 359,
-    VALIDNOTIFYMETHOD = 360,
-    NOTIFYMETHODCAPABILITY = 361,
-    NOTIFY = 362,
-    ENOTIFY = 363,
-    ENCODEURL = 364,
-    DENOTIFY = 365,
-    ID = 366,
-    ANY = 367,
-    LOW = 368,
-    NORMAL = 369,
-    HIGH = 370,
-    IHAVE = 371,
-    ERROR = 372,
-    MAILBOXEXISTS = 373,
-    CREATE = 374,
-    METADATA = 375,
-    METADATAEXISTS = 376,
-    SERVERMETADATA = 377,
-    SERVERMETADATAEXISTS = 378,
-    BYTIMEREL = 379,
-    BYTIMEABS = 380,
-    BYMODE = 381,
-    BYTRACE = 382,
-    DSNNOTIFY = 383,
-    DSNRET = 384,
-    VALIDEXTLIST = 385,
-    LIST = 386,
-    INCLUDE = 387,
-    OPTIONAL = 388,
-    ONCE = 389,
-    RETURN = 390,
-    PERSONAL = 391,
-    GLOBAL = 392,
-    DUPLICATE = 393,
-    HEADER = 394,
-    UNIQUEID = 395,
-    SPECIALUSEEXISTS = 396,
-    SPECIALUSE = 397,
-    FCC = 398,
-    MAILBOXID = 399,
-    MAILBOXIDEXISTS = 400,
-    LOG = 401,
-    JMAPQUERY = 402,
-    SNOOZE = 403,
-    MAILBOX = 404,
-    ADDFLAGS = 405,
-    REMOVEFLAGS = 406,
-    WEEKDAYS = 407
+    INDEX = 336,
+    LAST = 337,
+    ADDHEADER = 338,
+    DELETEHEADER = 339,
+    REJCT = 340,
+    EREJECT = 341,
+    METHOD = 342,
+    OPTIONS = 343,
+    MESSAGE = 344,
+    IMPORTANCE = 345,
+    VALIDNOTIFYMETHOD = 346,
+    NOTIFYMETHODCAPABILITY = 347,
+    NOTIFY = 348,
+    ENOTIFY = 349,
+    ENCODEURL = 350,
+    DENOTIFY = 351,
+    ID = 352,
+    ANY = 353,
+    LOW = 354,
+    NORMAL = 355,
+    HIGH = 356,
+    IHAVE = 357,
+    ERROR = 358,
+    MAILBOXEXISTS = 359,
+    CREATE = 360,
+    METADATA = 361,
+    METADATAEXISTS = 362,
+    SERVERMETADATA = 363,
+    SERVERMETADATAEXISTS = 364,
+    BYTIMEREL = 365,
+    BYTIMEABS = 366,
+    BYMODE = 367,
+    BYTRACE = 368,
+    DSNNOTIFY = 369,
+    DSNRET = 370,
+    VALIDEXTLIST = 371,
+    LIST = 372,
+    INCLUDE = 373,
+    OPTIONAL = 374,
+    ONCE = 375,
+    RETURN = 376,
+    PERSONAL = 377,
+    GLOBAL = 378,
+    DUPLICATE = 379,
+    HEADER = 380,
+    UNIQUEID = 381,
+    SPECIALUSEEXISTS = 382,
+    SPECIALUSE = 383,
+    FCC = 384,
+    MAILBOXID = 385,
+    MAILBOXIDEXISTS = 386,
+    LOG = 387,
+    JMAPQUERY = 388,
+    SNOOZE = 389,
+    MAILBOX = 390,
+    ADDFLAGS = 391,
+    REMOVEFLAGS = 392,
+    WEEKDAYS = 393,
+    TZID = 394
   };
 #endif
 /* Tokens.  */
@@ -276,85 +263,72 @@ extern int sievedebug;
 #define CURRENTDATE 333
 #define ORIGINALZONE 334
 #define ZONE 335
-#define TIMEZONE 336
-#define YEARP 337
-#define MONTHP 338
-#define DAYP 339
-#define DATEP 340
-#define JULIAN 341
-#define HOURP 342
-#define MINUTEP 343
-#define SECONDP 344
-#define TIMEP 345
-#define ISO8601 346
-#define STD11 347
-#define ZONEP 348
-#define WEEKDAYP 349
-#define INDEX 350
-#define LAST 351
-#define ADDHEADER 352
-#define DELETEHEADER 353
-#define REJCT 354
-#define EREJECT 355
-#define METHOD 356
-#define OPTIONS 357
-#define MESSAGE 358
-#define IMPORTANCE 359
-#define VALIDNOTIFYMETHOD 360
-#define NOTIFYMETHODCAPABILITY 361
-#define NOTIFY 362
-#define ENOTIFY 363
-#define ENCODEURL 364
-#define DENOTIFY 365
-#define ID 366
-#define ANY 367
-#define LOW 368
-#define NORMAL 369
-#define HIGH 370
-#define IHAVE 371
-#define ERROR 372
-#define MAILBOXEXISTS 373
-#define CREATE 374
-#define METADATA 375
-#define METADATAEXISTS 376
-#define SERVERMETADATA 377
-#define SERVERMETADATAEXISTS 378
-#define BYTIMEREL 379
-#define BYTIMEABS 380
-#define BYMODE 381
-#define BYTRACE 382
-#define DSNNOTIFY 383
-#define DSNRET 384
-#define VALIDEXTLIST 385
-#define LIST 386
-#define INCLUDE 387
-#define OPTIONAL 388
-#define ONCE 389
-#define RETURN 390
-#define PERSONAL 391
-#define GLOBAL 392
-#define DUPLICATE 393
-#define HEADER 394
-#define UNIQUEID 395
-#define SPECIALUSEEXISTS 396
-#define SPECIALUSE 397
-#define FCC 398
-#define MAILBOXID 399
-#define MAILBOXIDEXISTS 400
-#define LOG 401
-#define JMAPQUERY 402
-#define SNOOZE 403
-#define MAILBOX 404
-#define ADDFLAGS 405
-#define REMOVEFLAGS 406
-#define WEEKDAYS 407
+#define INDEX 336
+#define LAST 337
+#define ADDHEADER 338
+#define DELETEHEADER 339
+#define REJCT 340
+#define EREJECT 341
+#define METHOD 342
+#define OPTIONS 343
+#define MESSAGE 344
+#define IMPORTANCE 345
+#define VALIDNOTIFYMETHOD 346
+#define NOTIFYMETHODCAPABILITY 347
+#define NOTIFY 348
+#define ENOTIFY 349
+#define ENCODEURL 350
+#define DENOTIFY 351
+#define ID 352
+#define ANY 353
+#define LOW 354
+#define NORMAL 355
+#define HIGH 356
+#define IHAVE 357
+#define ERROR 358
+#define MAILBOXEXISTS 359
+#define CREATE 360
+#define METADATA 361
+#define METADATAEXISTS 362
+#define SERVERMETADATA 363
+#define SERVERMETADATAEXISTS 364
+#define BYTIMEREL 365
+#define BYTIMEABS 366
+#define BYMODE 367
+#define BYTRACE 368
+#define DSNNOTIFY 369
+#define DSNRET 370
+#define VALIDEXTLIST 371
+#define LIST 372
+#define INCLUDE 373
+#define OPTIONAL 374
+#define ONCE 375
+#define RETURN 376
+#define PERSONAL 377
+#define GLOBAL 378
+#define DUPLICATE 379
+#define HEADER 380
+#define UNIQUEID 381
+#define SPECIALUSEEXISTS 382
+#define SPECIALUSE 383
+#define FCC 384
+#define MAILBOXID 385
+#define MAILBOXIDEXISTS 386
+#define LOG 387
+#define JMAPQUERY 388
+#define SNOOZE 389
+#define MAILBOX 390
+#define ADDFLAGS 391
+#define REMOVEFLAGS 392
+#define WEEKDAYS 393
+#define TZID 394
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 
 union YYSTYPE
 {
-#line 170 "sieve/sieve.y" /* yacc.c:1909  */
+#line 178 "sieve/sieve.y" /* yacc.c:1909  */
 
     int nval;
     char *sval;
@@ -365,7 +339,7 @@ union YYSTYPE
     testlist_t *testl;
     commandlist_t *cl;
 
-#line 369 "sieve/sieve.h" /* yacc.c:1909  */
+#line 343 "sieve/sieve.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

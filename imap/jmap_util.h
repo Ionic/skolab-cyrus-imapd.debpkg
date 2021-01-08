@@ -70,13 +70,13 @@ extern json_t* jmap_patchobject_apply(json_t *val, json_t *patch, json_t *invali
 /* Create a patch-object that transforms src into dst. */
 extern json_t *jmap_patchobject_create(json_t *src, json_t *dst);
 
-/* Return non-zero src and its RFC6901 encoding differ */
+/* Return non-zero src and its RFC 6901 encoding differ */
 extern int jmap_pointer_needsencode(const char *src);
 
-/* Encode src according to RFC6901 */
+/* Encode src according to RFC 6901 */
 extern char *jmap_pointer_encode(const char *src);
 
-/* Decode src according to RFC6901 */
+/* Decode src according to RFC 6901 */
 extern char *jmap_pointer_decode(const char *src, size_t len);
 
 /* Remove all properties in jobj that have no key in props */
@@ -111,5 +111,26 @@ extern json_t *jmap_server_error(int r);
 
 extern char *jmap_encode_base64_nopad(const char *data, size_t len);
 extern char *jmap_decode_base64_nopad(const char *b64, size_t b64len);
+
+/* Decode the text in data of datalen bytes to UTF-8 to a C-string.
+ *
+ * Attempt to detect the right character encoding if conversion to
+ * UTF-8 yields any invalid or replacement characters.
+ *
+ * Parameters:
+ * - charset indicates the presumed character encoding.
+ * - encoding must be one of the encodings defined in charset.h
+ * - confidence indicates the threshold for charset detection (0 to 1.0)
+ * - val holds any allocated memory to which the return value points to
+ * - (optional) is_encoding_problem is set for invalid byte sequences
+ *
+ * The return value MAY point to data if data is a C-string and does not
+ * contain invalid UTF-8 (but may contain replacement) characters.
+ */
+extern const char *jmap_decode_to_utf8(const char *charset, int encoding,
+                                       const char *data, size_t datalen,
+                                       float confidence,
+                                       char **val,
+                                       int *is_encoding_problem);
 
 #endif /* JMAP_UTIL_H */

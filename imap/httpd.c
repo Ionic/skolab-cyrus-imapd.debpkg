@@ -90,6 +90,7 @@
 #include "backend.h"
 #include "prometheus.h"
 #include "proxy.h"
+#include "sync_support.h"
 #include "userdeny.h"
 #include "message.h"
 #include "idle.h"
@@ -149,8 +150,8 @@ HIDDEN int zlib_compress(struct transaction_t *txn, unsigned flags,
     zstrm->next_in = (Bytef *) buf;
     zstrm->avail_in = len;
 
-    buf_ensure(&txn->zbuf, deflateBound(zstrm, zstrm->avail_in));
     buf_reset(&txn->zbuf);
+    buf_ensure(&txn->zbuf, deflateBound(zstrm, zstrm->avail_in));
 
     do {
         int zr;
@@ -255,8 +256,8 @@ static int brotli_compress(struct transaction_t *txn,
     const uint8_t *next_in = (const uint8_t *) buf;
     size_t avail_in = (size_t) len;
 
-    buf_ensure(&txn->zbuf, BrotliEncoderMaxCompressedSize(avail_in));
     buf_reset(&txn->zbuf);
+    buf_ensure(&txn->zbuf, BrotliEncoderMaxCompressedSize(avail_in));
 
     do {
         uint8_t *next_out = (uint8_t *) txn->zbuf.s + txn->zbuf.len;
@@ -330,8 +331,8 @@ static int zstd_compress(struct transaction_t *txn,
 
     if (flags & COMPRESS_START) ZSTD_CCtx_reset(cctx, ZSTD_reset_session_only);
 
-    buf_ensure(&txn->zbuf, ZSTD_compressBound(len));
     buf_reset(&txn->zbuf);
+    buf_ensure(&txn->zbuf, ZSTD_compressBound(len));
 
     ZSTD_outBuffer output = { txn->zbuf.s, txn->zbuf.alloc, 0 };
     do {
@@ -398,6 +399,7 @@ const char *httpd_localip = NULL, *httpd_remoteip = NULL;
 struct protstream *httpd_out = NULL;
 struct protstream *httpd_in = NULL;
 struct protgroup *protin = NULL;
+strarray_t *httpd_log_headers = NULL;
 
 static sasl_ssf_t extprops_ssf = 0;
 int https = 0;
@@ -412,9 +414,11 @@ struct buf serverinfo = BUF_INITIALIZER;
 int ignorequota = 0;
 int apns_enabled = 0;
 
-/* List of HTTP auth schemes that we support */
+/* List of HTTP auth schemes that we support -
+   in descending order of security properties */
 struct auth_scheme_t auth_schemes[] = {
-      AUTH_SCHEME_BASIC,
+    { AUTH_SPNEGO, "Negotiate", "GSS-SPNEGO",
+      AUTH_BASE64 | AUTH_SUCCESS_WWW },
     { AUTH_SCRAM_SHA256, "SCRAM-SHA-256", "SCRAM-SHA-256",
       AUTH_NEED_PERSIST | AUTH_SERVER_FIRST | AUTH_BASE64 |
       AUTH_REALM_PARAM | AUTH_DATA_PARAM },
@@ -423,12 +427,11 @@ struct auth_scheme_t auth_schemes[] = {
       AUTH_REALM_PARAM | AUTH_DATA_PARAM },
     { AUTH_DIGEST, "Digest", HTTP_DIGEST_MECH,
       AUTH_NEED_REQUEST | AUTH_SERVER_FIRST },
-    { AUTH_SPNEGO, "Negotiate", "GSS-SPNEGO",
-      AUTH_BASE64 | AUTH_SUCCESS_WWW },
     { AUTH_NTLM, "NTLM", "NTLM",
       AUTH_NEED_PERSIST | AUTH_BASE64 },
     { AUTH_BEARER, "Bearer", NULL,
       AUTH_SERVER_FIRST | AUTH_REALM_PARAM },
+      AUTH_SCHEME_BASIC,
     { 0, NULL, NULL, 0 }
 };
 
@@ -486,28 +489,29 @@ static struct sasl_callback mysasl_cb[] = {
 
 /* Array of HTTP methods known by our server. */
 const struct known_meth_t http_methods[] = {
-    { "ACL",            0,              CYRUS_HTTP_ACL_TOTAL },
-    { "BIND",           0,              CYRUS_HTTP_BIND_TOTAL },
-    { "CONNECT",        METH_NOBODY,    CYRUS_HTTP_CONNECT_TOTAL },
-    { "COPY",           METH_NOBODY,    CYRUS_HTTP_COPY_TOTAL },
-    { "DELETE",         METH_NOBODY,    CYRUS_HTTP_DELETE_TOTAL },
-    { "GET",            METH_NOBODY,    CYRUS_HTTP_GET_TOTAL },
-    { "HEAD",           METH_NOBODY,    CYRUS_HTTP_HEAD_TOTAL },
-    { "LOCK",           0,              CYRUS_HTTP_LOCK_TOTAL },
-    { "MKCALENDAR",     0,              CYRUS_HTTP_MKCALENDAR_TOTAL },
-    { "MKCOL",          0,              CYRUS_HTTP_MKCOL_TOTAL },
-    { "MOVE",           METH_NOBODY,    CYRUS_HTTP_MOVE_TOTAL },
-    { "OPTIONS",        METH_NOBODY,    CYRUS_HTTP_OPTIONS_TOTAL },
-    { "PATCH",          0,              CYRUS_HTTP_PATCH_TOTAL },
-    { "POST",           0,              CYRUS_HTTP_POST_TOTAL },
-    { "PROPFIND",       0,              CYRUS_HTTP_PROPFIND_TOTAL },
-    { "PROPPATCH",      0,              CYRUS_HTTP_PROPPATCH_TOTAL },
-    { "PUT",            0,              CYRUS_HTTP_PUT_TOTAL },
-    { "REPORT",         0,              CYRUS_HTTP_REPORT_TOTAL },
-    { "TRACE",          METH_NOBODY,    CYRUS_HTTP_TRACE_TOTAL },
-    { "UNBIND",         0,              CYRUS_HTTP_UNBIND_TOTAL },
-    { "UNLOCK",         METH_NOBODY,    CYRUS_HTTP_UNLOCK_TOTAL },
-    { NULL,             0,              0 }
+    { "ACL",           0,                          CYRUS_HTTP_ACL_TOTAL },
+    { "BIND",          0,                          CYRUS_HTTP_BIND_TOTAL },
+    { "CONNECT",       METH_NOBODY,                CYRUS_HTTP_CONNECT_TOTAL },
+    { "COPY",          METH_NOBODY,                CYRUS_HTTP_COPY_TOTAL },
+    { "DELETE",        METH_NOBODY,                CYRUS_HTTP_DELETE_TOTAL },
+    { "GET",           METH_NOBODY | METH_SAFE,    CYRUS_HTTP_GET_TOTAL },
+    { "HEAD",          METH_NOBODY | METH_SAFE,    CYRUS_HTTP_HEAD_TOTAL },
+    { "LOCK",          0,                          CYRUS_HTTP_LOCK_TOTAL },
+    { "MKCALENDAR",    0,                          CYRUS_HTTP_MKCALENDAR_TOTAL },
+    { "MKCOL",         0,                          CYRUS_HTTP_MKCOL_TOTAL },
+    { "MOVE",          METH_NOBODY,                CYRUS_HTTP_MOVE_TOTAL },
+    { "OPTIONS",       METH_NOBODY | METH_SAFE,    CYRUS_HTTP_OPTIONS_TOTAL },
+    { "PATCH",         0,                          CYRUS_HTTP_PATCH_TOTAL },
+    { "POST",          0,                          CYRUS_HTTP_POST_TOTAL },
+    { "PROPFIND",      METH_SAFE,                  CYRUS_HTTP_PROPFIND_TOTAL },
+    { "PROPPATCH",     0,                          CYRUS_HTTP_PROPPATCH_TOTAL },
+    { "PUT",           0,                          CYRUS_HTTP_PUT_TOTAL },
+    { "REPORT",        METH_SAFE,                  CYRUS_HTTP_REPORT_TOTAL },
+    { "SEARCH",        METH_SAFE,                  CYRUS_HTTP_SEARCH_TOTAL },
+    { "TRACE",         METH_NOBODY | METH_SAFE,    CYRUS_HTTP_TRACE_TOTAL },
+    { "UNBIND",        0,                          CYRUS_HTTP_UNBIND_TOTAL },
+    { "UNLOCK",        METH_NOBODY,                CYRUS_HTTP_UNLOCK_TOTAL },
+    { NULL,            0,                          0 }
 };
 
 /* WebSocket handler */
@@ -747,6 +751,9 @@ int service_init(int argc __attribute__((unused)),
     protin = protgroup_new(2);
 
     config_httpprettytelemetry = config_getswitch(IMAPOPT_HTTPPRETTYTELEMETRY);
+
+    httpd_log_headers = strarray_split(config_getstring(IMAPOPT_HTTPLOGHEADERS),
+                                       " ", STRARRAY_TRIM | STRARRAY_LCASE);
 
     if (config_getstring(IMAPOPT_HTTPALLOWCORS)) {
         allow_cors =
@@ -997,6 +1004,8 @@ void shut_down(int code)
     in_shutdown = 1;
 
     if (allow_cors) free_wildmats(allow_cors);
+
+    strarray_free(httpd_log_headers);
 
     /* Do any namespace specific cleanup */
     for (i = 0; http_namespaces[i]; i++) {
@@ -1509,6 +1518,12 @@ static int check_namespace(struct transaction_t *txn)
         meth_t = &namespace->methods[txn->meth];
         if (!meth_t->proc) return HTTP_NOT_ALLOWED;
 
+        if (config_getswitch(IMAPOPT_READONLY) &&
+              !(http_methods[txn->meth].flags & METH_SAFE) &&
+              !(namespace->allow & ALLOW_READONLY)) {
+            return HTTP_NOT_ALLOWED;
+        }
+
         /* Check if method expects a body */
         else if ((http_methods[txn->meth].flags & METH_NOBODY) &&
                  (txn->req_body.framing != FRAMING_LENGTH ||
@@ -1986,6 +2001,9 @@ static void cmdloop(struct http_connection *conn)
 
         /* make sure nothing leaked */
         assert(!open_mailboxes_exist());
+        assert(!open_mboxlocks_exist());
+
+        sync_log_reset();
 
         /* Check for input from client */
         do {
@@ -2534,10 +2552,9 @@ static void write_cachehdr(const char *name, const char *contents,
     simple_hdr(txn, name, "%s", contents);
 }
 
-
 EXPORTED void response_header(long code, struct transaction_t *txn)
 {
-    int i;
+    int i, size;
     time_t now;
     char datestr[30];
     va_list noargs;
@@ -2596,7 +2613,8 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
         GCC_FALLTHROUGH
 
     case HTTP_EARLY_HINTS:
-        for (i = 0; i < strarray_size(&resp_body->links); i++) {
+        size = strarray_size(&resp_body->links);
+        for (i = 0; i < size; i++) {
             simple_hdr(txn, "Link", "%s", strarray_nth(&resp_body->links, i));
         }
 
@@ -2634,7 +2652,7 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
         /* Construct Cache-Control header */
         const char *cc_dirs[] =
             { "must-revalidate", "no-cache", "no-store", "no-transform",
-              "public", "private", "max-age=%d", NULL };
+              "public", "private", "max-age=%d", "immutable", NULL };
 
         comma_list_hdr(txn, "Cache-Control",
                        cc_dirs, txn->flags.cc, resp_body->maxage);
@@ -2768,6 +2786,19 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
             }
             break;
         }
+
+        /* Fall through and specify supported content codings */
+        GCC_FALLTHROUGH
+
+    case HTTP_CREATED:
+    case HTTP_ACCEPTED:
+    case HTTP_NO_CONTENT:
+    case HTTP_RESET_CONTENT:
+    case HTTP_PARTIAL:
+    case HTTP_MULTI_STATUS:
+        if (accept_encodings && buf_len(&txn->req_body.payload)) {
+            comma_list_hdr(txn, "Accept-Encoding", ce, accept_encodings);
+        }
         break;
 
     case HTTP_NOT_ALLOWED:
@@ -2856,7 +2887,10 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
             simple_hdr(txn, "Content-Language", "%s", resp_body->lang);
         }
         if (resp_body->loc) {
-            simple_hdr(txn, "Content-Location", "%s", resp_body->loc);
+            xmlChar *uri = xmlURIEscapeStr(BAD_CAST resp_body->loc, BAD_CAST ":/?=");
+            simple_hdr(txn, "Content-Location", "%s", (const char *) uri);
+            free(uri);
+
             if (txn->flags.cors) Access_Control_Expose("Content-Location");
         }
         if (resp_body->md5) {
@@ -3085,6 +3119,17 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
             sep = "; ";
         }
 
+        /* Add httplogheaders */
+        size = strarray_size(httpd_log_headers);
+        for (i = 0; i < size; i++) {
+            const char *name = strarray_nth(httpd_log_headers, i);
+
+            if ((hdr = spool_getheader(txn->req_hdrs, name))) {
+                buf_printf(logbuf, "%s%s=\"%s\"", sep, name, hdr[0]);
+                sep = "; ";
+            }
+        }
+
         if (*sep == ';') buf_appendcstr(logbuf, ")");
     }
 
@@ -3114,9 +3159,9 @@ EXPORTED void response_header(long code, struct transaction_t *txn)
         comma_list_body(logbuf, te, txn->flags.te, 0, noargs);
         sep = "; ";
     }
-    if (txn->resp_body.enc.proc) {
+    if (resp_body->enc.proc && (resp_body->len || txn->flags.te)) {
         buf_printf(logbuf, "%scnt-encoding=", sep);
-        comma_list_body(logbuf, ce, txn->resp_body.enc.type, 0, noargs);
+        comma_list_body(logbuf, ce, resp_body->enc.type, 0, noargs);
         sep = "; ";
     }
     if (txn->location) {
@@ -3630,7 +3675,7 @@ EXPORTED void error_response(long code, struct transaction_t *txn)
     }
 
     if (txn->error.desc) {
-        const char **hdr, *host = "";
+        const char **hdr, *host = config_servername;
         char *port = NULL;
         unsigned level = 0;
 
@@ -3640,9 +3685,7 @@ EXPORTED void error_response(long code, struct transaction_t *txn)
             host = (char *) hdr[0];
             if ((port = strchr(host, ':'))) *port++ = '\0';
         }
-        else if (config_serverinfo != IMAP_ENUM_SERVERINFO_OFF) {
-            host = config_servername;
-        }
+
         if (!port) {
             port = (buf_len(&saslprops.iplocalport)) ?
                 strchr(buf_cstring(&saslprops.iplocalport), ';')+1 : "";
@@ -3657,10 +3700,14 @@ EXPORTED void error_response(long code, struct transaction_t *txn)
         buf_printf_markup(html, level++, "<body>");
         buf_printf_markup(html, level, "<h1>%s</h1>", error_message(code)+4);
         buf_printf_markup(html, level, "<p>%s</p>", txn->error.desc);
-        buf_printf_markup(html, level, "<hr>");
-        buf_printf_markup(html, level,
-                          "<address>%s Server at %s Port %s</address>",
-                          buf_cstring(&serverinfo), host, port);
+        if (config_serverinfo) {
+            buf_printf_markup(html, level, "<hr>");
+            buf_printf_markup(html, level,
+                              "<address>%s Server at %s Port %s</address>",
+                              (config_serverinfo == IMAP_ENUM_SERVERINFO_ON) ?
+                              buf_cstring(&serverinfo) : "HTTP",
+                              host, port);
+        }
         buf_printf_markup(html, --level, "</body>");
         buf_printf_markup(html, --level, "</html>");
 
@@ -4533,7 +4580,7 @@ HIDDEN int meth_connect(struct transaction_t *txn, void *params)
 static int meth_get(struct transaction_t *txn,
                     void *params __attribute__((unused)))
 {
-    int ret = 0, r, fd = -1, precond, len;
+    int r, fd = -1, precond, len;
     const char *prefix, *urls, *path, *ext;
     static struct buf pathbuf = BUF_INITIALIZER;
     struct stat sbuf;
@@ -4546,7 +4593,8 @@ static int meth_get(struct transaction_t *txn,
         if (txn->flags.upgrade & UPGRADE_WS) {
             return ws_start_channel(txn, NULL, &ws_echo);
         }
-        else if (ws_enabled()) {
+
+        if (ws_enabled()) {
             txn->flags.upgrade |= UPGRADE_WS;
             txn->flags.conn |= CONN_UPGRADE;
         }
@@ -4556,8 +4604,11 @@ static int meth_get(struct transaction_t *txn,
     len = strlen(WELL_KNOWN_PREFIX);
     if (!strncmp(txn->req_uri->path, WELL_KNOWN_PREFIX, len)) {
         if (txn->req_uri->path[len] == '/') len++;
-        if (txn->req_uri->path[len] == '\0') return list_well_known(txn);
-        else return HTTP_NOT_FOUND;
+        if (txn->req_uri->path[len] == '\0') {
+            return list_well_known(txn);
+        }
+
+        return HTTP_NOT_FOUND;
     }
 
     /* Serve up static pages */
@@ -4666,7 +4717,7 @@ static int meth_get(struct transaction_t *txn,
         close(fd);
     }
 
-    return ret;
+    return 0;
 }
 
 
