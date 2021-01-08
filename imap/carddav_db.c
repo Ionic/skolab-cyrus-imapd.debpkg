@@ -904,7 +904,7 @@ EXPORTED int carddav_delete(struct carddav_db *carddavdb, unsigned rowid)
 
 #define CMD_DELMBOX "DELETE FROM vcard_objs WHERE mailbox = :mailbox;"
 
-EXPORTED int carddav_delmbox(struct carddav_db *carddavdb, const char *mailbox)
+HIDDEN int carddav_delmbox(struct carddav_db *carddavdb, const char *mailbox)
 {
     struct sqldb_bindval bval[] = {
         { ":mailbox", SQLITE_TEXT, { .s = mailbox } },
@@ -1094,7 +1094,7 @@ EXPORTED int carddav_writecard(struct carddav_db *carddavdb,
 
 EXPORTED int carddav_store(struct mailbox *mailbox, struct vparse_card *vcard,
                            const char *resource, modseq_t createdmodseq,
-                           strarray_t *flags, struct entryattlist *annots,
+                           strarray_t *flags, struct entryattlist **annots,
                            const char *userid, struct auth_state *authstate,
                            int ignorequota)
 {
@@ -1141,10 +1141,11 @@ EXPORTED int carddav_store(struct mailbox *mailbox, struct vparse_card *vcard,
 
     fprintf(f, "Date: %s\r\n", datestr);
 
-    if (strchr(uid, '@'))
-        fprintf(f, "Message-ID: <%s>\r\n", uid);
-    else
-        fprintf(f, "Message-ID: <%s@%s>\r\n", uid, config_servername);
+    /* Use SHA1(uid)@servername as Message-ID */
+    struct message_guid uuid;
+    message_guid_generate(&uuid, uid, strlen(uid));
+    fprintf(f, "Message-ID: <%s@%s>\r\n",
+            message_guid_encode(&uuid), config_servername);
 
     fprintf(f, "Content-Type: text/vcard; charset=utf-8\r\n");
 

@@ -76,6 +76,11 @@
 #include "hash.h"
 #include "times.h"
 
+#ifdef WITH_JMAP
+#include "imap/jmap_mail_query.h"
+#include "imap/mboxname.h"
+#endif
+
 static char vacation_answer;
 
 typedef struct {
@@ -147,11 +152,29 @@ static int getheader(void *v, const char *phead, const char ***body)
     }
 }
 
-/* adds the header "head" with body "body" to msg */
-static int addheader(void *sc, void *mc,
-                     const char *head, const char *body, int index)
+static void getheaders_cb(const char *name, const char *value,
+                          const char *raw, void *rock)
 {
-    script_data_t *sd = (script_data_t *)sc;
+    struct buf *contents = (struct buf *) rock;
+
+    if (raw) buf_appendcstr(contents, raw);
+    else buf_printf(contents, "%s: %s\r\n", name, value);
+}
+
+static int getheadersection(void *mc, struct buf **contents)
+{
+    message_data_t *m = (message_data_t *) mc;
+
+    *contents = buf_new();
+
+    spool_enum_hdrcache(m->cache, &getheaders_cb, *contents);
+
+    return SIEVE_OK;
+}
+
+/* adds the header "head" with body "body" to msg */
+static int addheader(void *mc, const char *head, const char *body, int index)
+{
     message_data_t *m = (message_data_t *) mc;
 
     if (head == NULL || body == NULL) return SIEVE_FAIL;
@@ -165,15 +188,12 @@ static int addheader(void *sc, void *mc,
         spool_prepend_header(xstrdup(head), xstrdup(body), m->cache);
     }
 
-    sd->edited_header = 1;
-
     return SIEVE_OK;
 }
 
 /* deletes (instance "index" of) the header "head" from msg */
-static int deleteheader(void *sc, void *mc, const char *head, int index)
+static int deleteheader(void *mc, const char *head, int index)
 {
-    script_data_t *sd = (script_data_t *)sc;
     message_data_t *m = (message_data_t *) mc;
 
     if (head == NULL) return SIEVE_FAIL;
@@ -186,8 +206,6 @@ static int deleteheader(void *sc, void *mc, const char *head, int index)
         printf("removing header '%s[%d]'\n", head, index);
         spool_remove_header_instance(xstrdup(head), index, m->cache);
     }
-
-    sd->edited_header = 1;
 
     return SIEVE_OK;
 }
@@ -257,6 +275,10 @@ static message_data_t *new_msg(FILE *msg, int size, const char *name)
 
 static void free_msg(message_data_t *m)
 {
+#ifdef WITH_JMAP
+    jmap_email_matchmime_free(&m->content.matchmime);
+#endif
+    buf_free(&m->content.map);
     spool_free_hdrcache(m->cache);
     free(m->name);
     free(m);
@@ -277,8 +299,8 @@ static int getbody(void *mc, const char **content_types, sieve_bodypart_t ***par
 
     if (!m->content.body) {
         /* parse the message body if we haven't already */
-        r = message_parse_file(m->data, &m->content.base,
-                               &m->content.len, &m->content.body, NULL);
+        r = message_parse_file_buf(m->data, &m->content.map,
+                                   &m->content.body, NULL);
     }
 
     /* XXX currently struct bodypart as defined in message.h is the same as
@@ -345,6 +367,11 @@ static int fileinto(void *ac, void *ic, void *sc __attribute__((unused)),
     message_data_t *m = (message_data_t *) mc;
     int *force_fail = (int*) ic;
 
+    if (!m) {
+        /* just doing destination mailbox resolution */
+        return SIEVE_OK;
+    }
+
     printf("filing message '%s' into '%s'\n", m->name, fc->mailbox);
 
     if (fc->imapflags->count) {
@@ -367,8 +394,9 @@ static int snooze(void *ac, void *ic, void *sc __attribute__((unused)),
 
     time_t now = time(NULL);
     struct tm *tm = localtime(&now);
-    int i, day_inc = -1;
+    int day_inc = -1;
     unsigned t;
+    size_t i;
 
     if (sn->days & (1 << tm->tm_wday)) {
         /* We have times for today - see if a future one is still available */
@@ -420,6 +448,11 @@ static int keep(void *ac, void *ic, void *sc __attribute__((unused)),
     message_data_t *m = (message_data_t *) mc;
     int *force_fail = (int*) ic;
 
+    if (!m) {
+        /* just doing destination mailbox resolution */
+        return SIEVE_OK;
+    }
+
     printf("keeping message '%s'\n", m->name);
     if (kc->imapflags->count) {
         char *s = strarray_join(kc->imapflags, "' '");
@@ -438,18 +471,16 @@ static int notify(void *ac, void *ic, void *sc __attribute__((unused)),
 {
     sieve_notify_context_t *nc = (sieve_notify_context_t *) ac;
     int *force_fail = (int*) ic;
-    int flag = 0;
 
     printf("notify ");
     if (nc->method) {
-        const char **opts = nc->options;
-
         printf("%s(", nc->method);
-        while (opts && *opts) {
-            if (flag) printf(", ");
-            printf("%s", *opts);
-            opts++;
-            flag = 1;
+        if (nc->options) {
+            int i;
+            for (i = 0; i < strarray_size(nc->options); i++) {
+                if (i) printf(", ");
+                printf("%s", strarray_nth(nc->options, i));
+            }
         }
         printf("), ");
     }
@@ -536,41 +567,48 @@ static int send_response(void *ac, void *ic, void *sc,
 }
 
 #ifdef WITH_JMAP
-#include "imap/jmap_mail_query.h"
-#include "imap/mboxname.h"
-
 static int jmapquery(void *sc, void *mc, const char *json)
 {
     script_data_t *sd = (script_data_t *) sc;
     message_data_t *md = (message_data_t *) mc;
-    struct buf msg = BUF_INITIALIZER;
     const char *userid = sd->userid;
     json_error_t jerr;
     json_t *jfilter, *err = NULL;
-    int r;
+    int matches = 0;
 
     /* Create filter from json */
     jfilter = json_loads(json, 0, &jerr);
     if (!jfilter) return 0;
 
-    /* mmap the staged message file */
-    buf_refresh_mmap(&msg, 1, fileno(md->data), md->name, md->size, NULL);
+    int r = 0;
+
+    if (!md->content.body) {
+        /* parse the message body if we haven't already */
+        r = message_parse_file_buf(md->data, &md->content.map,
+                                   &md->content.body, NULL);
+        if (r) {
+            json_decref(jfilter);
+            return 0;
+        }
+    }
+
+    if (!md->content.matchmime)
+        md->content.matchmime = jmap_email_matchmime_init(&md->content.map, &err);
 
     /* Run query */
-    r = jmap_email_matchmime(&msg, jfilter, userid, time(NULL), &err);
+    if (md->content.matchmime)
+        matches = jmap_email_matchmime(md->content.matchmime, jfilter, userid, time(NULL), &err);
 
     if (err) {
         char *errstr = json_dumps(err, JSON_COMPACT);
         fprintf(stderr, "sieve: jmapquery: %s\n", errstr);
 
         free(errstr);
-        r = SIEVE_RUN_ERROR;
     }
 
     json_decref(jfilter);
-    buf_free(&msg);
 
-    return r;
+    return matches;
 }
 #endif
 
@@ -607,7 +645,6 @@ int main(int argc, char *argv[])
     int c, force_fail = 0;
     int fd, res;
     struct stat sbuf;
-    static strarray_t mark = STRARRAY_INITIALIZER;
     static strarray_t e_from = STRARRAY_INITIALIZER;
     static strarray_t e_to = STRARRAY_INITIALIZER;
     char *alt_config = NULL;
@@ -745,6 +782,7 @@ int main(int argc, char *argv[])
     sieve_register_keep(i, keep);
     sieve_register_size(i, getsize);
     sieve_register_header(i, getheader);
+    sieve_register_headersection(i, getheadersection);
     sieve_register_addheader(i, addheader);
     sieve_register_deleteheader(i, deleteheader);
     sieve_register_envelope(i, getenvelope);
@@ -758,9 +796,6 @@ int main(int argc, char *argv[])
         printf("sieve_register_vacation() returns %d\n", res);
         exit(1);
     }
-
-    strarray_append(&mark, "\\flagged");
-    sieve_register_imapflags(i, &mark);
 
     sieve_register_notify(i, notify, NULL);
     sieve_register_parse_error(i, mysieve_error);
@@ -823,7 +858,6 @@ int main(int argc, char *argv[])
         free_msg(m);
     strarray_fini(&e_from);
     strarray_fini(&e_to);
-    strarray_fini(&mark);
 
     return 0;
 }

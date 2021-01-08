@@ -210,6 +210,17 @@ extern char *dir_hash_b(const char *name, int full, char buf[2]);
  */
 extern int create_tempfile(const char *path);
 
+/* create a temporary directory at path and return the directory
+ * name "cyrus-subname-XXXXXX", where subname defaults to "tmpdir"
+ * and XXXXXX is a string that makes the directory name unique.
+ * */
+extern char *create_tempdir(const char *path, const char *subname);
+
+/* recursively call remove(3) on path and its descendants, except
+ * symlinks. Returns zero on sucess, or the first non-zero return
+ * value of remove on error. */
+extern int removedir(const char *path);
+
 /* Close a network filedescriptor the "safe" way */
 extern int cyrus_close_sock(int fd);
 
@@ -330,6 +341,7 @@ int buf_findchar(const struct buf *, unsigned int off, int c);
 int buf_findline(const struct buf *buf, const char *line);
 void buf_init_ro(struct buf *buf, const char *base, size_t len);
 void buf_initm(struct buf *buf, char *base, int len);
+void buf_initmcstr(struct buf *buf, char *str);
 void buf_init_ro_cstr(struct buf *buf, const char *str);
 void buf_refresh_mmap(struct buf *buf, int onceonly, int fd,
                    const char *fname, size_t size, const char *mboxname);
@@ -410,6 +422,12 @@ const char *makeuuid();
 
 void tcp_enable_keepalive(int fd);
 void tcp_disable_nagle(int fd);
+
+void xsyslog_fn(int priority, const char *description,
+                const char *func, const char *extra_fmt, ...)
+               __attribute__((format(printf, 4, 5)));
+#define xsyslog(pri, desc, ...)  \
+    xsyslog_fn(pri, desc, __func__, __VA_ARGS__)
 
 /*
  * GCC_VERSION macro usage:

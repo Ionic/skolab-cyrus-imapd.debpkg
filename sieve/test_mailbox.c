@@ -152,11 +152,29 @@ static int getheader(void *v, const char *phead, const char ***body)
     }
 }
 
-/* adds the header "head" with body "body" to msg */
-static int addheader(void *sc, void *mc,
-                     const char *head, const char *body, int index)
+static void getheaders_cb(const char *name, const char *value,
+                          const char *raw, void *rock)
 {
-    script_data_t *sd = (script_data_t *)sc;
+    struct buf *contents = (struct buf *) rock;
+
+    if (raw) buf_appendcstr(contents, raw);
+    else buf_printf(contents, "%s: %s\r\n", name, value);
+}
+
+static int getheadersection(void *mc, struct buf **contents)
+{
+    message_data_t *m = (message_data_t *) mc;
+
+    *contents = buf_new();
+
+    spool_enum_hdrcache(m->cache, &getheaders_cb, *contents);
+
+    return SIEVE_OK;
+}
+
+/* adds the header "head" with body "body" to msg */
+static int addheader(void *mc, const char *head, const char *body, int index)
+{
     message_data_t *m = (message_data_t *) mc;
 
     if (head == NULL || body == NULL) return SIEVE_FAIL;
@@ -170,15 +188,12 @@ static int addheader(void *sc, void *mc,
         spool_prepend_header(xstrdup(head), xstrdup(body), m->cache);
     }
 
-    sd->edited_header = 1;
-
     return SIEVE_OK;
 }
 
 /* deletes (instance "index" of) the header "head" from msg */
-static int deleteheader(void *sc, void *mc, const char *head, int index)
+static int deleteheader(void *mc, const char *head, int index)
 {
-    script_data_t *sd = (script_data_t *)sc;
     message_data_t *m = (message_data_t *) mc;
 
     if (head == NULL) return SIEVE_FAIL;
@@ -191,8 +206,6 @@ static int deleteheader(void *sc, void *mc, const char *head, int index)
         printf("removing header '%s[%d]'\n", head, index);
         spool_remove_header_instance(xstrdup(head), index, m->cache);
     }
-
-    sd->edited_header = 1;
 
     return SIEVE_OK;
 }
@@ -282,8 +295,8 @@ static int getbody(void *mc, const char **content_types, sieve_bodypart_t ***par
 
     if (!m->content.body) {
         /* parse the message body if we haven't already */
-        r = message_parse_file(m->data, &m->content.base,
-                               &m->content.len, &m->content.body, NULL);
+        r = message_parse_file_buf(m->data, &m->content.map,
+                                   &m->content.body, NULL);
     }
 
     /* XXX currently struct bodypart as defined in message.h is the same as
@@ -388,18 +401,16 @@ static int notify(void *ac, void *ic, void *sc __attribute__((unused)),
 {
     sieve_notify_context_t *nc = (sieve_notify_context_t *) ac;
     int *force_fail = (int*) ic;
-    int flag = 0;
 
     printf("notify ");
     if (nc->method) {
-        const char **opts = nc->options;
-
         printf("%s(", nc->method);
-        while (opts && *opts) {
-            if (flag) printf(", ");
-            printf("%s", *opts);
-            opts++;
-            flag = 1;
+        if (nc->options) {
+            int i;
+            for (i = 0; i < strarray_size(nc->options); i++) {
+                if (i) printf(", ");
+                printf("%s", strarray_nth(nc->options, i));
+            }
         }
         printf("), ");
     }
@@ -554,7 +565,6 @@ int main(int argc, char *argv[])
     char *tmpscript = NULL, *script = NULL, *extname = NULL;
     int c, force_fail = 0;
     int fd, res, r;
-    static strarray_t mark = STRARRAY_INITIALIZER;
     char *alt_config = NULL;
     script_data_t sd = { NULL, "", NULL, 0 };
     FILE *f;
@@ -696,6 +706,7 @@ int main(int argc, char *argv[])
     sieve_register_keep(i, keep);
     sieve_register_size(i, getsize);
     sieve_register_header(i, getheader);
+    sieve_register_headersection(i, getheadersection);
     sieve_register_addheader(i, addheader);
     sieve_register_deleteheader(i, deleteheader);
     sieve_register_envelope(i, getenvelope);
@@ -709,9 +720,6 @@ int main(int argc, char *argv[])
         printf("sieve_register_vacation() returns %d\n", res);
         exit(1);
     }
-
-    strarray_append(&mark, "\\flagged");
-    sieve_register_imapflags(i, &mark);
 
     sieve_register_notify(i, notify, NULL);
     sieve_register_parse_error(i, mysieve_error);
@@ -782,7 +790,6 @@ int main(int argc, char *argv[])
 
     strarray_fini(&e_from);
     strarray_fini(&e_to);
-    strarray_fini(&mark);
 
     cyrus_done();
 

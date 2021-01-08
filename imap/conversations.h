@@ -63,6 +63,10 @@ typedef bit64   conversation_id_t;
 struct index_record;
 struct mailbox;
 
+#define CONVERSATIONS_KEY_VERSION 0
+#define CONVERSATIONS_STATUS_VERSION 0
+#define CONVERSATIONS_RECORD_VERSION 1
+
 #define CONV_ISDIRTY     (1<<0)
 #define CONV_WITHFOLDERS (1<<1)
 #define CONV_WITHSENDERS (1<<2)
@@ -72,6 +76,13 @@ struct mailbox;
 #define CONV_WITHALL CONV_WITHFOLDERS|CONV_WITHSENDERS|\
                      CONV_WITHSUBJECT|CONV_WITHTHREAD
 
+struct conv_quota {
+    ssize_t emails;
+    ssize_t storage;
+};
+
+#define CONV_QUOTA_INIT { 0, 0 }
+
 struct conversations_state {
     struct db *db;
     struct txn *txn;
@@ -79,15 +90,13 @@ struct conversations_state {
     strarray_t *counted_flags;
     strarray_t *folder_names;
     hash_table folderstatus;
+    struct conv_quota quota;
     int trashfolder;
     char *trashmboxname;
-    int is_shared;
     char *path;
-};
-
-struct conversations_open {
-    struct conversations_state s;
-    struct conversations_open *next;
+    unsigned quota_loaded:1;
+    unsigned quota_dirty:1;
+    unsigned is_shared:1;
 };
 
 typedef struct conversation conversation_t;
@@ -121,7 +130,7 @@ struct conv_folder {
 struct conv_guidrec {
     const char      *guidrep; // [MESSAGE_GUID_SIZE*2], hex-encoded
     const char      *mboxname;
-    uint32_t        foldernum;
+    int             foldernum;
     uint32_t        uid;
     const char      *part;
     conversation_id_t cid;
@@ -151,13 +160,11 @@ struct conv_status {
 #define CONV_STATUS_INIT { 0, 0, 0, 0, 0 }
 
 struct conversation {
+    int             version;
     modseq_t        modseq;
     uint32_t        num_records;
     uint32_t        exists;
     uint32_t        unseen;
-    uint32_t        prev_unseen;
-    uint32_t        trash_unseen;
-    uint32_t        prev_trash_unseen;
     uint32_t        size;
     uint32_t        counts[32];
     conv_folder_t   *folders;
@@ -168,18 +175,29 @@ struct conversation {
     int             flags;
 };
 
-#define CONVERSATION_INIT { 0, 0, 0, 0, 0, 0, 0, 0, {0}, NULL, NULL, NULL, NULL, 0, CONV_ISDIRTY }
+#define CONVERSATION_INIT { CONVERSATIONS_RECORD_VERSION, 0, 0, 0, 0, 0, {0}, \
+                            NULL, NULL, NULL, NULL, 0, CONV_ISDIRTY }
 
-struct emailcounts {
-    const char *mboxname;
-    int ispost;
-    int pre_emailexists;
-    int pre_emailunseen;
-    int post_emailexists;
-    int post_emailunseen;
+struct emailcountitems {
+    size_t foldernumrecords;
+    size_t folderexists;
+    size_t folderunseen;
+    size_t numrecords;
+    size_t exists;
+    size_t unseen;
 };
 
-#define EMAILCOUNTS_INIT { NULL, 0, 0, 0, 0, 0 }
+#define EMAILCOUNTITEMS_INIT { 0, 0, 0, 0, 0, 0 }
+
+struct emailcounts {
+    int foldernum;
+    int trashfolder;
+    int ispost;
+    struct emailcountitems pre;
+    struct emailcountitems post;
+};
+
+#define EMAILCOUNTS_INIT { -1, -1, 0, EMAILCOUNTITEMS_INIT, EMAILCOUNTITEMS_INIT }
 
 #include "mailbox.h"
 
@@ -200,9 +218,12 @@ extern struct conversations_state *conversations_get_path(const char *path);
 extern struct conversations_state *conversations_get_user(const char *username);
 extern struct conversations_state *conversations_get_mbox(const char *mboxname);
 
-extern uint32_t conversations_num_folders(struct conversations_state *state);
+extern int conversations_num_folders(struct conversations_state *state);
 extern const char* conversations_folder_name(struct conversations_state *state,
-                                             uint32_t foldernum);
+                                             int foldernum);
+extern int conversation_folder_number(struct conversations_state *state,
+                                      const char *name,
+                                      int create_flag);
 
 /* either of these close */
 extern int conversations_abort(struct conversations_state **state);
@@ -253,8 +274,7 @@ extern int conversation_get_modseq(struct conversations_state *state,
                                    modseq_t *modseqp);
 extern int conversation_save(struct conversations_state *state,
                              conversation_id_t cid,
-                             conversation_t *conv,
-                             struct emailcounts *ecounts);
+                             conversation_t *conv);
 extern int conversation_load_advanced(struct conversations_state *state,
                                       conversation_id_t cid,
                                       conversation_t *convp,
@@ -275,19 +295,14 @@ extern int conversations_update_record(struct conversations_state *cstate,
                                        struct mailbox *mailbox,
                                        const struct index_record *old,
                                        struct index_record *new_,
-                                       int allowrenumber);
+                                       int allowrenumber,
+                                       int ignorelimits);
 
-extern void conversation_update(struct conversations_state *state,
+extern int conversation_update(struct conversations_state *state,
                                 conversation_t *conv,
-                                const char *mboxname,
-                                int is_trash,
-                                int delta_num_records,
-                                int delta_exists,
-                                int delta_unseen,
-                                int delta_size,
-                                int *delta_counts,
-                                modseq_t modseq,
-                                modseq_t createdmodseq);
+                                struct emailcounts *ecounts,
+                                ssize_t delta_size, int *delta_counts,
+                                modseq_t modseq, modseq_t createdmodseq);
 extern conv_folder_t *conversation_find_folder(struct conversations_state *state,
                                                conversation_t *,
                                                const char *mboxname);
@@ -301,7 +316,7 @@ extern void conversation_update_sender(conversation_t *conv,
                                        const char *mailbox,
                                        const char *domain,
                                        time_t lastseen,
-                                       int delta_exists);
+                                       ssize_t delta_exists);
 
 extern int conversations_prune(struct conversations_state *state,
                                time_t thresh, unsigned int *,
@@ -323,5 +338,7 @@ extern int conversations_rename_folder(struct conversations_state *state,
                                        const char *to_name);
 
 extern int conversations_check_msgid(const char *msgid, size_t len);
+
+extern int conversations_read_quota(struct conversations_state *state, struct conv_quota *q);
 
 #endif /* __CYRUS_CONVERSATIONS_H_ */

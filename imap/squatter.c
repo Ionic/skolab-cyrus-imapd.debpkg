@@ -97,13 +97,18 @@ const int SKIP_FUZZ = 60;
 
 static int verbose = 0;
 static int incremental_mode = 0;
-static int batch_mode = 0;
 static int xapindexed_mode = 0;
 static int recursive_flag = 0;
 static int annotation_flag = 0;
 static int sleepmicroseconds = 0;
-static const char *temp_root_dir = NULL;
+static int allow_partials = 0;
+static int allow_duplicateparts = 0;
+static int reindex_partials = 0;
+static int reindex_minlevel = 0;
 static search_text_receiver_t *rx = NULL;
+
+static strarray_t *skip_domains = NULL;
+static strarray_t *skip_users = NULL;
 
 static const char *name_starts_from = NULL;
 
@@ -125,6 +130,9 @@ __attribute__((noreturn)) static int usage(const char *name)
             "\n"
             "Index mode options:\n"
             "  -i          index incrementally\n"
+            "  -p          allow partially indexed messages\n"
+            "  -P          reindex partially indexed messages (implies -Z)\n"
+            "  -L level    reindex messages where indexlevel < level (implies -Z)\n"
             "  -N name     index mailbox names starting with name\n"
             "  -S seconds  sleep seconds between indexing mailboxes\n"
             "  -Z          Xapian: use internal index rather than cyrus.indexed.db\n"
@@ -186,7 +194,13 @@ static void become_daemon(void)
 
 static int should_index(const char *name)
 {
+    // skip early users
+    if (strcmpsafe(name, name_starts_from) < 0)
+        return 0;
+
+    int ret = 1;
     mbentry_t *mbentry = NULL;
+    mbname_t *mbname = mbname_from_intname(name);
     /* Skip remote mailboxes */
     int r = mboxlist_lookup(name, &mbentry, NULL);
     if (r) {
@@ -200,29 +214,52 @@ static int should_index(const char *name)
                extname, error_message(r));
 
         free(extname);
-        return 0;
+        ret = 0;
+        goto done;
     }
 
     // skip remote or not-real mailboxes
     if (mbentry->mbtype & (MBTYPE_REMOTE|MBTYPE_DELETED|MBTYPE_INTERMEDIATE)) {
-        mboxlist_entry_free(&mbentry);
-        return 0;
+        ret = 0;
+        goto done;
     }
 
     // skip email submissions
     if (mboxname_issubmissionmailbox(mbentry->name, mbentry->mbtype)) {
-        mboxlist_entry_free(&mbentry);
-        return 0;
+        ret = 0;
+        goto done;
     }
 
     // skip COLLECTION mailboxes (just files)
     if (mbentry->mbtype & MBTYPE_COLLECTION) {
-        mboxlist_entry_free(&mbentry);
-        return 0;
+        ret = 0;
+        goto done;
     }
 
+    // skip deleted mailboxes
+    if (mbname_isdeleted(mbname)) {
+        ret = 0;
+        goto done;
+    }
+
+    // skip listed domains
+    if (mbname_domain(mbname) && skip_domains &&
+        strarray_find(skip_domains, mbname_domain(mbname), 0) >= 0) {
+        ret = 0;
+        goto done;
+    }
+
+    // skip listed users
+    if (mbname_userid(mbname) && skip_users &&
+        strarray_find(skip_users, mbname_userid(mbname), 0) >= 0) {
+        ret = 0;
+        goto done;
+    }
+
+done:
+    mbname_free(&mbname);
     mboxlist_entry_free(&mbentry);
-    return 1;
+    return ret;
 }
 
 /* ====================================================================== */
@@ -232,14 +269,18 @@ static int index_one(const char *name, int blocking)
 {
     struct mailbox *mailbox = NULL;
     int r;
-    int flags = 0;
+    int flags = SEARCH_UPDATE_BATCH;
 
     if (incremental_mode)
         flags |= SEARCH_UPDATE_INCREMENTAL;
-    if (batch_mode)
-        flags |= SEARCH_UPDATE_BATCH;
     if (xapindexed_mode)
         flags |= SEARCH_UPDATE_XAPINDEXED;
+    if (allow_partials)
+        flags |= SEARCH_UPDATE_ALLOW_PARTIALS;
+    if (reindex_partials)
+        flags |= SEARCH_UPDATE_REINDEX_PARTIALS;
+    if (allow_duplicateparts)
+        flags |= SEARCH_UPDATE_ALLOW_DUPPARTS;
 
     /* Convert internal name to external */
     char *extname = mboxname_to_external(name, &squat_namespace, NULL);
@@ -312,7 +353,7 @@ again:
         printf("Indexing mailbox %s... ", extname);
     }
 
-    r = search_update_mailbox(rx, mailbox, flags);
+    r = search_update_mailbox(rx, mailbox, reindex_minlevel, flags);
 
     mailbox_close(&mailbox);
 
@@ -328,12 +369,6 @@ again:
 static int addmbox(const mbentry_t *mbentry, void *rock)
 {
     strarray_t *sa = (strarray_t *) rock;
-
-    if (strcmpsafe(mbentry->name, name_starts_from) < 0)
-        return 0;
-    if (mboxname_isdeletedmailbox(mbentry->name, NULL))
-        return 0;
-
     strarray_append(sa, mbentry->name);
     return 0;
 }
@@ -359,6 +394,11 @@ static void expand_mboxnames(strarray_t *sa, int nmboxnames,
             mboxlist_mboxtree(intname, addmbox, sa, flags);
             free(intname);
         }
+
+        /* sort mboxnames */
+        strarray_sort(sa, cmpstringp_raw);
+        /* and deduplicate */
+        strarray_uniq(sa);
     }
 }
 
@@ -522,13 +562,15 @@ static int do_list(const strarray_t *mboxnames)
     return r;
 }
 
-static int compact_mbox(const char *userid, const strarray_t *srctiers,
+static int compact_mbox(const char *userid, const strarray_t *reindextiers,
+                        const strarray_t *srctiers,
                         const char *desttier, int flags)
 {
-    return search_compact(userid, temp_root_dir, srctiers, desttier, flags);
+    return search_compact(userid, reindextiers, srctiers, desttier, flags);
 }
 
-static int do_compact(const strarray_t *mboxnames, const strarray_t *srctiers,
+static int do_compact(const strarray_t *mboxnames, const strarray_t *reindextiers,
+                      const strarray_t *srctiers,
                       const char *desttier, int flags)
 {
     char *prev_userid = NULL;
@@ -536,6 +578,7 @@ static int do_compact(const strarray_t *mboxnames, const strarray_t *srctiers,
 
     for (i = 0; i < strarray_size(mboxnames); i++) {
         const char *mboxname = strarray_nth(mboxnames, i);
+        if (!should_index(mboxname)) continue;
         char *userid = mboxname_to_userid(mboxname);
         if (!userid) continue;
 
@@ -546,10 +589,11 @@ static int do_compact(const strarray_t *mboxnames, const strarray_t *srctiers,
 
         int retry;
         for (retry = 1; retry <= 3; retry++) {
-            int r = compact_mbox(userid, srctiers, desttier, flags);
+            int r = compact_mbox(userid, reindextiers, srctiers, desttier, flags);
             if (!r) break;
-            syslog(LOG_ERR, "IOERROR: failed to compact %s (%d): %s",
-                   userid, retry, error_message(r));
+            xsyslog(LOG_ERR, "IOERROR: failed to compact",
+                             "userid=<%s> retry=<%d> error=<%s>",
+                             userid, retry, error_message(r));
         }
 
         free(prev_userid);
@@ -608,8 +652,7 @@ static strarray_t *read_sync_log_items(sync_log_reader_t *slr)
 
     while (sync_log_reader_getitem(slr, args) == 0) {
         if (!strcmp(args[0], "APPEND")) {
-            if (!mboxname_isdeletedmailbox(args[1], NULL))
-                strarray_add(mboxnames, args[1]);
+            strarray_append(mboxnames, args[1]);
         }
         else if (!strcmp(args[0], "USER"))
             mboxlist_usermboxtree(args[1], NULL, addmbox, mboxnames, /*flags*/0);
@@ -634,6 +677,8 @@ static int do_synclogfile(const char *synclogfile)
 
     /* sort mboxnames for locality of reference in file processing mode */
     strarray_sort(mboxnames, cmpstringp_raw);
+    /* and deduplicate */
+    strarray_uniq(mboxnames);
 
     signals_poll();
 
@@ -654,7 +699,8 @@ static int do_synclogfile(const char *synclogfile)
         if (r == IMAP_MAILBOX_LOCKED || r == IMAP_AGAIN) {
             nskipped++;
             if (nskipped > 10000) {
-                syslog(LOG_ERR, "IOERROR: skipped too many times at %s", mboxname);
+                xsyslog(LOG_ERR, "IOERROR: skipped too many times",
+                                 "mailbox=<%s>", mboxname);
                 break;
             }
             r = 0;
@@ -662,8 +708,9 @@ static int do_synclogfile(const char *synclogfile)
             strarray_append(mboxnames, mboxname);
         }
         if (r) {
-            syslog(LOG_ERR, "IOERROR: failed to index %s: %s",
-                   mboxname, error_message(r));
+            xsyslog(LOG_ERR, "IOERROR: failed to index",
+                             "mailbox=<%s> error=<%s>",
+                             mboxname, error_message(r));
             break;
         }
         if (sleepmicroseconds)
@@ -708,6 +755,11 @@ static void do_rolling(const char *channel)
         mboxnames = read_sync_log_items(slr);
 
         if (mboxnames->count) {
+            /* sort mboxnames for locality of reference in file processing mode */
+            strarray_sort(mboxnames, cmpstringp_raw);
+            /* and deduplicate */
+            strarray_uniq(mboxnames);
+
             /* have some due items in the queue, try to index them */
             rx = search_begin_update(verbose);
             if (NULL == rx) {
@@ -723,6 +775,17 @@ static void do_rolling(const char *channel)
                 if (r == IMAP_AGAIN || r == IMAP_MAILBOX_LOCKED) {
                     /* XXX: alternative, just append to strarray_t *mboxnames ... */
                     sync_log_channel_append(channel, mboxname);
+                }
+                else if (r == IMAP_MAILBOX_NONEXISTENT) {
+                    /* should_index() checked for this, but we lost a race.
+                     * not an IOERROR, just annoying!
+                     */
+                    syslog(LOG_DEBUG, "skipping nonexistent mailbox: %s", mboxname);
+                }
+                else if (r) {
+                    xsyslog(LOG_ERR, "IOERROR: failed to index and forgetting",
+                                     "mailbox=<%s> error=<%s>",
+                                     mboxname, error_message(r));
                 }
                 if (sleepmicroseconds)
                     usleep(sleepmicroseconds);
@@ -834,6 +897,7 @@ int main(int argc, char **argv)
     int user_mode = 0;
     int compact_flags = 0;
     strarray_t *srctiers = NULL;
+    strarray_t *reindextiers = NULL;
     const char *desttier = NULL;
     char *errstr = NULL;
     enum { UNKNOWN, INDEXER, SEARCH, ROLLING, SYNCLOG,
@@ -841,11 +905,15 @@ int main(int argc, char **argv)
 
     setbuf(stdout, NULL);
 
-    while ((opt = getopt(argc, argv, "C:N:RUXZT:S:Fde:f:mn:riavAz:t:ouhl")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:N:RUBXZDT:S:Fde:f:mn:riavpPL:Az:t:ouhl")) != EOF) {
         switch (opt) {
         case 'A':
             if (mode != UNKNOWN) usage(argv[0]);
             mode = AUDIT;
+            break;
+
+        case 'B':
+            compact_flags |= SEARCH_COMPACT_NONBLOCKING;
             break;
 
         case 'C':               /* alt config file */
@@ -860,11 +928,30 @@ int main(int argc, char **argv)
             compact_flags |= SEARCH_COMPACT_REINDEX;
             break;
 
-        case 'Z':
-            /* we have two different flag types for the two different modes,
-             * set both of them even though only one will be used */
+        case 'L':
+            reindex_minlevel = atoi(optarg);
+            if (reindex_minlevel < 1 || reindex_minlevel > SEARCH_INDEXLEVEL_MAX) {
+                fprintf(stderr, "%s: %s: invalid level argument\n", argv[0], optarg);
+                exit(EX_USAGE);
+            }
             xapindexed_mode = 1;
-            compact_flags |= SEARCH_COMPACT_XAPINDEXED;
+            break;
+
+        case 'P':
+            reindex_partials = 1;
+            xapindexed_mode = 1;
+            break;
+
+        case 'Z':
+            xapindexed_mode = 1;
+            break;
+
+        case 'p':
+            allow_partials = 1;
+            break;
+
+        case 'D':
+            allow_duplicateparts = 1;
             break;
 
         case 'N':
@@ -875,7 +962,6 @@ int main(int argc, char **argv)
             if (mode != UNKNOWN) usage(argv[0]);
             mode = ROLLING;
             incremental_mode = 1; /* always incremental if rolling */
-            batch_mode = 1;
             break;
 
         case 'l':               /* list paths */
@@ -885,10 +971,6 @@ int main(int argc, char **argv)
 
         case 'S':               /* sleep time in seconds */
             sleepmicroseconds = (atof(optarg) * 1000000);
-            break;
-
-        case 'T':               /* temporary root directory for search */
-            temp_root_dir = optarg;
             break;
 
         case 'd':               /* foreground (with -R) */
@@ -958,6 +1040,12 @@ int main(int argc, char **argv)
             mode = COMPACT;
             break;
 
+        case 'T':
+            if (mode != UNKNOWN && mode != COMPACT) usage(argv[0]);
+            reindextiers = strarray_split(optarg, ",", 0);
+            mode = COMPACT;
+            break;
+
         case 'u':
             user_mode = 1;
             break;
@@ -966,6 +1054,12 @@ int main(int argc, char **argv)
         default:
             usage("squatter");
         }
+    }
+
+    if (xapindexed_mode) {
+        /* we have two different flag types for the two different modes,
+         * set both of them even though only one will be used */
+        compact_flags |= SEARCH_COMPACT_XAPINDEXED;
     }
 
     compact_flags |= SEARCH_VERBOSE(verbose);
@@ -1000,6 +1094,12 @@ int main(int argc, char **argv)
 
     index_text_extractor_init(NULL);
 
+    const char *conf;
+    conf = config_getstring(IMAPOPT_SEARCH_INDEX_SKIP_DOMAINS);
+    if (conf) skip_domains = strarray_split(conf, " ", STRARRAY_TRIM);
+    conf = config_getstring(IMAPOPT_SEARCH_INDEX_SKIP_USERS);
+    if (conf) skip_users = strarray_split(conf, " ", STRARRAY_TRIM);
+
     switch (mode) {
     case UNKNOWN:
         break;
@@ -1028,7 +1128,7 @@ int main(int argc, char **argv)
     case COMPACT:
         if (recursive_flag && optind == argc) usage(argv[0]);
         expand_mboxnames(&mboxnames, argc-optind, (const char **)argv+optind, user_mode);
-        r = do_compact(&mboxnames, srctiers, desttier, compact_flags);
+        r = do_compact(&mboxnames, reindextiers, srctiers, desttier, compact_flags);
         break;
     case AUDIT:
         if (recursive_flag && optind == argc) usage(argv[0]);

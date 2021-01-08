@@ -89,6 +89,7 @@
 #include "prometheus.h"
 #include "prot.h"
 #include "proxy.h"
+#include "sync_support.h"
 #include "telemetry.h"
 #include "times.h"
 #include "tls.h"
@@ -102,7 +103,6 @@
 /* generated headers are not necessarily in current directory */
 #include "imap/imap_err.h"
 #include "imap/lmtp_err.h"
-#include "imap/lmtpstats.h"
 
 #include "lmtpd.h"
 #include "lmtpengine.h"
@@ -240,10 +240,6 @@ int service_init(int argc __attribute__((unused)),
 
     mboxevent_setnamespace(&lmtpd_namespace);
 
-    /* create connection to the SNMP listener, if available. */
-    snmp_connect(); /* ignore return code */
-    snmp_set_str(SERVER_NAME_VERSION, CYRUS_VERSION);
-
     prometheus_increment(CYRUS_LMTP_READY_LISTENERS);
 
     return 0;
@@ -263,7 +259,6 @@ int service_main(int argc, char **argv,
     /* fatal/shut_down will adjust these, so we need to set them early */
     prometheus_decrement(CYRUS_LMTP_READY_LISTENERS);
     prometheus_increment(CYRUS_LMTP_ACTIVE_CONNECTIONS);
-    snmp_increment(ACTIVE_CONNECTIONS, 1);
 
     if (config_iolog) {
         io_count_start = xmalloc (sizeof (struct io_count));
@@ -289,12 +284,10 @@ int service_main(int argc, char **argv,
 
     /* count the connection, now that it's established */
     prometheus_increment(CYRUS_LMTP_CONNECTIONS_TOTAL);
-    snmp_increment(TOTAL_CONNECTIONS, 1);
 
     lmtpmode(&mylmtp, deliver_in, deliver_out, 0);
 
     prometheus_decrement(CYRUS_LMTP_ACTIVE_CONNECTIONS);
-    snmp_increment(ACTIVE_CONNECTIONS, -1);
 
     /* free session state */
     if (deliver_in) prot_free(deliver_in);
@@ -334,7 +327,6 @@ static void usage(void)
     if (deliver_out) {
         /* one less active connection */
         prometheus_decrement(CYRUS_LMTP_ACTIVE_CONNECTIONS);
-        snmp_increment(ACTIVE_CONNECTIONS, -1);
     }
     else {
         /* one less ready listener */
@@ -409,7 +401,7 @@ static int fuzzy_match_cb(const mbentry_t *mbentry, void *rock)
     return 0;
 }
 
-static int fuzzy_match(mbname_t *mbname)
+EXPORTED int fuzzy_match(mbname_t *mbname)
 {
     struct fuzz_rock frock;
     char *prefix = NULL;
@@ -442,35 +434,6 @@ static int fuzzy_match(mbname_t *mbname)
     }
 
     return 0;
-}
-
-/* proxy mboxlist_lookup; on misses, it asks the listener for this
-   machine to make a roundtrip to the master mailbox server to make
-   sure it's up to date */
-static int mlookup(const char *name, mbentry_t **mbentryptr)
-{
-    int r;
-    mbentry_t *mbentry = NULL;
-
-    /* do a local lookup and kick the slave if necessary */
-    r = mboxlist_lookup(name, &mbentry, NULL);
-    if (r == IMAP_MAILBOX_NONEXISTENT && config_mupdate_server) {
-        kick_mupdate();
-        mboxlist_entry_free(&mbentry);
-        r = mboxlist_lookup(name, &mbentry, NULL);
-    }
-    if (r) return r;
-    if (mbentry->mbtype & MBTYPE_MOVING) {
-        r = IMAP_MAILBOX_MOVED;
-    }
-    else if (mbentry->mbtype & MBTYPE_DELETED) {
-        r = IMAP_MAILBOX_NONEXISTENT;
-    }
-
-    if (mbentryptr && !r) *mbentryptr = mbentry;
-    else mboxlist_entry_free(&mbentry);
-
-    return r;
 }
 
 static int delivery_enabled_for_mailbox(const char *mailboxname)
@@ -535,7 +498,7 @@ int deliver_mailbox(FILE *f,
     struct mailbox *mailbox = NULL;
     char *uuid = NULL;
     duplicate_key_t dkey = DUPLICATE_INITIALIZER;
-    quota_t qdiffs[QUOTA_NUMRESOURCES] = QUOTA_DIFFS_INITIALIZER;
+    quota_t qdiffs[QUOTA_NUMRESOURCES] = QUOTA_DIFFS_DONTCARE_INITIALIZER;
     time_t internaldate = 0;
 
     /* make sure we have an IMAP mailbox */
@@ -556,18 +519,15 @@ int deliver_mailbox(FILE *f,
     r = mailbox_open_iwl(mailboxname, &mailbox);
     if (r) return r;
 
-    if (quotaoverride)
-        qdiffs[QUOTA_STORAGE] = -1;
-    else if (config_getswitch(IMAPOPT_LMTP_STRICT_QUOTA))
-        qdiffs[QUOTA_STORAGE] = size;
-    if (quotaoverride)
-        qdiffs[QUOTA_MESSAGE] = -1;
-    else if (config_getswitch(IMAPOPT_LMTP_STRICT_QUOTA))
-        qdiffs[QUOTA_MESSAGE] = 1;
-    if (quotaoverride)
-        qdiffs[QUOTA_ANNOTSTORAGE] = -1;
-    else if (config_getswitch(IMAPOPT_LMTP_STRICT_QUOTA))
+    if (!quotaoverride) {
         qdiffs[QUOTA_ANNOTSTORAGE] = 0;
+        qdiffs[QUOTA_STORAGE] = 0;
+        qdiffs[QUOTA_MESSAGE] = 0;
+        if (config_getswitch(IMAPOPT_LMTP_STRICT_QUOTA)) {
+            qdiffs[QUOTA_STORAGE] = size;
+            qdiffs[QUOTA_MESSAGE] = 1;
+        }
+    }
 
     r = append_setup_mbox(&as, mailbox,
                           authuser, authstate, acloverride ? 0 : ACL_POST,
@@ -594,12 +554,18 @@ int deliver_mailbox(FILE *f,
     if (!r && !content->body) {
         /* parse the message body if we haven't already,
            and keep the file mmap'ed */
-        r = message_parse_file(f, &content->base, &content->len,
-                               &content->body, NULL);
-        /* If the body contains received_date, we should always use that. */
-        if (content->body->received_date)
-            time_from_rfc5322(content->body->received_date, &internaldate,
-                              DATETIME_FULL);
+        r = message_parse_file_buf(f, &content->map, &content->body, NULL);
+    }
+
+    /* if the body contains an x-deliveredinternaldate then that overrides all else */
+    if (content->body->x_deliveredinternaldate) {
+        time_from_rfc5322(content->body->x_deliveredinternaldate,
+                          &internaldate, DATETIME_FULL);
+    }
+    /* Otherwise we'll use a received date if there's one */
+    else if (content->body->received_date) {
+        time_from_rfc5322(content->body->received_date,
+                          &internaldate, DATETIME_FULL);
     }
 
     if (!r) {
@@ -619,7 +585,7 @@ int deliver_mailbox(FILE *f,
 
         r = append_fromstage_full(&as, &content->body, stage,
                                   internaldate, savedate, /*createdmodseq*/0,
-                                  flags, !singleinstance, annotations);
+                                  flags, !singleinstance, &annotations);
 
         if (r) {
             append_abort(&as);
@@ -748,8 +714,8 @@ static void deliver_remote(message_data_t *msgdata,
     }
 }
 
-EXPORTED int deliver_local(deliver_data_t *mydata, struct imap4flags *imap4flags,
-                           const mbname_t *origmbname)
+static int deliver_local(deliver_data_t *mydata, struct imap4flags *imap4flags,
+                         const mbname_t *origmbname)
 {
     message_data_t *md = mydata->m;
     int quotaoverride = msg_getrcpt_ignorequota(md, mydata->cur_rcpt);
@@ -815,9 +781,10 @@ int deliver(message_data_t *msgdata, char *authuser,
     int n, nrcpts;
     struct dest *dlist = NULL;
     enum rcpt_status *status;
-    struct message_content content = { NULL, 0, NULL };
+    struct message_content content = MESSAGE_CONTENT_INITIALIZER;
     char *notifyheader;
     deliver_data_t mydata;
+    json_t *jerr = NULL;
 
     assert(msgdata);
     nrcpts = msg_getnumrcpt(msgdata);
@@ -837,6 +804,21 @@ int deliver(message_data_t *msgdata, char *authuser,
     mydata.authuser = authuser;
     mydata.authstate = authstate;
 
+    if (config_getswitch(IMAPOPT_LMTP_PREPARSE)) {
+        int r = message_parse_file_buf(msgdata->f, &content.map,
+                                       &content.body, NULL);
+        if (r) {
+            for (n = 0; n < nrcpts; n++)
+                msg_setrcpt_status(msgdata, n, r, NULL);
+            goto skipdelivery;
+        }
+
+#if defined(USE_SIEVE) && defined(WITH_JMAP)
+        /* build the query filter */
+        content.matchmime = jmap_email_matchmime_init(&content.map, &jerr);
+#endif
+    }
+
     /* loop through each recipient, attempting delivery for each */
     for (n = 0; n < nrcpts; n++) {
         const mbname_t *mbname = msg_getrcpt(msgdata, n);
@@ -845,7 +827,7 @@ int deliver(message_data_t *msgdata, char *authuser,
                 xstrdup(mbname_intname(mbname));
 
         mbentry_t *mbentry = NULL;
-        int r = mlookup(mboxname, &mbentry);
+        int r = proxy_mlookup(mboxname, &mbentry, NULL, NULL);
         free(mboxname);
         if (r) goto setstatus;
 
@@ -856,6 +838,15 @@ int deliver(message_data_t *msgdata, char *authuser,
             status[n] = nosieve;
         }
         else {
+            strarray_t flags = STRARRAY_INITIALIZER;
+            struct imap4flags imap4flags = { &flags, authstate };
+
+            // lock conversations for the duration of delivery, so nothing else can read
+            // the state of any mailbox while the delivery is half done
+            struct conversations_state *state = NULL;
+            r = conversations_open_user(mbname_userid(mbname), 0/*shared*/, &state);
+            if (r) goto setstatus;
+
             /* local mailbox */
             mydata.cur_rcpt = n;
 #ifdef USE_SIEVE
@@ -863,7 +854,12 @@ int deliver(message_data_t *msgdata, char *authuser,
             sieve_interp_t *interp = setup_sieve(&ctx);
 
             sieve_srs_init();
-            r = run_sieve(mbname, interp, &mydata);
+            if (jerr)
+                r = -1;
+            else
+                r = run_sieve(mbname, interp, &mydata);
+            // set a flag if sieve failed
+            if (r < 0) strarray_append(&flags, "$SieveFailed");
 #ifdef WITH_DAV
             if (ctx.carddavdb) carddav_close(ctx.carddavdb);
 #endif
@@ -874,10 +870,11 @@ int deliver(message_data_t *msgdata, char *authuser,
 #else
             r = 1;      /* normal delivery */
 #endif
-
             if (r) {
-                r = deliver_local(&mydata, NULL, mbname);
+                r = deliver_local(&mydata, &imap4flags, mbname);
             }
+            strarray_fini(&flags);
+            conversations_commit(&state);
         }
 
         telemetry_rusage(mbname_userid(mbname));
@@ -888,6 +885,8 @@ int deliver(message_data_t *msgdata, char *authuser,
 
         mboxlist_entry_free(&mbentry);
     }
+
+skipdelivery:
 
     if (dlist) {
         struct dest *d;
@@ -945,14 +944,21 @@ int deliver(message_data_t *msgdata, char *authuser,
 
     /* cleanup */
     free(status);
-    if (content.base) map_free(&content.base, &content.len);
+    buf_free(&content.map);
     if (content.body) {
         message_free_body(content.body);
         free(content.body);
     }
+#if defined(USE_SIEVE) && defined(WITH_JMAP)
+    jmap_email_matchmime_free(&content.matchmime);
+#endif
     append_removestage(stage);
     stage = NULL;
+    json_decref(jerr);
     if (notifyheader) free(notifyheader);
+
+    // checkpoint the replication before we return to reply to the client
+    sync_checkpoint(deliver_in);
 
     return 0;
 }
@@ -966,7 +972,6 @@ EXPORTED void fatal(const char* s, int code)
         if (deliver_out) {
             /* one less active connection */
             prometheus_decrement(CYRUS_LMTP_ACTIVE_CONNECTIONS);
-            snmp_increment(ACTIVE_CONNECTIONS, -1);
         }
         else {
             /* one less ready listener */
@@ -1028,7 +1033,6 @@ void shut_down(int code)
 
         /* one less active connection */
         prometheus_decrement(CYRUS_LMTP_ACTIVE_CONNECTIONS);
-        snmp_increment(ACTIVE_CONNECTIONS, -1);
     }
     else {
         /* one less ready listener */
@@ -1095,13 +1099,13 @@ static int verify_user(const mbname_t *origmbname,
      * - don't care about ACL on INBOX (always allow post)
      * - don't care about message size (1 msg over quota allowed)
      */
-    r = mlookup(mbname_intname(mbname), &mbentry);
+    r = proxy_mlookup(mbname_intname(mbname), &mbentry, NULL, NULL);
 
 #ifdef USE_AUTOCREATE
     /* If user mailbox does not exist, then invoke autocreate inbox function */
     if (r == IMAP_MAILBOX_NONEXISTENT) {
         r = autocreate_inbox(mbname);
-        if (!r) r = mlookup(mbname_intname(mbname), &mbentry);
+        if (!r) r = proxy_mlookup(mbname_intname(mbname), &mbentry, NULL, NULL);
     }
 #endif // USE_AUTOCREATE
 
@@ -1109,7 +1113,7 @@ static int verify_user(const mbname_t *origmbname,
         config_getswitch(IMAPOPT_LMTP_FUZZY_MAILBOX_MATCH)) {
         /* see if we have a mailbox whose name is close */
         if (fuzzy_match(mbname)) {
-            r = mlookup(mbname_intname(mbname), &mbentry);
+            r = proxy_mlookup(mbname_intname(mbname), &mbentry, NULL, NULL);
         }
     }
 
@@ -1212,7 +1216,7 @@ FILE *spoolfile(message_data_t *msgdata)
             mbname_truncate_boxes(mbname, 0);
         }
 
-        r = mlookup(mbname_intname(mbname), &mbentry);
+        r = proxy_mlookup(mbname_intname(mbname), &mbentry, NULL, NULL);
         if (r || !mbentry->server) {
             /* local mailbox -- setup stage for later use by deliver() */
             f = append_newstage(mbname_intname(mbname), now, 0, &stage);

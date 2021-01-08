@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "SQUATTER" "8" "November 30, 2020" "3.2.5" "Cyrus IMAP"
+.TH "SQUATTER" "8" "January 08, 2021" "3.4.0" "Cyrus IMAP"
 .SH NAME
 squatter \- Cyrus IMAP documentation
 .
@@ -44,7 +44,7 @@ i.e.:
 \fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-v\fP ] [ \fB\-a\fP ] [ \fB\-i\fP ] [ \fB\-N\fP \fIname\fP ] [ \fB\-S\fP \fIseconds\fP ] [ \fB\-r\fP ] [ \fB\-Z\fP ] \fB\-u\fP \fIuser\fP\&...
 \fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-v\fP ] [ \fB\-a\fP ] \fB\-R\fP [ \fB\-n\fP \fIchannel\fP ] [ \fB\-d\fP ] [ \fB\-S\fP \fIseconds\fP ] [ \fB\-Z\fP ]
 \fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-v\fP ] [ \fB\-a\fP ] \fB\-f\fP \fIsynclogfile\fP [ \fB\-S\fP \fIseconds\fP ] [ \fB\-Z\fP ]
-\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-v\fP ] \fB\-t\fP \fIsrctier(s)\fP\&... \fB\-z\fP \fIdesttier\fP [ \fB\-F\fP ] [ \fB\-U\fP ] [ \fB\-T\fP \fIdir\fP ] [ \fB\-X\fP ] [ \fB\-o\fP ] [ \fB\-S\fP \fIseconds\fP ] [ \fB\-u\fP \fIuser\fP\&... ]
+\fBsquatter\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-v\fP ] \fB\-t\fP \fIsrctier(s)\fP\&... \fB\-z\fP \fIdesttier\fP [ \fB\-B\fP ] [ \fB\-F\fP ] [ \fB\-U\fP ] [ \fB\-T\fP \fIreindextiers\fP ] [ \fB\-X\fP ] [ \fB\-o\fP ] [ \fB\-S\fP \fIseconds\fP ] [ \fB\-u\fP \fIuser\fP\&... ]
 .fi
 .SH DESCRIPTION
 .sp
@@ -105,7 +105,7 @@ is sometimes useful for cleaning up after problems with rolling mode.
 In the sixth synopsis, \fBsquatter\fP will compact indices from
 \fIsrctier(s)\fP to \fIdesttier\fP, optionally reindexing (\fB\-X\fP) or filtering
 expunged records (\fB\-F\fP) in the process.  The optional \fB\-T\fP flag may be
-used to specify a directory to use for temporary files.  These files are
+used to specify members of srctiers which must be reindexed.  These files are
 eventually copied with \fIrsync \-a\fP and then removed by \fIrm\fP\&.
 \fIrsync\fP can increase the load average of the system, especially when the
 temporary directory is on \fItmpfs\fP\&.  To throttle \fIrsync\fP it is possible to
@@ -177,6 +177,14 @@ This feature was introduced in version 3.0.
 .UNINDENT
 .INDENT 0.0
 .TP
+.B \-B
+In compact mode, use non\-blocking lock to start and skip any
+users who have their xapianactive file locked at the time (i.e
+another reindex task)
+This feature was introduced in version 3.0.
+.UNINDENT
+.INDENT 0.0
+.TP
 .B \-F
 In compact mode, filter the resulting database to only include
 messages which are not expunged in mailboxes with existing
@@ -224,9 +232,26 @@ This feature was introduced in version 3.0.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-P
-Missing documentation, reindex parts mode.
+.B \-p
+.INDENT 7.0
+.INDENT 3.5
+When indexing, allow messages to be partially indexed. This may
+occur if attachment indexing is enabled but indexing failed for
+one or more attachment body parts. If this flag is set, the
+message is partially indexed and squatter continues. Otherwise
+squatter aborts with an error. Also see \fB\-P\fP\&.
+Xapian only.
 This feature is only available on the master branch.
+.UNINDENT
+.UNINDENT
+.INDENT 7.0
+.TP
+.B \-P
+When reindexing, then attempt to reindex any partially indexed
+messages (see \fB\-p\fP). Setting this flag implies \fB\-Z\fP\&.
+Xapian only.
+This feature is only available on the master branch.
+.UNINDENT
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -251,13 +276,10 @@ fractional amounts. This feature was introduced in version 3.0.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-T directory
-When indexing, work on a temporary copy of the search engine
-databases in \fIdirectory\fP\&.  That directory would typically be on
-some very fast filesystem, like an SSD or tmpfs.  This option may
-not work with all search engines, but it\(aqs only effect is to speed
-up initial indexing.
-Xapian only.
+.B \-T reindextiers
+In compact mode, a comma\-separated subset of the source tiers
+(see \fB\-t\fP) to be reindexed.  Similar to \fB\-X\fP but allows
+limiting the tiers that will be reindexed.
 This feature was introduced in version 3.0.
 .UNINDENT
 .INDENT 0.0

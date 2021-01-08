@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "MASTER" "8" "November 30, 2020" "3.2.5" "Cyrus IMAP"
+.TH "MASTER" "8" "January 08, 2021" "3.4.0" "Cyrus IMAP"
 .SH NAME
 master \- Cyrus IMAP documentation
 .
@@ -36,9 +36,8 @@ The Cyrus IMAP master process.
 .sp
 .nf
 \fBmaster\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-M\fP \fIalternate cyrus.conf\fP ]
-    [ \fB\-l\fP \fIlisten queue\fP ] [ \fB\-p\fP \fIpidfile\fP ] [ \fB\-P\fP \fIsnmp agentx ping interval\fP ]
+    [ \fB\-l\fP \fIlisten queue\fP ] [ \fB\-p\fP \fIpidfile\fP ]
     [ \fB\-j\fP \fIjanitor period\fP ] [ \fB\-d\fP | \fB\-D\fP ] [ \fB\-L\fP \fIlogfile\fP ]
-    [ \fB\-x\fP \fIsnmp agentx socket\fP ]
 .fi
 .SH DESCRIPTION
 .sp
@@ -88,13 +87,6 @@ Use \fIpidfile\fP as the pidfile.  If not specified, defaults to
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-P  snmp agentx ping interval
-Sets the amount on time in seconds the subagent will try and
-reconnect to the master agent (snmpd) if it ever becomes (or
-starts) disconnected.  Requires net\-snmp 5.0 or higher.
-.UNINDENT
-.INDENT 0.0
-.TP
 .B \-d
 Start in daemon mode (run in background and disconnect from
 controlling terminal).
@@ -110,12 +102,6 @@ Note that \fB\-d\fP and \fB\-D\fP cannot be used together; consider using
 .TP
 .B \-L  logfile
 Redirect stdout and stderr to the given \fIlogfile\fP\&.
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-x  snmp agentx socket
-Address the master agent (most likely snmpd) listens on.
-Requires net\-snmp 5.0 or higher.
 .UNINDENT
 .SH CONFIGURATION
 .sp

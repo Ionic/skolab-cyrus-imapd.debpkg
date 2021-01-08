@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "CTL_CYRUSDB" "8" "November 30, 2020" "3.2.5" "Cyrus IMAP"
+.TH "CTL_CYRUSDB" "8" "January 08, 2021" "3.4.0" "Cyrus IMAP"
 .SH NAME
 ctl_cyrusdb \- Cyrus IMAP documentation
 .
@@ -63,10 +63,10 @@ matches the configured database type in imapd.conf.  If not, the
 file is automatically converted using the same logic as cvt_cyrusdb.
 .sp
 If the \fBreverseacls\fP option in imapd.conf(5) is enabled,
-and the RACL entries do not exist in the database, they will be
-generated.  Conversely, if RACL entries do exist in the database,
-but the \fBreverseacls\fP option is disabled, then the entries will be
-cleaned up.
+and the RACL entries in the database are an old version or do not
+exist, they will be generated.  Conversely, if RACL entries do exist
+in the database, but the \fBreverseacls\fP option is disabled, then the
+entries will be cleaned up.
 .UNINDENT
 .INDENT 0.0
 .TP

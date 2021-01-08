@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>reconstruct &mdash; Cyrus IMAP 3.2.5 documentation</title>
+  <title>reconstruct &mdash; Cyrus IMAP 3.4.0-beta1 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.0-beta1 documentation" href="../../../../index.html"/>
         <link rel="up" title="Man pages" href="../commands.html"/>
         <link rel="next" title="rehash" href="rehash.html"/>
         <link rel="prev" title="quota" href="quota.html"/> 
@@ -128,12 +128,15 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#stable-version">Stable Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#development-version">Development Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#supported-product-series">Supported Product Series</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-3-4">Series 3.4</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-3-2">Series 3.2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-3-0">Series 3.0</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-2-5">Series 2.5</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#development-snapshots">Development snapshots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/3.5/index.html">Cyrus IMAP 3.5 Tags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/3.3/index.html">Cyrus IMAP 3.3 Tags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/3.1/index.html">Cyrus IMAP 3.1 Tags</a></li>
 </ul>
 </li>
@@ -331,19 +334,19 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../installing.html#troubleshooting">Troubleshooting</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../../download/upgrade.html">Upgrading to 3.2</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../download/upgrade.html">Upgrading to 3.4</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#preparation">1. Preparation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/upgrade.html#installation-from-tarball">Installation from tarball</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/upgrade.html#how-are-you-planning-on-upgrading">How are you planning on upgrading?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/upgrade.html#do-what-as-who">Do What As Who?</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#install-new-3-2-cyrus">2. Install new 3.2 Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#install-new-3-4-cyrus">2. Install new 3.4 Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#shut-down-existing-cyrus">3. Shut down existing Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#backup-and-copy-existing-data">4. Backup and Copy existing data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#copy-config-files-and-update">5. Copy config files and update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#upgrade-specific-items">6. Upgrade specific items</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#start-new-3-2-cyrus-and-verify">7. Start new 3.2 Cyrus and verify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#start-new-3-4-cyrus-and-verify">7. Start new 3.4 Cyrus and verify</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#reconstruct-databases-and-cache">8. Reconstruct databases and cache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#do-you-want-any-new-features">9. Do you want any new features?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#upgrade-complete">10. Upgrade complete</a></li>
@@ -740,7 +743,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.2: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.2"></a>
+    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -760,7 +763,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.2.5</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.4.0-beta1</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -770,7 +773,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.2/docsrc/imap/reference/manpages/systemcommands/reconstruct.rst" class="fa fa-github"> Edit on GitHub</a>
+            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.4/docsrc/imap/reference/manpages/systemcommands/reconstruct.rst" class="fa fa-github"> Edit on GitHub</a>
           
         
       </li>
@@ -787,23 +790,22 @@
 <pre class="literal-block">
 <strong>reconstruct</strong> [ <strong>-C</strong> <em>config-file</em> ] [ <strong>-p</strong> <em>partition</em> ] [ <strong>-x</strong> ] [ <strong>-r</strong> ]
     [ <strong>-f</strong> ] [ <strong>-U</strong> ] [ <strong>-s</strong> ] [ <strong>-q</strong> ] [ <strong>-G</strong> ] [ <strong>-R</strong> ] [ <strong>-o</strong> ]
-    [ <strong>-O</strong> ] [ <strong>-M</strong> ] [ <strong>-V</strong> <em>version</em> ] <em>mailbox</em>...
+    [ <strong>-O</strong> ] [ <strong>-M</strong> ] <em>mailbox</em>...
 
 <strong>reconstruct</strong> [ <strong>-C</strong> <em>config-file</em> ] [ <strong>-p</strong> <em>partition</em> ] [ <strong>-x</strong> ] [ <strong>-r</strong> ]
     [ <strong>-f</strong> ] [ <strong>-U</strong> ] [ <strong>-s</strong> ] [ <strong>-q</strong> ] [ <strong>-G</strong> ] [ <strong>-R</strong> ] [ <strong>-o</strong> ]
-    [ <strong>-O</strong> ] [ <strong>-M</strong> ] [ <strong>-u</strong> ] <em>users</em>...
+    [ <strong>-O</strong> ] [ <strong>-M</strong> ] <strong>-u</strong> <em>user</em>...
 
-<strong>reconstruct</strong> [ <strong>-C</strong> <em>config-file</em> ] [ <strong>-p</strong> <em>partition</em> ] [ <strong>-x</strong> ] [ <strong>-r</strong> ]
-    [ <strong>-f</strong> ] [ <strong>-U</strong> ] [ <strong>-s</strong> ] [ <strong>-q</strong> ] [ <strong>-G</strong> ] [ <strong>-R</strong> ] [ <strong>-o</strong> ]
-    [ <strong>-O</strong> ] [ <strong>-M</strong> ] <strong>-V</strong> <em>&lt;version&gt;</em> [ <strong>-u</strong> <em>users</em> ]
+<strong>reconstruct</strong> [ <strong>-C</strong> <em>config-file</em> ] [ <strong>-p</strong> <em>partition</em> ] [ <strong>-r</strong> ]
+    [ <strong>-q</strong> ] <strong>-V</strong> <em>version</em> <em>mailbox</em>...
 
-<strong>reconstruct</strong> [ <strong>-C</strong> <em>config-file</em> ] <strong>-m</strong>
+<strong>reconstruct</strong> [ <strong>-C</strong> <em>config-file</em> ] [ <strong>-p</strong> <em>partition</em> ] [ <strong>-r</strong> ]
+    [ <strong>-q</strong> ] <strong>-V</strong> <em>version</em> <strong>-u</strong> <em>user</em>...
 </pre>
 </div>
 <div class="section" id="description">
 <h2>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
-<p><strong>reconstruct</strong> rebuilds one or more IMAP mailboxes.  When invoked with
-the <strong>-m</strong> switch, it rebuilds the master mailboxes file.  It can be
+<p><strong>reconstruct</strong> rebuilds one or more IMAP mailboxes.  It can be
 used to recover from almost any sort of data corruption.</p>
 <p>If <strong>reconstruct</strong> can find existing header and index files, it
 attempts to preserve any data in them that is not derivable from the
@@ -819,7 +821,10 @@ root files.  After running <strong>reconstruct</strong>, it is advisable to run
 root files.</p>
 <p>When upgrading versions of Cyrus software, it may be necessary to run
 <strong>reconstruct</strong> with the <strong>-V</strong> option, to rebuild indexes to a
-given version, (or <em>max</em> for the most recent).</p>
+given version (or <em>max</em> for the most recent).  Note that the <strong>-V</strong>
+option cannot be combined with most other reconstruct options.  If
+a mailbox needs reconstructing you should do that first, and then
+upgrade it with <strong>-V</strong> once it's good.</p>
 </div>
 <div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
@@ -879,8 +884,7 @@ size mismatches).  &quot;<strong>reconstruct -s</strong>&quot; should be quite f
 <dl class="option">
 <dt id="cmdoption-reconstruct-n">
 <code class="descname">-n</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-reconstruct-n" title="Permalink to this definition">¶</a></dt>
-<dd><p>Don't make any changes.  This gives equivalent behaviour to
-<a class="reference internal" href="chk_cyrus.html#std:cyrusman-chk_cyrus(8)">chk_cyrus(8)</a> where problems are reported, but not fixed.</p>
+<dd><p>Don't make any changes.  Problems are reported, but not fixed.</p>
 </dd></dl>
 
 <dl class="option">
@@ -943,7 +947,7 @@ other way around.  This feature was introduced in version 3.0.</p>
 
 <dl class="option">
 <dt id="cmdoption-reconstruct-V">
-<code class="descname">-V</code><code class="descclassname">  version</code><a class="headerlink" href="#cmdoption-reconstruct-V" title="Permalink to this definition">¶</a></dt>
+<code class="descname">-V</code><code class="descclassname"> version</code><a class="headerlink" href="#cmdoption-reconstruct-V" title="Permalink to this definition">¶</a></dt>
 <dd><p>Change the <code class="docutils literal"><span class="pre">cyrus.index</span></code> minor version to a specific <em>version</em>.
 This can be useful for upgrades or downgrades. Use a magical
 version of <em>max</em> to upgrade to the latest available database format
@@ -954,16 +958,6 @@ version.</p>
 <dt id="cmdoption-reconstruct-u">
 <code class="descname">-u</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-reconstruct-u" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instead of mailbox prefixes, give usernames on the command line</p>
-</dd></dl>
-
-<dl class="option">
-<dt id="cmdoption-reconstruct-m">
-<code class="descname">-m</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-reconstruct-m" title="Permalink to this definition">¶</a></dt>
-<dd><p>NOTE:
-CURRENTLY UNAVAILABLE</p>
-<p>Rebuild the <em>mailboxes</em> file.  Use whatever data in the existing
-<em>mailboxes</em> file it can scavenge, then scans all partitions listed
-in the <a class="reference internal" href="../configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> file for additional mailboxes.</p>
 </dd></dl>
 
 </div>
@@ -1059,7 +1053,7 @@ deprecated in Cyrus version 2.4.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jul 27 2018
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Dec 18 2020
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1079,7 +1073,7 @@ deprecated in Cyrus version 2.4.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.2.5',
+            VERSION:'3.4.0-beta1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

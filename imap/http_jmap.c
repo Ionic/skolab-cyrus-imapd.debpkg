@@ -54,6 +54,7 @@
 #include "mboxname.h"
 #include "proxy.h"
 #include "times.h"
+#include "sync_support.h"
 #include "syslog.h"
 #include "user.h"
 #include "xstrlcpy.h"
@@ -112,7 +113,7 @@ struct namespace_t namespace_jmap = {
     URL_NS_JMAP, 0, "jmap", JMAP_ROOT, "/.well-known/jmap",
     jmap_need_auth, /*authschemes*/0,
     /*mbtype*/0, 
-    (ALLOW_READ | ALLOW_POST),
+    (ALLOW_READ | ALLOW_POST | ALLOW_READONLY),
     &jmap_init, &jmap_auth, NULL, &jmap_shutdown, NULL, /*bearer*/NULL,
     {
         { NULL,                 NULL },                 /* ACL          */
@@ -176,8 +177,14 @@ static void jmap_init(struct buf *serverinfo)
 
     jmap_core_init(&my_jmap_settings);
     jmap_mail_init(&my_jmap_settings);
+    jmap_mdn_init(&my_jmap_settings);
     jmap_contact_init(&my_jmap_settings);
     jmap_calendar_init(&my_jmap_settings);
+    jmap_backup_init(&my_jmap_settings);
+    jmap_notes_init(&my_jmap_settings);
+#ifdef USE_SIEVE
+    jmap_sieve_init(&my_jmap_settings);
+#endif
 
     if (ws_enabled()) {
         json_object_set_new(my_jmap_settings.server_capabilities,
@@ -375,6 +382,13 @@ static int meth_post(struct transaction_t *txn,
     /* Regular JMAP API request */
     ret = jmap_api(txn, &res, &my_jmap_settings);
 
+    /* ensure we didn't leak anything! */
+    assert(!open_mailboxes_exist());
+    assert(!open_mboxlocks_exist());
+
+    // checkpoint before we reply
+    sync_checkpoint(httpd_in);
+
     if (res) {
         /* Output the JSON object */
         ret = json_response(ret ? ret : HTTP_OK, txn, res);
@@ -431,7 +445,6 @@ static int jmap_getblob_default_handler(jmap_req_t *req,
     struct body *body = NULL;
     const struct body *part = NULL;
     struct buf msg_buf = BUF_INITIALIZER;
-    struct buf blob = BUF_INITIALIZER;
     char *decbuf = NULL;
     int res = 0;
 
@@ -470,10 +483,9 @@ static int jmap_getblob_default_handler(jmap_req_t *req,
     }
 
     // success
-    buf_setmap(&blob, base, len);
     req->txn->resp_body.type = accept_mime ? accept_mime : "application/octet-stream";
-    req->txn->resp_body.len = buf_len(&blob);
-    write_body(HTTP_OK, req->txn, buf_base(&blob), buf_len(&blob));
+    req->txn->resp_body.len = len;
+    write_body(HTTP_OK, req->txn, base, len);
     res = HTTP_OK;
 
  done:
@@ -487,7 +499,6 @@ static int jmap_getblob_default_handler(jmap_req_t *req,
         msgrecord_unref(&mr);
     }
     buf_free(&msg_buf);
-    buf_free(&blob);
     return res;
 }
 
@@ -540,9 +551,9 @@ static int jmap_download(struct transaction_t *txn)
     req.txn = txn;
 
     /* Initialize ACL mailbox cache for findblob */
-    hash_table mboxrights = HASH_TABLE_INITIALIZER;
-    construct_hash_table(&mboxrights, 64, 0);
-    req.mboxrights = &mboxrights;
+    hash_table mbstates = HASH_TABLE_INITIALIZER;
+    construct_hash_table(&mbstates, 64, 0);
+    req.mbstates = &mbstates;
 
     blobid = xstrndup(blobbase, bloblen);
 
@@ -559,6 +570,10 @@ static int jmap_download(struct transaction_t *txn)
     /* Set Content-Disposition header */
     txn->resp_body.dispo.attach = fname != NULL;
     txn->resp_body.dispo.fname = fname;
+
+    /* Set Cache-Control directives */
+    txn->resp_body.maxage = 604800;  /* 7 days */
+    txn->flags.cc |= CC_MAXAGE | CC_PRIVATE | CC_IMMUTABLE;
 
     /* Call blob download handlers */
     int i;
@@ -577,11 +592,13 @@ static int jmap_download(struct transaction_t *txn)
         if (!txn->error.desc) txn->error.desc = error_message(res);
         txn->resp_body.dispo.attach = 0;
         txn->resp_body.dispo.fname = NULL;
+        txn->resp_body.maxage = 0;
+        txn->flags.cc = 0;
     }
     else if (res == HTTP_OK) res = 0;
 
     buf_free(&blob);
-    free_hash_table(&mboxrights, free);
+    free_hash_table(&mbstates, free);
     conversations_commit(&cstate);
     free(accept_mime);
     free(accountid);
@@ -613,12 +630,12 @@ static int lookup_upload_collection(const char *accountid, mbentry_t **mbentry)
 
     /* Locate the mailbox */
     uploadname = mbname_intname(mbname);
-    r = http_mlookup(uploadname, mbentry, NULL);
+    r = proxy_mlookup(uploadname, mbentry, NULL, NULL);
     if (r == IMAP_MAILBOX_NONEXISTENT) {
         /* Find location of INBOX */
         char *inboxname = mboxname_user_mbox(accountid, NULL);
 
-        int r1 = http_mlookup(inboxname, mbentry, NULL);
+        int r1 = proxy_mlookup(inboxname, mbentry, NULL, NULL);
         free(inboxname);
         if (r1 == IMAP_MAILBOX_NONEXISTENT) {
             r = IMAP_INVALID_USER;
@@ -751,7 +768,8 @@ static int jmap_upload(struct transaction_t *txn)
 
     struct body *body = NULL;
 
-    int ret = HTTP_CREATED;
+    int ret = HTTP_SERVER_ERROR;
+    json_t *resp = NULL;
     hdrcache_t hdrcache = txn->req_hdrs;
     struct stagemsg *stage = NULL;
     FILE *f = NULL;
@@ -943,14 +961,11 @@ wrotebody:
     jmap_set_blobid(rawmessage ? &body->guid : &body->content_guid, blob_id);
 
     /* Create response object */
-    json_t *resp = json_pack("{s:s}", "accountId", accountid);
+    resp = json_pack("{s:s}", "accountId", accountid);
     json_object_set_new(resp, "blobId", json_string(blob_id));
     json_object_set_new(resp, "size", json_integer(datalen));
     json_object_set_new(resp, "expires", json_string(datestr));
     json_object_set_new(resp, "type", json_string(normalisedtype));
-
-    /* Output the JSON object */
-    ret = json_response(HTTP_CREATED, txn, resp);
 
 done:
     free(normalisedtype);
@@ -966,6 +981,17 @@ done:
         else r = mailbox_commit(mailbox);
         mailbox_close(&mailbox);
     }
+
+    /* ensure we didn't leak anything! */
+    assert(!open_mailboxes_exist());
+    assert(!open_mboxlocks_exist());
+
+    // checkpoint before replying
+    sync_checkpoint(httpd_in);
+
+    /* Output the JSON object */
+    if (resp)
+        ret = json_response(HTTP_CREATED, txn, resp);
 
     return ret;
 }
@@ -1057,6 +1083,13 @@ static int jmap_ws(struct buf *inbuf, struct buf *outbuf,
     /* Process the API request */
     ret = jmap_api(txn, &res, &my_jmap_settings);
 
+    /* ensure we didn't leak anything! */
+    assert(!open_mailboxes_exist());
+    assert(!open_mboxlocks_exist());
+
+    // checkpoint before we reply
+    sync_checkpoint(httpd_in);
+
     /* Free request payload */
     buf_free(&txn->req_body.payload);
 
@@ -1065,6 +1098,11 @@ static int jmap_ws(struct buf *inbuf, struct buf *outbuf,
         const char **hdr = spool_getheader(txn->req_hdrs, ":jmap");
 
         if (hdr) buf_printf(logbuf, "; jmap=%s", hdr[0]);
+
+        /* Add logheaders */
+        hdr = spool_getheader(txn->req_hdrs, ":logheaders");
+
+        if (hdr) buf_appendcstr(logbuf, hdr[0]);
     }
 
     if (!ret) {

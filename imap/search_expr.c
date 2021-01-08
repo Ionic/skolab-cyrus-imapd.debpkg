@@ -1056,6 +1056,29 @@ static int is_folder_or_indexed(search_expr_t *e, void *rock __attribute__((unus
     return (is_folder_node(e) || is_indexed_node(e));
 }
 
+/* given an expression tree, return the name of the first mailbox that
+ * is mentioned in it (if any).  This is depth-first, but normally that
+ * won't matter.  It does explicitly skip "not in this mailbox" type
+ * queries because we won't want to open those mailboxes! */
+EXPORTED char *search_expr_firstmailbox(const search_expr_t *e)
+{
+    // don't descend into "NOT" because we won't want to open those mailboxes
+    if (e->op == SEOP_NOT) return NULL;
+
+    if (is_folder_node(e)) {
+        char *res = xstrdupnull(e->value.s);
+        if (res) return res;
+    }
+
+    const search_expr_t *child;
+    for (child = e->children; child; child = child->next) {
+        char *res = search_expr_firstmailbox(child);
+        if (res) return res;
+    }
+
+    return NULL;
+}
+
 /*
  * Split a search expression into one or more parts, each of which
  * satisfies the earliest of these conditions:
@@ -1420,7 +1443,7 @@ static int search_contenttype_match(message_t *m, const union search_value *v,
             if (r) goto out;    // success
 
             /* match against combined type_subtype */
-            snprintf(combined, sizeof(combined), "%s_%s", type, subtype);
+            snprintf(combined, sizeof(combined), "%s/%s", type, subtype);
             r = charset_searchstring(v->s, pat, combined, strlen(combined), charset_flags);
             if (r) goto out;    // success
         }
@@ -1455,7 +1478,7 @@ static int search_header_match(message_t *m, const union search_value *v,
             r = charset_searchstring(internal->s, internal->pat, buf.s, buf.len, charset_flags);
         }
         else {
-            /* RFC3501: If the string to search is zero-length, this matches
+            /* RFC 3501: If the string to search is zero-length, this matches
              * all messages that have a header line with the specified
              * field-name regardless of the contents. */
             r = buf.len ? 1 : 0;
@@ -1821,7 +1844,7 @@ struct search_annot_rock {
 static int _search_annot_match(const struct buf *match,
                                const struct buf *value)
 {
-    /* These cases are not explicitly defined in RFC5257 */
+    /* These cases are not explicitly defined in RFC 5257 */
 
     /* NIL matches NIL and nothing else */
     if (match->s == NULL)
@@ -1835,7 +1858,7 @@ static int _search_annot_match(const struct buf *match,
     if (value->len == 0)
         return 0;
 
-    /* RFC5257 seems to define a simple CONTAINS style search */
+    /* RFC 5257 seems to define a simple CONTAINS style search */
     return !!memmem(value->s, value->len,
                     match->s, match->len);
 }
@@ -2286,6 +2309,16 @@ static int search_text_match(message_t *m,
     return sr.result;
 }
 
+static int search_language_match(message_t *m __attribute__((unused)),
+                                 const union search_value *v __attribute__((unused)),
+                                 void *internalised __attribute__((unused)),
+                                 void *data1 __attribute__((unused)))
+{
+    /* language matching must be done in the backend */
+    syslog(LOG_DEBUG, "%s: ignoring language search attribute", __func__);
+    return 1;
+}
+
 /* ====================================================================== */
 
 static hash_table attrs_by_name = HASH_TABLE_INITIALIZER;
@@ -2382,6 +2415,20 @@ EXPORTED void search_attr_init(void)
             search_string_duplicate,
             search_string_free,
             (void *)message_get_bcc
+        },{
+            "deliveredto",
+            SEA_FUZZABLE,
+            SEARCH_PART_DELIVEREDTO,
+            SEARCH_COST_BODY,
+            search_string_internalise,
+            /*cmp*/NULL,
+            search_string_match,
+            search_string_serialise,
+            search_string_unserialise,
+            /*get_countability*/NULL,
+            search_string_duplicate,
+            search_string_free,
+            (void *)message_get_deliveredto
         },{
             "cc",
             SEA_FUZZABLE,
@@ -2844,6 +2891,34 @@ EXPORTED void search_attr_init(void)
             search_string_duplicate,
             search_string_free,
             (void *)0       /* skipheader flag */
+        },{
+            "language",
+            SEA_FUZZABLE,
+            SEARCH_PART_LANGUAGE,
+            SEARCH_COST_BODY,
+            search_string_internalise,
+            /*cmp*/NULL,
+            search_language_match,
+            search_string_serialise,
+            search_string_unserialise,
+            /*get_countability*/NULL,
+            search_string_duplicate,
+            search_string_free,
+            (void *)0
+        }, {
+            "priority",
+            SEA_FUZZABLE,
+            SEARCH_PART_PRIORITY,
+            SEARCH_COST_BODY,
+            search_string_internalise,
+            /*cmp*/NULL,
+            search_string_match,
+            search_string_serialise,
+            search_string_unserialise,
+            /*get_countability*/NULL,
+            search_string_duplicate,
+            search_string_free,
+            (void *)message_get_priority
         }
     };
 

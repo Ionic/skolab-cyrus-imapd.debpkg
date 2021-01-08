@@ -261,6 +261,8 @@ int service_init(int argc __attribute__((unused)),
         fatal(error_message(r), EX_CONFIG);
     }
 
+    mboxevent_setnamespace(sync_namespacep);
+
     return 0;
 }
 
@@ -541,7 +543,8 @@ static void cmdloop(void)
                     dlist_free(&kl);
                 }
                 else {
-                    syslog(LOG_ERR, "IOERROR: received bad APPLY command");
+                    xsyslog(LOG_ERR, "IOERROR: received bad command",
+                                     "command=<%s>", cmd.s);
                     prot_printf(sync_out, "BAD IMAP_PROTOCOL_ERROR Failed to parse APPLY line\r\n");
                 }
                 continue;
@@ -568,7 +571,8 @@ static void cmdloop(void)
                     dlist_free(&kl);
                 }
                 else {
-                    syslog(LOG_ERR, "IOERROR: received bad GET command");
+                    xsyslog(LOG_ERR, "IOERROR: received bad command",
+                                     "command=<%s>", cmd.s);
                     prot_printf(sync_out, "BAD IMAP_PROTOCOL_ERROR Failed to parse GET line\r\n");
                 }
                 continue;
@@ -611,7 +615,8 @@ static void cmdloop(void)
                     dlist_free(&kl);
                 }
                 else {
-                    syslog(LOG_ERR, "IOERROR: received bad RESTORE command");
+                    xsyslog(LOG_ERR, "IOERROR: received bad command",
+                                     "command=<%s>", cmd.s);
                     prot_printf(sync_out, "BAD IMAP_PROTOCOL_ERROR Failed to parse RESTORE line\r\n");
                 }
                 continue;
@@ -645,7 +650,8 @@ static void cmdloop(void)
 
         }
 
-        syslog(LOG_ERR, "IOERROR: received bad command: %s", cmd.s);
+        xsyslog(LOG_ERR, "IOERROR: received bad command",
+                         "command=<%s>", cmd.s);
         prot_printf(sync_out, "BAD IMAP_PROTOCOL_ERROR Unrecognized command\r\n");
         eatline(sync_in, c);
         continue;
@@ -960,6 +966,7 @@ static void cmd_apply(struct dlist *kin, struct sync_reserve_list *reserve_list)
     };
 
     const char *resp = sync_apply(kin, reserve_list, &sync_state);
+    sync_checkpoint(sync_in);
     prot_printf(sync_out, "%s\r\n", resp);
 }
 
@@ -990,5 +997,6 @@ static void cmd_restore(struct dlist *kin, struct sync_reserve_list *reserve_lis
     };
 
     const char *resp = sync_restore(kin, reserve_list, &sync_state);
+    sync_checkpoint(sync_in);
     prot_printf(sync_out, "%s\r\n", resp);
 }

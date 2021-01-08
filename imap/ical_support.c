@@ -58,20 +58,24 @@
 
 #ifdef HAVE_ICAL
 
+static int initialized = 0;
+
 EXPORTED void ical_support_init(void)
 {
+    if (initialized) return;
+
     /* Initialize timezones path */
     const char *tzpath = config_getstring(IMAPOPT_ZONEINFO_DIR);
     icalarray *timezones;
 
     if (tzpath) {
-        syslog(LOG_NOTICE, "using timezone data from zoneinfo_dir=%s", tzpath);
+        syslog(LOG_DEBUG, "using timezone data from zoneinfo_dir=%s", tzpath);
         icaltimezone_set_zone_directory((char *) tzpath);
         icaltimezone_set_tzid_prefix("");
         icaltimezone_set_builtin_tzdata(1);
     }
     else {
-        syslog(LOG_NOTICE, "zoneinfo_dir is unset, libical will find "
+        syslog(LOG_DEBUG, "zoneinfo_dir is unset, libical will find "
                            "its own timezone data");
     }
 
@@ -88,39 +92,55 @@ EXPORTED void ical_support_init(void)
               EX_CONFIG);
     }
 
-    if (config_debug) {
-        size_t i;
+    syslog(LOG_DEBUG, "%s: found " SIZE_T_FMT " timezones",
+                       __func__, timezones->num_elements);
 
-        syslog(LOG_DEBUG, "%s: found " SIZE_T_FMT " timezones",
-                          __func__, timezones->num_elements);
-        for (i = 0; i < timezones->num_elements; i++) {
-            icaltimezone *tz = icalarray_element_at(timezones, i);
-            char *tzid = xstrdupsafe(icaltimezone_get_tzid(tz));
-            char *location = xstrdupsafe(icaltimezone_get_location(tz));
-            syslog(LOG_DEBUG, "%s: [" SIZE_T_FMT "] tzid=%s location=%s",
-                              __func__, i, tzid, location);
-            free(location);
-            free(tzid);
-        }
-    }
+    initialized = 1;
 }
 
 EXPORTED int cyrus_icalrestriction_check(icalcomponent *ical)
 {
-    icalcomponent *vtz;
+    icalcomponent *comp;
+    icalproperty *prop;
 
-    /* Strip COMMENT properties from VTIMEZONEs */
-    /* XXX  These were added by KSM in a previous version of vzic,
-       but libical doesn't allow them in its restrictions checks */
-    for (vtz = icalcomponent_get_first_component(ical, ICAL_VTIMEZONE_COMPONENT);
-         vtz;
-         vtz = icalcomponent_get_next_component(ical, ICAL_VTIMEZONE_COMPONENT)) {
-        icalproperty *prop =
-            icalcomponent_get_first_property(vtz, ICAL_COMMENT_PROPERTY);
+    for (comp = icalcomponent_get_first_component(ical, ICAL_ANY_COMPONENT);
+         comp;
+         comp = icalcomponent_get_next_component(ical, ICAL_ANY_COMPONENT)) {
 
-        if (prop) {
-            icalcomponent_remove_property(vtz, prop);
-            icalproperty_free(prop);
+        switch (icalcomponent_isa(comp)) {
+        case ICAL_VTIMEZONE_COMPONENT:
+            /* Strip COMMENT properties from VTIMEZONEs */
+            /* XXX  These were added by KSM in a previous version of vzic,
+               but libical doesn't allow them in its restrictions checks */
+            prop = icalcomponent_get_first_property(comp, ICAL_COMMENT_PROPERTY);
+            if (prop) {
+                icalcomponent_remove_property(comp, prop);
+                icalproperty_free(prop);
+            }
+            break;
+
+        case ICAL_VEVENT_COMPONENT:
+            /* Strip TZID properies from VEVENTs */
+            /* XXX  Zoom invites contain these,
+               but libical doesn't allow them in its restrictions checks */
+            prop = icalcomponent_get_first_property(comp, ICAL_TZID_PROPERTY);
+            if (prop) {
+                icalcomponent_remove_property(comp, prop);
+                icalproperty_free(prop);
+            }
+
+            /* Strip CALSCALE properies from VEVENTs */
+            /* XXX  CiviCRM invites contain these,
+               but libical doesn't allow them in its restrictions checks */
+            prop = icalcomponent_get_first_property(comp, ICAL_CALSCALE_PROPERTY);
+            if (prop) {
+                icalcomponent_remove_property(comp, prop);
+                icalproperty_free(prop);
+            }
+            break;
+
+        default:
+            break;
         }
     }
 

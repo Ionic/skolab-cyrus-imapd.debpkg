@@ -1462,11 +1462,16 @@ static struct mbent *database_lookup(const char *name, const mbentry_t *mbentry,
     else
         location = xstrdup("");
 
-    out->mailbox = (pool) ? mpool_strdup(pool, name) : xstrdup(name);
-    out->location = (pool) ? mpool_strdup(pool, location)
-                         : xstrdup(location);
+    if (pool) {
+        out->mailbox = mpool_strdup(pool, name);
+        out->location = mpool_strdup(pool, location);
+        free(location);
+    }
+    else {
+        out->mailbox = xstrdup(name);
+        out->location = location;
+    }
 
-    free(location);
     if (my_mbentry) mboxlist_entry_free(&my_mbentry);
 
     return out;
@@ -1667,6 +1672,7 @@ static void cmd_set(struct conn *C,
 
             m->t = t;
         } else {
+            char *thismailbox = m ? m->mailbox : xstrdup(mailbox);
             struct mbent *newm;
 
             /* allocate new mailbox */
@@ -1675,7 +1681,7 @@ static void cmd_set(struct conn *C,
             } else {
                 newm = xrealloc(m, sizeof(struct mbent) + 1);
             }
-            newm->mailbox = xstrdup(mailbox);
+            newm->mailbox = thismailbox;
             newm->location = xstrdup(location);
 
             if (acl) {

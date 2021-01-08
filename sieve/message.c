@@ -99,10 +99,11 @@ int do_reject(action_list_t *a, int action, const char *msg)
  *
  * incompatible with: [e]reject
  */
-int do_snooze(action_list_t *a, const char *awaken_mbox, int is_mboxid,
-              strarray_t *addflags, strarray_t *removeflags,
+int do_snooze(action_list_t *a, const char *awaken_mbox, const char *awaken_mboxid,
+              const char *awaken_spluse, int do_create,
+              strarray_t *addflags, strarray_t *removeflags, const char *tzid,
               unsigned char days, arrayu64_t *times,
-              strarray_t *imapflags)
+              strarray_t *imapflags, struct buf *headers)
 {
     action_list_t *b = NULL;
 
@@ -142,12 +143,16 @@ int do_snooze(action_list_t *a, const char *awaken_mbox, int is_mboxid,
     a->a = ACTION_SNOOZE;
     a->cancel_keep = 1;
     a->u.snz.awaken_mbox = awaken_mbox;
+    a->u.snz.awaken_mboxid = awaken_mboxid;
+    a->u.snz.awaken_spluse = awaken_spluse;
+    a->u.snz.do_create = do_create;
     a->u.snz.imapflags = imapflags;
     a->u.snz.addflags = addflags;
     a->u.snz.removeflags = removeflags;
     a->u.snz.days = days;
     a->u.snz.times = times;
-    a->u.snz.is_mboxid = !!is_mboxid;
+    a->u.snz.tzid = tzid;
+    a->u.snz.headers = headers;
 
     b->next = a;
 
@@ -158,25 +163,50 @@ int do_snooze(action_list_t *a, const char *awaken_mbox, int is_mboxid,
  *
  * incompatible with: [e]reject
  */
-int do_fileinto(action_list_t *a, const char *mbox, const char *specialuse,
+int do_fileinto(sieve_interp_t *i, void *sc,
+                action_list_t *a, const char *mbox, const char *specialuse,
                 int cancel_keep, int do_create, const char *mailboxid,
-                strarray_t *imapflags)
+                strarray_t *imapflags, struct buf *headers)
 {
-    action_list_t *b = NULL;
+    action_list_t *new, *b = NULL;
+    const char *errmsg;
+    int ret;
+
+    if (!i->fileinto) return SIEVE_INTERNAL_ERROR;
+
+    new = new_action_list();
+    new->a = ACTION_FILEINTO;
+    new->cancel_keep |= cancel_keep;
+    new->u.fil.mailbox = mbox;
+    new->u.fil.specialuse = specialuse;
+    new->u.fil.imapflags = imapflags;
+    new->u.fil.do_create = do_create;
+    new->u.fil.mailboxid = mailboxid;
+    new->u.fil.headers = headers;
+    new->u.fil.resolved_mailbox = NULL;
+
+    ret = i->fileinto(&new->u.fil, i->interp_context, sc, NULL, &errmsg);
+    if (ret != SIEVE_OK) {
+        ret = SIEVE_RUN_ERROR;
+        goto done;
+    }
 
     /* see if this conflicts with any previous actions taken on this message */
     while (a != NULL) {
         if (a->a == ACTION_REJECT || a->a == ACTION_EREJECT) {
-            strarray_free(imapflags);
-            return SIEVE_RUN_ERROR;
+            ret = SIEVE_RUN_ERROR;
+            goto done;
         }
 
-        if (a->a == ACTION_FILEINTO && !strcmp(a->u.fil.mailbox, mbox)) {
+        if ((a->a == ACTION_FILEINTO &&
+             !strcmp(a->u.fil.resolved_mailbox, new->u.fil.resolved_mailbox)) ||
+            ((a->a == ACTION_KEEP &&
+              !strcmp(a->u.keep.resolved_mailbox, new->u.fil.resolved_mailbox)))) {
             /* don't bother doing it twice */
             /* check that we have a valid action */
             if (b == NULL) {
-                strarray_free(imapflags);
-                return SIEVE_INTERNAL_ERROR;
+                ret = SIEVE_INTERNAL_ERROR;
+                goto done;
             }
 
             /* cut this action out of the list */
@@ -190,16 +220,13 @@ int do_fileinto(action_list_t *a, const char *mbox, const char *specialuse,
         a = a->next;
     }
 
-    a = new_action_list();
-    a->a = ACTION_FILEINTO;
-    a->cancel_keep |= cancel_keep;
-    a->u.fil.mailbox = mbox;
-    a->u.fil.specialuse = specialuse;
-    a->u.fil.imapflags = imapflags;
-    a->u.fil.do_create = do_create;
-    a->u.fil.mailboxid = mailboxid;
+    b->next = new;
 
-    b->next = a;
+  done:
+    if (ret != SIEVE_OK) {
+        free_action_list(new);
+        return ret;
+    }
 
     return 0;
 }
@@ -210,7 +237,7 @@ int do_fileinto(action_list_t *a, const char *mbox, const char *specialuse,
  */
 int do_redirect(action_list_t *a, const char *addr, const char *deliverby,
                 const char *dsn_notify, const char *dsn_ret,
-                int is_ext_list, int cancel_keep)
+                int is_ext_list, int cancel_keep, struct buf *headers)
 {
     action_list_t *b = NULL;
 
@@ -234,6 +261,7 @@ int do_redirect(action_list_t *a, const char *addr, const char *deliverby,
     a->u.red.deliverby = deliverby;
     a->u.red.dsn_notify = dsn_notify;
     a->u.red.dsn_ret = dsn_ret;
+    a->u.red.headers = headers;
 
     b->next = a;
 
@@ -244,23 +272,41 @@ int do_redirect(action_list_t *a, const char *addr, const char *deliverby,
  *
  * incompatible with: [e]reject
  */
-int do_keep(action_list_t *a, strarray_t *imapflags)
+int do_keep(sieve_interp_t *i, void *sc,
+            action_list_t *a, strarray_t *imapflags, struct buf *headers)
 {
-    action_list_t *b = NULL;
+    action_list_t *new, *b = NULL;
+    const char *errmsg;
+    int ret;
+
+    new = new_action_list();
+    new->a = ACTION_KEEP;
+    new->cancel_keep = 1;
+    new->u.keep.imapflags = imapflags;
+    new->u.keep.headers = headers;
+    new->u.keep.resolved_mailbox = NULL;
+
+    ret = i->keep(&new->u.keep, i->interp_context, sc, NULL, &errmsg);
+    if (ret != SIEVE_OK) {
+        ret = SIEVE_RUN_ERROR;
+        goto done;
+    }
 
     /* see if this conflicts with any previous actions taken on this message */
     while (a != NULL) {
         if (a->a == ACTION_REJECT || a->a == ACTION_EREJECT) {
-            return SIEVE_RUN_ERROR;
-            strarray_free(imapflags);
+            ret = SIEVE_RUN_ERROR;
+            goto done;
         }
 
-        if (a->a == ACTION_KEEP) {
+        if (a->a == ACTION_KEEP ||
+            (a->a == ACTION_FILEINTO &&
+             !strcmp(a->u.fil.resolved_mailbox, new->u.keep.resolved_mailbox))) {
             /* don't bother doing it twice */
             /* check that we have a valid action */
             if (b == NULL) {
-                strarray_free(imapflags);
-                return SIEVE_INTERNAL_ERROR;
+                ret = SIEVE_INTERNAL_ERROR;
+                goto done;
             }
             /* cut this action out of the list */
             b->next = a->next;
@@ -273,12 +319,13 @@ int do_keep(action_list_t *a, strarray_t *imapflags)
         a = a->next;
     }
 
-    a = new_action_list();
-    a->a = ACTION_KEEP;
-    a->cancel_keep = 1;
-    a->u.keep.imapflags = imapflags;
+    b->next = new;
 
-    b->next = a;
+  done:
+    if (ret != SIEVE_OK) {
+        free_action_list(new);
+        return ret;
+    }
 
     return 0;
 }
@@ -350,6 +397,7 @@ int do_vacation(action_list_t *a, char *addr, char *fromaddr,
     a->u.vac.send.msg = msg;
     a->u.vac.send.mime = mime;
     a->u.vac.send.fcc.mailbox = fcc->mailbox;
+    a->u.vac.send.fcc.mailboxid = fcc->mailboxid;
     a->u.vac.send.fcc.specialuse = fcc->specialuse;
     a->u.vac.send.fcc.do_create = fcc->do_create;
     a->u.vac.send.fcc.imapflags = fcc->imapflags;
@@ -423,7 +471,7 @@ int do_unmark(action_list_t *a)
  * incompatible with: none
  */
 int do_notify(notify_list_t *n, const char *id, const char *from,
-              const char *method, const char **options,
+              const char *method, strarray_t *options,
               const char *priority, const char *message)
 {
     notify_list_t *b = NULL;
@@ -469,64 +517,6 @@ int do_denotify(notify_list_t *n, comparator_t *comp, const void *pat,
     return 0;
 }
 
-/* add a header to the message
- *
- * incompatible with: none
- */
-int do_addheader(action_list_t *a, const char *name, const char *value,
-                 int index)
-{
-    action_list_t *b = NULL;
-
-    /* see if this conflicts with any previous actions taken on this message */
-    while (a != NULL) {
-        b = a;
-        a = a->next;
-    }
-
-    /* add to the action list */
-    a = new_action_list();
-    a->a = ACTION_ADDHEADER;
-    a->u.addh.name = name;
-    a->u.addh.value = value;
-    a->u.addh.index = index;
-
-    b->next = a;
-
-    return 0;
-}
-
-/* delete a header from the message
- *
- * incompatible with: none
- */
-int do_deleteheader(action_list_t *a, const char *name, void *patterns,
-                    int index, int comptype,
-                    comparator_t *compfunc, void *comprock)
-{
-    action_list_t *b = NULL;
-
-    /* see if this conflicts with any previous actions taken on this message */
-    while (a != NULL) {
-        b = a;
-        a = a->next;
-    }
-
-    /* add to the action list */
-    a = new_action_list();
-    a->a = ACTION_DELETEHEADER;
-    a->u.delh.name = name;
-    a->u.delh.patterns = patterns;
-    a->u.delh.index = index;
-    a->u.delh.comptype = comptype;
-    a->u.delh.compfunc = compfunc;
-    a->u.delh.comprock = comprock;
-
-    b->next = a;
-
-    return 0;
-}
-
 int do_duptrack(duptrack_list_t *d, sieve_duplicate_context_t *dc)
 {
     duptrack_list_t *b = NULL;
@@ -556,7 +546,10 @@ void free_notify_list(notify_list_t *n)
 {
     while (n) {
         notify_list_t *b = n->next;
-        free(n->options); /* strings live in bytecode, only free the array */
+        if (n->options) {
+            /* strings live in bytecode, only free the array */
+            free(strarray_safetakevf(n->options));
+        }
         free(n);
         n = b;
     }
@@ -575,6 +568,8 @@ void free_action_list(action_list_t *a)
         switch (a->a) {
         case ACTION_FILEINTO:
             strarray_free(a->u.fil.imapflags);
+            buf_destroy(a->u.fil.headers);
+            free(a->u.fil.resolved_mailbox);
             break;
 
         case ACTION_SNOOZE:
@@ -582,10 +577,13 @@ void free_action_list(action_list_t *a)
             strarray_free(a->u.snz.addflags);
             strarray_free(a->u.snz.removeflags);
             arrayu64_free(a->u.snz.times);
+            buf_destroy(a->u.snz.headers);
             break;
 
         case ACTION_KEEP:
             strarray_free(a->u.keep.imapflags);
+            buf_destroy(a->u.keep.headers);
+            free(a->u.keep.resolved_mailbox);
             break;
 
         case ACTION_VACATION:
@@ -595,8 +593,8 @@ void free_action_list(action_list_t *a)
             strarray_free(a->u.vac.send.fcc.imapflags);
             break;
 
-        case ACTION_DELETEHEADER:
-            ptrarray_free(a->u.delh.patterns);
+        case ACTION_REDIRECT:
+            buf_destroy(a->u.red.headers);
             break;
 
         default:

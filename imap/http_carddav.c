@@ -74,7 +74,6 @@
 #include "smtpclient.h"
 #include "spool.h"
 #include "strhash.h"
-#include "stristr.h"
 #include "times.h"
 #include "user.h"
 #include "util.h"
@@ -464,7 +463,7 @@ EXPORTED int carddav_create_defaultaddressbook(const char *userid) {
         char *inboxname = mboxname_user_mbox(userid, NULL);
         mbentry_t *mbentry = NULL;
 
-        r = http_mlookup(inboxname, &mbentry, NULL);
+        r = proxy_mlookup(inboxname, &mbentry, NULL, NULL);
         free(inboxname);
         if (r == IMAP_MAILBOX_NONEXISTENT) r = IMAP_INVALID_USER;
         if (!r && mbentry->server) {
@@ -655,17 +654,14 @@ static int store_resource(struct transaction_t *txn,
     mimehdr = charset_encode_mimeheader(fullname, 0, 0);
     spool_replace_header(xstrdup("Subject"), mimehdr, txn->req_hdrs);
 
-    /* XXX - validate uid for mime safety? */
-    if (strchr(uid, '@')) {
-        spool_replace_header(xstrdup("Message-ID"),
-                             xstrdup(uid), txn->req_hdrs);
-    }
-    else {
-        assert(!buf_len(&txn->buf));
-        buf_printf(&txn->buf, "<%s@%s>", uid, config_servername);
-        spool_replace_header(xstrdup("Message-ID"),
-                             buf_release(&txn->buf), txn->req_hdrs);
-    }
+    /* Use SHA1(uid)@servername as Message-ID */
+    struct message_guid uuid;
+    message_guid_generate(&uuid, uid, strlen(uid));
+    assert(!buf_len(&txn->buf));
+    buf_printf(&txn->buf, "<%s@%s>",
+               message_guid_encode(&uuid), config_servername);
+    spool_replace_header(xstrdup("Message-ID"),
+                         buf_release(&txn->buf), txn->req_hdrs);
 
     assert(!buf_len(&txn->buf));
     buf_printf(&txn->buf, "text/vcard; version=%s; charset=utf-8", version);
@@ -1473,7 +1469,7 @@ static int propfind_addrdata(const xmlChar *name, xmlNsPtr ns,
             /* Limit returned properties */
             struct vparse_card *vcard = fctx->obj;
 
-            if (!vcard) vcard = fctx->obj = vcard_parse_string(data, 1);
+            if (!vcard) vcard = fctx->obj = vcard_parse_string(data);
             prune_properties(vcard->objects, partial);
 
             /* Create vCard data from new vcard component */
@@ -1758,7 +1754,7 @@ static int apply_propfilter(struct prop_filter *propfilter,
             if (fctx->msg_buf.len) {
                 vcard = fctx->obj =
                     vcard_parse_string(buf_cstring(&fctx->msg_buf) +
-                                       fctx->record->header_size, 1);
+                                       fctx->record->header_size);
             }
             if (!vcard) return 0;
         }

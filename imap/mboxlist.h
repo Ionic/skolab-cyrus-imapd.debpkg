@@ -89,6 +89,7 @@
                                       for non-existent ancestor mailboxes */
 #define MBTYPE_SUBMISSION   (1<<9) /* JMAP Mail Submission Mailbox */
 #define MBTYPE_PUSHSUBSCRIPTION   (1<<10) /* JMAP Push Subscriptions */
+#define MBTYPE_UNKNOWN      (1<<31) /* unknown type for error handling */
 
 #define MBTYPES_DAV     (MBTYPE_CALENDAR|MBTYPE_ADDRESSBOOK|MBTYPE_COLLECTION)
 #define MBTYPES_NONIMAP (MBTYPE_NETNEWS|MBTYPES_DAV|MBTYPE_SUBMISSION|MBTYPE_PUSHSUBSCRIPTION)
@@ -145,6 +146,7 @@ int mboxlist_lookup_allow_all(const char *name,
 char *mboxlist_find_specialuse(const char *use, const char *userid);
 char *mboxlist_find_uniqueid(const char *uniqueid, const char *userid,
                              const struct auth_state *auth_state);
+
 
 
 /* insert/delete stub entries */
@@ -215,40 +217,35 @@ int mboxlist_createsync(const char *name, int mbtype, const char *partition,
                         int keep_intermediaries,
                         struct mailbox **mboxptr);
 
-/* delated delete */
+#define MBOXLIST_DELETE_CHECKACL            (1<<0)
+/* setting local_only disables any communication with the mupdate server
+ * and deletes the mailbox from the filesystem regardless of if it is
+ * MBTYPE_REMOTE or not */
+#define MBOXLIST_DELETE_LOCALONLY           (1<<1)
+/* force ignores errors and just tries to wipe the mailbox off the face of
+ * the planet */
+#define MBOXLIST_DELETE_FORCE               (1<<2)
+#define MBOXLIST_DELETE_KEEP_INTERMEDIARIES (1<<3)
+/* silently delete, do not bump modseq */
+#define MBOXLIST_DELETE_SILENT              (1<<4)
+/* unprotect_specialuse ignores the specialuse_protect config */
+#define MBOXLIST_DELETE_UNPROTECT_SPECIALUSE (1<<5)
+/* delayed delete */
 /* Translate delete into rename */
 /* prepare MailboxDelete notification if mboxevent is not NULL */
 int
 mboxlist_delayed_deletemailbox(const char *name, int isadmin, const char *userid,
                                const struct auth_state *auth_state,
-                               struct mboxevent *mboxevent,
-                               int checkacl,
-                               int localonly, int force, int keep_intermediaries);
+                               struct mboxevent *mboxevent, int flags);
 /* Delete a mailbox. */
-/* setting local_only disables any communication with the mupdate server
- * and deletes the mailbox from the filesystem regardless of if it is
- * MBTYPE_REMOTE or not */
-/* force ignores errors and just tries to wipe the mailbox off the face of
- * the planet */
 /* prepare MailboxDelete notification if mboxevent is not NULL */
 int mboxlist_deletemailbox(const char *name, int isadmin, const char *userid,
                            const struct auth_state *auth_state,
-                           struct mboxevent *mboxevent,
-                           int checkacl,
-                           int local_only, int force, int keep_intermediaries);
-/* same but with silent */
-int mboxlist_deletemailbox_full(const char *name, int isadmin, const char *userid,
-                           const struct auth_state *auth_state,
-                           struct mboxevent *mboxevent,
-                           int checkacl,
-                           int local_only, int force,
-                           int keep_intermediaries, int silent);
+                           struct mboxevent *mboxevent, int flags);
 /* same but wrap with a namespacelock */
 int mboxlist_deletemailboxlock(const char *name, int isadmin, const char *userid,
                            const struct auth_state *auth_state,
-                           struct mboxevent *mboxevent,
-                           int checkacl,
-                           int local_only, int force, int keep_intermediaries);
+                           struct mboxevent *mboxevent, int flags);
 
 /* rename a tree of mailboxes - renames mailbox plus any children */
 int mboxlist_renametree(const char *oldname, const char *newname,
@@ -280,6 +277,7 @@ int mboxlist_sync_setacls(const char *name, const char *acl, modseq_t foldermods
 int mboxlist_update_foldermodseq(const char *name, modseq_t foldermodseq);
 
 int mboxlist_set_racls(int enabled);
+int mboxlist_set_runiqueid(int enabled);
 
 int mboxlist_cleanup_deletedentries(const mbentry_t *mbentry, time_t mark);
 
@@ -321,6 +319,7 @@ int mboxlist_findone_withp(struct namespace *namespace,
                      const char *userid, const struct auth_state *auth_state,
                      findall_p *p, findall_cb *cb, void *rock);
 
+
 /* Find a mailbox's parent (if any) */
 int mboxlist_findparent(const char *mboxname,
                         mbentry_t **mbentryp);
@@ -346,6 +345,8 @@ int mboxlist_mboxtree(const char *mboxname, mboxlist_cb *proc, void *rock, int f
 int mboxlist_usermboxtree(const char *userid, const struct auth_state *auth_state,
                           mboxlist_cb *proc, void *rock, int flags);
 int mboxlist_usersubs(const char *userid, mboxlist_cb *proc, void *rock, int flags);
+int mboxlist_foreach_uniqueid(const char *uniqueid, mboxlist_cb *proc,
+                              void *rock, int flags);
 
 strarray_t *mboxlist_sublist(const char *userid);
 

@@ -3,7 +3,7 @@
 .. _upgrade:
 
 ================
-Upgrading to 3.2
+Upgrading to 3.4
 ================
 
 .. note::
@@ -29,24 +29,28 @@ Things to consider **before** you begin:
 Installation from tarball
 #########################
 
-You will need to install from our packaged tarball. We provide a full list of libraries that Debian requires, but we aren't able to test all platforms: you may find you need to install additional or different libraries to support v3.2.
+You will need to install from our packaged tarball. We provide a full list of
+libraries that Debian requires, but we aren't able to test all platforms: you
+may find you need to install additional or different libraries to support v3.4.
 
 How are you planning on upgrading?
 ##################################
 
-Ideally, you will do a sandboxed test installation of 3.2 using a snapshot of your existing data before you switch off your existing installation. The rest of the instructions are assuming a sandboxed 3.2 installation.
+Ideally, you will do a sandboxed test installation of 3.4 using a snapshot of
+your existing data before you switch off your existing installation. The rest
+of the instructions are assuming a sandboxed 3.4 installation.
 
 Upgrade by replicating
 ~~~~~~~~~~~~~~~~~~~~~~
 
 If you're familiar with replication, and your current installation is 2.4 or
 newer, you can set up your existing installation to replicate data to a new
-3.2 installation and failover to the new installation when you're ready. The
+3.4 installation and failover to the new installation when you're ready. The
 replication protocol has been kept backwards compatible.
 
 If your old installation contains mailboxes or messages that are older than
 2.4, they may not have GUID fields in their indexes (index version too old),
-or they may have their GUID field set to zero.  3.2 will not accept message
+or they may have their GUID field set to zero.  3.4 will not accept message
 replications without valid matching GUIDs, so you need to fix this on your
 old installation first.
 
@@ -71,7 +75,7 @@ Upgrade in place
 If you are upgrading in place, you will need to shut down Cyrus
 entirely while you install the new package.  If your old installation
 was using Berkeley DB format databases, you will need to convert or
-upgrade the databases **before** you upgrade.  Cyrus v3.2 does not
+upgrade the databases **before** you upgrade.  Cyrus v3.4 does not
 support Berkeley DB at all.
 
 .. note::
@@ -116,25 +120,28 @@ commands, such as ``rsync`` or ``scp``.
 
 We strongly recommend that you read this entire document before upgrading.
 
-2. Install new 3.2 Cyrus
+2. Install new 3.4 Cyrus
 ------------------------
 
-Download the release :ref:`3.2 package tarball <getcyrus>`.
+Download the release :ref:`3.4 package tarball <getcyrus>`.
 
-Fetch the libraries for your platform. The full list (including all optional packages) for Debian is::
+Fetch the libraries for your platform. The full list (including all optional
+packages) for Debian is::
 
     sudo apt-get install -y autoconf automake autotools-dev bash-completion bison build-essential comerr-dev \
     debhelper flex g++ git gperf groff heimdal-dev libbsd-resource-perl libclone-perl libconfig-inifiles-perl \
     libcunit1-dev libdatetime-perl libdb-dev libdigest-sha-perl libencode-imaputf7-perl libfile-chdir-perl \
     libglib2.0-dev libical-dev libio-socket-inet6-perl libio-stringy-perl libjansson-dev libldap2-dev \
     libmysqlclient-dev libnet-server-perl libnews-nntpclient-perl libpam0g-dev libpcre3-dev libsasl2-dev \
-    libsnmp-dev libsqlite3-dev libssl-dev libtest-unit-perl libtool libunix-syslog-perl liburi-perl \
+    libsqlite3-dev libssl-dev libtest-unit-perl libtool libunix-syslog-perl liburi-perl \
     libxapian-dev libxml-generator-perl libxml-xpath-perl libxml2-dev libwrap0-dev libzephyr-dev lsb-base \
     net-tools perl php-cli php-curl pkg-config po-debconf tcl-dev \
     transfig uuid-dev vim wamerican wget xutils-dev zlib1g-dev sasl2-bin rsyslog sudo acl telnet
 
 If you're on another platform and can provide the list of dependencies, please
-let us know via a `GitHub issue <https://github.com/cyrusimap/cyrus-imapd/issues>`_ or documentation pull request or send mail to the :ref:`developer list<feedback-mailing-lists>`.
+let us know via a `GitHub issue <https://github.com/cyrusimap/cyrus-imapd/issues>`_
+or documentation pull request, or send mail to the
+:ref:`developer list<feedback-mailing-lists>`.
 
 Follow the :ref:`general install instructions <installing>`.
 
@@ -143,8 +150,9 @@ Follow the :ref:`general install instructions <installing>`.
     It's best to ensure your new Cyrus *will not* start up automatically
     if your server restarts in the middle of the upgrade.
 
-    How this is best achieved will depend upon your OS and distro, but may involve
-    something like ``systemctl disable cyrus-imapd`` or ``update-rc.d cyrus-imapd disable``
+    How this is best achieved will depend upon your OS and distro, but may
+    involve something like ``systemctl disable cyrus-imapd`` or ``update-rc.d
+    cyrus-imapd disable``
 
 3. Shut down existing Cyrus
 ---------------------------
@@ -164,8 +172,8 @@ We recommend backing up all your data before continuing.
 * Mail spool
 * :ref:`Cyrus Databases <databases>`
 
-(You do already have a backup strategy in place, right? Once you're on 3.2, you can
-consider using the experimental :ref:`backup tools <cyrus-backups>`.)
+(You do already have a backup strategy in place, right? Once you're on 3.4, you
+can consider using the experimental :ref:`backup tools <cyrus-backups>`.)
 
 Copy all of this to the new instance, using ``rsync`` or similar tools.
 
@@ -184,7 +192,7 @@ server)::
     rsync -aHv oldimap:/var/lib/cyrus/. /var/lib/cyrus/.
     rsync -aHv oldimap:/var/spool/cyrus/. /var/spool/cyrus/.
 
-You don't need to copy the following databases as Cyrus 3.2 will
+You don't need to copy the following databases as Cyrus 3.4 will
 recreate these for you automatically:
 
 * duplicate delivery (deliver.db),
@@ -197,15 +205,6 @@ recreate these for you automatically:
     storage, such as ``/run/cyrus`` (Debian/Ubuntu) or ``/var/run/cyrus``
     or whatever suitable tmpfs is provided on your distro.  It will place
     less IO load on your disks and run faster.
-
-.. warning::
-    Please be warned that some packages place tasks such as ``tlsprune``
-    (:cyrusman:`tls_prune(8)`) in the ``START{}`` stanza of
-    :cyrusman:`cyrus.conf(5)`.  This will cause a startup problem if the
-    ``tls_sessions_db`` is not present.  The solution to this is to
-    remove the ``tlsprune`` task from ``START{}`` and schedule it in
-    ``EVENTS{}``, further down.
-
 
 5. Copy config files and update
 -------------------------------
@@ -234,17 +233,13 @@ you have provided overrides for in your config files::
 
 **Important config** options: ``unixhierarchysep:`` and ``altnamespace:``
 defaults in :cyrusman:`imapd.conf(5)` changed in 3.0, which will affect you
-if you are upgrading to 3.2 from something earlier than 3.0. Implications
+if you are upgrading to 3.4 from something earlier than 3.0. Implications
 are outlined in the Note in :ref:`imap-admin-namespaces-mode` and
 :ref:`imap-switching-alt-namespace-mode`.  Please also see "Sieve Scripts,"
 below.
 
 * unixhierarchysep: on
 * altnamespace: on
-
-.. note::
-    If your installation is using groups, don't turn ``reverseacls:`` on. Reverseacl support
-    only works well for sites without groups.
 
 In :cyrusman:`cyrus.conf(5)` move idled from the START section to the
 DAEMON section.
@@ -265,7 +260,7 @@ DAEMON section.
     If you have any databases using Berkeley db, they'll need to be
     converted to skiplist or flat *in your existing installation*. And
     then optionally converted to whatever final format you'd like in
-    your 3.2 installation.
+    your 3.4 installation.
 
     Databases potentially affected: mailboxes, annotations, conversations, quotas.
 
@@ -273,15 +268,15 @@ DAEMON section.
 
        cvt_cyrusdb /<configdirectory>mailboxes.db berkeley /tmp/new-mailboxes.db skiplist
 
-    If you don't want to use flat or skiplist for 3.2, you can use the
-    new 3.2 :cyrusman:`cvt_cyrusdb(8)` to swap to new format::
+    If you don't want to use flat or skiplist for 3.4, you can use
+    :cyrusman:`cvt_cyrusdb(8)` to swap to new format::
 
        cvt_cyrusdb /tmp/new-mailboxes.db skiplist /<configdirectory>/mailboxes.db <new file format>
 
 .. note::
     The :cyrusman:`cvt_cyrusdb(8)` command does not accept relative paths.
 
-7. Start new 3.2 Cyrus and verify
+7. Start new 3.4 Cyrus and verify
 ---------------------------------
 
 ::
@@ -290,12 +285,12 @@ DAEMON section.
 
 Check ``/var/log/syslog`` for errors so you can quickly understand potential problems.
 
-When you're satisfied version 3.2 is running and can see all its data correctly,
+When you're satisfied version 3.4 is running and can see all its data correctly,
 start the new Cyrus up with your regular init script.
 
 If something has gone wrong, contact us on the :ref:`mailing list <feedback-mailing-lists>`.
 You can revert to backups and keep processing mail using your old version
-until you're able to finish your 3.2 installation.
+until you're able to finish your 3.4 installation.
 
 .. note::
 
@@ -349,8 +344,8 @@ to force a regeneration:
 9. Do you want any new features?
 --------------------------------
 
-3.2 comes with many lovely new features. Consider which ones you want to enable.
-Check the :ref:`3.2 release notes <imap-release-notes-3.2>` for the full list.
+3.4 comes with many lovely new features. Consider which ones you want to enable.
+Check the :ref:`3.4 release notes <imap-release-notes-3.4>` for the full list.
 
 10. Upgrade complete
 --------------------
@@ -359,9 +354,9 @@ Your upgrade is complete! We have a super-quick survey (3 questions only,
 anonymous responses) we would love for you to fill out, so we can get a feel for
 how many Cyrus installations are out there, and how the upgrade process went.
 
-|3.2 survey link|
+|3.4 survey link|
 
-.. |3.2 survey link| raw:: html
+.. |3.4 survey link| raw:: html
 
     <a href="https://cyrusimap.typeform.com/to/YI9P0f" target="_blank">
     I'll fill in the survey right now</a> (opens in a new window)
@@ -380,7 +375,7 @@ upgrade all your back end servers first. This can be done one at a time.
 Upgrade your mupdate master and front ends last.
 
 If you are upgrading from 2.4, and wish to use XFER to transfer your
-mailboxes to your new 3.2 server, please consider first upgrading your
+mailboxes to your new 3.4 server, please consider first upgrading your
 2.4 setup to version 2.4.19 or later.  Earlier versions of 2.4 do not
 correctly recognise the 2.5 and later mailbox versions, and will
 downgrade mailboxes (losing metadata) in transit.  2.4.19 and later

@@ -95,6 +95,9 @@ EXPORTED int getxstring(struct protstream *pin, struct protstream *pout,
     int i;
     int isnowait;
     int len;
+    static int lminus = -1;
+
+    if (lminus == -1) lminus = config_getswitch(IMAPOPT_LITERALMINUS);
 
     buf_reset(buf);
 
@@ -150,6 +153,8 @@ EXPORTED int getxstring(struct protstream *pin, struct protstream *pout,
         buf_reset(buf);
         c = getint32(pin, &len);
         if (c == '+') {
+            // LITERAL- says maximum size is 4096!
+            if (lminus && len > 4096) return EOF;
             isnowait++;
             c = prot_getc(pin);
         }
@@ -573,9 +578,9 @@ static int get_search_date(struct protstream *pin, time_t *start, time_t *end)
 /*
  * Parse search return options
  */
-static int get_search_return_opts(struct protstream *pin,
-                                  struct protstream *pout,
-                                  struct searchargs *searchargs)
+EXPORTED int get_search_return_opts(struct protstream *pin,
+                                    struct protstream *pout,
+                                    struct searchargs *searchargs)
 {
     int c;
     static struct buf opt;
@@ -616,7 +621,7 @@ static int get_search_return_opts(struct protstream *pin,
 
     } while (c == ' ');
 
-    /* rfc4731:
+    /* RFC 4731:
      * If the list of result options is empty, that requests the server to
      * return an ESEARCH response instead of the SEARCH response.  This is
      * equivalent to "(ALL)".
@@ -641,7 +646,7 @@ bad:
 }
 
 /*
- * Parse a ANNOTATION item for SEARCH (RFC5257) into a struct
+ * Parse a ANNOTATION item for SEARCH (RFC 5257) into a struct
  * searchannot and append it to the chain of such structures at *lp.
  * Returns the next character.
  */
@@ -691,9 +696,6 @@ static int get_search_annotation(struct protstream *pin,
 
     *lp = sa;
 
-    buf_free(&entry);
-    buf_free(&attrib);
-    buf_free(&value);
     return c;
 
 bad:
@@ -712,14 +714,18 @@ static void string_match(search_expr_t *parent, const char *val,
     search_expr_t *e;
     const search_attr_t *attr = search_attr_find(aname);
     enum search_op op = SEOP_MATCH;
+    char *searchval;
 
     if (base->fuzzy_depth > 0 &&
-        search_attr_is_fuzzable(attr))
+        search_attr_is_fuzzable(attr)) {
         op = SEOP_FUZZYMATCH;
+        searchval = xstrdup(val); // keep search value as-is
+    }
+    else searchval = charset_convert(val, base->charset, charset_flags|CHARSET_KEEPCASE);
 
     e = search_expr_new(parent, op);
     e->attr = attr;
-    e->value.s = charset_convert(val, base->charset, charset_flags|CHARSET_KEEPCASE);
+    e->value.s = searchval;
     if (!e->value.s) {
         e->op = SEOP_FALSE;
         e->attr = NULL;
@@ -862,7 +868,7 @@ static int get_search_criterion(struct protstream *pin,
             search_expr_new(parent, SEOP_TRUE);
             break;
         }
-        else if (!strcmp(criteria.s, "annotation")) {   /* RFC 5259 */
+        else if (!strcmp(criteria.s, "annotation")) {   /* RFC 5257 */
             struct searchannot *annot = NULL;
             c = get_search_annotation(pin, pout, base, c, &annot);
             if (c == EOF)
@@ -969,6 +975,12 @@ static int get_search_criterion(struct protstream *pin,
         }
         else if (!strcmp(criteria.s, "draft")) {        /* RFC 3501 */
             systemflag_match(parent, FLAG_DRAFT, /*not*/0);
+        }
+        else if (!strcmp(criteria.s, "deliveredto")) {  /* nonstandard */
+            if (c != ' ') goto missingarg;
+            c = getastring(pin, pout, &arg);
+            if (c == EOF) goto missingarg;
+            string_match(parent, arg.s, criteria.s, base);
         }
         else goto badcri;
         break;
@@ -1306,6 +1318,12 @@ static int get_search_criterion(struct protstream *pin,
             c = getastring(pin, pout, &arg);
             if (c == EOF) goto missingarg;
             string_match(parent, arg.s, "attachmentname", base);
+        }
+        else if (!strcmp(criteria.s, "xattachmentbody")) {  /* nonstandard */
+            if (c != ' ') goto missingarg;
+            c = getastring(pin, pout, &arg);
+            if (c == EOF) goto missingarg;
+            string_match(parent, arg.s, "attachmentbody", base);
         }
         else if (!strcmp(criteria.s, "xlistid")) {           /* nonstandard */
             if (c != ' ') goto missingarg;

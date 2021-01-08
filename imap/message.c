@@ -171,7 +171,7 @@ static char *message_ucase(char *s)
 }
 
 /*
- * Check a message 'from' of 'size' bytes for minimal RFC-822 compliance.
+ * Check a message 'from' of 'size' bytes for minimal RFC 822 compliance.
  * The message is read from 'from'. If 'to' is not NULL, the message
  * is copied to 'to', otherwise an in-memory buffer of 'from' is checked.
  *
@@ -398,6 +398,39 @@ EXPORTED int message_parse_file(FILE *infile,
     return r;
 }
 
+/*
+ * Parse the message 'infile'.
+ *
+ * The caller MUST free the allocated body struct.
+ *
+ * If msg_base/msg_len are non-NULL, the file will remain memory-mapped
+ * and returned to the caller.  The caller MUST unmap the file.
+ */
+EXPORTED int message_parse_file_buf(FILE *infile,
+                                    struct buf *buf,
+                                    struct body **body,
+                                    const char *efname)
+{
+    int fd = fileno(infile);
+    struct stat sbuf;
+
+    // unmap or clear space
+    buf_free(buf);
+
+    if (fstat(fd, &sbuf) == -1) {
+        if (efname)
+            syslog(LOG_ERR, "IOERROR: fstat on new message in spool (%s): %m",
+                   efname);
+        else
+            syslog(LOG_ERR, "IOERROR: fstat on new message in spool: %m");
+        fatal("can't fstat message file", EX_OSFILE);
+    }
+    buf_refresh_mmap(buf, 1, fd, efname, sbuf.st_size, "new message");
+
+    if (!*body) *body = (struct body *) xzmalloc(sizeof(struct body));
+    return message_parse_mapped(buf_base(buf), buf_len(buf), *body, efname);
+}
+
 
 /*
  * Parse the message 'infile'.
@@ -508,7 +541,7 @@ EXPORTED int message_parse_mapped(const char *msg_base, unsigned long msg_len,
  * listed in headers or (if headers_not is non-empty) those headers
  * not in headers_not.
  */
-EXPORTED void message_pruneheader(char *buf, const strarray_t *headers,
+HIDDEN void message_pruneheader(char *buf, const strarray_t *headers,
                          const strarray_t *headers_not)
 {
     char *p, *colon, *nextheader;
@@ -649,7 +682,7 @@ EXPORTED void message_fetch_part(struct message_content *msg,
 
     *parts = NULL;
     message_find_part(msg->body, "1", content_types,
-                      msg->base, msg->len, parts, &n);
+                      buf_base(&msg->map), buf_len(&msg->map), parts, &n);
 }
 
 /*
@@ -851,11 +884,11 @@ static int message_parse_headers(struct msg *msg, struct body *body,
             /* check if we've hit a limit and flag it */
             if (maxlines && body->header_lines > maxlines) {
                 if (efname)
-                    syslog(LOG_ERR, "ERROR: message (%s) has more than %d header lines"
+                    syslog(LOG_ERR, "ERROR: message (%s) has more than %d header lines "
                                     "not caching any more",
                            efname, maxlines);
                 else
-                    syslog(LOG_ERR, "ERROR: message has more than %d header lines"
+                    syslog(LOG_ERR, "ERROR: message has more than %d header lines "
                                     "not caching any more",
                            maxlines);
                 have_max = 1;
@@ -946,7 +979,7 @@ static int message_parse_headers(struct msg *msg, struct body *body,
                 break;
             case RFC822_X_DELIVEREDINTERNALDATE:
                 /* Explicit x-deliveredinternaldate overrides received: headers */
-                message_parse_string(value, &body->received_date);
+                message_parse_string(value, &body->x_deliveredinternaldate);
                 break;
             case RFC822_X_ME_MESSAGE_ID:
                 message_parse_string(value, &body->x_me_message_id);
@@ -966,7 +999,7 @@ static int message_parse_headers(struct msg *msg, struct body *body,
 }
 
 /*
- * Parse a list of RFC-822 addresses from a header
+ * Parse a list of RFC 822 addresses from a header
  */
 static void message_parse_address(const char *hdr, struct address **addrp)
 {
@@ -1239,7 +1272,7 @@ EXPORTED void message_parse_type(const char *hdr, char **typep, char **subtypep,
         message_parse_params(hdr+1, paramp);
         message_fold_params(paramp);
         if (decbuf && paramp && *paramp) {
-            /* The type header was erroneously encoded as a RFC2407 encoded word
+            /* The type header was erroneously encoded as a RFC 2407 encoded word
              * (rather than encoding its attributes), and the parameter values
              * might now contain non-ASCII characters. Let's reencode them. */
             struct param *param = *paramp;
@@ -1459,7 +1492,7 @@ skip:
 }
 
 /*
- * Decode RFC-2231 parameter continuations
+ * Decode RFC 2231 parameter continuations
  *
  * Algorithm: Run down the list of parameters looking for
  * an attribute of the form "foo*0" or "foo*0*".  When we find
@@ -1666,7 +1699,7 @@ static void message_parse_language(const char *hdr, struct param **paramp)
 }
 
 /*
- * Skip over RFC-822 whitespace and comments
+ * Skip over RFC 822 whitespace and comments
  */
 static void message_parse_rfc822space(const char **s)
 {
@@ -1740,7 +1773,9 @@ static void message_parse_multipart(struct msg *msg, struct body *body,
 
     /* Find boundary id */
     boundary = body->params;
-    while(boundary && strcmp(boundary->attribute, "BOUNDARY") != 0) {
+    while (boundary &&
+           strcmp(boundary->attribute, "BOUNDARY") != 0 &&
+           strcmp(boundary->attribute, "BOUNDARY*") != 0) {
         boundary = boundary->next;
     }
 
@@ -1751,7 +1786,13 @@ static void message_parse_multipart(struct msg *msg, struct body *body,
     }
 
     /* Add the new boundary id */
-    strarray_append(boundaries, boundary->value);
+    char *id = NULL;
+    if (boundary->attribute[8] == '*') {
+        /* Decode boundary id */
+        id = charset_parse_mimexvalue(boundary->value, NULL);
+    }
+    if (!id) id = xstrdup(boundary->value);
+    strarray_appendm(boundaries, id);
     depth = boundaries->count;
 
     /* Parse preamble */
@@ -1871,7 +1912,7 @@ static void message_parse_content(struct msg *msg, struct body *body,
                 body->content_lines--;
                 body->boundary_lines++;
             }
-            if (body->content_size) {
+            if (body->content_size > 1) {
                 body->content_size -= 2;
                 body->boundary_size += 2;
             }
@@ -2587,7 +2628,7 @@ static void message_write_searchaddr(struct buf *buf,
 
     while (addrlist) {
 
-        /* Handle RFC-822 group addresses */
+        /* Handle RFC 822 group addresses */
         if (!addrlist->domain) {
             if (addrlist->mailbox) {
                 if (prevaddr) buf_putc(buf, ',');
@@ -2686,6 +2727,7 @@ EXPORTED void message_free_body(struct body *body)
     if (body->x_me_message_id) free(body->x_me_message_id);
     if (body->references) free(body->references);
     if (body->received_date) free(body->received_date);
+    if (body->x_deliveredinternaldate) free(body->x_deliveredinternaldate);
     if (body->charset_id) free(body->charset_id);
     if (body->part_id) free(body->part_id);
 
@@ -3404,8 +3446,8 @@ static conversation_id_t generate_conversation_id(
 }
 
 /*
- * In RFC2822, the In-Reply-To field is explicitly required to contain
- * only message-ids, whitespace and commas.  The old RFC822 was less
+ * In RFC 2822, the In-Reply-To field is explicitly required to contain
+ * only message-ids, whitespace and commas.  The old RFC 822 was less
  * well specified and allowed all sorts of stuff.  We used to be equally
  * liberal here in parsing the field.  Sadly some versions of the NMH
  * mailer will generate In-Reply-To containing email addresses which we
@@ -3447,6 +3489,102 @@ static int getconvmailbox(const char *mboxname, struct mailbox **mailboxptr)
 }
 
 /*
+ * This is the legacy code version to generate conversation subjects.
+ * We keep it here to allow matching messages to conversations that
+ * already got that oldstyle subject set.
+ */
+/*
+ * Normalise a subject string, to a form which can be used for deciding
+ * whether a message belongs in the same conversation as it's antecedent
+ * messages.  What we're doing here is the same idea as the "base
+ * subject" algorithm described in RFC 5256 but slightly adapted from
+ * experience.  Differences are:
+ *
+ *  - We eliminate all whitespace; RFC 5256 normalises any sequence
+ *    of whitespace characters to a single SP.  We do this because
+ *    we have observed combinations of buggy client software both
+ *    add and remove whitespace around folding points.
+ *
+ *  - We include the Unicode U+00A0 (non-breaking space) codepoint in our
+ *    determination of whitespace (as the UTF-8 sequence \xC2\xA0) because
+ *    we have seen it in the wild, but do not currently generalise this to
+ *    other Unicode "whitespace" codepoints. (XXX)
+ *
+ *  - Because we eliminate whitespace entirely, and whitespace helps
+ *    delimit some of our other replacements, we do that whitespace
+ *    step last instead of first.
+ *
+ *  - We eliminate leading tokens like Re: and Fwd: using a simpler
+ *    and more generic rule than RFC 5256's; this rule catches a number
+ *    of semantically identical prefixes in other human languages, but
+ *    unfortunately also catches lots of other things.  We think we can
+ *    get away with this because the normalised subject is never directly
+ *    seen by human eyes, so some information loss is acceptable as long
+ *    as the subjects in different messages match correctly.
+ *
+ *  - We eliminate trailing tokens like [SEC=UNCLASSIFIED],
+ *    [DLM=Sensitive], etc which are automatically added by Australian
+ *    Government department email systems.  In theory there should be no
+ *    more than one of these on an email subject but in practice multiple
+ *    have been seen.
+ *    http://www.finance.gov.au/files/2012/04/EPMS2012.3.pdf
+ */
+static void oldstyle_normalise_subject(struct buf *s)
+{
+    static int initialised_res = 0;
+    static regex_t whitespace_re;
+    static regex_t relike_token_re;
+    static regex_t blob_start_re;
+    static regex_t blob_end_re;
+    int r;
+
+    if (!initialised_res) {
+        r = regcomp(&whitespace_re, "([ \t\r\n]+|\xC2\xA0)", REG_EXTENDED);
+        assert(r == 0);
+        r = regcomp(&relike_token_re, "^[ \t]*[A-Za-z0-9]+(\\[[0-9]+\\])?:", REG_EXTENDED);
+        assert(r == 0);
+        r = regcomp(&blob_start_re, "^[ \t]*\\[[^]]+\\]", REG_EXTENDED);
+        assert(r == 0);
+        r = regcomp(&blob_end_re, "\\[(SEC|DLM)=[^]]+\\][ \t]*$", REG_EXTENDED);
+        assert(r == 0);
+        initialised_res = 1;
+    }
+
+    /* step 1 is to decode any RFC 2047 MIME encoding of the header
+     * field, but we assume that has already happened */
+
+    /* step 2 is to eliminate all "Re:"-like tokens and [] blobs
+     * at the start, and AusGov [] blobs at the end */
+    while (buf_replace_one_re(s, &relike_token_re, NULL) ||
+           buf_replace_one_re(s, &blob_start_re, NULL) ||
+           buf_replace_one_re(s, &blob_end_re, NULL))
+        ;
+
+    /* step 3 is eliminating whitespace. */
+    buf_replace_all_re(s, &whitespace_re, NULL);
+}
+
+static void extract_convsubject(const struct index_record *record,
+                                struct buf *msubject,
+                                void (*normalise)(struct buf*))
+{
+    if (cacheitem_base(record, CACHE_HEADERS)) {
+        message1_get_subject(record, msubject);
+        normalise(msubject);
+    }
+}
+
+EXPORTED char *message_extract_convsubject(const struct index_record *record)
+{
+    if (cacheitem_base(record, CACHE_HEADERS)) {
+        struct buf msubject = BUF_INITIALIZER;
+        extract_convsubject(record, &msubject, conversation_normalise_subject);
+        return buf_release(&msubject);
+    }
+    return NULL;
+}
+
+/*
  * Update the conversations database for the given
  * mailbox, to account for the given message.
  * @body may be NULL, in which case we get everything
@@ -3459,13 +3597,13 @@ EXPORTED int message_update_conversations(struct conversations_state *state,
 {
     char *hdrs[4];
     char *c_refs = NULL, *c_env = NULL, *c_me_msgid = NULL;
-    struct buf msubject = BUF_INITIALIZER;
     strarray_t msgidlist = STRARRAY_INITIALIZER;
     arrayu64_t matchlist = ARRAYU64_INITIALIZER;
     arrayu64_t cids = ARRAYU64_INITIALIZER;
     int mustkeep = 0;
     conversation_t *conv = NULL;
-    const char *msubj = NULL;
+    char *msubj = NULL;
+    char *msubj_oldstyle = NULL;
     int i;
     int j;
     int r = 0;
@@ -3513,8 +3651,6 @@ EXPORTED int message_update_conversations(struct conversations_state *state,
 
         strarray_fini(&want);
 
-        message1_get_subject(record, &msubject);
-
         /* work around stupid message_guid API */
         message_guid_isnull(&record->guid);
     }
@@ -3528,8 +3664,14 @@ EXPORTED int message_update_conversations(struct conversations_state *state,
 
     /* Note that a NULL subject, e.g. due to a missing Subject: header
      * field in the original message, is normalised to "" not NULL */
-    conversation_normalise_subject(&msubject);
-    msubj = buf_cstring(&msubject);
+    if (cacheitem_base(record, CACHE_HEADERS)) {
+        struct buf msubject = BUF_INITIALIZER;
+        extract_convsubject(record, &msubject, conversation_normalise_subject);
+        msubj = xstrdup(buf_cstring(&msubject));
+        buf_reset(&msubject);
+        extract_convsubject(record, &msubject, oldstyle_normalise_subject);
+        msubj_oldstyle = buf_release(&msubject);
+    }
 
     for (i = 0 ; i < 4 ; i++) {
         int hcount = 0;
@@ -3543,7 +3685,7 @@ EXPORTED int message_update_conversations(struct conversations_state *state,
             }
             /*
              * The issue of case sensitivity of msgids is curious.
-             * RFC2822 seems to imply they're case-insensitive,
+             * RFC 2822 seems to imply they're case-insensitive,
              * without explicitly stating so.  So here we punt
              * on that being the case.
              *
@@ -3579,8 +3721,11 @@ EXPORTED int message_update_conversations(struct conversations_state *state,
                 if (r) goto out;
                 /* [IRIS-1576] if X-ME-Message-ID says the messages are
                 * linked, ignore any difference in Subject: header fields. */
-                if (!conv || i == 3 || !conv->subject || !strcmpsafe(conv->subject, msubj))
+                if (!conv || i == 3 || !conv->subject ||
+                        !strcmpsafe(conv->subject, msubj) ||
+                        !strcmpsafe(conv->subject, msubj_oldstyle)) {
                     arrayu64_add(&matchlist, cid);
+                }
             }
 
             conversation_free(conv);
@@ -3589,7 +3734,7 @@ EXPORTED int message_update_conversations(struct conversations_state *state,
     }
 
     /* calculate the CID if needed */
-    if (!record->silent) {
+    if (!record->silentupdate) {
         /* match for GUID, it always has the same CID */
         conversation_id_t currentcid = conversations_guid_cid_lookup(state, message_guid_encode(&record->guid));
         if (currentcid) {
@@ -3634,7 +3779,7 @@ EXPORTED int message_update_conversations(struct conversations_state *state,
     if (!conv) conv = conversation_new();
 
     uint32_t max_thread = config_getint(IMAPOPT_CONVERSATIONS_MAX_THREAD);
-    if (conv->exists >= max_thread && !mustkeep && !record->silent) {
+    if (conv->exists >= max_thread && !mustkeep && !record->silentupdate) {
         /* time to reset the conversation */
         conversation_id_t was = record->cid;
         record->cid = generate_conversation_id(record);
@@ -3696,7 +3841,8 @@ out:
     free(c_refs);
     free(c_env);
     free(c_me_msgid);
-    buf_free(&msubject);
+    free(msubj);
+    free(msubj_oldstyle);
     if (local_mailbox)
         mailbox_close(&local_mailbox);
 
@@ -3705,8 +3851,7 @@ out:
     else if (convp)
         *convp = conv;
     else {
-        // no emailcounts needed here, because we haven't changec counts for any messages
-        r = conversation_save(state, record->cid, conv, NULL);
+        r = conversation_save(state, record->cid, conv);
         conversation_free(conv);
     }
 
@@ -4697,6 +4842,15 @@ EXPORTED int message_get_bcc(message_t *m, struct buf *buf)
     return message_get_field(m, "bcc", MESSAGE_RAW, buf);
 }
 
+EXPORTED int message_get_deliveredto(message_t *m, struct buf *buf)
+{
+    int r = message_get_field(m, "X-Original-Delivered-To", MESSAGE_RAW, buf);
+    if (!r && buf_len(buf) == 0) {
+        r = message_get_field(m, "X-Delivered-To", MESSAGE_RAW, buf);
+    }
+    return r;
+}
+
 EXPORTED int message_get_cc(message_t *m, struct buf *buf)
 {
     return message_get_field(m, "cc", MESSAGE_RAW, buf);
@@ -4732,10 +4886,34 @@ EXPORTED int message_get_mailinglist(message_t *m, struct buf *buf)
     return message_get_field(m, "mailing-list", MESSAGE_RAW, buf);
 }
 
+EXPORTED int message_get_priority(message_t *m, struct buf *buf)
+{
+    /* Only returns priority value "1" or none. */
+    int r = message_get_field(m, "X-Priority", MESSAGE_RAW, buf);
+    buf_trim(buf);
+    if (!r && !strcmp(buf_cstring(buf), "1")) {
+        return 0;
+    }
+    r = message_get_field(m, "Importance", MESSAGE_RAW, buf);
+    buf_trim(buf);
+    if (!r && !strcmp(buf_cstring(buf), "high")) {
+        buf_setcstr(buf, "1");
+        return 0;
+    }
+    buf_reset(buf);
+    return r;
+}
+
 EXPORTED const struct index_record *msg_record(const message_t *m)
 {
     assert(!message_need(m, M_RECORD))
     return &m->record;
+}
+
+EXPORTED struct mailbox *msg_mailbox(const message_t *m)
+{
+    assert(!message_need(m, M_MAILBOX))
+    return m->mailbox;
 }
 
 EXPORTED int message_get_size(message_t *m, uint32_t *sizep)
@@ -4808,7 +4986,7 @@ EXPORTED int message_get_msgno(message_t *m, uint32_t *msgnop)
     return 0;
 }
 
-EXPORTED int msg_msgno(const message_t *m)
+EXPORTED uint32_t msg_msgno(const message_t *m)
 {
     assert(!message_need(m, M_INDEX))
     return m->msgno;
@@ -5025,6 +5203,13 @@ EXPORTED int message_get_field(message_t *m, const char *hdr, int flags, struct 
     int hasname = 1;
     int isutf8 = 0;
 
+    if (!strcasecmp(hdr, "rawheaders")) {
+        int r = message_need(m, M_MAP|M_RECORD);
+        if (r) return r;
+        buf_setmap(buf, m->map.s, m->record.header_size);
+        return 0;
+    }
+
     if (!strcasecmp(hdr, "rawbody")) {
         int r = message_need(m, M_MAP|M_RECORD);
         if (r) return r;
@@ -5238,4 +5423,14 @@ EXPORTED int message_get_cachebody(message_t *m, const struct body **bodyp)
     if (r) return r;
     *bodyp = m->body;
     return 0;
+}
+
+EXPORTED int message_get_body(message_t *m, struct buf *buf)
+{
+    return message_get_field(m, "rawbody", MESSAGE_RAW, buf);
+}
+
+EXPORTED int message_get_headers(message_t *m, struct buf *buf)
+{
+    return message_get_field(m, "rawheaders", MESSAGE_RAW, buf);
 }

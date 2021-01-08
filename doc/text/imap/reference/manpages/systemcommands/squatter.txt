@@ -17,7 +17,7 @@ Synopsis
    **squatter** [ **-C** *config-file* ] [ **-v** ] [ **-a** ] [ **-i** ] [ **-N** *name* ] [ **-S** *seconds* ] [ **-r** ] [ **-Z** ] **-u** *user*...
    **squatter** [ **-C** *config-file* ] [ **-v** ] [ **-a** ] **-R** [ **-n** *channel* ] [ **-d** ] [ **-S** *seconds* ] [ **-Z** ]
    **squatter** [ **-C** *config-file* ] [ **-v** ] [ **-a** ] **-f** *synclogfile* [ **-S** *seconds* ] [ **-Z** ]
-   **squatter** [ **-C** *config-file* ] [ **-v** ] **-t** *srctier(s)*... **-z** *desttier* [ **-F** ] [ **-U** ] [ **-T** *dir* ] [ **-X** ] [ **-o** ] [ **-S** *seconds* ] [ **-u** *user*... ]
+   **squatter** [ **-C** *config-file* ] [ **-v** ] **-t** *srctier(s)*... **-z** *desttier* [ **-B** ] [ **-F** ] [ **-U** ] [ **-T** *reindextiers* ] [ **-X** ] [ **-o** ] [ **-S** *seconds* ] [ **-u** *user*... ]
 
 
 Description
@@ -77,8 +77,8 @@ is sometimes useful for cleaning up after problems with rolling mode.
 In the sixth synopsis, **squatter** will compact indices from
 *srctier(s)* to *desttier*, optionally reindexing (**-X**) or
 filtering expunged records (**-F**) in the process.  The optional
-**-T** flag may be used to specify a directory to use for temporary
-files.  These files are eventually copied with *rsync -a* and then
+**-T** flag may be used to specify members of srctiers which must be
+reindexed.  These files are eventually copied with *rsync -a* and then
 removed by *rm*. *rsync* can increase the load average of the system,
 especially when the temporary directory is on *tmpfs*.  To throttle
 *rsync* it is possible to modify the call in *imap/search_xapian.c*
@@ -141,6 +141,12 @@ Options
    standard error.  Useful for debugging. This feature was introduced
    in version 3.0.
 
+-B
+
+   In compact mode, use non-blocking lock to start and skip any users
+   who have their xapianactive file locked at the time (i.e another
+   reindex task) This feature was introduced in version 3.0.
+
 -F
 
    In compact mode, filter the resulting database to only include
@@ -179,10 +185,20 @@ Options
    it to the destination rather than compacting. This feature was
    introduced in version 3.0.
 
--P
+-p
 
-   Missing documentation, reindex parts mode. This feature is only
-   available on the master branch.
+      When indexing, allow messages to be partially indexed. This may
+      occur if attachment indexing is enabled but indexing failed for
+      one or more attachment body parts. If this flag is set, the
+      message is partially indexed and squatter continues. Otherwise
+      squatter aborts with an error. Also see **-P**. Xapian only.
+      This feature is only available on the master branch.
+
+   -P
+
+      When reindexing, then attempt to reindex any partially indexed
+      messages (see **-p**). Setting this flag implies **-Z**. Xapian
+      only. This feature is only available on the master branch.
 
 -R
 
@@ -202,13 +218,11 @@ Options
    continuing. Can be used to provide some load balancing.  Accepts
    fractional amounts. This feature was introduced in version 3.0.
 
--T directory
+-T reindextiers
 
-   When indexing, work on a temporary copy of the search engine
-   databases in *directory*.  That directory would typically be on
-   some very fast filesystem, like an SSD or tmpfs.  This option may
-   not work with all search engines, but it's only effect is to speed
-   up initial indexing. Xapian only. This feature was introduced in
+   In compact mode, a comma-separated subset of the source tiers (see
+   **-t**) to be reindexed.  Similar to **-X** but allows limiting the
+   tiers that will be reindexed. This feature was introduced in
    version 3.0.
 
 -t srctier...

@@ -223,6 +223,12 @@ Other
 | ClamAV               | libclamav-dev   | clamav-devel    | no    | It is used by **cyr_virusscan**, otherwise    |
 |                      |                 |                 |       | not needed.                                   |
 +----------------------+-----------------+-----------------+-------+-----------------------------------------------+
+| CLD2                 | libcld2-dev     | cld2-devel      | yes/  | Compact Language Detector 2                   |
+|                      |                 |                 | no    | (probabilistically detects over 80 languages  |
+|                      |                 |                 |       | in Unicode UTF-8 text, either plain text or   |
+|                      |                 |                 |       | HTML/XML). Required for **Xapian** ("--       |
+|                      |                 |                 |       | enable-xapian"), otherwise not needed.        |
++----------------------+-----------------+-----------------+-------+-----------------------------------------------+
 | openldap             | libldap2-dev    | openldap-devel  | no    | Development headers to enable **ptloader** to |
 |                      |                 |                 |       | interface with LDAP directly, for             |
 |                      |                 |                 |       | canonification of login usernames to mailbox  |

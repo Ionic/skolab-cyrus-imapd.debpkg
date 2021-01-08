@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Known Protocol Limitations &mdash; Cyrus IMAP 3.2.5 documentation</title>
+  <title>Known Protocol Limitations &mdash; Cyrus IMAP 3.4.0-beta1 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.0-beta1 documentation" href="../../../index.html"/>
         <link rel="up" title="Configuration Guide" href="../deployment.html"/>
         <link rel="next" title="Authentication and Authorization" href="authentication_and_authorization.html"/>
         <link rel="prev" title="Mailbox Creation Distribution" href="mailbox_creation_distribution.html"/> 
@@ -128,12 +128,15 @@
 <li class="toctree-l3"><a class="reference internal" href="../../download/release-notes/index.html#stable-version">Stable Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../download/release-notes/index.html#development-version">Development Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../download/release-notes/index.html#supported-product-series">Supported Product Series</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../download/release-notes/index.html#series-3-4">Series 3.4</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../download/release-notes/index.html#series-3-2">Series 3.2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../download/release-notes/index.html#series-3-0">Series 3.0</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../download/release-notes/index.html#series-2-5">Series 2.5</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../download/release-notes/index.html#development-snapshots">Development snapshots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../download/release-notes/3.5/index.html">Cyrus IMAP 3.5 Tags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../download/release-notes/3.3/index.html">Cyrus IMAP 3.3 Tags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../download/release-notes/3.1/index.html">Cyrus IMAP 3.1 Tags</a></li>
 </ul>
 </li>
@@ -331,19 +334,19 @@
 <li class="toctree-l3"><a class="reference internal" href="../../installing.html#troubleshooting">Troubleshooting</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../download/upgrade.html">Upgrading to 3.2</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../download/upgrade.html">Upgrading to 3.4</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../download/upgrade.html#preparation">1. Preparation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../download/upgrade.html#installation-from-tarball">Installation from tarball</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../download/upgrade.html#how-are-you-planning-on-upgrading">How are you planning on upgrading?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../download/upgrade.html#do-what-as-who">Do What As Who?</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../download/upgrade.html#install-new-3-2-cyrus">2. Install new 3.2 Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../download/upgrade.html#install-new-3-4-cyrus">2. Install new 3.4 Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../download/upgrade.html#shut-down-existing-cyrus">3. Shut down existing Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../download/upgrade.html#backup-and-copy-existing-data">4. Backup and Copy existing data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../download/upgrade.html#copy-config-files-and-update">5. Copy config files and update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../download/upgrade.html#upgrade-specific-items">6. Upgrade specific items</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../download/upgrade.html#start-new-3-2-cyrus-and-verify">7. Start new 3.2 Cyrus and verify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../download/upgrade.html#start-new-3-4-cyrus-and-verify">7. Start new 3.4 Cyrus and verify</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../download/upgrade.html#reconstruct-databases-and-cache">8. Reconstruct databases and cache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../download/upgrade.html#do-you-want-any-new-features">9. Do you want any new features?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../download/upgrade.html#upgrade-complete">10. Upgrade complete</a></li>
@@ -740,7 +743,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.2: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.2"></a>
+    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -760,7 +763,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.2.5</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.4.0-beta1</a> &raquo;</li>
       
           <li><a href="../../../setup.html">Setup</a> &raquo;</li>
       
@@ -770,7 +773,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.2/docsrc/imap/concepts/deployment/known_protocol_limitations.rst" class="fa fa-github"> Edit on GitHub</a>
+            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.4/docsrc/imap/concepts/deployment/known_protocol_limitations.rst" class="fa fa-github"> Edit on GitHub</a>
           
         
       </li>
@@ -781,19 +784,28 @@
             
   <div class="section" id="known-protocol-limitations">
 <h1>Known Protocol Limitations<a class="headerlink" href="#known-protocol-limitations" title="Permalink to this headline">¶</a></h1>
-<p>This chapter lists known limitations to protocols commonly in use today, that may impact your deployment.</p>
+<p>This chapter lists known limitations to protocols commonly in use today, that
+may impact your deployment.</p>
 <div class="section" id="pop3-and-mailbox-locking">
 <h2>POP3 and Mailbox Locking<a class="headerlink" href="#pop3-and-mailbox-locking" title="Permalink to this headline">¶</a></h2>
-<p>POP3, as described in <a class="reference external" href="http://tools.ietf.org/html/rfc1939">RFC 1939</a>, requires a mailbox to be locked by a POP3 session.</p>
-<p>As such, when POP3 is used simultaneously across multiple clients, and a common set of mailboxes, an error similar to the following would occur:</p>
+<p>POP3, as described in <span class="target" id="index-0"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc1939.html"><strong>RFC 1939</strong></a>, requires a mailbox to be locked by a POP3
+session.</p>
+<p>As such, when POP3 is used simultaneously across multiple clients, and a common
+set of mailboxes, an error similar to the following would occur:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Mailbox</span> <span class="n">locked</span> <span class="n">by</span> <span class="n">POP</span> <span class="n">server</span><span class="o">.</span>
 </pre></div>
 </div>
-<p>The exact error message may be subject to the specific error message a client application wishes to display.</p>
+<p>The exact error message may be subject to the specific error message a client
+application wishes to display.</p>
 </div>
 <div class="section" id="cyrus-imap-pop3-implementation">
 <h2>Cyrus IMAP POP3 Implementation<a class="headerlink" href="#cyrus-imap-pop3-implementation" title="Permalink to this headline">¶</a></h2>
-<p>The Cyrus IMAP POP3 server implementation does not have the aforementioned problem of POP3 sessions locking mailboxes. As of version 2.4.0, Cyrus IMAP allows multiple POP3 sessions to operate on a single mailbox by providing a - virtual - snapshot of the mailbox, and all operations are executed to this snapshot. A safety mechanism ensures no messages are deleted until after all existing operations have closed the mailbox - including IMAP, LMTP and POP.</p>
+<p>The Cyrus IMAP POP3 server implementation does not have the aforementioned
+problem of POP3 sessions locking mailboxes. As of version 2.4.0, Cyrus IMAP
+allows multiple POP3 sessions to operate on a single mailbox by providing a
+<em>virtual</em> snapshot of the mailbox, and all operations are executed to this
+snapshot. A safety mechanism ensures no messages are deleted until after all
+existing operations have closed the mailbox - including IMAP, LMTP and POP.</p>
 </div>
 </div>
 
@@ -815,7 +827,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Aug 26 2016
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jul 17 2020
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -835,7 +847,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.2.5',
+            VERSION:'3.4.0-beta1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

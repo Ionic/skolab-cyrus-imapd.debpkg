@@ -115,12 +115,10 @@ Cyrus has two types of repositories where Sieve scripts can live:
 
 1. **Personal** is per user and
 
-2. **Global** is for every user. Global scripts aren’t applied on
+2. **Global** is for every user. Global scripts aren't applied on
    incoming messages by default: users must include them in their
-   scripts.
-
-      * Note that there are two types of Global scripts: **global**
-        and **global per domain**.
+   scripts.  Note that there are two types of Global scripts:
+   **global** and **global per domain**.
 
 When you log into Cyrus IMAP with sieveshell(1) you have the following
 combinations (Assuming there is "manager" and "manager@example.com" as
@@ -136,8 +134,8 @@ admin in imapd.conf(5)):
   To edit personal scripts of some user.
 
 Scripts for shared folders work different from user scripts. The last
-ones are loaded to the user’s repository and attached to the inbox
-when activated The first ones must be loaded to the global domain
+ones are loaded to the user's repository and attached to the inbox
+when activated. The first ones must be loaded to the global domain
 repository and attached to a shared folder by a user that has
 permission on it. Use the second combination listed above to load them
 and cyradm (or another compatible client) to do the attach:
@@ -267,7 +265,7 @@ Sieve has a lot of extensions. Cyrus supports a subset of these:
 
 * Copying Without Side Effects **RFC 3894**
 
-* Regular Expression Extension Draft regex RFC
+* Regular Expression Extension draft-ietf-sieve-regex
 
 * Checking Mailbox Status and Accessing Mailbox Metadata **RFC
   5490**
@@ -292,9 +290,9 @@ Sieve has a lot of extensions. Cyrus supports a subset of these:
 
 * Ihave Extension **RFC 5463**
 
-* Delivering to Special-Use Mailboxes Draft special-use RFC
+* Delivering to Special-Use Mailboxes **RFC 8579**
 
-* IMAP flag Extension Draft imap flags RFC
+* IMAP flag Extension **RFC 5232**
 
 * Body Extension **RFC 5173**
 

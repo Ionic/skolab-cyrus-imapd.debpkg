@@ -85,6 +85,7 @@
 #include "backend.h"
 #include "proc.h"
 #include "proxy.h"
+#include "sync_support.h"
 #include "seen.h"
 #include "userdeny.h"
 
@@ -625,6 +626,9 @@ void shut_down(int code)
 
     /* make sure we didn't leak */
     assert(!open_mailboxes_exist());
+    assert(!open_mboxlocks_exist());
+
+    sync_log_reset();
 
     if (popd_in) {
         prot_NONBLOCK(popd_in);
@@ -968,6 +972,9 @@ static void cmdloop(void)
                 mailbox_unlock_index(popd_mailbox, NULL);
 
 done:
+                mailbox_close(&popd_mailbox);
+                sync_checkpoint(popd_in);
+
                 prot_printf(popd_out, "+OK\r\n");
                 telemetry_rusage( popd_userid );
                 return;
@@ -1065,6 +1072,10 @@ done:
             else if (config_popuseacl && !(popd_myrights & ACL_DELETEMSG)) {
                 prot_printf(popd_out, "-ERR [SYS/PERM] %s\r\n",
                             error_message(IMAP_PERMISSION_DENIED));
+            }
+            else if (config_getswitch(IMAPOPT_READONLY)) {
+                prot_printf(popd_out, "-ERR [SYS/PERM] %s\r\n",
+                            error_message(IMAP_CONNECTION_READONLY));
             }
             else {
                 msgno = parse_msgno(&arg);

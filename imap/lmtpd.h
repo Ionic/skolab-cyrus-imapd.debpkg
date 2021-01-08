@@ -48,6 +48,7 @@
 #include "lmtpengine.h"
 #include "mboxname.h"
 #include "message.h"
+#include "jmap_mail_query.h"
 
 /* data per message */
 typedef struct deliver_data {
@@ -73,9 +74,7 @@ struct imap4flags {
 };
 
 /* forward declarations */
-extern int deliver_local(deliver_data_t *mydata,
-                         struct imap4flags *imap4flags,
-                         const mbname_t *mbname);
+extern int fuzzy_match(mbname_t *mbname);
 
 extern int deliver_mailbox(FILE *f,
                            struct message_content *content,

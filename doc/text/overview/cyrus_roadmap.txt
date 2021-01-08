@@ -47,15 +47,15 @@ Future
 2.5.x
 -----
 
-* Support ANNOTATE (RFC 5257)
+* Support ANNOTATE (**RFC 5257**)
 
-* Support some of ESORT/ESEARCH (RFC 5256)
+* Support some of ESORT/ESEARCH (**RFC 5256**)
 
-* Support LIST-EXT STATUS (RFC 5819)
+* Support LIST-EXT STATUS (**RFC 5819**)
 
-* Support SORT=DISPLAY (RFC 5957)
+* Support SORT=DISPLAY (**RFC 5957**)
 
-* Support SpecialUse (RFC 6154)
+* Support SpecialUse (**RFC 6154**)
 
 * Autocreate/autosieve (needs to be -enabled in config)
 
@@ -64,7 +64,7 @@ Future
 
 * cyr_info utility - configuration 'lint' and dumping tool.
 
-* MESSAGE quota support (RFC 2087)
+* MESSAGE quota support (**RFC 2087**)
 
 * Some CalDAV calendaring support.
 

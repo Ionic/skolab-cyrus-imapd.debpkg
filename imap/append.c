@@ -877,13 +877,14 @@ EXPORTED int append_fromstage_full(struct appendstate *as, struct body **body,
                                    time_t internaldate, time_t savedate,
                                    modseq_t createdmodseq,
                                    const strarray_t *flags, int nolink,
-                                   struct entryattlist *user_annots)
+                                   struct entryattlist **user_annotsp)
 {
     struct mailbox *mailbox = as->mailbox;
     msgrecord_t *msgrec = NULL;
     const char *fname;
     int i, r;
     strarray_t *newflags = NULL;
+    struct entryattlist *user_annots = user_annotsp ? *user_annotsp : NULL;
     struct entryattlist *system_annots = NULL;
     struct mboxevent *mboxevent = NULL;
 #if defined ENABLE_OBJECTSTORE
@@ -1029,6 +1030,7 @@ EXPORTED int append_fromstage_full(struct appendstate *as, struct body **body,
             r = 0;
         }
         flags = newflags;
+        if (user_annotsp) *user_annotsp = user_annots;
     }
 
     /* straight to archive? */
@@ -1072,7 +1074,7 @@ EXPORTED int append_fromstage_full(struct appendstate *as, struct body **body,
 
     /* Write the new message record */
     r = msgrecord_append(msgrec);
-    if (r) return r;
+    if (r) goto out;
 
     if (in_object_storage) {  // must delete local file
         if (unlink(fname) != 0) // unlink should do it.
@@ -1108,7 +1110,7 @@ out:
     freeentryatts(system_annots);
     if (r) {
         append_abort(as);
-        if (msgrec) msgrecord_unref(&msgrec);
+        msgrecord_unref(&msgrec);
         return r;
     }
 
@@ -1120,7 +1122,7 @@ out:
     mboxevent_set_access(mboxevent, NULL, NULL, as->userid, as->mailbox->name, 1);
     mboxevent_set_numunseen(mboxevent, mailbox, -1);
 
-    if (msgrec) msgrecord_unref(&msgrec);
+    msgrecord_unref(&msgrec);
     return r;
 }
 
@@ -1440,9 +1442,14 @@ EXPORTED int append_copy(struct mailbox *mailbox, struct appendstate *as,
                     int num;
                     r = mailbox_user_flag(as->mailbox, mailbox->flagname[userflag], &num, 1);
                     if (r)
-                        syslog(LOG_ERR, "IOERROR: unable to copy flag %s from %s to %s for UID %u: %s",
-                               mailbox->flagname[userflag], mailbox->name, as->mailbox->name,
-                               src_uid, error_message(r));
+                        xsyslog(LOG_ERR, "IOERROR: unable to copy flag",
+                                         "flag=<%s> src_mailbox=<%s> dest_mailbox=<%s>"
+                                         " uid=<%u> error=<%s>",
+                                         mailbox->flagname[userflag],
+                                         mailbox->name,
+                                         as->mailbox->name,
+                                         src_uid,
+                                         error_message(r));
                     else
                         dst_user_flags[num/32] |= 1<<(num&31);
                 }
@@ -1531,12 +1538,11 @@ EXPORTED int append_copy(struct mailbox *mailbox, struct appendstate *as,
 out:
     free(srcfname);
     free(destfname);
+    msgrecord_unref(&dst_msgrec);
+
     if (r) {
         append_abort(as);
         return r;
-    }
-    if (dst_msgrec) {
-        msgrecord_unref(&dst_msgrec);
     }
 
     mboxevent_extract_mailbox(mboxevent, as->mailbox);

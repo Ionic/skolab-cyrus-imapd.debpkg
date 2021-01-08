@@ -574,13 +574,6 @@ AC_ARG_ENABLE(xapian,
         [AS_HELP_STRING([--enable-xapian], [enable Xapian support])],,
         [enable_xapian=no])
 if test "x$enable_xapian" != xno ; then
-    AC_ARG_VAR(RM_BIN, [Location of rm])
-    AC_PATH_PROG(RM_BIN, [rm], [])
-    AS_IF([test -z "$RM_BIN"],[
-        AC_MSG_ERROR([Can't find the 'rm' binary])
-    ])
-    AC_DEFINE_UNQUOTED([RM_BIN], ["$RM_BIN"], [Path to 'rm' binary])
-
     AC_ARG_VAR(RSYNC_BIN, [Location of rsync])
     AC_PATH_PROG(RSYNC_BIN, [rsync], [])
     AS_IF([test -z "$RSYNC_BIN"],[
@@ -1516,6 +1509,22 @@ AC_SUBST([LIBCHARDET_CFLAGS])
 AM_CONDITIONAL([USE_LIBCHARDET], [test "x$with_chardet" = xyes])
 
 dnl
+dnl Check for cld2 library
+dnl
+AC_ARG_WITH([cld2],
+	[AS_HELP_STRING([--without-cld2], [ignore presence of cld2 library and disable it])],
+    [],
+    [with_cld2=yes])
+AS_IF([test "x$with_cld2" = "xyes"],
+	[ PKG_CHECK_MODULES([CLD2], [cld2],
+		[ AC_DEFINE(HAVE_CLD2, [], [Build with cld2 library support])
+		  with_cld2=yes ],
+          with_cld2=no)])
+AC_SUBST([CLD2_LIBS])
+AC_SUBST([CLD2_CFLAGS])
+AM_CONDITIONAL([HAVE_CLD2], [test "x$with_cld2" = xyes])
+
+dnl
 dnl Set pidfile location
 dnl
 AC_ARG_WITH(pidfile,
@@ -1991,11 +2000,6 @@ dnl -- this is needed on NetBSD and Linux, but seems to cause problems on atleas
 fi
 
 CMU_LIBWRAP
-CMU_UCDSNMP
-AS_IF([test "x$with_snmp" != "xno"],
-      [ AC_MSG_WARN([SNMP support is deprecated and will be removed in the future.])
-        AC_MSG_WARN([Consider using Prometheus instead.])
-      ])
 
 # Figure out what directories we're linking against.
 # Lots of fun for the whole family.
@@ -2455,7 +2459,6 @@ External dependencies:
    jansson:            $with_jansson
    pcre:               $cyrus_cv_pcre_utf8
    clamav:             $with_clamav
-   snmp:               $with_snmp
    -----------------------
    caringo:            $with_caringo
    openio:             $with_openio
@@ -2469,6 +2472,7 @@ External dependencies:
    icu4c:              $with_icu4c
    shapelib:           $with_shapelib
    chardet:            $with_chardet
+   cld2:               $with_cld2
 
 Database support:
    mysql:              $with_mysql

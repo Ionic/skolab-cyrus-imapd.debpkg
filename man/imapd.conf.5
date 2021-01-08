@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "IMAPD.CONF" "5" "November 30, 2020" "3.2.5" "Cyrus IMAP"
+.TH "IMAPD.CONF" "5" "January 08, 2021" "3.4.0" "Cyrus IMAP"
 .SH NAME
 imapd.conf \- Cyrus IMAP documentation
 .
@@ -921,6 +921,13 @@ user\(aqs personal calendar hierarchy will be a child of their Inbox.
 .UNINDENT
 .UNINDENT
 .sp
+\fBcalendar_default_displayname:\fP personal
+.INDENT 0.0
+.INDENT 3.5
+The displayname to be used when creating a user\(aqs \(aqDefault\(aq calendar.
+.UNINDENT
+.UNINDENT
+.sp
 \fBcalendar_user_address_set:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
@@ -1084,11 +1091,43 @@ assumed.
 .UNINDENT
 .UNINDENT
 .sp
+\fBconversations_keep_existing:\fP 1
+.INDENT 0.0
+.INDENT 3.5
+during conversations cleanup, don\(aqt clean up if there are still existing emails
+with one of the mentioned CIDs
+.UNINDENT
+.UNINDENT
+.sp
 \fBconversations_max_thread:\fP 100
 .INDENT 0.0
 .INDENT 3.5
 maximum size for a single thread.  Threads will split if they have this many
-* messages in them and another message arrives
+messages in them and another message arrives
+.UNINDENT
+.UNINDENT
+.sp
+\fBconversations_max_guidrecords:\fP 5000
+.INDENT 0.0
+.INDENT 3.5
+maximum records with the same guid.  This is just a sanity check to stop the same
+email being added and removed over and over, so the default is 5000
+.UNINDENT
+.UNINDENT
+.sp
+\fBconversations_max_guidexists:\fP 100
+.INDENT 0.0
+.INDENT 3.5
+maximum records with the same guid.  This maps to "labels", so with the default
+of 100, you can only have 100 labels on an email in JMAP
+.UNINDENT
+.UNINDENT
+.sp
+\fBconversations_max_guidinfolder:\fP 10
+.INDENT 0.0
+.INDENT 3.5
+maximum records with the same guid in the same folder. You can\(aqt do this via JMAP,
+but could via IMAP.  The default of 10 should be heaps normally!
 .UNINDENT
 .UNINDENT
 .sp
@@ -1611,6 +1650,14 @@ assumed.
 .UNINDENT
 .UNINDENT
 .sp
+\fBhttplogheaders:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+Space\-separated list of HTTP header fields that will be included
+in the requests logged by httpd(8).
+.UNINDENT
+.UNINDENT
+.sp
 \fBhttpmodules:\fP <empty string>
 .INDENT 0.0
 .INDENT 3.5
@@ -1801,6 +1848,16 @@ The maximum size (in kilobytes) that the JMAP API accepts
 for blob uploads. Returned as the maxSizeUpload property
 value of the JMAP "\fI\%urn:ietf:params:jmap:core\fP" capabilities object.
 Default is 1Gb.
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_max_size_blob_set:\fP 4096
+.INDENT 0.0
+.INDENT 3.5
+The maximum size (in kilobytes) that the JMAP API accepts
+for Blob/set. Returned as the maxSizeBlobSet property
+value of the JMAP "\fI\%https://cyrusimap.org/ns/jmap/blob\fP" capabilities object.
+Default is 4Mb.
 .UNINDENT
 .UNINDENT
 .sp
@@ -2394,6 +2451,16 @@ causing the MTA to queue the message and retry later.
 .UNINDENT
 .UNINDENT
 .sp
+\fBlmtp_preparse:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+If enabled, lmtpd will map in the email and parse the xapian data
+for jmapsearch.  The advantage is that the parsing is done without
+holding any locks.  The disadvantage is that the parsing is done
+even if it winds up not being needed.
+.UNINDENT
+.UNINDENT
+.sp
 \fBlmtp_strict_quota:\fP 0
 .INDENT 0.0
 .INDENT 3.5
@@ -2487,6 +2554,39 @@ newly created mailbox.  If you know you will require particular
 flag names then this avoids a possible race condition against a client
 that fills the entire 128 available slots.  Default is NULL, which is
 no flags.  Example: $Label1 $Label2 $Label3 NotSpam Spam
+.UNINDENT
+.UNINDENT
+.sp
+\fBmailbox_maxmessages_addressbook:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+Limit the number of messages that may exist in a single mailbox of
+"addressbook" type. Default (0) means no limit.  This limit applies
+after quotas are checked, so if you have both quota limits and this
+set, then you will be denied if you are either over quota or over
+this per\-mailbox count.
+.UNINDENT
+.UNINDENT
+.sp
+\fBmailbox_maxmessages_calendar:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+Limit the number of messages that may exist in a single mailbox of
+"calendar" type. Default (0) means no limit.  This limit applies
+after quotas are checked, so if you have both quota limits and this
+set, then you will be denied if you are either over quota or over
+this per\-mailbox count.
+.UNINDENT
+.UNINDENT
+.sp
+\fBmailbox_maxmessages_email:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+Limit the number of messages that may exist in a single mailbox of
+"email" (normal) type. Default (0) means no limit.  This limit applies
+after quotas are checked, so if you have both quota limits and this
+set, then you will be denied if you are either over quota or over
+this per\-mailbox count.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3302,6 +3402,15 @@ not specified will be configdirectory/quotas.db or configdirectory/quota/
 .UNINDENT
 .UNINDENT
 .sp
+\fBquota_use_conversations:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+If conversations it enabled and quotaroot is a user folder, use the
+conversations quota counts, which count multiple copies of exactly the
+same message (by GUID) as only one
+.UNINDENT
+.UNINDENT
+.sp
 \fBquotawarn:\fP 90
 .INDENT 0.0
 .INDENT 3.5
@@ -3325,6 +3434,14 @@ amount, then warnings are always given).
 The maximum amount of messages at which to give a quota warning
 (if this value is 0, or if the quota is smaller than this
 amount, then warnings are always given).
+.UNINDENT
+.UNINDENT
+.sp
+\fBreadonly:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+If enabled, all IMAP, POP and JMAP connections are read\-only,
+* no writes allowed
 .UNINDENT
 .UNINDENT
 .sp
@@ -3365,6 +3482,14 @@ authenticating to an IMAP/sync server.
 .INDENT 3.5
 At startup time, ctl_cyrusdb \-r will check this value and it
 will either add or remove reverse ACL pointers from mailboxes.db
+.UNINDENT
+.UNINDENT
+.sp
+\fBreverseuniqueids:\fP 1
+.INDENT 0.0
+.INDENT 3.5
+At startup time, ctl_cyrusdb \-r will check this value and it
+will either add or remove reverse UNIQUEID pointers from mailboxes.db
 .UNINDENT
 .UNINDENT
 .sp
@@ -3521,14 +3646,44 @@ Note that long batches may delay user commands or mail delivery.
 \fBsearch_attachment_extractor_url:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-Reserved for future use.
+A HTTP or HTTPS URL to extract search text from rich text attachments
+and other media during search indexing. The server at this URL must
+implement the following protocol:
+.sp
+1. For each attachment of an email, Cyrus sends a GET request to the
+URL <extractor\-url>/<cyrus\-id>, where <extractor\-url> is the
+configured URL and <cyrus\-id> is a Cyrus\-chosen path segment that
+uniquely identifies this attachment.
+.sp
+2. If the extractor already has a cached plain text extract of the
+attachment identified by <cyrus\-id> then it may return HTTP status
+code 200 (OK) and the plain text extract with a Content\-Type
+"text/plain" header. Otherwise it must return HTTP status 404 (Not Found).
+.sp
+3. If Cyrus receives the HTTP status code 404 (Not Found), then it sends
+a PUT request to the same URL as previously. The PUT request body
+contains the decoded, binary body of the attachment. The Content\-Type
+request header has the same value as declared in the MIME part
+headers, including any type parameters.
+.sp
+4. The extractor must return the plain text extract with either HTTP status
+200 (OK) or 201 (Created) and a Content\-Type "text/plain" header.
+If no text can be extracted, then the extractor may return any return code
+in the range 4xx, or 200 and an empty response body.
+.sp
+Any other HTTP status code is treated as an error. For performance
+reasons, the Cyrus indexer attempts to keep\-alive the TCP connection
+to the extractor.
+Xapian only.
 .UNINDENT
 .UNINDENT
 .sp
 \fBsearch_index_language:\fP 0
 .INDENT 0.0
 .INDENT 3.5
-Reserved for future use.
+If enabled, then messages bodies are stemmed by detected language
+in addition to the default English stemmer.
+Xapian only.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3539,10 +3694,26 @@ Deprecated. No longer used.
 .UNINDENT
 .UNINDENT
 .sp
+\fBsearch_index_skip_domains:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+A space separated list of domains \- if set, any users in the listed domains
+will be skipped when indexing.
+.UNINDENT
+.UNINDENT
+.sp
+\fBsearch_index_skip_users:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+A space separated list of usernames \- if set, any users in the list
+will be skipped when indexing.
+.UNINDENT
+.UNINDENT
+.sp
 \fBsearch_query_language:\fP 0
 .INDENT 0.0
 .INDENT 3.5
-Reserved for future use.
+Deprecated. No longer used.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3822,7 +3993,7 @@ assumed.
 .UNINDENT
 .UNINDENT
 .sp
-\fBsieve_extensions:\fP fileinto reject vacation vacation\-seconds imapflags notify include envelope environment body relational regex subaddress copy date index imap4flags mailbox mboxmetadata servermetadata variables editheader extlists duplicate ihave fcc special\-use redirect\-dsn redirect\-deliverby mailboxid x\-cyrus\-log x\-cyrus\-jmapquery x\-cyrus\-snooze
+\fBsieve_extensions:\fP fileinto reject vacation vacation\-seconds notify include envelope environment body relational regex subaddress copy date index imap4flags mailbox mboxmetadata servermetadata variables editheader extlists duplicate ihave fcc special\-use redirect\-dsn redirect\-deliverby mailboxid vnd.cyrus.log vnd.cyrus.jmapquery snooze
 .INDENT 0.0
 .INDENT 3.5
 Space\-separated list of Sieve extensions allowed to be used in
@@ -3831,7 +4002,7 @@ previously installed script will be unaffected by this option and
 will continue to execute regardless of the extensions used.  This
 option has no effect on options that are disabled at compile time
 (e.g., "regex").
-Allowed values: \fIfileinto\fP, \fIreject\fP, \fIvacation\fP, \fIvacation\-seconds\fP, \fIimapflags\fP, \fInotify\fP, \fIinclude\fP, \fIenvelope\fP, \fIenvironment\fP, \fIbody\fP, \fIrelational\fP, \fIregex\fP, \fIsubaddress\fP, \fIcopy\fP, \fIdate\fP, \fIindex\fP, \fIimap4flags\fP, \fImailbox\fP, \fImboxmetadata\fP, \fIservermetadata\fP, \fIvariables\fP, \fIeditheader\fP, \fIextlists\fP, \fIduplicate\fP, \fIihave\fP, \fIfcc\fP, \fIspecial\-use\fP, \fIredirect\-dsn\fP, \fIredirect\-deliverby\fP, \fImailboxid\fP, \fIx\-cyrus\-log\fP, \fIx\-cyrus\-jmapquery\fP, \fIx\-cyrus\-snooze\fP
+Allowed values: \fIfileinto\fP, \fIreject\fP, \fIvacation\fP, \fIvacation\-seconds\fP, \fInotify\fP, \fIinclude\fP, \fIenvelope\fP, \fIenvironment\fP, \fIbody\fP, \fIrelational\fP, \fIregex\fP, \fIsubaddress\fP, \fIcopy\fP, \fIdate\fP, \fIindex\fP, \fIimap4flags=imapflags\fP, \fImailbox\fP, \fImboxmetadata\fP, \fIservermetadata\fP, \fIvariables\fP, \fIeditheader\fP, \fIextlists\fP, \fIduplicate\fP, \fIihave\fP, \fIfcc\fP, \fIspecial\-use\fP, \fIredirect\-dsn\fP, \fIredirect\-deliverby\fP, \fImailboxid\fP, \fIvnd.cyrus.log=x\-cyrus\-log\fP, \fIvnd.cyrus.jmapquery=x\-cyrus\-jmapquery\fP, \fIsnooze=vnd.cyrus.snooze=x\-cyrus\-snooze\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -4237,6 +4408,24 @@ to the mailbox, generate a synthetic partial state and send that.
 .UNINDENT
 .UNINDENT
 .sp
+\fBsync_cache_db:\fP twoskip
+.INDENT 0.0
+.INDENT 3.5
+The cyrusdb backend to use for the replication cache.
+.sp
+Allowed values: \fIskiplist\fP, \fIsql\fP, \fItwoskip\fP, \fIzeroskip\fP
+.UNINDENT
+.UNINDENT
+.sp
+\fBsync_cache_db_path:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+The path for the replication cache.  Prefix with a
+channel name to apply for that channel.  NOTE, it\(aqs
+quite important to have a different one per backend!
+.UNINDENT
+.UNINDENT
+.sp
 \fBsync_host:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
@@ -4324,6 +4513,14 @@ channel.
 .sp
 For backward compatibility, if no unit is specified, seconds is
 assumed.
+.UNINDENT
+.UNINDENT
+.sp
+\fBsync_rightnow_channel:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+if set, run sync_client to this channel immediately.  As with channels,
+set this value to \(aq""\(aq to sync the default channel!
 .UNINDENT
 .UNINDENT
 .sp
@@ -4420,7 +4617,8 @@ assumed.
 \fBtemp_path:\fP /tmp
 .INDENT 0.0
 .INDENT 3.5
-The pathname to store temporary files in
+The pathname to store temporary files in. It is recommended to
+use an in\-memory filesystem such as tmpfs for this path.
 .UNINDENT
 .UNINDENT
 .sp

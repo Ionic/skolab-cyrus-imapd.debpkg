@@ -24,8 +24,8 @@ Cyrus IMAP supports the following platforms;
 
      * SUSE Linux
 
-     Should your Linux distribution not be listed here, please refer
-     to Support/Community for ways of contacting the Cyrus IMAP team.
+  Should your Linux distribution not be listed here, please refer to
+  Support/Community for ways of contacting the Cyrus IMAP team.
 
 * Solaris
 
@@ -69,8 +69,8 @@ Idled Support
 -------------
 
 To enable near real-time client updates through IMAP IDLE (as
-described in RFC 2177), configure Cyrus IMAP with the "--enable-idled"
-option.
+described in **RFC 2177**), configure Cyrus IMAP with the "--enable-
+idled" option.
 
 
 Murder Support

@@ -42,6 +42,10 @@ Sitemap
 
         * Supported Product Series
 
+          * Series 3.4
+
+            * Cyrus IMAP 3.4 Releases
+
           * Series 3.2
 
             * Cyrus IMAP 3.2 Releases
@@ -55,6 +59,14 @@ Sitemap
             * Cyrus IMAP 2.5 Releases
 
         * Development snapshots
+
+          * Cyrus IMAP 3.5 Tags
+
+          * Cyrus IMAP 3.3 Tags
+
+            * Cyrus IMAP 3.3.0 Tag Notes
+
+            * Cyrus IMAP 3.3.1 Tag Notes
 
           * Cyrus IMAP 3.1 Tags
 
@@ -489,7 +501,7 @@ Sitemap
 
         * Troubleshooting
 
-      * Upgrading to 3.2
+      * Upgrading to 3.4
 
         * 1. Preparation
 
@@ -503,7 +515,7 @@ Sitemap
 
           * Do What As Who?
 
-        * 2. Install new 3.2 Cyrus
+        * 2. Install new 3.4 Cyrus
 
         * 3. Shut down existing Cyrus
 
@@ -513,7 +525,7 @@ Sitemap
 
         * 6. Upgrade specific items
 
-        * 7. Start new 3.2 Cyrus and verify
+        * 7. Start new 3.4 Cyrus and verify
 
         * 8. Reconstruct databases and cache
 
