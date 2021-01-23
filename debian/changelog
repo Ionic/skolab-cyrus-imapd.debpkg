@@ -1,3 +1,9 @@
+cyrus-imapd (3.0.8-6+deb10u5) buster; urgency=medium
+
+  * Fix cron script (Closes: #980240)
+
+ -- Xavier Guimard <yadd@debian.org>  Sat, 16 Jan 2021 21:34:16 +0100
+
 cyrus-imapd (3.0.8-6+deb10u4) buster; urgency=medium
 
   * Add BACKUP type to cyrus-upgrade-db (Closes: #930764)
