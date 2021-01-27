@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installing Cyrus &mdash; Cyrus IMAP 3.4.0-beta1 documentation</title>
+  <title>Installing Cyrus &mdash; Cyrus IMAP 3.4.0-beta2 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.0-beta1 documentation" href="../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.0-beta2 documentation" href="../index.html"/>
         <link rel="up" title="Setup" href="../setup.html"/>
         <link rel="next" title="HTTP modules" href="download/installation/manage-dav.html"/>
         <link rel="prev" title="Compiling" href="developer/compiling.html"/> 
@@ -330,7 +330,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#launch-cyrus">Launch Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#send-a-test-email">Send a test email</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#checking-carddav-and-carddav">Checking CardDAV and CardDAV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#checking-carddav-and-caldav">Checking CardDAV and CalDAV</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
 </ul>
 </li>
@@ -763,7 +763,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html">Docs v3.4.0-beta1</a> &raquo;</li>
+      <li><a href="../index.html">Docs v3.4.0-beta2</a> &raquo;</li>
       
           <li><a href="../setup.html">Setup</a> &raquo;</li>
       
@@ -1416,8 +1416,8 @@ need to add them to SASL (as before):</p>
 connect to the mailbox for <a class="reference external" href="mailto:example&#37;&#52;&#48;localhost">example<span>&#64;</span>localhost</a> via IMAP and see the
 message.</p>
 </div>
-<div class="section" id="checking-carddav-and-carddav">
-<h2>Checking CardDAV and CardDAV<a class="headerlink" href="#checking-carddav-and-carddav" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="checking-carddav-and-caldav">
+<h2>Checking CardDAV and CalDAV<a class="headerlink" href="#checking-carddav-and-caldav" title="Permalink to this headline">¶</a></h2>
 <p>Modify <code class="docutils literal"><span class="pre">/etc/cyrus.conf</span></code> and add (or uncomment) this line in the
 SERVICES section:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">http</span>        <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;httpd&quot;</span> <span class="n">listen</span><span class="o">=</span><span class="s2">&quot;http&quot;</span> <span class="n">prefork</span><span class="o">=</span><span class="mi">0</span>
@@ -1495,7 +1495,7 @@ addressbook and calendar entry for the sample example user:</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Sep 22 2017
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jan 27 2021
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1515,7 +1515,7 @@ addressbook and calendar entry for the sample example user:</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'3.4.0-beta1',
+            VERSION:'3.4.0-beta2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

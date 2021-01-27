@@ -497,7 +497,7 @@ Sitemap
 
         * Send a test email
 
-        * Checking CardDAV and CardDAV
+        * Checking CardDAV and CalDAV
 
         * Troubleshooting
 
@@ -2160,7 +2160,7 @@ Sitemap
 
             * Send a test email
 
-            * Checking CardDAV and CardDAV
+            * Checking CardDAV and CalDAV
 
             * Troubleshooting
 

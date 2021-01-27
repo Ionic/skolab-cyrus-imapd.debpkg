@@ -22,7 +22,7 @@ Setup
 
   * Send a test email
 
-  * Checking CardDAV and CardDAV
+  * Checking CardDAV and CalDAV
 
   * Troubleshooting
 
