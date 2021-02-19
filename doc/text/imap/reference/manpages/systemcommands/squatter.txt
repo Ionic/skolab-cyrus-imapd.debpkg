@@ -116,7 +116,7 @@ Options
    Use the specified configuration file *config-file* rather than the
    default imapd.conf(5).
 
--a
+-a, --squat-annot
 
    Only create indexes for mailboxes which have the shared
    */vendor/cmu/cyrus-imapd/squat* annotation set to "true".
@@ -130,62 +130,62 @@ Options
    the mailbox is not indexed. In other words, the implicit value of
    */vendor/cmu/cyrus-imapd/squat* is "false".
 
--A
+-A, --audit
 
-   Missing documentation, starts audit mode. This feature is only
-   available on the master branch.
+   Audits the specified mailboxes (or all), reports any unindexed
+   messages. This feature is only available on the master branch.
 
--d
+-d, --nodaemon
 
    In rolling mode, don't background and do emit log messages on
    standard error.  Useful for debugging. This feature was introduced
    in version 3.0.
 
--B
+-B, --skip-locked
 
    In compact mode, use non-blocking lock to start and skip any users
    who have their xapianactive file locked at the time (i.e another
-   reindex task) This feature was introduced in version 3.0.
+   reindex task) This feature is only available on the master branch.
 
--F
+-F, --filter
 
    In compact mode, filter the resulting database to only include
    messages which are not expunged in mailboxes with existing
    name/uidvalidity. This feature was introduced in version 3.0.
 
--f synclogfile
+-f synclogfile, --synclog=synclogfile
 
    Read the *synclogfile* and incrementally index all the mailboxes
    listed therein, then exit. This feature was introduced in version
    3.0.
 
--h
+-h, --help
 
    Display this usage information.
 
--i
+-i, --incremental
 
    Incremental updates where indexes already exist.
 
--N name
+-N name, --name=name
 
    Only index mailboxes beginning with *name* while iterating through
    the mailbox list derived from other options.
 
--n channel
+-n channel, --channel=channel
 
    In rolling mode, specify the name of the sync log *channel* that
    **squatter** will listen to.  The default is "squatter".  This
    channel **must** be defined in imapd.conf(5) before being used.
    This feature was introduced in version 3.0.
 
--o
+-o, --copydb
 
    In compact mode, if only one source database is selected, just copy
    it to the destination rather than compacting. This feature was
    introduced in version 3.0.
 
--p
+-p, --allow-partials
 
       When indexing, allow messages to be partially indexed. This may
       occur if attachment indexing is enabled but indexing failed for
@@ -194,56 +194,81 @@ Options
       squatter aborts with an error. Also see **-P**. Xapian only.
       This feature is only available on the master branch.
 
-   -P
+   -P, --reindex-partials
 
       When reindexing, then attempt to reindex any partially indexed
       messages (see **-p**). Setting this flag implies **-Z**. Xapian
       only. This feature is only available on the master branch.
 
--R
+   -L, --reindex-minlevel=level
+
+      When reindexing, index all messages that have an index level
+      less than level. Currently, Cyrus only supports two index
+      levels: A message for which attachment indexing was never
+      attempted has index level 1. A message that has indexed
+      attachments, or does not contain attachments, has index level 3.
+      Consequently, running squatter with minlevel set to 3 will cause
+      it to attempt reindexing all messages, for which attachment
+      indexing never was attempted. Future Cyrus versions may
+      introduce additional levels. Setting this flag implies **-Z**.
+      Xapian only. This feature is only available on the master
+      branch.
+
+-R, --rolling
 
    Run in rolling mode; **squatter** runs as a daemon listening to a
    sync log channel and continuously incrementally indexing mailboxes.
    See also **-d** and **-n**. This feature was introduced in version
    3.0.
 
--r
+-r, --recursive
 
    Recursively create indexes for all sub-mailboxes of the user,
    mailboxes or mailbox prefixes given as arguments.
 
--S seconds
+-s, --squat-skip[=delta]
+
+   Skip mailboxes that have not been modified since last index. This
+   is achieved by comparing the last modification time of a mailbox to
+   the last time the squat index of this mailbox got updated. If the
+   mailbox modification time (plus delta) is less than the squat index
+   modification time, then the mailbox is skipped. The optional
+   argument value delta is defined in seconds and must be equal to or
+   higher than zero, the default value is 60. Squat only. This feature
+   is only available on the master branch.
+
+-S seconds, --sleep=seconds
 
    After processing each mailbox, sleep for "seconds" before
    continuing. Can be used to provide some load balancing.  Accepts
    fractional amounts. This feature was introduced in version 3.0.
 
--T reindextiers
+-T reindextiers, --reindex-tier=reindextiers
 
    In compact mode, a comma-separated subset of the source tiers (see
    **-t**) to be reindexed.  Similar to **-X** but allows limiting the
    tiers that will be reindexed. This feature was introduced in
    version 3.0.
 
--t srctier...
+-t srctiers, --srctier=srctiers
 
    In compact mode, the comma-separated source tier(s) for the
    compacted indices.  At least one source tier must be specified in
    compact mode. Xapian only. This feature was introduced in version
    3.0.
 
--u
+-u name, --user=name
 
    Extra options refer to usernames (e.g. foo@bar.com) rather than
    mailbox names.  Usernames are space-separated. This feature was
    introduced in version 3.0.
 
--U
+-U, --only-upgrade
 
    In compact mode, only compact if re-indexing. Xapian only. This
    feature is only available on the master branch.
 
--v
+-v, --verbose
 
    Increase the verbosity of progress/status messages.  Sometimes
    additional messages are emitted on the terminal with this option
@@ -251,20 +276,20 @@ Options
    messages are sent to syslog, only if -v is provided.  In rolling
    and synclog modes, -vv sends even more messages to syslog.
 
--X
+-X, --reindex
 
    Reindex all the messages before compacting.  This mode reads all
    the lists of messages indexed by the listed tiers, and re-indexes
    them into a temporary database before compacting that into place.
    Xapian only. This feature was introduced in version 3.0.
 
--z desttier
+-z desttier, --compact=desttier
 
    In compact mode, the destination tier for the compacted indices.
    This must be specified in compact mode. Xapian only. This feature
    was introduced in version 3.0.
 
--Z
+-Z, --internalindex
 
    When indexing messages, use the Xapian internal cyrusid rather than
    referencing the ranges of already indexed messages to know if a

@@ -2105,59 +2105,117 @@ static search_expr_t *_email_buildsearchexpr(jmap_req_t *req, json_t *filter,
     return this;
 }
 
-static search_expr_t *_email_buildsearch(jmap_req_t *req, json_t *filter,
-                                         hash_table *contactgroups,
-                                         strarray_t *perf_filters)
+static int is_single_jmap_folderexpr(search_expr_t *e)
 {
-    search_expr_t *root = _email_buildsearchexpr(req, filter, /*parent*/NULL,
-                                                 contactgroups, perf_filters);
+    return e->op == SEOP_MATCH &&
+        !strcmp(e->attr->name, "jmap_folders") &&
+        e->attr->data1 == 0 &&
+        strarray_size(e->value.list) == 1;
+}
 
-    /* The search API internally optimises for IMAP folder queries
-     * and we'd like to benefit from this also for JMAP. To do so,
-     * we try to convert as many inMailboxId expressions to IMAP
-     * mailbox matches as possible. This includes the first
-     * inMailboxId that is part of a positive AND and any inMailboxId
-     * that is part of a positive OR expression. */
-    ptrarray_t todo = PTRARRAY_INITIALIZER;
-    int found_and_match = 0;
-    struct work {
-        search_expr_t *e;
-        int in_or;
-    };
-    struct work *w = xmalloc(sizeof(struct work));
-    w->e = root;
-    w->in_or = 0;
-    ptrarray_push(&todo, w);
-    while ((w = ptrarray_pop(&todo))) {
-        if (w->e->op == SEOP_MATCH) {
-            if (!strcmp(w->e->attr->name, "jmap_folders") &&
-                w->e->attr->data1 == 0 &&
-                strarray_size(w->e->value.list) == 1) {
-                /* Its's an inMailboxId expression */
-                if (w->in_or || !found_and_match) {
-                    char *folder = strarray_pop(w->e->value.list);
-                    _emailsearch_folders_free(&w->e->value);
-                    const search_attr_t *attr = search_attr_find("folder");
-                    w->e->value.s = folder;
-                    w->e->attr = attr;
-                    found_and_match = !w->in_or;
+static int convert_foldermatch(search_expr_t *e,
+                               strarray_t *preferred_folders,
+                               int only_preferred)
+{
+    if (!is_single_jmap_folderexpr(e)) return 0;
+
+    const char *folder = strarray_nth(e->value.list, 0);
+    int is_preferred = strarray_find(preferred_folders, folder, 0) >= 0;
+    if (!is_preferred && only_preferred) {
+        return 0;
+    }
+    else if (!is_preferred) {
+        strarray_append(preferred_folders, folder);
+    }
+
+    char *folderm = strarray_pop(e->value.list);
+    _emailsearch_folders_free(&e->value);
+    const search_attr_t *attr = search_attr_find("folder");
+    e->value.s = folderm;
+    e->attr = attr;
+    return 1;
+}
+
+static void convert_folderclause(search_expr_t *clause,
+                                 strarray_t *preferred_folders,
+                                 int *is_imapfolderptr)
+{
+    assert(clause->op != SEOP_OR);
+
+    if (clause->op == SEOP_AND) {
+        int found_foldermatch = 0;
+        /* First pass. Convert preferred folder expression. */
+        search_expr_t *c;
+        for (c = clause->children; c; c = c->next) {
+            if (convert_foldermatch(c, preferred_folders, 1)) {
+                found_foldermatch = 1;
+                break;
+            }
+        }
+        if (!found_foldermatch) {
+            /* Second pass. Convert any folder expression. */
+            for (c = clause->children; c; c = c->next) {
+                if (convert_foldermatch(c, preferred_folders, 0)) {
+                    found_foldermatch = 1;
+                    break;
                 }
             }
         }
-        else if (w->e->op == SEOP_AND || w->e->op == SEOP_OR) {
+        if (found_foldermatch) {
+            if (is_imapfolderptr) *is_imapfolderptr = 1;
+            return;
+        }
+    }
+    else if (convert_foldermatch(clause, preferred_folders, 0)) {
+        if (is_imapfolderptr) *is_imapfolderptr = 1;
+    }
+}
+
+static int _emailsearch_normalise(search_expr_t **rootp, int *is_imapfolderptr)
+{
+    if (is_imapfolderptr) *is_imapfolderptr = 0;
+
+    /* Convert tree to DNF, it will converted in search_query anyway */
+    if (search_expr_normalise(rootp) < 0) {
+        return IMAP_SEARCH_SLOW;
+    }
+
+    search_expr_t *root = *rootp;
+
+    /* Is there any JMAP folder expression we could optimize? */
+    int has_jmapfolder_expr = 0;
+    ptrarray_t work = PTRARRAY_INITIALIZER;
+    ptrarray_push(&work, root);
+    search_expr_t *e;
+    while ((e = ptrarray_pop(&work))) {
+        if (is_single_jmap_folderexpr(e)) {
+            has_jmapfolder_expr = 1;
+            break;
+        }
+        search_expr_t *c;
+        for (c = e->children; c; c = c->next) {
+            ptrarray_push(&work, c);
+        }
+    }
+    ptrarray_fini(&work);
+
+    if (has_jmapfolder_expr) {
+        /* Convert at most one inMailboxId expression in each clause to an
+         * IMAP folder search expression. Prefer to convert the same folders. */
+        strarray_t preferred_folders = STRARRAY_INITIALIZER;
+        if (root->op == SEOP_OR) {
             search_expr_t *c;
-            for (c = w->e->children; c; c = c->next) {
-                struct work *ww = xmalloc(sizeof(struct work));
-                ww->e = c;
-                ww->in_or = w->in_or || w->e->op == SEOP_OR;
-                ptrarray_push(&todo, ww);
+            for (c = root->children; c; c = c->next) {
+                convert_folderclause(c, &preferred_folders, is_imapfolderptr);
             }
         }
-        free(w);
+        else {
+            convert_folderclause(root, &preferred_folders, is_imapfolderptr);
+        }
+        strarray_fini(&preferred_folders);
     }
-    ptrarray_fini(&todo);
 
-    return root;
+    return 0;
 }
 
 static void _email_contactfilter_initreq(jmap_req_t *req, struct email_contactfilter *cfilter)
@@ -2334,11 +2392,13 @@ struct emailsearch {
     int want_partids;
     int ignore_timer;
     int is_mutable;
-    search_expr_t *expr;
+    search_expr_t *expr_dnf;
+    search_expr_t *expr_orig;
     struct sortcrit *sort;
     char *hash;
     strarray_t perf_filters;
     int sort_savedate;
+    int is_imapfolder;
     /* Internal state for UID search */
     search_query_t *query;
     struct searchargs *args;
@@ -2346,11 +2406,12 @@ struct emailsearch {
     struct index_init init;
 };
 
-static void _emailsearch_free(struct emailsearch *search)
+static void _emailsearch_fini(struct emailsearch *search)
 {
     if (!search) return;
 
-    search_expr_free(search->expr);
+    search_expr_free(search->expr_dnf);
+    search_expr_free(search->expr_orig);
     freesortcrit(search->sort);
     strarray_fini(&search->perf_filters);
     free(search->hash);
@@ -2359,19 +2420,16 @@ static void _emailsearch_free(struct emailsearch *search)
     search_query_free(search->query);
     freesearchargs(search->args);
 
-    free(search);
+    memset(search, 0, sizeof(struct emailsearch));
 }
 
 static char *_emailsearch_hash(search_expr_t *expr, struct sortcrit *sort)
 {
     struct buf buf = BUF_INITIALIZER;
     if (expr) {
-        search_expr_t *mysearch = search_expr_duplicate(expr);
-        search_expr_normalise(&mysearch);
-        char *tmp = search_expr_serialise(mysearch);
+        char *tmp = search_expr_serialise(expr);
         buf_appendcstr(&buf, tmp);
         free(tmp);
-        search_expr_free(mysearch);
     }
     else {
         buf_appendcstr(&buf, "noquery");
@@ -2413,17 +2471,30 @@ static int _jmap_checkfolder(const char *mboxname, void *rock)
     return 0;
 }
 
-static struct emailsearch* _emailsearch_new(jmap_req_t *req,
-                                            json_t *filter,
-                                            json_t *jsort,
-                                            hash_table *contactgroups,
-                                            int want_expunged,
-                                            int want_partids,
-                                            int ignore_timer)
+static void _emailsearch_init(struct emailsearch *search,
+                              jmap_req_t *req,
+                              json_t *filter,
+                              json_t *jsort,
+                              hash_table *contactgroups,
+                              int want_expunged,
+                              int want_partids,
+                              int ignore_timer,
+                              json_t **err)
 {
-    struct emailsearch* search = xzmalloc(sizeof(struct emailsearch));
+    memset(search, 0, sizeof(struct emailsearch));
 
-    search->expr = _email_buildsearch(req, filter, contactgroups, &search->perf_filters);
+    search->expr_orig = _email_buildsearchexpr(req, filter, NULL,
+                                    contactgroups, &search->perf_filters);
+    if (!search->expr_orig) return;
+
+    search->expr_dnf = search_expr_duplicate(search->expr_orig);
+
+    int r = _emailsearch_normalise(&search->expr_dnf, &search->is_imapfolder);
+    if (r == IMAP_SEARCH_SLOW) {
+        *err = json_pack("{s:s s:s}", "type", "unsupportedFilter",
+                "description", "search too complex");
+        return;
+    }
 
     if (json_array_size(jsort)) {
         search->sort = _email_buildsort(jsort, &search->sort_savedate);
@@ -2440,13 +2511,11 @@ static struct emailsearch* _emailsearch_new(jmap_req_t *req,
         search->sort = sort;
     }
 
-    search->hash = _emailsearch_hash(search->expr, search->sort);
-    search->is_mutable = search_is_mutable(search->sort, search->expr);
+    search->hash = _emailsearch_hash(search->expr_dnf, search->sort);
+    search->is_mutable = search_is_mutable(search->sort, search->expr_dnf);
     search->want_expunged = want_expunged;
     search->want_partids = want_partids;
     search->ignore_timer = ignore_timer;
-
-    return search;
 }
 
 static int _emailsearch_run_uidsearch(jmap_req_t *req, struct emailsearch *search,
@@ -2457,7 +2526,7 @@ static int _emailsearch_run_uidsearch(jmap_req_t *req, struct emailsearch *searc
     /* Build search args */
     search->args = new_searchargs(NULL/*tag*/, GETSEARCH_CHARSET_FIRST,
             &jmap_namespace, req->accountid, req->authstate, 0);
-    search->args->root = search_expr_duplicate(search->expr);
+    search->args->root = search_expr_duplicate(search->expr_dnf);
 
     /* Build index state */
     search->init.userid = req->accountid;
@@ -2706,7 +2775,7 @@ done:
     return 0;
 }
 
-static int _email_query_can_calculate_changes(struct emailsearch *search)
+static int _email_query_is_mutable_search(struct emailsearch *search)
 {
     /* can calculate changes for mutable sort, but not mutable search */
     return search->is_mutable > 1 ? 0 : 1;
@@ -3257,9 +3326,9 @@ static int guidsearch_rank_clause(struct conversations_state *cstate,
 }
 
 static int guidsearch_rank_expr(struct conversations_state *cstate,
-                                const search_expr_t *_e)
+                                const search_expr_t *e)
 {
-    if (!_e) return 0;
+    if (!e) return 0;
 
     /*
      * Returns -1 for unsupported expressions or a bitmask of:
@@ -3267,28 +3336,19 @@ static int guidsearch_rank_expr(struct conversations_state *cstate,
      *  0x1  supported but does not require Xapian
      *  0x2  requires Xapian
      */
-
-    search_expr_t *e = search_expr_duplicate(_e);
-    if (search_expr_normalise(&e) == -1) {
-        return -1;
-    }
-    int rank = 0;
     if (e->op == SEOP_OR) {
+        int rank = 0;
         search_expr_t *child;
         for (child = e->children ; child ; child = child->next) {
             int childrank = guidsearch_rank_clause(cstate, child);
             if (childrank == 1 || childrank == -1) {
-                rank = -1;
-                goto done;
+                return -1;
             }
             rank |= childrank;
         }
+        return rank;
     }
-    else rank = guidsearch_rank_clause(cstate, e);
-
-done:
-    search_expr_free(e);
-    return rank;
+    return guidsearch_rank_clause(cstate, e);
 }
 
 static int is_guidsearch_sort(struct sortcrit *sort)
@@ -3370,7 +3430,7 @@ static int guidsearch_run_cb(const conv_guidrec_t *rec,
 static int guidsearch_run(jmap_req_t *req, struct emailsearch *search,
                           struct guidsearch_query *gsq)
 {
-    int exprrank = guidsearch_rank_expr(req->cstate, search->expr);
+    int exprrank = guidsearch_rank_expr(req->cstate, search->expr_dnf);
     if (exprrank < 2 || !is_guidsearch_sort(search->sort)) {
         return IMAP_SEARCH_NOT_SUPPORTED;
     }
@@ -3421,7 +3481,7 @@ static int guidsearch_run(jmap_req_t *req, struct emailsearch *search,
         }
 
         int need_folders = 0;
-        gsq->matchexpr = guidsearch_expr_build(req->cstate, NULL, search->expr,
+        gsq->matchexpr = guidsearch_expr_build(req->cstate, NULL, search->expr_orig,
                                                &foldernum_by_mboxname,
                                                &need_folders);
         gsq->numfolders = need_folders ? numfolders : 0;
@@ -3451,7 +3511,7 @@ static int guidsearch_run(jmap_req_t *req, struct emailsearch *search,
         goto done;
     }
 
-    search_build_query(bx, search->expr);
+    search_build_query(bx, search->expr_orig);
     r = bx->run_guidsearch(bx, guidsearch_run_cb, gsq);
     bv_fini(&gsq->readable_folders);
     if (r && r != IMAP_OK_COMPLETED) goto done;
@@ -3752,8 +3812,11 @@ static int _email_query_uidsearch(jmap_req_t *req,
     if (r) {
         switch (r) {
             case IMAP_SEARCH_NOT_SUPPORTED:
-            case IMAP_SEARCH_SLOW:
                 *err = json_pack("{s:s}", "type", "unsupportedFilter");
+                break;
+            case IMAP_SEARCH_SLOW:
+                *err = json_pack("{s:s s:s}", "type", "unsupportedFilter",
+                        "description", "search too slow");
                 break;
             default:
                 *err = jmap_server_error(r);
@@ -3983,16 +4046,12 @@ static void _email_query(jmap_req_t *req, struct jmap_emailquery *q,
                          hash_table *contactgroups,
                          json_t **err)
 {
-    struct emailsearch *search = _emailsearch_new(req, q->super.filter,
-                                                  q->super.sort,
-                                                  contactgroups, 0,
-                                                  q->want_partids, 0);
     int r = 0;
 
-    if (!search) {
-        *err = jmap_server_error(IMAP_INTERNAL);
-        goto done;
-    }
+    struct emailsearch search;
+    _emailsearch_init(&search, req, q->super.filter, q->super.sort,
+                      contactgroups, 0, q->want_partids, 0, err);
+    if (*err) goto done;
 
     /* make query state */
     modseq_t modseq = jmap_highestmodseq(req, MBTYPE_EMAIL);
@@ -4003,8 +4062,8 @@ static void _email_query(jmap_req_t *req, struct jmap_emailquery *q,
     if (jmap_is_using(req, JMAP_PERFORMANCE_EXTENSION)) {
         int i;
         json_t *jfilters = json_array();
-        for (i = 0; i < strarray_size(&search->perf_filters); i++) {
-            const char *cost = strarray_nth(&search->perf_filters, i);
+        for (i = 0; i < strarray_size(&search.perf_filters); i++) {
+            const char *cost = strarray_nth(&search.perf_filters, i);
             json_array_append_new(jfilters, json_string(cost));
         }
         json_object_set_new(req->perf_details, "filters", jfilters);
@@ -4014,7 +4073,7 @@ static void _email_query(jmap_req_t *req, struct jmap_emailquery *q,
     int is_guidsearch = 0;
     if (!q->disable_guidsearch && !q->super.calculate_total &&
         (q->super.limit || !q->super.have_limit) && !q->want_partids) {
-        r = _email_query_guidsearch(req, q, search, err);
+        r = _email_query_guidsearch(req, q, &search, err);
         if (r == IMAP_SEARCH_NOT_SUPPORTED) {
             /* Fallback to UID search */
             r = 0;
@@ -4023,20 +4082,27 @@ static void _email_query(jmap_req_t *req, struct jmap_emailquery *q,
         else is_guidsearch = 1;
     }
     if (!is_guidsearch) {
-        r = _email_query_uidsearch(req, q, search, err);
+        r = _email_query_uidsearch(req, q, &search, err);
     }
 
-    q->super.can_calculate_changes = _email_query_can_calculate_changes(search);
+    q->super.can_calculate_changes = _email_query_is_mutable_search(&search);
     q->super.query_state = _email_make_querystate(modseq, 0, addrbook_modseq);
+
+    if (jmap_is_using(req, JMAP_PERFORMANCE_EXTENSION)) {
+        json_object_set_new(req->perf_details, "isImapFolderSearch",
+                json_boolean(search.is_imapfolder));
+    }
 
 done:
     if (r && *err == NULL) {
         if (r == IMAP_SEARCH_SLOW) {
-            *err = json_pack("{s:s}", "type", "unsupportedFilter");
+            *err = json_pack("{s:s s:s}", "type", "unsupportedFilter",
+                    "description", "search too slow");
         }
         else *err = jmap_server_error(r);
     }
-    _emailsearch_free(search);
+
+    _emailsearch_fini(&search);
 }
 
 static int _email_queryargs_parse(jmap_req_t *req,
@@ -4165,50 +4231,40 @@ static void _email_querychanges_collapsed(jmap_req_t *req,
     uint32_t since_uid;
     uint32_t num_changes = 0;
     modseq_t addrbook_modseq = 0;
-    int is_guidsearch = 0;
+    int r = 0;
 
     if (!_email_read_querystate(query->since_querystate,
                                 &since_modseq, &since_uid,
                                 &addrbook_modseq)) {
-        *err = json_pack("{s:s}", "type", "cannotCalculateChanges");
+        *err = json_pack("{s:s s:s}", "type", "cannotCalculateChanges",
+                                      "description", "invalid query state");
         return;
     }
     if (addrbook_modseq && addrbook_modseq != jmap_highestmodseq(req, MBTYPE_ADDRESSBOOK)) {
-        *err = json_pack("{s:s}", "type", "cannotCalculateChanges");
-        return;
-    }
-    if (is_guidsearch) {
-        *err = json_pack("{s:s}", "type", "cannotCalculateChanges");
+        *err = json_pack("{s:s s:s}", "type", "cannotCalculateChanges",
+                                      "description", "addressbook changed");
+
         return;
     }
 
-    struct emailsearch *search = _emailsearch_new(req, query->filter, query->sort,
-                                                  &contactfilter->contactgroups,
-                                                  /*want_expunged*/1,
-                                                  /*want_partids*/0,
-                                                  /*ignore_timer*/0);
-    if (!search) {
-        *err = jmap_server_error(IMAP_INTERNAL);
-        goto done;
-    }
-    if (!_email_query_can_calculate_changes(search)) {
-        *err = json_pack("{s:s}", "type", "cannotCalculateChanges");
+    struct emailsearch search;
+    _emailsearch_init(&search, req, query->filter, query->sort,
+                      &contactfilter->contactgroups,
+                      /*want_expunged*/1,
+                      /*want_partids*/0,
+                      /*ignore_timer*/0, err);
+    if (*err) goto done;
+
+    if (!_email_query_is_mutable_search(&search)) {
+        *err = json_pack("{s:s s:s}", "type", "cannotCalculateChanges",
+                                      "description", "mutable search");
         goto done;
     }
 
     /* Run search */
     const ptrarray_t *msgdata = NULL;
-    int r = _emailsearch_run_uidsearch(req, search, &msgdata);
-    if (r) {
-        if (r == IMAP_SEARCH_SLOW) {
-            *err = json_pack("{s:s, s:s}", "type", "cannotCalculateChanges",
-                                           "description", "search too slow");
-        }
-        else {
-            *err = jmap_server_error(r);
-        }
-        goto done;
-    }
+    r = _emailsearch_run_uidsearch(req, &search, &msgdata);
+    if (r) goto done;
 
     /* Prepare result loop */
     char email_id[JMAP_EMAILID_SIZE];
@@ -4244,7 +4300,7 @@ static void _email_querychanges_collapsed(jmap_req_t *req,
 
         // for this phase, we only care that it has a change
         if (md->modseq <= since_modseq) {
-            if (search->is_mutable) {
+            if (search.is_mutable) {
                 modseq_t modseq = md->convmodseq;
                 if (!modseq) conversation_get_modseq(req->cstate, md->cid, &modseq);
                 if (modseq > since_modseq)
@@ -4282,7 +4338,7 @@ static void _email_querychanges_collapsed(jmap_req_t *req,
             if (!(touched_id & 1)) goto doneloop;
 
             // could not possibly be old exemplar
-            if (!search->is_mutable && (touched_cid & 8)) goto doneloop;
+            if (!search.is_mutable && (touched_cid & 8)) goto doneloop;
 
             // add the destroy notice
             if (!(touched_id & 4)) {
@@ -4307,7 +4363,7 @@ static void _email_querychanges_collapsed(jmap_req_t *req,
             // haven't told the exemplar yet?  This is the exemplar!
             if (!(touched_cid & 2)) {
                 // not yet told in any way, and this ID hasn't been told at all
-                if (touched_cid == 1 && touched_id == 0 && !search->is_mutable) {
+                if (touched_cid == 1 && touched_id == 0 && !search.is_mutable) {
                     // this is both old AND new exemplar, horray.  We don't
                     // need to tell anything
                     new_touched_cid |= 8;
@@ -4331,7 +4387,7 @@ static void _email_querychanges_collapsed(jmap_req_t *req,
             // otherwise we've already told the exemplar.
 
             // could not possibly be old exemplar
-            if (!search->is_mutable && (touched_cid & 8)) goto doneloop;
+            if (!search.is_mutable && (touched_cid & 8)) goto doneloop;
 
             // OK, maybe this alive message WAS the old examplar
             if (!(touched_id & 4)) {
@@ -4358,7 +4414,7 @@ static void _email_querychanges_collapsed(jmap_req_t *req,
             hashu64_insert(md->cid, (void*)new_touched_cid, &touched_cids);
         // if the search is mutable, later changes could have
         // been earlier once, so no up_to_id is possible
-        if (!found_up_to && !search->is_mutable
+        if (!found_up_to && !search.is_mutable
                          && query->up_to_id
                          && !strcmp(email_id, query->up_to_id)) {
             found_up_to = 1;
@@ -4372,7 +4428,14 @@ static void _email_querychanges_collapsed(jmap_req_t *req,
     query->new_querystate = _email_make_querystate(modseq, 0, addrbook_modseq);
 
 done:
-    _emailsearch_free(search);
+    if (r && *err == NULL) {
+        if (r == IMAP_SEARCH_SLOW) {
+            *err = json_pack("{s:s s:s}", "type", "cannotCalculateChanges",
+                                          "description", "search too slow");
+        }
+        else *err = jmap_server_error(r);
+    }
+    _emailsearch_fini(&search);
 }
 
 static void _email_querychanges_uncollapsed(jmap_req_t *req,
@@ -4384,50 +4447,39 @@ static void _email_querychanges_uncollapsed(jmap_req_t *req,
     uint32_t since_uid;
     uint32_t num_changes = 0;
     modseq_t addrbook_modseq = 0;
-    int is_guidsearch = 0;
+    int r = 0;
 
     if (!_email_read_querystate(query->since_querystate,
                                 &since_modseq, &since_uid,
                                 &addrbook_modseq)) {
-        *err = json_pack("{s:s}", "type", "cannotCalculateChanges");
+        *err = json_pack("{s:s s:s}", "type", "cannotCalculateChanges",
+                                      "description", "invalid query state");
         return;
     }
     if (addrbook_modseq && addrbook_modseq != jmap_highestmodseq(req, MBTYPE_ADDRESSBOOK)) {
-        *err = json_pack("{s:s}", "type", "cannotCalculateChanges");
-        return;
-    }
-    if (is_guidsearch) {
-        *err = json_pack("{s:s}", "type", "cannotCalculateChanges");
+        *err = json_pack("{s:s s:s}", "type", "cannotCalculateChanges",
+                                      "description", "addressbook changed");
         return;
     }
 
-    struct emailsearch *search = _emailsearch_new(req, query->filter, query->sort,
-                                                  &contactfilter->contactgroups,
-                                                  /*want_expunged*/1,
-                                                  /*want_partids*/0,
-                                                  /*ignore_timer*/0);
-    if (!search) {
-        *err = jmap_server_error(IMAP_INTERNAL);
-        goto done;
-    }
-    if (!_email_query_can_calculate_changes(search)) {
-        *err = json_pack("{s:s}", "type", "cannotCalculateChanges");
+    struct emailsearch search;
+    _emailsearch_init(&search, req, query->filter, query->sort,
+                      &contactfilter->contactgroups,
+                      /*want_expunged*/1,
+                      /*want_partids*/0,
+                      /*ignore_timer*/0, err);
+    if (*err) goto done;
+
+    if (!_email_query_is_mutable_search(&search)) {
+        *err = json_pack("{s:s s:s}", "type", "cannotCalculateChanges",
+                                      "description", "mutable search");
         goto done;
     }
 
     /* Run search */
     const ptrarray_t *msgdata = NULL;
-    int r = _emailsearch_run_uidsearch(req, search, &msgdata);
-    if (r) {
-        if (r == IMAP_SEARCH_SLOW) {
-            *err = json_pack("{s:s, s:s}", "type", "cannotCalculateChanges",
-                                           "description", "search too slow");
-        }
-        else {
-            *err = jmap_server_error(r);
-        }
-        goto done;
-    }
+    r = _emailsearch_run_uidsearch(req, &search, &msgdata);
+    if (r) goto done;
 
     /* Prepare result loop */
     char email_id[JMAP_EMAILID_SIZE];
@@ -4496,7 +4548,7 @@ static void _email_querychanges_uncollapsed(jmap_req_t *req,
 
         // if it's changed, tell about that
         if ((touched_id & 1)) {
-            if (!search->is_mutable && touched_id == 1 && md->modseq <= since_modseq) {
+            if (!search.is_mutable && touched_id == 1 && md->modseq <= since_modseq) {
                 // this is the exemplar, and it's unchanged,
                 // and we haven't told a removed yet, so we
                 // can just suppress everything
@@ -4526,7 +4578,7 @@ static void _email_querychanges_uncollapsed(jmap_req_t *req,
             hash_insert(email_id, (void*)new_touched_id, &touched_ids);
         // if the search is mutable, later changes could have
         // been earlier once, so no up_to_id is possible
-        if (!found_up_to && !search->is_mutable
+        if (!found_up_to && !search.is_mutable
                          && query->up_to_id
                          && !strcmp(email_id, query->up_to_id)) {
             found_up_to = 1;
@@ -4539,7 +4591,14 @@ static void _email_querychanges_uncollapsed(jmap_req_t *req,
     query->new_querystate = _email_make_querystate(modseq, 0, addrbook_modseq);
 
 done:
-    _emailsearch_free(search);
+    if (r && *err == NULL) {
+        if (r == IMAP_SEARCH_SLOW) {
+            *err = json_pack("{s:s s:s}", "type", "cannotCalculateChanges",
+                                          "description", "search too slow");
+        }
+        else *err = jmap_server_error(r);
+    }
+    _emailsearch_fini(&search);
 }
 
 static int jmap_email_querychanges(jmap_req_t *req)
@@ -4597,27 +4656,24 @@ done:
 
 static void _email_changes(jmap_req_t *req, struct jmap_changes *changes, json_t **err)
 {
+    int r = 0;
+
     /* Run search */
     json_t *filter = json_pack("{s:o}", "sinceEmailState",
                                jmap_fmtstate(changes->since_modseq));
     json_t *sort = json_pack("[{s:s}]", "property", "emailState");
 
-    struct emailsearch *search = _emailsearch_new(req, filter, sort,
-                                                  /*contactgroups*/NULL,
-                                                  /*want_expunged*/1,
-                                                  /*want_partids*/0,
-                                                  /*ignore_timer*/1);
-    if (!search) {
-        *err = jmap_server_error(IMAP_INTERNAL);
-        goto done;
-    }
+    struct emailsearch search;
+    _emailsearch_init(&search, req, filter, sort,
+                      /*contactgroups*/NULL,
+                      /*want_expunged*/1,
+                      /*want_partids*/0,
+                      /*ignore_timer*/1, err);
+    if (*err) goto done;
 
     const ptrarray_t *msgdata = NULL;
-    int r = _emailsearch_run_uidsearch(req, search, &msgdata);
-    if (r) {
-        *err = jmap_server_error(r);
-        goto done;
-    }
+    r = _emailsearch_run_uidsearch(req, &search, &msgdata);
+    if (r) goto done;
 
     /* Process results */
     char email_id[JMAP_EMAILID_SIZE];
@@ -4688,7 +4744,14 @@ static void _email_changes(jmap_req_t *req, struct jmap_changes *changes, json_t
 done:
     json_decref(filter);
     json_decref(sort);
-    _emailsearch_free(search);
+    if (r && *err == NULL) {
+        if (r == IMAP_SEARCH_SLOW) {
+            *err = json_pack("{s:s s:s}", "type", "cannotCalculateChanges",
+                                          "description", "search too slow");
+        }
+        else *err = jmap_server_error(r);
+    }
+    _emailsearch_fini(&search);
 }
 
 static int jmap_email_changes(jmap_req_t *req)
@@ -4724,27 +4787,24 @@ done:
 static void _thread_changes(jmap_req_t *req, struct jmap_changes *changes, json_t **err)
 {
     conversation_t conv = CONVERSATION_INIT;
+    int r = 0;
 
     /* Run search */
     json_t *filter = json_pack("{s:o}", "sinceEmailState",
                                jmap_fmtstate(changes->since_modseq));
     json_t *sort = json_pack("[{s:s}]", "property", "emailState");
-    struct emailsearch *search = _emailsearch_new(req, filter, sort,
-                                                  /*contactgroups*/NULL,
-                                                  /*want_expunged*/1,
-                                                  /*want_partids*/0,
-                                                  /*ignore_timer*/1);
-    if (!search) {
-        *err = jmap_server_error(IMAP_INTERNAL);
-        goto done;
-    }
+
+    struct emailsearch search;
+    _emailsearch_init(&search, req, filter, sort,
+                      /*contactgroups*/NULL,
+                      /*want_expunged*/1,
+                      /*want_partids*/0,
+                      /*ignore_timer*/1, err);
+    if (*err) goto done;
 
     const ptrarray_t *msgdata = NULL;
-    int r = _emailsearch_run_uidsearch(req, search, &msgdata);
-    if (r) {
-        *err = jmap_server_error(r);
-        goto done;
-    }
+    r = _emailsearch_run_uidsearch(req, &search, &msgdata);
+    if (r) goto done;
 
     /* Process results */
     size_t changes_count = 0;
@@ -4801,7 +4861,14 @@ done:
     conversation_fini(&conv);
     json_decref(filter);
     json_decref(sort);
-    _emailsearch_free(search);
+    if (r && *err == NULL) {
+        if (r == IMAP_SEARCH_SLOW) {
+            *err = json_pack("{s:s s:s}", "type", "cannotCalculateChanges",
+                                          "description", "search too slow");
+        }
+        else *err = jmap_server_error(r);
+    }
+    _emailsearch_fini(&search);
 }
 
 static int jmap_thread_changes(jmap_req_t *req)
@@ -4882,7 +4949,7 @@ static int _snippet_get(jmap_req_t *req, json_t *filter,
     strarray_t perf_filters = STRARRAY_INITIALIZER;
     searchargs = new_searchargs(NULL/*tag*/, GETSEARCH_CHARSET_FIRST,
                                 &jmap_namespace, req->userid, req->authstate, 0);
-    searchargs->root = _email_buildsearch(req, filter, /*contactgroups*/NULL, &perf_filters);
+    searchargs->root = _email_buildsearchexpr(req, filter, NULL, NULL, &perf_filters);
     strarray_fini(&perf_filters);
 
     /* Build the search query */

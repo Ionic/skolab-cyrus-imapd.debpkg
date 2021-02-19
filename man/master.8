@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "MASTER" "8" "January 27, 2021" "3.4.0" "Cyrus IMAP"
+.TH "MASTER" "8" "February 19, 2021" "3.4.0" "Cyrus IMAP"
 .SH NAME
 master \- Cyrus IMAP documentation
 .
@@ -43,7 +43,7 @@ The Cyrus IMAP master process.
 .sp
 \fBmaster\fP is the process that controls all of the Cyrus
 processes. This process is responsible for creating all imapd, pop3d,
-lmtpd and sieved child processes. This process also performs scheduled
+lmtpd and timsieved child processes. This process also performs scheduled
 cleanup/maintenance.
 .sp
 If this process dies, then no new sessions will be started.

@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "SQUATTER" "8" "January 27, 2021" "3.4.0" "Cyrus IMAP"
+.TH "SQUATTER" "8" "February 19, 2021" "3.4.0" "Cyrus IMAP"
 .SH NAME
 squatter \- Cyrus IMAP documentation
 .
@@ -149,7 +149,7 @@ Use the specified configuration file \fIconfig\-file\fP rather than the default 
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-a
+.B \-a, \-\-squat\-annot
 Only create indexes for mailboxes which have the shared
 \fI/vendor/cmu/cyrus\-imapd/squat\fP annotation set to "true".
 .sp
@@ -164,28 +164,28 @@ implicit value of \fI/vendor/cmu/cyrus\-imapd/squat\fP is "false".
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-A
-Missing documentation, starts audit mode.
+.B \-A, \-\-audit
+Audits the specified mailboxes (or all), reports any unindexed messages.
 This feature is only available on the master branch.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-d
+.B \-d, \-\-nodaemon
 In rolling mode, don\(aqt background and do emit log messages on
 standard error.  Useful for debugging.
 This feature was introduced in version 3.0.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-B
+.B \-B, \-\-skip\-locked
 In compact mode, use non\-blocking lock to start and skip any
 users who have their xapianactive file locked at the time (i.e
 another reindex task)
-This feature was introduced in version 3.0.
+This feature is only available on the master branch.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-F
+.B \-F, \-\-filter
 In compact mode, filter the resulting database to only include
 messages which are not expunged in mailboxes with existing
 name/uidvalidity.
@@ -193,30 +193,30 @@ This feature was introduced in version 3.0.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-f synclogfile
+.B \-f synclogfile, \-\-synclog=synclogfile
 Read the \fIsynclogfile\fP and incrementally index all the mailboxes
 listed therein, then exit.
 This feature was introduced in version 3.0.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-h
+.B \-h, \-\-help
 Display this usage information.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-i
+.B \-i, \-\-incremental
 Incremental updates where indexes already exist.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-N name
+.B \-N name, \-\-name=name
 Only index mailboxes beginning with \fIname\fP while iterating through
 the mailbox list derived from other options.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-n channel
+.B \-n channel, \-\-channel=channel
 In rolling mode, specify the name of the sync log \fIchannel\fP that
 \fBsquatter\fP will listen to.  The default is "squatter".  This
 channel \fBmust\fP be defined in imapd.conf(5) before
@@ -225,14 +225,14 @@ This feature was introduced in version 3.0.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-o
+.B \-o, \-\-copydb
 In compact mode, if only one source database is selected, just copy
 it to the destination rather than compacting.
 This feature was introduced in version 3.0.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-p
+.B \-p, \-\-allow\-partials
 .INDENT 7.0
 .INDENT 3.5
 When indexing, allow messages to be partially indexed. This may
@@ -246,16 +246,31 @@ This feature is only available on the master branch.
 .UNINDENT
 .INDENT 7.0
 .TP
-.B \-P
+.B \-P, \-\-reindex\-partials
 When reindexing, then attempt to reindex any partially indexed
 messages (see \fB\-p\fP). Setting this flag implies \fB\-Z\fP\&.
+Xapian only.
+This feature is only available on the master branch.
+.UNINDENT
+.INDENT 7.0
+.TP
+.B \-L, \-\-reindex\-minlevel=level
+When reindexing, index all messages that have an index level
+less than level. Currently, Cyrus only supports two index levels:
+A message for which attachment indexing was never attempted has
+index level 1. A message that has indexed attachments, or does not
+contain attachments, has index level 3. Consequently, running
+squatter with minlevel set to 3 will cause it to attempt reindexing
+all messages, for which attachment indexing never was attempted.
+Future Cyrus versions may introduce additional levels. Setting
+this flag implies \fB\-Z\fP\&.
 Xapian only.
 This feature is only available on the master branch.
 .UNINDENT
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-R
+.B \-R, \-\-rolling
 Run in rolling mode; \fBsquatter\fP runs as a daemon listening to a
 sync log channel and continuously incrementally indexing mailboxes.
 See also \fB\-d\fP and \fB\-n\fP\&.
@@ -263,20 +278,33 @@ This feature was introduced in version 3.0.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-r
+.B \-r, \-\-recursive
 Recursively create indexes for all sub\-mailboxes of the user,
 mailboxes or mailbox prefixes given as arguments.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-S seconds
+.B \-s, \-\-squat\-skip[=delta]
+Skip mailboxes that have not been modified since last index. This is
+achieved by comparing the last modification time of a mailbox to
+the last time the squat index of this mailbox got updated. If the
+mailbox modification time (plus delta) is less than the squat
+index modification time, then the mailbox is skipped. The optional
+argument value delta is defined in seconds and must be equal to or
+higher than zero, the default value is 60.
+Squat only.
+This feature is only available on the master branch.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-S seconds, \-\-sleep=seconds
 After processing each mailbox, sleep for "seconds" before
 continuing. Can be used to provide some load balancing.  Accepts
 fractional amounts. This feature was introduced in version 3.0.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-T reindextiers
+.B \-T reindextiers, \-\-reindex\-tier=reindextiers
 In compact mode, a comma\-separated subset of the source tiers
 (see \fB\-t\fP) to be reindexed.  Similar to \fB\-X\fP but allows
 limiting the tiers that will be reindexed.
@@ -284,7 +312,7 @@ This feature was introduced in version 3.0.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-t srctier...
+.B \-t srctiers, \-\-srctier=srctiers
 In compact mode, the comma\-separated source tier(s) for the compacted
 indices.  At least one source tier must be specified in compact mode.
 Xapian only.
@@ -292,21 +320,21 @@ This feature was introduced in version 3.0.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-u
+.B \-u name, \-\-user=name
 Extra options refer to usernames (e.g. \fI\%foo@bar.com\fP) rather than
 mailbox names.  Usernames are space\-separated.
 This feature was introduced in version 3.0.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-U
+.B \-U, \-\-only\-upgrade
 In compact mode, only compact if re\-indexing.
 Xapian only.
 This feature is only available on the master branch.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-v
+.B \-v, \-\-verbose
 Increase the verbosity of progress/status messages.  Sometimes additional messages
 are emitted on the terminal with this option and the messages are unconditionally sent
 to syslog.  Sometimes messages are sent to syslog, only if \-v is provided.  In rolling and
@@ -314,7 +342,7 @@ synclog modes, \-vv sends even more messages to syslog.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-X
+.B \-X, \-\-reindex
 Reindex all the messages before compacting.  This mode reads all
 the lists of messages indexed by the listed tiers, and re\-indexes
 them into a temporary database before compacting that into place.
@@ -323,7 +351,7 @@ This feature was introduced in version 3.0.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-z desttier
+.B \-z desttier, \-\-compact=desttier
 In compact mode, the destination tier for the compacted indices.
 This must be specified in compact mode.
 Xapian only.
@@ -331,7 +359,7 @@ This feature was introduced in version 3.0.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-Z
+.B \-Z, \-\-internalindex
 When indexing messages, use the Xapian internal cyrusid rather than
 referencing the ranges of already indexed messages to know if a
 particular message is indexed.  Useful if the ranges get out of

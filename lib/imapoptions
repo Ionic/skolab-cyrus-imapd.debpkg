@@ -1383,7 +1383,7 @@ Blank lines and lines beginning with ``#'' are ignored.
 /* Path to a directory with CA (Certificate Authority) certificates. */
 
 { "ldap_ca_file", NULL, STRING, "2.5.0" }
-/* Patch to a file containing CA (Certificate Authority) certificate(s). */
+/* Path to a file containing CA (Certificate Authority) certificate(s). */
 
 { "ldap_ciphers", NULL, STRING, "2.5.0" }
 /* List of SSL/TLS ciphers to allow.  The format of the string is
@@ -2244,7 +2244,7 @@ If all partitions are over that limit, this feature is not used anymore.
 /* Whether to index headers other than From, To, Cc, Bcc, and Subject.
    Experiment shows that some headers such as Received and DKIM-Signature
    can contribute up to 2/3rds of the index size but almost nothing to
-   the utility of searching.  Note that is header indexing is disabled,
+   the utility of searching.  Note that if header indexing is disabled,
    headers can still be searched, the searches will just be slower.
  */
 

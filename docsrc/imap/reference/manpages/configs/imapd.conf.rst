@@ -2598,7 +2598,7 @@ FIELD DESCRIPTIONS
 
     ``ldap_ca_file:`` <none>
 
-        Patch to a file containing CA (Certificate Authority) certificate(s). 
+        Path to a file containing CA (Certificate Authority) certificate(s). 
 
 
     .. endblob ldap_ca_file
@@ -4222,7 +4222,7 @@ FIELD DESCRIPTIONS
         Whether to index headers other than From, To, Cc, Bcc, and Subject.
         Experiment shows that some headers such as Received and DKIM-Signature
         can contribute up to 2/3rds of the index size but almost nothing to
-        the utility of searching.  Note that is header indexing is disabled,
+        the utility of searching.  Note that if header indexing is disabled,
         headers can still be searched, the searches will just be slower.
 
 
