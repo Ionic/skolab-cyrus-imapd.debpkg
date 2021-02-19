@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "IMAPD.CONF" "5" "January 27, 2021" "3.4.0" "Cyrus IMAP"
+.TH "IMAPD.CONF" "5" "February 19, 2021" "3.4.0" "Cyrus IMAP"
 .SH NAME
 imapd.conf \- Cyrus IMAP documentation
 .
@@ -2311,7 +2311,7 @@ Path to a directory with CA (Certificate Authority) certificates.
 \fBldap_ca_file:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-Patch to a file containing CA (Certificate Authority) certificate(s).
+Path to a file containing CA (Certificate Authority) certificate(s).
 .UNINDENT
 .UNINDENT
 .sp
@@ -3752,7 +3752,7 @@ enable fuzzy search for regular SEARCH commands.
 Whether to index headers other than From, To, Cc, Bcc, and Subject.
 Experiment shows that some headers such as Received and DKIM\-Signature
 can contribute up to 2/3rds of the index size but almost nothing to
-the utility of searching.  Note that is header indexing is disabled,
+the utility of searching.  Note that if header indexing is disabled,
 headers can still be searched, the searches will just be slower.
 .UNINDENT
 .UNINDENT

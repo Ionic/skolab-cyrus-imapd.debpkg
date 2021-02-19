@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System Architecture &mdash; Cyrus IMAP 3.4.0-beta2 documentation</title>
+  <title>System Architecture &mdash; Cyrus IMAP 3.4.0-beta3 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.0-beta2 documentation" href="../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.0-beta3 documentation" href="../../index.html"/>
         <link rel="up" title="Administrator Guide" href="admin.html"/>
         <link rel="next" title="File &amp; Directory Locations" href="admin/locations.html"/>
         <link rel="prev" title="Administrator Guide" href="admin.html"/> 
@@ -763,7 +763,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html">Docs v3.4.0-beta2</a> &raquo;</li>
+      <li><a href="../../index.html">Docs v3.4.0-beta3</a> &raquo;</li>
       
           <li><a href="../../operations.html">Operations</a> &raquo;</li>
       
@@ -868,8 +868,8 @@ for more information.</p>
 <p>Replication is not Aggregation or <a class="reference internal" href="#architecture-murder"><span class="std std-ref">Cyrus Murder</span></a>.
 Replication provides high availability and hot backups. It is designed to
 replicate the mailstore on a standalone Cyrus install, or multiple backend
-servers in a <a class="reference internal" href="#architecture-murder"><span class="std std-ref">murder</span></a> configuration. (It does
-not replicate mupdate master servers (frontends have no state to replicate).</p>
+servers in a <a class="reference internal" href="#architecture-murder"><span class="std std-ref">murder</span></a> configuration. It does
+not replicate mupdate master servers: frontends have no state to replicate.</p>
 <a class="reference internal image-reference" href="../../_images/image3-replication.jpg"><img alt="Cyrus replication architecture" class="align-center" src="../../_images/image3-replication.jpg" style="width: 507px; height: 385px;" /></a>
 <p>A replication master is configured with a number of <strong>channels</strong>: each
 channel defines the set of replicas the master is replicating to, and
@@ -971,7 +971,7 @@ the same as running <code class="docutils literal"><span class="pre">sync_client
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Aug 26 2016
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jan 16 2021
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -991,7 +991,7 @@ the same as running <code class="docutils literal"><span class="pre">sync_client
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'3.4.0-beta2',
+            VERSION:'3.4.0-beta3',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
