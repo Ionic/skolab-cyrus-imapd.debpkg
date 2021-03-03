@@ -18,6 +18,13 @@ cyrus-imapd (3.4.0~beta1-1) experimental; urgency=medium
 
  -- Xavier Guimard <yadd@debian.org>  Fri, 08 Jan 2021 06:00:24 +0100
 
+cyrus-imapd (3.2.5-3) unstable; urgency=medium
+
+  * Indicate that cyrus-imapd breaks+replaces cyrus-common < 3.2.3~
+    (Closes: #983887)
+
+ -- Yadd <yadd@debian.org>  Wed, 03 Mar 2021 07:44:59 +0100
+
 cyrus-imapd (3.2.5-2) unstable; urgency=medium
 
   * Enable JMAP support (Closes: #976905)
