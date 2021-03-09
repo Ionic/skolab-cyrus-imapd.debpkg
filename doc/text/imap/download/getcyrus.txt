@@ -37,7 +37,7 @@ The Cyrus team produce packaged tarballs containing full source and
 pre-built documentation.
 
 Download a versioned tarball using HTTPS. Latest stable version is
-3.2.5.
+3.2.6.
 
 Extract the tarball:
 

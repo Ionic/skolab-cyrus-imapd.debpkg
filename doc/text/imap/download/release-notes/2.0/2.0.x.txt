@@ -9,9 +9,9 @@ Changes to the Cyrus IMAP Server since 2.0.16
 * altnamespace: it is now possible to display user mailboxes as
   siblings to the INBOX at the top-level (Ken Murchison)
 
-* unixhierarchysep: it is now possible possible to use slash as the
-  hierarchy seperator, instead of a period. (Ken Murchison, inspired
-  by David Fuchs, dfuchs@uniserve.com)
+* unixhierarchysep: it is now possible to use slash as the hierarchy
+  separator, instead of a period. (Ken Murchison, inspired by David
+  Fuchs, dfuchs@uniserve.com)
 
 * SSL/TLS session caching (Ken Murchison)
 

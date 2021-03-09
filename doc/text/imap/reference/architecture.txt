@@ -96,8 +96,8 @@ Replication
 Replication is not Aggregation or Cyrus Murder. Replication provides
 high availability and hot backups. It is designed to replicate the
 mailstore on a standalone Cyrus install, or multiple backend servers
-in a murder configuration. (It does not replicate mupdate master
-servers (frontends have no state to replicate).
+in a murder configuration. It does not replicate mupdate master
+servers: frontends have no state to replicate.
 
 [image: Cyrus replication architecture][image]
 

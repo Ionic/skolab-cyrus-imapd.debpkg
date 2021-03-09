@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "RECONSTRUCT" "8" "November 30, 2020" "3.2.5" "Cyrus IMAP"
+.TH "RECONSTRUCT" "8" "March 09, 2021" "3.2.6" "Cyrus IMAP"
 .SH NAME
 reconstruct \- Cyrus IMAP documentation
 .
@@ -37,22 +37,21 @@ Reconstruct mailboxes
 .nf
 \fBreconstruct\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-p\fP \fIpartition\fP ] [ \fB\-x\fP ] [ \fB\-r\fP ]
     [ \fB\-f\fP ] [ \fB\-U\fP ] [ \fB\-s\fP ] [ \fB\-q\fP ] [ \fB\-G\fP ] [ \fB\-R\fP ] [ \fB\-o\fP ]
-    [ \fB\-O\fP ] [ \fB\-M\fP ] [ \fB\-V\fP \fIversion\fP ] \fImailbox\fP\&...
+    [ \fB\-O\fP ] [ \fB\-M\fP ] \fImailbox\fP\&...
 
 \fBreconstruct\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-p\fP \fIpartition\fP ] [ \fB\-x\fP ] [ \fB\-r\fP ]
     [ \fB\-f\fP ] [ \fB\-U\fP ] [ \fB\-s\fP ] [ \fB\-q\fP ] [ \fB\-G\fP ] [ \fB\-R\fP ] [ \fB\-o\fP ]
-    [ \fB\-O\fP ] [ \fB\-M\fP ] [ \fB\-u\fP ] \fIusers\fP\&...
+    [ \fB\-O\fP ] [ \fB\-M\fP ] \fB\-u\fP \fIuser\fP\&...
 
-\fBreconstruct\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-p\fP \fIpartition\fP ] [ \fB\-x\fP ] [ \fB\-r\fP ]
-    [ \fB\-f\fP ] [ \fB\-U\fP ] [ \fB\-s\fP ] [ \fB\-q\fP ] [ \fB\-G\fP ] [ \fB\-R\fP ] [ \fB\-o\fP ]
-    [ \fB\-O\fP ] [ \fB\-M\fP ] \fB\-V\fP \fI<version>\fP [ \fB\-u\fP \fIusers\fP ]
+\fBreconstruct\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-p\fP \fIpartition\fP ] [ \fB\-r\fP ]
+    [ \fB\-q\fP ] \fB\-V\fP \fIversion\fP \fImailbox\fP\&...
 
-\fBreconstruct\fP [ \fB\-C\fP \fIconfig\-file\fP ] \fB\-m\fP
+\fBreconstruct\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-p\fP \fIpartition\fP ] [ \fB\-r\fP ]
+    [ \fB\-q\fP ] \fB\-V\fP \fIversion\fP \fB\-u\fP \fIuser\fP\&...
 .fi
 .SH DESCRIPTION
 .sp
-\fBreconstruct\fP rebuilds one or more IMAP mailboxes.  When invoked with
-the \fB\-m\fP switch, it rebuilds the master mailboxes file.  It can be
+\fBreconstruct\fP rebuilds one or more IMAP mailboxes.  It can be
 used to recover from almost any sort of data corruption.
 .sp
 If \fBreconstruct\fP can find existing header and index files, it
@@ -73,7 +72,10 @@ root files.
 .sp
 When upgrading versions of Cyrus software, it may be necessary to run
 \fBreconstruct\fP with the \fB\-V\fP option, to rebuild indexes to a
-given version, (or \fImax\fP for the most recent).
+given version (or \fImax\fP for the most recent).  Note that the \fB\-V\fP
+option cannot be combined with most other reconstruct options.  If
+a mailbox needs reconstructing you should do that first, and then
+upgrade it with \fB\-V\fP once it\(aqs good.
 .SH OPTIONS
 .INDENT 0.0
 .TP
@@ -124,8 +126,7 @@ Emit less verbose information to syslog.
 .INDENT 0.0
 .TP
 .B \-n
-Don\(aqt make any changes.  This gives equivalent behaviour to
-chk_cyrus(8) where problems are reported, but not fixed.
+Don\(aqt make any changes.  Problems are reported, but not fixed.
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -181,7 +182,7 @@ other way around.  This feature was introduced in version 3.0.
 .UNINDENT
 .INDENT 0.0
 .TP
-.B \-V  version
+.B \-V version
 Change the \fBcyrus.index\fP minor version to a specific \fIversion\fP\&.
 This can be useful for upgrades or downgrades. Use a magical
 version of \fImax\fP to upgrade to the latest available database format
@@ -191,16 +192,6 @@ version.
 .TP
 .B \-u
 Instead of mailbox prefixes, give usernames on the command line
-.UNINDENT
-.INDENT 0.0
-.TP
-.B \-m
-NOTE:
-CURRENTLY UNAVAILABLE
-.sp
-Rebuild the \fImailboxes\fP file.  Use whatever data in the existing
-\fImailboxes\fP file it can scavenge, then scans all partitions listed
-in the imapd.conf(5) file for additional mailboxes.
 .UNINDENT
 .SH EXAMPLES
 .sp
