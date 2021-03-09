@@ -18,6 +18,12 @@ cyrus-imapd (3.4.0~beta1-1) experimental; urgency=medium
 
  -- Xavier Guimard <yadd@debian.org>  Fri, 08 Jan 2021 06:00:24 +0100
 
+cyrus-imapd (3.2.6-1) unstable; urgency=medium
+
+  * New upstream version 3.2.6
+
+ -- Yadd <yadd@debian.org>  Tue, 09 Mar 2021 07:37:35 +0100
+
 cyrus-imapd (3.2.5-3) unstable; urgency=medium
 
   * Indicate that cyrus-imapd breaks+replaces cyrus-common < 3.2.3~
