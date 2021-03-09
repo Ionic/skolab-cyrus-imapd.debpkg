@@ -52,6 +52,8 @@ Major changes since the 3.0.x series
 
 * Support for HTTP/2.0
 
+* Support for SCRAM authentication for httpd
+
 * Experimental support for Zeroskip database format
 
 * Intermediate mailboxes are now recorded in mailboxes database

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>HTTP modules &mdash; Cyrus IMAP 3.2.5 documentation</title>
+  <title>HTTP modules &mdash; Cyrus IMAP 3.2.6 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.6 documentation" href="../../../index.html"/>
         <link rel="up" title="Installing Cyrus" href="../../installing.html"/>
         <link rel="next" title="CalDAV" href="http/caldav.html"/>
         <link rel="prev" title="Installing Cyrus" href="../../installing.html"/> 
@@ -327,7 +327,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../installing.html#launch-cyrus">Launch Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../installing.html#send-a-test-email">Send a test email</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../installing.html#checking-carddav-and-carddav">Checking CardDAV and CardDAV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../installing.html#checking-carddav-and-caldav">Checking CardDAV and CalDAV</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../installing.html#troubleshooting">Troubleshooting</a></li>
 </ul>
 </li>
@@ -760,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.2.5</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.2.6</a> &raquo;</li>
       
           <li><a href="../../../setup.html">Setup</a> &raquo;</li>
       
@@ -836,7 +836,7 @@ collections and <span class="target" id="index-2"></span><a class="rfc reference
 <dt>Other (RSS, static content)</dt>
 <dd><ul class="first last">
 <li>Serves static content (such as the RSS feed list template and the
-CalDAV/CardDAV web GUIs ).</li>
+CalDAV/CardDAV web GUIs).</li>
 <li>Serves IMAP mailboxes as RSS feeds.</li>
 </ul>
 </dd>
@@ -878,9 +878,9 @@ have the ability to execute any server-side scripts.</p>
 <p>As with other Cyrus services, the Cyrus httpd service uses
 <a class="reference external" href="https://www.cyrusimap.org/sasl/index.html#sasl-index" title="(in Cyrus SASL v2.1.27)"><span class="xref std std-ref">Cyrus SASL</span></a> to perform
 its authentication. Cyrus supports the following HTTP authentication schemes:
-Basic, Digest, Negotiate (Kerberos only), and NTLM. While Basic and NTLM are available in
-all versions of SASL, the remaining schemes are only available in Cyrus SASL
-2.1.16 (and higher).</p>
+Basic, Digest, Negotiate (Kerberos only), NTLM, SCRAM-SHA-1, and SCRAM-SHA-256.
+While Basic and NTLM are available in all versions of SASL, the remaining schemes
+are only available in Cyrus SASL 2.1.16 (and higher).</p>
 <div class="sidebar">
 <p class="first sidebar-title">allowplaintext</p>
 <blockquote>
@@ -903,9 +903,9 @@ the HTTP Basic authentication scheme based on the <code class="docutils literal"
 whether the client has connected over a TLS protected connection (HTTPS).</p>
 <p>The availability of the other HTTP authentication schemes is controlled by the
 <a class="reference external" href="https://www.cyrusimap.org/sasl/sasl/options.html#options" title="(in Cyrus SASL v2.1.27)"><span class="xref std std-ref">SASL mech_list option</span></a> option. For Cyrus httpd
-the DIGEST-MD5, GSS-SPNEGO, and NTLM SASL
-plugins support the Digest, Negotiate, and NTLM authentication schemes
-respectively, provided that these plugins are installed on the server.</p>
+the DIGEST-MD5, GSS-SPNEGO, NTLM, SCRAM-SHA-1, and SCRAM-SHA-256 values enable
+support for the Digest, Negotiate, NTLM, SCRAM-SHA-1, and SCRAM-SHA-256 authentication
+schemes respectively, provided that the plugins are installed on the server.</p>
 </div>
 </div>
 <div class="section" id="module-specific-information">
@@ -1020,7 +1020,7 @@ needs to be customized to your specific hostnames.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on May 29 2019
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jan 16 2021
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1040,7 +1040,7 @@ needs to be customized to your specific hostnames.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.2.5',
+            VERSION:'3.2.6',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

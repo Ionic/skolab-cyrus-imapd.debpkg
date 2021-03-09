@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Cyrus IMAP 2.2.x Release Notes &mdash; Cyrus IMAP 3.2.5 documentation</title>
+  <title>Cyrus IMAP 2.2.x Release Notes &mdash; Cyrus IMAP 3.2.6 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.6 documentation" href="../../../../index.html"/>
         <link rel="up" title="Release Notes" href="../index.html"/>
         <link rel="next" title="Cyrus IMAP 2.3 Releases" href="../2.3/index.html"/>
         <link rel="prev" title="Cyrus IMAP 2.1.x Release Notes" href="../2.1/2.1.x.html"/> 
@@ -327,7 +327,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../installing.html#launch-cyrus">Launch Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../installing.html#send-a-test-email">Send a test email</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../installing.html#checking-carddav-and-carddav">Checking CardDAV and CardDAV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../installing.html#checking-carddav-and-caldav">Checking CardDAV and CalDAV</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../installing.html#troubleshooting">Troubleshooting</a></li>
 </ul>
 </li>
@@ -760,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.2.5</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.2.6</a> &raquo;</li>
       
           <li><a href="../../../../download.html">Download</a> &raquo;</li>
       
@@ -849,12 +849,12 @@
 <p>Changes to the Cyrus IMAP Server since 2.2.5</p>
 <ul class="simple">
 <li>Fix a bug in the proxy code where a backend connection might get closed twice</li>
-<li>Improved consistancy checking in chk_cyrus</li>
+<li>Improved consistency checking in chk_cyrus</li>
 <li>Fix segfault in APPEND code</li>
 <li>Fix a bug with an interaction between sieve and unixhierarchysep</li>
 <li>Fix a file descriptor leak in the quotadb code</li>
 <li>Fix a triggered assertation in service-thread services</li>
-<li>Add a number of internal consistancy checks to the skiplist code</li>
+<li>Add a number of internal consistency checks to the skiplist code</li>
 <li>Allow mbpath to handle virtual domains</li>
 <li>Fix various MANAGESIEVE client authentication issues</li>
 <li>Other minor fixes</li>
@@ -922,7 +922,7 @@
 </ul>
 <p>Changes to the Cyrus IMAP Server since 2.1.x</p>
 <ul class="simple">
-<li>There have been extensive performance and consistancy changes to the configuration subsystem. This will both ensure greater consistancy between the documentation and the code, as well as a more standard format for specifing service-specific configuration options in imapd.conf. Important changes are detailed here:</li>
+<li>There have been extensive performance and consistency changes to the configuration subsystem. This will both ensure greater consistency between the documentation and the code, as well as a more standard format for specifing service-specific configuration options in imapd.conf. Important changes are detailed here:</li>
 <li>The tls_[service]_* configuration options have been removed. Now use [servicename]_tls_*, where servicename is the service identifier from cyrus.conf for that particular process.</li>
 <li>Administrative groups (e.g. admins and lmtp_admins) no longer union, service groups completely override the generic group.</li>
 <li>lmtp_allowplaintext is no longer a defined parameter and must be specified using the service name of your lmtp process if you require a specific value</li>
@@ -958,7 +958,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Aug 26 2016
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jan 16 2021
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -978,7 +978,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.2.5',
+            VERSION:'3.2.6',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
