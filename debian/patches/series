@@ -7,5 +7,3 @@
 0011-Fix-extra-libpci-in-SNMP_LIBS.patch
 0012-Use-UnicodeData.txt-from-system.patch
 0018-increase-test-timeout.patch
-#0019-fix-tests.patch
-#0020-disable-some-tests.patch

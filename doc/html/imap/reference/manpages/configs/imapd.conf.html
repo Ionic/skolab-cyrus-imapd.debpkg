@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>imapd.conf &mdash; Cyrus IMAP 3.2.5 documentation</title>
+  <title>imapd.conf &mdash; Cyrus IMAP 3.2.6 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.2.5 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.2.6 documentation" href="../../../../index.html"/>
         <link rel="up" title="Man pages" href="../commands.html"/>
         <link rel="next" title="krb.equiv" href="krb.equiv.html"/>
         <link rel="prev" title="cyrus.conf" href="cyrus.conf.html"/> 
@@ -327,7 +327,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../installing.html#launch-cyrus">Launch Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../installing.html#send-a-test-email">Send a test email</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../installing.html#checking-carddav-and-carddav">Checking CardDAV and CardDAV</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../installing.html#checking-carddav-and-caldav">Checking CardDAV and CalDAV</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../installing.html#troubleshooting">Troubleshooting</a></li>
 </ul>
 </li>
@@ -760,7 +760,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.2.5</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.2.6</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -2081,7 +2081,7 @@ assumed.</p>
 <div>Path to a directory with CA (Certificate Authority) certificates.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">ldap_ca_file:</span></code> &lt;none&gt;</p>
 <blockquote>
-<div>Patch to a file containing CA (Certificate Authority) certificate(s).</div></blockquote>
+<div>Path to a file containing CA (Certificate Authority) certificate(s).</div></blockquote>
 <p><code class="docutils literal"><span class="pre">ldap_ciphers:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>List of SSL/TLS ciphers to allow.  The format of the string is
@@ -2859,7 +2859,7 @@ enable fuzzy search for regular SEARCH commands.</div></blockquote>
 <div>Whether to index headers other than From, To, Cc, Bcc, and Subject.
 Experiment shows that some headers such as Received and DKIM-Signature
 can contribute up to 2/3rds of the index size but almost nothing to
-the utility of searching.  Note that is header indexing is disabled,
+the utility of searching.  Note that if header indexing is disabled,
 headers can still be searched, the searches will just be slower.</div></blockquote>
 <p><code class="docutils literal"><span class="pre">search_indexed_db:</span></code> twoskip</p>
 <blockquote>
@@ -3690,7 +3690,7 @@ on HTTP 1.1 using a RESTful architecture</div></blockquote>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.2.5',
+            VERSION:'3.2.6',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

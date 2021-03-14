@@ -139,6 +139,8 @@ Depends: cyrus-common (= ${binary:Version}),
 Recommends: rsync
 Pre-Depends: ${misc:Pre-Depends}
 Conflicts: imap-server
+Breaks: cyrus-common (<< 3.2.3~)
+Replaces: cyrus-common (<< 3.2.3~)
 Provides: imap-server
 Description: Cyrus mail system - IMAP support
  Cyrus is an IMAP server designed to handle massive quantities of mail,
