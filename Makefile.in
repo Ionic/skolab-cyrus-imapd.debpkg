@@ -2591,8 +2591,8 @@ imap_libcyrus_imap_la_LIBADD = $(COM_ERR_LIBS) $(LIB_UUID) \
 	$(GCOV_LIBS) lib/libcyrus_min.la lib/libcyrus.la \
 	$(am__append_67) $(am__append_69)
 imap_libcyrus_imap_la_CFLAGS = $(AM_CFLAGS) $(CFLAG_VISIBILITY)
-imap_libcyrus_imap_la_CXXFLAGS = $(AM_CXXFLAGS) $(am__append_68) \
-	$(am__append_70)
+imap_libcyrus_imap_la_CXXFLAGS = $(AM_CXXFLAGS) $(CFLAG_VISIBILITY) \
+	$(am__append_68) $(am__append_70)
 imap_libcyrus_imap_la_SOURCES = imap/annotate.c imap/annotate.h \
 	imap/append.c imap/append.h imap/backend.c imap/backend.h \
 	imap/conversations.c imap/conversations.h imap/convert_code.c \

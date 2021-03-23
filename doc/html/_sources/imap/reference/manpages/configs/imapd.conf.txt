@@ -5445,7 +5445,7 @@ FIELD DESCRIPTIONS
 
         File containing the private key belonging to the certificate in
         tls_server_cert.  If not set, tls_server_cert must contain both private and
-        public key.  Two files with keys can be set, if two certifates are used, in
+        public key.  Two files with keys can be set, if two certificates are used, in
         which case the files must be separated with comma without spaces 
 
     .. endblob tls_server_key
