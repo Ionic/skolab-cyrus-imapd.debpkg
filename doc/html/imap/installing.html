@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installing Cyrus &mdash; Cyrus IMAP 3.4.0-rc1 documentation</title>
+  <title>Installing Cyrus &mdash; Cyrus IMAP 3.4.0 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.0-rc1 documentation" href="../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.0 documentation" href="../index.html"/>
         <link rel="up" title="Setup" href="../setup.html"/>
         <link rel="next" title="HTTP modules" href="download/installation/manage-dav.html"/>
         <link rel="prev" title="Compiling" href="developer/compiling.html"/> 
@@ -324,7 +324,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#mail-delivery-from-your-mta">Mail delivery from your MTA</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#protocol-ports">Protocol ports</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cyrus-config-files">Cyrus config files</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#optional-setting-up-ssl-certificates">Optional: Setting up SSL certificates</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#optional-setting-up-tls-certificates">Optional: Setting up TLS certificates</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#prepare-ephemeral-run-time-storage-directories">Prepare ephemeral (run-time) storage directories</a></li>
 </ul>
 </li>
@@ -763,7 +763,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html">Docs v3.4.0-rc1</a> &raquo;</li>
+      <li><a href="../index.html">Docs v3.4.0</a> &raquo;</li>
       
           <li><a href="../setup.html">Setup</a> &raquo;</li>
       
@@ -1206,41 +1206,17 @@ structure: use <a class="reference internal" href="reference/manpages/systemcomm
 </pre></div>
 </div>
 </div>
-<div class="section" id="optional-setting-up-ssl-certificates">
-<h3>Optional: Setting up SSL certificates<a class="headerlink" href="#optional-setting-up-ssl-certificates" title="Permalink to this headline">¶</a></h3>
-<p>Create a TLS certificate using OpenSSL. Generate the certificate and
-store it in the /var/lib/cyrus/server.pem file:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">openssl</span> <span class="n">req</span> <span class="o">-</span><span class="n">new</span> <span class="o">-</span><span class="n">x509</span> <span class="o">-</span><span class="n">nodes</span> <span class="o">-</span><span class="n">out</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/</span><span class="n">server</span><span class="o">.</span><span class="n">pem</span> \
-<span class="o">-</span><span class="n">keyout</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/</span><span class="n">server</span><span class="o">.</span><span class="n">pem</span> <span class="o">-</span><span class="n">days</span> <span class="mi">365</span> \
-<span class="o">-</span><span class="n">subj</span> <span class="s2">&quot;/C=US/ST=Denial/L=Springfield/O=Dis/CN=localhost&quot;</span>
-</pre></div>
-</div>
-<p>This creates a TLS certificate (<cite>-out</cite>) and private key (<cite>-keyout</cite>) in
-the <a class="reference external" href="https://en.wikipedia.org/wiki/X.509">X.509</a> format (<cite>-x509</cite>).
-The certificate is set to expire in 365 days (<cite>-days</cite>) and has default
-information set up (<cite>-subj ...</cite>). The contents of the -subj is
-non-trivial and defined in <a class="reference external" href="http://www.ietf.org/rfc/rfc5280.txt">RFC 5280</a>, a brief summary is available
-on <a class="reference external" href="http://stackoverflow.com/questions/6464129/certificate-subject-x-509">stackoverflow</a>
-which is enough to decode our sample above.</p>
-<p>Great! You should now have a file at /var/lib/cyrus/server.pem. Give
-Cyrus access to this file:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">chown</span> <span class="n">cyrus</span><span class="p">:</span><span class="n">mail</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/</span><span class="n">server</span><span class="o">.</span><span class="n">pem</span>
-</pre></div>
-</div>
-<p>Awesome! Almost done. We will now configure the Cyrus IMAP server to
-actually use this TLS certificate. Open your Cyrus configuration file
-<code class="docutils literal"><span class="pre">/etc/imapd.conf</span></code> and add the following two lines at the end of it:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">tls_server_cert</span><span class="p">:</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/</span><span class="n">server</span><span class="o">.</span><span class="n">pem</span>
-<span class="n">tls_server_key</span><span class="p">:</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/</span><span class="n">server</span><span class="o">.</span><span class="n">pem</span>
-</pre></div>
-</div>
-<p>This tells the server where to find the TLS certificate and the key. It
-may seem weird to specify the same file twice, but since the file has
-the x509 format, the server will know what to do. Cyrus is there for
-you, always (unless your hard drive burns down) ! :-)</p>
-<p>The other configuration file we have to edit is <code class="docutils literal"><span class="pre">/etc/cyrus.conf</span></code>.
-Open it up with your favorite text editor and in the <strong>SERVICES</strong>
-section, add (or uncomment) this line:</p>
+<div class="section" id="optional-setting-up-tls-certificates">
+<h3>Optional: Setting up TLS certificates<a class="headerlink" href="#optional-setting-up-tls-certificates" title="Permalink to this headline">¶</a></h3>
+<p>Obtain a certificate, e.g. from
+<a class="reference external" href="https://letsencrypt.org/">Let’s Encrypt</a>.  You need a file with
+the full chain and a private key in
+<a class="reference external" href="https://en.wikipedia.org/wiki/X.509">X.509</a> format.  Adjust the file
+owner on these files with <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">chown</span> <span class="pre">cyrus:mail</span></code>.  Set the options
+<code class="docutils literal"><span class="pre">tls_server_cert</span></code> and <code class="docutils literal"><span class="pre">tls_server_key</span></code> in <a class="reference internal" href="reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>
+to point to these files.</p>
+<p>Open <code class="docutils literal"><span class="pre">/etc/cyrus.conf</span></code> and in the <strong>SERVICES</strong> section, add (or
+uncomment) this line:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">imaps</span>        <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;imapd&quot;</span> <span class="n">listen</span><span class="o">=</span><span class="s2">&quot;imaps&quot;</span> <span class="n">prefork</span><span class="o">=</span><span class="mi">0</span>
 </pre></div>
 </div>
@@ -1495,7 +1471,7 @@ addressbook and calendar entry for the sample example user:</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jan 27 2021
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Mar 25 2021
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1515,7 +1491,7 @@ addressbook and calendar entry for the sample example user:</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'3.4.0-rc1',
+            VERSION:'3.4.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

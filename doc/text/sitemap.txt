@@ -489,7 +489,7 @@ Sitemap
 
           * Cyrus config files
 
-          * Optional: Setting up SSL certificates
+          * Optional: Setting up TLS certificates
 
           * Prepare ephemeral (run-time) storage directories
 
