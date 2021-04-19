@@ -1,3 +1,9 @@
+cyrus-imapd (3.4.0-1) experimental; urgency=medium
+
+  * New upstream version 3.4.0
+
+ -- Yadd <yadd@debian.org>  Mon, 19 Apr 2021 06:09:55 +0200
+
 cyrus-imapd (3.4.0~rc1-1) experimental; urgency=medium
 
   * New upstream version 3.4.0~rc1
