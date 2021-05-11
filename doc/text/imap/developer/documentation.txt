@@ -162,7 +162,7 @@ number defined in conf.py.
 
 Usage: "|imap_current_stable_version|"
 
-Produces 3.4.0.
+Produces 3.4.1.
 
 
 Conventions: Man Pages
