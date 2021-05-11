@@ -1,5 +1,5 @@
 /* ANSI-C code produced by gperf version 3.0.4 */
-/* Command-line: gperf /tmp/compile_st_NBXFPK.gperf  */
+/* Command-line: gperf /tmp/compile_st_Vc8ePJ.gperf  */
 /* Computed positions: -k'1,10,$' */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
@@ -220,28 +220,28 @@ enum rfc822_header rfc822_header_from_string_len(const char *s, size_t len)
 const char *rfc822_header_to_string(enum rfc822_header v)
 {
     static const char * const strs[] = {
-        "Bcc", /* RFC822_BCC */
-        "Cc", /* RFC822_CC */
-        "Content-Description", /* RFC822_CONTENT_DESCRIPTION */
-        "Content-Disposition", /* RFC822_CONTENT_DISPOSITION */
-        "Content-Id", /* RFC822_CONTENT_ID */
-        "Content-Language", /* RFC822_CONTENT_LANGUAGE */
-        "Content-Location", /* RFC822_CONTENT_LOCATION */
-        "Content-MD5", /* RFC822_CONTENT_MD5 */
-        "Content-Transfer-Encoding", /* RFC822_CONTENT_TRANSFER_ENCODING */
-        "Content-Type", /* RFC822_CONTENT_TYPE */
-        "Date", /* RFC822_DATE */
-        "From", /* RFC822_FROM */
-        "In-Reply-To", /* RFC822_IN_REPLY_TO */
-        "Message-ID", /* RFC822_MESSAGE_ID */
-        "Reply-To", /* RFC822_REPLY_TO */
-        "Received", /* RFC822_RECEIVED */
-        "References", /* RFC822_REFERENCES */
-        "Subject", /* RFC822_SUBJECT */
-        "Sender", /* RFC822_SENDER */
-        "To", /* RFC822_TO */
-        "X-Deliveredinternaldate", /* RFC822_X_DELIVEREDINTERNALDATE */
-        "X-ME-Message-ID", /* RFC822_X_ME_MESSAGE_ID */
+	"Bcc", /* RFC822_BCC */
+	"Cc", /* RFC822_CC */
+	"Content-Description", /* RFC822_CONTENT_DESCRIPTION */
+	"Content-Disposition", /* RFC822_CONTENT_DISPOSITION */
+	"Content-Id", /* RFC822_CONTENT_ID */
+	"Content-Language", /* RFC822_CONTENT_LANGUAGE */
+	"Content-Location", /* RFC822_CONTENT_LOCATION */
+	"Content-MD5", /* RFC822_CONTENT_MD5 */
+	"Content-Transfer-Encoding", /* RFC822_CONTENT_TRANSFER_ENCODING */
+	"Content-Type", /* RFC822_CONTENT_TYPE */
+	"Date", /* RFC822_DATE */
+	"From", /* RFC822_FROM */
+	"In-Reply-To", /* RFC822_IN_REPLY_TO */
+	"Message-ID", /* RFC822_MESSAGE_ID */
+	"Reply-To", /* RFC822_REPLY_TO */
+	"Received", /* RFC822_RECEIVED */
+	"References", /* RFC822_REFERENCES */
+	"Subject", /* RFC822_SUBJECT */
+	"Sender", /* RFC822_SENDER */
+	"To", /* RFC822_TO */
+	"X-Deliveredinternaldate", /* RFC822_X_DELIVEREDINTERNALDATE */
+	"X-ME-Message-ID", /* RFC822_X_ME_MESSAGE_ID */
     };
     return (v >= 0 && v < (int)(sizeof(strs)/sizeof(strs[0])) ? strs[v] : NULL);
 }
