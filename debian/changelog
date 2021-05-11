@@ -1,7 +1,8 @@
 cyrus-imapd (3.2.6-2) unstable; urgency=medium
 
   * Update gbp.conf for Bullseye branch
-  * annotate: don't allow everyone to write shared server entries (Closes: CVE-2021-32056)
+  * annotate: don't allow everyone to write shared server entries
+    (Closes: CVE-2021-32056)
 
  -- Yadd <yadd@debian.org>  Mon, 10 May 2021 19:24:53 +0200
 
