@@ -1,3 +1,9 @@
+cyrus-imapd (3.4.1-1) experimental; urgency=medium
+
+  * New upstream version 3.4.1 (Closes: CVE-2021-32056)
+
+ -- Yadd <yadd@debian.org>  Tue, 11 May 2021 16:36:44 +0200
+
 cyrus-imapd (3.4.0-1) experimental; urgency=medium
 
   * New upstream version 3.4.0
