@@ -3,7 +3,7 @@ Maintainer: Debian Cyrus Team <team+cyrus@tracker.debian.org>
 Uploaders: Henrique de Moraes Holschuh <hmh@debian.org>,
            Ondřej Surý <ondrej@debian.org>,
            Anthony Prades <toony.debian@chezouam.net>,
-           Xavier Guimard <yadd@debian.org>
+           Yadd <yadd@debian.org>
 Section: mail
 Priority: optional
 Build-Depends: bison,
