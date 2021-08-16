@@ -1,3 +1,9 @@
+cyrus-imapd (3.4.1-2) unstable; urgency=medium
+
+  * Back to unstable
+
+ -- Yadd <yadd@debian.org>  Mon, 16 Aug 2021 12:33:53 +0200
+
 cyrus-imapd (3.4.1-1) experimental; urgency=medium
 
   * New upstream version 3.4.1 (Closes: CVE-2021-32056)
