@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "CYR_DBTOOL" "8" "May 10, 2021" "3.4.1" "Cyrus IMAP"
+.TH "CYR_DBTOOL" "8" "September 01, 2021" "3.4.2" "Cyrus IMAP"
 .SH NAME
 cyr_dbtool \- Cyrus IMAP documentation
 .
@@ -64,10 +64,10 @@ Running without any options will list the available database backends and
 usable actions.
 .sp
 The \fIconsistency\fP action runs a consistency check on the DB by calling
-\(aqmyconsistent\(aq on it.
+‘myconsistent’ on it.
 .sp
 The \fIrepack\fP action will compress the database by removing stale data
-on backends which support it.  It\(aqs a NOOP otherwise.
+on backends which support it.  It’s a NOOP otherwise.
 .sp
 \fBcyr_dbtool\fP reads its configuration options out of the imapd.conf(5) file unless specified otherwise by \fB\-C\fP\&.
 .sp
@@ -101,7 +101,7 @@ Uses improved MBOX list sort
 .INDENT 0.0
 .TP
 .B \-n
-Create the database file if it doesn\(aqt already exist.
+Create the database file if it doesn’t already exist.
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -112,17 +112,17 @@ is completed.
 .INDENT 0.0
 .TP
 .B \-T
-Use a transaction to do the action (most especially for \(aqshow\(aq) \- the
+Use a transaction to do the action (most especially for ‘show’) \- the
 default used to be transactions.
 .UNINDENT
 .SH EXAMPLES
 .sp
 This series of examples address manipulating the \fIuser_deny.db\fP
 database, which is used to deny users access to specific services.  This
-is typically a Cyrus "flat" format database.
+is typically a Cyrus “flat” format database.
 .sp
 \fIuser_deny.db\fP is indexed by userid and each record contains the
-database version number (currently 2), a list of "wildmat" patterns
+database version number (currently 2), a list of “wildmat” patterns
 specifying Cyrus services to be denied, and a text message to be
 displayed to the user upon denial. The service names to be matched are
 those as used in cyrus.conf(5)\&.  cyr_deny(8)
@@ -134,7 +134,7 @@ provides more convenient way to manage \fIuser_deny.db\fP\&.
 Given that \fIkeys\fP are tab\-delimited, these examples use the notation
 <tab> to indicate the tab character.  When entering this via the
 command line, remember to escape tabs.  In a normal shell, one can
-do so with <ctrl\-v> (^v).  The sequence "<ctrl\-v><ctrl\-i>" (^v^i)
+do so with <ctrl\-v> (^v).  The sequence “<ctrl\-v><ctrl\-i>” (^v^i)
 works well to enter tab characters.
 .UNINDENT
 .UNINDENT
@@ -144,7 +144,7 @@ works well to enter tab characters.
 .fi
 .INDENT 0.0
 .INDENT 3.5
-Deny the user \(aqbaduser\(aq access to imap and pop3.
+Deny the user ‘baduser’ access to imap and pop3.
 .UNINDENT
 .UNINDENT
 .sp
@@ -162,7 +162,7 @@ Show all current database records.
 .fi
 .INDENT 0.0
 .INDENT 3.5
-Get the current database record(s) for user \(aqbaduser\(aq.
+Get the current database record(s) for user ‘baduser’.
 .UNINDENT
 .UNINDENT
 .SH FILES

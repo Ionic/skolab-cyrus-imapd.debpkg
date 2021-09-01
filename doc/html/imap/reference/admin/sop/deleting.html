@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Deleting and Undeleting Messages and Folders &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Deleting and Undeleting Messages and Folders &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../../index.html"/>
         <link rel="up" title="Standard Operating Procedures" href="../sop.html"/>
         <link rel="next" title="Running Cyrus IMAP Services on Non-Standard Ports" href="administration-running.html"/>
         <link rel="prev" title="Alternative Namespace" href="altnamespace.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -794,33 +795,33 @@ expunge and expire in different contexts, used throughout this chapter.</p>
 <h3>Message context<a class="headerlink" href="#message-context" title="Permalink to this headline">¶</a></h3>
 <dl class="glossary docutils">
 <dt id="term-delete">Delete</dt>
-<dd>sets the <code class="docutils literal"><span class="pre">\Deleted</span></code> flag on the message using
-<code class="docutils literal"><span class="pre">STORE</span> <span class="pre">+Flags</span> <span class="pre">\Deleted</span></code> via IMAP client</dd>
+<dd>sets the <code class="docutils literal notranslate"><span class="pre">\Deleted</span></code> flag on the message using
+<code class="docutils literal notranslate"><span class="pre">STORE</span> <span class="pre">+Flags</span> <span class="pre">\Deleted</span></code> via IMAP client</dd>
 </dl>
 <dl class="glossary docutils">
 <dt id="term-expunge">Expunge</dt>
 <dd>delete messages from the cyrus folder index that have the
-<code class="docutils literal"><span class="pre">\Deleted</span></code> flag set using EXPUNGE via IMAP client. With
-<code class="docutils literal"><span class="pre">expunge_mode:</span> <span class="pre">delayed</span></code>, this doesn't delete the file from
+<code class="docutils literal notranslate"><span class="pre">\Deleted</span></code> flag set using EXPUNGE via IMAP client. With
+<code class="docutils literal notranslate"><span class="pre">expunge_mode:</span> <span class="pre">delayed</span></code>, this doesn’t delete the file from
 the filesystem.</dd>
 </dl>
 <dl class="glossary docutils">
 <dt id="term-unexpunge">Unexpunge</dt>
 <dd>recover messages into the cyrus folder index based on filesystem
-content (only possible with <code class="docutils literal"><span class="pre">expunge_mode:</span> <span class="pre">delayed</span></code>)</dd>
+content (only possible with <code class="docutils literal notranslate"><span class="pre">expunge_mode:</span> <span class="pre">delayed</span></code>)</dd>
 </dl>
 <dl class="glossary docutils">
 <dt id="term-undelete">Undelete</dt>
-<dd>remove the <code class="docutils literal"><span class="pre">\Deleted</span></code> flag on the message using
-<code class="docutils literal"><span class="pre">STORE</span> <span class="pre">-Flags</span> <span class="pre">\Deleted</span></code> via IMAP client.</dd>
+<dd>remove the <code class="docutils literal notranslate"><span class="pre">\Deleted</span></code> flag on the message using
+<code class="docutils literal notranslate"><span class="pre">STORE</span> <span class="pre">-Flags</span> <span class="pre">\Deleted</span></code> via IMAP client.</dd>
 </dl>
 </div>
 <div class="section" id="folder-context">
 <h3>Folder context<a class="headerlink" href="#folder-context" title="Permalink to this headline">¶</a></h3>
 <dl class="glossary docutils">
 <dt id="term-4">Delete</dt>
-<dd><p class="first">deletes the folder and all messages inside it using <code class="docutils literal"><span class="pre">DELETE</span></code>
-via IMAP client. If using <code class="docutils literal"><span class="pre">delete_mode:</span> <span class="pre">delayed</span></code>, this renames
+<dd><p class="first">deletes the folder and all messages inside it using <code class="docutils literal notranslate"><span class="pre">DELETE</span></code>
+via IMAP client. If using <code class="docutils literal notranslate"><span class="pre">delete_mode:</span> <span class="pre">delayed</span></code>, this renames
 the folder, rather than deletes the folder, as discussed below.</p>
 <p class="last">Otherwise, the folder and messages are removed from the mailbox
 list and the filesystem.</p>
@@ -829,7 +830,7 @@ list and the filesystem.</p>
 <dl class="glossary docutils">
 <dt id="term-5">Undelete</dt>
 <dd>rename the deleted folder back to the original location using
-<code class="docutils literal"><span class="pre">renamemailbox</span></code> in <code class="docutils literal"><span class="pre">cyradm</span></code>.</dd>
+<code class="docutils literal notranslate"><span class="pre">renamemailbox</span></code> in <code class="docutils literal notranslate"><span class="pre">cyradm</span></code>.</dd>
 </dl>
 </div>
 </div>
@@ -837,7 +838,7 @@ list and the filesystem.</p>
 <h2>Expiring Deleted Messages and Folders<a class="headerlink" href="#expiring-deleted-messages-and-folders" title="Permalink to this headline">¶</a></h2>
 <p>In the EVENTS block of cyrus.conf, you should have a line similar to the
 following:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">delprune</span>  <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;cyr_expire -E 1 -D 7 -X 7 -a&quot;</span> <span class="n">at</span><span class="o">=</span><span class="mi">2300</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">delprune</span>  <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;cyr_expire -E 1 -D 7 -X 7 -a&quot;</span> <span class="n">at</span><span class="o">=</span><span class="mi">2300</span>
 </pre></div>
 </div>
 <p>-D 7</p>
@@ -854,15 +855,15 @@ suppression database.</div></blockquote>
 expunged more than 7 days ago.</div></blockquote>
 <p>To use delayed deletion of mailboxes, you need the following entry in
 <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">delete_mode</span><span class="p">:</span> <span class="n">delayed</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">delete_mode</span><span class="p">:</span> <span class="n">delayed</span>
 </pre></div>
 </div>
 <div class="versionadded">
 <p><span class="versionmodified">New in version 2.3.9.</span></p>
 </div>
-<p>The default prefix for deleted mailboxes is <code class="docutils literal"><span class="pre">DELETED</span></code> but it probably
-doesn't hurt to specify it in <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> as well:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">deletedprefix</span><span class="p">:</span> <span class="n">DELETED</span>
+<p>The default prefix for deleted mailboxes is <code class="docutils literal notranslate"><span class="pre">DELETED</span></code> but it probably
+doesn’t hurt to specify it in <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> as well:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">deletedprefix</span><span class="p">:</span> <span class="n">DELETED</span>
 </pre></div>
 </div>
 <div class="versionadded">
@@ -872,12 +873,12 @@ doesn't hurt to specify it in <a class="reference internal" href="../../manpages
 <div class="section" id="undeleting-folders">
 <h2>Undeleting Folders<a class="headerlink" href="#undeleting-folders" title="Permalink to this headline">¶</a></h2>
 <p>The following assumes that you are using the UNIX hierarchy separator.
-If it's off then replace '/' in the names with '.'</p>
+If it’s off then replace ‘/’ in the names with ‘.’</p>
 <p>With the previous configuration options in place, whenever a mail folder
 or mailbox is deleted, it will be renamed to
-<code class="docutils literal"><span class="pre">DELETED/mailfoldername/4D5C6B7A</span></code> where <code class="docutils literal"><span class="pre">4D5C6B7A</span></code> is a hex-encoded
-timestamp and <code class="docutils literal"><span class="pre">DELETED</span></code> is the prefix for deleted mailboxes.</p>
-<p><code class="docutils literal"><span class="pre">4D5C6B7A</span></code> can be converted back to a human-readable time using a
+<code class="docutils literal notranslate"><span class="pre">DELETED/mailfoldername/4D5C6B7A</span></code> where <code class="docutils literal notranslate"><span class="pre">4D5C6B7A</span></code> is a hex-encoded
+timestamp and <code class="docutils literal notranslate"><span class="pre">DELETED</span></code> is the prefix for deleted mailboxes.</p>
+<p><code class="docutils literal notranslate"><span class="pre">4D5C6B7A</span></code> can be converted back to a human-readable time using a
 simple one-liner in Perl:</p>
 <pre class="literal-block">
 $ <strong class="command">perl -le 'print scalar(localtime(hex(&quot;4D5C6B7A&quot;)));'</strong>
@@ -897,17 +898,17 @@ deleted:</p>
 <pre class="literal-block">
 cyradm&gt; <strong class="command">listmailbox user/john*&#64;example.org</strong>
 </pre>
-<p>If there's no output from the above command, the mailbox has not been
+<p>If there’s no output from the above command, the mailbox has not been
 recreated since being deleted and you can rename the mailbox and any
 folders back to the original name as follows. If the mailbox has been
 recreated, you will probably want to rename the deleted folders into a
 subfolder of the new mailbox, for example
-<code class="docutils literal"><span class="pre">user/john/4D88AF31&#64;example.org</span></code> becomes
-<code class="docutils literal"><span class="pre">user/john/restored&#64;example.org</span></code> and
-<code class="docutils literal"><span class="pre">user/john/Sent/4D88AF34&#64;example.org</span></code> becomes
-<code class="docutils literal"><span class="pre">user/john/restored/Sent&#64;example.org</span></code></p>
+<code class="docutils literal notranslate"><span class="pre">user/john/4D88AF31&#64;example.org</span></code> becomes
+<code class="docutils literal notranslate"><span class="pre">user/john/restored&#64;example.org</span></code> and
+<code class="docutils literal notranslate"><span class="pre">user/john/Sent/4D88AF34&#64;example.org</span></code> becomes
+<code class="docutils literal notranslate"><span class="pre">user/john/restored/Sent&#64;example.org</span></code></p>
 <p>In either case the commands are similar but with the latter option you
-need to insert the extra &quot;/restored&quot; after the <code class="docutils literal"><span class="pre">user/john</span></code>:</p>
+need to insert the extra “/restored” after the <code class="docutils literal notranslate"><span class="pre">user/john</span></code>:</p>
 <pre class="literal-block">
 cyradm&gt; <strong class="command">listmailbox DELETED/user/john*&#64;example.org</strong>
 <a class="reference external" href="mailto:DELETED/user/john/4D88AF31&#37;&#52;&#48;example&#46;org">DELETED/user/john/4D88AF31<span>&#64;</span>example<span>&#46;</span>org</a> (HasNoChildren)
@@ -919,23 +920,23 @@ cyradm&gt; <strong class="command">renamemailbox DELETED/user/john/Drafts/4D88AF
 cyradm&gt; <strong class="command">renamemailbox DELETED/user/john/Sent/4D88AF34&#64;example.org user/john/Sent&#64;example.org</strong>
 cyradm&gt; <strong class="command">renamemailbox DELETED/user/john/Trash/4D88AF35&#64;example.org user/john/Trash&#64;example.org</strong>
 </pre>
-<p>Unfortunately there's no easy way to rename the entire mailbox back
+<p>Unfortunately there’s no easy way to rename the entire mailbox back
 including all the subfolders and the hex timestamp can vary between
 folders in the same mailbox if it was a mailbox with some large folders.</p>
-<p>This is because it's the time that particular folder was deleted, not
+<p>This is because it’s the time that particular folder was deleted, not
 when the first folder was deleted.</p>
 </div>
 <div class="section" id="undeleting-messages-in-a-mailbox">
 <h2>Undeleting messages in a mailbox<a class="headerlink" href="#undeleting-messages-in-a-mailbox" title="Permalink to this headline">¶</a></h2>
 <p>The following examples assume you have an installation of cyrus where
-there are binaries in <code class="docutils literal"><span class="pre">/usr/lib/cyrus-imapd/</span></code> - if not, adjust path to
+there are binaries in <code class="docutils literal notranslate"><span class="pre">/usr/lib/cyrus-imapd/</span></code> - if not, adjust path to
 suit.</p>
 <p>List messages available to unexpunge:</p>
 <pre class="literal-block">
 # <strong class="command">/usr/lib/cyrus-imapd/unexpunge -l user/john&#64;example.org</strong>
 </pre>
 <p>Each message will give you something like the following:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">UID</span><span class="p">:</span> <span class="mi">11422</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">UID</span><span class="p">:</span> <span class="mi">11422</span>
     <span class="n">Size</span><span class="p">:</span> <span class="mi">7786</span>
     <span class="n">Sent</span><span class="p">:</span> <span class="n">Mon</span> <span class="n">Mar</span> <span class="mi">10</span> <span class="mi">12</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span> <span class="mi">2014</span>
     <span class="n">Recv</span><span class="p">:</span> <span class="n">Mon</span> <span class="n">Mar</span> <span class="mi">10</span> <span class="mi">16</span><span class="p">:</span><span class="mi">06</span><span class="p">:</span><span class="mi">32</span> <span class="mi">2014</span>
@@ -961,7 +962,7 @@ restored 1 expunged messages
 </pre>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">This isn't recursive. It will only restore the messages in the
+<p class="last">This isn’t recursive. It will only restore the messages in the
 folder specified.</p>
 </div>
 <p>To find other folders, <a class="reference internal" href="../../manpages/systemcommands/ctl_mboxlist.html#imap-reference-manpages-systemcommands-ctl-mboxlist"><span class="std std-ref">ctl_mboxlist</span></a> can be
@@ -975,7 +976,7 @@ example.org!user.john.Deleted Messages   0 default <a class="reference external"
 </pre>
 <p>Run the unexpunge command for every folder that needs to have mail
 undeleted.</p>
-<p>For folder names that have spaces ' ', the spaces need to be escaped
+<p>For folder names that have spaces ‘ ‘, the spaces need to be escaped
 with a backslash.</p>
 <pre class="literal-block">
 # <strong class="command">/usr/lib/cyrus-imapd/unexpunge -adv user/john/DeletedMessages&#64;example.org</strong>
@@ -1004,7 +1005,7 @@ with a backslash.</p>
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Sep 05 2016
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1021,7 +1022,7 @@ with a backslash.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1030,7 +1031,7 @@ with a backslash.</p>
       <script type="text/javascript" src="../../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../../_static/language_data.js"></script>
 
   
 

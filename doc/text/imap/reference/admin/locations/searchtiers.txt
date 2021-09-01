@@ -1,4 +1,3 @@
-
 Search Tiers
 ************
 
@@ -29,7 +28,7 @@ Search Tier Partition Location
 ==============================
 
 Each search tier to be used requires a partition location be specified
-via a *searchpartition-name* setting, wherein "name" is replaced with
+via a *searchpartition-name* setting, wherein “name” is replaced with
 the name of the mail spool for which this search partition is to be
 used, and prepended by the name of the tier with which it is
 associated:
@@ -74,7 +73,7 @@ These settings are in imapd.conf(5):
       For example: if *defaultpartition* is defined as part1 and
       *defaultsearchtier* as tier1 then the configuration must contain
       an entry *tier1searchpartition-part1* that defines the path
-      where to store this tier1's search index for the part1
+      where to store this tier1’s search index for the part1
       partition.
 
       This option MUST be specified for xapian search.

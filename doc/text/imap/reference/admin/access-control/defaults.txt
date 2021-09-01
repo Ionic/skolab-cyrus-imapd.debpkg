@@ -1,4 +1,3 @@
-
 Access Control Defaults
 ***********************
 
@@ -52,7 +51,7 @@ Initial ACLs for Newly Created Mailboxes
 
 When a mailbox is created, its ACL starts off with a copy of the ACL
 of its closest parent mailbox. When a user is created, the ACL on the
-user's "INBOX" starts off with a single entry granting all rights to
+user’s "INBOX" starts off with a single entry granting all rights to
 the user. When a non-user mailbox is created and does not have a
 parent, its ACL is initialized to the value of the "defaultacl" option
 in imapd.conf(5).
@@ -62,5 +61,5 @@ Other Implicit Rights
 =====================
 
 Note that some rights are available implicitly, for example
-'anonymous' always has 'p' on user INBOXes, and users always have "la"
+‘anonymous’ always has ‘p’ on user INBOXes, and users always have "la"
 rights on mailboxes within their INBOX hierarchy.

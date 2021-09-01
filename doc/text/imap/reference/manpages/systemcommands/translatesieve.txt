@@ -1,4 +1,3 @@
-
 **translatesieve**
 ******************
 
@@ -15,8 +14,8 @@ Description
 ===========
 
 **translatesieve** can both translate the mailbox separator characters
-in sieve scripts from traditional netnews style -- '.' -- to new Unix
-style -- '/' -- and vice versa.  It can also convert sieve scripts to
+in sieve scripts from traditional netnews style – ‘.’ – to new Unix
+style – ‘/’ – and vice versa.  It can also convert sieve scripts to
 use "altnamespace" mailbox naming conventions.  Please also see
 Mailbox namespaces for details.
 
@@ -26,7 +25,7 @@ no".  If your configuration was already using one of these, then use
 the appropriate flag, **-u** for "unixhierarchysep: yes" or **-a** for
 "altnamespace: yes".  Failure to do so may ruin your sieve scripts.
 
-A "Dry run" mode is available via **-n** and you are strongly
+A “Dry run” mode is available via **-n** and you are strongly
 encouraged to use this.
 
 **translatesieve** reads its configuration options out of the
@@ -54,7 +53,7 @@ Options
 
 -n
 
-   Dry-run mode.  No changes will be written, but you'll be shown what
+   Dry-run mode.  No changes will be written, but you’ll be shown what
    would be changed.
 
 -v

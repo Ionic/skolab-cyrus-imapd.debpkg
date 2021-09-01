@@ -1,4 +1,3 @@
-
 IMAP Developer Guide
 ********************
 

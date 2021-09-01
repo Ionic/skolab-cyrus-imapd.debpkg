@@ -1,4 +1,3 @@
-
 Introduction to Cyrus IMAP
 **************************
 
@@ -7,7 +6,7 @@ University)) software development project for a highly scalable
 enterprise mail system.
 
 Cyrus IMAP is one of two primary software development projects
-undertaken by the Cyrus project -- the other one being Cyrus SASL.
+undertaken by the Cyrus project – the other one being Cyrus SASL.
 
 The project as a whole started in 1994 and has its roots in replacing
 the Andrew Mail System (AMS (Andrew Mail System)) that CMU (Carnegie
@@ -15,7 +14,7 @@ Mellon University) had been using, and has replaced AMS (Andrew Mail
 System) between 1998 and 2002.
 
 The project name, Cyrus, comes from the inventor of the first modern
-"packet-switching"-based mail system, the forerunner of every major
+“packet-switching”-based mail system, the forerunner of every major
 communication system we have today.
 
 Cyrus the Great (c. 585-529 BC) founded the ancient Persian Empire,
@@ -33,7 +32,7 @@ century later:
    they have to go, either by snow, or rain, or heat, or by the
    darkness of night. The first rider delivers his despatch to the
    second and the second passes it to the third; and so it is borne
-   from hand to hand along the whole line...
+   from hand to hand along the whole line…
 
    -- Herodotus
 
@@ -46,7 +45,7 @@ message store using a client application, and is the de-facto standard
 protocol for mailstore access.
 
 Contrary to the Post Office Protocol (POP), IMAP by default maintains
-a copy of the message on the server -- until it is explicitly deleted.
+a copy of the message on the server – until it is explicitly deleted.
 
 Cyrus IMAP supports both POP3 and IMAP4 access to the mail store.
 

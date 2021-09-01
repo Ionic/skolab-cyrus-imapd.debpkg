@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "RESTORE" "8" "May 10, 2021" "3.4.1" "Cyrus IMAP"
+.TH "RESTORE" "8" "September 01, 2021" "3.4.2" "Cyrus IMAP"
 .SH NAME
 restore \- Cyrus IMAP documentation
 .
@@ -46,7 +46,7 @@ storage.
 \fBrestore\fP reads its configuration options out of the imapd.conf(5) file unless specified otherwise by \fB\-C\fP\&.
 .sp
 \fIserver\fP specifies the destination server to which content should be restored.
-It should be of the form \(aq\fIhost\fP[:\fIport\fP]\(aq, where \fIhost\fP is either a
+It should be of the form ‘\fIhost\fP[:\fIport\fP]’, where \fIhost\fP is either a
 hostname, an IPv4 address, or an IPv6 address, and where the optional \fIport\fP is
 either a known service name (see \fBservices(5)\fP) or a decimal port
 number.  If \fIport\fP is omitted, \fBimap\fP will be tried first, followed by
@@ -59,7 +59,7 @@ instance.  In either case it must be Cyrus version 3.0 or newer.
 \fBrestore\fP will authenticate to the destination server according to the
 \fBrestore_authname\fP, \fBrestore_password\fP and \fBrestore_realm\fP configuration
 options.  The credentials should correspond with one of the destination
-server\(aqs \fBadmins\fP\&.
+server’s \fBadmins\fP\&.
 .sp
 \fIbackup\fP is interpreted according to the specified MODE.
 See \fI\%Modes\fP below.
@@ -91,8 +91,8 @@ stored in the backup.
 .sp
 If \fIacl\fP is the empty string (e.g. \fB\-A ""\fP) or is unspecified, mailboxes
 will be restored with the default ACL for their destination owner.  This
-is mostly useful when restoring folders from one user\(aqs backup into a
-different user\(aqs mailbox.
+is mostly useful when restoring folders from one user’s backup into a
+different user’s mailbox.
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -102,7 +102,7 @@ Use the specified configuration file \fIconfig\-file\fP rather than the default 
 .INDENT 0.0
 .TP
 .B \-D
-Don\(aqt trim \fBdeletedprefix\fP from mailbox names prior to restoring.  This
+Don’t trim \fBdeletedprefix\fP from mailbox names prior to restoring.  This
 is mainly useful for rebuilding failed servers, where deleted mailboxes
 should be restored as deleted mailboxes, not as new ones.
 .sp
@@ -110,7 +110,7 @@ The default is to trim the prefix before restoring.
 .sp
 If the original server from which the backups were produced had
 \fBdelete_mode\fP set to \fIimmediate\fP, then the mailboxes in the backup will
-not have such a prefix, and this option won\(aqt have any useful effect.
+not have such a prefix, and this option won’t have any useful effect.
 .sp
 See imapd.conf(5) for information about the \fBdeletedprefix\fP
 and \fBdelete_mode\fP configuration options.
@@ -123,7 +123,7 @@ the command line arguments.
 .sp
 \fIinput\-file\fP should contain one object specification (either an \fImboxname\fP,
 a \fIuniqueid\fP, or a \fIguid\fP) per line.  Empty lines, and lines beginning with
-a \(aq#\(aq character, are ignored.
+a ‘#’ character, are ignored.
 .UNINDENT
 .INDENT 0.0
 .TP

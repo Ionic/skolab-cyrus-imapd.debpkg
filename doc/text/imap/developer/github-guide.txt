@@ -1,4 +1,3 @@
-
 GitHub guide
 ************
 
@@ -32,10 +31,10 @@ setting up two-factor authentication for additional security.
 2. Add your ssh key
 ===================
 
-It's worth adding a ssh key to your account, so you're not having to
+It’s worth adding a ssh key to your account, so you’re not having to
 input your password every time you access the repository.
 
-If you don't have an ssh key already (and here's how to check), you
+If you don’t have an ssh key already (and here’s how to check), you
 can generate a new key. Once you have a key, add it to GitHub and test
 it out.
 
@@ -43,7 +42,7 @@ it out.
 3. Fork the repository
 ======================
 
-Whether you're contributing to Cyrus (source, or documentation),
+Whether you’re contributing to Cyrus (source, or documentation),
 contributing to tests with Cassandane or into helping out with SASL or
 any of the other Cyrus component projects, use the Fork button to make
 a copy of the repository into your own GitHub work space.
@@ -76,7 +75,7 @@ Now we can check to see that the upstream is set:
    upstream  https://github.com/cyrusimap/ORIGINAL_REPOSITORY.git (fetch)
    upstream  https://github.com/cyrusimap/ORIGINAL_REPOSITORY.git (push)
 
-We recommend you create a topic branch and make your changes (don't
+We recommend you create a topic branch and make your changes (don’t
 forget to test!). Using a topic branch means you can keep your master
 source in sync without affecting your changes. It also means that if
 your patch undergoes further revisions before inclusion, you can
@@ -90,6 +89,6 @@ When your changes are done, you issue a pull request. This is done by
 logging into the GitHub interface, swapping to your branch, then
 selecting New Pull Request.
 
-When submitting the pull request, note if there's a particular filed
+When submitting the pull request, note if there’s a particular filed
 bug your patch addresses. The Cyrus Team will review your pull request
 and make sure it gets integrated!

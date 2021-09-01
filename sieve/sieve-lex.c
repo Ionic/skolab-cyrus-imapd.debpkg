@@ -8,11 +8,17 @@
 
 #define yy_create_buffer sieve_create_buffer
 #define yy_delete_buffer sieve_delete_buffer
-#define yy_flex_debug sieve_flex_debug
+#define yy_scan_buffer sieve_scan_buffer
+#define yy_scan_string sieve_scan_string
+#define yy_scan_bytes sieve_scan_bytes
 #define yy_init_buffer sieve_init_buffer
 #define yy_flush_buffer sieve_flush_buffer
 #define yy_load_buffer_state sieve_load_buffer_state
 #define yy_switch_to_buffer sieve_switch_to_buffer
+#define yypush_buffer_state sievepush_buffer_state
+#define yypop_buffer_state sievepop_buffer_state
+#define yyensure_buffer_stack sieveensure_buffer_stack
+#define yy_flex_debug sieve_flex_debug
 #define yyin sievein
 #define yyleng sieveleng
 #define yylex sievelex
@@ -28,9 +34,243 @@
 #define FLEX_SCANNER
 #define YY_FLEX_MAJOR_VERSION 2
 #define YY_FLEX_MINOR_VERSION 6
-#define YY_FLEX_SUBMINOR_VERSION 1
+#define YY_FLEX_SUBMINOR_VERSION 4
 #if YY_FLEX_SUBMINOR_VERSION > 0
 #define FLEX_BETA
+#endif
+
+#ifdef yy_create_buffer
+#define sieve_create_buffer_ALREADY_DEFINED
+#else
+#define yy_create_buffer sieve_create_buffer
+#endif
+
+#ifdef yy_delete_buffer
+#define sieve_delete_buffer_ALREADY_DEFINED
+#else
+#define yy_delete_buffer sieve_delete_buffer
+#endif
+
+#ifdef yy_scan_buffer
+#define sieve_scan_buffer_ALREADY_DEFINED
+#else
+#define yy_scan_buffer sieve_scan_buffer
+#endif
+
+#ifdef yy_scan_string
+#define sieve_scan_string_ALREADY_DEFINED
+#else
+#define yy_scan_string sieve_scan_string
+#endif
+
+#ifdef yy_scan_bytes
+#define sieve_scan_bytes_ALREADY_DEFINED
+#else
+#define yy_scan_bytes sieve_scan_bytes
+#endif
+
+#ifdef yy_init_buffer
+#define sieve_init_buffer_ALREADY_DEFINED
+#else
+#define yy_init_buffer sieve_init_buffer
+#endif
+
+#ifdef yy_flush_buffer
+#define sieve_flush_buffer_ALREADY_DEFINED
+#else
+#define yy_flush_buffer sieve_flush_buffer
+#endif
+
+#ifdef yy_load_buffer_state
+#define sieve_load_buffer_state_ALREADY_DEFINED
+#else
+#define yy_load_buffer_state sieve_load_buffer_state
+#endif
+
+#ifdef yy_switch_to_buffer
+#define sieve_switch_to_buffer_ALREADY_DEFINED
+#else
+#define yy_switch_to_buffer sieve_switch_to_buffer
+#endif
+
+#ifdef yypush_buffer_state
+#define sievepush_buffer_state_ALREADY_DEFINED
+#else
+#define yypush_buffer_state sievepush_buffer_state
+#endif
+
+#ifdef yypop_buffer_state
+#define sievepop_buffer_state_ALREADY_DEFINED
+#else
+#define yypop_buffer_state sievepop_buffer_state
+#endif
+
+#ifdef yyensure_buffer_stack
+#define sieveensure_buffer_stack_ALREADY_DEFINED
+#else
+#define yyensure_buffer_stack sieveensure_buffer_stack
+#endif
+
+#ifdef yylex
+#define sievelex_ALREADY_DEFINED
+#else
+#define yylex sievelex
+#endif
+
+#ifdef yyrestart
+#define sieverestart_ALREADY_DEFINED
+#else
+#define yyrestart sieverestart
+#endif
+
+#ifdef yylex_init
+#define sievelex_init_ALREADY_DEFINED
+#else
+#define yylex_init sievelex_init
+#endif
+
+#ifdef yylex_init_extra
+#define sievelex_init_extra_ALREADY_DEFINED
+#else
+#define yylex_init_extra sievelex_init_extra
+#endif
+
+#ifdef yylex_destroy
+#define sievelex_destroy_ALREADY_DEFINED
+#else
+#define yylex_destroy sievelex_destroy
+#endif
+
+#ifdef yyget_debug
+#define sieveget_debug_ALREADY_DEFINED
+#else
+#define yyget_debug sieveget_debug
+#endif
+
+#ifdef yyset_debug
+#define sieveset_debug_ALREADY_DEFINED
+#else
+#define yyset_debug sieveset_debug
+#endif
+
+#ifdef yyget_extra
+#define sieveget_extra_ALREADY_DEFINED
+#else
+#define yyget_extra sieveget_extra
+#endif
+
+#ifdef yyset_extra
+#define sieveset_extra_ALREADY_DEFINED
+#else
+#define yyset_extra sieveset_extra
+#endif
+
+#ifdef yyget_in
+#define sieveget_in_ALREADY_DEFINED
+#else
+#define yyget_in sieveget_in
+#endif
+
+#ifdef yyset_in
+#define sieveset_in_ALREADY_DEFINED
+#else
+#define yyset_in sieveset_in
+#endif
+
+#ifdef yyget_out
+#define sieveget_out_ALREADY_DEFINED
+#else
+#define yyget_out sieveget_out
+#endif
+
+#ifdef yyset_out
+#define sieveset_out_ALREADY_DEFINED
+#else
+#define yyset_out sieveset_out
+#endif
+
+#ifdef yyget_leng
+#define sieveget_leng_ALREADY_DEFINED
+#else
+#define yyget_leng sieveget_leng
+#endif
+
+#ifdef yyget_text
+#define sieveget_text_ALREADY_DEFINED
+#else
+#define yyget_text sieveget_text
+#endif
+
+#ifdef yyget_lineno
+#define sieveget_lineno_ALREADY_DEFINED
+#else
+#define yyget_lineno sieveget_lineno
+#endif
+
+#ifdef yyset_lineno
+#define sieveset_lineno_ALREADY_DEFINED
+#else
+#define yyset_lineno sieveset_lineno
+#endif
+
+#ifdef yywrap
+#define sievewrap_ALREADY_DEFINED
+#else
+#define yywrap sievewrap
+#endif
+
+#ifdef yyalloc
+#define sievealloc_ALREADY_DEFINED
+#else
+#define yyalloc sievealloc
+#endif
+
+#ifdef yyrealloc
+#define sieverealloc_ALREADY_DEFINED
+#else
+#define yyrealloc sieverealloc
+#endif
+
+#ifdef yyfree
+#define sievefree_ALREADY_DEFINED
+#else
+#define yyfree sievefree
+#endif
+
+#ifdef yytext
+#define sievetext_ALREADY_DEFINED
+#else
+#define yytext sievetext
+#endif
+
+#ifdef yyleng
+#define sieveleng_ALREADY_DEFINED
+#else
+#define yyleng sieveleng
+#endif
+
+#ifdef yyin
+#define sievein_ALREADY_DEFINED
+#else
+#define yyin sievein
+#endif
+
+#ifdef yyout
+#define sieveout_ALREADY_DEFINED
+#else
+#define yyout sieveout
+#endif
+
+#ifdef yy_flex_debug
+#define sieve_flex_debug_ALREADY_DEFINED
+#else
+#define yy_flex_debug sieve_flex_debug
+#endif
+
+#ifdef yylineno
+#define sievelineno_ALREADY_DEFINED
+#else
+#define yylineno sievelineno
 #endif
 
 /* First, we deal with  platform-specific or compiler-specific issues. */
@@ -103,9 +343,15 @@ typedef unsigned int flex_uint32_t;
 #define UINT32_MAX             (4294967295U)
 #endif
 
+#ifndef SIZE_MAX
+#define SIZE_MAX               (~(size_t)0)
+#endif
+
 #endif /* ! C99 */
 
 #endif /* ! FLEXINT_H */
+
+/* begin standard C++ headers. */
 
 /* TODO: this is always defined, so inline it */
 #define yyconst const
@@ -119,32 +365,26 @@ typedef unsigned int flex_uint32_t;
 /* Returned upon end-of-file. */
 #define YY_NULL 0
 
-/* Promotes a possibly negative, possibly signed char to an unsigned
- * integer for use as an array index.  If the signed char is negative,
- * we want to instead treat it as an 8-bit unsigned char, hence the
- * double cast.
+/* Promotes a possibly negative, possibly signed char to an
+ *   integer in range [0..255] for use as an array index.
  */
-#define YY_SC_TO_UI(c) ((unsigned int) (unsigned char) c)
+#define YY_SC_TO_UI(c) ((YY_CHAR) (c))
 
 /* Enter a start condition.  This macro really ought to take a parameter,
  * but we do it the disgusting crufty way forced on us by the ()-less
  * definition of BEGIN.
  */
 #define BEGIN (yy_start) = 1 + 2 *
-
 /* Translate the current start state into a value that can be later handed
  * to BEGIN to return to the state.  The YYSTATE alias is for lex
  * compatibility.
  */
 #define YY_START (((yy_start) - 1) / 2)
 #define YYSTATE YY_START
-
 /* Action number for EOF rule of a given start state. */
 #define YY_STATE_EOF(state) (YY_END_OF_BUFFER + state + 1)
-
 /* Special action meaning "start processing a new file". */
-#define YY_NEW_FILE sieverestart(sievein  )
-
+#define YY_NEW_FILE yyrestart( yyin  )
 #define YY_END_OF_BUFFER_CHAR 0
 
 /* Size of default input buffer. */
@@ -174,50 +414,49 @@ typedef struct yy_buffer_state *YY_BUFFER_STATE;
 typedef size_t yy_size_t;
 #endif
 
-extern int sieveleng;
+extern int yyleng;
 
-extern FILE *sievein, *sieveout;
+extern FILE *yyin, *yyout;
 
 #define EOB_ACT_CONTINUE_SCAN 0
 #define EOB_ACT_END_OF_FILE 1
 #define EOB_ACT_LAST_MATCH 2
-
+    
     /* Note: We specifically omit the test for yy_rule_can_match_eol because it requires
      *       access to the local variable yy_act. Since yyless() is a macro, it would break
-     *       existing scanners that call yyless() from OUTSIDE sievelex.
+     *       existing scanners that call yyless() from OUTSIDE yylex.
      *       One obvious solution it to make yy_act a global. I tried that, and saw
-     *       a 5% performance hit in a non-sievelineno scanner, because yy_act is
+     *       a 5% performance hit in a non-yylineno scanner, because yy_act is
      *       normally declared as a register variable-- so it is not worth it.
      */
     #define  YY_LESS_LINENO(n) \
             do { \
                 int yyl;\
-                for ( yyl = n; yyl < sieveleng; ++yyl )\
-                    if ( sievetext[yyl] == '\n' )\
-                        --sievelineno;\
+                for ( yyl = n; yyl < yyleng; ++yyl )\
+                    if ( yytext[yyl] == '\n' )\
+                        --yylineno;\
             }while(0)
     #define YY_LINENO_REWIND_TO(dst) \
             do {\
                 const char *p;\
                 for ( p = yy_cp-1; p >= (dst); --p)\
                     if ( *p == '\n' )\
-                        --sievelineno;\
+                        --yylineno;\
             }while(0)
     
 /* Return all but the first "n" matched characters back to the input stream. */
 #define yyless(n) \
 	do \
 		{ \
-		/* Undo effects of setting up sievetext. */ \
+		/* Undo effects of setting up yytext. */ \
         int yyless_macro_arg = (n); \
         YY_LESS_LINENO(yyless_macro_arg);\
 		*yy_cp = (yy_hold_char); \
 		YY_RESTORE_YY_MORE_OFFSET \
 		(yy_c_buf_p) = yy_cp = yy_bp + yyless_macro_arg - YY_MORE_ADJ; \
-		YY_DO_BEFORE_ACTION; /* set up sievetext again */ \
+		YY_DO_BEFORE_ACTION; /* set up yytext again */ \
 		} \
 	while ( 0 )
-
 #define unput(c) yyunput( c, (yytext_ptr)  )
 
 #ifndef YY_STRUCT_YY_BUFFER_STATE
@@ -277,8 +516,8 @@ struct yy_buffer_state
 	 * possible backing-up.
 	 *
 	 * When we actually see the EOF, we change the status to "new"
-	 * (via sieverestart()), so that the user can continue scanning by
-	 * just pointing sievein at a new input file.
+	 * (via yyrestart()), so that the user can continue scanning by
+	 * just pointing yyin at a new input file.
 	 */
 #define YY_BUFFER_EOF_PENDING 2
 
@@ -299,109 +538,101 @@ static YY_BUFFER_STATE * yy_buffer_stack = NULL; /**< Stack as an array. */
 #define YY_CURRENT_BUFFER ( (yy_buffer_stack) \
                           ? (yy_buffer_stack)[(yy_buffer_stack_top)] \
                           : NULL)
-
 /* Same as previous macro, but useful when we know that the buffer stack is not
  * NULL or when we need an lvalue. For internal use only.
  */
 #define YY_CURRENT_BUFFER_LVALUE (yy_buffer_stack)[(yy_buffer_stack_top)]
 
-/* yy_hold_char holds the character lost when sievetext is formed. */
+/* yy_hold_char holds the character lost when yytext is formed. */
 static char yy_hold_char;
 static int yy_n_chars;		/* number of characters read into yy_ch_buf */
-int sieveleng;
+int yyleng;
 
 /* Points to current character in buffer. */
 static char *yy_c_buf_p = NULL;
 static int yy_init = 0;		/* whether we need to initialize */
 static int yy_start = 0;	/* start state number */
 
-/* Flag which is used to allow sievewrap()'s to do buffer switches
- * instead of setting up a fresh sievein.  A bit of a hack ...
+/* Flag which is used to allow yywrap()'s to do buffer switches
+ * instead of setting up a fresh yyin.  A bit of a hack ...
  */
 static int yy_did_buffer_switch_on_eof;
 
-void sieverestart (FILE *input_file  );
-void sieve_switch_to_buffer (YY_BUFFER_STATE new_buffer  );
-YY_BUFFER_STATE sieve_create_buffer (FILE *file,int size  );
-void sieve_delete_buffer (YY_BUFFER_STATE b  );
-void sieve_flush_buffer (YY_BUFFER_STATE b  );
-void sievepush_buffer_state (YY_BUFFER_STATE new_buffer  );
-void sievepop_buffer_state (void );
+void yyrestart ( FILE *input_file  );
+void yy_switch_to_buffer ( YY_BUFFER_STATE new_buffer  );
+YY_BUFFER_STATE yy_create_buffer ( FILE *file, int size  );
+void yy_delete_buffer ( YY_BUFFER_STATE b  );
+void yy_flush_buffer ( YY_BUFFER_STATE b  );
+void yypush_buffer_state ( YY_BUFFER_STATE new_buffer  );
+void yypop_buffer_state ( void );
 
-static void sieveensure_buffer_stack (void );
-static void sieve_load_buffer_state (void );
-static void sieve_init_buffer (YY_BUFFER_STATE b,FILE *file  );
+static void yyensure_buffer_stack ( void );
+static void yy_load_buffer_state ( void );
+static void yy_init_buffer ( YY_BUFFER_STATE b, FILE *file  );
+#define YY_FLUSH_BUFFER yy_flush_buffer( YY_CURRENT_BUFFER )
 
-#define YY_FLUSH_BUFFER sieve_flush_buffer(YY_CURRENT_BUFFER )
+YY_BUFFER_STATE yy_scan_buffer ( char *base, yy_size_t size  );
+YY_BUFFER_STATE yy_scan_string ( const char *yy_str  );
+YY_BUFFER_STATE yy_scan_bytes ( const char *bytes, int len  );
 
-YY_BUFFER_STATE sieve_scan_buffer (char *base,yy_size_t size  );
-YY_BUFFER_STATE sieve_scan_string (yyconst char *yy_str  );
-YY_BUFFER_STATE sieve_scan_bytes (yyconst char *bytes,int len  );
+void *yyalloc ( yy_size_t  );
+void *yyrealloc ( void *, yy_size_t  );
+void yyfree ( void *  );
 
-void *sievealloc (yy_size_t  );
-void *sieverealloc (void *,yy_size_t  );
-void sievefree (void *  );
-
-#define yy_new_buffer sieve_create_buffer
-
+#define yy_new_buffer yy_create_buffer
 #define yy_set_interactive(is_interactive) \
 	{ \
 	if ( ! YY_CURRENT_BUFFER ){ \
-        sieveensure_buffer_stack (); \
+        yyensure_buffer_stack (); \
 		YY_CURRENT_BUFFER_LVALUE =    \
-            sieve_create_buffer(sievein,YY_BUF_SIZE ); \
+            yy_create_buffer( yyin, YY_BUF_SIZE ); \
 	} \
 	YY_CURRENT_BUFFER_LVALUE->yy_is_interactive = is_interactive; \
 	}
-
 #define yy_set_bol(at_bol) \
 	{ \
 	if ( ! YY_CURRENT_BUFFER ){\
-        sieveensure_buffer_stack (); \
+        yyensure_buffer_stack (); \
 		YY_CURRENT_BUFFER_LVALUE =    \
-            sieve_create_buffer(sievein,YY_BUF_SIZE ); \
+            yy_create_buffer( yyin, YY_BUF_SIZE ); \
 	} \
 	YY_CURRENT_BUFFER_LVALUE->yy_at_bol = at_bol; \
 	}
-
 #define YY_AT_BOL() (YY_CURRENT_BUFFER_LVALUE->yy_at_bol)
 
 /* Begin user sect3 */
 
 #define sievewrap() (/*CONSTCOND*/1)
 #define YY_SKIP_YYWRAP
+typedef flex_uint8_t YY_CHAR;
 
-typedef unsigned char YY_CHAR;
-
-FILE *sievein = NULL, *sieveout = NULL;
+FILE *yyin = NULL, *yyout = NULL;
 
 typedef int yy_state_type;
 
-extern int sievelineno;
+extern int yylineno;
+int yylineno = 1;
 
-int sievelineno = 1;
-
-extern char *sievetext;
+extern char *yytext;
 #ifdef yytext_ptr
 #undef yytext_ptr
 #endif
-#define yytext_ptr sievetext
+#define yytext_ptr yytext
 
-static yy_state_type yy_get_previous_state (void );
-static yy_state_type yy_try_NUL_trans (yy_state_type current_state  );
-static int yy_get_next_buffer (void );
-static void yynoreturn yy_fatal_error (yyconst char* msg  );
+static yy_state_type yy_get_previous_state ( void );
+static yy_state_type yy_try_NUL_trans ( yy_state_type current_state  );
+static int yy_get_next_buffer ( void );
+static void yynoreturn yy_fatal_error ( const char* msg  );
 
 /* Done after the current pattern has been matched and before the
- * corresponding action - sets up sievetext.
+ * corresponding action - sets up yytext.
  */
 #define YY_DO_BEFORE_ACTION \
 	(yytext_ptr) = yy_bp; \
-	sieveleng = (int) (yy_cp - yy_bp); \
+	yyleng = (int) (yy_cp - yy_bp); \
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
-
 #define YY_NUM_RULES 155
 #define YY_END_OF_BUFFER 156
 /* This struct is not used in this scanner,
@@ -411,7 +642,7 @@ struct yy_trans_info
 	flex_int32_t yy_verify;
 	flex_int32_t yy_nxt;
 	};
-static yyconst flex_int16_t yy_accept[816] =
+static const flex_int16_t yy_accept[816] =
     {   0,
         0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
         0,    0,  156,  154,  153,  153,    7,  152,  154,    8,
@@ -505,7 +736,7 @@ static yyconst flex_int16_t yy_accept[816] =
         0,    0,    0,   97,    0
     } ;
 
-static yyconst YY_CHAR yy_ec[256] =
+static const YY_CHAR yy_ec[256] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    2,    3,
         1,    1,    4,    1,    1,    1,    1,    1,    1,    1,
@@ -537,7 +768,7 @@ static yyconst YY_CHAR yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static yyconst YY_CHAR yy_meta[46] =
+static const YY_CHAR yy_meta[46] =
     {   0,
         1,    1,    2,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -546,7 +777,7 @@ static yyconst YY_CHAR yy_meta[46] =
         1,    1,    1,    1,    1
     } ;
 
-static yyconst flex_uint16_t yy_base[825] =
+static const flex_int16_t yy_base[825] =
     {   0,
         0,    0,  896,   43,   44,   45,   51,   55,   62,   66,
        70,   74,  898,  900,  900,  900,  900,    0,  890,   69,
@@ -641,7 +872,7 @@ static yyconst flex_uint16_t yy_base[825] =
       395,  397,  399,  401
     } ;
 
-static yyconst flex_int16_t yy_def[825] =
+static const flex_int16_t yy_def[825] =
     {   0,
       815,    1,  816,  816,  816,  816,  817,  817,  817,  817,
       817,  817,  815,  815,  815,  815,  815,  818,  815,  815,
@@ -736,7 +967,7 @@ static yyconst flex_int16_t yy_def[825] =
       815,  815,  815,  815
     } ;
 
-static yyconst flex_uint16_t yy_nxt[946] =
+static const flex_int16_t yy_nxt[946] =
     {   0,
        14,   15,   16,   15,   17,   18,   14,   14,   14,   19,
        20,   20,   20,   20,   21,   14,   14,   14,   14,   22,
@@ -844,7 +1075,7 @@ static yyconst flex_uint16_t yy_nxt[946] =
       815,  815,  815,  815,  815
     } ;
 
-static yyconst flex_int16_t yy_chk[946] =
+static const flex_int16_t yy_chk[946] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -953,7 +1184,7 @@ static yyconst flex_int16_t yy_chk[946] =
     } ;
 
 /* Table of booleans, true if rule could match eol. */
-static yyconst flex_int32_t yy_rule_can_match_eol[156] =
+static const flex_int32_t yy_rule_can_match_eol[156] =
     {   0,
 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 
@@ -967,8 +1198,8 @@ static yyconst flex_int32_t yy_rule_can_match_eol[156] =
 static yy_state_type yy_last_accepting_state;
 static char *yy_last_accepting_cpos;
 
-extern int sieve_flex_debug;
-int sieve_flex_debug = 0;
+extern int yy_flex_debug;
+int yy_flex_debug = 0;
 
 /* The intent behind this definition is that it'll catch
  * any uses of REJECT which flex missed.
@@ -977,7 +1208,7 @@ int sieve_flex_debug = 0;
 #define yymore() yymore_used_but_not_detected
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
-char *sievetext;
+char *yytext;
 #line 1 "sieve/sieve-lex.l"
 #line 2 "sieve/sieve-lex.l"
 /* sieve.l -- sieve lexer
@@ -1035,7 +1266,7 @@ char *sievetext;
 #include "sieve/sieve.h"
 
 #define YY_NO_INPUT
-#define YY_DECL int sievelex(YYSTYPE *yylval,sieve_script_t *sscript)
+#define YY_DECL int yylex(YYSTYPE *yylval, sieve_script_t *sscript)
 
 static struct buf buf;   /* buffer for multi-line text and quoted strings */
 extern int encoded_char; /* used to receive encoded-char feedback from parser */
@@ -1044,14 +1275,16 @@ static unsigned long long tonum(const char *str);
 static int decode_string(struct buf *buf);
 extern void sieveerror(sieve_script_t *, char *);
 extern void sieveerror_f(sieve_script_t *, char *fmt, ...);
-/* linebreak */
-/* non-linebreaking whitespace */
+#line 1279 "sieve/sieve-lex.c"
+#line 74 "sieve/sieve-lex.l"
+    /* linebreak */
+    /* non-linebreaking whitespace */
 
 
 
 
 
-#line 1055 "sieve/sieve-lex.c"
+#line 1288 "sieve/sieve-lex.c"
 
 #define INITIAL 0
 #define MULTILINE 1
@@ -1072,36 +1305,36 @@ extern void sieveerror_f(sieve_script_t *, char *fmt, ...);
 #define YY_EXTRA_TYPE void *
 #endif
 
-static int yy_init_globals (void );
+static int yy_init_globals ( void );
 
 /* Accessor methods to globals.
    These are made visible to non-reentrant scanners for convenience. */
 
-int sievelex_destroy (void );
+int yylex_destroy ( void );
 
-int sieveget_debug (void );
+int yyget_debug ( void );
 
-void sieveset_debug (int debug_flag  );
+void yyset_debug ( int debug_flag  );
 
-YY_EXTRA_TYPE sieveget_extra (void );
+YY_EXTRA_TYPE yyget_extra ( void );
 
-void sieveset_extra (YY_EXTRA_TYPE user_defined  );
+void yyset_extra ( YY_EXTRA_TYPE user_defined  );
 
-FILE *sieveget_in (void );
+FILE *yyget_in ( void );
 
-void sieveset_in  (FILE * _in_str  );
+void yyset_in  ( FILE * _in_str  );
 
-FILE *sieveget_out (void );
+FILE *yyget_out ( void );
 
-void sieveset_out  (FILE * _out_str  );
+void yyset_out  ( FILE * _out_str  );
 
-			int sieveget_leng (void );
+			int yyget_leng ( void );
 
-char *sieveget_text (void );
+char *yyget_text ( void );
 
-int sieveget_lineno (void );
+int yyget_lineno ( void );
 
-void sieveset_lineno (int _line_number  );
+void yyset_lineno ( int _line_number  );
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -1109,9 +1342,9 @@ void sieveset_lineno (int _line_number  );
 
 #ifndef YY_SKIP_YYWRAP
 #ifdef __cplusplus
-extern "C" int sievewrap (void );
+extern "C" int yywrap ( void );
 #else
-extern int sievewrap (void );
+extern int yywrap ( void );
 #endif
 #endif
 
@@ -1120,19 +1353,18 @@ extern int sievewrap (void );
 #endif
 
 #ifndef yytext_ptr
-static void yy_flex_strncpy (char *,yyconst char *,int );
+static void yy_flex_strncpy ( char *, const char *, int );
 #endif
 
 #ifdef YY_NEED_STRLEN
-static int yy_flex_strlen (yyconst char * );
+static int yy_flex_strlen ( const char * );
 #endif
 
 #ifndef YY_NO_INPUT
-
 #ifdef __cplusplus
-static int yyinput (void );
+static int yyinput ( void );
 #else
-static int input (void );
+static int input ( void );
 #endif
 
 #endif
@@ -1152,7 +1384,7 @@ static int input (void );
 /* This used to be an fputs(), but since the string might contain NUL's,
  * we now use fwrite().
  */
-#define ECHO do { if (fwrite( sievetext, (size_t) sieveleng, 1, sieveout )) {} } while (0)
+#define ECHO do { if (fwrite( yytext, (size_t) yyleng, 1, yyout )) {} } while (0)
 #endif
 
 /* Gets input and stuffs it into "buf".  number of characters read, or YY_NULL,
@@ -1163,20 +1395,20 @@ static int input (void );
 	if ( YY_CURRENT_BUFFER_LVALUE->yy_is_interactive ) \
 		{ \
 		int c = '*'; \
-		size_t n; \
+		int n; \
 		for ( n = 0; n < max_size && \
-			     (c = getc( sievein )) != EOF && c != '\n'; ++n ) \
+			     (c = getc( yyin )) != EOF && c != '\n'; ++n ) \
 			buf[n] = (char) c; \
 		if ( c == '\n' ) \
 			buf[n++] = (char) c; \
-		if ( c == EOF && ferror( sievein ) ) \
+		if ( c == EOF && ferror( yyin ) ) \
 			YY_FATAL_ERROR( "input in flex scanner failed" ); \
 		result = n; \
 		} \
 	else \
 		{ \
 		errno=0; \
-		while ( (result = (int) fread(buf, 1, max_size, sievein))==0 && ferror(sievein)) \
+		while ( (result = (int) fread(buf, 1, (yy_size_t) max_size, yyin)) == 0 && ferror(yyin)) \
 			{ \
 			if( errno != EINTR) \
 				{ \
@@ -1184,7 +1416,7 @@ static int input (void );
 				break; \
 				} \
 			errno=0; \
-			clearerr(sievein); \
+			clearerr(yyin); \
 			} \
 		}\
 \
@@ -1217,12 +1449,12 @@ static int input (void );
 #ifndef YY_DECL
 #define YY_DECL_IS_OURS 1
 
-extern int sievelex (void);
+extern int yylex (void);
 
-#define YY_DECL int sievelex (void)
+#define YY_DECL int yylex (void)
 #endif /* !YY_DECL */
 
-/* Code executed at the beginning of each rule, after sievetext and sieveleng
+/* Code executed at the beginning of each rule, after yytext and yyleng
  * have been set up.
  */
 #ifndef YY_USER_ACTION
@@ -1235,9 +1467,9 @@ extern int sievelex (void);
 #endif
 
 #define YY_RULE_SETUP \
-	if ( sieveleng > 0 ) \
+	if ( yyleng > 0 ) \
 		YY_CURRENT_BUFFER_LVALUE->yy_at_bol = \
-				(sievetext[sieveleng - 1] == '\n'); \
+				(yytext[yyleng - 1] == '\n'); \
 	YY_USER_ACTION
 
 /** The main scanner function which does all the work.
@@ -1259,32 +1491,32 @@ YY_DECL
 		if ( ! (yy_start) )
 			(yy_start) = 1;	/* first start state */
 
-		if ( ! sievein )
-			sievein = stdin;
+		if ( ! yyin )
+			yyin = stdin;
 
-		if ( ! sieveout )
-			sieveout = stdout;
+		if ( ! yyout )
+			yyout = stdout;
 
 		if ( ! YY_CURRENT_BUFFER ) {
-			sieveensure_buffer_stack ();
+			yyensure_buffer_stack ();
 			YY_CURRENT_BUFFER_LVALUE =
-				sieve_create_buffer(sievein,YY_BUF_SIZE );
+				yy_create_buffer( yyin, YY_BUF_SIZE );
 		}
 
-		sieve_load_buffer_state( );
+		yy_load_buffer_state(  );
 		}
 
 	{
-#line 85 "sieve/sieve-lex.l"
+#line 86 "sieve/sieve-lex.l"
 
     /* dot stuffing */
-#line 1282 "sieve/sieve-lex.c"
+#line 1514 "sieve/sieve-lex.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
 		yy_cp = (yy_c_buf_p);
 
-		/* Support of sievetext. */
+		/* Support of yytext. */
 		*yy_cp = (yy_hold_char);
 
 		/* yy_bp points to the position in yy_ch_buf of the start of
@@ -1307,9 +1539,9 @@ yy_match:
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
 				if ( yy_current_state >= 816 )
-					yy_c = yy_meta[(unsigned int) yy_c];
+					yy_c = yy_meta[yy_c];
 				}
-			yy_current_state = yy_nxt[yy_base[yy_current_state] + (flex_int16_t) yy_c];
+			yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
 			++yy_cp;
 			}
 		while ( yy_base[yy_current_state] != 900 );
@@ -1328,10 +1560,10 @@ yy_find_action:
 		if ( yy_act != YY_END_OF_BUFFER && yy_rule_can_match_eol[yy_act] )
 			{
 			int yyl;
-			for ( yyl = 0; yyl < sieveleng; ++yyl )
-				if ( sievetext[yyl] == '\n' )
+			for ( yyl = 0; yyl < yyleng; ++yyl )
+				if ( yytext[yyl] == '\n' )
 					
-    sievelineno++;
+    yylineno++;
 ;
 			}
 
@@ -1348,17 +1580,17 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 87 "sieve/sieve-lex.l"
-buf_putc(&buf, sievetext[1]);
+#line 88 "sieve/sieve-lex.l"
+buf_putc(&buf, yytext[1]);
 	YY_BREAK
 /* end of multi-line text */
 case 2:
 /* rule 2 can match eol */
-#line 91 "sieve/sieve-lex.l"
+#line 92 "sieve/sieve-lex.l"
 /* end of quoted string */
 case 3:
 YY_RULE_SETUP
-#line 93 "sieve/sieve-lex.l"
+#line 94 "sieve/sieve-lex.l"
 {
                                   BEGIN INITIAL;
                                   if (encoded_char && !decode_string(&buf)) {
@@ -1373,20 +1605,20 @@ YY_RULE_SETUP
 /* escaped character */
 case 4:
 YY_RULE_SETUP
-#line 105 "sieve/sieve-lex.l"
-buf_putc(&buf, sievetext[1]);
+#line 106 "sieve/sieve-lex.l"
+buf_putc(&buf, yytext[1]);
 	YY_BREAK
 /* any character (including LF) */
 case 5:
 /* rule 5 can match eol */
 YY_RULE_SETUP
-#line 108 "sieve/sieve-lex.l"
-buf_putc(&buf, sievetext[0]);
+#line 109 "sieve/sieve-lex.l"
+buf_putc(&buf, yytext[0]);
 	YY_BREAK
 /* premature EOF */
 case YY_STATE_EOF(QSTRING):
 case YY_STATE_EOF(MULTILINE):
-#line 111 "sieve/sieve-lex.l"
+#line 112 "sieve/sieve-lex.l"
 {
                                   BEGIN INITIAL;
                                   sieveerror(sscript,
@@ -1399,7 +1631,7 @@ case YY_STATE_EOF(MULTILINE):
 case 6:
 /* rule 6 can match eol */
 YY_RULE_SETUP
-#line 120 "sieve/sieve-lex.l"
+#line 121 "sieve/sieve-lex.l"
 {
                                   BEGIN MULTILINE;
                                   buf_reset(&buf);
@@ -1408,7 +1640,7 @@ YY_RULE_SETUP
 /* beginning of quoted string */
 case 7:
 YY_RULE_SETUP
-#line 126 "sieve/sieve-lex.l"
+#line 127 "sieve/sieve-lex.l"
 {
                                   BEGIN QSTRING;
                                   buf_reset(&buf);
@@ -1417,13 +1649,13 @@ YY_RULE_SETUP
 /* number with optional power of 2 suffix */
 case 8:
 YY_RULE_SETUP
-#line 132 "sieve/sieve-lex.l"
+#line 133 "sieve/sieve-lex.l"
 {
-                                  unsigned long long val = tonum(sievetext);
+                                  unsigned long long val = tonum(yytext);
                                   if (val > INT_MAX) {
                                       sieveerror_f(sscript,
                                                    "number too large %s",
-                                                   sievetext);
+                                                   yytext);
                                   }
                                   yylval->nval = val;
                                   return NUMBER;
@@ -1432,132 +1664,132 @@ YY_RULE_SETUP
 /* standard control commands - RFC 5228 */
 case 9:
 YY_RULE_SETUP
-#line 144 "sieve/sieve-lex.l"
+#line 145 "sieve/sieve-lex.l"
 return IF;
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 145 "sieve/sieve-lex.l"
+#line 146 "sieve/sieve-lex.l"
 return ELSIF;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 146 "sieve/sieve-lex.l"
+#line 147 "sieve/sieve-lex.l"
 return ELSE;
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 147 "sieve/sieve-lex.l"
+#line 148 "sieve/sieve-lex.l"
 return REQUIRE;
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 148 "sieve/sieve-lex.l"
+#line 149 "sieve/sieve-lex.l"
 return STOP;
 	YY_BREAK
 /* standard tests - RFC 5228 */
 case 14:
 YY_RULE_SETUP
-#line 151 "sieve/sieve-lex.l"
+#line 152 "sieve/sieve-lex.l"
 return ANYOF;
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 152 "sieve/sieve-lex.l"
+#line 153 "sieve/sieve-lex.l"
 return ALLOF;
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 153 "sieve/sieve-lex.l"
+#line 154 "sieve/sieve-lex.l"
 return EXISTS;
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 154 "sieve/sieve-lex.l"
+#line 155 "sieve/sieve-lex.l"
 return SFALSE;
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 155 "sieve/sieve-lex.l"
+#line 156 "sieve/sieve-lex.l"
 return STRUE;
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 156 "sieve/sieve-lex.l"
+#line 157 "sieve/sieve-lex.l"
 return NOT;
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 157 "sieve/sieve-lex.l"
+#line 158 "sieve/sieve-lex.l"
 return HEADERT;
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 158 "sieve/sieve-lex.l"
+#line 159 "sieve/sieve-lex.l"
 return ADDRESS;
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 159 "sieve/sieve-lex.l"
+#line 160 "sieve/sieve-lex.l"
 return ENVELOPE;
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 160 "sieve/sieve-lex.l"
+#line 161 "sieve/sieve-lex.l"
 return SIZE;
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 161 "sieve/sieve-lex.l"
+#line 162 "sieve/sieve-lex.l"
 return yylval->nval = OVER;
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 162 "sieve/sieve-lex.l"
+#line 163 "sieve/sieve-lex.l"
 return yylval->nval = UNDER;
 	YY_BREAK
 /* standard action commands - RFC 5228 */
 case 26:
 YY_RULE_SETUP
-#line 165 "sieve/sieve-lex.l"
+#line 166 "sieve/sieve-lex.l"
 return DISCARD;
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 166 "sieve/sieve-lex.l"
+#line 167 "sieve/sieve-lex.l"
 return KEEP;
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 167 "sieve/sieve-lex.l"
+#line 168 "sieve/sieve-lex.l"
 return FILEINTO;
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 168 "sieve/sieve-lex.l"
+#line 169 "sieve/sieve-lex.l"
 return REDIRECT;
 	YY_BREAK
 /* copy - RFC 3894 */
 case 30:
 YY_RULE_SETUP
-#line 171 "sieve/sieve-lex.l"
+#line 172 "sieve/sieve-lex.l"
 return COPY;
 	YY_BREAK
 /* comparator-types - RFC 5228 */
 case 31:
 YY_RULE_SETUP
-#line 174 "sieve/sieve-lex.l"
+#line 175 "sieve/sieve-lex.l"
 { BEGIN QCOLLATION; return COMPARATOR; }
 	YY_BREAK
 case 32:
 /* rule 32 can match eol */
 YY_RULE_SETUP
-#line 176 "sieve/sieve-lex.l"
+#line 177 "sieve/sieve-lex.l"
 ;       /* ignore whitespace */
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 177 "sieve/sieve-lex.l"
+#line 178 "sieve/sieve-lex.l"
 {
                                   BEGIN INITIAL;
                                   return yylval->nval = OCTET;
@@ -1565,7 +1797,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 181 "sieve/sieve-lex.l"
+#line 182 "sieve/sieve-lex.l"
 {
                                   BEGIN INITIAL;
                                   return yylval->nval = ASCIICASEMAP;
@@ -1573,7 +1805,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 185 "sieve/sieve-lex.l"
+#line 186 "sieve/sieve-lex.l"
 {
                                   BEGIN INITIAL;
                                   return yylval->nval = ASCIINUMERIC;
@@ -1582,325 +1814,325 @@ YY_RULE_SETUP
 case 36:
 /* rule 36 can match eol */
 YY_RULE_SETUP
-#line 189 "sieve/sieve-lex.l"
+#line 190 "sieve/sieve-lex.l"
 {
                                   BEGIN INITIAL;
                                   sieveerror_f(sscript,
                                                "unknown comparator-name %s",
-                                               sievetext);
+                                               yytext);
                               }
 	YY_BREAK
 /* match-types - RFC 5228 */
 case 37:
 YY_RULE_SETUP
-#line 197 "sieve/sieve-lex.l"
+#line 198 "sieve/sieve-lex.l"
 return yylval->nval = IS;
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 198 "sieve/sieve-lex.l"
+#line 199 "sieve/sieve-lex.l"
 return yylval->nval = CONTAINS;
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 199 "sieve/sieve-lex.l"
+#line 200 "sieve/sieve-lex.l"
 return yylval->nval = MATCHES;
 	YY_BREAK
 /* regex - draft-ietf-sieve-regex */
 case 40:
 YY_RULE_SETUP
-#line 202 "sieve/sieve-lex.l"
+#line 203 "sieve/sieve-lex.l"
 return yylval->nval = REGEX;
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 203 "sieve/sieve-lex.l"
+#line 204 "sieve/sieve-lex.l"
 return yylval->nval = QUOTEREGEX;
 	YY_BREAK
 /* extlists - RFC 6134 */
 case 42:
 YY_RULE_SETUP
-#line 206 "sieve/sieve-lex.l"
+#line 207 "sieve/sieve-lex.l"
 return yylval->nval = LIST;
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 207 "sieve/sieve-lex.l"
+#line 208 "sieve/sieve-lex.l"
 return VALIDEXTLIST;
 	YY_BREAK
 /* address-parts - RFC 5228 */
 case 44:
 YY_RULE_SETUP
-#line 210 "sieve/sieve-lex.l"
+#line 211 "sieve/sieve-lex.l"
 return yylval->nval = ALL;
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 211 "sieve/sieve-lex.l"
+#line 212 "sieve/sieve-lex.l"
 return yylval->nval = LOCALPART;
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 212 "sieve/sieve-lex.l"
+#line 213 "sieve/sieve-lex.l"
 return yylval->nval = DOMAIN;
 	YY_BREAK
 /* subaddress - RFC 5233 */
 case 47:
 YY_RULE_SETUP
-#line 215 "sieve/sieve-lex.l"
+#line 216 "sieve/sieve-lex.l"
 return yylval->nval = USER;
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 216 "sieve/sieve-lex.l"
+#line 217 "sieve/sieve-lex.l"
 return yylval->nval = DETAIL;
 	YY_BREAK
 /* body - RFC 5173 */
 case 49:
 YY_RULE_SETUP
-#line 219 "sieve/sieve-lex.l"
+#line 220 "sieve/sieve-lex.l"
 return BODY;
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 220 "sieve/sieve-lex.l"
+#line 221 "sieve/sieve-lex.l"
 return yylval->nval = RAW;
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 221 "sieve/sieve-lex.l"
+#line 222 "sieve/sieve-lex.l"
 return yylval->nval = TEXT;
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 222 "sieve/sieve-lex.l"
+#line 223 "sieve/sieve-lex.l"
 return yylval->nval = CONTENT;
 	YY_BREAK
 /* environment - RFC 5183 */
 case 53:
 YY_RULE_SETUP
-#line 225 "sieve/sieve-lex.l"
+#line 226 "sieve/sieve-lex.l"
 return ENVIRONMENT;
 	YY_BREAK
 /* variables - RFC 5229 */
 case 54:
 YY_RULE_SETUP
-#line 228 "sieve/sieve-lex.l"
+#line 229 "sieve/sieve-lex.l"
 return STRINGT;
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 229 "sieve/sieve-lex.l"
+#line 230 "sieve/sieve-lex.l"
 return SET;
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 230 "sieve/sieve-lex.l"
+#line 231 "sieve/sieve-lex.l"
 return yylval->nval = LOWER;
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 231 "sieve/sieve-lex.l"
+#line 232 "sieve/sieve-lex.l"
 return yylval->nval = UPPER;
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 232 "sieve/sieve-lex.l"
+#line 233 "sieve/sieve-lex.l"
 return yylval->nval = LOWERFIRST;
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 233 "sieve/sieve-lex.l"
+#line 234 "sieve/sieve-lex.l"
 return yylval->nval = UPPERFIRST;
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 234 "sieve/sieve-lex.l"
+#line 235 "sieve/sieve-lex.l"
 return yylval->nval = QUOTEWILDCARD;
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 235 "sieve/sieve-lex.l"
+#line 236 "sieve/sieve-lex.l"
 return yylval->nval = LENGTH;
 	YY_BREAK
 /* vacation - RFC 5230 */
 case 62:
 YY_RULE_SETUP
-#line 238 "sieve/sieve-lex.l"
+#line 239 "sieve/sieve-lex.l"
 return VACATION;
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 239 "sieve/sieve-lex.l"
+#line 240 "sieve/sieve-lex.l"
 return DAYS;
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 240 "sieve/sieve-lex.l"
+#line 241 "sieve/sieve-lex.l"
 return ADDRESSES;
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 241 "sieve/sieve-lex.l"
+#line 242 "sieve/sieve-lex.l"
 return SUBJECT;
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 242 "sieve/sieve-lex.l"
+#line 243 "sieve/sieve-lex.l"
 return FROM;
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 243 "sieve/sieve-lex.l"
+#line 244 "sieve/sieve-lex.l"
 return HANDLE;
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 244 "sieve/sieve-lex.l"
+#line 245 "sieve/sieve-lex.l"
 return MIME;
 	YY_BREAK
 /* vacation-seconds - RFC 6131 */
 case 69:
 YY_RULE_SETUP
-#line 247 "sieve/sieve-lex.l"
+#line 248 "sieve/sieve-lex.l"
 return SECONDS;
 	YY_BREAK
 /* relational - RFC 5231 */
 case 70:
 YY_RULE_SETUP
-#line 250 "sieve/sieve-lex.l"
+#line 251 "sieve/sieve-lex.l"
 { BEGIN QRELATION; return yylval->nval = COUNT; }
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 251 "sieve/sieve-lex.l"
+#line 252 "sieve/sieve-lex.l"
 { BEGIN QRELATION; return yylval->nval = VALUE; }
 	YY_BREAK
 case 72:
 /* rule 72 can match eol */
 YY_RULE_SETUP
-#line 253 "sieve/sieve-lex.l"
+#line 254 "sieve/sieve-lex.l"
 ;        /* ignore whitespace */
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 254 "sieve/sieve-lex.l"
+#line 255 "sieve/sieve-lex.l"
 { BEGIN INITIAL; return yylval->nval = EQ; }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 255 "sieve/sieve-lex.l"
+#line 256 "sieve/sieve-lex.l"
 { BEGIN INITIAL; return yylval->nval = NE; }
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 256 "sieve/sieve-lex.l"
+#line 257 "sieve/sieve-lex.l"
 { BEGIN INITIAL; return yylval->nval = GT; }
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 257 "sieve/sieve-lex.l"
+#line 258 "sieve/sieve-lex.l"
 { BEGIN INITIAL; return yylval->nval = GE; }
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 258 "sieve/sieve-lex.l"
+#line 259 "sieve/sieve-lex.l"
 { BEGIN INITIAL; return yylval->nval = LT; }
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 259 "sieve/sieve-lex.l"
+#line 260 "sieve/sieve-lex.l"
 { BEGIN INITIAL; return yylval->nval = LE; }
 	YY_BREAK
 case 79:
 /* rule 79 can match eol */
 YY_RULE_SETUP
-#line 260 "sieve/sieve-lex.l"
+#line 261 "sieve/sieve-lex.l"
 {
                                   BEGIN INITIAL;
                                   sieveerror_f(sscript,
                                                "invalid relational-match %s",
-                                               sievetext);
+                                               yytext);
                               }
 	YY_BREAK
 /* imap4flags - RFC 5232 */
 case 80:
 YY_RULE_SETUP
-#line 268 "sieve/sieve-lex.l"
+#line 269 "sieve/sieve-lex.l"
 return yylval->nval = SETFLAG;
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 269 "sieve/sieve-lex.l"
+#line 270 "sieve/sieve-lex.l"
 return yylval->nval = ADDFLAG;
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 270 "sieve/sieve-lex.l"
+#line 271 "sieve/sieve-lex.l"
 return yylval->nval = REMOVEFLAG;
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 271 "sieve/sieve-lex.l"
+#line 272 "sieve/sieve-lex.l"
 return yylval->nval = HASFLAG;
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 272 "sieve/sieve-lex.l"
+#line 273 "sieve/sieve-lex.l"
 return FLAGS;
 	YY_BREAK
 /* imapflags - draft-melnikov-sieve-imapflags-04 */
 case 85:
 YY_RULE_SETUP
-#line 275 "sieve/sieve-lex.l"
+#line 276 "sieve/sieve-lex.l"
 return yylval->nval = MARK;
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 276 "sieve/sieve-lex.l"
+#line 277 "sieve/sieve-lex.l"
 return yylval->nval = UNMARK;
 	YY_BREAK
 /* date - RFC 5260 */
 case 87:
 YY_RULE_SETUP
-#line 279 "sieve/sieve-lex.l"
+#line 280 "sieve/sieve-lex.l"
 return DATE;
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 280 "sieve/sieve-lex.l"
+#line 281 "sieve/sieve-lex.l"
 return ORIGINALZONE;
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 281 "sieve/sieve-lex.l"
+#line 282 "sieve/sieve-lex.l"
 return ZONE;
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 282 "sieve/sieve-lex.l"
+#line 283 "sieve/sieve-lex.l"
 return CURRENTDATE;
 	YY_BREAK
 /* index - RFC 5260 */
 case 91:
 YY_RULE_SETUP
-#line 285 "sieve/sieve-lex.l"
+#line 286 "sieve/sieve-lex.l"
 return INDEX;
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 286 "sieve/sieve-lex.l"
+#line 287 "sieve/sieve-lex.l"
 return LAST;
 	YY_BREAK
 /* editheader - RFC 5293 */
 case 93:
 YY_RULE_SETUP
-#line 289 "sieve/sieve-lex.l"
+#line 290 "sieve/sieve-lex.l"
 return ADDHEADER;
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 290 "sieve/sieve-lex.l"
+#line 291 "sieve/sieve-lex.l"
 return DELETEHEADER;
 	YY_BREAK
 /*   :index               defined in 'index' */
@@ -1908,233 +2140,233 @@ return DELETEHEADER;
 /* [e]reject - RFC 5429 */
 case 95:
 YY_RULE_SETUP
-#line 295 "sieve/sieve-lex.l"
+#line 296 "sieve/sieve-lex.l"
 return yylval->nval = REJCT;
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-#line 296 "sieve/sieve-lex.l"
+#line 297 "sieve/sieve-lex.l"
 return yylval->nval = EREJECT;
 	YY_BREAK
 /* enotify - RFC 5435 */
 case 97:
 YY_RULE_SETUP
-#line 299 "sieve/sieve-lex.l"
+#line 300 "sieve/sieve-lex.l"
 return NOTIFYMETHODCAPABILITY;
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
-#line 300 "sieve/sieve-lex.l"
+#line 301 "sieve/sieve-lex.l"
 return VALIDNOTIFYMETHOD;
 	YY_BREAK
 case 99:
 YY_RULE_SETUP
-#line 301 "sieve/sieve-lex.l"
+#line 302 "sieve/sieve-lex.l"
 return NOTIFY;
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
-#line 302 "sieve/sieve-lex.l"
+#line 303 "sieve/sieve-lex.l"
 return OPTIONS;
 	YY_BREAK
 case 101:
 YY_RULE_SETUP
-#line 303 "sieve/sieve-lex.l"
+#line 304 "sieve/sieve-lex.l"
 return MESSAGE;
 	YY_BREAK
 case 102:
 YY_RULE_SETUP
-#line 304 "sieve/sieve-lex.l"
+#line 305 "sieve/sieve-lex.l"
 return yylval->nval = ENCODEURL;
 	YY_BREAK
 case 103:
 YY_RULE_SETUP
-#line 305 "sieve/sieve-lex.l"
+#line 306 "sieve/sieve-lex.l"
 { BEGIN QIMPORTANCE; return IMPORTANCE; }
 	YY_BREAK
 case 104:
 /* rule 104 can match eol */
 YY_RULE_SETUP
-#line 307 "sieve/sieve-lex.l"
+#line 308 "sieve/sieve-lex.l"
 ;      /* ignore whitespace */
 	YY_BREAK
 case 105:
 YY_RULE_SETUP
-#line 308 "sieve/sieve-lex.l"
+#line 309 "sieve/sieve-lex.l"
 { BEGIN INITIAL; return yylval->nval = HIGH;   }
 	YY_BREAK
 case 106:
 YY_RULE_SETUP
-#line 309 "sieve/sieve-lex.l"
+#line 310 "sieve/sieve-lex.l"
 { BEGIN INITIAL; return yylval->nval = NORMAL; }
 	YY_BREAK
 case 107:
 YY_RULE_SETUP
-#line 310 "sieve/sieve-lex.l"
+#line 311 "sieve/sieve-lex.l"
 { BEGIN INITIAL; return yylval->nval = LOW;    }
 	YY_BREAK
 case 108:
 /* rule 108 can match eol */
 YY_RULE_SETUP
-#line 311 "sieve/sieve-lex.l"
+#line 312 "sieve/sieve-lex.l"
 {
                                   BEGIN INITIAL;
                                   sieveerror_f(sscript,
-                                               "invalid importance %s", sievetext);
+                                               "invalid importance %s", yytext);
                               }
 	YY_BREAK
 /* notify - draft-martin-sieve-notify-01 */
 case 109:
 YY_RULE_SETUP
-#line 318 "sieve/sieve-lex.l"
+#line 319 "sieve/sieve-lex.l"
 return DENOTIFY;
 	YY_BREAK
 case 110:
 YY_RULE_SETUP
-#line 319 "sieve/sieve-lex.l"
+#line 320 "sieve/sieve-lex.l"
 return METHOD;
 	YY_BREAK
 case 111:
 YY_RULE_SETUP
-#line 320 "sieve/sieve-lex.l"
+#line 321 "sieve/sieve-lex.l"
 return ID;
 	YY_BREAK
 case 112:
 YY_RULE_SETUP
-#line 321 "sieve/sieve-lex.l"
+#line 322 "sieve/sieve-lex.l"
 return yylval->nval = LOW;
 	YY_BREAK
 case 113:
 YY_RULE_SETUP
-#line 322 "sieve/sieve-lex.l"
+#line 323 "sieve/sieve-lex.l"
 return yylval->nval = NORMAL;
 	YY_BREAK
 case 114:
 YY_RULE_SETUP
-#line 323 "sieve/sieve-lex.l"
+#line 324 "sieve/sieve-lex.l"
 return yylval->nval = HIGH;
 	YY_BREAK
 /* ihave - RFC 5463 */
 case 115:
 YY_RULE_SETUP
-#line 326 "sieve/sieve-lex.l"
+#line 327 "sieve/sieve-lex.l"
 return IHAVE;
 	YY_BREAK
 case 116:
 YY_RULE_SETUP
-#line 327 "sieve/sieve-lex.l"
+#line 328 "sieve/sieve-lex.l"
 return ERROR;
 	YY_BREAK
 /* mailbox - RFC 5490 */
 case 117:
 YY_RULE_SETUP
-#line 330 "sieve/sieve-lex.l"
+#line 331 "sieve/sieve-lex.l"
 return MAILBOXEXISTS;
 	YY_BREAK
 case 118:
 YY_RULE_SETUP
-#line 331 "sieve/sieve-lex.l"
+#line 332 "sieve/sieve-lex.l"
 return CREATE;
 	YY_BREAK
 /* mboxmetadata - RFC 5490 */
 case 119:
 YY_RULE_SETUP
-#line 334 "sieve/sieve-lex.l"
+#line 335 "sieve/sieve-lex.l"
 return yylval->nval = METADATA;
 	YY_BREAK
 case 120:
 YY_RULE_SETUP
-#line 335 "sieve/sieve-lex.l"
+#line 336 "sieve/sieve-lex.l"
 return METADATAEXISTS;
 	YY_BREAK
 /* servermetadata - RFC 5490 */
 case 121:
 YY_RULE_SETUP
-#line 338 "sieve/sieve-lex.l"
+#line 339 "sieve/sieve-lex.l"
 return yylval->nval = SERVERMETADATA;
 	YY_BREAK
 case 122:
 YY_RULE_SETUP
-#line 339 "sieve/sieve-lex.l"
+#line 340 "sieve/sieve-lex.l"
 return SERVERMETADATAEXISTS;
 	YY_BREAK
 /* redirect-deliverby - RFC 6009 */
 case 123:
 YY_RULE_SETUP
-#line 342 "sieve/sieve-lex.l"
+#line 343 "sieve/sieve-lex.l"
 return BYTIMEREL;
 	YY_BREAK
 case 124:
 YY_RULE_SETUP
-#line 343 "sieve/sieve-lex.l"
+#line 344 "sieve/sieve-lex.l"
 return BYTIMEABS;
 	YY_BREAK
 case 125:
 YY_RULE_SETUP
-#line 344 "sieve/sieve-lex.l"
+#line 345 "sieve/sieve-lex.l"
 return BYMODE;
 	YY_BREAK
 case 126:
 YY_RULE_SETUP
-#line 345 "sieve/sieve-lex.l"
+#line 346 "sieve/sieve-lex.l"
 return BYTRACE;
 	YY_BREAK
 /* redirect-dsn - RFC 6009 */
 case 127:
 YY_RULE_SETUP
-#line 348 "sieve/sieve-lex.l"
+#line 349 "sieve/sieve-lex.l"
 return DSNNOTIFY;
 	YY_BREAK
 case 128:
 YY_RULE_SETUP
-#line 349 "sieve/sieve-lex.l"
+#line 350 "sieve/sieve-lex.l"
 return DSNRET;
 	YY_BREAK
 /* include - RFC 6609 */
 case 129:
 YY_RULE_SETUP
-#line 352 "sieve/sieve-lex.l"
+#line 353 "sieve/sieve-lex.l"
 return INCLUDE;
 	YY_BREAK
 case 130:
 YY_RULE_SETUP
-#line 353 "sieve/sieve-lex.l"
+#line 354 "sieve/sieve-lex.l"
 return yylval->nval = PERSONAL;
 	YY_BREAK
 case 131:
 YY_RULE_SETUP
-#line 354 "sieve/sieve-lex.l"
+#line 355 "sieve/sieve-lex.l"
 return yylval->nval = GLOBAL;
 	YY_BREAK
 case 132:
 YY_RULE_SETUP
-#line 355 "sieve/sieve-lex.l"
+#line 356 "sieve/sieve-lex.l"
 return OPTIONAL;
 	YY_BREAK
 case 133:
 YY_RULE_SETUP
-#line 356 "sieve/sieve-lex.l"
+#line 357 "sieve/sieve-lex.l"
 return ONCE;
 	YY_BREAK
 case 134:
 YY_RULE_SETUP
-#line 357 "sieve/sieve-lex.l"
+#line 358 "sieve/sieve-lex.l"
 return RETURN;
 	YY_BREAK
 /* duplicate - RFC 7352 */
 case 135:
 YY_RULE_SETUP
-#line 360 "sieve/sieve-lex.l"
+#line 361 "sieve/sieve-lex.l"
 return DUPLICATE;
 	YY_BREAK
 case 136:
 YY_RULE_SETUP
-#line 361 "sieve/sieve-lex.l"
+#line 362 "sieve/sieve-lex.l"
 return yylval->nval = HEADER;
 	YY_BREAK
 case 137:
 YY_RULE_SETUP
-#line 362 "sieve/sieve-lex.l"
+#line 363 "sieve/sieve-lex.l"
 return yylval->nval = UNIQUEID;
 	YY_BREAK
 /*   :handle              defined in 'vacation'         */
@@ -2143,72 +2375,72 @@ return yylval->nval = UNIQUEID;
 /* special-use - RFC 8579 */
 case 138:
 YY_RULE_SETUP
-#line 368 "sieve/sieve-lex.l"
+#line 369 "sieve/sieve-lex.l"
 return SPECIALUSEEXISTS;
 	YY_BREAK
 case 139:
 YY_RULE_SETUP
-#line 369 "sieve/sieve-lex.l"
+#line 370 "sieve/sieve-lex.l"
 return SPECIALUSE;
 	YY_BREAK
 /* fcc - RFC 8580 */
 case 140:
 YY_RULE_SETUP
-#line 372 "sieve/sieve-lex.l"
+#line 373 "sieve/sieve-lex.l"
 return FCC;
 	YY_BREAK
 /* draft-gondwana-sieve-mailboxid */
 case 141:
 YY_RULE_SETUP
-#line 375 "sieve/sieve-lex.l"
+#line 376 "sieve/sieve-lex.l"
 return MAILBOXIDEXISTS;
 	YY_BREAK
 case 142:
 YY_RULE_SETUP
-#line 376 "sieve/sieve-lex.l"
+#line 377 "sieve/sieve-lex.l"
 return MAILBOXID;
 	YY_BREAK
 /* vnd.cyrus.log */
 case 143:
 YY_RULE_SETUP
-#line 379 "sieve/sieve-lex.l"
+#line 380 "sieve/sieve-lex.l"
 return LOG;
 	YY_BREAK
 /* vnd.cyrus.jmapquery */
 case 144:
 YY_RULE_SETUP
-#line 382 "sieve/sieve-lex.l"
+#line 383 "sieve/sieve-lex.l"
 return JMAPQUERY;
 	YY_BREAK
 /* vnd.cyrus.snooze */
 case 145:
 YY_RULE_SETUP
-#line 385 "sieve/sieve-lex.l"
+#line 386 "sieve/sieve-lex.l"
 return SNOOZE;
 	YY_BREAK
 case 146:
 YY_RULE_SETUP
-#line 386 "sieve/sieve-lex.l"
+#line 387 "sieve/sieve-lex.l"
 return MAILBOX;
 	YY_BREAK
 case 147:
 YY_RULE_SETUP
-#line 387 "sieve/sieve-lex.l"
+#line 388 "sieve/sieve-lex.l"
 return ADDFLAGS;
 	YY_BREAK
 case 148:
 YY_RULE_SETUP
-#line 388 "sieve/sieve-lex.l"
+#line 389 "sieve/sieve-lex.l"
 return REMOVEFLAGS;
 	YY_BREAK
 case 149:
 YY_RULE_SETUP
-#line 389 "sieve/sieve-lex.l"
+#line 390 "sieve/sieve-lex.l"
 return WEEKDAYS;
 	YY_BREAK
 case 150:
 YY_RULE_SETUP
-#line 390 "sieve/sieve-lex.l"
+#line 391 "sieve/sieve-lex.l"
 return TZID;
 	YY_BREAK
 /*   :create               defined in 'mailbox'     */
@@ -2217,31 +2449,31 @@ return TZID;
 case 151:
 /* rule 151 can match eol */
 YY_RULE_SETUP
-#line 395 "sieve/sieve-lex.l"
+#line 396 "sieve/sieve-lex.l"
 ;  /* ignore bracketed comments */
 	YY_BREAK
 case 152:
 YY_RULE_SETUP
-#line 396 "sieve/sieve-lex.l"
+#line 397 "sieve/sieve-lex.l"
 ;                /* ignore hash comments */
 	YY_BREAK
 case 153:
 /* rule 153 can match eol */
 YY_RULE_SETUP
-#line 397 "sieve/sieve-lex.l"
+#line 398 "sieve/sieve-lex.l"
 ;          /* ignore whitespace */
 	YY_BREAK
 case 154:
 YY_RULE_SETUP
-#line 398 "sieve/sieve-lex.l"
-return sievetext[0];
+#line 399 "sieve/sieve-lex.l"
+return yytext[0];
 	YY_BREAK
 case 155:
 YY_RULE_SETUP
-#line 400 "sieve/sieve-lex.l"
+#line 401 "sieve/sieve-lex.l"
 ECHO;
 	YY_BREAK
-#line 2245 "sieve/sieve-lex.c"
+#line 2477 "sieve/sieve-lex.c"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(QCOLLATION):
 case YY_STATE_EOF(QRELATION):
@@ -2261,15 +2493,15 @@ case YY_STATE_EOF(QIMPORTANCE):
 			{
 			/* We're scanning a new file or input source.  It's
 			 * possible that this happened because the user
-			 * just pointed sievein at a new source and called
-			 * sievelex().  If so, then we have to assure
+			 * just pointed yyin at a new source and called
+			 * yylex().  If so, then we have to assure
 			 * consistency between YY_CURRENT_BUFFER and our
 			 * globals.  Here is the right place to do so, because
 			 * this is the first action (other than possibly a
 			 * back-up) that will match for the new input source.
 			 */
 			(yy_n_chars) = YY_CURRENT_BUFFER_LVALUE->yy_n_chars;
-			YY_CURRENT_BUFFER_LVALUE->yy_input_file = sievein;
+			YY_CURRENT_BUFFER_LVALUE->yy_input_file = yyin;
 			YY_CURRENT_BUFFER_LVALUE->yy_buffer_status = YY_BUFFER_NORMAL;
 			}
 
@@ -2322,11 +2554,11 @@ case YY_STATE_EOF(QIMPORTANCE):
 				{
 				(yy_did_buffer_switch_on_eof) = 0;
 
-				if ( sievewrap( ) )
+				if ( yywrap(  ) )
 					{
 					/* Note: because we've taken care in
 					 * yy_get_next_buffer() to have set up
-					 * sievetext, we can now set up
+					 * yytext, we can now set up
 					 * yy_c_buf_p so that if some total
 					 * hoser (like flex itself) wants to
 					 * call the scanner after we return the
@@ -2376,7 +2608,7 @@ case YY_STATE_EOF(QIMPORTANCE):
 	} /* end of action switch */
 		} /* end of scanning one token */
 	} /* end of user's declarations */
-} /* end of sievelex */
+} /* end of yylex */
 
 /* yy_get_next_buffer - try to read in a new buffer
  *
@@ -2454,7 +2686,8 @@ static int yy_get_next_buffer (void)
 
 				b->yy_ch_buf = (char *)
 					/* Include room in for 2 EOB chars. */
-					sieverealloc((void *) b->yy_ch_buf,b->yy_buf_size + 2  );
+					yyrealloc( (void *) b->yy_ch_buf,
+							 (yy_size_t) (b->yy_buf_size + 2)  );
 				}
 			else
 				/* Can't grow it, we don't own it. */
@@ -2486,7 +2719,7 @@ static int yy_get_next_buffer (void)
 		if ( number_to_move == YY_MORE_ADJ )
 			{
 			ret_val = EOB_ACT_END_OF_FILE;
-			sieverestart(sievein  );
+			yyrestart( yyin  );
 			}
 
 		else
@@ -2503,9 +2736,12 @@ static int yy_get_next_buffer (void)
 	if (((yy_n_chars) + number_to_move) > YY_CURRENT_BUFFER_LVALUE->yy_buf_size) {
 		/* Extend the array by 50%, plus the number we really need. */
 		int new_size = (yy_n_chars) + number_to_move + ((yy_n_chars) >> 1);
-		YY_CURRENT_BUFFER_LVALUE->yy_ch_buf = (char *) sieverealloc((void *) YY_CURRENT_BUFFER_LVALUE->yy_ch_buf,new_size  );
+		YY_CURRENT_BUFFER_LVALUE->yy_ch_buf = (char *) yyrealloc(
+			(void *) YY_CURRENT_BUFFER_LVALUE->yy_ch_buf, (yy_size_t) new_size  );
 		if ( ! YY_CURRENT_BUFFER_LVALUE->yy_ch_buf )
 			YY_FATAL_ERROR( "out of dynamic memory in yy_get_next_buffer()" );
+		/* "- 2" to take care of EOB's */
+		YY_CURRENT_BUFFER_LVALUE->yy_buf_size = (int) (new_size - 2);
 	}
 
 	(yy_n_chars) += number_to_move;
@@ -2539,9 +2775,9 @@ static int yy_get_next_buffer (void)
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
 			if ( yy_current_state >= 816 )
-				yy_c = yy_meta[(unsigned int) yy_c];
+				yy_c = yy_meta[yy_c];
 			}
-		yy_current_state = yy_nxt[yy_base[yy_current_state] + (flex_int16_t) yy_c];
+		yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
 		}
 
 	return yy_current_state;
@@ -2567,9 +2803,9 @@ static int yy_get_next_buffer (void)
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
 		if ( yy_current_state >= 816 )
-			yy_c = yy_meta[(unsigned int) yy_c];
+			yy_c = yy_meta[yy_c];
 		}
-	yy_current_state = yy_nxt[yy_base[yy_current_state] + (flex_int16_t) yy_c];
+	yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
 	yy_is_jam = (yy_current_state == 815);
 
 		return yy_is_jam ? 0 : yy_current_state;
@@ -2603,7 +2839,7 @@ static int yy_get_next_buffer (void)
 
 		else
 			{ /* need more input */
-			int offset = (yy_c_buf_p) - (yytext_ptr);
+			int offset = (int) ((yy_c_buf_p) - (yytext_ptr));
 			++(yy_c_buf_p);
 
 			switch ( yy_get_next_buffer(  ) )
@@ -2620,13 +2856,13 @@ static int yy_get_next_buffer (void)
 					 */
 
 					/* Reset buffer status. */
-					sieverestart(sievein );
+					yyrestart( yyin );
 
 					/*FALLTHROUGH*/
 
 				case EOB_ACT_END_OF_FILE:
 					{
-					if ( sievewrap( ) )
+					if ( yywrap(  ) )
 						return 0;
 
 					if ( ! (yy_did_buffer_switch_on_eof) )
@@ -2646,13 +2882,13 @@ static int yy_get_next_buffer (void)
 		}
 
 	c = *(unsigned char *) (yy_c_buf_p);	/* cast for 8-bit char's */
-	*(yy_c_buf_p) = '\0';	/* preserve sievetext */
+	*(yy_c_buf_p) = '\0';	/* preserve yytext */
 	(yy_hold_char) = *++(yy_c_buf_p);
 
 	YY_CURRENT_BUFFER_LVALUE->yy_at_bol = (c == '\n');
 	if ( YY_CURRENT_BUFFER_LVALUE->yy_at_bol )
 		
-    sievelineno++;
+    yylineno++;
 ;
 
 	return c;
@@ -2664,32 +2900,32 @@ static int yy_get_next_buffer (void)
  * 
  * @note This function does not reset the start condition to @c INITIAL .
  */
-    void sieverestart  (FILE * input_file )
+    void yyrestart  (FILE * input_file )
 {
     
 	if ( ! YY_CURRENT_BUFFER ){
-        sieveensure_buffer_stack ();
+        yyensure_buffer_stack ();
 		YY_CURRENT_BUFFER_LVALUE =
-            sieve_create_buffer(sievein,YY_BUF_SIZE );
+            yy_create_buffer( yyin, YY_BUF_SIZE );
 	}
 
-	sieve_init_buffer(YY_CURRENT_BUFFER,input_file );
-	sieve_load_buffer_state( );
+	yy_init_buffer( YY_CURRENT_BUFFER, input_file );
+	yy_load_buffer_state(  );
 }
 
 /** Switch to a different input buffer.
  * @param new_buffer The new input buffer.
  * 
  */
-    void sieve_switch_to_buffer  (YY_BUFFER_STATE  new_buffer )
+    void yy_switch_to_buffer  (YY_BUFFER_STATE  new_buffer )
 {
     
 	/* TODO. We should be able to replace this entire function body
 	 * with
-	 *		sievepop_buffer_state();
-	 *		sievepush_buffer_state(new_buffer);
+	 *		yypop_buffer_state();
+	 *		yypush_buffer_state(new_buffer);
      */
-	sieveensure_buffer_stack ();
+	yyensure_buffer_stack ();
 	if ( YY_CURRENT_BUFFER == new_buffer )
 		return;
 
@@ -2702,21 +2938,21 @@ static int yy_get_next_buffer (void)
 		}
 
 	YY_CURRENT_BUFFER_LVALUE = new_buffer;
-	sieve_load_buffer_state( );
+	yy_load_buffer_state(  );
 
 	/* We don't actually know whether we did this switch during
-	 * EOF (sievewrap()) processing, but the only time this flag
-	 * is looked at is after sievewrap() is called, so it's safe
+	 * EOF (yywrap()) processing, but the only time this flag
+	 * is looked at is after yywrap() is called, so it's safe
 	 * to go ahead and always set it.
 	 */
 	(yy_did_buffer_switch_on_eof) = 1;
 }
 
-static void sieve_load_buffer_state  (void)
+static void yy_load_buffer_state  (void)
 {
     	(yy_n_chars) = YY_CURRENT_BUFFER_LVALUE->yy_n_chars;
 	(yytext_ptr) = (yy_c_buf_p) = YY_CURRENT_BUFFER_LVALUE->yy_buf_pos;
-	sievein = YY_CURRENT_BUFFER_LVALUE->yy_input_file;
+	yyin = YY_CURRENT_BUFFER_LVALUE->yy_input_file;
 	(yy_hold_char) = *(yy_c_buf_p);
 }
 
@@ -2726,35 +2962,35 @@ static void sieve_load_buffer_state  (void)
  * 
  * @return the allocated buffer state.
  */
-    YY_BUFFER_STATE sieve_create_buffer  (FILE * file, int  size )
+    YY_BUFFER_STATE yy_create_buffer  (FILE * file, int  size )
 {
 	YY_BUFFER_STATE b;
     
-	b = (YY_BUFFER_STATE) sievealloc(sizeof( struct yy_buffer_state )  );
+	b = (YY_BUFFER_STATE) yyalloc( sizeof( struct yy_buffer_state )  );
 	if ( ! b )
-		YY_FATAL_ERROR( "out of dynamic memory in sieve_create_buffer()" );
+		YY_FATAL_ERROR( "out of dynamic memory in yy_create_buffer()" );
 
-	b->yy_buf_size = (yy_size_t)size;
+	b->yy_buf_size = size;
 
 	/* yy_ch_buf has to be 2 characters longer than the size given because
 	 * we need to put in 2 end-of-buffer characters.
 	 */
-	b->yy_ch_buf = (char *) sievealloc(b->yy_buf_size + 2  );
+	b->yy_ch_buf = (char *) yyalloc( (yy_size_t) (b->yy_buf_size + 2)  );
 	if ( ! b->yy_ch_buf )
-		YY_FATAL_ERROR( "out of dynamic memory in sieve_create_buffer()" );
+		YY_FATAL_ERROR( "out of dynamic memory in yy_create_buffer()" );
 
 	b->yy_is_our_buffer = 1;
 
-	sieve_init_buffer(b,file );
+	yy_init_buffer( b, file );
 
 	return b;
 }
 
 /** Destroy the buffer.
- * @param b a buffer created with sieve_create_buffer()
+ * @param b a buffer created with yy_create_buffer()
  * 
  */
-    void sieve_delete_buffer (YY_BUFFER_STATE  b )
+    void yy_delete_buffer (YY_BUFFER_STATE  b )
 {
     
 	if ( ! b )
@@ -2764,27 +3000,27 @@ static void sieve_load_buffer_state  (void)
 		YY_CURRENT_BUFFER_LVALUE = (YY_BUFFER_STATE) 0;
 
 	if ( b->yy_is_our_buffer )
-		sievefree((void *) b->yy_ch_buf  );
+		yyfree( (void *) b->yy_ch_buf  );
 
-	sievefree((void *) b  );
+	yyfree( (void *) b  );
 }
 
 /* Initializes or reinitializes a buffer.
  * This function is sometimes called more than once on the same buffer,
- * such as during a sieverestart() or at EOF.
+ * such as during a yyrestart() or at EOF.
  */
-    static void sieve_init_buffer  (YY_BUFFER_STATE  b, FILE * file )
+    static void yy_init_buffer  (YY_BUFFER_STATE  b, FILE * file )
 
 {
 	int oerrno = errno;
     
-	sieve_flush_buffer(b );
+	yy_flush_buffer( b );
 
 	b->yy_input_file = file;
 	b->yy_fill_buffer = 1;
 
-    /* If b is the current buffer, then sieve_init_buffer was _probably_
-     * called from sieverestart() or through yy_get_next_buffer.
+    /* If b is the current buffer, then yy_init_buffer was _probably_
+     * called from yyrestart() or through yy_get_next_buffer.
      * In that case, we don't want to reset the lineno or column.
      */
     if (b != YY_CURRENT_BUFFER){
@@ -2801,7 +3037,7 @@ static void sieve_load_buffer_state  (void)
  * @param b the buffer state to be flushed, usually @c YY_CURRENT_BUFFER.
  * 
  */
-    void sieve_flush_buffer (YY_BUFFER_STATE  b )
+    void yy_flush_buffer (YY_BUFFER_STATE  b )
 {
     	if ( ! b )
 		return;
@@ -2821,7 +3057,7 @@ static void sieve_load_buffer_state  (void)
 	b->yy_buffer_status = YY_BUFFER_NEW;
 
 	if ( b == YY_CURRENT_BUFFER )
-		sieve_load_buffer_state( );
+		yy_load_buffer_state(  );
 }
 
 /** Pushes the new state onto the stack. The new state becomes
@@ -2830,14 +3066,14 @@ static void sieve_load_buffer_state  (void)
  *  @param new_buffer The new state.
  *  
  */
-void sievepush_buffer_state (YY_BUFFER_STATE new_buffer )
+void yypush_buffer_state (YY_BUFFER_STATE new_buffer )
 {
     	if (new_buffer == NULL)
 		return;
 
-	sieveensure_buffer_stack();
+	yyensure_buffer_stack();
 
-	/* This block is copied from sieve_switch_to_buffer. */
+	/* This block is copied from yy_switch_to_buffer. */
 	if ( YY_CURRENT_BUFFER )
 		{
 		/* Flush out information for old buffer. */
@@ -2851,8 +3087,8 @@ void sievepush_buffer_state (YY_BUFFER_STATE new_buffer )
 		(yy_buffer_stack_top)++;
 	YY_CURRENT_BUFFER_LVALUE = new_buffer;
 
-	/* copied from sieve_switch_to_buffer. */
-	sieve_load_buffer_state( );
+	/* copied from yy_switch_to_buffer. */
+	yy_load_buffer_state(  );
 	(yy_did_buffer_switch_on_eof) = 1;
 }
 
@@ -2860,18 +3096,18 @@ void sievepush_buffer_state (YY_BUFFER_STATE new_buffer )
  *  The next element becomes the new top.
  *  
  */
-void sievepop_buffer_state (void)
+void yypop_buffer_state (void)
 {
     	if (!YY_CURRENT_BUFFER)
 		return;
 
-	sieve_delete_buffer(YY_CURRENT_BUFFER );
+	yy_delete_buffer(YY_CURRENT_BUFFER );
 	YY_CURRENT_BUFFER_LVALUE = NULL;
 	if ((yy_buffer_stack_top) > 0)
 		--(yy_buffer_stack_top);
 
 	if (YY_CURRENT_BUFFER) {
-		sieve_load_buffer_state( );
+		yy_load_buffer_state(  );
 		(yy_did_buffer_switch_on_eof) = 1;
 	}
 }
@@ -2879,9 +3115,9 @@ void sievepop_buffer_state (void)
 /* Allocates the stack if it does not exist.
  *  Guarantees space for at least one push.
  */
-static void sieveensure_buffer_stack (void)
+static void yyensure_buffer_stack (void)
 {
-	int num_to_alloc;
+	yy_size_t num_to_alloc;
     
 	if (!(yy_buffer_stack)) {
 
@@ -2890,11 +3126,11 @@ static void sieveensure_buffer_stack (void)
 		 * immediate realloc on the next call.
          */
       num_to_alloc = 1; /* After all that talk, this was set to 1 anyways... */
-		(yy_buffer_stack) = (struct yy_buffer_state**)sievealloc
+		(yy_buffer_stack) = (struct yy_buffer_state**)yyalloc
 								(num_to_alloc * sizeof(struct yy_buffer_state*)
 								);
 		if ( ! (yy_buffer_stack) )
-			YY_FATAL_ERROR( "out of dynamic memory in sieveensure_buffer_stack()" );
+			YY_FATAL_ERROR( "out of dynamic memory in yyensure_buffer_stack()" );
 
 		memset((yy_buffer_stack), 0, num_to_alloc * sizeof(struct yy_buffer_state*));
 
@@ -2909,12 +3145,12 @@ static void sieveensure_buffer_stack (void)
 		yy_size_t grow_size = 8 /* arbitrary grow size */;
 
 		num_to_alloc = (yy_buffer_stack_max) + grow_size;
-		(yy_buffer_stack) = (struct yy_buffer_state**)sieverealloc
+		(yy_buffer_stack) = (struct yy_buffer_state**)yyrealloc
 								((yy_buffer_stack),
 								num_to_alloc * sizeof(struct yy_buffer_state*)
 								);
 		if ( ! (yy_buffer_stack) )
-			YY_FATAL_ERROR( "out of dynamic memory in sieveensure_buffer_stack()" );
+			YY_FATAL_ERROR( "out of dynamic memory in yyensure_buffer_stack()" );
 
 		/* zero only the new slots.*/
 		memset((yy_buffer_stack) + (yy_buffer_stack_max), 0, grow_size * sizeof(struct yy_buffer_state*));
@@ -2928,7 +3164,7 @@ static void sieveensure_buffer_stack (void)
  * 
  * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE sieve_scan_buffer  (char * base, yy_size_t  size )
+YY_BUFFER_STATE yy_scan_buffer  (char * base, yy_size_t  size )
 {
 	YY_BUFFER_STATE b;
     
@@ -2938,11 +3174,11 @@ YY_BUFFER_STATE sieve_scan_buffer  (char * base, yy_size_t  size )
 		/* They forgot to leave room for the EOB's. */
 		return NULL;
 
-	b = (YY_BUFFER_STATE) sievealloc(sizeof( struct yy_buffer_state )  );
+	b = (YY_BUFFER_STATE) yyalloc( sizeof( struct yy_buffer_state )  );
 	if ( ! b )
-		YY_FATAL_ERROR( "out of dynamic memory in sieve_scan_buffer()" );
+		YY_FATAL_ERROR( "out of dynamic memory in yy_scan_buffer()" );
 
-	b->yy_buf_size = size - 2;	/* "- 2" to take care of EOB's */
+	b->yy_buf_size = (int) (size - 2);	/* "- 2" to take care of EOB's */
 	b->yy_buf_pos = b->yy_ch_buf = base;
 	b->yy_is_our_buffer = 0;
 	b->yy_input_file = NULL;
@@ -2952,33 +3188,33 @@ YY_BUFFER_STATE sieve_scan_buffer  (char * base, yy_size_t  size )
 	b->yy_fill_buffer = 0;
 	b->yy_buffer_status = YY_BUFFER_NEW;
 
-	sieve_switch_to_buffer(b  );
+	yy_switch_to_buffer( b  );
 
 	return b;
 }
 
-/** Setup the input buffer state to scan a string. The next call to sievelex() will
+/** Setup the input buffer state to scan a string. The next call to yylex() will
  * scan from a @e copy of @a str.
  * @param yystr a NUL-terminated string to scan
  * 
  * @return the newly allocated buffer state object.
  * @note If you want to scan bytes that may contain NUL values, then use
- *       sieve_scan_bytes() instead.
+ *       yy_scan_bytes() instead.
  */
-YY_BUFFER_STATE sieve_scan_string (yyconst char * yystr )
+YY_BUFFER_STATE yy_scan_string (const char * yystr )
 {
     
-	return sieve_scan_bytes(yystr,(int) strlen(yystr) );
+	return yy_scan_bytes( yystr, (int) strlen(yystr) );
 }
 
-/** Setup the input buffer state to scan the given bytes. The next call to sievelex() will
+/** Setup the input buffer state to scan the given bytes. The next call to yylex() will
  * scan from a @e copy of @a bytes.
  * @param yybytes the byte buffer to scan
  * @param _yybytes_len the number of bytes in the buffer pointed to by @a bytes.
  * 
  * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE sieve_scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
+YY_BUFFER_STATE yy_scan_bytes  (const char * yybytes, int  _yybytes_len )
 {
 	YY_BUFFER_STATE b;
 	char *buf;
@@ -2987,18 +3223,18 @@ YY_BUFFER_STATE sieve_scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
     
 	/* Get memory for full buffer, including space for trailing EOB's. */
 	n = (yy_size_t) (_yybytes_len + 2);
-	buf = (char *) sievealloc(n  );
+	buf = (char *) yyalloc( n  );
 	if ( ! buf )
-		YY_FATAL_ERROR( "out of dynamic memory in sieve_scan_bytes()" );
+		YY_FATAL_ERROR( "out of dynamic memory in yy_scan_bytes()" );
 
 	for ( i = 0; i < _yybytes_len; ++i )
 		buf[i] = yybytes[i];
 
 	buf[_yybytes_len] = buf[_yybytes_len+1] = YY_END_OF_BUFFER_CHAR;
 
-	b = sieve_scan_buffer(buf,n );
+	b = yy_scan_buffer( buf, n );
 	if ( ! b )
-		YY_FATAL_ERROR( "bad buffer in sieve_scan_bytes()" );
+		YY_FATAL_ERROR( "bad buffer in yy_scan_bytes()" );
 
 	/* It's okay to grow etc. this buffer, and we should throw it
 	 * away when we're done.
@@ -3012,9 +3248,9 @@ YY_BUFFER_STATE sieve_scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
 #define YY_EXIT_FAILURE 2
 #endif
 
-static void yynoreturn yy_fatal_error (yyconst char* msg )
+static void yynoreturn yy_fatal_error (const char* msg )
 {
-			(void) fprintf( stderr, "%s\n", msg );
+			fprintf( stderr, "%s\n", msg );
 	exit( YY_EXIT_FAILURE );
 }
 
@@ -3024,14 +3260,14 @@ static void yynoreturn yy_fatal_error (yyconst char* msg )
 #define yyless(n) \
 	do \
 		{ \
-		/* Undo effects of setting up sievetext. */ \
+		/* Undo effects of setting up yytext. */ \
         int yyless_macro_arg = (n); \
         YY_LESS_LINENO(yyless_macro_arg);\
-		sievetext[sieveleng] = (yy_hold_char); \
-		(yy_c_buf_p) = sievetext + yyless_macro_arg; \
+		yytext[yyleng] = (yy_hold_char); \
+		(yy_c_buf_p) = yytext + yyless_macro_arg; \
 		(yy_hold_char) = *(yy_c_buf_p); \
 		*(yy_c_buf_p) = '\0'; \
-		sieveleng = yyless_macro_arg; \
+		yyleng = yyless_macro_arg; \
 		} \
 	while ( 0 )
 
@@ -3040,89 +3276,89 @@ static void yynoreturn yy_fatal_error (yyconst char* msg )
 /** Get the current line number.
  * 
  */
-int sieveget_lineno  (void)
+int yyget_lineno  (void)
 {
     
-    return sievelineno;
+    return yylineno;
 }
 
 /** Get the input stream.
  * 
  */
-FILE *sieveget_in  (void)
+FILE *yyget_in  (void)
 {
-        return sievein;
+        return yyin;
 }
 
 /** Get the output stream.
  * 
  */
-FILE *sieveget_out  (void)
+FILE *yyget_out  (void)
 {
-        return sieveout;
+        return yyout;
 }
 
 /** Get the length of the current token.
  * 
  */
-int sieveget_leng  (void)
+int yyget_leng  (void)
 {
-        return sieveleng;
+        return yyleng;
 }
 
 /** Get the current token.
  * 
  */
 
-char *sieveget_text  (void)
+char *yyget_text  (void)
 {
-        return sievetext;
+        return yytext;
 }
 
 /** Set the current line number.
  * @param _line_number line number
  * 
  */
-void sieveset_lineno (int  _line_number )
+void yyset_lineno (int  _line_number )
 {
     
-    sievelineno = _line_number;
+    yylineno = _line_number;
 }
 
 /** Set the input stream. This does not discard the current
  * input buffer.
  * @param _in_str A readable stream.
  * 
- * @see sieve_switch_to_buffer
+ * @see yy_switch_to_buffer
  */
-void sieveset_in (FILE *  _in_str )
+void yyset_in (FILE *  _in_str )
 {
-        sievein = _in_str ;
+        yyin = _in_str ;
 }
 
-void sieveset_out (FILE *  _out_str )
+void yyset_out (FILE *  _out_str )
 {
-        sieveout = _out_str ;
+        yyout = _out_str ;
 }
 
-int sieveget_debug  (void)
+int yyget_debug  (void)
 {
-        return sieve_flex_debug;
+        return yy_flex_debug;
 }
 
-void sieveset_debug (int  _bdebug )
+void yyset_debug (int  _bdebug )
 {
-        sieve_flex_debug = _bdebug ;
+        yy_flex_debug = _bdebug ;
 }
 
 static int yy_init_globals (void)
 {
         /* Initialization is the same as for the non-reentrant scanner.
-     * This function is called from sievelex_destroy(), so don't allocate here.
+     * This function is called from yylex_destroy(), so don't allocate here.
      */
 
-    /* We do not touch sievelineno unless the option is enabled. */
-    sievelineno =  1;
+    /* We do not touch yylineno unless the option is enabled. */
+    yylineno =  1;
     
     (yy_buffer_stack) = NULL;
     (yy_buffer_stack_top) = 0;
@@ -3133,36 +3369,36 @@ static int yy_init_globals (void)
 
 /* Defined in main.c */
 #ifdef YY_STDINIT
-    sievein = stdin;
-    sieveout = stdout;
+    yyin = stdin;
+    yyout = stdout;
 #else
-    sievein = NULL;
-    sieveout = NULL;
+    yyin = NULL;
+    yyout = NULL;
 #endif
 
     /* For future reference: Set errno on error, since we are called by
-     * sievelex_init()
+     * yylex_init()
      */
     return 0;
 }
 
-/* sievelex_destroy is for both reentrant and non-reentrant scanners. */
-int sievelex_destroy  (void)
+/* yylex_destroy is for both reentrant and non-reentrant scanners. */
+int yylex_destroy  (void)
 {
     
     /* Pop the buffer stack, destroying each element. */
 	while(YY_CURRENT_BUFFER){
-		sieve_delete_buffer(YY_CURRENT_BUFFER  );
+		yy_delete_buffer( YY_CURRENT_BUFFER  );
 		YY_CURRENT_BUFFER_LVALUE = NULL;
-		sievepop_buffer_state();
+		yypop_buffer_state();
 	}
 
 	/* Destroy the stack itself. */
-	sievefree((yy_buffer_stack) );
+	yyfree((yy_buffer_stack) );
 	(yy_buffer_stack) = NULL;
 
     /* Reset the globals. This is important in a non-reentrant scanner so the next time
-     * sievelex() is called, initialization will occur. */
+     * yylex() is called, initialization will occur. */
     yy_init_globals( );
 
     return 0;
@@ -3173,7 +3409,7 @@ int sievelex_destroy  (void)
  */
 
 #ifndef yytext_ptr
-static void yy_flex_strncpy (char* s1, yyconst char * s2, int n )
+static void yy_flex_strncpy (char* s1, const char * s2, int n )
 {
 		
 	int i;
@@ -3183,7 +3419,7 @@ static void yy_flex_strncpy (char* s1, yyconst char * s2, int n )
 #endif
 
 #ifdef YY_NEED_STRLEN
-static int yy_flex_strlen (yyconst char * s )
+static int yy_flex_strlen (const char * s )
 {
 	int n;
 	for ( n = 0; s[n]; ++n )
@@ -3193,12 +3429,12 @@ static int yy_flex_strlen (yyconst char * s )
 }
 #endif
 
-void *sievealloc (yy_size_t  size )
+void *yyalloc (yy_size_t  size )
 {
 			return malloc(size);
 }
 
-void *sieverealloc  (void * ptr, yy_size_t  size )
+void *yyrealloc  (void * ptr, yy_size_t  size )
 {
 		
 	/* The cast to (char *) in the following accommodates both
@@ -3211,15 +3447,14 @@ void *sieverealloc  (void * ptr, yy_size_t  size )
 	return realloc(ptr, size);
 }
 
-void sievefree (void * ptr )
+void yyfree (void * ptr )
 {
-			free( (char *) ptr );	/* see sieverealloc() for (char *) cast */
+			free( (char *) ptr );	/* see yyrealloc() for (char *) cast */
 }
 
 #define YYTABLES_NAME "yytables"
 
-#line 400 "sieve/sieve-lex.l"
-
+#line 401 "sieve/sieve-lex.l"
 
 
 /* convert numerical string w/units to unsigned long */

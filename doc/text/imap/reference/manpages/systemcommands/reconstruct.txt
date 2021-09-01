@@ -1,4 +1,3 @@
-
 **reconstruct**
 ***************
 
@@ -51,7 +50,7 @@ When upgrading versions of Cyrus software, it may be necessary to run
 version (or *max* for the most recent).  Note that the **-V** option
 cannot be combined with most other reconstruct options.  If a mailbox
 needs reconstructing you should do that first, and then upgrade it
-with **-V** once it's good.
+with **-V** once it’s good.
 
 
 Options
@@ -73,7 +72,7 @@ Options
    When processing a mailbox which is not in the mailbox list (e.g.
    via the **-p** or **-f** options), do not import the metadata from
    the mailbox, instead create it anew (this specifically affects at
-   least the mailbox's seen state unique identifier, user flags, and
+   least the mailbox’s seen state unique identifier, user flags, and
    ACL).
 
 -r
@@ -89,9 +88,9 @@ Options
 
 -s
 
-   Don't stat underlying files.  This makes reconstruct run faster, at
+   Don’t stat underlying files.  This makes reconstruct run faster, at
    the expense of not noticing some issues (like zero byte files or
-   size mismatches).  "**reconstruct -s**" should be quite fast.
+   size mismatches).  “**reconstruct -s**” should be quite fast.
 
 -q
 
@@ -99,7 +98,7 @@ Options
 
 -n
 
-   Don't make any changes.  Problems are reported, but not fixed.
+   Don’t make any changes.  Problems are reported, but not fixed.
 
 -G
 
@@ -111,14 +110,14 @@ Options
 
    If two mailboxes exist with the same UNIQUEID and reconstruct
    visits both of them, -I will cause the second mailbox to have a new
-   UNIQUEID created for it.  If you don't specify -I, you will just
+   UNIQUEID created for it.  If you don’t specify -I, you will just
    get a syslog entry telling you of the clash.
 
 -R
 
    Perform a UID upgrade operation on GUID mismatch files.  Use this
    option if you think your index is corrupted rather than your
-   message files, or if all backup attempts have failed and you're
+   message files, or if all backup attempts have failed and you’re
    happy to be served the missing files.
 
 -U
@@ -128,7 +127,7 @@ Options
    mailbox IOERROR free and fix replication.
 
    WARNING: this deletes corrupt message files for ever - so make sure
-   you've exhausted other options first!
+   you’ve exhausted other options first!
 
 -o
 
@@ -169,7 +168,7 @@ Examples
    **reconstruct -r -f** *tech.support.Archive.2%*
 
    Recursively reconstruct all mailboxes within the
-   *tech.support.Archive* hierarchy with names beginning with '2',
+   *tech.support.Archive* hierarchy with names beginning with ‘2’,
    restoring any directories containing "cyrus.header" files.
 
    **reconstruct -r -f -u** *jsmith*

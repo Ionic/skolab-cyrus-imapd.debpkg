@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "DELIVER" "8" "May 10, 2021" "3.4.1" "Cyrus IMAP"
+.TH "DELIVER" "8" "September 01, 2021" "3.4.2" "Cyrus IMAP"
 .SH NAME
 deliver \- Cyrus IMAP documentation
 .
@@ -72,17 +72,17 @@ Insert a \fBReturn\-Path:\fP header containing \fIaddress\fP\&.
 .B \-m  mailbox
 Deliver to \fBmailbox\fP\&.  If any \fIuserid\fPs are specified, attempts
 to deliver to \fBuser.\fP\fIuserid\fP\fB\&.mailbox\fP for each \fIuserid\fP\&.
-If the ACL on any such mailbox does not grant the sender the "p"
+If the ACL on any such mailbox does not grant the sender the “p”
 right or if \fB\-m\fP is not specified, then delivers to the INBOX for
 the \fIuserid\fP, regardless of the ACL on the INBOX.
 .sp
-If no \fIuserid\fPs are specified, attempts to deliver to \fImailbox\fP\&. If the ACL on \fImailbox\fP does not grant the sender the "p" right,
+If no \fIuserid\fPs are specified, attempts to deliver to \fImailbox\fP\&. If the ACL on \fImailbox\fP does not grant the sender the “p” right,
 the delivery fails.
 .UNINDENT
 .INDENT 0.0
 .TP
 .B \-a  auth\-id
-Specify the authorization id of the sender.  Defaults to "anonymous".
+Specify the authorization id of the sender.  Defaults to “anonymous”.
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -100,9 +100,9 @@ Depending on the setting of \fBreject8bit\fP in imapd.conf(5), deliver
 either rejects/accepts messages with 8\-bit\-set characters in the headers.
 If we accept messages with 8\-bit\-set characters in the headers, then depending
 on the setting of \fBmunge8bit\fP, these characters are either left un\-touched
-or changed to "X".
+or changed to “X”.
 .sp
-This is because such characters can\(aqt be interpreted since the
+This is because such characters can’t be interpreted since the
 character set is not known, although some communities not well\-served by
 US\-ASCII assume that those characters can be used to represent characters not
 present in US\-ASCII.

@@ -1,4 +1,3 @@
-
 Automatic Creation of Mailboxes
 *******************************
 
@@ -8,16 +7,16 @@ Cyrus IMAP features the ability to create mailboxes automatically;
 
 * for email messages that arrive for a user,
 
-* when a Sieve script uses the "fileinto" action.
+* when a Sieve script uses the “fileinto” action.
 
 When operating an IT infrastructure, Cyrus IMAP may only be one part
 of such larger environment. When adding a user *John Doe
 <john.doe@example.org>*, several pieces may need to fall or put in
 place to ensure the account is fully functional.
 
-Cyrus IMAP allows the automatic creation of John's INBOX, and selected
+Cyrus IMAP allows the automatic creation of John’s INBOX, and selected
 sub-folders, either when John first logs in to Cyrus IMAP, or when the
-first message is to be delivered to John's INBOX.
+first message is to be delivered to John’s INBOX.
 
 Additional features of this functionality include;
 
@@ -33,8 +32,8 @@ Additional features of this functionality include;
 Important: Third party solutions incorporating Cyrus IMAP, and
   distributors of Cyrus IMAP (such as your Linux distribution) may
   have disabled this functionality altogether, during the building of
-  the packages -- most likely because they employ different means to
-  get user's mailboxes created.Cyrus IMAP does not currently strip
+  the packages – most likely because they employ different means to
+  get user’s mailboxes created.Cyrus IMAP does not currently strip
   options from man-pages that are rendered irrelevant by the
   functionality not being built in, so while the man-page on your
   system may refer to settings related to this functionality, the
@@ -50,7 +49,7 @@ options in imapd.conf(5).
       message delivery if *autocreate_post* is enabled, provided their
       INBOX did not yet already exist.
 
-      The user's quota is set to the value if it is greater than zero,
+      The user’s quota is set to the value if it is greater than zero,
       otherwise the user has unlimited quota.
 
       Note that quota is specified in kilobytes.
@@ -71,11 +70,11 @@ Autocreation of mailboxes
 
       If a user does not have an INBOX already, and the INBOX is to be
       created, create the list of folders in this setting as well.
-      *autocreate_inbox_folders* is a list of INBOX's subfolders
-      separated by a "|", that are automatically created by the server
+      *autocreate_inbox_folders* is a list of INBOX’s subfolders
+      separated by a “|”, that are automatically created by the server
       under the following two scenarios. Leading and trailing
-      whitespace is stripped, so "Junk | Trash" results in two
-      folders: "Junk" and "Trash".  See also the *xlist-flag* option,
+      whitespace is stripped, so “Junk | Trash” results in two
+      folders: “Junk” and “Trash”.  See also the *xlist-flag* option,
       for setting special-use flags on autocreated folders.
 
       INBOX folders are created under both the following conditions:
@@ -111,19 +110,19 @@ Autocreation of Sieve scripts
 
    "autocreate_sieve_folders:" <none>
 
-      A "|" separated list of subfolders of INBOX that will be
+      A “|” separated list of subfolders of INBOX that will be
       automatically created, if requested by a sieve filter, through
-      the "fileinto" action. The default is to create no folders
+      the “fileinto” action. The default is to create no folders
       automatically.
 
       Leading and trailing whitespace is stripped from each folder, so
-      a setting of "Junk | Trash" will create two folders: "Junk" and
-      "Trash".
+      a setting of “Junk | Trash” will create two folders: “Junk” and
+      “Trash”.
 
    "autocreate_sieve_script:" <none>
 
       The full path of a file that contains a sieve script. This
-      script automatically becomes a user's initial default sieve
+      script automatically becomes a user’s initial default sieve
       filter script.
 
       When this option is not defined, no default sieve filter is
@@ -141,11 +140,11 @@ Autocreation of Sieve scripts
    "autocreate_sieve_script_compiled:" <none>
 
       The full path of a file that contains a compiled in bytecode
-      sieve script. This script automatically becomes a user's initial
+      sieve script. This script automatically becomes a user’s initial
       default sieve filter script.  If this option is not specified,
-      or the filename doesn't exist then the script defined by
+      or the filename doesn’t exist then the script defined by
       autocreate_sieve_script is compiled on the fly and installed as
-      the user's default sieve script
+      the user’s default sieve script
 
 
 Automated folder subscriptions
@@ -153,14 +152,14 @@ Automated folder subscriptions
 
    "autocreate_subscribe_folders:" <none>
 
-      A list of folder names, separated by "|", that the users get
+      A list of folder names, separated by “|”, that the users get
       automatically subscribed to, when their INBOX is created. These
       folder names must have been included in the
       autocreateinboxfolders option of the imapd.conf.
 
    "autocreate_subscribe_sharedfolders:" <none>
 
-      A list of shared folders (bulletin boards), separated by "|",
+      A list of shared folders (bulletin boards), separated by “|”,
       that the users get automatically subscribed to, after their
       INBOX is created. The shared folder must have been created and
       the user must have the required permissions to get subscribed to
@@ -208,12 +207,12 @@ Limitations to the Automatic Creation of Mailboxes
    * "user/jdoe@example.org"
 
 2. When a user *Jane Gi <jane.gi@example.org>* marries *John Doe*
-   and adopts her new husband's surname, her primary recipient email
+   and adopts her new husband’s surname, her primary recipient email
    address may change to become "jane.doe@example.org".
 
    Note that *John Doe* does not need to be an "example.org" user for
    such event to occur, and that many countries allow the husband to
-   take the maiden name of their spouse instead -- so even if the
+   take the maiden name of their spouse instead – so even if the
    employees and/or associates of an organization running Cyrus IMAP
    are exclusively male, this may still apply to that organization.
 

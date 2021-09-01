@@ -1,4 +1,3 @@
-
 Delayed Expunge
 ***************
 
@@ -33,17 +32,17 @@ settings in imapd.conf(5).
       "expunge_mode:" delayed
 
          The mode in which messages (and their corresponding cache
-         entries) are expunged.  "semidelayed" mode is the old
+         entries) are expunged.  “semidelayed” mode is the old
          behavior in which the message files are purged at the time of
          the EXPUNGE, but index and cache records are retained to
-         facilitate QRESYNC. In "delayed" mode, which is the default
+         facilitate QRESYNC. In “delayed” mode, which is the default
          since Cyrus 2.5.0, the message files are also retained,
-         allowing unexpunge to rescue them.  In "immediate" mode, both
+         allowing unexpunge to rescue them.  In “immediate” mode, both
          the message files and the index records are removed as soon
          as possible.  In all cases, nothing will be finally purged
          until all other processes have closed the mailbox to ensure
-         they never see data disappear under them.  In "semidelayed"
-         or "delayed" mode, a later run of "cyr_expire" will clean out
+         they never see data disappear under them.  In “semidelayed”
+         or “delayed” mode, a later run of “cyr_expire” will clean out
          the retained records (and possibly message files). This
          reduces the amount of I/O that takes place at the time of
          EXPUNGE and should result in greater responsiveness for the
@@ -56,6 +55,6 @@ See also:
 
   * Delayed Delete
 
-  * When is What ... Deleted, Expired, Expunged or Purged?
+  * When is What … Deleted, Expired, Expunged or Purged?
 
 Back to Features

@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.4.9 Release Notes
 ******************************
 
@@ -8,13 +7,13 @@ Changes to the Cyrus IMAP Server since 2.4.8
 
 * Bug #3453 - fixed LSUB replication
 
-* Bug #3442 - allow disabling PCRE if it's buggy at your site
+* Bug #3442 - allow disabling PCRE if it’s buggy at your site
 
 * Bug #3443 - LSUB response fixes
 
 * Bug #3448 - XFER error handling (murder)
 
-* Bug #3437 - fixed regression: quotaroot wasn't being updated on
+* Bug #3437 - fixed regression: quotaroot wasn’t being updated on
   rename
 
 * Bug #3456 - fixed crash on rename user.foo user.foo without

@@ -1,4 +1,3 @@
-
 **restore**
 ***********
 
@@ -22,7 +21,7 @@ containing the backup storage.
 file unless specified otherwise by **-C**.
 
 *server* specifies the destination server to which content should be
-restored. It should be of the form '*host*[:*port*]', where *host* is
+restored. It should be of the form ‘*host*[:*port*]’, where *host* is
 either a hostname, an IPv4 address, or an IPv6 address, and where the
 optional *port* is either a known service name (see *services(5)*) or
 a decimal port number.  If *port* is omitted, "imap" will be tried
@@ -35,7 +34,7 @@ either case it must be Cyrus version 3.0 or newer.
 **restore** will authenticate to the destination server according to
 the **restore_authname**, **restore_password** and **restore_realm**
 configuration options.  The credentials should correspond with one of
-the destination server's **admins**.
+the destination server’s **admins**.
 
 *backup* is interpreted according to the specified MODE. See Modes
 below.
@@ -74,7 +73,7 @@ Options
    If *acl* is the empty string (e.g. "-A """) or is unspecified,
    mailboxes will be restored with the default ACL for their
    destination owner.  This is mostly useful when restoring folders
-   from one user's backup into a different user's mailbox.
+   from one user’s backup into a different user’s mailbox.
 
 -C config-file
 
@@ -83,7 +82,7 @@ Options
 
 -D
 
-   Don't trim **deletedprefix** from mailbox names prior to restoring.
+   Don’t trim **deletedprefix** from mailbox names prior to restoring.
    This is mainly useful for rebuilding failed servers, where deleted
    mailboxes should be restored as deleted mailboxes, not as new ones.
 
@@ -91,7 +90,7 @@ Options
 
    If the original server from which the backups were produced had
    **delete_mode** set to *immediate*, then the mailboxes in the
-   backup will not have such a prefix, and this option won't have any
+   backup will not have such a prefix, and this option won’t have any
    useful effect.
 
    See imapd.conf(5) for information about the **deletedprefix** and
@@ -104,7 +103,7 @@ Options
 
    *input-file* should contain one object specification (either an
    *mboxname*, a *uniqueid*, or a *guid*) per line.  Empty lines, and
-   lines beginning with a '#' character, are ignored.
+   lines beginning with a ‘#’ character, are ignored.
 
 -L
 

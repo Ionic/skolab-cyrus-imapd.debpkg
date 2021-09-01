@@ -1,4 +1,3 @@
-
 Why does reconstruct -m not work?
 *********************************
 
@@ -19,11 +18,11 @@ more information.
 
 If you do find yourself with a corrupted mailboxes.db, there are a few
 things you can try. The first is to see if "db_recover" can recover
-your database. If that doesnt' work, there should be backups in
+your database. If that doesnt’ work, there should be backups in
 "$CONFIGDIRECTORY/db.backup1" and "$CONFIGDIRECTORY/db.backup2" that
 may be OK.
 
-If you're using Simon Matter's RPMs, plain-text copies of the
+If you’re using Simon Matter’s RPMs, plain-text copies of the
 mailboxes database should be being generated and saved in
 "/var/lib/imap/backup". Try rebuilding the db from one of those using
 ctl_mboxlist(8). Alternately, try asking the mailing list for help.

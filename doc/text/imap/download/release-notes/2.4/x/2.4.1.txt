@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.4.1 Release Notes
 ******************************
 
@@ -23,7 +22,7 @@ Changes to the Cyrus IMAP Server since 2.4.0
 
 * New build system using git commit ID rather than CVS date
   information to uniquely identify a release or development build via
-  the "ID" command. Also changes the CYRUS_VERSION string for builds
+  the “ID” command. Also changes the CYRUS_VERSION string for builds
   directly from git.
 
 Cyrus IMAP 2.4 Releases

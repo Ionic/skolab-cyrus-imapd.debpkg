@@ -1,4 +1,3 @@
-
 System Architecture
 *******************
 
@@ -56,14 +55,14 @@ stores. Unlike the frontends, each backends is unique: each holds a
 subset of data. Backends are IMAP/POP3/Sieve/LMTP servers.
 
 So when a user logs in to a frontend (say F1), how does F1 know from
-which backend to fetch the user's data? This is where **mupdate**
+which backend to fetch the user’s data? This is where **mupdate**
 comes in: the **mupdate** master holds the mapping of mailboxes to
 back ends. Any time a backend has a change to their user data (i.e.
 mailbox add/delete/move/subscribe), it sends the change to the
 **mupdate** master which then notifies all the frontends of the latest
 mapping.
 
-A user's data is not necessarily all stored on a single backend,
+A user’s data is not necessarily all stored on a single backend,
 either: it can be split across disk partitions or backends.
 
 The mapping on mupdate goes something like this:
@@ -108,7 +107,7 @@ for how to communicate to that replica.
 
 Each channel (ie: each replica) has its own set of log files on the
 master, and its own **sync_client** instance which processes those log
-files and sends them to the replica's **sync_server**.
+files and sends them to the replica’s **sync_server**.
 
 When a replication master generates a change, it calls **sync_log**.
 This writes the change to all the log files (one per channel). The log
@@ -131,7 +130,7 @@ on the master to know the imap credentials on the replica to allow it
 to send details to the replica. It is the port configuration on the
 replica to know where to listen for change updates.
 
-There's two standard channel configurations:
+There’s two standard channel configurations:
 
 1. Single master keeping all replicas up to date.
 
@@ -152,8 +151,8 @@ Log file
 The log file is a list of users and/or mailboxes which have been
 altered.  When sync_log is enabled, all of the daemons which might
 alter a mailbox or user will write a line to this log each time they
-do so.  That means the obvious suspects -- imapd, pop3d, timsieved,
-lmtpd, etc. -- but also cyr_expire and friends.
+do so.  That means the obvious suspects – imapd, pop3d, timsieved,
+lmtpd, etc. – but also cyr_expire and friends.
 
 So when sync_client processes a sync_log, it needs to look at an
 actual copy of the user/mailbox in order to determine its current
@@ -162,8 +161,8 @@ between them. It uses sync_send_lookup to ask for the current state of
 an item, and sync_response_parse to process the response to then make
 suitable changes to perform the synchronisation.
 
-Sync client supports doing a single user with '-u', a single mailbox
-with '-m', etc.  All the entries in the sync_log file are triggers to
+Sync client supports doing a single user with ‘-u’, a single mailbox
+with ‘-m’, etc.  All the entries in the sync_log file are triggers to
 replicate with that same value, so a line "USER vader@darth.net" is
 the same as running "sync_client -u vader@darth.net".
 

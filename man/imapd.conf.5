@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "IMAPD.CONF" "5" "May 10, 2021" "3.4.1" "Cyrus IMAP"
+.TH "IMAPD.CONF" "5" "September 01, 2021" "3.4.2" "Cyrus IMAP"
 .SH NAME
 imapd.conf \- Cyrus IMAP documentation
 .
@@ -48,11 +48,11 @@ where \fIoption\fP is the name of the configuration option being set
 and \fIvalue\fP is the value that the configuration option is being
 set to.
 .sp
-Although there is no limit to the length of a line, a \(ga\(ga\e\(aq\(aq
+Although there is no limit to the length of a line, a \(ga\(ga\(aq’
 (backslash) character may be used as the last character on a line to
 force it to continue on the next one.  No additional whitespace is
-inserted before or after the \(ga\(ga\e\(aq\(aq.  Note that a line that is split
-using \(ga\(ga\e\(aq\(aq character(s) is still considered a single line.
+inserted before or after the \(ga\(ga\(aq’.  Note that a line that is split
+using \(ga\(ga\(aq’ character(s) is still considered a single line.
 .INDENT 0.0
 .TP
 .B For example
@@ -72,11 +72,11 @@ using \(ga\(ga\e\(aq\(aq character(s) is still considered a single line.
 \fIoption\fP: \fIvalue\fP1 \fIvalue\fP2   \fIvalue\fP3
 .UNINDENT
 .sp
-Blank lines and lines beginning with \(ga\(ga#\(aq\(aq are ignored.
+Blank lines and lines beginning with \(ga\(ga#’’ are ignored.
 .sp
-For boolean and enumerated options, the values \(ga\(gayes\(aq\(aq, \(ga\(gaon\(aq\(aq, \(ga\(gat\(aq\(aq,
-\(ga\(gatrue\(aq\(aq and \(ga\(ga1\(aq\(aq turn the option on, the values \(ga\(gano\(aq\(aq, \(ga\(gaoff\(aq\(aq,
-\(ga\(gaf\(aq\(aq, \(ga\(gafalse\(aq\(aq and \(ga\(ga0\(aq\(aq turn the option off.
+For boolean and enumerated options, the values \(ga\(gayes’‘, \(ga\(gaon’‘, \(ga\(gat’‘,
+\(ga\(gatrue’’ and \(ga\(ga1’’ turn the option on, the values \(ga\(gano’‘, \(ga\(gaoff’‘,
+\(ga\(gaf’‘, \(ga\(gafalse’’ and \(ga\(ga0’’ turn the option off.
 .sp
 Duration options take the form of a number followed by a unit, for example
 \fB32m\fP (32 minutes).  Units are \fBd\fP (days), \fBh\fP (hours), \fBm\fP
@@ -92,10 +92,10 @@ etc are not considered).
 .INDENT 0.0
 .INDENT 3.5
 The sections below detail options that can be placed in the
-\fB/etc/imapd.conf\fP file, and show each option\(aqs default value.
+\fB/etc/imapd.conf\fP file, and show each option’s default value.
 Some options have no default value, these are listed with
-\(ga\(ga<no default>\(aq\(aq.  Some options default to the empty string, these
-are listed with \(ga\(ga<none>\(aq\(aq.
+\(ga\(ga<no default>’‘.  Some options default to the empty string, these
+are listed with \(ga\(ga<none>’‘.
 .sp
 \fBaddressbookprefix:\fP #addressbooks
 .INDENT 0.0
@@ -103,7 +103,7 @@ are listed with \(ga\(ga<none>\(aq\(aq.
 The prefix for the addressbook mailboxes hierarchies.  The hierarchy
 delimiter will be automatically appended.  The public addressbook
 hierarchy will be at the toplevel of the shared namespace.  A
-user\(aqs personal addressbook hierarchy will be a child of their Inbox.
+user’s personal addressbook hierarchy will be a child of their Inbox.
 .UNINDENT
 .UNINDENT
 .sp
@@ -112,11 +112,11 @@ user\(aqs personal addressbook hierarchy will be a child of their Inbox.
 .INDENT 3.5
 The list of userids with administrative rights.  Separate each userid
 with a space.  Sites using Kerberos authentication may use
-separate "admin" instances.
+separate “admin” instances.
 .sp
 Note that accounts used by users should not be administrators.
 Administrative accounts should not receive mail.  That is, if user
-"jbRo" is a user reading mail, he should not also be in the admins line.
+“jbRo” is a user reading mail, he should not also be in the admins line.
 Some problems may occur otherwise, most notably the ability of
 administrators to create top\-level mailboxes visible to users,
 but not writable by users.
@@ -145,9 +145,9 @@ Cell to use for AFS PTS lookups.  Defaults to the local cell.
 .INDENT 3.5
 Allow subscription to nonexistent mailboxes.  This option is
 typically used on backend servers in a Murder so that users can
-subscribe to mailboxes that don\(aqt reside on their "home" server.
+subscribe to mailboxes that don’t reside on their “home” server.
 This option can also be used as a workaround for IMAP clients which
-don\(aqt play well with nonexistent or unselectable mailboxes (e.g.,
+don’t play well with nonexistent or unselectable mailboxes (e.g.,
 Microsoft Outlook).
 .UNINDENT
 .UNINDENT
@@ -155,7 +155,7 @@ Microsoft Outlook).
 \fBallowanonymouslogin:\fP 0
 .INDENT 0.0
 .INDENT 3.5
-Permit logins by the user "anonymous" using any password.  Also
+Permit logins by the user “anonymous” using any password.  Also
 allows use of the SASL ANONYMOUS mechanism.
 .UNINDENT
 .UNINDENT
@@ -218,7 +218,7 @@ or XFER.
 .sp
 Note that measures should be taken to make sure that the user being
 moved is not logged in, and cannot login during the move.  Failure
-to do so may result in the user\(aqs meta\-data (seen state,
+to do so may result in the user’s meta\-data (seen state,
 subscriptions, etc) being corrupted or out of date.
 .UNINDENT
 .UNINDENT
@@ -241,7 +241,7 @@ plus\-addressing.  The default changed in 3.0 from off to on.
 \fBaltprefix:\fP Alt Folders
 .INDENT 0.0
 .INDENT 3.5
-Alternative INBOX spellings that can\(aqt be accessed in altnamespace
+Alternative INBOX spellings that can’t be accessed in altnamespace
 otherwise go under here
 .UNINDENT
 .UNINDENT
@@ -266,9 +266,9 @@ will be configdirectory/annotations.db
 \fBanyoneuseracl:\fP 1
 .INDENT 0.0
 .INDENT 3.5
-Should non\-admin users be allowed to set ACLs for the \(aqanyone\(aq
+Should non\-admin users be allowed to set ACLs for the ‘anyone’
 user on their mailboxes?  In a large organization this can cause
-support problems, but it\(aqs enabled by default.
+support problems, but it’s enabled by default.
 .UNINDENT
 .UNINDENT
 .sp
@@ -323,7 +323,7 @@ this obsolete data type, which was useful for early drafts of the standard,
 is accepted but silently translated to \fBstring\fP\&.
 .TP
 \fBboolean\fP
-only the strings "true" or "false" are accepted.  Checking is
+only the strings “true” or “false” are accepted.  Checking is
 case\-insensitive but the value is forced to lowercase.
 .TP
 \fBint\fP
@@ -356,7 +356,7 @@ so leaving this field empty is harmless.  Note also that there is no way
 to specify that an annotation can only be set by an admin user; in
 particular the \fBa\fP permission bit does not achieve this.
 .sp
-Blank lines and lines beginning with \(ga\(ga#\(aq\(aq are ignored.
+Blank lines and lines beginning with \(ga\(ga#’’ are ignored.
 .UNINDENT
 .UNINDENT
 .UNINDENT
@@ -440,7 +440,7 @@ assumed.
 \fBarchive_maxsize:\fP 1024
 .INDENT 0.0
 .INDENT 3.5
-The size in kilobytes of the largest message that won\(aqt be archived
+The size in kilobytes of the largest message that won’t be archived
 immediately.  Default is 1Mb
 .UNINDENT
 .UNINDENT
@@ -448,7 +448,7 @@ immediately.  Default is 1Mb
 \fBarchive_keepflagged:\fP 0
 .INDENT 0.0
 .INDENT 3.5
-If set, messages with the \eFlagged system flag won\(aqt be archived,
+If set, messages with the \eFlagged system flag won’t be archived,
 provided they are smaller than \fBarchive_maxsize\fP\&.
 .UNINDENT
 .UNINDENT
@@ -462,7 +462,7 @@ a directory on \fBpartition\-name\fP, the archived messages will be
 stored in a corresponding directory on \fBarchivepartition\-name\fP\&.
 Note that not every \fBpartition\-name\fP option is strictly required
 to have a corresponding \fBarchivepartition\-name\fP option, but that
-without one there\(aqs no benefit to enabling archiving.
+without one there’s no benefit to enabling archiving.
 .UNINDENT
 .UNINDENT
 .sp
@@ -470,7 +470,7 @@ without one there\(aqs no benefit to enabling archiving.
 .INDENT 0.0
 .INDENT 3.5
 Should cyrus output log entries for every action taken on a message
-file or mailboxes list entry?  It\(aqs noisy so disabled by default, but
+file or mailboxes list entry?  It’s noisy so disabled by default, but
 can be very useful for tracking down what happened if things look strange
 .UNINDENT
 .UNINDENT
@@ -552,15 +552,15 @@ Deprecated in favor of \fIautocreate_subscribe_sharedfolders_all\fP\&.
 .INDENT 3.5
 If folders are to be created by \fIautocreate_inbox_folders\fP, this
 setting can be used to apply additional ACLs to the autocreated
-folders.  The syntax is "autocreate_acl folder identifier rights",
+folders.  The syntax is “autocreate_acl folder identifier rights”,
 where \fIfolder\fP must match one of the \fIautocreate_inbox_folders\fP
 folders, \fIidentifier\fP must be a valid cyrus identifier, and
 \fIrights\fP must be a valid cyrus rights string.  Multiple
 identifier|rights pairs can be assigned to a single folder by providing
 this setting multiple times.
 .sp
-For example, "autocreate_acl Plus anyone p" would allow lmtp delivery
-to a folder named "Plus".
+For example, “autocreate_acl Plus anyone p” would allow lmtp delivery
+to a folder named “Plus”.
 .UNINDENT
 .UNINDENT
 .sp
@@ -569,11 +569,11 @@ to a folder named "Plus".
 .INDENT 3.5
 If a user does not have an INBOX already, and the INBOX is to be
 created, create the list of folders in this setting as well.
-\fIautocreate_inbox_folders\fP is a list of INBOX\(aqs subfolders
-separated by a "|", that are automatically created by the server
+\fIautocreate_inbox_folders\fP is a list of INBOX’s subfolders
+separated by a “|”, that are automatically created by the server
 under the following two scenarios. Leading and trailing whitespace is
-stripped, so "Junk | Trash" results in two folders: "Junk" and
-"Trash".  See also the \fIxlist\-flag\fP option, for setting
+stripped, so “Junk | Trash” results in two folders: “Junk” and
+“Trash”.  See also the \fIxlist\-flag\fP option, for setting
 special\-use flags on autocreated folders.
 .sp
 INBOX folders are created under both the following conditions:
@@ -605,7 +605,7 @@ created upon a successful login event or upon \fIlmtpd(8)\fP
 message delivery if \fIautocreate_post\fP is enabled, provided their
 INBOX did not yet already exist.
 .sp
-The user\(aqs quota is set to the value if it is greater than zero,
+The user’s quota is set to the value if it is greater than zero,
 otherwise the user has unlimited quota.
 .sp
 Note that quota is specified in kilobytes.
@@ -631,14 +631,14 @@ as unlimited message quota, rather than a message quota of zero.
 \fBautocreate_sieve_folders:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-A "|" separated list of subfolders of INBOX that will be
+A “|” separated list of subfolders of INBOX that will be
 automatically created, if requested by a sieve filter, through the
-"fileinto" action. The default is to create no folders
+“fileinto” action. The default is to create no folders
 automatically.
 .sp
 Leading and trailing whitespace is stripped from each folder, so a
-setting of "Junk | Trash" will create two folders: "Junk" and
-"Trash".
+setting of “Junk | Trash” will create two folders: “Junk” and
+“Trash”.
 .UNINDENT
 .UNINDENT
 .sp
@@ -646,7 +646,7 @@ setting of "Junk | Trash" will create two folders: "Junk" and
 .INDENT 0.0
 .INDENT 3.5
 The full path of a file that contains a sieve script. This script
-automatically becomes a user\(aqs initial default sieve filter script.
+automatically becomes a user’s initial default sieve filter script.
 .sp
 When this option is not defined, no default sieve filter is created.
 The file must be readable by the Cyrus daemon.
@@ -667,9 +667,9 @@ autocreate_sieve_compiledscript must have valid values
 .INDENT 0.0
 .INDENT 3.5
 The full path of a file that contains a compiled in bytecode sieve script. This script
-automatically becomes a user\(aqs initial default sieve filter script.  If this option is
-not specified, or the filename doesn\(aqt exist then the script defined by
-autocreate_sieve_script is compiled on the fly and installed as the user\(aqs default
+automatically becomes a user’s initial default sieve filter script.  If this option is
+not specified, or the filename doesn’t exist then the script defined by
+autocreate_sieve_script is compiled on the fly and installed as the user’s default
 sieve script
 .UNINDENT
 .UNINDENT
@@ -677,7 +677,7 @@ sieve script
 \fBautocreate_subscribe_folders:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-A list of folder names, separated by "|", that the users get automatically subscribed to,
+A list of folder names, separated by “|”, that the users get automatically subscribed to,
 when their INBOX is created. These folder names must have been included in the
 autocreateinboxfolders option of the imapd.conf.
 .UNINDENT
@@ -686,7 +686,7 @@ autocreateinboxfolders option of the imapd.conf.
 \fBautocreate_subscribe_sharedfolders:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-A list of shared folders (bulletin boards), separated by "|", that the users get
+A list of shared folders (bulletin boards), separated by “|”, that the users get
 automatically subscribed to, after their INBOX is created. The shared folder must
 have been created and the user must have the required permissions to get subscribed
 to it. Otherwise, subscribing to the shared folder fails.
@@ -840,7 +840,7 @@ Enable per\-user calendar administration web UI on the CalDAV server.
 \fBcaldav_allowscheduling:\fP on
 .INDENT 0.0
 .INDENT 3.5
-Enable calendar scheduling operations. If set to "apple", the
+Enable calendar scheduling operations. If set to “apple”, the
 server will emulate Apple CalendarServer behavior as closely as
 possible.
 Allowed values: \fIoff\fP, \fIon\fP, \fIapple\fP
@@ -850,21 +850,21 @@ Allowed values: \fIoff\fP, \fIon\fP, \fIapple\fP
 \fBcaldav_create_attach:\fP 1
 .INDENT 0.0
 .INDENT 3.5
-Create the \(aqAttachments\(aq collection if it doesn\(aqt already exist
+Create the ‘Attachments’ collection if it doesn’t already exist
 .UNINDENT
 .UNINDENT
 .sp
 \fBcaldav_create_default:\fP 1
 .INDENT 0.0
 .INDENT 3.5
-Create the \(aqDefault\(aq calendar if it doesn\(aqt already exist
+Create the ‘Default’ calendar if it doesn’t already exist
 .UNINDENT
 .UNINDENT
 .sp
 \fBcaldav_create_sched:\fP 1
 .INDENT 0.0
 .INDENT 3.5
-Create the \(aqInbox\(aq and \(aqOutbox\(aq calendars if they don\(aqt already exist
+Create the ‘Inbox’ and ‘Outbox’ calendars if they don’t already exist
 .UNINDENT
 .UNINDENT
 .sp
@@ -872,7 +872,7 @@ Create the \(aqInbox\(aq and \(aqOutbox\(aq calendars if they don\(aqt already e
 .INDENT 0.0
 .INDENT 3.5
 How long after an occurrence of event or task has concluded
-that it is considered \(aqhistorical\(aq.  Changes to historical
+that it is considered ‘historical’.  Changes to historical
 occurrences of events or tasks WILL NOT have invite or reply
 messages sent for them.  A negative value means that events
 and tasks are NEVER considered historical.
@@ -906,7 +906,7 @@ The earliest date and time accepted by the server (ISO format).
 .INDENT 0.0
 .INDENT 3.5
 The realm to present for HTTP authentication of CalDAV resources.
-If not set (the default), the value of the "servername" option will
+If not set (the default), the value of the “servername” option will
 be used.
 .UNINDENT
 .UNINDENT
@@ -917,14 +917,14 @@ be used.
 The prefix for the calendar mailboxes hierarchies.  The hierarchy
 delimiter will be automatically appended.  The public calendar
 hierarchy will be at the toplevel of the shared namespace.  A
-user\(aqs personal calendar hierarchy will be a child of their Inbox.
+user’s personal calendar hierarchy will be a child of their Inbox.
 .UNINDENT
 .UNINDENT
 .sp
 \fBcalendar_default_displayname:\fP personal
 .INDENT 0.0
 .INDENT 3.5
-The displayname to be used when creating a user\(aqs \(aqDefault\(aq calendar.
+The displayname to be used when creating a user’s ‘Default’ calendar.
 .UNINDENT
 .UNINDENT
 .sp
@@ -933,7 +933,7 @@ The displayname to be used when creating a user\(aqs \(aqDefault\(aq calendar.
 .INDENT 3.5
 Space\-separated list of domains corresponding to calendar user
 addresses for which the server is responsible.  If not set (the
-default), the value of the "servername" option will be used.
+default), the value of the “servername” option will be used.
 .UNINDENT
 .UNINDENT
 .sp
@@ -943,7 +943,7 @@ default), the value of the "servername" option will be used.
 Space\-separated list of iCalendar component types that calendar
 object resources may contain in a calendar collection.
 This restriction is only set at calendar creation time and only
-if the CalDAV client hasn\(aqt specified a restriction in the creation
+if the CalDAV client hasn’t specified a restriction in the creation
 request.
 Allowed values: \fIVEVENT\fP, \fIVTODO\fP, \fIVJOURNAL\fP, \fIVFREEBUSY\fP, \fIVAVAILABILITY\fP, \fIVPOLL\fP
 .UNINDENT
@@ -967,7 +967,7 @@ Enable per\-user addressbook administration web UI on the CardDAV server.
 .INDENT 0.0
 .INDENT 3.5
 The realm to present for HTTP authentication of CardDAV resources.
-If not set (the default), the value of the "servername" option will
+If not set (the default), the value of the “servername” option will
 be used.
 .UNINDENT
 .UNINDENT
@@ -994,7 +994,7 @@ for every lmtp connection, every POP3 command, etc
 If enabled, a specific IP will be bound when performing a client
 connection.  \fBclient_bind_name\fP is used if it is set, otherwise
 \fBservername\fP is used.  This is useful on multi\-homed servers where
-Cyrus should not use other services\(aq interfaces.
+Cyrus should not use other services’ interfaces.
 .sp
 If not enabled (the default), no bind will be performed.  Client
 connections will use an IP chosen by the operating system.
@@ -1094,7 +1094,7 @@ assumed.
 \fBconversations_keep_existing:\fP 1
 .INDENT 0.0
 .INDENT 3.5
-during conversations cleanup, don\(aqt clean up if there are still existing emails
+during conversations cleanup, don’t clean up if there are still existing emails
 with one of the mentioned CIDs
 .UNINDENT
 .UNINDENT
@@ -1118,7 +1118,7 @@ email being added and removed over and over, so the default is 5000
 \fBconversations_max_guidexists:\fP 100
 .INDENT 0.0
 .INDENT 3.5
-maximum records with the same guid.  This maps to "labels", so with the default
+maximum records with the same guid.  This maps to “labels”, so with the default
 of 100, you can only have 100 labels on an email in JMAP
 .UNINDENT
 .UNINDENT
@@ -1126,7 +1126,7 @@ of 100, you can only have 100 labels on an email in JMAP
 \fBconversations_max_guidinfolder:\fP 10
 .INDENT 0.0
 .INDENT 3.5
-maximum records with the same guid in the same folder. You can\(aqt do this via JMAP,
+maximum records with the same guid in the same folder. You can’t do this via JMAP,
 but could via IMAP.  The default of 10 should be heaps normally!
 .UNINDENT
 .UNINDENT
@@ -1135,7 +1135,7 @@ but could via IMAP.  The default of 10 should be heaps normally!
 .INDENT 0.0
 .INDENT 3.5
 Enable cross domain sharing.  This works best with alt namespace and
-unix hierarchy separators on, so you get Other \fI\%Users/foo@example.com/\fP\&...
+unix hierarchy separators on, so you get Other \fI\%Users/foo@example.com/\fP…
 .UNINDENT
 .UNINDENT
 .sp
@@ -1143,7 +1143,7 @@ unix hierarchy separators on, so you get Other \fI\%Users/foo@example.com/\fP\&.
 .INDENT 0.0
 .INDENT 3.5
 only show the domain for users in other domains than your own (for
-backwards compatibility if you\(aqre already sharing
+backwards compatibility if you’re already sharing
 .UNINDENT
 .UNINDENT
 .sp
@@ -1159,7 +1159,7 @@ setting the $CYRUS_GROUP environment variable.
 \fBcyrus_user:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-The username to use as the \(aqcyrus\(aq user.  If not configured, the compile
+The username to use as the ‘cyrus’ user.  If not configured, the compile
 time default will be used. Can be further overridden by setting the
 $CYRUS_USER environment variable.
 .UNINDENT
@@ -1171,7 +1171,7 @@ $CYRUS_USER environment variable.
 The prefix for the DAV storage mailboxes hierarchies.  The hierarchy
 delimiter will be automatically appended.  The public storage
 hierarchy will be at the toplevel of the shared namespace.  A
-user\(aqs personal storage hierarchy will be a child of their Inbox.
+user’s personal storage hierarchy will be a child of their Inbox.
 .UNINDENT
 .UNINDENT
 .sp
@@ -1181,7 +1181,7 @@ user\(aqs personal storage hierarchy will be a child of their Inbox.
 The prefix for the DAV notifications hierarchy.  The hierarchy
 delimiter will be automatically appended.  The public notifications
 hierarchy will be at the toplevel of the shared namespace.  A
-user\(aqs personal notifications hierarchy will be a child of their Inbox.
+user’s personal notifications hierarchy will be a child of their Inbox.
 .UNINDENT
 .UNINDENT
 .sp
@@ -1190,7 +1190,7 @@ user\(aqs personal notifications hierarchy will be a child of their Inbox.
 .INDENT 3.5
 The realm to present for HTTP authentication of generic DAV
 resources (principals).  If not set (the default), the value of the
-"servername" option will be used.
+“servername” option will be used.
 .UNINDENT
 .UNINDENT
 .sp
@@ -1240,7 +1240,7 @@ specified, the partition with the most free space will be used for
 new mailboxes.
 .sp
 Note that the partition specified by this option must also be
-specified as \fIpartition\-name\fP, where you substitute \(aqname\(aq
+specified as \fIpartition\-name\fP, where you substitute ‘name’
 for the alphanumeric string you set \fIdefaultpartition\fP to.
 .UNINDENT
 .UNINDENT
@@ -1299,7 +1299,7 @@ Allowed values: \fIimmediate\fP, \fIdelayed\fP
 Whether to also unsubscribe from mailboxes when they are deleted.
 Note that this behaviour contravenes \fI\%RFC 3501\fP section 6.3.9, but
 may be useful for avoiding user/client software confusion.
-The default is \(aqno\(aq.
+The default is ‘no’.
 .UNINDENT
 .UNINDENT
 .sp
@@ -1309,25 +1309,25 @@ The default is \(aqno\(aq.
 Deprecated \- only used for backwards compatibility with existing
 installations.  Lists the old \fI\%RFC 2086\fP right which was used to
 grant the user the ability to delete a mailbox.  If a user has this
-right, they will automatically be given the new \(aqx\(aq right.
+right, they will automatically be given the new ‘x’ right.
 .UNINDENT
 .UNINDENT
 .sp
 \fBdisable_user_namespace:\fP 0
 .INDENT 0.0
 .INDENT 3.5
-Preclude list command on user namespace.  If set to \(aqyes\(aq, the
-LIST response will never include any other user\(aqs mailbox.  Admin
-users will always see all mailboxes.  The default is \(aqno\(aq
+Preclude list command on user namespace.  If set to ‘yes’, the
+LIST response will never include any other user’s mailbox.  Admin
+users will always see all mailboxes.  The default is ‘no’
 .UNINDENT
 .UNINDENT
 .sp
 \fBdisable_shared_namespace:\fP 0
 .INDENT 0.0
 .INDENT 3.5
-Preclude list command on shared namespace.  If set to \(aqyes\(aq, the
+Preclude list command on shared namespace.  If set to ‘yes’, the
 LIST response will never include any non\-user mailboxes.  Admin
-users will always see all mailboxes.  The default is \(aqno\(aq
+users will always see all mailboxes.  The default is ‘no’
 .UNINDENT
 .UNINDENT
 .sp
@@ -1402,11 +1402,11 @@ and message\-id/resent\-message\-id of all successful deliveries.
 .INDENT 0.0
 .INDENT 3.5
 The mode in which message content may be included with MessageAppend and
-MessageNew. "standard" mode is the default behavior in which message is
-included up to a size with the notification. In "message" mode, the message
-is included and may be truncated to a size. In "header" mode, it includes
-headers truncated to a size. In "body" mode, it includes body truncated
-to a size. In "headerbody" mode, it includes full headers and body truncated
+MessageNew. “standard” mode is the default behavior in which message is
+included up to a size with the notification. In “message” mode, the message
+is included and may be truncated to a size. In “header” mode, it includes
+headers truncated to a size. In “body” mode, it includes body truncated
+to a size. In “headerbody” mode, it includes full headers and body truncated
 to a size
 Allowed values: \fIstandard\fP, \fImessage\fP, \fIheader\fP, \fIbody\fP, \fIheaderbody\fP
 .UNINDENT
@@ -1423,14 +1423,14 @@ MessageNew. Set 0 to include the entire message itself
 \fBevent_exclude_flags:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-Don\(aqt send event notification for given IMAP flag(s)
+Don’t send event notification for given IMAP flag(s)
 .UNINDENT
 .UNINDENT
 .sp
 \fBevent_exclude_specialuse:\fP \eJunk
 .INDENT 0.0
 .INDENT 3.5
-Don\(aqt send event notification for folder with given special\-use attributes.
+Don’t send event notification for folder with given special\-use attributes.
 Set ALL for any folder
 .UNINDENT
 .UNINDENT
@@ -1456,8 +1456,8 @@ Allowed values: \fImessage\fP, \fIquota\fP, \fIflags\fP, \fIaccess\fP, \fImailbo
 \fBevent_notifier:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-Notifyd(8) method to use for "EVENT" notifications which are based on
-the \fI\%RFC 5423\fP\&.  If not set, "EVENT" notifications are disabled.
+Notifyd(8) method to use for “EVENT” notifications which are based on
+the \fI\%RFC 5423\fP\&.  If not set, “EVENT” notifications are disabled.
 .UNINDENT
 .UNINDENT
 .sp
@@ -1465,16 +1465,16 @@ the \fI\%RFC 5423\fP\&.  If not set, "EVENT" notifications are disabled.
 .INDENT 0.0
 .INDENT 3.5
 The mode in which messages (and their corresponding cache entries)
-are expunged.  "semidelayed" mode is the old behavior in which the
+are expunged.  “semidelayed” mode is the old behavior in which the
 message files are purged at the time of the EXPUNGE, but index
 and cache records are retained to facilitate QRESYNC.
-In "delayed" mode, which is the default since Cyrus 2.5.0,
+In “delayed” mode, which is the default since Cyrus 2.5.0,
 the message files are also retained, allowing unexpunge to
-rescue them.  In "immediate" mode, both the message files and the
+rescue them.  In “immediate” mode, both the message files and the
 index records are removed as soon as possible.  In all cases,
 nothing will be finally purged until all other processes have
 closed the mailbox to ensure they never see data disappear under
-them.  In "semidelayed" or "delayed" mode, a later run of "cyr_expire"
+them.  In “semidelayed” or “delayed” mode, a later run of “cyr_expire”
 will clean out the retained records (and possibly message files).
 This reduces the amount of I/O that takes place at the time of
 EXPUNGE and should result in greater responsiveness for the client,
@@ -1503,8 +1503,8 @@ Deprecated. No longer used
 \fBfoolstupidclients:\fP 0
 .INDENT 0.0
 .INDENT 3.5
-If enabled, only list the personal namespace when a LIST "*" is performed
-(it changes the request to a LIST "INBOX*").
+If enabled, only list the personal namespace when a LIST “*” is performed
+(it changes the request to a LIST “INBOX*”).
 .UNINDENT
 .UNINDENT
 .sp
@@ -1580,15 +1580,15 @@ human\-readable.
 \fBhttpallowcors:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-A wildmat pattern specifying a list of origin URIs ( scheme "://"
-host [ ":" port ] ) that are allowed to make Cross\-Origin Resource
+A wildmat pattern specifying a list of origin URIs ( scheme “://”
+host [ “:” port ] ) that are allowed to make Cross\-Origin Resource
 Sharing (CORS) requests on the server.  By default, CORS requests
 are disabled.
 .sp
 Note that the scheme and host should both be lowercase, the port
 should be omitted if using the default for the scheme (80 for http,
-443 for https), and there should be no trailing \(aq/\(aq (e.g.:
-"\fI\%http://www.example.com:8080\fP", "\fI\%https://example.org\fP").
+443 for https), and there should be no trailing ‘/’ (e.g.:
+“\fI\%http://www.example.com:8080\fP”, “\fI\%https://example.org\fP”).
 .UNINDENT
 .UNINDENT
 .sp
@@ -1605,12 +1605,12 @@ Note that sensitive data might be disclosed by the response.
 .INDENT 0.0
 .INDENT 3.5
 Space\-separated list of relative URLs (paths) rooted at
-"httpdocroot" (see below) to be served by httpd.  If set, this
+“httpdocroot” (see below) to be served by httpd.  If set, this
 option will limit served static content to only those paths specified
-(returning "404 Not Found" to any other client requested URLs).
-Otherwise, httpd will serve any content found in "httpdocroot".
+(returning “404 Not Found” to any other client requested URLs).
+Otherwise, httpd will serve any content found in “httpdocroot”.
 .sp
-Note that any path specified by "rss_feedlist_template" is an
+Note that any path specified by “rss_feedlist_template” is an
 exception to this rule.
 .UNINDENT
 .UNINDENT
@@ -1638,7 +1638,7 @@ serve any static content.
 \fBhttpkeepalive:\fP 20s
 .INDENT 0.0
 .INDENT 3.5
-Set the length of the HTTP server\(aqs keepalive heartbeat.  The
+Set the length of the HTTP server’s keepalive heartbeat.  The
 default is 20 seconds.  The minimum value is 0, which will disable
 the keepalive heartbeat.  When enabled, if a request takes longer
 than \fIhttpkeepalive\fP to process, the server will send the client
@@ -1665,8 +1665,8 @@ Space\-separated list of HTTP modules that will be enabled in
 httpd(8).  This option has no effect on modules that are disabled
 at compile time due to missing dependencies (e.g. libical).
 .sp
-Note that "domainkey" depends on "ischedule" being enabled, and
-that both "freebusy" and "ischedule" depend on "caldav" being
+Note that “domainkey” depends on “ischedule” being enabled, and
+that both “freebusy” and “ischedule” depend on “caldav” being
 enabled.
 Allowed values: \fIadmin\fP, \fIcaldav\fP, \fIcarddav\fP, \fIcgi\fP, \fIdomainkey\fP, \fIfreebusy\fP, \fIischedule\fP, \fIjmap\fP, \fIprometheus\fP, \fIrss\fP, \fItzdist\fP, \fIwebdav\fP
 .UNINDENT
@@ -1686,7 +1686,7 @@ sent across the wire.
 \fBhttptimeout:\fP 5m
 .INDENT 0.0
 .INDENT 3.5
-Set the length of the HTTP server\(aqs inactivity autologout timer.
+Set the length of the HTTP server’s inactivity autologout timer.
 The default is 5 minutes.  The minimum value is 0, which will
 disable persistent connections.
 .sp
@@ -1705,7 +1705,7 @@ Unix domain socket that idled listens on.
 \fBignorereference:\fP 0
 .INDENT 0.0
 .INDENT 3.5
-For backwards compatibility with Cyrus 1.5.10 and earlier \-\- ignore
+For backwards compatibility with Cyrus 1.5.10 and earlier – ignore
 the reference argument in LIST or LSUB commands.
 .UNINDENT
 .UNINDENT
@@ -1745,8 +1745,8 @@ mailboxes.
 \fBimipnotifier:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-Notifyd(8) method to use for "IMIP" notifications which are based on
-the \fI\%RFC 6047\fP\&.  If not set, "IMIP" notifications are disabled.
+Notifyd(8) method to use for “IMIP” notifications which are based on
+the \fI\%RFC 6047\fP\&.  If not set, “IMIP” notifications are disabled.
 .UNINDENT
 .UNINDENT
 .sp
@@ -1770,7 +1770,7 @@ is prepended.
 .INDENT 0.0
 .INDENT 3.5
 If enabled, a special comparator will be used which will correctly
-sort mailbox names that contain characters such as \(aq \(aq and \(aq\-\(aq.
+sort mailbox names that contain characters such as ‘ ‘ and ‘\-‘.
 .sp
 Note that this option SHOULD NOT be changed on a live system.  The
 mailboxes database should be dumped (ctl_mboxlist) before the
@@ -1811,7 +1811,7 @@ values are ignored.
 For example, if message part 1.2 contains an image of width 300
 and height 200, then the value of this annotation would be:
 .sp
-{ "1.2" : [ 300, 200 ] }
+{ “1.2” : [ 300, 200 ] }
 .UNINDENT
 .UNINDENT
 .sp
@@ -1823,10 +1823,10 @@ JSON object, mapping \fI\%RFC 2392\fP Content\-IDs referenced in HTML bodies
 to the respective HTML body part number.
 .sp
 For example, if message part 1.2 contains HTML and references an
-inlined image at "\fI\%cid:foo\fP", then the value of this annotation
+inlined image at “\fI\%cid:foo\fP”, then the value of this annotation
 would be:
 .sp
-{ "<foo>" : "1.2" }
+{ “<foo>” : “1.2” }
 .sp
 Note that the Content\-ID key must be URL\-unescaped and enclosed in
 angular brackets, as defined in \fI\%RFC 2392\fP\&.
@@ -1846,7 +1846,7 @@ stored in jmap_preview_annot take precedence.
 .INDENT 3.5
 The maximum size (in kilobytes) that the JMAP API accepts
 for blob uploads. Returned as the maxSizeUpload property
-value of the JMAP "\fI\%urn:ietf:params:jmap:core\fP" capabilities object.
+value of the JMAP “\fI\%urn:ietf:params:jmap:core\fP” capabilities object.
 Default is 1Gb.
 .UNINDENT
 .UNINDENT
@@ -1856,7 +1856,7 @@ Default is 1Gb.
 .INDENT 3.5
 The maximum size (in kilobytes) that the JMAP API accepts
 for Blob/set. Returned as the maxSizeBlobSet property
-value of the JMAP "\fI\%https://cyrusimap.org/ns/jmap/blob\fP" capabilities object.
+value of the JMAP “\fI\%https://cyrusimap.org/ns/jmap/blob\fP” capabilities object.
 Default is 4Mb.
 .UNINDENT
 .UNINDENT
@@ -1865,7 +1865,7 @@ Default is 4Mb.
 .INDENT 0.0
 .INDENT 3.5
 The value to return for the maxConcurrentUpload property of
-the JMAP "\fI\%urn:ietf:params:jmap:core\fP" capabilities object. The Cyrus JMAP
+the JMAP “\fI\%urn:ietf:params:jmap:core\fP” capabilities object. The Cyrus JMAP
 implementation does not enforce this rate\-limit.
 .UNINDENT
 .UNINDENT
@@ -1875,7 +1875,7 @@ implementation does not enforce this rate\-limit.
 .INDENT 3.5
 The maximum size (in kilobytes) that the JMAP API accepts
 for requests at the API endpoint. Returned as the
-maxSizeRequest property value of the JMAP "\fI\%urn:ietf:params:jmap:core\fP"
+maxSizeRequest property value of the JMAP “\fI\%urn:ietf:params:jmap:core\fP”
 capabilities object. Default is 10Mb.
 .UNINDENT
 .UNINDENT
@@ -1884,7 +1884,7 @@ capabilities object. Default is 10Mb.
 .INDENT 0.0
 .INDENT 3.5
 The value to return for the maxConcurrentRequests property of
-the JMAP "\fI\%urn:ietf:params:jmap:core\fP" capabilities object. The Cyrus JMAP
+the JMAP “\fI\%urn:ietf:params:jmap:core\fP” capabilities object. The Cyrus JMAP
 implementation does not enforce this rate\-limit.
 .UNINDENT
 .UNINDENT
@@ -1894,7 +1894,7 @@ implementation does not enforce this rate\-limit.
 .INDENT 3.5
 The maximum number of calls per JMAP request object.
 Returned as the maxCallsInRequest property value of the
-JMAP "\fI\%urn:ietf:params:jmap:core\fP" capabilities object.
+JMAP “\fI\%urn:ietf:params:jmap:core\fP” capabilities object.
 .UNINDENT
 .UNINDENT
 .sp
@@ -1902,7 +1902,7 @@ JMAP "\fI\%urn:ietf:params:jmap:core\fP" capabilities object.
 .INDENT 0.0
 .INDENT 3.5
 The value to return for the maxDelayedSend property of
-the JMAP "\fI\%urn:ietf:params:jmap:emailsubmission\fP" capabilities object.
+the JMAP “\fI\%urn:ietf:params:jmap:emailsubmission\fP” capabilities object.
 The Cyrus JMAP implementation does not enforce this limit.
 .sp
 For backward compatibility, if no unit is specified, seconds is
@@ -1914,11 +1914,11 @@ assumed.
 .INDENT 0.0
 .INDENT 3.5
 The maximum number of ids that a JMAP client may request in
-a single "/get" type method call. The actual number
+a single “/get” type method call. The actual number
 of returned objects in the response may exceed this number
-if the JMAP object type supports unbounded "/get" calls.
+if the JMAP object type supports unbounded “/get” calls.
 Returned as the maxObjectsInGet property value of the
-JMAP "\fI\%urn:ietf:params:jmap:core\fP" capabilities object.
+JMAP “\fI\%urn:ietf:params:jmap:core\fP” capabilities object.
 .UNINDENT
 .UNINDENT
 .sp
@@ -1928,7 +1928,7 @@ JMAP "\fI\%urn:ietf:params:jmap:core\fP" capabilities object.
 The maximum number of objects a JMAP client may send to create,
 update or destroy in a single /set type method call.
 Returned as the maxObjectsInSet property value of the
-JMAP "\fI\%urn:ietf:params:jmap:core\fP" capabilities object.
+JMAP “\fI\%urn:ietf:params:jmap:core\fP” capabilities object.
 .UNINDENT
 .UNINDENT
 .sp
@@ -1936,7 +1936,7 @@ JMAP "\fI\%urn:ietf:params:jmap:core\fP" capabilities object.
 .INDENT 0.0
 .INDENT 3.5
 The value (in kilobytes) to return for the maxSizeAttachmentsPerEmail
-property of the JMAP "\fI\%urn:ietf:params:jmap:mail\fP" capabilities object. The Cyrus
+property of the JMAP “\fI\%urn:ietf:params:jmap:mail\fP” capabilities object. The Cyrus
 JMAP implementation does not enforce this size limit. Default is 10 Mb.
 .UNINDENT
 .UNINDENT
@@ -2152,7 +2152,7 @@ LDAP base dn for ldap_member_filter.
 \fBldap_member_filter:\fP (member=%D)
 .INDENT 0.0
 .INDENT 3.5
-Specify a filter for "ldap_member_method: filter".
+Specify a filter for “ldap_member_method: filter”.
 See ldap_filter for more options.
 .UNINDENT
 .UNINDENT
@@ -2160,10 +2160,10 @@ See ldap_filter for more options.
 \fBldap_member_method:\fP attribute
 .INDENT 0.0
 .INDENT 3.5
-Specify a group method.  The "attribute" method retrieves groups from
+Specify a group method.  The “attribute” method retrieves groups from
 a multi\-valued attribute specified in ldap_member_attribute.
 .sp
-The "filter" method uses a filter, specified by ldap_member_filter, to find
+The “filter” method uses a filter, specified by ldap_member_filter, to find
 groups; ldap_member_attribute is a single\-value attribute group name.
 Allowed values: \fIattribute\fP, \fIfilter\fP
 .UNINDENT
@@ -2277,7 +2277,7 @@ Specify a number of entries for a search request to return.
 .INDENT 0.0
 .INDENT 3.5
 Use transport layer security for \fI\%ldap://\fP using STARTTLS. Do not use
-ldaps:// in \(aqldap_uri\(aq with this option enabled.
+ldaps:// in ‘ldap_uri’ with this option enabled.
 .UNINDENT
 .UNINDENT
 .sp
@@ -2408,7 +2408,7 @@ set to 3.
 .INDENT 0.0
 .INDENT 3.5
 if enabled, CAPABILITIES will reply with LITERAL\- rather than
-LITERAL+ (\fI\%RFC 7888\fP).  Doesn\(aqt actually size\-restrict uploads though
+LITERAL+ (\fI\%RFC 7888\fP).  Doesn’t actually size\-restrict uploads though
 .UNINDENT
 .UNINDENT
 .sp
@@ -2416,16 +2416,16 @@ LITERAL+ (\fI\%RFC 7888\fP).  Doesn\(aqt actually size\-restrict uploads though
 .INDENT 0.0
 .INDENT 3.5
 If enabled, lmtpd will convert the recipient addresses to lowercase
-(up to a \(aq+\(aq character, if present).
+(up to a ‘+’ character, if present).
 .UNINDENT
 .UNINDENT
 .sp
 \fBlmtp_exclude_specialuse:\fP \eSnoozed
 .INDENT 0.0
 .INDENT 3.5
-Don\(aqt allow delivery to folders with given special\-use attributes.
+Don’t allow delivery to folders with given special\-use attributes.
 .sp
-Note that "snoozing" of emails can currently only be done via the
+Note that “snoozing” of emails can currently only be done via the
 JMAP protocol, so delivery directly to the Snoozed mailbox is
 prohibited by default as it will not be moved back into INBOX
 automatically.
@@ -2436,7 +2436,7 @@ automatically.
 .INDENT 0.0
 .INDENT 3.5
 If enabled, and the mailbox specified in the detail part of the
-recipient (everything after the \(aq+\(aq) does not exist, lmtpd will try
+recipient (everything after the ‘+’) does not exist, lmtpd will try
 to find the closest match (ignoring case, ignoring whitespace,
 falling back to parent) to the specified mailbox name.
 .UNINDENT
@@ -2445,7 +2445,7 @@ falling back to parent) to the specified mailbox name.
 \fBlmtp_over_quota_perm_failure:\fP 0
 .INDENT 0.0
 .INDENT 3.5
-If enabled, lmtpd returns a permanent failure code when a user\(aqs
+If enabled, lmtpd returns a permanent failure code when a user’s
 mailbox is over quota.  By default, the failure is temporary,
 causing the MTA to queue the message and retry later.
 .UNINDENT
@@ -2465,8 +2465,8 @@ even if it winds up not being needed.
 .INDENT 0.0
 .INDENT 3.5
 If enabled, lmtpd returns a failure code when the incoming message
-will cause the user\(aqs mailbox to exceed its quota.  By default, the
-failure won\(aqt occur until the mailbox is already over quota.
+will cause the user’s mailbox to exceed its quota.  By default, the
+failure won’t occur until the mailbox is already over quota.
 .UNINDENT
 .UNINDENT
 .sp
@@ -2475,7 +2475,7 @@ failure won\(aqt occur until the mailbox is already over quota.
 .INDENT 3.5
 By default, lmtpd will be strict (per \fI\%RFC 2821\fP) with regards to which
 envelope addresses are allowed.  If this option is set to false, 8bit
-characters in the local\-part of envelope addresses are changed to \(aqX\(aq
+characters in the local\-part of envelope addresses are changed to ‘X’
 instead.  This is useful to avoid generating backscatter with
 certain MTAs like Postfix or Exim which accept such messages.
 .UNINDENT
@@ -2506,7 +2506,7 @@ assumed.
 .INDENT 0.0
 .INDENT 3.5
 A floating point number of seconds.  If set, time how long we wait for
-any lock, and syslog the filename and time if it\(aqs longer than this
+any lock, and syslog the filename and time if it’s longer than this
 value.  The default of NULL means not to time locks.
 .UNINDENT
 .UNINDENT
@@ -2517,7 +2517,7 @@ value.  The default of NULL means not to time locks.
 The list of remote realms whose users may authenticate using cross\-realm
 authentication identifiers.  Separate each realm name by a space.  (A
 cross\-realm identity is considered any identity returned by SASL
-with an "@" in it.).
+with an “@” in it.).
 .UNINDENT
 .UNINDENT
 .sp
@@ -2525,7 +2525,7 @@ with an "@" in it.).
 .INDENT 0.0
 .INDENT 3.5
 If enabled, any authentication identity which has \fBa\fP rights on a
-user\(aqs INBOX may log in as that user.
+user’s INBOX may log in as that user.
 .UNINDENT
 .UNINDENT
 .sp
@@ -2540,8 +2540,8 @@ seconds since the last command or response.
 \fBmailbox_default_options:\fP 0
 .INDENT 0.0
 .INDENT 3.5
-Default "options" field for the mailbox on create.  You\(aqll want to know
-what you\(aqre doing before setting this, but it can apply some default
+Default “options” field for the mailbox on create.  You’ll want to know
+what you’re doing before setting this, but it can apply some default
 annotations like duplicate suppression
 .UNINDENT
 .UNINDENT
@@ -2561,7 +2561,7 @@ no flags.  Example: $Label1 $Label2 $Label3 NotSpam Spam
 .INDENT 0.0
 .INDENT 3.5
 Limit the number of messages that may exist in a single mailbox of
-"addressbook" type. Default (0) means no limit.  This limit applies
+“addressbook” type. Default (0) means no limit.  This limit applies
 after quotas are checked, so if you have both quota limits and this
 set, then you will be denied if you are either over quota or over
 this per\-mailbox count.
@@ -2572,7 +2572,7 @@ this per\-mailbox count.
 .INDENT 0.0
 .INDENT 3.5
 Limit the number of messages that may exist in a single mailbox of
-"calendar" type. Default (0) means no limit.  This limit applies
+“calendar” type. Default (0) means no limit.  This limit applies
 after quotas are checked, so if you have both quota limits and this
 set, then you will be denied if you are either over quota or over
 this per\-mailbox count.
@@ -2583,7 +2583,7 @@ this per\-mailbox count.
 .INDENT 0.0
 .INDENT 3.5
 Limit the number of messages that may exist in a single mailbox of
-"email" (normal) type. Default (0) means no limit.  This limit applies
+“email” (normal) type. Default (0) means no limit.  This limit applies
 after quotas are checked, so if you have both quota limits and this
 set, then you will be denied if you are either over quota or over
 this per\-mailbox count.
@@ -2593,7 +2593,7 @@ this per\-mailbox count.
 \fBmailnotifier:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-Notifyd(8) method to use for "MAIL" notifications.  If not set, "MAIL"
+Notifyd(8) method to use for “MAIL” notifications.  If not set, “MAIL”
 notifications are disabled.
 .UNINDENT
 .UNINDENT
@@ -2731,11 +2731,11 @@ mupdate server (if needed).
 .INDENT 0.0
 .INDENT 3.5
 The configuration of the mupdate servers in the Cyrus Murder.
-The "standard" config is one in which there are discreet frontend
-(proxy) and backend servers.  The "unified" config is one in which
-a server can be both a frontend and backend.  The "replicated"
+The “standard” config is one in which there are discreet frontend
+(proxy) and backend servers.  The “unified” config is one in which
+a server can be both a frontend and backend.  The “replicated”
 config is one in which multiple backend servers all share the same
-mailspool, but each have their own "replicated" copy of
+mailspool, but each have their own “replicated” copy of
 mailboxes.db.
 Allowed values: \fIstandard\fP, \fIunified\fP, \fIreplicated\fP
 .UNINDENT
@@ -2745,7 +2745,7 @@ Allowed values: \fIstandard\fP, \fIunified\fP, \fIreplicated\fP
 .INDENT 0.0
 .INDENT 3.5
 If enabled, lmtpd munges messages with 8\-bit characters in the
-headers.  The 8\-bit characters are changed to \(gaX\(aq.  If
+headers.  The 8\-bit characters are changed to \(gaX’.  If
 \fBreject8bit\fP is enabled, setting \fBmunge8bit\fP has no effect.
 (A proper solution to non\-ASCII characters in headers is offered by
 \fI\%RFC 2047\fP and its predecessors.)
@@ -2867,9 +2867,9 @@ Allowed values: \fIto\fP, \fIreplyto\fP
 A wildmat pattern specifying which mailbox hierarchies should be
 treated as newsgroups.  Only mailboxes matching the wildmat will
 accept and/or serve articles via NNTP.  If not set, a default
-wildmat of "*" (ALL shared mailboxes) will be used.  If the
+wildmat of “*” (ALL shared mailboxes) will be used.  If the
 \fInewsprefix\fP option is also set, the default wildmat will be
-translated to "<newsprefix>.*"
+translated to “<newsprefix>.*”
 .UNINDENT
 .UNINDENT
 .sp
@@ -2878,10 +2878,10 @@ translated to "<newsprefix>.*"
 .INDENT 3.5
 Userid that is used for checking access controls when executing
 Usenet control messages.  For instance, to allow articles to be
-automatically deleted by cancel messages, give the "news" user
-the \(aqd\(aq right on the desired mailboxes.  To allow newsgroups to be
+automatically deleted by cancel messages, give the “news” user
+the ‘d’ right on the desired mailboxes.  To allow newsgroups to be
 automatically created, deleted and renamed by the corresponding
-control messages, give the "news" user the \(aqc\(aq right on the desired
+control messages, give the “news” user the ‘c’ right on the desired
 mailbox hierarchies.
 .UNINDENT
 .UNINDENT
@@ -2891,20 +2891,20 @@ mailbox hierarchies.
 .INDENT 3.5
 A list of whitespace\-separated news server specifications to which
 articles should be fed.  Each server specification is a string of
-the form [user[:pass]@]host[:port][/wildmat] where \(aqhost\(aq is the fully
-qualified hostname of the server, \(aqport\(aq is the port on which the
-server is listening, \(aquser\(aq and \(aqpass\(aq are the authentication
-credentials and \(aqwildmat\(aq is a pattern that specifies which groups
-should be fed.  If no \(aqport\(aq is specified, port 119 is used.  If
-no \(aqwildmat\(aq is specified, all groups are fed.  If \(aquser\(aq is specified
+the form [user[:pass]@]host[:port][/wildmat] where ‘host’ is the fully
+qualified hostname of the server, ‘port’ is the port on which the
+server is listening, ‘user’ and ‘pass’ are the authentication
+credentials and ‘wildmat’ is a pattern that specifies which groups
+should be fed.  If no ‘port’ is specified, port 119 is used.  If
+no ‘wildmat’ is specified, all groups are fed.  If ‘user’ is specified
 (even if empty), then the NNTP POST command will be used to feed
 the article to the server, otherwise the IHAVE command will be
 used.
 .sp
-A \(aq@\(aq may be used in place of \(aq!\(aq in the wildmat to prevent feeding
+A ‘@’ may be used in place of ‘!’ in the wildmat to prevent feeding
 articles cross\-posted to the given group, otherwise cross\-posted
 articles are fed if any part of the wildmat matches.  For example,
-the string "peer.example.com:*,!control.*,@local.*" would feed all
+the string “peer.example.com:*,!control.*,@local.*” would feed all
 groups except control messages and local groups to
 peer.example.com.  In the case of cross\-posting to local groups,
 these articles would not be fed.
@@ -2915,8 +2915,8 @@ these articles would not be fed.
 .INDENT 0.0
 .INDENT 3.5
 Userid used to deliver usenet articles to newsgroup folders
-(usually via lmtp2nntp).  For example, if set to "post", email sent
-to "post+comp.mail.imap" would be delivered to the "comp.mail.imap"
+(usually via lmtp2nntp).  For example, if set to “post”, email sent
+to “post+comp.mail.imap” would be delivered to the “comp.mail.imap”
 folder.
 .sp
 When set, the Cyrus NNTP server will add the header(s) specified in
@@ -2946,7 +2946,7 @@ will be configdirectory/fetchnews.db
 \fBnntptimeout:\fP 3m
 .INDENT 0.0
 .INDENT 3.5
-Set the length of the NNTP server\(aqs inactivity autologout timer.
+Set the length of the NNTP server’s inactivity autologout timer.
 The minimum value is 3 minutes, also the default.
 .sp
 For backward compatibility, if no unit is specified, minutes is
@@ -2957,7 +2957,7 @@ assumed.
 \fBnotesmailbox:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-The top level mailbox in each user\(aqs account which is used to store
+The top level mailbox in each user’s account which is used to store
 * Apple\-style Notes.  Default is blank (disabled)
 .UNINDENT
 .UNINDENT
@@ -3097,7 +3097,7 @@ The duration advertised as being the minimum a message may be
 left on the POP server before it is deleted (via the CAPA command,
 defined in the POP3 Extension Mechanism, which some clients may
 support).  This duration has a granularity of whole days, with partial
-days truncated (so e.g. "45m" is effectively "0d").  "NEVER", the
+days truncated (so e.g. “45m” is effectively “0d”).  “NEVER”, the
 default, may be specified with a negative number.
 .sp
 The Cyrus POP3 server never deletes mail, no matter what the value of
@@ -3150,7 +3150,7 @@ of the slots.
 \fBpoptimeout:\fP 10m
 .INDENT 0.0
 .INDENT 3.5
-Set the length of the POP server\(aqs inactivity autologout timer.
+Set the length of the POP server’s inactivity autologout timer.
 The minimum value is 10 minutes, the default.
 .sp
 For backward compatibility, if no unit is specified, minutes is
@@ -3162,10 +3162,10 @@ assumed.
 .INDENT 0.0
 .INDENT 3.5
 Enforce IMAP ACLs in the pop server.  Due to the nature of the POP3
-protocol, the only rights which are used by the pop server are \(aqr\(aq,
-\(aqt\(aq, and \(aqs\(aq for the owner of the mailbox.  The \(aqr\(aq right allows the
-user to open the mailbox and list/retrieve messages.  The \(aqt\(aq right
-allows the user to delete messages.  The \(aqs\(aq right allows messages
+protocol, the only rights which are used by the pop server are ‘r’,
+‘t’, and ‘s’ for the owner of the mailbox.  The ‘r’ right allows the
+user to open the mailbox and list/retrieve messages.  The ‘t’ right
+allows the user to delete messages.  The ‘s’ right allows messages
 retrieved by the user to have the \eSeen flag set (only if
 \fIpopuseimapflags\fP is also enabled).
 .UNINDENT
@@ -3184,7 +3184,7 @@ set.  All messages will have the \eRecent flag unset.
 \fBpostmaster:\fP postmaster
 .INDENT 0.0
 .INDENT 3.5
-Username that is used as the \(aqFrom\(aq address in rejection MDNs produced
+Username that is used as the ‘From’ address in rejection MDNs produced
 by sieve.
 .UNINDENT
 .UNINDENT
@@ -3193,9 +3193,9 @@ by sieve.
 .INDENT 0.0
 .INDENT 3.5
 Userid used to deliver messages to shared folders.  For example, if
-set to "bb", email sent to "bb+shared.blah" would be delivered to
-the "shared.blah" folder.  By default, an email address of
-"+shared.blah" would be used.
+set to “bb”, email sent to “bb+shared.blah” would be delivered to
+the “shared.blah” folder.  By default, an email address of
+“+shared.blah” would be used.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3308,7 +3308,7 @@ A list of users and groups that are allowed to proxy for other
 users, separated by spaces.  Any user listed in this will be
 allowed to login for any other user: use with caution.
 In a standard murder this option should ONLY be set on backends.
-DO NOT SET on frontends or things won\(aqt work properly.
+DO NOT SET on frontends or things won’t work properly.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3361,8 +3361,8 @@ assumed.
 .INDENT 0.0
 .INDENT 3.5
 When using the AFSKRB ptloader module with Kerberos 5 canonicalization,
-do the final 524 conversion to get a n AFS style name (using \(aq.\(aq instead
-of \(aq/\(aq, and using short names
+do the final 524 conversion to get a n AFS style name (using ‘.’ instead
+of ‘/’, and using short names
 .UNINDENT
 .UNINDENT
 .sp
@@ -3523,7 +3523,7 @@ otherwise.
 If enabled, Sieve will be strict (per \fI\%RFC 3028\fP) with regards to
 which headers are allowed to be used in address and envelope tests.
 This means that only those headers which are defined to contain addresses
-will be allowed in address tests and only "to" and "from" will be
+will be allowed in address tests and only “to” and “from” will be
 allowed in envelope tests.  When disabled, ANY grammatically correct header
 will be allowed.
 .UNINDENT
@@ -3536,9 +3536,9 @@ File containing HTML that will be used as a template for displaying
 the list of available RSS feeds.  A single instance of the variable
 %RSS_FEEDLIST% should appear in the file, which will be replaced by
 a nested unordered list of feeds.  The toplevel unordered list will
-be tagged with an id of "feed" (<ul id=\(aqfeed\(aq>) which can be used
+be tagged with an id of “feed” (<ul id=’feed’>) which can be used
 by stylesheet(s) in your template.  The dynamically created list of
-feeds based on the HTML template will be accessible at the "/rss"
+feeds based on the HTML template will be accessible at the “/rss”
 URL on the server.
 .UNINDENT
 .UNINDENT
@@ -3549,7 +3549,7 @@ URL on the server.
 A wildmat pattern specifying which mailbox hierarchies should be
 treated as RSS feeds.  Only mailboxes matching the wildmat will
 have their messages available via RSS.  If not set, a default
-wildmat of "*" (ALL mailboxes) will be used.
+wildmat of “*” (ALL mailboxes) will be used.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3580,7 +3580,7 @@ default).
 .INDENT 3.5
 Maximum RSS item synopsis length.  If non\-zero, httpd will display
 no more than the first \fIrss_maxsynopsis\fP characters of an
-item\(aqs synopsis.  If set to 0, the entire synopsis will be
+item’s synopsis.  If set to 0, the entire synopsis will be
 displayed (the default).
 .UNINDENT
 .UNINDENT
@@ -3589,7 +3589,7 @@ displayed (the default).
 .INDENT 0.0
 .INDENT 3.5
 The realm to present for HTTP authentication of RSS feeds.  If not
-set (the default), the value of the "servername" option will be
+set (the default), the value of the “servername” option will be
 used.
 .UNINDENT
 .UNINDENT
@@ -3631,7 +3631,7 @@ file overrides the SASL configuration file.
 .INDENT 0.0
 .INDENT 3.5
 The mechanism used by the server to verify plaintext passwords.
-Possible values include "auxprop", "saslauthd", and "pwcheck".
+Possible values include “auxprop”, “saslauthd”, and “pwcheck”.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3658,7 +3658,7 @@ uniquely identifies this attachment.
 2. If the extractor already has a cached plain text extract of the
 attachment identified by <cyrus\-id> then it may return HTTP status
 code 200 (OK) and the plain text extract with a Content\-Type
-"text/plain" header. Otherwise it must return HTTP status 404 (Not Found).
+“text/plain” header. Otherwise it must return HTTP status 404 (Not Found).
 .sp
 3. If Cyrus receives the HTTP status code 404 (Not Found), then it sends
 a PUT request to the same URL as previously. The PUT request body
@@ -3667,7 +3667,7 @@ request header has the same value as declared in the MIME part
 headers, including any type parameters.
 .sp
 4. The extractor must return the plain text extract with either HTTP status
-200 (OK) or 201 (Created) and a Content\-Type "text/plain" header.
+200 (OK) or 201 (Created) and a Content\-Type “text/plain” header.
 If no text can be extracted, then the extractor may return any return code
 in the range 4xx, or 200 and an empty response body.
 .sp
@@ -3770,7 +3770,7 @@ Allowed values: \fIflat\fP, \fIskiplist\fP, \fItwoskip\fP, \fIzeroskip\fP
 .INDENT 0.0
 .INDENT 3.5
 The maximum number of seconds to run a search for before aborting.  Default
-of no value means search "forever" until other timeouts.
+of no value means search “forever” until other timeouts.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3786,8 +3786,8 @@ The minimum number of records require to do a direct scan of all G keys
 .INDENT 0.0
 .INDENT 3.5
 When searching, should diacriticals be stripped from the search
-terms.  The default is "true", a search for "hav" will match
-"Håvard".  This is not \fI\%RFC 5051\fP compliant, but it backwards
+terms.  The default is “true”, a search for “hav” will match
+“Håvard”.  This is not \fI\%RFC 5051\fP compliant, but it backwards
 compatible, and may be preferred by some sites.
 .UNINDENT
 .UNINDENT
@@ -3796,7 +3796,7 @@ compatible, and may be preferred by some sites.
 .INDENT 0.0
 .INDENT 3.5
 If enabled, HTML parts of messages are skipped, i.e. not indexed and
-not searchable.  Otherwise, they\(aqre indexed.
+not searchable.  Otherwise, they’re indexed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -3804,11 +3804,11 @@ not searchable.  Otherwise, they\(aqre indexed.
 .INDENT 0.0
 .INDENT 3.5
 When searching, how whitespace should be handled.  Options are:
-"skip" (default in 2.3 and earlier series) \- where a search for
-"equi" would match "the quick brown fox".  "merge" \- the default,
-where "he  qu" would match "the quick   brownfox", and "keep",
-where whitespace must match exactly.  The default of "merge" is
-recommended for most cases \- it\(aqs a good compromise which
+“skip” (default in 2.3 and earlier series) \- where a search for
+“equi” would match “the quick brown fox”.  “merge” \- the default,
+where “he  qu” would match “the quick   brownfox”, and “keep”,
+where whitespace must match exactly.  The default of “merge” is
+recommended for most cases \- it’s a good compromise which
 keeps words separate.
 Allowed values: \fIskip\fP, \fImerge\fP, \fIkeep\fP
 .UNINDENT
@@ -3844,7 +3844,7 @@ details).
 For example: if \fIdefaultpartition\fP is defined as part1 and
 \fIdefaultsearchtier\fP as tier1 then the configuration must contain
 an entry \fItier1searchpartition\-part1\fP that defines the path where to
-store this tier1\(aqs search index for the part1 partition.
+store this tier1’s search index for the part1 partition.
 .sp
 This option MUST be specified for xapian search.
 .UNINDENT
@@ -3953,11 +3953,11 @@ The server information to display in the greeting and capability
 responses. Information is displayed as follows:
 .INDENT 0.0
 .INDENT 3.5
-"off" = no server information in the greeting or capabilities
+“off” = no server information in the greeting or capabilities
 .sp
-"min" = \fIservername\fP in the greeting; no server information in the capabilities
+“min” = \fIservername\fP in the greeting; no server information in the capabilities
 .sp
-"on" = \fIservername\fP and product version in the greeting;
+“on” = \fIservername\fP and product version in the greeting;
 product version in the capabilities
 .sp
 Allowed values: \fIoff\fP, \fImin\fP, \fIon\fP
@@ -3978,7 +3978,7 @@ namespace.  The hierarchy delimiter will be automatically appended.
 .INDENT 0.0
 .INDENT 3.5
 If enabled, timsieved will issue referrals to clients when the
-user\(aqs scripts reside on a remote server (in a Murder).
+user’s scripts reside on a remote server (in a Murder).
 Otherwise, timsieved will proxy traffic to the remote server.
 .UNINDENT
 .UNINDENT
@@ -4001,7 +4001,7 @@ sieve scripts, enforced at submission by timsieved(8).  Any
 previously installed script will be unaffected by this option and
 will continue to execute regardless of the extensions used.  This
 option has no effect on options that are disabled at compile time
-(e.g., "regex").
+(e.g., “regex”).
 Allowed values: \fIfileinto\fP, \fIreject\fP, \fIvacation\fP, \fIvacation\-seconds\fP, \fInotify\fP, \fIinclude\fP, \fIenvelope\fP, \fIenvironment\fP, \fIbody\fP, \fIrelational\fP, \fIregex\fP, \fIsubaddress\fP, \fIcopy\fP, \fIdate\fP, \fIindex\fP, \fIimap4flags=imapflags\fP, \fImailbox\fP, \fImboxmetadata\fP, \fIservermetadata\fP, \fIvariables\fP, \fIeditheader\fP, \fIextlists\fP, \fIduplicate\fP, \fIihave\fP, \fIfcc\fP, \fIspecial\-use\fP, \fIredirect\-dsn\fP, \fIredirect\-deliverby\fP, \fImailboxid\fP, \fIvnd.cyrus.log=x\-cyrus\-log\fP, \fIvnd.cyrus.jmapquery=x\-cyrus\-jmapquery\fP, \fIsnooze=vnd.cyrus.snooze=x\-cyrus\-snooze\fP
 .UNINDENT
 .UNINDENT
@@ -4081,7 +4081,7 @@ scripts.
 \fBsievenotifier:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-Notifyd(8) method to use for "SIEVE" notifications.  If not set, "SIEVE"
+Notifyd(8) method to use for “SIEVE” notifications.  If not set, “SIEVE”
 notifications are disabled.
 .sp
 This method is only used when no method is specified in the script.
@@ -4091,7 +4091,7 @@ This method is only used when no method is specified in the script.
 \fBsieveusehomedir:\fP 0
 .INDENT 0.0
 .INDENT 3.5
-If enabled, lmtpd will look for Sieve scripts in user\(aqs home
+If enabled, lmtpd will look for Sieve scripts in user’s home
 directories: ~user/.sieve.
 .UNINDENT
 .UNINDENT
@@ -4099,8 +4099,8 @@ directories: ~user/.sieve.
 \fBanysievefolder:\fP 0
 .INDENT 0.0
 .INDENT 3.5
-It must be "yes" in order to permit the autocreation of any INBOX subfolder
-requested by a sieve filter, through the "fileinto" action. (default = no)
+It must be “yes” in order to permit the autocreation of any INBOX subfolder
+requested by a sieve filter, through the “fileinto” action. (default = no)
 .UNINDENT
 .UNINDENT
 .sp
@@ -4119,7 +4119,7 @@ potentially large disk savings.
 If enabled, this option forces the skiplist cyrusdb backend to
 always checkpoint when doing a recovery.  This causes slightly
 more IO, but on the other hand leads to more efficient databases,
-and the entire file is already "hot".
+and the entire file is already “hot”.
 .UNINDENT
 .UNINDENT
 .sp
@@ -4136,13 +4136,13 @@ not sync writes to the disk.  Enabling this option is NOT RECOMMENDED.
 .INDENT 3.5
 The SMTP backend to use for sending email.
 .sp
-The "host" backend sends message submissions via
+The “host” backend sends message submissions via
 a TCP socket to the SMTP host defined in the config
 option smtp_host.
 .sp
-The "sendmail" backend forks the Cyrus process into
+The “sendmail” backend forks the Cyrus process into
 the executable defined in the config option sendmail.
-The executable must accept "\-bs" as command line
+The executable must accept “\-bs” as command line
 argument, read from stdin and must implement the minimum
 SMTP protocol as defined in section 4.5.1 of \fI\%RFC 5321\fP\&.
 .sp
@@ -4169,10 +4169,10 @@ The SMTP host to use for sending mail (also see the
 smtp_backend option). The value of this option must
 the name or IP address of a TCP host, followed optionally
 by a colon and the port or service to use. The default
-port is 587. TLS may be activated by appending "/tls"
+port is 587. TLS may be activated by appending “/tls”
 to the value. Authentication is enabled if smtp_auth_authname
 is set. Authentication can be explicitly disabled by appending
-"/noauth" to the host address.
+“/noauth” to the host address.
 .UNINDENT
 .UNINDENT
 .sp
@@ -4233,7 +4233,7 @@ if needed.
 .INDENT 0.0
 .INDENT 3.5
 Whitespace separated list of special\-use attributes
-to protect the mailboxes for.  If set, don\(aqt allow
+to protect the mailboxes for.  If set, don’t allow
 mailboxes with these special use attributes to be deleted
 or renamed to have a different parent. Default is the built\-in list
 .UNINDENT
@@ -4243,7 +4243,7 @@ or renamed to have a different parent. Default is the built\-in list
 .INDENT 0.0
 .INDENT 3.5
 If enabled, this option causes LIST and LSUB output to always include
-the XLIST "special\-use" flags
+the XLIST “special\-use” flags
 .UNINDENT
 .UNINDENT
 .sp
@@ -4331,7 +4331,7 @@ The separator to appear immediately after SRS[01] in rewritten addresses.
 \fBsrvtab:\fP <empty string>
 .INDENT 0.0
 .INDENT 3.5
-The pathname of \fIsrvtab\fP file containing the server\(aqs private
+The pathname of \fIsrvtab\fP file containing the server’s private
 key.  This option is passed to the SASL library and overrides its
 default setting.
 .UNINDENT
@@ -4340,9 +4340,9 @@ default setting.
 \fBsubmitservers:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-A list of users and groups that are allowed to resolve "urlauth=submit+"
+A list of users and groups that are allowed to resolve “urlauth=submit+”
 IMAP URLs, separated by spaces.  Any user listed in this will be
-allowed to fetch the contents of any valid "urlauth=submit+" IMAP URL:
+allowed to fetch the contents of any valid “urlauth=submit+” IMAP URL:
 use with caution.
 .UNINDENT
 .UNINDENT
@@ -4361,9 +4361,9 @@ Allowed values: \fIflat\fP, \fIskiplist\fP, \fItwoskip\fP, \fIzeroskip\fP
 .INDENT 3.5
 Suppress the named capabilities from any capability response.  Use the
 exact case as it appears in the response, e.g.
-"suppress_capabilities: ESEARCH QRESYNC WITHIN XLIST LIST\-EXTENDED"
-if you have a murder with 2.3.x backends and don\(aqt want clients being
-confused by new capabilities that some backends don\(aqt support.
+“suppress_capabilities: ESEARCH QRESYNC WITHIN XLIST LIST\-EXTENDED”
+if you have a murder with 2.3.x backends and don’t want clients being
+confused by new capabilities that some backends don’t support.
 .UNINDENT
 .UNINDENT
 .sp
@@ -4421,7 +4421,7 @@ Allowed values: \fIskiplist\fP, \fIsql\fP, \fItwoskip\fP, \fIzeroskip\fP
 .INDENT 0.0
 .INDENT 3.5
 The path for the replication cache.  Prefix with a
-channel name to apply for that channel.  NOTE, it\(aqs
+channel name to apply for that channel.  NOTE, it’s
 quite important to have a different one per backend!
 .UNINDENT
 .UNINDENT
@@ -4440,7 +4440,7 @@ Prefix with a channel name to only apply for that channel
 .INDENT 3.5
 Enable replication action logging by lmtpd(8), imapd(8), pop3d(8),
 and nntpd(8).  The log {configdirectory}/sync/log is used by
-sync_client(8) for "rolling" replication.
+sync_client(8) for “rolling” replication.
 .UNINDENT
 .UNINDENT
 .sp
@@ -4448,7 +4448,7 @@ sync_client(8) for "rolling" replication.
 .INDENT 0.0
 .INDENT 3.5
 Enable replication action logging by sync_server as well, allowing
-chaining of replicas.  Use this on \(aqB\(aq for A => B => C replication layout
+chaining of replicas.  Use this on ‘B’ for A => B => C replication layout
 .UNINDENT
 .UNINDENT
 .sp
@@ -4456,11 +4456,11 @@ chaining of replicas.  Use this on \(aqB\(aq for A => B => C replication layout
 .INDENT 0.0
 .INDENT 3.5
 If specified, log all events to multiple log files in directories
-specified by each "channel".  Each channel can then be processed
+specified by each “channel”.  Each channel can then be processed
 separately, such as by multiple sync_client(8)s in a mesh replication
 scheme, or by squatter(8) for rolling search index updates.
 .sp
-You can use "" (the two\-character string U+22 U+22) to mean the
+You can use “” (the two\-character string U+22 U+22) to mean the
 default sync channel.
 .UNINDENT
 .UNINDENT
@@ -4488,10 +4488,10 @@ Prefix with a channel name to only apply for that channel
 .INDENT 3.5
 Name of the service (or port number) of the replication service on
 replica host.  Prefix with a channel name to only apply for that
-channel.  If not specified, and if sync_try_imap is set to "yes"
-(the default), then the replication client will first try "imap"
+channel.  If not specified, and if sync_try_imap is set to “yes”
+(the default), then the replication client will first try “imap”
 (port 143) to check if imapd supports replication.  otherwise it
-will default to "csync" (usually port 2005).
+will default to “csync” (usually port 2005).
 .UNINDENT
 .UNINDENT
 .sp
@@ -4520,7 +4520,7 @@ assumed.
 .INDENT 0.0
 .INDENT 3.5
 if set, run sync_client to this channel immediately.  As with channels,
-set this value to \(aq""\(aq to sync the default channel!
+set this value to ‘”“’ to sync the default channel!
 .UNINDENT
 .UNINDENT
 .sp
@@ -4549,7 +4549,7 @@ assumed.
 .INDENT 0.0
 .INDENT 3.5
 Whether sync_client should try to perform an IMAP connection
-before falling back to csync.  If this is set to "no",
+before falling back to csync.  If this is set to “no”,
 sync_client will only use csync.  Prefix with a channel name to
 apply only for that channel
 .UNINDENT
@@ -4632,7 +4632,7 @@ If true, log by sessionid instead of PID for telemetry
 \fBtimeout:\fP 32m
 .INDENT 0.0
 .INDENT 3.5
-The length of the IMAP server\(aqs inactivity autologout timer.
+The length of the IMAP server’s inactivity autologout timer.
 The minimum value is 30 minutes.  The default is 32 minutes,
 to allow a bit of leeway for clients that try to NOOP every
 30 minutes.
@@ -4646,7 +4646,7 @@ is assumed.
 .INDENT 0.0
 .INDENT 3.5
 Timeout for idling clients (\fI\%RFC 2177\fP).  If not set (the default),
-the value of "timeout" will be used instead.
+the value of “timeout” will be used instead.
 .sp
 For backward compatibility, if no unit is specified, minutes
 is assumed.
@@ -4699,9 +4699,9 @@ Deprecated in favor of \fItls_ciphers\fP\&.
 .INDENT 0.0
 .INDENT 3.5
 The list of SSL/TLS ciphers to allow.  The format of the string
-(and definition of "DEFAULT") is described in \fBciphers(1)\fP\&.
+(and definition of “DEFAULT”) is described in \fBciphers(1)\fP\&.
 .sp
-See also Mozilla\(aqs server\-side TLS recommendations:
+See also Mozilla’s server\-side TLS recommendations:
 .sp
 \fI\%https://wiki.mozilla.org/Security/Server_Side_TLS\fP
 .UNINDENT
@@ -4734,7 +4734,7 @@ client SSL certificates used for authentication.
 .INDENT 0.0
 .INDENT 3.5
 File containing the certificate presented to a server for authentication
-during STARTTLS. A value of "disabled" will disable this server\(aqs use
+during STARTTLS. A value of “disabled” will disable this server’s use
 of certificate\-based authentication.
 .UNINDENT
 .UNINDENT
@@ -4742,7 +4742,7 @@ of certificate\-based authentication.
 \fBtls_client_certs:\fP optional
 .INDENT 0.0
 .INDENT 3.5
-Disable ("off"), allow ("optional", default) or require ("require") the
+Disable (“off”), allow (“optional”, default) or require (“require”) the
 use of SSL certificates by clients to authenticate themselves.
 Allowed values: \fIoff\fP, \fIoptional\fP, \fIrequire\fP
 .UNINDENT
@@ -4752,7 +4752,7 @@ Allowed values: \fIoff\fP, \fIoptional\fP, \fIrequire\fP
 .INDENT 0.0
 .INDENT 3.5
 File containing the private key belonging to the tls_client_cert
-certificate. A value of "disabled" will disable this server\(aqs use
+certificate. A value of “disabled” will disable this server’s use
 of certificate\-based authentication.
 .UNINDENT
 .UNINDENT
@@ -4761,7 +4761,7 @@ of certificate\-based authentication.
 .INDENT 0.0
 .INDENT 3.5
 The elliptic curve used for ECDHE. Default is NIST Suite B prime256.
-See \(aqopenssl ecparam \-list_curves\(aq for possible values.
+See ‘openssl ecparam \-list_curves’ for possible values.
 .UNINDENT
 .UNINDENT
 .sp
@@ -4874,9 +4874,9 @@ disabled.
 \fBuidl_format:\fP cyrus
 .INDENT 0.0
 .INDENT 3.5
-Choose the format for UIDLs in pop3.  Possible values are "uidonly",
-"cyrus", "dovecot" and "courier".  "uidonly" forces the old default
-of UID, "cyrus" is UIDVALIDITY.UID.  Dovecot is 8 digits of leading
+Choose the format for UIDLs in pop3.  Possible values are “uidonly”,
+“cyrus”, “dovecot” and “courier”.  “uidonly” forces the old default
+of UID, “cyrus” is UIDVALIDITY.UID.  Dovecot is 8 digits of leading
 hex (lower case) each UID UIDVALIDITY. Courier is UIDVALIDITY\-UID.
 Allowed values: \fIuidonly\fP, \fIcyrus\fP, \fIdovecot\fP, \fIcourier\fP
 .UNINDENT
@@ -4936,9 +4936,9 @@ slow)
 \fBunixhierarchysep:\fP 1
 .INDENT 0.0
 .INDENT 3.5
-Use the UNIX separator character \(aq/\(aq for delimiting levels of
+Use the UNIX separator character ‘/’ for delimiting levels of
 mailbox hierarchy.  Turn off to use the netnews separator
-character \(aq.\(aq. Note that with the newnews separator, no dots may
+character ‘.’. Note that with the newnews separator, no dots may
 occur in mailbox names.  The default switched in 3.0 from off to on.
 .UNINDENT
 .UNINDENT
@@ -4955,13 +4955,13 @@ addresses is ever considered.  This is not recommended for any deployment,
 but is currently the default.
 .TP
 .B userid
-The user\(aqs domain is determined by splitting a fully qualified userid at the
-last \(aq@\(aq or \(aq%\(aq symbol.  If the userid is unqualified, the \fIdefaultdomain\fP
+The user’s domain is determined by splitting a fully qualified userid at the
+last ‘@’ or ‘%’ symbol.  If the userid is unqualified, the \fIdefaultdomain\fP
 will be used.  This is the recommended configuration for all deployments.
 If you wish to provide calendaring services you must use this configuration.
 .TP
 .B on
-Fully qualified userids are respected, as per "userid".  Unqualified userids
+Fully qualified userids are respected, as per “userid”.  Unqualified userids
 will have their domain determined by doing a reverse lookup on the IP address
 of the incoming network interface, or if no record is found, the
 \fIdefaultdomain\fP will be used.
@@ -5024,7 +5024,7 @@ INBOX, NOT an email address!
 .INDENT 0.0
 .INDENT 3.5
 The cyrusdb backend to use for zoneinfo.  This database is used by the
-"tzdist" \fIhttpmodules\fP, and is managed by \fBctl_zoneinfo(8)\fP\&.
+“tzdist” \fIhttpmodules\fP, and is managed by \fBctl_zoneinfo(8)\fP\&.
 Allowed values: \fIflat\fP, \fIskiplist\fP, \fItwoskip\fP, \fIzeroskip\fP
 .UNINDENT
 .UNINDENT
@@ -5045,7 +5045,7 @@ definitions as generated by the vzic tool.  If not specified, whatever
 definitions libical finds will be used.
 .sp
 If you are providing a Time Zone Data Distribution Service (i.e. you have
-"tzdist" listed in \fIhttpmodules\fP), then this configuration option MUST
+“tzdist” listed in \fIhttpmodules\fP), then this configuration option MUST
 be specified.
 .UNINDENT
 .UNINDENT
@@ -5074,7 +5074,7 @@ in a flat structure
 .INDENT 3.5
 The OpenIO namespace used to store archived email messages. A namespace
 identifies the physical platform cyrus must contact. This directive is used
-by the OpenIO\(aqs SDK to locate its platform entry point.
+by the OpenIO’s SDK to locate its platform entry point.
 .UNINDENT
 .UNINDENT
 .sp
@@ -5113,13 +5113,13 @@ provisioned with the mailboxes.
 \fBopenio_verbosity:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-Sets the logging verbosity of the OpenIO\(aqs internal behavior. Admissible
-values are: "warning", "notice", "info", "debug", "trace", "quiet".
-The default verbosity is "warning". Set to "notice" for a few lines on a
-per\-client basis. Set to "info" for a few lines on a per\-request basis. Set
-to "debug" Set to "trace" to activate the underlying libcurl debug
-output. Enabling a verbosity higher to equal than "debug" requires
-the cyrus to be set in debug mode. The special "quiet" value disables all
+Sets the logging verbosity of the OpenIO’s internal behavior. Admissible
+values are: “warning”, “notice”, “info”, “debug”, “trace”, “quiet”.
+The default verbosity is “warning”. Set to “notice” for a few lines on a
+per\-client basis. Set to “info” for a few lines on a per\-request basis. Set
+to “debug” Set to “trace” to activate the underlying libcurl debug
+output. Enabling a verbosity higher to equal than “debug” requires
+the cyrus to be set in debug mode. The special “quiet” value disables all
 kinds of logging at the GLib level.
 .UNINDENT
 .UNINDENT
@@ -5129,7 +5129,7 @@ kinds of logging at the GLib level.
 .INDENT 3.5
 The Caringo hostname used to store archived email messages. A hostname
 identifies the physical platform cyrus must contact. This directive is used
-by the Caringo\(aqs SDK (CastorSDK: Caringo Simple Content Storage Protocol (SCSP)
+by the Caringo’s SDK (CastorSDK: Caringo Simple Content Storage Protocol (SCSP)
 on HTTP 1.1 using a RESTful architecture
 .UNINDENT
 .UNINDENT

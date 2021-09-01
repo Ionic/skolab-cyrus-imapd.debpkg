@@ -1,4 +1,3 @@
-
 Reporting Bugs
 **************
 
@@ -53,5 +52,5 @@ Note: **Cyrus SASL Version**The Cyrus team would appreciate if you
   have, **what could?**
 
 If you run a development version of Cyrus IMAP or SASL (i.e. your own
-compile from GIT's master or any of the stable branches), please
+compile from GIT’s master or any of the stable branches), please
 remember to note that in the report.

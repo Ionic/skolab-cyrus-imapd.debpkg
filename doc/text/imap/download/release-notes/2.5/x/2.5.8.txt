@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.5.8 Release Notes
 ******************************
 
@@ -43,18 +42,18 @@ Bug fixes
 * Fixed: master on pselect systems no longer chokes on repeated
   interrupts (thanks Jens Erat and team)
 
-* Fixed: better iOS CalDAV support (don't announce VPOLL)
+* Fixed: better iOS CalDAV support (don’t announce VPOLL)
 
 * Fixed: backported version detection code to detect future versions
 
-* Fixed bug #3927: don't break cyrus.index on XFER of mailbox with
+* Fixed bug #3927: don’t break cyrus.index on XFER of mailbox with
   annotations (thanks Wolfgang Breyha)
 
-* Fixed: replication/XFER of mailbox names containing '@'
+* Fixed: replication/XFER of mailbox names containing ‘@’
 
 * Fixed: METADATA and GETMETADATA pattern/list recognition
 
-* Fixed bug #3862: don't leave behind inconsistent mailboxes when
+* Fixed bug #3862: don’t leave behind inconsistent mailboxes when
   mupdate fails during mailbox rename
 
 * Fixed compilation with Sun Studio 12 C Compiler (thanks Marty Lee)
@@ -62,7 +61,7 @@ Bug fixes
 * Fixed bug #3765: ctl_cyrusdb(8) now uses database paths from
   imapd.conf (thanks Simon Matter)
 
-* Fixed task 227: service processes no longer crash with '-T 0'
+* Fixed task 227: service processes no longer crash with ‘-T 0’
   argument (thanks Ian Batten and Jens Erat)
 
 * various build system fixes

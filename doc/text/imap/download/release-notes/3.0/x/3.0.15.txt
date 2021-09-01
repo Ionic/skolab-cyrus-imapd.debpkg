@@ -1,4 +1,3 @@
-
 Cyrus IMAP 3.0.15 Release Notes
 *******************************
 
@@ -31,7 +30,7 @@ Bug fixes
   backend connections
 
 * Fixed Issue #3287: tools/translatesieve directory iteration
-  protection (thanks Daniel O'Connor)
+  protection (thanks Daniel O’Connor)
 
 * Fixed Issue #53: mailbox tombstones were not being cleaned up by
   cyr_expire(8)

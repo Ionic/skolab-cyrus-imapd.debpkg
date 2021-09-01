@@ -1,4 +1,3 @@
-
 **ctl_backups**
 ***************
 
@@ -136,10 +135,10 @@ Options
 
 -V
 
-   Don't verify backup checksums for read-only operations.
+   Don’t verify backup checksums for read-only operations.
 
    The read-only operations **list** and **stat** will normally
-   perform a "quick" verification of the backup file being read, which
+   perform a “quick” verification of the backup file being read, which
    checks the checksums of the most recent chunk.  This can be slow
    for backups whose most recent backup chunk is very large.
 

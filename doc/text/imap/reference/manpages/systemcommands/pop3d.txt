@@ -1,4 +1,3 @@
-
 **pop3d**
 *********
 
@@ -61,7 +60,7 @@ Options
 
 -k
 
-   Serve MIT's KPOP (Kerberized POP) protocol instead.
+   Serve MIT’s KPOP (Kerberized POP) protocol instead.
 
 -p  ssf
 

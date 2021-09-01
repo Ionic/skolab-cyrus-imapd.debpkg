@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Cyrus IMAP 2.5.0 Release Notes &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Cyrus IMAP 2.5.0 Release Notes &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../../../index.html"/>
         <link rel="up" title="Cyrus IMAP 2.5 Releases" href="../index.html"/>
         <link rel="next" title="Cyrus IMAP 2.5.1 Release Notes" href="2.5.1.html"/>
         <link rel="prev" title="Cyrus IMAP 2.5 Releases" href="../index.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../../../download.html">Download</a> &raquo;</li>
       
@@ -809,16 +810,16 @@
 <span id="imap-relnotes-2-5-0-upgrading"></span><h2>Upgrading to Cyrus IMAP 2.5.0<a class="headerlink" href="#upgrading-to-cyrus-imap-2-5-0" title="Permalink to this headline">¶</a></h2>
 <p>It is strongly recommended to shut down the Cyrus IMAP services before
 performing the upgrade, as the newer binaries will end up writing to
-<code class="docutils literal"><span class="pre">mailboxes.db</span></code> in a way that is not compatible with the older binaries
+<code class="docutils literal notranslate"><span class="pre">mailboxes.db</span></code> in a way that is not compatible with the older binaries
 (that would otherwise still be running).</p>
 <p>You can start the server immediately after upgrading, however.</p>
 <div class="section" id="underscores-in-cmd-names-in-cyrus-conf-5">
-<h3>Underscores in <code class="docutils literal"><span class="pre">cmd</span></code> Names in <a class="reference internal" href="../../../../reference/manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a><a class="headerlink" href="#underscores-in-cmd-names-in-cyrus-conf-5" title="Permalink to this headline">¶</a></h3>
-<p>Underscores (the <code class="docutils literal"><span class="pre">_</span></code> character) are no longer allowed in the
-<code class="docutils literal"><span class="pre">START</span></code>, <code class="docutils literal"><span class="pre">SERVICES</span></code> and <code class="docutils literal"><span class="pre">EVENTS</span></code> sections of
+<h3>Underscores in <code class="docutils literal notranslate"><span class="pre">cmd</span></code> Names in <a class="reference internal" href="../../../../reference/manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a><a class="headerlink" href="#underscores-in-cmd-names-in-cyrus-conf-5" title="Permalink to this headline">¶</a></h3>
+<p>Underscores (the <code class="docutils literal notranslate"><span class="pre">_</span></code> character) are no longer allowed in the
+<code class="docutils literal notranslate"><span class="pre">START</span></code>, <code class="docutils literal notranslate"><span class="pre">SERVICES</span></code> and <code class="docutils literal notranslate"><span class="pre">EVENTS</span></code> sections of
 <a class="reference internal" href="../../../../reference/manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a>, as they interfere with configuration options
 in <a class="reference internal" href="../../../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> being prefixed by service names and an
-underscore (<code class="docutils literal"><span class="pre">_</span></code>) character.</p>
+underscore (<code class="docutils literal notranslate"><span class="pre">_</span></code>) character.</p>
 </div>
 <div class="section" id="database-format-upgrade-for-mailboxes">
 <h3>Database Format Upgrade for Mailboxes<a class="headerlink" href="#database-format-upgrade-for-mailboxes" title="Permalink to this headline">¶</a></h3>
@@ -828,45 +829,45 @@ administrators to run:</p>
 <pre class="literal-block">
 # <strong class="command">/usr/lib/cyrus-imapd/reconstruct -V max</strong> [options]
 </pre>
-<p>This command can be run at the administrator's convenience, and while
+<p>This command can be run at the administrator’s convenience, and while
 running the database format upgrade process is not strictly required, it
 is certainly strongly recommended.</p>
-<p>Releases prior to 2.5.0, namely the 2.4 series, upgraded <code class="docutils literal"><span class="pre">cyrus.index</span></code>
+<p>Releases prior to 2.5.0, namely the 2.4 series, upgraded <code class="docutils literal notranslate"><span class="pre">cyrus.index</span></code>
 database formats in-line (i.e. as the mailbox in question as being
 used). This may have caused an I/O storm in some situations, which 2.5.0
 aims to address.</p>
-<p>The minor version of the <code class="docutils literal"><span class="pre">cyrus.index</span></code> file in 2.5.0 is <strong>13</strong>. While
-mailboxes with an older format will continue to work &quot;forever&quot;, newer
+<p>The minor version of the <code class="docutils literal notranslate"><span class="pre">cyrus.index</span></code> file in 2.5.0 is <strong>13</strong>. While
+mailboxes with an older format will continue to work “forever”, newer
 features such as annotation quotas will fail, as there is no space in
-the database formats prior to version 13 to store the new feature's
+the database formats prior to version 13 to store the new feature’s
 information.</p>
 <p>Until you upgrade the database format, you may experience slightly
-inconsistent search results, due to the <code class="docutils literal"><span class="pre">cyrus.cache</span></code> format in Cyrus
+inconsistent search results, due to the <code class="docutils literal notranslate"><span class="pre">cyrus.cache</span></code> format in Cyrus
 IMAP versions prior to 2.4.0 running words together and not obeying word
 boundaries (as well as versions in the 2.4 and 2.5 series).</p>
-<p>If you were running Cyrus 2.3.x with <code class="docutils literal"><span class="pre">expunge_mode:</span> <span class="pre">delayed</span></code>, then the
-contents of the <code class="docutils literal"><span class="pre">cyrus.expunge</span></code> file will be removed the first time
-the mailbox is opened, and the mailbox will act as if <code class="docutils literal"><span class="pre">expunge_mode</span></code>
-was set to <code class="docutils literal"><span class="pre">immediate</span></code> -- until it is upgraded.</p>
-<p>This is because version 2.3 mailboxes used the <code class="docutils literal"><span class="pre">cyrus.expunge</span></code> file,
-and it's not worth the complexity to try to recreate that file.</p>
+<p>If you were running Cyrus 2.3.x with <code class="docutils literal notranslate"><span class="pre">expunge_mode:</span> <span class="pre">delayed</span></code>, then the
+contents of the <code class="docutils literal notranslate"><span class="pre">cyrus.expunge</span></code> file will be removed the first time
+the mailbox is opened, and the mailbox will act as if <code class="docutils literal notranslate"><span class="pre">expunge_mode</span></code>
+was set to <code class="docutils literal notranslate"><span class="pre">immediate</span></code> – until it is upgraded.</p>
+<p>This is because version 2.3 mailboxes used the <code class="docutils literal notranslate"><span class="pre">cyrus.expunge</span></code> file,
+and it’s not worth the complexity to try to recreate that file.</p>
 <p>This upgrade path supports upgrades from Cyrus IMAP version 2.2.12 and
 later versions.</p>
 <div class="admonition important">
 <p class="first admonition-title">Important</p>
 <p class="last">The above command can run while the Cyrus IMAP services are in
-operation, and does <strong>not</strong> interfere with the service's operations.</p>
+operation, and does <strong>not</strong> interfere with the service’s operations.</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Additional options can be specified to <a class="reference internal" href="../../../../reference/manpages/systemcommands/reconstruct.html#std:cyrusman-reconstruct(8)">reconstruct(8)</a> to
-more granularly specify which mailboxes' <code class="file docutils literal"><span class="pre">cyrus.index</span></code> is to
+more granularly specify which mailboxes’ <code class="file docutils literal notranslate"><span class="pre">cyrus.index</span></code> is to
 be upgraded.</p>
 </div>
 </div>
 <div class="section" id="quota-fixes-and-enhancements">
 <h3>Quota Fixes and Enhancements<a class="headerlink" href="#quota-fixes-and-enhancements" title="Permalink to this headline">¶</a></h3>
-<p>After all mailboxes are upgraded, you should run <code class="docutils literal"><span class="pre">quota</span> <span class="pre">-f</span></code> to make
+<p>After all mailboxes are upgraded, you should run <code class="docutils literal notranslate"><span class="pre">quota</span> <span class="pre">-f</span></code> to make
 all message and folder counts are correct. The new quota types that
 Cyrus IMAP 2.5.0 supports require the counts to need to be accurate.</p>
 </div>
@@ -879,7 +880,7 @@ their backends before they upgrade their frontends.</p>
 <h3>Greater Memory Footprint<a class="headerlink" href="#greater-memory-footprint" title="Permalink to this headline">¶</a></h3>
 <p>For those upgrading from 2.3.X; newer releases of Cyrus IMAP will use
 significantly more memory per selected mailbox.  This is not an error
-or bug; it's a feature.  The newer code is holding more data and
+or bug; it’s a feature.  The newer code is holding more data and
 metadata in memory for purposes of faster access to more of the
 mailbox.  This is not a memory leak.</p>
 </div>
@@ -891,15 +892,15 @@ mailbox.  This is not a memory leak.</p>
 <p>Long-running (idling) connections may have previously intervened with
 mailbox deletions and general cleanup work, resulting in one connection
 blocking another from, for example, deleting and recreating a mailbox:</p>
-<div class="highlight-bash"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+<div class="highlight-bash notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
 3</pre></div></td><td class="code"><div class="highlight"><pre><span></span>C1: SELECT <span class="s2">&quot;Foo&quot;</span>
 C2: DELETE <span class="s2">&quot;Foo&quot;</span>
 C2: CREATE <span class="s2">&quot;Foo&quot;</span>
 </pre></div>
 </td></tr></table></div>
-<p>The <code class="docutils literal"><span class="pre">CREATE</span></code> command on line 3 (by client 2, while client 1 still has
-the <code class="docutils literal"><span class="pre">Foo</span></code> mailbox selected) would have failed before, but does now
+<p>The <code class="docutils literal notranslate"><span class="pre">CREATE</span></code> command on line 3 (by client 2, while client 1 still has
+the <code class="docutils literal notranslate"><span class="pre">Foo</span></code> mailbox selected) would have failed before, but does now
 succeed.</p>
 </div>
 <div class="section" id="extended-quota-types">
@@ -919,7 +920,7 @@ repository, but are now mainstream and included in Cyrus IMAP 2.5.0.</p>
 and continues to be, enriching the experience of Cyrus IMAP users
 globally.</p>
 <p>If upgrading to Cyrus IMAP 2.5 from one of the 2.4.17-caldav-beta
-releases, you MUST run the <code class="docutils literal"><span class="pre">dav_reconstruct</span></code> utility for each of
+releases, you MUST run the <code class="docutils literal notranslate"><span class="pre">dav_reconstruct</span></code> utility for each of
 your CalDAV users.</p>
 </div>
 <div class="section" id="support-for-rfc-5464-imap-metadata">
@@ -929,7 +930,7 @@ Extension</em>.</p>
 <p>This also means the support for the ANNOTATEMORE draft for IMAP will
 ultimately be dropped.</p>
 <p>Aside from the trusted folder metadata, this also introduces message
-annotations. Users will need to be given the <code class="docutils literal"><span class="pre">n</span></code> right to allow them
+annotations. Users will need to be given the <code class="docutils literal notranslate"><span class="pre">n</span></code> right to allow them
 to set message annotations.</p>
 </div>
 <div class="section" id="event-notifications">
@@ -951,7 +952,7 @@ to be used in the selection. Please see our Administrator Guide for
 more details.</p>
 </div>
 <div class="section" id="new-database-format-for-mailboxes-db">
-<h3>New Database Format for <code class="docutils literal"><span class="pre">mailboxes.db</span></code><a class="headerlink" href="#new-database-format-for-mailboxes-db" title="Permalink to this headline">¶</a></h3>
+<h3>New Database Format for <code class="docutils literal notranslate"><span class="pre">mailboxes.db</span></code><a class="headerlink" href="#new-database-format-for-mailboxes-db" title="Permalink to this headline">¶</a></h3>
 <p>The database format for mailboxes.db has been upgraded, adding;</p>
 <ul>
 <li><p class="first">A new mailbox type for deleted mailboxes.</p>
@@ -961,29 +962,29 @@ another session on the same mailbox to clean up the directories and
 files. See also <a class="reference internal" href="#relnotes-2-5-0-index-namelock-release"><span class="std std-ref">Index Namelock Release</span></a>.</p>
 </li>
 <li><p class="first">A key-value storage format is used, allowing for faster and better
-parsing of <code class="file docutils literal"><span class="pre">mailboxes.db</span></code>, more granular updates to runtime
+parsing of <code class="file docutils literal notranslate"><span class="pre">mailboxes.db</span></code>, more granular updates to runtime
 environments, and more sustainable future upgrades.</p>
 </li>
 </ul>
 </div>
 <div class="section" id="new-database-format-twoskip">
-<h3>New Database Format <code class="docutils literal"><span class="pre">twoskip</span></code><a class="headerlink" href="#new-database-format-twoskip" title="Permalink to this headline">¶</a></h3>
-<p>A new database format has been added, called <code class="docutils literal"><span class="pre">twoskip</span></code> <a class="footnote-reference" href="#id2" id="id1">[1]</a>.</p>
+<h3>New Database Format <code class="docutils literal notranslate"><span class="pre">twoskip</span></code><a class="headerlink" href="#new-database-format-twoskip" title="Permalink to this headline">¶</a></h3>
+<p>A new database format has been added, called <code class="docutils literal notranslate"><span class="pre">twoskip</span></code> <a class="footnote-reference" href="#id2" id="id1">[1]</a>.</p>
 <p>This new database format is reputedly better, faster, safer and 64-bit
-capable, as opposed to our former favorite <code class="docutils literal"><span class="pre">skiplist</span></code>.</p>
-<p><code class="docutils literal"><span class="pre">twoskip</span></code> can be used for the following databases:</p>
+capable, as opposed to our former favorite <code class="docutils literal notranslate"><span class="pre">skiplist</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">twoskip</span></code> can be used for the following databases:</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">annotation_db</span></code></li>
-<li><code class="docutils literal"><span class="pre">duplicate_db</span></code></li>
-<li><code class="docutils literal"><span class="pre">mboxkey_db</span></code></li>
-<li><code class="docutils literal"><span class="pre">mboxlist_db</span></code></li>
-<li><code class="docutils literal"><span class="pre">ptscache_db</span></code></li>
-<li><code class="docutils literal"><span class="pre">quota_db</span></code></li>
-<li><code class="docutils literal"><span class="pre">seenstate_db</span></code></li>
-<li><code class="docutils literal"><span class="pre">subscription_db</span></code></li>
-<li><code class="docutils literal"><span class="pre">statuscache_db</span></code></li>
-<li><code class="docutils literal"><span class="pre">tls_sessions_db</span></code></li>
-<li><code class="docutils literal"><span class="pre">user_deny_db</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">annotation_db</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">duplicate_db</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">mboxkey_db</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">mboxlist_db</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">ptscache_db</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">quota_db</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">seenstate_db</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">subscription_db</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">statuscache_db</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">tls_sessions_db</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user_deny_db</span></code></li>
 </ul>
 </div>
 <div class="section" id="miscellaneous">
@@ -992,17 +993,17 @@ capable, as opposed to our former favorite <code class="docutils literal"><span 
 <h4>Allowing Undefined Annotations<a class="headerlink" href="#allowing-undefined-annotations" title="Permalink to this headline">¶</a></h4>
 <p>Cyrus IMAP 2.5.0 allows administrators to configure that undefined
 annotations should be allowed, using a new
-<code class="docutils literal"><span class="pre">annotation_allow_undefined</span></code> setting in <a class="reference internal" href="../../../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.</p>
+<code class="docutils literal notranslate"><span class="pre">annotation_allow_undefined</span></code> setting in <a class="reference internal" href="../../../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.</p>
 </div>
 <div class="section" id="catchall-mailbox-for-lmtp">
 <h4>Catchall Mailbox for LMTP<a class="headerlink" href="#catchall-mailbox-for-lmtp" title="Permalink to this headline">¶</a></h4>
 <p>Thanks to the work by Carsten Hoeger and Ralf Haferkamp, this new
 feature enables administrators to configure a target mailbox for mail
 delivered through LMTP to targetted mailboxes that do not exist.</p>
-<p>For example, a mail that LMTP would deliver to <code class="docutils literal"><span class="pre">user/bovik</span></code>, which
+<p>For example, a mail that LMTP would deliver to <code class="docutils literal notranslate"><span class="pre">user/bovik</span></code>, which
 for the sake of argument does not exist in this example, setting
-<code class="docutils literal"><span class="pre">lmtp_catchall_mailbox</span></code> to <code class="docutils literal"><span class="pre">admin</span></code> will instead deliver the mail
-to <code class="docutils literal"><span class="pre">user/admin</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">lmtp_catchall_mailbox</span></code> to <code class="docutils literal notranslate"><span class="pre">admin</span></code> will instead deliver the mail
+to <code class="docutils literal notranslate"><span class="pre">user/admin</span></code>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p><strong>Mailbox name, not Email Address</strong></p>
@@ -1012,11 +1013,11 @@ indicator as well as the hierarchy separator are to be omitted.</p>
 </div>
 <div class="section" id="does-this-impact-lmtp-fuzzy-mailbox-match">
 <h5>Does this impact lmtp_fuzzy_mailbox_match?<a class="headerlink" href="#does-this-impact-lmtp-fuzzy-mailbox-match" title="Permalink to this headline">¶</a></h5>
-<p>Environments that have <code class="docutils literal"><span class="pre">lmtp_fuzzy_mailbox_match</span></code> enabled, in order
+<p>Environments that have <code class="docutils literal notranslate"><span class="pre">lmtp_fuzzy_mailbox_match</span></code> enabled, in order
 to have LMTP seek from the targetted, non-existent mailbox sub-folder
-(example: <code class="docutils literal"><span class="pre">user/bovik/spam/probably</span></code>) all the way to the toplevel
-mailbox folder (i.e. <code class="docutils literal"><span class="pre">user/bovik</span></code>) until it finds a mailbox
-(sub-)folder that does exist (example: <code class="docutils literal"><span class="pre">user/bovik/spam</span></code>), are not
+(example: <code class="docutils literal notranslate"><span class="pre">user/bovik/spam/probably</span></code>) all the way to the toplevel
+mailbox folder (i.e. <code class="docutils literal notranslate"><span class="pre">user/bovik</span></code>) until it finds a mailbox
+(sub-)folder that does exist (example: <code class="docutils literal notranslate"><span class="pre">user/bovik/spam</span></code>), are not
 impacted by this setting.</p>
 </div>
 <div class="section" id="can-the-lmtp-catchall-mailbox-include-the-path-to-a-sub-folder-of-a-target-mailbox">
@@ -1031,13 +1032,13 @@ impacted by this setting.</p>
 <div class="section" id="callout-for-setmetadata">
 <h4>Callout for SETMETADATA<a class="headerlink" href="#callout-for-setmetadata" title="Permalink to this headline">¶</a></h4>
 <p>A callout program can be called when annotations are set, configured
-through <code class="docutils literal"><span class="pre">annotation_callout</span></code>.</p>
+through <code class="docutils literal notranslate"><span class="pre">annotation_callout</span></code>.</p>
 </div>
 <div class="section" id="host-user-login-restrictions">
 <h4>Host &amp; User Login Restrictions<a class="headerlink" href="#host-user-login-restrictions" title="Permalink to this headline">¶</a></h4>
 <p>Logins can now be restricted on a per host (source IP address) or per
-user basis, using the settings <code class="docutils literal"><span class="pre">maxlogins_per_host</span></code> and
-<code class="docutils literal"><span class="pre">maxlogins_per_user</span></code>.</p>
+user basis, using the settings <code class="docutils literal notranslate"><span class="pre">maxlogins_per_host</span></code> and
+<code class="docutils literal notranslate"><span class="pre">maxlogins_per_user</span></code>.</p>
 </div>
 </div>
 </div>
@@ -1050,22 +1051,22 @@ these new settings, not doing so may have undesired side-effects,
 including but not limited to deprecation warnings in log messages.</p>
 </div>
 <div class="section" id="option-name-changes-for-autocreate">
-<h3>Option Name Changes for <code class="docutils literal"><span class="pre">autocreate</span></code><a class="headerlink" href="#option-name-changes-for-autocreate" title="Permalink to this headline">¶</a></h3>
+<h3>Option Name Changes for <code class="docutils literal notranslate"><span class="pre">autocreate</span></code><a class="headerlink" href="#option-name-changes-for-autocreate" title="Permalink to this headline">¶</a></h3>
 <p>The options related to automatic creation of user mailboxes and
 sub-folders (aka. <em>autocreate</em>) have been changed to hold a prefix of
-<code class="docutils literal"><span class="pre">autocreate_</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">autocreate_</span></code>.</p>
 <p>The following <em>autocreate</em> options are now available:</p>
-<p><strong>autocreate_inbox_folders</strong> (was: <code class="docutils literal"><span class="pre">autocreateinboxfolders</span></code>)</p>
+<p><strong>autocreate_inbox_folders</strong> (was: <code class="docutils literal notranslate"><span class="pre">autocreateinboxfolders</span></code>)</p>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">autocreate_inbox_folders</span></code> controls which folders to create in
+<div><p><code class="docutils literal notranslate"><span class="pre">autocreate_inbox_folders</span></code> controls which folders to create in
 addition to the INBOX folder.</p>
-<p>Separate the folder names by <code class="docutils literal"><span class="pre">|</span></code>.</p>
+<p>Separate the folder names by <code class="docutils literal notranslate"><span class="pre">|</span></code>.</p>
 </div></blockquote>
-<p><strong>autocreate_post</strong> (was: <code class="docutils literal"><span class="pre">createonpost</span></code>)</p>
+<p><strong>autocreate_post</strong> (was: <code class="docutils literal notranslate"><span class="pre">createonpost</span></code>)</p>
 <blockquote>
 <div>Controls whether or not to create a folder when a message is first
 posted to it (by LTMP).</div></blockquote>
-<p><strong>autocreate_quota</strong> (was: <code class="docutils literal"><span class="pre">autocreatequota</span></code>)</p>
+<p><strong>autocreate_quota</strong> (was: <code class="docutils literal notranslate"><span class="pre">autocreatequota</span></code>)</p>
 <blockquote>
 <div>When creating a user mailbox, set the quota for that mailbox to the
 value of this configuration option.</div></blockquote>
@@ -1074,26 +1075,26 @@ value of this configuration option.</div></blockquote>
 <div>When creating a user mailbox, set the message quota (maximum number
 of messages allowed in the folder hierarchy) to the value of this
 configuration option.</div></blockquote>
-<p><strong>autocreate_sieve_folders</strong> (was: <code class="docutils literal"><span class="pre">autosievefolders</span></code>)</p>
+<p><strong>autocreate_sieve_folders</strong> (was: <code class="docutils literal notranslate"><span class="pre">autosievefolders</span></code>)</p>
 <blockquote>
 <div><p>Limit the folders that can be created automatically by a Sieve
-script performing a &quot;fileinto&quot; action, to the folders listed in
+script performing a “fileinto” action, to the folders listed in
 this configuration option.</p>
-<p>Separate the folder names by <code class="docutils literal"><span class="pre">|</span></code>.</p>
+<p>Separate the folder names by <code class="docutils literal notranslate"><span class="pre">|</span></code>.</p>
 </div></blockquote>
 <p><strong>autocreate_sieve_script</strong> (unchanged)</p>
 <blockquote>
 <div>When creating a user mailbox, associate the Sieve script configured
 here.</div></blockquote>
-<p><strong>autocreate_sieve_script_compile</strong> (was: <code class="docutils literal"><span class="pre">generate_compiled_sieve_script</span></code>)</p>
+<p><strong>autocreate_sieve_script_compile</strong> (was: <code class="docutils literal notranslate"><span class="pre">generate_compiled_sieve_script</span></code>)</p>
 <blockquote>
 <div>Whether or not to compile the Sieve script configured by
-<code class="docutils literal"><span class="pre">autocreate_sieve_script</span></code>.</div></blockquote>
-<p><strong>autocreate_sieve_script_compiled</strong> (was: <code class="docutils literal"><span class="pre">autocreate_sieve_compiled_script</span></code>)</p>
+<code class="docutils literal notranslate"><span class="pre">autocreate_sieve_script</span></code>.</div></blockquote>
+<p><strong>autocreate_sieve_script_compiled</strong> (was: <code class="docutils literal notranslate"><span class="pre">autocreate_sieve_compiled_script</span></code>)</p>
 <blockquote>
 <div>When creating a user mailbox, associate the already compiled Sieve
 script configured here.</div></blockquote>
-<p><strong>autocreate_subscribe_folders</strong> (was: <code class="docutils literal"><span class="pre">autosubscribeinboxfolders</span></code>)</p>
+<p><strong>autocreate_subscribe_folders</strong> (was: <code class="docutils literal notranslate"><span class="pre">autosubscribeinboxfolders</span></code>)</p>
 <blockquote>
 <div><p>List the folder names to which the user for which a mailbox is
 being created should be subscribed.</p>
@@ -1102,15 +1103,15 @@ being created should be subscribed.</p>
 <p class="last">All folders listed here are considered to reside in the
 personal namespace.</p>
 </div>
-<p>Separate the folder names by <code class="docutils literal"><span class="pre">|</span></code>.</p>
+<p>Separate the folder names by <code class="docutils literal notranslate"><span class="pre">|</span></code>.</p>
 </div></blockquote>
-<p><strong>autocreate_subscribe_sharedfolders</strong> (was: <code class="docutils literal"><span class="pre">autosubscribesharedfolders</span></code>)</p>
+<p><strong>autocreate_subscribe_sharedfolders</strong> (was: <code class="docutils literal notranslate"><span class="pre">autosubscribesharedfolders</span></code>)</p>
 <blockquote>
 <div><p>List the folder names of shared folders to which the user for which
 a mailbox is being automatically created should be subscribed.</p>
-<p>Separate the folder names by <code class="docutils literal"><span class="pre">|</span></code>.</p>
+<p>Separate the folder names by <code class="docutils literal notranslate"><span class="pre">|</span></code>.</p>
 </div></blockquote>
-<p><strong>autocreate_subscribe_sharedfolders_all</strong> (was: <code class="docutils literal"><span class="pre">autosubscribe_all_sharedfolders</span></code>)</p>
+<p><strong>autocreate_subscribe_sharedfolders_all</strong> (was: <code class="docutils literal notranslate"><span class="pre">autosubscribe_all_sharedfolders</span></code>)</p>
 <blockquote>
 <div>Rather than subscribe the user for which a mailbox is being
 automatically created to some shared folders, simply subscribe the
@@ -1121,19 +1122,19 @@ user to all shared folders.</div></blockquote>
 configured here.</div></blockquote>
 </div>
 <div class="section" id="default-change-delete-mode">
-<h3>Default Change: <code class="docutils literal"><span class="pre">delete_mode</span></code><a class="headerlink" href="#default-change-delete-mode" title="Permalink to this headline">¶</a></h3>
+<h3>Default Change: <code class="docutils literal notranslate"><span class="pre">delete_mode</span></code><a class="headerlink" href="#default-change-delete-mode" title="Permalink to this headline">¶</a></h3>
 <p>The default for the <a class="reference internal" href="../../../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> configuration option
-<code class="docutils literal"><span class="pre">delete_mode</span></code> has changed from <code class="docutils literal"><span class="pre">immediate</span></code> to <code class="docutils literal"><span class="pre">delayed</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">delete_mode</span></code> has changed from <code class="docutils literal notranslate"><span class="pre">immediate</span></code> to <code class="docutils literal notranslate"><span class="pre">delayed</span></code>.</p>
 <p>This causes mail folders that are deleted by a client to not
 immediately dissappear from the filesystem. Instead, they are renamed
 to a deleted namespace that is visible only to administrators.</p>
-<p>A separate job <code class="docutils literal"><span class="pre">cyr_expire</span> <span class="pre">-D</span> <span class="pre">$x</span></code> is to be included in the master
+<p>A separate job <code class="docutils literal notranslate"><span class="pre">cyr_expire</span> <span class="pre">-D</span> <span class="pre">$x</span></code> is to be included in the master
 service configuration file <a class="reference internal" href="../../../../reference/manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a>, specifically in
-the EVENTS section. <code class="docutils literal"><span class="pre">$x</span></code> is a number of days to keep already deleted
+the EVENTS section. <code class="docutils literal notranslate"><span class="pre">$x</span></code> is a number of days to keep already deleted
 folders.</p>
 <p><strong>Example section of :cyrusman:`cyrus.conf(5)`</strong></p>
 <blockquote>
-<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">EVENTS</span> <span class="p">{</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">EVENTS</span> <span class="p">{</span>
     <span class="n">deleteprune</span> <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;cyr_expire -D 69&quot;</span> <span class="n">at</span><span class="o">=</span><span class="mi">0430</span>
 <span class="p">}</span>
 </pre></div>
@@ -1144,20 +1145,20 @@ only after 2 times 31 plus 7 days, corresponding with 2 cycles of a
 monthly (full, virtual) backup of which one might fail.</p>
 </div>
 <div class="section" id="default-change-expunge-mode">
-<h3>Default Change: <code class="docutils literal"><span class="pre">expunge_mode</span></code><a class="headerlink" href="#default-change-expunge-mode" title="Permalink to this headline">¶</a></h3>
+<h3>Default Change: <code class="docutils literal notranslate"><span class="pre">expunge_mode</span></code><a class="headerlink" href="#default-change-expunge-mode" title="Permalink to this headline">¶</a></h3>
 <p>The default for the <a class="reference internal" href="../../../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> configuration option
-<code class="docutils literal"><span class="pre">expunge_mode</span></code> has changed from <code class="docutils literal"><span class="pre">default</span></code> to <code class="docutils literal"><span class="pre">delayed</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">expunge_mode</span></code> has changed from <code class="docutils literal notranslate"><span class="pre">default</span></code> to <code class="docutils literal notranslate"><span class="pre">delayed</span></code>.</p>
 <p>This causes the mail message files associated with messages that are
 flagged as Deleted in a folder that is subsequently expunged, or
 individual messages that are expunged, to not be removed from the
 filesystem directly.</p>
-<p>A separate job <code class="docutils literal"><span class="pre">cyr_expire</span> <span class="pre">-X</span> <span class="pre">$x</span></code> is to be included in the master
+<p>A separate job <code class="docutils literal notranslate"><span class="pre">cyr_expire</span> <span class="pre">-X</span> <span class="pre">$x</span></code> is to be included in the master
 service configuration file <a class="reference internal" href="../../../../reference/manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a>, specifically in
-the EVENTS section. <code class="docutils literal"><span class="pre">$x</span></code> is a number of days to keep the message
+the EVENTS section. <code class="docutils literal notranslate"><span class="pre">$x</span></code> is a number of days to keep the message
 files on the filesystem.</p>
 <p><strong>Example section of :cyrusman:`cyrus.conf(5)`</strong></p>
 <blockquote>
-<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">EVENTS</span> <span class="p">{</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">EVENTS</span> <span class="p">{</span>
     <span class="n">expungeprune</span> <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;cyr_expire -X 69&quot;</span> <span class="n">at</span><span class="o">=</span><span class="mi">0430</span>
 <span class="p">}</span>
 </pre></div>
@@ -1168,43 +1169,43 @@ filesystem only after 2 times 31 plus 7 days, corresponding with 2
 cycles of a monthly (full, virtual) backup of which one might fail.</p>
 </div>
 <div class="section" id="option-name-changes-for-ldap-tls">
-<h3>Option Name Changes for <code class="docutils literal"><span class="pre">ldap_tls_*</span></code><a class="headerlink" href="#option-name-changes-for-ldap-tls" title="Permalink to this headline">¶</a></h3>
+<h3>Option Name Changes for <code class="docutils literal notranslate"><span class="pre">ldap_tls_*</span></code><a class="headerlink" href="#option-name-changes-for-ldap-tls" title="Permalink to this headline">¶</a></h3>
 <p>Configuration option names for LDAP SSL/TLS configuration in
 <a class="reference internal" href="../../../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> have been changed:</p>
-<p><strong>ldap_ca_dir</strong> (was: <code class="docutils literal"><span class="pre">ldap_tls_cacert_dir</span></code>)</p>
-<p><strong>ldap_ca_file</strong> (was: <code class="docutils literal"><span class="pre">ldap_tls_cacert_file</span></code>)</p>
-<p><strong>ldap_client_cert</strong> (was: <code class="docutils literal"><span class="pre">ldap_tls_cert</span></code>)</p>
-<p><strong>ldap_verify_peer</strong> (was: <code class="docutils literal"><span class="pre">ldap_tls_check_peer</span></code>)</p>
-<p><strong>ldap_ciphers</strong> (was: <code class="docutils literal"><span class="pre">ldap_tls_ciphers</span></code>)</p>
-<p><strong>ldap_client_key</strong> (was: <code class="docutils literal"><span class="pre">ldap_tls_key</span></code>)</p>
+<p><strong>ldap_ca_dir</strong> (was: <code class="docutils literal notranslate"><span class="pre">ldap_tls_cacert_dir</span></code>)</p>
+<p><strong>ldap_ca_file</strong> (was: <code class="docutils literal notranslate"><span class="pre">ldap_tls_cacert_file</span></code>)</p>
+<p><strong>ldap_client_cert</strong> (was: <code class="docutils literal notranslate"><span class="pre">ldap_tls_cert</span></code>)</p>
+<p><strong>ldap_verify_peer</strong> (was: <code class="docutils literal notranslate"><span class="pre">ldap_tls_check_peer</span></code>)</p>
+<p><strong>ldap_ciphers</strong> (was: <code class="docutils literal notranslate"><span class="pre">ldap_tls_ciphers</span></code>)</p>
+<p><strong>ldap_client_key</strong> (was: <code class="docutils literal notranslate"><span class="pre">ldap_tls_key</span></code>)</p>
 </div>
 <div class="section" id="option-name-changes-for-tls">
-<h3>Option Name Changes for <code class="docutils literal"><span class="pre">tls_*</span></code><a class="headerlink" href="#option-name-changes-for-tls" title="Permalink to this headline">¶</a></h3>
+<h3>Option Name Changes for <code class="docutils literal notranslate"><span class="pre">tls_*</span></code><a class="headerlink" href="#option-name-changes-for-tls" title="Permalink to this headline">¶</a></h3>
 <p>Configuration option names for SSL/TLS configuration in
 <a class="reference internal" href="../../../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> have been changed to better reflect how
 they are used, as enhancements would otherwise create great confusion.</p>
-<p><strong>tls_client_ca_dir</strong> (was: <code class="docutils literal"><span class="pre">tls_ca_path</span></code>)</p>
-<p><strong>tls_client_ca_file</strong> (was: <code class="docutils literal"><span class="pre">tls_ca_file</span></code>)</p>
+<p><strong>tls_client_ca_dir</strong> (was: <code class="docutils literal notranslate"><span class="pre">tls_ca_path</span></code>)</p>
+<p><strong>tls_client_ca_file</strong> (was: <code class="docutils literal notranslate"><span class="pre">tls_ca_file</span></code>)</p>
 <blockquote>
-<div><p>The former <code class="docutils literal"><span class="pre">tls_ca_*</span></code> configuration options specified one or more
+<div><p>The former <code class="docutils literal notranslate"><span class="pre">tls_ca_*</span></code> configuration options specified one or more
 SSL Certificate Authority certificates against which SSL
 certificates offered by clients could be verified.</p>
 <p>In a Cyrus IMAP Murder topology however, Cyrus IMAP servers
 themselves become clients of other Cyrus IMAP servers, but may not
 have been issued certificates under the same verification chain.</p>
 </div></blockquote>
-<p>With the (too) generic names for <code class="docutils literal"><span class="pre">tls_ca_*</span></code> configuration options out
+<p>With the (too) generic names for <code class="docutils literal notranslate"><span class="pre">tls_ca_*</span></code> configuration options out
 of the way, Cyrus IMAP 2.5.0 adds the following configuration options:</p>
-<p><strong>tls_server_cert</strong> (was: <code class="docutils literal"><span class="pre">tls_cert_file</span></code>)</p>
-<p><strong>tls_server_key</strong> (was: <code class="docutils literal"><span class="pre">tls_key_file</span></code>)</p>
+<p><strong>tls_server_cert</strong> (was: <code class="docutils literal notranslate"><span class="pre">tls_cert_file</span></code>)</p>
+<p><strong>tls_server_key</strong> (was: <code class="docutils literal notranslate"><span class="pre">tls_key_file</span></code>)</p>
 <blockquote>
 <div>Server SSL certificate and key to use for connections from
 clients.</div></blockquote>
-<p><strong>tls_sessions_db</strong> (was: <code class="docutils literal"><span class="pre">tlscache_db</span></code>)</p>
-<p><strong>tls_sessions_db_path</strong> (was: <code class="docutils literal"><span class="pre">tlscache_db_path</span></code>)</p>
+<p><strong>tls_sessions_db</strong> (was: <code class="docutils literal notranslate"><span class="pre">tlscache_db</span></code>)</p>
+<p><strong>tls_sessions_db_path</strong> (was: <code class="docutils literal notranslate"><span class="pre">tlscache_db_path</span></code>)</p>
 </div>
 <div class="section" id="new-options-for-tls">
-<h3>New Options for <code class="docutils literal"><span class="pre">tls_*</span></code><a class="headerlink" href="#new-options-for-tls" title="Permalink to this headline">¶</a></h3>
+<h3>New Options for <code class="docutils literal notranslate"><span class="pre">tls_*</span></code><a class="headerlink" href="#new-options-for-tls" title="Permalink to this headline">¶</a></h3>
 <p><strong>tls_client_cert</strong> (&lt;none&gt;)</p>
 <p><strong>tls_client_key</strong> (&lt;none&gt;)</p>
 <blockquote>
@@ -1215,33 +1216,33 @@ a client (to other cyrus-imapd server (instances)).</div></blockquote>
 <blockquote>
 <div>Certificate Authority file or directory used to verify client SSL
 certificates.</div></blockquote>
-<p><strong>tls_client_certs</strong> (<code class="docutils literal"><span class="pre">optional</span></code>)</p>
+<p><strong>tls_client_certs</strong> (<code class="docutils literal notranslate"><span class="pre">optional</span></code>)</p>
 <blockquote>
-<div>Disable (<code class="docutils literal"><span class="pre">off</span></code>), allow (<code class="docutils literal"><span class="pre">optional</span></code>) or require (<code class="docutils literal"><span class="pre">require</span></code>)
+<div>Disable (<code class="docutils literal notranslate"><span class="pre">off</span></code>), allow (<code class="docutils literal notranslate"><span class="pre">optional</span></code>) or require (<code class="docutils literal notranslate"><span class="pre">require</span></code>)
 clients authenticate with an SSL certificate.</div></blockquote>
 <p><strong>tls_server_ca_file</strong> (&lt;none&gt;)</p>
 <p><strong>tls_server_ca_dir</strong> (&lt;none&gt;)</p>
 <blockquote>
 <div>Certificate Authority file or directory used to verify SSL
 certificates offered by other servers.</div></blockquote>
-<p><strong>tls_compression</strong> (<code class="docutils literal"><span class="pre">0</span></code>)</p>
+<p><strong>tls_compression</strong> (<code class="docutils literal notranslate"><span class="pre">0</span></code>)</p>
 <blockquote>
 <div>Enable TLS compression. Disabled by default.</div></blockquote>
-<p><strong>tls_eccurve</strong> (<code class="docutils literal"><span class="pre">prime256v1</span></code>)</p>
+<p><strong>tls_eccurve</strong> (<code class="docutils literal notranslate"><span class="pre">prime256v1</span></code>)</p>
 <blockquote>
 <div>Select the elliptic curve used for ECDHE. See
 <strong class="command">openssl ecparams -list_curves</strong> for supported values on
 your platform.</div></blockquote>
-<p><strong>tls_prefer_server_ciphers</strong> (<code class="docutils literal"><span class="pre">0</span></code>)</p>
+<p><strong>tls_prefer_server_ciphers</strong> (<code class="docutils literal notranslate"><span class="pre">0</span></code>)</p>
 <blockquote>
 <div>Prefer the cipher order configured on the server-side.</div></blockquote>
-<p><strong>tls_versions</strong> (<code class="docutils literal"><span class="pre">ssl2</span> <span class="pre">ssl3</span> <span class="pre">tls1_0</span> <span class="pre">tls1_1</span> <span class="pre">tls1_2</span></code>)</p>
+<p><strong>tls_versions</strong> (<code class="docutils literal notranslate"><span class="pre">ssl2</span> <span class="pre">ssl3</span> <span class="pre">tls1_0</span> <span class="pre">tls1_1</span> <span class="pre">tls1_2</span></code>)</p>
 <blockquote>
 <div>Disable SSL/TLS protocols not in this list.</div></blockquote>
 </div>
 </div>
 <div class="section" id="development-switch-to-autoconf-and-libtool">
-<span id="relnotes-2-5-0-development-autoconf"></span><h2>Development: Switch to <code class="docutils literal"><span class="pre">autoconf</span></code> and <code class="docutils literal"><span class="pre">libtool</span></code><a class="headerlink" href="#development-switch-to-autoconf-and-libtool" title="Permalink to this headline">¶</a></h2>
+<span id="relnotes-2-5-0-development-autoconf"></span><h2>Development: Switch to <code class="docutils literal notranslate"><span class="pre">autoconf</span></code> and <code class="docutils literal notranslate"><span class="pre">libtool</span></code><a class="headerlink" href="#development-switch-to-autoconf-and-libtool" title="Permalink to this headline">¶</a></h2>
 <p>With the release of Cyrus IMAP 2.5.0, the Cyrus IMAP project has
 switched to using autoconf and libtool.</p>
 </div>
@@ -1259,7 +1260,7 @@ GitHub for code and bug management. <a class="reference external" href="https://
 </div>
 <div class="section" id="development-sphinx-for-documentation">
 <span id="relnotes-2-5-0-development-documentation"></span><h2>Development: Sphinx for Documentation<a class="headerlink" href="#development-sphinx-for-documentation" title="Permalink to this headline">¶</a></h2>
-<p>While a work in progress still, you're looking at the new and improved
+<p>While a work in progress still, you’re looking at the new and improved
 documentation effort for the Cyrus project as a whole.</p>
 <p>This documentation is written in reStructuredText, and rendered by
 Sphinx.</p>
@@ -1295,7 +1296,7 @@ Sphinx.</p>
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jul 17 2020
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1312,7 +1313,7 @@ Sphinx.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1321,7 +1322,7 @@ Sphinx.</p>
       <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../../../_static/language_data.js"></script>
 
   
 

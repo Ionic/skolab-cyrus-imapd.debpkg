@@ -1,4 +1,3 @@
-
 **quota**
 *********
 
@@ -59,13 +58,13 @@ Options
 
 -n
 
-   Check for any inconsistencies in the quota subsystem but don't
-   actually fix them.  Use with **-f** and **-q** to only see what's
+   Check for any inconsistencies in the quota subsystem but don’t
+   actually fix them.  Use with **-f** and **-q** to only see what’s
    incorrect.
 
 -q
 
-   Operate quietly. If **-f** is specified, then don't print the quota
+   Operate quietly. If **-f** is specified, then don’t print the quota
    values, only print messages when things are changed.
 
 -J

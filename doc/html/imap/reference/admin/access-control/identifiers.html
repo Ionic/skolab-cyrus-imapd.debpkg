@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Access Control Identifier (ACI) &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Access Control Identifier (ACI) &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../../index.html"/>
         <link rel="up" title="Access Control" href="../access-control.html"/>
         <link rel="next" title="Access Control Lists Rights Reference" href="rights-reference.html"/>
         <link rel="prev" title="Access Control Defaults" href="defaults.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -788,24 +789,24 @@
 <span id="imap-admin-access-control-identifiers"></span><h1>Access Control Identifier (ACI)<a class="headerlink" href="#access-control-identifier-aci" title="Permalink to this headline">¶</a></h1>
 <p>The Access Control Identifier (ACI) part of an ACL entry specifies the
 user or group for which the entry applies.  Group identifiers are
-distinguished be the prefix &quot;group:&quot;.  For example, &quot;group:accounting&quot;.</p>
-<p>There are two special identifiers, &quot;anonymous&quot;, and &quot;anyone&quot;, which are
+distinguished be the prefix “group:”.  For example, “group:accounting”.</p>
+<p>There are two special identifiers, “anonymous”, and “anyone”, which are
 explained below. The meaning of other identifiers usually depends on
-the authorization mechanism being used (selected by <code class="docutils literal"><span class="pre">--with-auth</span></code> at
+the authorization mechanism being used (selected by <code class="docutils literal notranslate"><span class="pre">--with-auth</span></code> at
 compile time, defaulting to Unix).</p>
 <div class="section" id="anonymous-and-anyone">
-<h2><code class="docutils literal"><span class="pre">anonymous</span></code> and <code class="docutils literal"><span class="pre">anyone</span></code><a class="headerlink" href="#anonymous-and-anyone" title="Permalink to this headline">¶</a></h2>
+<h2><code class="docutils literal notranslate"><span class="pre">anonymous</span></code> and <code class="docutils literal notranslate"><span class="pre">anyone</span></code><a class="headerlink" href="#anonymous-and-anyone" title="Permalink to this headline">¶</a></h2>
 <p>With any authorization mechanism, two special identifiers are defined.
-The identifier <code class="docutils literal"><span class="pre">anonymous</span></code> refers to the anonymous, or unauthenticated
-user. The identifier <code class="docutils literal"><span class="pre">anyone</span></code> refers to all users, including the
+The identifier <code class="docutils literal notranslate"><span class="pre">anonymous</span></code> refers to the anonymous, or unauthenticated
+user. The identifier <code class="docutils literal notranslate"><span class="pre">anyone</span></code> refers to all users, including the
 anonymous user.</p>
-<p>Both <code class="docutils literal"><span class="pre">anonymous</span></code> and <code class="docutils literal"><span class="pre">anyone</span></code> may commonly be used with the <strong>post</strong>
-right <code class="docutils literal"><span class="pre">p</span></code> to allow message insertion to mailboxes.</p>
+<p>Both <code class="docutils literal notranslate"><span class="pre">anonymous</span></code> and <code class="docutils literal notranslate"><span class="pre">anyone</span></code> may commonly be used with the <strong>post</strong>
+right <code class="docutils literal notranslate"><span class="pre">p</span></code> to allow message insertion to mailboxes.</p>
 </div>
 <div class="section" id="kerberos-vs-unix-authorization">
 <h2>Kerberos vs. Unix Authorization<a class="headerlink" href="#kerberos-vs-unix-authorization" title="Permalink to this headline">¶</a></h2>
 <p>The Cyrus IMAP server comes with four authorization mechanisms, one is
-compatible with Unix-style (<code class="docutils literal"><span class="pre">/etc/passwd</span></code>) authorization, one for use
+compatible with Unix-style (<code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code>) authorization, one for use
 with Kerberos 4, one for use with Kerberos 5, and one for use with an
 external authorization process (ptloader) which can interface with
 other group databases (e.g. AFS PTS groups, LDAP Groups, etc).</p>
@@ -821,21 +822,21 @@ this document.</p>
 <div class="section" id="unix-authorization">
 <h3>Unix Authorization<a class="headerlink" href="#unix-authorization" title="Permalink to this headline">¶</a></h3>
 <p>In the Unix authorization mechanism, ACIs are either a valid userid or
-the string <code class="docutils literal"><span class="pre">group:</span></code> followed by a group listed in <code class="docutils literal"><span class="pre">/etc/group</span></code>.
+the string <code class="docutils literal notranslate"><span class="pre">group:</span></code> followed by a group listed in <code class="docutils literal notranslate"><span class="pre">/etc/group</span></code>.
 Thus:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">root</span>                <span class="n">Refers</span> <span class="n">to</span> <span class="n">the</span> <span class="n">user</span> <span class="n">root</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">root</span>                <span class="n">Refers</span> <span class="n">to</span> <span class="n">the</span> <span class="n">user</span> <span class="n">root</span>
 <span class="n">group</span><span class="p">:</span><span class="n">staff</span>         <span class="n">Refers</span> <span class="n">to</span> <span class="n">the</span> <span class="n">group</span> <span class="n">staff</span>
 </pre></div>
 </div>
 <p>It is also possible to use unix groups with users authenticated through
 a non-/etc/passwd backend. Note that using unix groups in this way
-(without associated <code class="docutils literal"><span class="pre">/etc/passwd</span></code> entries) is not recommended.</p>
+(without associated <code class="docutils literal notranslate"><span class="pre">/etc/passwd</span></code> entries) is not recommended.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>Cyrus requires the getgrent(3) POSIX sysctl. As such, NSS needs to
 be configured to have the groups available, one of which includes
-&quot;files&quot;, but could also include &quot;ldap&quot;.</p>
-<p class="last">NSS augmentations, such as <code class="docutils literal"><span class="pre">nss_ldap</span></code>, <code class="docutils literal"><span class="pre">pam_ldap</span></code> or <code class="docutils literal"><span class="pre">sssd</span></code>
+“files”, but could also include “ldap”.</p>
+<p class="last">NSS augmentations, such as <code class="docutils literal notranslate"><span class="pre">nss_ldap</span></code>, <code class="docutils literal notranslate"><span class="pre">pam_ldap</span></code> or <code class="docutils literal notranslate"><span class="pre">sssd</span></code>
 may be used to provide Cyrus access to group information via NSS.</p>
 </div>
 </div>
@@ -844,24 +845,24 @@ may be used to provide Cyrus access to group information via NSS.</p>
 <p>Using the Kerberos authorization mechanism, ACIs are of the form:</p>
 <blockquote>
 <div><em>$principal</em>.*$instance*&#64;*$realm*</div></blockquote>
-<p>If <code class="docutils literal"><span class="pre">$instance</span></code> is omitted, it defaults to the null string. If
-<code class="docutils literal"><span class="pre">$realm</span></code> is omitted, it defaults to the local realm.</p>
-<p>The file <code class="docutils literal"><span class="pre">/etc/krb.equiv</span></code> contains mappings between Kerberos
+<p>If <code class="docutils literal notranslate"><span class="pre">$instance</span></code> is omitted, it defaults to the null string. If
+<code class="docutils literal notranslate"><span class="pre">$realm</span></code> is omitted, it defaults to the local realm.</p>
+<p>The file <code class="docutils literal notranslate"><span class="pre">/etc/krb.equiv</span></code> contains mappings between Kerberos
 principals. The file contains zero or more lines, each containing two
 fields. Any identity matching the first field of a line is changed to
 the second identity during canonicalization. For example, a line in
-<code class="docutils literal"><span class="pre">/etc/krb.equiv</span></code> of:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">bovik</span><span class="nd">@REMOTE</span><span class="o">.</span><span class="n">COM</span> <span class="n">bovik</span>
+<code class="docutils literal notranslate"><span class="pre">/etc/krb.equiv</span></code> of:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bovik</span><span class="nd">@REMOTE</span><span class="o">.</span><span class="n">COM</span> <span class="n">bovik</span>
 </pre></div>
 </div>
-<p>will cause the identity <code class="docutils literal"><span class="pre">bovik&#64;REMOTE.COM</span></code> to be treated as if it
-were the local identity <code class="docutils literal"><span class="pre">bovik</span></code>.</p>
+<p>will cause the identity <code class="docutils literal notranslate"><span class="pre">bovik&#64;REMOTE.COM</span></code> to be treated as if it
+were the local identity <code class="docutils literal notranslate"><span class="pre">bovik</span></code>.</p>
 </div>
 <div class="section" id="alternative-authorization">
 <h3>Alternative Authorization<a class="headerlink" href="#alternative-authorization" title="Permalink to this headline">¶</a></h3>
 <p>A site may wish to write their own authorization mechanism, perhaps to
 implement a local group mechanism. If it does so (by implementing an
-<code class="docutils literal"><span class="pre">auth_[whatever]</span></code> PTS module), it will dictate its own form and
+<code class="docutils literal notranslate"><span class="pre">auth_[whatever]</span></code> PTS module), it will dictate its own form and
 meaning of identifiers.</p>
 </div>
 </div>
@@ -888,7 +889,7 @@ meaning of identifiers.</p>
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on May 08 2017
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -905,7 +906,7 @@ meaning of identifiers.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -914,7 +915,7 @@ meaning of identifiers.</p>
       <script type="text/javascript" src="../../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../../_static/language_data.js"></script>
 
   
 

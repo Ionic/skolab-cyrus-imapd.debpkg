@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.4.18 Release Notes
 *******************************
 
@@ -16,7 +15,7 @@ Cyrus IMAP 2.4.18 Release Notes
   Coloos)
 
 * Fixed task 116: correct LIST response for domains starting with
-  'inbox.'
+  ‘inbox.’
 
 * Fixed task 76: fixed lmtpd userdeny db checks (thanks Leena Heino)
 
@@ -32,7 +31,7 @@ Cyrus IMAP 2.4.18 Release Notes
 * Fixed bug #3784: no longer crash in THREAD REFERENCES when
   messages reference themselves
 
-* Fixed bug #3757: don't segfault on mailbox close with no user
+* Fixed bug #3757: don’t segfault on mailbox close with no user
 
 
 New ssl/tls configuration options

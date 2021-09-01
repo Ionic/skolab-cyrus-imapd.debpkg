@@ -1,4 +1,3 @@
-
 Cyrus IMAP 3.1.8 Tag Notes
 **************************
 
@@ -61,7 +60,7 @@ Major changes since the 3.0.x series
   mapping nearly everything to EX_TEMPFAIL
 
 * CyrusDB errors now syslog the actual error instead of just
-  "cyrusdb error"
+  “cyrusdb error”
 
 * New *allowdeleted* imapd.conf(5) option (default off), which
   allows admin users to see deleted mailboxes and expunged messages
@@ -71,7 +70,7 @@ Major changes since the 3.0.x series
   sent about infected messages that have been deleted
 
 * imapd.conf(5) options that represent a time duration now accept
-  'd', 'h', 'm', 's' suffixes rather than arbitrary units.
+  ‘d’, ‘h’, ‘m’, ‘s’ suffixes rather than arbitrary units.
 
 * The *tls_server_cert* and *tls_server_key* imapd.conf(5) options
   now allow two certificate/key pairs (e.g. RSA and EC) to be used.
@@ -83,7 +82,7 @@ Updates to default configuration
 
 * The *specialusealways* option is now enabled by default. It must
   explicitly be disabled for interoperability with legacy clients that
-  can't handle RFC 6154 attributes in extended LIST commands.
+  can’t handle RFC 6154 attributes in extended LIST commands.
 
 * The values accepted by *expunge_mode* have changed, please see the
   documentation for more information about the changes.

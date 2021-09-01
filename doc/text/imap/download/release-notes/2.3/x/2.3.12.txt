@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.3.12 Release Notes
 *******************************
 
@@ -6,23 +5,23 @@ Changes to the Cyrus IMAP Server since 2.3.11
 
 * Added statuscache.db to cache IMAP STATUS data which significantly
   reduces the amount of I/O necessary when neither the mailbox nor
-  Seen state has changed -- courtesy of Fastmail.fm.
+  Seen state has changed – courtesy of Fastmail.fm.
 
-* Added option to unexpunge to restore messages by time interval --
+* Added option to unexpunge to restore messages by time interval –
   courtesy of David Carter.
 
 * Implemented undocumented IMAP SCAN extension, which allows
-  Pine/Alpine to do cross-mailbox searches -- based on work of David
+  Pine/Alpine to do cross-mailbox searches – based on work of David
   Carter.
 
-* Implemented incremental squat updates (see squatter.8) -- courtesy
+* Implemented incremental squat updates (see squatter.8) – courtesy
   of David Carter.
 
-* Fixed major bugs in reconstruct -k implementation -- courtesy of
+* Fixed major bugs in reconstruct -k implementation – courtesy of
   David Carter.
 
 * Added code to promote transaction safety and to track the lock
-  status of skiplist databases -- courtesy of Fastmail.fm.
+  status of skiplist databases – courtesy of Fastmail.fm.
 
 * Added option to mbexamine to compare quota usage in cyrus.index to
   the actual message file sizes.

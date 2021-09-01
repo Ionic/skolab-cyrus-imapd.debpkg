@@ -1,4 +1,3 @@
-
 Duplicate Delivery Suppression
 ******************************
 
@@ -17,5 +16,5 @@ Duplicate Delivery Suppression can also affect sieve redirects. In
 this case, suppression is done on a message-id/redirect-target basis.
 
 Duplicate Delivery Suppression can also affect vacation messages. In
-this case, suppression is done based on a hash of the sender's address
+this case, suppression is done based on a hash of the sender’s address
 and the vacation message.

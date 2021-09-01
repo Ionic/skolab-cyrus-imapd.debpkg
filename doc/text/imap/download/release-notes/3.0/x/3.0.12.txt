@@ -1,4 +1,3 @@
-
 Cyrus IMAP 3.0.12 Release Notes
 *******************************
 
@@ -24,7 +23,7 @@ Changes Since 3.0.11
 Release changes
 ---------------
 
-We're trialing using the Github Releases feature.  If you have trouble
+We’re trialing using the Github Releases feature.  If you have trouble
 downloading this release, please report this to the mailing lists.
 Thanks!
 
@@ -40,7 +39,7 @@ Security fixes
 Build changes
 -------------
 
-* *configure* can now find xapian-config-1.5 on its own, if it's in
+* *configure* can now find xapian-config-1.5 on its own, if it’s in
   your PATH.
 
 * *make distcheck* now tries to build with most components enabled
@@ -50,7 +49,7 @@ Build changes
 
 * Now builds cleanly with GCC 9.1.1 (thanks Дилян Палаузов)
 
-* *configure --disable-pcre* now works properly, and falls back to
+* *configure –disable-pcre* now works properly, and falls back to
   POSIX regexes
 
 

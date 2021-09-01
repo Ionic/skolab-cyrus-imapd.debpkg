@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "CYRUS.CONF" "5" "May 10, 2021" "3.4.1" "Cyrus IMAP"
+.TH "CYRUS.CONF" "5" "September 01, 2021" "3.4.2" "Cyrus IMAP"
 .SH NAME
 cyrus.conf \- Cyrus IMAP documentation
 .
@@ -58,16 +58,16 @@ into sections of the form
 where \fIsection\fP is the name of the section, \fIname\fP is the name of the
 entry and \fIarguments\fP is the whitespace\-separated list of arguments for
 the entry.  The \fIname\fP may be any sequence of alphabetic and numeric
-characters, but may not contain punctuation such as \(aq\-\(aq or \(aq_\(aq.  In the
+characters, but may not contain punctuation such as ‘\-‘ or ‘_’.  In the
 \fBSERVICES\fP section, names must be unique.
 .sp
-Blank lines and lines beginning with \(ga\(ga#\(aq\(aq are ignored.
+Blank lines and lines beginning with \(ga\(ga#’’ are ignored.
 .SH SECTION DESCRIPTIONS
 .sp
 The paragraphs below detail the four sections (\fBSTART\fP, \fBSERVICES\fP,
 \fBEVENTS\fP, \fBDAEMON\fP) that can be placed in the \fB/etc/cyrus.conf\fP
 file.  The arguments that are available for each entry within the
-section are described, and each argument\(aqs default value is shown.
+section are described, and each argument’s default value is shown.
 .sp
 An important distinction exists between \fBSERVICES\fP and \fBDAEMON\fP ;
 the former have sockets which master(8) will listen on
@@ -87,7 +87,7 @@ DAEMON may not be terminated by master(8)\&.
 .UNINDENT
 .sp
 Arguments can appear in any order. Some arguments have no default
-value, these are listed with \(ga\(ga<no default>\(aq\(aq.  For string arguments,
+value, these are listed with \(ga\(ga<no default>’‘.  For string arguments,
 the value MUST be enclosed in double quotes.
 .SS START
 .sp
@@ -128,7 +128,7 @@ on certain Internet/UNIX sockets.
 .INDENT 0.0
 .INDENT 3.5
 Integer value \- if non\-zero, will make sure at least one process is
-pre\-forked, and will set the maxforkrate to 10 if it\(aqs zero.
+pre\-forked, and will set the maxforkrate to 10 if it’s zero.
 .UNINDENT
 .UNINDENT
 .sp
@@ -228,7 +228,7 @@ process. This integer value is optional.
 .INDENT 0.0
 .INDENT 3.5
 Maximum number of processes to fork per second \- the master
-will insert sleeps to ensure it doesn\(aqt fork faster than this
+will insert sleeps to ensure it doesn’t fork faster than this
 on average.
 .UNINDENT
 .UNINDENT
@@ -317,7 +317,7 @@ DAEMON {
 When TCP Wrappers is used to control access to Cyrus services, the
 \fIname\fP of the service entry should be used as the process name in
 the \fBhosts_access(5)\fP table.  For instance, in the example above,
-"imap", "imaps", "lmtpunix" and "lmtp" would be used as the process
+“imap”, “imaps”, “lmtpunix” and “lmtp” would be used as the process
 names.  This allows a single daemon such as imapd to be run in
 different modes or configurations (i.e., SSL and non\-SSL enabled) yet
 still have separate access control rules.

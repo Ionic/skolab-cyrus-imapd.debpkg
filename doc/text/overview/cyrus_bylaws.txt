@@ -1,4 +1,3 @@
-
 Cyrus Bylaws
 ************
 
@@ -105,7 +104,7 @@ regardless of the Roadmap.
 
 The Release Engineer shall make releases according to the Roadmap. If
 there are no blocker-level bugs, a release may be made at the Release
-Engineer's discretion. The Release Engineer may also classify a bug as
+Engineer’s discretion. The Release Engineer may also classify a bug as
 blocker or as a security fix that requires immediate release.
 
 The Core Developers group may block a pending release with a simple

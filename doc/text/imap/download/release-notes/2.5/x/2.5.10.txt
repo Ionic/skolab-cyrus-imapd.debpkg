@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.5.10 Release Notes
 *******************************
 
@@ -34,7 +33,7 @@ Dependency changes
 Other changes
 -------------
 
-* master(8) now supports a "-V" (print version and exit) option
+* master(8) now supports a “-V” (print version and exit) option
 
 * version information is now based on git describe, not hard-coded
   strings
@@ -50,7 +49,7 @@ Bug fixes
   are too old to be replicated.  Instead, it fails with an error and
   logs a warning that they need to be reconstructed
 
-* Fixed Issue #45: extended LIST doesn't lose options when proxied
+* Fixed Issue #45: extended LIST doesn’t lose options when proxied
   to backend
 
 * Fixed task 142: extended LIST response no longer missing

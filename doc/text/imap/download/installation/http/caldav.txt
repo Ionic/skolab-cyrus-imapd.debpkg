@@ -1,4 +1,3 @@
-
 CalDAV
 ******
 
@@ -18,25 +17,25 @@ calendarprefix
       The prefix for the calendar mailboxes hierarchies.  The
       hierarchy delimiter will be automatically appended.  The public
       calendar hierarchy will be at the toplevel of the shared
-      namespace.  A user's personal calendar hierarchy will be a child
+      namespace.  A user’s personal calendar hierarchy will be a child
       of their Inbox.
 
 When enabled, the CalDAV module allows Cyrus to function as a calendar
 and scheduling server. This module uses a subset of the mailbox
 hierarchy as calendar collections, the toplevel of which is specified
 by the "calendarprefix" option. The public calendar hierarchy will
-reside at the toplevel of the shared mailbox namespace. A user's
+reside at the toplevel of the shared mailbox namespace. A user’s
 personal calendar hierarchy will be a child of their Inbox.
 
 For example, using the default value for calendarprefix, a calendar
-named Default for user "murch" would reside in the mailbox named
+named Default for user “murch” would reside in the mailbox named
 "user.murch.#calendars.Default".
 
 Warning: Note that mailboxes in the calendar hierarchies (those
   under calendarprefix) **should not** be accessed with an IMAP client
   as doing so will leave a mailbox in a state unsuitable for CalDAV.
   To this end, calendar mailboxes will not returned by Cyrus imapd in
-  response to an IMAP client's request for the available calendar
+  response to an IMAP client’s request for the available calendar
   list, but Cyrus imapd can not otherwise prevent an IMAP client from
   accessing them.
 
@@ -49,7 +48,7 @@ caldav_allowscheduling
 
    "caldav_allowscheduling:" on
 
-      Enable calendar scheduling operations. If set to "apple", the
+      Enable calendar scheduling operations. If set to “apple”, the
       server will emulate Apple CalendarServer behavior as closely as
       possible. Allowed values: *off*, *on*, *apple*
 
@@ -76,19 +75,19 @@ autocreate options
 
    "caldav_create_default:" 1
 
-      Create the 'Default' calendar if it doesn't already exist
+      Create the ‘Default’ calendar if it doesn’t already exist
 
    "caldav_create_attach:" 1
 
-      Create the 'Attachments' collection if it doesn't already exist
+      Create the ‘Attachments’ collection if it doesn’t already exist
 
    "caldav_create_sched:" 1
 
-      Create the 'Inbox' and 'Outbox' calendars if they don't already
+      Create the ‘Inbox’ and ‘Outbox’ calendars if they don’t already
       exist
 
 Autocreate of the various calendars can be disabled with the
-"caldav_create_default/sched/attach" options, if you have an alternate
+“caldav_create_default/sched/attach” options, if you have an alternate
 mechanism to create calendars.
 
 There is also a Cyrus web GUI for managing calendar resources. It
@@ -105,7 +104,7 @@ allows you to:
    * Delete existing collections
 
 The Cyrus web GUI for CalDAV Collection Management is disabled by
-default, but can be enabled with the "caldav_allowcalendaradmin"
+default, but can be enabled with the “caldav_allowcalendaradmin”
 option.
 
 
@@ -142,16 +141,16 @@ When enabled in conjunction with the CalDAV module, the Freebusy URL
 module allows non-CalDAV and/or remote calendaring clients to query
 the freebusy information of Cyrus CalDAV users.
 
-Access to the freebusy information is controlled by the "freebusy" ACL
-(9) on a user's home calendar collection. (e.g. a mailbox named
+Access to the freebusy information is controlled by the “freebusy” ACL
+(9) on a user’s home calendar collection. (e.g. a mailbox named
 "user.murch.#calendars"). To enable unauthenticated users (non-Cyrus)
 to access freebusy information, the freebusy ACL must be given to
-"anyone".
+“anyone”.
 
-Freebusy information, consolidating the data of all user's calendars,
+Freebusy information, consolidating the data of all user’s calendars,
 is accessed via URLs of the following form:
 "https://<servername>/freebusy/user/<userid>".  Querying individual
-CalDAV collections, when they have explicitly "freebusy" ACL (9) set,
+CalDAV collections, when they have explicitly “freebusy” ACL (9) set,
 is done via
 "https://<servername>/freebusy/user/<userid>/<collection>".
 
@@ -203,7 +202,7 @@ zoneinfo config
    "zoneinfo_db:" twoskip
 
       The cyrusdb backend to use for zoneinfo.  This database is used
-      by the "tzdist" *httpmodules*, and is managed by
+      by the “tzdist” *httpmodules*, and is managed by
       **ctl_zoneinfo(8)**. Allowed values: *flat*, *skiplist*,
       *twoskip*, *zeroskip*
 
@@ -216,7 +215,7 @@ zoneinfo config
       whatever definitions libical finds will be used.
 
       If you are providing a Time Zone Data Distribution Service (i.e.
-      you have "tzdist" listed in *httpmodules*), then this
+      you have “tzdist” listed in *httpmodules*), then this
       configuration option MUST be specified.
 
 The TZDist module requires the "zoneinfo_dir" setting in imapd.conf(5)
@@ -275,7 +274,7 @@ The steps to populate the "zoneinfo_dir" directory are:
 
    where <version-string> contains description of the recently
    downloaded time zone data, colon, and the version of the data (e.g.
-   "IANA Time Zone Database:2020a").
+   “IANA Time Zone Database:2020a”).
 
 6. Check that the zoneinfo index database and all iCalendar data
    files/links are readable by the cyrus user.
@@ -292,11 +291,11 @@ Note: iSchedule support in Cyrus is a work in progress.
 
 iSchedule allows CalDAV servers to:
 
-* query an event participant's free/busy status prior to invitation
+* query an event participant’s free/busy status prior to invitation
   in order to set up a good meeting time, which cannot be done over
   email.
 
-* keep participant's local event current by updating the status of
+* keep participant’s local event current by updating the status of
   other participants automatically. This is not done when scheduling
   over email as it would result in too much mail traffic and extra
   manual overhead for the users.
@@ -310,7 +309,7 @@ caldav_allowscheduling
 
    "caldav_allowscheduling:" on
 
-      Enable calendar scheduling operations. If set to "apple", the
+      Enable calendar scheduling operations. If set to “apple”, the
       server will emulate Apple CalendarServer behavior as closely as
       possible. Allowed values: *off*, *on*, *apple*
 

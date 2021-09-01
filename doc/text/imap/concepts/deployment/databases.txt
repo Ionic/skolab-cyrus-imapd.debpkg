@@ -1,4 +1,3 @@
-
 Databases
 *********
 
@@ -186,7 +185,7 @@ STATUS cache (statuscache.db)
 -----------------------------
 
 This database caches IMAP STATUS information resulting in less I/O
-when the STATUS information hasn't changed (mailbox and Seen state
+when the STATUS information hasn’t changed (mailbox and Seen state
 unchanged). The database is indexed by mailbox name + userid and each
 data record contains the database version number, a bitmask of the
 stored status items, the mtime, inode, and size of the cyrus.index
@@ -209,7 +208,7 @@ User Access (user_deny.db)
 This database contains a list of users that are denied access to Cyrus
 services. The database is indexed by userid and each data record
 contains the database version number (currently 2), a list of
-"wildmat" patterns (per **RFC 3977#section-4**) specifying Cyrus
+“wildmat” patterns (per **RFC 3977#section-4**) specifying Cyrus
 services to be denied, and a text message to be displayed to the user
 upon denial. The service names to be matched are those as used in
 cyrus.conf(5). The format of each record is as follows:
@@ -225,7 +224,7 @@ Backups (backups.db)
 --------------------
 
 This database maps userids to the location of their backup files.  It
-only exists on Cyrus Backup servers (compiled with the *--enable-
+only exists on Cyrus Backup servers (compiled with the *–enable-
 backup* configure option).
 
 File type can be: twoskip (default), skiplist, sql, or twoskip.
@@ -266,7 +265,7 @@ File format not selectable.
 Search Indexes (cyrus.squat, <userid>.xapianactive, cyrus.indexed.db)
 ---------------------------------------------------------------------
 
-This is either cyrus.squat in each folder, or if you're using Xapian a
+This is either cyrus.squat in each folder, or if you’re using Xapian a
 single <userid>.xapianactive file listing active databases with tier
 name and number.
 

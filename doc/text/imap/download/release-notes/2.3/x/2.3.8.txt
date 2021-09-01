@@ -1,11 +1,10 @@
-
 Cyrus IMAP 2.3.8 Release Notes
 ******************************
 
 Changes to the Cyrus IMAP Server since 2.3.7
 
 * Added improved_mboxlist_sort option which fixes LIST/LSUB problem
-  with characters like '-' and ' ' in mailbox names. See imapd.conf.5
+  with characters like ‘-‘ and ‘ ‘ in mailbox names. See imapd.conf.5
   for details
 
 * Fixed problem with mupdate randomly spinning.

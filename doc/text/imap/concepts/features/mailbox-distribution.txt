@@ -1,4 +1,3 @@
-
 Mailbox Distribution
 ********************
 
@@ -203,7 +202,7 @@ Excluding Partitions
    Partitions listed in the "partition_select_exclude" setting in
    imapd.conf(5) are permanently excluded from being selected.
 
-   Listed partition's names are separated by spaces and/or commas.
+   Listed partition’s names are separated by spaces and/or commas.
    Only configured partition names (and not paths) are expected.
 
    With the following configuration in imapd.conf(5), "parta" and
@@ -245,16 +244,16 @@ Important: **Exclusion is not absolute**Partitions are only excluded
   parent folder.
 
 
-Partition's Usage Information Reset
+Partition’s Usage Information Reset
 -----------------------------------
 
-By default, partition's usage information is retrieved only once --
+By default, partition’s usage information is retrieved only once –
 when the service first initializes.
 
 If you tend to use the same service instance for a long lapse of time
 and performs a large amount of mailbox creations, it may be useful to
 configure the "partition_select_usage_reinit" setting so that each
-partition's usage information is refreshed after the configured number
+partition’s usage information is refreshed after the configured number
 of creation requests.
 
 Note: This only concerns selection modes other than *random`*.
@@ -398,7 +397,7 @@ automatically excluded if their considered usage percentage is beyond
 the "serverlist_select_soft_usage_limit" integer setting.
 
 
-Backend's Usage Information Reset
+Backend’s Usage Information Reset
 ---------------------------------
 
 By default backends usage data are retrieved only once upon service
@@ -408,7 +407,7 @@ Note: This only concerns selection modes other than "random".
 
 If you tend to use the same service instance for a long lapse of time
 and performs a large amounts of mailbox creations, it may be useful to
-configure the "serverlist_select_usage_reinit" so that the backend's
+configure the "serverlist_select_usage_reinit" so that the backend’s
 disk usage information is refreshed after the configured number of
 creation requests.
 

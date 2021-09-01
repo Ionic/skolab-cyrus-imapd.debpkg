@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.5.11 Release Notes
 *******************************
 
@@ -31,8 +30,8 @@ Other changes
 * Better integration with updated documentation/website
   infrastructure
 
-* The "timeout" option is now also used as an upper limit in minutes
-  for IDLE connections.  A new option "imapidletimeout" can be used to
+* The “timeout” option is now also used as an upper limit in minutes
+  for IDLE connections.  A new option “imapidletimeout” can be used to
   set an idle-specific timeout instead.  (Thanks Philipp Gesang.)
 
 
@@ -49,7 +48,7 @@ Bug fixes
 * Fixed Issue #67: better support for dots in localparts (thanks
   Jeroen van Meeuwen)
 
-* Fixed: don't assume LIST section options when proxying
+* Fixed: don’t assume LIST section options when proxying
 
 * Fixed: SEARCH crash on some platforms
 

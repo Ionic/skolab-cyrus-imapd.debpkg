@@ -1,4 +1,3 @@
-
 **mknewsgroups**
 ****************
 
@@ -25,7 +24,7 @@ Options
 
 -n
 
-   Print the IMAP commands, but don't execute them.
+   Print the IMAP commands, but don’t execute them.
 
 -C  <config file>
 
@@ -43,7 +42,7 @@ Options
 -w <wildmats>
 
    Only create the newsgroups specified by <wildmats>.  <wildmats> is
-   a comma-separated list of wildmat pattern (eg, "*,!alt.*")
+   a comma-separated list of wildmat pattern (eg, “*,!alt.*”)
 
 -p  <part>
 
@@ -52,4 +51,4 @@ Options
 -a <acls>
 
    Set <acls> on the newsgroup.  <acls> is a whitespace-separated list
-   of cyradm-style userid/rights pairs (eg, "anyone +p  news write")
+   of cyradm-style userid/rights pairs (eg, “anyone +p  news write”)

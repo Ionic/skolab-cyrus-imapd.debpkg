@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Virtual Domains &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Virtual Domains &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../index.html"/>
         <link rel="up" title="Features" href="../features.html"/>
         <link rel="next" title="Mailbox Annotations (METADATA)" href="mailbox-annotations.html"/>
         <link rel="prev" title="Mailbox Namespaces" href="namespaces.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../overview.html">Overview</a> &raquo;</li>
       
@@ -788,41 +789,41 @@
 <h2>What are virtual domains?<a class="headerlink" href="#what-are-virtual-domains" title="Permalink to this headline">¶</a></h2>
 <p>Virtual domains means hosting a service for more than one
 domain on a single server.  Cyrus IMAP has the ability to host IMAP/POP
-mailboxes for multiple domains (for example: <code class="docutils literal"><span class="pre">test&#64;cyrusisgreat.org</span></code> and
-<code class="docutils literal"><span class="pre">test&#64;ilovecyrus.com</span></code>) on a single server or Murder.</p>
+mailboxes for multiple domains (for example: <code class="docutils literal notranslate"><span class="pre">test&#64;cyrusisgreat.org</span></code> and
+<code class="docutils literal notranslate"><span class="pre">test&#64;ilovecyrus.com</span></code>) on a single server or Murder.</p>
 <p>Cyrus needs to know which domain to use when a mailbox is accessed.
 There are two ways in which Cyrus can determine the domain:</p>
 <dl class="docutils">
 <dt>Fully qualified userid</dt>
 <dd>The client logs in with a userid
 containing the domain in which the user belongs (for example:
-<code class="docutils literal"><span class="pre">test&#64;cyrusisgreat.org</span></code> or <code class="docutils literal"><span class="pre">test&#64;ilovecyrus.com</span></code>)</dd>
+<code class="docutils literal notranslate"><span class="pre">test&#64;cyrusisgreat.org</span></code> or <code class="docutils literal notranslate"><span class="pre">test&#64;ilovecyrus.com</span></code>)</dd>
 <dt>IP address</dt>
 <dd>The server looks up the domain based on the IP
 address of the receiving interface (useful for servers with multiple
 NICs or those using IP aliasing)</dd>
 </dl>
-<p>If the <code class="docutils literal"><span class="pre">virtdomains</span></code> option is set to <code class="docutils literal"><span class="pre">off</span></code> (or <code class="docutils literal"><span class="pre">no</span></code>, <code class="docutils literal"><span class="pre">0</span></code>, <code class="docutils literal"><span class="pre">false</span></code>),
+<p>If the <code class="docutils literal notranslate"><span class="pre">virtdomains</span></code> option is set to <code class="docutils literal notranslate"><span class="pre">off</span></code> (or <code class="docutils literal notranslate"><span class="pre">no</span></code>, <code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">false</span></code>),
 Cyrus does not know or care about domains, and only ever considers the local
 part of email addresses.  This configuration is never recommended, but is
 currently the default.</p>
-<p>If the <code class="docutils literal"><span class="pre">virtdomains</span></code> option is set to <code class="docutils literal"><span class="pre">userid</span></code>, then only the
+<p>If the <code class="docutils literal notranslate"><span class="pre">virtdomains</span></code> option is set to <code class="docutils literal notranslate"><span class="pre">userid</span></code>, then only the
 fully qualified userid is used.  This is the only recommended configuration
 for new deployments, and in the future may become the default or only option.
 Existing deployments should strongly consider migrating towards this
 configuration.</p>
-<p>If the <code class="docutils literal"><span class="pre">virtdomains</span></code> option is set to <code class="docutils literal"><span class="pre">on</span></code> (or <code class="docutils literal"><span class="pre">yes</span></code>, <code class="docutils literal"><span class="pre">1</span></code>, <code class="docutils literal"><span class="pre">true</span></code>),
+<p>If the <code class="docutils literal notranslate"><span class="pre">virtdomains</span></code> option is set to <code class="docutils literal notranslate"><span class="pre">on</span></code> (or <code class="docutils literal notranslate"><span class="pre">yes</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">true</span></code>),
 Cyrus uses both mechanisms to work out the domain (with the fully qualified
 userid taking precedence).  This configuration is not recommended.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>If you are providing calendaring services, you MUST use the
-<code class="docutils literal"><span class="pre">virtdomains:</span> <span class="pre">userid</span></code> configuration.  Calendaring services require
+<code class="docutils literal notranslate"><span class="pre">virtdomains:</span> <span class="pre">userid</span></code> configuration.  Calendaring services require
 a consistent single authoritative fully-qualified email address for
 each user in order to function, and this is the only configuration
 that provides it.</p>
-<p class="last">The <code class="docutils literal"><span class="pre">virtdomains:</span> <span class="pre">off</span></code> and <code class="docutils literal"><span class="pre">virtdomains:</span> <span class="pre">on</span></code> configurations both
-allow users' domains to be changed from outside of Cyrus without Cyrus
+<p class="last">The <code class="docutils literal notranslate"><span class="pre">virtdomains:</span> <span class="pre">off</span></code> and <code class="docutils literal notranslate"><span class="pre">virtdomains:</span> <span class="pre">on</span></code> configurations both
+allow users’ domains to be changed from outside of Cyrus without Cyrus
 knowing about it, which fundamentally breaks calendaring.  These
 configurations are only suitable for IMAP-only deployments.</p>
 </div>
@@ -831,17 +832,17 @@ configurations are only suitable for IMAP-only deployments.</p>
 <h2>Concepts<a class="headerlink" href="#concepts" title="Permalink to this headline">¶</a></h2>
 <dl class="docutils">
 <dt>Everyone is in a domain</dt>
-<dd>It's best to think of every user as existing inside a domain.  Unqualified users are technically inside the <code class="docutils literal"><span class="pre">defaultdomain</span></code>.</dd>
+<dd>It’s best to think of every user as existing inside a domain.  Unqualified users are technically inside the <code class="docutils literal notranslate"><span class="pre">defaultdomain</span></code>.</dd>
 <dt>Names can be qualified</dt>
-<dd><p class="first">Global admins can reference mailboxes and IDs by qualified names.  That is, for any given mailbox command, you can add <code class="docutils literal"><span class="pre">&#64;domain</span></code> to the end of the mailbox name.</p>
+<dd><p class="first">Global admins can reference mailboxes and IDs by qualified names.  That is, for any given mailbox command, you can add <code class="docutils literal notranslate"><span class="pre">&#64;domain</span></code> to the end of the mailbox name.</p>
 <p>Here are some examples:</p>
 <blockquote class="last">
 <div><ul class="simple">
-<li><code class="docutils literal"><span class="pre">cyradm&gt;</span> <span class="pre">create</span> <span class="pre">user.lukecage&#64;example.net</span></code> - create a user</li>
-<li><code class="docutils literal"><span class="pre">cyradm&gt;</span> <span class="pre">create</span> <span class="pre">user.mercedesknight&#64;example.net</span></code> - create another user</li>
-<li><code class="docutils literal"><span class="pre">cyradm&gt;</span> <span class="pre">setquota</span> <span class="pre">user.lukecage&#64;example.net</span> <span class="pre">50000</span></code> - define a quota</li>
-<li><code class="docutils literal"><span class="pre">cyradm&gt;</span> <span class="pre">setaclmailbox</span> <span class="pre">user.lukecage&#64;example.net</span> <span class="pre">mercedesknight&#64;example.net</span> <span class="pre">read</span></code> - give Mercedes Knight read access to Luke Cage's mailbox</li>
-<li><code class="docutils literal"><span class="pre">cyradm&gt;</span> <span class="pre">listmailbox</span> <span class="pre">*&#64;example.net</span></code> - list all mailboxes in the example.net domain</li>
+<li><code class="docutils literal notranslate"><span class="pre">cyradm&gt;</span> <span class="pre">create</span> <span class="pre">user.lukecage&#64;example.net</span></code> - create a user</li>
+<li><code class="docutils literal notranslate"><span class="pre">cyradm&gt;</span> <span class="pre">create</span> <span class="pre">user.mercedesknight&#64;example.net</span></code> - create another user</li>
+<li><code class="docutils literal notranslate"><span class="pre">cyradm&gt;</span> <span class="pre">setquota</span> <span class="pre">user.lukecage&#64;example.net</span> <span class="pre">50000</span></code> - define a quota</li>
+<li><code class="docutils literal notranslate"><span class="pre">cyradm&gt;</span> <span class="pre">setaclmailbox</span> <span class="pre">user.lukecage&#64;example.net</span> <span class="pre">mercedesknight&#64;example.net</span> <span class="pre">read</span></code> - give Mercedes Knight read access to Luke Cage’s mailbox</li>
+<li><code class="docutils literal notranslate"><span class="pre">cyradm&gt;</span> <span class="pre">listmailbox</span> <span class="pre">*&#64;example.net</span></code> - list all mailboxes in the example.net domain</li>
 </ul>
 </div></blockquote>
 </dd>
@@ -850,14 +851,14 @@ configurations are only suitable for IMAP-only deployments.</p>
 <dl class="docutils">
 <dt>Domains are mutually exclusive</dt>
 <dd>Users only have access to mailboxes within their own domain (intra-domain).  The following
-example will not work: <code class="docutils literal"><span class="pre">setacl</span> <span class="pre">user.mercedesknight&#64;herdomain.com</span>
+example will not work: <code class="docutils literal notranslate"><span class="pre">setacl</span> <span class="pre">user.mercedesknight&#64;herdomain.com</span>
 <span class="pre">lukecage&#64;hisdomain.com</span> <span class="pre">read</span></code>.</dd>
 <dt>Global and Domain admins</dt>
 <dd><p class="first">The Cyrus virtual domains
 implementation supports per-domain administrators as well as
 global (inter-domain) administrators.</p>
 <p>Domain-specific administrators are specified with a fully qualified userid in the
-<code class="docutils literal"><span class="pre">admins</span></code> option (e.g., <code class="docutils literal"><span class="pre">admin&#64;example.net</span></code>) and only
+<code class="docutils literal notranslate"><span class="pre">admins</span></code> option (e.g., <code class="docutils literal notranslate"><span class="pre">admin&#64;example.net</span></code>) and only
 have access to mailboxes in the associated domain.</p>
 <p class="last">Global administrators are specified with unqualified userids.</p>
 </dd>
@@ -867,27 +868,27 @@ have access to mailboxes in the associated domain.</p>
 <div class="section" id="quick-start">
 <h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>Add <code class="docutils literal"><span class="pre">virtdomains:</span> <span class="pre">userid</span></code> to <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a></li>
-<li>Add a <code class="docutils literal"><span class="pre">defaultdomain</span></code> entry to <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a></li>
+<li>Add <code class="docutils literal notranslate"><span class="pre">virtdomains:</span> <span class="pre">userid</span></code> to <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a></li>
+<li>Add a <code class="docutils literal notranslate"><span class="pre">defaultdomain</span></code> entry to <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a></li>
 <li>Use cyradm (as a global or domain admin) to create mailboxes for each domain.</li>
 </ul>
 </div>
 <div class="section" id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
-<p>Support for virtual domains is enabled by turning on the <code class="docutils literal"><span class="pre">virtdomains</span></code> option in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.</p>
+<p>Support for virtual domains is enabled by turning on the <code class="docutils literal notranslate"><span class="pre">virtdomains</span></code> option in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.</p>
 <p>When upgrading from a single domain installation to a virtual
 domain installation, the name of the existing domain (domain of the
-server hostname) should be specified using the <code class="docutils literal"><span class="pre">defaultdomain</span></code>
+server hostname) should be specified using the <code class="docutils literal notranslate"><span class="pre">defaultdomain</span></code>
 option in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.  This allows users to continue to
 access their mailboxes using unqualified userids.  For example, if the
-primary IP address on your server resolves to 'www.xxx.yyy.zzz',
-then set <code class="docutils literal"><span class="pre">defaultdomain</span></code> to 'xxx.yyy.zzz'.</p>
-<p>Even for new installations, set the <code class="docutils literal"><span class="pre">defaultdomain</span></code> to the &quot;real&quot;
+primary IP address on your server resolves to ‘www.xxx.yyy.zzz’,
+then set <code class="docutils literal notranslate"><span class="pre">defaultdomain</span></code> to ‘xxx.yyy.zzz’.</p>
+<p>Even for new installations, set the <code class="docutils literal notranslate"><span class="pre">defaultdomain</span></code> to the “real”
 domain of the server (domain of its primary hostname).
 See <a class="reference internal" href="#administrators">Administrators</a> for further discussion.</p>
-<p>Here is a sample <code class="docutils literal"><span class="pre">imapd.conf</span></code> with a minimal set of configuration
+<p>Here is a sample <code class="docutils literal notranslate"><span class="pre">imapd.conf</span></code> with a minimal set of configuration
 options:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">configdirectory</span><span class="p">:</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">imap</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">configdirectory</span><span class="p">:</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">imap</span>
 <span class="n">partition</span><span class="o">-</span><span class="n">default</span><span class="p">:</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">spool</span><span class="o">/</span><span class="n">cyrus</span>
 <span class="n">admins</span><span class="p">:</span> <span class="n">admin</span> <span class="n">lukecage</span><span class="o">.</span><span class="n">admin</span><span class="nd">@hisdomain</span><span class="o">.</span><span class="n">com</span> <span class="n">mercedesknight</span><span class="o">.</span><span class="n">admin</span><span class="nd">@herdomain</span><span class="o">.</span><span class="n">net</span>
 <span class="n">virtdomains</span><span class="p">:</span> <span class="n">yes</span>
@@ -895,9 +896,9 @@ options:</p>
 </pre></div>
 </div>
 <p>This example has three domains: exampleisp.net, hisdomain.com, and
-herdomain.net.  <code class="docutils literal"><span class="pre">admin</span></code> can administer all three domains, while
-<code class="docutils literal"><span class="pre">lukecage.admin&#64;hisdomain.com</span></code> and
-<code class="docutils literal"><span class="pre">mercedesknight.admin&#64;herdomain.net</span></code> can only administer their respective
+herdomain.net.  <code class="docutils literal notranslate"><span class="pre">admin</span></code> can administer all three domains, while
+<code class="docutils literal notranslate"><span class="pre">lukecage.admin&#64;hisdomain.com</span></code> and
+<code class="docutils literal notranslate"><span class="pre">mercedesknight.admin&#64;herdomain.net</span></code> can only administer their respective
 domains.</p>
 <p>Everyday users should not be administrators.  In the
 above example, Mercedes Knight and Luke Cage have separate administrative accounts for
@@ -907,22 +908,22 @@ their domains.</p>
 <p>In order to use a multiple IP address configuration, the server must
 be able to do a reverse lookup on the IP address to determine the
 hostname of the receiving interface.  For example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="mf">192.168</span><span class="o">.</span><span class="mf">0.1</span>  <span class="o">-&gt;</span>  <span class="n">mail</span><span class="o">.</span><span class="n">example</span><span class="o">.</span><span class="n">com</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mf">192.168</span><span class="o">.</span><span class="mf">0.1</span>  <span class="o">-&gt;</span>  <span class="n">mail</span><span class="o">.</span><span class="n">example</span><span class="o">.</span><span class="n">com</span>
 <span class="mf">192.168</span><span class="o">.</span><span class="mf">0.2</span>  <span class="o">-&gt;</span>  <span class="n">mail</span><span class="o">.</span><span class="n">example</span><span class="o">.</span><span class="n">net</span>
 <span class="mf">192.168</span><span class="o">.</span><span class="mf">0.3</span>  <span class="o">-&gt;</span>  <span class="n">mail</span><span class="o">.</span><span class="n">foo</span><span class="o">.</span><span class="n">bar</span>
 </pre></div>
 </div>
 <p>Once the server obtains the fully qualified hostname of the
-interface, it removes the localpart (i.e., 'mail') and uses the
+interface, it removes the localpart (i.e., ‘mail’) and uses the
 remainder as the domain for any user that logs in.</p>
 <p>This address to hostname mapping would usually be done via DNS,
-<code class="docutils literal"><span class="pre">/etc/hosts</span></code>, NIS, etc.  Configuration of the various naming
+<code class="docutils literal notranslate"><span class="pre">/etc/hosts</span></code>, NIS, etc.  Configuration of the various naming
 services is beyond the scope of this document.</p>
 </div>
 <div class="section" id="delivering-mail">
 <h3>Delivering mail<a class="headerlink" href="#delivering-mail" title="Permalink to this headline">¶</a></h3>
 <p>To deliver mail to your virtual domains, configure your MTA so that
-the envelope recipient (RCPT TO) passed to <code class="docutils literal"><span class="pre">lmtpd</span></code> is fully
+the envelope recipient (RCPT TO) passed to <code class="docutils literal notranslate"><span class="pre">lmtpd</span></code> is fully
 qualified with the correct domain.</p>
 <div class="section" id="configuring-sendmail">
 <h4>Configuring Sendmail<a class="headerlink" href="#configuring-sendmail" title="Permalink to this headline">¶</a></h4>
@@ -933,14 +934,14 @@ qualified with the correct domain.</p>
 rather than adding the domain to the local-host-names file ($w).
 This prevents Sendmail from changing the domain name to the local host name.</p>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">example.com</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">cyrusv2:/var/imap/socket/lmtp</span></code></p>
+<div><p><code class="docutils literal notranslate"><span class="pre">example.com</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">cyrusv2:/var/imap/socket/lmtp</span></code></p>
 </div></blockquote>
 </li>
-<li><p class="first">You'll have to use the Cyrus mailer in LMTP mode, and you'll have
+<li><p class="first">You’ll have to use the Cyrus mailer in LMTP mode, and you’ll have
 to change the mailer flags so that it provides the full domain while
 communicating via LMTP.  Specifically these changes:</p>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">S=EnvFromSMTP/HdrFromSMTP,</span> <span class="pre">R=EnvToSMTP</span></code></p>
+<div><p><code class="docutils literal notranslate"><span class="pre">S=EnvFromSMTP/HdrFromSMTP,</span> <span class="pre">R=EnvToSMTP</span></code></p>
 </div></blockquote>
 </li>
 </ul>
@@ -948,9 +949,9 @@ communicating via LMTP.  Specifically these changes:</p>
 </div>
 <div class="section" id="mail-clients">
 <h3>Mail Clients<a class="headerlink" href="#mail-clients" title="Permalink to this headline">¶</a></h3>
-<p>The only changes you'll need to make to mail clients is to change
-usernames to the fully qualified domain names, i.e., <code class="docutils literal"><span class="pre">user&#64;example.com</span></code>.
-The <code class="docutils literal"><span class="pre">user%example.com</span></code> form of userid is also supported.</p>
+<p>The only changes you’ll need to make to mail clients is to change
+usernames to the fully qualified domain names, i.e., <code class="docutils literal notranslate"><span class="pre">user&#64;example.com</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">user%example.com</span></code> form of userid is also supported.</p>
 <p>Users in the default domain will not
 need to reconfigure their clients (as unqualified userids are assumed to
 be in the default domain).</p>
@@ -958,33 +959,33 @@ be in the default domain).</p>
 <div class="section" id="administrators">
 <h3>Administrators<a class="headerlink" href="#administrators" title="Permalink to this headline">¶</a></h3>
 <p>The Cyrus virtual domains implementation supports per-domain
-administrators as well as &quot;global&quot; (inter-domain) administrators.
+administrators as well as “global” (inter-domain) administrators.
 Domain-specific administrators are specified with a
-fully qualified userid in the <code class="docutils literal"><span class="pre">admins</span></code> option
-(e.g., <code class="docutils literal"><span class="pre">admin&#64;example.net</span></code>) and only have access to mailboxes in
+fully qualified userid in the <code class="docutils literal notranslate"><span class="pre">admins</span></code> option
+(e.g., <code class="docutils literal notranslate"><span class="pre">admin&#64;example.net</span></code>) and only have access to mailboxes in
 the associated domain.  Mailbox names should be specified in the same
 fashion as on a single domain configuration.</p>
 <p>Global administrators are specified with an unqualified userid in the
-<code class="docutils literal"><span class="pre">admins</span></code> option and have access to <em>any</em> mailbox on the
+<code class="docutils literal notranslate"><span class="pre">admins</span></code> option and have access to <em>any</em> mailbox on the
 server.  Because global admins use unqualified userids, they belong
-to the <code class="docutils literal"><span class="pre">defaultdomain</span></code>.  As a result, you CANNOT have a global
-admin without specifying a <code class="docutils literal"><span class="pre">defaultdomain</span></code>.  Note that when
+to the <code class="docutils literal notranslate"><span class="pre">defaultdomain</span></code>.  As a result, you CANNOT have a global
+admin without specifying a <code class="docutils literal notranslate"><span class="pre">defaultdomain</span></code>.  Note that when
 trying to login as a global admin to a multi-homed server from a remote
 machine, it might be necessary to fully qualify the userid with the
-<code class="docutils literal"><span class="pre">defaultdomain</span></code>.</p>
-<p>Global admins must use <code class="docutils literal"><span class="pre">mailbox&#64;domain</span></code> syntax when
-specifying mailboxes outside of the <code class="docutils literal"><span class="pre">defaultdomain</span></code>.  Examples
-(using <code class="docutils literal"><span class="pre">cyradm</span></code>):</p>
-<p>To create a new INBOX for user 'test' in <code class="docutils literal"><span class="pre">defaultdomain</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">cm</span> <span class="n">user</span><span class="o">.</span><span class="n">test</span>
+<code class="docutils literal notranslate"><span class="pre">defaultdomain</span></code>.</p>
+<p>Global admins must use <code class="docutils literal notranslate"><span class="pre">mailbox&#64;domain</span></code> syntax when
+specifying mailboxes outside of the <code class="docutils literal notranslate"><span class="pre">defaultdomain</span></code>.  Examples
+(using <code class="docutils literal notranslate"><span class="pre">cyradm</span></code>):</p>
+<p>To create a new INBOX for user ‘test’ in <code class="docutils literal notranslate"><span class="pre">defaultdomain</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cm</span> <span class="n">user</span><span class="o">.</span><span class="n">test</span>
 </pre></div>
 </div>
-<p>To create a new INBOX for user 'test' in domain 'example.com':</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">cm</span> <span class="n">user</span><span class="o">.</span><span class="n">test</span><span class="nd">@example</span><span class="o">.</span><span class="n">com</span>
+<p>To create a new INBOX for user ‘test’ in domain ‘example.com’:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cm</span> <span class="n">user</span><span class="o">.</span><span class="n">test</span><span class="nd">@example</span><span class="o">.</span><span class="n">com</span>
 </pre></div>
 </div>
-<p>To list all mailboxes in domain 'example.com':</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">lm</span> <span class="o">*</span><span class="nd">@example</span><span class="o">.</span><span class="n">com</span>
+<p>To list all mailboxes in domain ‘example.com’:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lm</span> <span class="o">*</span><span class="nd">@example</span><span class="o">.</span><span class="n">com</span>
 </pre></div>
 </div>
 </div>
@@ -1012,7 +1013,7 @@ specifying mailboxes outside of the <code class="docutils literal"><span class="
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Aug 16 2019
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1029,7 +1030,7 @@ specifying mailboxes outside of the <code class="docutils literal"><span class="
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1038,7 +1039,7 @@ specifying mailboxes outside of the <code class="docutils literal"><span class="
       <script type="text/javascript" src="../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
 
   
 

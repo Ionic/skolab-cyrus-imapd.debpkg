@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.4.17-caldav-beta3 Release Notes
 ********************************************
 
@@ -7,7 +6,7 @@ Changes to the Cyrus IMAP Server since 2.4.17-caldav-beta2
 * Fixed security bug where a user-agent could access files outside
   of httpdocroot.
 
-* Changed annotation entry name scheme to be "/vendor/cmu/cyrus-
-  httpd/<" ns-href ">" prop
+* Changed annotation entry name scheme to be “/vendor/cmu/cyrus-
+  httpd/<” ns-href “>” prop
 
 Cyrus IMAP 2.4-caldav Releases

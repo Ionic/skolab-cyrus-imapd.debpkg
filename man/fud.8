@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "FUD" "8" "May 10, 2021" "3.4.1" "Cyrus IMAP"
+.TH "FUD" "8" "September 01, 2021" "3.4.2" "Cyrus IMAP"
 .SH NAME
 fud \- Cyrus IMAP documentation
 .
@@ -41,7 +41,7 @@ Provide information about user mailboxes
 .sp
 \fBfud\fP is a long lived datagram daemon started from master that
 provides information about when a user last read their mail, when mail
-last arrived in a user\(aqs mailbox, and how many messages are recent for
+last arrived in a user’s mailbox, and how many messages are recent for
 that user.
 .sp
 \fBfud\fP reads its configuration options out of the imapd.conf(5) file unless specified otherwise by \fB\-C\fP\&.
@@ -126,7 +126,7 @@ Though not really a bug, \fBfud\fP will silently ignore any requests that
 it does not consider valid.
 .sp
 Also not really a bug, \fBfud\fP requires that the anonymous user has the
-0 (zero) right on the mailbox in question.  This is only a "bug" because
+0 (zero) right on the mailbox in question.  This is only a “bug” because
 0 is not a standard IMAP ACL bit.
 .sp
 \fBfud\fP is an experimental interface meant to provide information to

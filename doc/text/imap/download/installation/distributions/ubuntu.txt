@@ -1,4 +1,3 @@
-
 Ubuntu
 ******
 
@@ -68,13 +67,13 @@ Note: The Debian Cyrus Team packages are split based upon functional
 
   * cyrus-caldav-2.4
 
-Once you've decided which services to support (IMAP, POP3, NNTP,
+Once you’ve decided which services to support (IMAP, POP3, NNTP,
 CalDav), and whether those services shall be available in secured
-versions, you'll need to edit "/etc/cyrus.conf" and check the
+versions, you’ll need to edit "/etc/cyrus.conf" and check the
 "SERVICES" section, commenting and uncommenting as needed to enable or
 disable the proper versions of those services.
 
-Here's the stock version of the "SERVICES" section of
+Here’s the stock version of the "SERVICES" section of
 "/etc/cyrus.conf" as shipped with these packages:
 
    SERVICES {
@@ -130,9 +129,9 @@ Please consult imapd.conf(5) for details.
 
 * You MUST, at the very least, uncomment the "admins:" line.
 
-* As documented in the man page, "the values "yes", "on", "t",
+* As documented in the man page, “the values "yes", "on", "t",
   "true" and "1" turn the option  on,  the  values  "no",  "off", "f",
-  "false" and "0" turn the option off."
+  "false" and "0" turn the option off.”
 
 * If you are NOT using SSL and/or STARTTLS, you MUST enable plain
   text logins, and set "sasl_minimum_layer: 0" for authentication to
@@ -167,7 +166,7 @@ methods:
 To enable *saslauthd*, edit "/etc/default/saslauthd" and set
 "START=yes".  Make sure to change any other settings here as needed.
 
-Note: If you're planning to integrate Cyrus with the Postfix MTA, it
+Note: If you’re planning to integrate Cyrus with the Postfix MTA, it
   is necessary to either relocate the socket used by "saslauthd", or
   else to disable "chroot" as noted in "/etc/default/saslauthd", so
   the Postfix "smtpd" daemon can access it.

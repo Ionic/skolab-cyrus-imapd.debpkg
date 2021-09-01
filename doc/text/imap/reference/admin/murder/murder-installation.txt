@@ -1,4 +1,3 @@
-
 Cyrus Murder: Installation and Administration
 *********************************************
 
@@ -12,7 +11,7 @@ The Cyrus Murder provides the ability to horizontally scale your Cyrus
 IMAP environment across multiple servers. It is similar in nature to
 various proxy solutions such as nginx or perdition with the difference
 being that Murder offers a uniform namespace. Those not currently
-using shared mailboxes and who don't intend to use shared mailboxes in
+using shared mailboxes and who don’t intend to use shared mailboxes in
 the future, should probably just consider using a simple proxy
 solution.
 
@@ -33,7 +32,7 @@ Installation
 Cyrus IMAPd must be built with the "--enable-murder" configure option.
 This builds the proxyds and the associated utilities.
 
-Note: Those using their distribution's packages may need to install
+Note: Those using their distribution’s packages may need to install
   a separate package for aggregation support.  For example, on Debian
   and derived distros, install the "cyrus-murder" package.
 
@@ -56,7 +55,7 @@ Configuring the MUPDATE Master
 ------------------------------
 
 The MUPDATE Master server needs to be running the mupdate service in
-master mode. The MUPDATE master may be one of the cluster's frontend
+master mode. The MUPDATE master may be one of the cluster’s frontend
 instances, in which case no slave mupdate process should be run on
 this instance.
 
@@ -232,11 +231,11 @@ name of "mailproxy":
 For SASL mechanisms not using authnames or passwords (e.g.
 KERBEROS_V4), the password options are not required. Note the use of
 the same authname as configured in the proxyservers line of the
-backend's imapd.conf(5) above.
+backend’s imapd.conf(5) above.
 
 Upon starting master(8) on the frontend, the local mailboxes database
 should automatically synchronize with the contents of the MUPDATE
-master, and it's ready to go. Clients should connect to the frontends,
+master, and it’s ready to go. Clients should connect to the frontends,
 and the frontends will proxy or refer as applicable to the backend
 servers.
 
@@ -271,7 +270,7 @@ Keeping the database synced
 
 Consistency in the database is maintained by pushing the current
 status of the backends to the master, and having the frontends stay up
-to date with the master's database. Since the frontends resync
+to date with the master’s database. Since the frontends resync
 themselves entirely when they startup, downtime should not be a
 problem. (While they are up they should be continuously receiving
 database updates, as well when they lose connection to the master,
@@ -311,7 +310,7 @@ If it is a quota root, the new quota root is instantiated on the new
 server, but otherwise quotas can appear to be violated, since each
 backend only takes care of its own quota.
 
-In general, it's better to leave trees of mailboxes on the same
+In general, it’s better to leave trees of mailboxes on the same
 server, and not move submailboxes of inboxes between servers.
 
 
@@ -434,7 +433,7 @@ Gotchas
 
 **Clients dealing with a pool of frontend servers**
    Some clients may not be terribly efficient caching connections to a
-   pool of imap servers, this isn't a problem, as such, but it may
+   pool of imap servers, this isn’t a problem, as such, but it may
    mean that you will see many more authentications than you are used
    to.
 
@@ -447,7 +446,7 @@ Gotchas
    whatever keying scheme you use.
 
 **Clients dealing with referrals**
-   Some clients (we've had particular trouble with pine, though most
+   Some clients (we’ve had particular trouble with pine, though most
    of these issues have now been resolved and new versions should be
    OK (that is, pine > 4.44), but as referrals have not been
    extensively used by any IMAP server until now, referrals are very
@@ -456,7 +455,7 @@ Gotchas
 **Clients dealing with getting a NO on LSUB commands**
    Some clients (Outlook, for example) may behave poorly if an LSUB
    command returns a NO, which may be the case if the backend server
-   with the user's inbox is down. We have, for example, seen this
+   with the user’s inbox is down. We have, for example, seen this
    result in the deletion of the disconnected message cache.
 
 **Behavior of cyradm / some mailbox operations**
@@ -472,7 +471,7 @@ Gotchas
 
 **Subscriptions**
    If users want subscribe to a mailbox other than on their backend
-   home server, they won't be able to, unless you set
+   home server, they won’t be able to, unless you set
    "allowallsubscribe: t" in the backend imapd.confs. This essentially
    lets any string be subscribed to successfully.
 
@@ -496,12 +495,12 @@ Troubleshooting
    connections every 20 seconds or so for about 20 attempts if the
    master does go down.
 
-**A frontend's mailboxes.db is corrupt or out of sync**
+**A frontend’s mailboxes.db is corrupt or out of sync**
    Restart master on the frontend, and have the mupdate process
    resynch the local database. You may need to remove the local
    mailboxes database if the corruption is extreme.
 
-**A mailbox's location keeps switching between two (or more) backend
+**A mailbox’s location keeps switching between two (or more) backend
 hosts.**
    It probably actually exists on both hosts. Delete the mailbox from
    all but one of the hosts, and run a "ctl_mboxlist -m" on the one

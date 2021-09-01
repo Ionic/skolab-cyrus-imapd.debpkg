@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>sync_client &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>sync_client &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../../index.html"/>
         <link rel="up" title="Man pages" href="../commands.html"/>
         <link rel="next" title="sync_reset" href="sync_reset.html"/>
         <link rel="prev" title="squatter" href="squatter.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -805,33 +806,33 @@ synchronize the replica system with the master system.</p>
 <div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <dl class="option">
-<dt id="cmdoption-sync_client-C">
-<code class="descname">-C</code><code class="descclassname"> config-file</code><a class="headerlink" href="#cmdoption-sync_client-C" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-sync-client-c">
+<code class="descname">-C</code><code class="descclassname"> config-file</code><a class="headerlink" href="#cmdoption-sync-client-c" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use the specified configuration file <em>config-file</em> rather than the default <a class="reference internal" href="../configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-A">
-<code class="descname">-A</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync_client-A" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-sync-client-a">
+<code class="descname">-A</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync-client-a" title="Permalink to this definition">¶</a></dt>
 <dd><p>All users mode.
-Sync every user on the server to the replica (doesn't do non-user
-mailboxes at all... this could be considered a bug and maybe it
+Sync every user on the server to the replica (doesn’t do non-user
+mailboxes at all… this could be considered a bug and maybe it
 should do those mailboxes independently)</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-d">
-<code class="descname">-d</code><code class="descclassname"> delay</code><a class="headerlink" href="#cmdoption-sync_client-d" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-sync-client-d">
+<code class="descname">-d</code><code class="descclassname"> delay</code><a class="headerlink" href="#cmdoption-sync-client-d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Minimum delay between replication runs in rolling replication mode.
 Larger values provide better efficiency as transactions can be
 merged. Smaller values mean that the replica system is more up to
-date and that you don't end up with large blocks of replication
+date and that you don’t end up with large blocks of replication
 transactions as a single group. Default: 3 seconds.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-f">
-<code class="descname">-f</code><code class="descclassname"> input-file</code><a class="headerlink" href="#cmdoption-sync_client-f" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-sync-client-f">
+<code class="descname">-f</code><code class="descclassname"> input-file</code><a class="headerlink" href="#cmdoption-sync-client-f" title="Permalink to this definition">¶</a></dt>
 <dd><p>In mailbox or user replication mode: provides list of users or
 mailboxes to replicate.  In rolling replication mode, specifies an
 alternate log file (<strong>sync_client</strong> will exit after processing the
@@ -839,87 +840,87 @@ log file).</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-F">
-<code class="descname">-F</code><code class="descclassname"> shutdown-file</code><a class="headerlink" href="#cmdoption-sync_client-F" title="Permalink to this definition">¶</a></dt>
+<dt id="id1">
+<code class="descname">-F</code><code class="descclassname"> shutdown-file</code><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rolling replication checks for this file at the end of each
 replication cycle and shuts down if it is present. Used to request
 a nice clean shutdown at the first convenient point. The file is
-removed on shutdown. Overrides <code class="docutils literal"><span class="pre">sync_shutdown_file</span></code> option in
+removed on shutdown. Overrides <code class="docutils literal notranslate"><span class="pre">sync_shutdown_file</span></code> option in
 <a class="reference internal" href="../configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-l">
-<code class="descname">-l</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync_client-l" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-sync-client-l">
+<code class="descname">-l</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync-client-l" title="Permalink to this definition">¶</a></dt>
 <dd><p>Verbose logging mode.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-L">
-<code class="descname">-L</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync_client-L" title="Permalink to this definition">¶</a></dt>
+<dt id="id2">
+<code class="descname">-L</code><code class="descclassname"></code><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform only local mailbox operations (do not do mupdate operations).
 This feature was introduced in version 3.0.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-m">
-<code class="descname">-m</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync_client-m" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-sync-client-m">
+<code class="descname">-m</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync-client-m" title="Permalink to this definition">¶</a></dt>
 <dd><p>Mailbox mode.
 Remaining arguments are list of mailboxes which should be replicated.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-n">
-<code class="descname">-n</code><code class="descclassname"> channel</code><a class="headerlink" href="#cmdoption-sync_client-n" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-sync-client-n">
+<code class="descname">-n</code><code class="descclassname"> channel</code><a class="headerlink" href="#cmdoption-sync-client-n" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use the named channel for rolling replication mode.  If multiple
-channels are specified in <code class="docutils literal"><span class="pre">sync_log_channels</span></code> then use one of them.
+channels are specified in <code class="docutils literal notranslate"><span class="pre">sync_log_channels</span></code> then use one of them.
 This option is probably best combined with <strong>-S</strong> to connect to a
 different server with each channel.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-o">
-<code class="descname">-o</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync_client-o" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-sync-client-o">
+<code class="descname">-o</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync-client-o" title="Permalink to this definition">¶</a></dt>
 <dd><p>Only attempt to connect to the backend server once rather than
 waiting up to 1000 seconds before giving up.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-O">
-<code class="descname">-O</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync_client-O" title="Permalink to this definition">¶</a></dt>
+<dt id="id3">
+<code class="descname">-O</code><code class="descclassname"></code><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
 <dd><p>No copyback mode. Replication will stop if the replica reports a CRC
 error, rather than doing a full mailbox sync. Useful if moving users to a
-new server, where you don't want any errors to cause the source servers
+new server, where you don’t want any errors to cause the source servers
 to change the account.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-p">
-<code class="descname">-p</code><code class="descclassname"> partition</code><a class="headerlink" href="#cmdoption-sync_client-p" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-sync-client-p">
+<code class="descname">-p</code><code class="descclassname"> partition</code><a class="headerlink" href="#cmdoption-sync-client-p" title="Permalink to this definition">¶</a></dt>
 <dd><p>In mailbox or user replication mode: provides the name of the
 partition on the replica to which the mailboxes/users should be
 replicated.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-r">
-<code class="descname">-r</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync_client-r" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-sync-client-r">
+<code class="descname">-r</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync-client-r" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rolling (repeat) replication mode. Pick up a list of actions
 recorded by the <a class="reference internal" href="lmtpd.html#std:cyrusman-lmtpd(8)">lmtpd(8)</a>, <a class="reference internal" href="imapd.html#std:cyrusman-imapd(8)">imapd(8)</a>,
 <a class="reference internal" href="pop3d.html#std:cyrusman-pop3d(8)">pop3d(8)</a> and <a class="reference internal" href="nntpd.html#std:cyrusman-nntpd(8)">nntpd(8)</a> daemons from the file
-specified in <code class="docutils literal"><span class="pre">sync_log_file</span></code>. Repeat until <code class="docutils literal"><span class="pre">sync_shutdown_file</span></code>
+specified in <code class="docutils literal notranslate"><span class="pre">sync_log_file</span></code>. Repeat until <code class="docutils literal notranslate"><span class="pre">sync_shutdown_file</span></code>
 appears.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-1">
-<code class="descname">-1</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync_client-1" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-sync-client-1">
+<code class="descname">-1</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync-client-1" title="Permalink to this definition">¶</a></dt>
 <dd><p>Like rolling replication, but only process a single file before exiting.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-s">
-<code class="descname">-s</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync_client-s" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-sync-client-s">
+<code class="descname">-s</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync-client-s" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sieve mode.
 Remaining arguments are list of users whose Sieve files should be
 replicated. Principally used for debugging purposes: not exposed to
@@ -927,45 +928,45 @@ replicated. Principally used for debugging purposes: not exposed to
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-S">
-<code class="descname">-S</code><code class="descclassname"> servername</code><a class="headerlink" href="#cmdoption-sync_client-S" title="Permalink to this definition">¶</a></dt>
+<dt id="id4">
+<code class="descname">-S</code><code class="descclassname"> servername</code><a class="headerlink" href="#id4" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tells <strong>sync_client</strong> with which server to communicate.  Overrides
-the <code class="docutils literal"><span class="pre">sync_host</span></code> configuration option.</p>
+the <code class="docutils literal notranslate"><span class="pre">sync_host</span></code> configuration option.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-t">
-<code class="descname">-t</code><code class="descclassname"> timeout</code><a class="headerlink" href="#cmdoption-sync_client-t" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-sync-client-t">
+<code class="descname">-t</code><code class="descclassname"> timeout</code><a class="headerlink" href="#cmdoption-sync-client-t" title="Permalink to this definition">¶</a></dt>
 <dd><p>Timeout for single replication run in rolling replication.
 <strong>sync_client</strong> will negotiate a restart after this many seconds.
 Default: 600 seconds</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-u">
-<code class="descname">-u</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync_client-u" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-sync-client-u">
+<code class="descname">-u</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync-client-u" title="Permalink to this definition">¶</a></dt>
 <dd><p>User mode.
 Remaining arguments are list of users who should be replicated.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-v">
-<code class="descname">-v</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync_client-v" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-sync-client-v">
+<code class="descname">-v</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync-client-v" title="Permalink to this definition">¶</a></dt>
 <dd><p>Verbose mode.  Use twice (<strong>-v -v</strong>) to log all protocol traffic to
 stderr.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-w">
-<code class="descname">-w</code><code class="descclassname"> interval</code><a class="headerlink" href="#cmdoption-sync_client-w" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-sync-client-w">
+<code class="descname">-w</code><code class="descclassname"> interval</code><a class="headerlink" href="#cmdoption-sync-client-w" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wait this long before starting. This option is typically used so
 that we can attach a debugger to one end of the replication system
 or the other.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-sync_client-z">
-<code class="descname">-z</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync_client-z" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-sync-client-z">
+<code class="descname">-z</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync-client-z" title="Permalink to this definition">¶</a></dt>
 <dd><p>Require compression.
 The replication protocol will always try to enable deflate
 compression if both ends support it.  Set this flag when you want
@@ -978,7 +979,7 @@ to abort if compression is not available.</p>
 <p>On a replication master, the following would be added to the START
 section of <a class="reference internal" href="../configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a>:</p>
 <blockquote>
-<div><div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">syncclient</span>              <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;/usr/lib/cyrus/bin/sync_client -r&quot;</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">syncclient</span>              <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;/usr/lib/cyrus/bin/sync_client -r&quot;</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -1020,7 +1021,7 @@ section of <a class="reference internal" href="../configs/cyrus.conf.html#std:cy
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Sep 19 2020
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1037,7 +1038,7 @@ section of <a class="reference internal" href="../configs/cyrus.conf.html#std:cy
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1046,7 +1047,7 @@ section of <a class="reference internal" href="../configs/cyrus.conf.html#std:cy
       <script type="text/javascript" src="../../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../../_static/language_data.js"></script>
 
   
 

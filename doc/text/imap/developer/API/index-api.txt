@@ -1,4 +1,3 @@
-
 Index API
 *********
 
@@ -33,8 +32,8 @@ Opening and closing
    index_close(&state);
 
 The "index_init" interface sucks. So does passing lots of parameters.
-For now, this will do! Just pass NULL if you're only reading, or use
-the code already in imapd and you'll be fine.
+For now, this will do! Just pass NULL if you’re only reading, or use
+the code already in imapd and you’ll be fine.
 
 
 The Index Model
@@ -51,7 +50,7 @@ Also, memory is now cheap. Rather than using locks to ensure
 consistency, we just keep a copy of the "struct index_record" for even
 message in the index, stored in memory. Since these are about 100
 bytes each, a 1 million email mailbox will take rougly 100Mb of
-memory. That's not too bad on a modern server, and that's a **huge**
+memory. That’s not too bad on a modern server, and that’s a **huge**
 mailbox.
 
 So - the model works like this:

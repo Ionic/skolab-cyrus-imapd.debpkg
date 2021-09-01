@@ -1,10 +1,9 @@
-
 Development Process
 *******************
 
 We need to develop not just for ourselves, but for those who follow
 us. This means following good development process to provide
-transparency, maintainability and readability to what we're doing.
+transparency, maintainability and readability to what we’re doing.
 
 
 Coding Style
@@ -16,7 +15,7 @@ Coding Style
 
 * No tabs: use 4 spaces instead.
 
-* Bracketing style: use the style that's already there.
+* Bracketing style: use the style that’s already there.
 
 * You are not a compiler: code for readability, not compactness.
 
@@ -27,7 +26,7 @@ Coding Style
   what your brilliant idea was when you wrote that gnarly piece of
   code unless you tell them.
 
-* Commit messages. Commit discrete changes, don't munge six
+* Commit messages. Commit discrete changes, don’t munge six
   different fixes into a single commit. And provide a clear message
   (preferably tied into a GitHub issue) of what problem these changes
   address.
@@ -43,9 +42,9 @@ Before you begin
 Found a bug? Got an enhancement? Great!
 
 New Feature considerations: this is an open source project. If your
-change isn't a basic part of what is already planned, will you be
-around to support it? Can you justify why it's in the best interests
-of the project to have your change included? We'd love to talk it
+change isn’t a basic part of what is already planned, will you be
+around to support it? Can you justify why it’s in the best interests
+of the project to have your change included? We’d love to talk it
 through with you: contact us via the mailing lists.
 
 
@@ -65,7 +64,7 @@ First, check out our Guide to GitHub, which covers:
 From there, you:
 
 1. Take ownership of a GitHub issue (or create a new one to cover
-   what you're planning to do).
+   what you’re planning to do).
 
 2. Code code test test test code code test test test.
 
@@ -76,13 +75,13 @@ From there, you:
 5. Wait for review (a quick note to the mailing list can speed this
    along).
 
-6. Once approved, it'll be merged into the master.
+6. Once approved, it’ll be merged into the master.
 
 
 Patches through the mailing list
 --------------------------------
 
-If you're not planning on regularly submitting changes, you can just
+If you’re not planning on regularly submitting changes, you can just
 send your patch through to the mailing list and one of the regular
 maintainers will see about incorporating it.
 
@@ -99,7 +98,6 @@ Community Participation
 Join us! The project is only as good as the sum of its people. We all
 work together, despite the tyranny of distance and timezones.
 
-Meetings are currently held online via Google Hangouts. Not sure what
-time that is for you? Try the meeting planner.
+Meetings are currently held online via Zoom.
 
-There's also IRC and mailing lists.
+There’s also mailing lists.

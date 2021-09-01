@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.4.13 Release Notes
 *******************************
 
@@ -8,7 +7,7 @@ Changes to the Cyrus IMAP Server since 2.4.12
   <dilyan.palauzov@aegee.org>
 
 * Bug #2685 - rename annots in delayed folder delete. Avoids
-  annotations "reappearing" when a folder is recreated
+  annotations “reappearing” when a folder is recreated
 
 * Bug #3566 - actually fix in a backward compatible way. 2.4.12
   broke older versions of bison
@@ -23,7 +22,7 @@ Changes to the Cyrus IMAP Server since 2.4.12
 * Bug #3564 - document the way prefork interacts with multiple
   network protocols
 
-* Bug #3586 - allow rename of "\Noselect" if subfolders exist
+* Bug #3586 - allow rename of “\Noselect” if subfolders exist
 
 * A handful of small cleanups (#3593, #3594, #3595) from David
   Carter <dpc22@cam.ac.uk>. Very much appreciated
@@ -44,7 +43,7 @@ Changes to the Cyrus IMAP Server since 2.4.12
 * Fixed infinite loop on suppress_capabilities with substrings of
   other capabilities. Ouch.
 
-* Fixed LIST and LSUB again - this time to make LIST "" "*%" work
+* Fixed LIST and LSUB again - this time to make LIST “” “*%” work
   without breaking other things
 
 * Bug #3588 - make XFER not break if the wrong server name was used.
@@ -55,7 +54,7 @@ Changes to the Cyrus IMAP Server since 2.4.12
 
 * Bug #3604 - always suppress the "DELETED.*" mailbox names, even if
   delete_mode is immediate. It means a config change or different
-  frontend won't show undeletable mailboxes
+  frontend won’t show undeletable mailboxes
 
 * Bug #3602 - allow UpperCase in service names to work
 

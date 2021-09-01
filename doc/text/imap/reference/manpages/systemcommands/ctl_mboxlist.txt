@@ -1,4 +1,3 @@
-
 **ctl_mboxlist**
 ****************
 
@@ -126,7 +125,7 @@ Examples
 
    **ctl_mboxlist -m -w**
 
-   The same as above, but only show us what would be done, don't
+   The same as above, but only show us what would be done, don’t
    actually do it.
 
    **ctl_mboxlist -m -a**

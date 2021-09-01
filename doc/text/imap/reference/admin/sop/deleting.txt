@@ -1,4 +1,3 @@
-
 Deleting and Undeleting Messages and Folders
 ********************************************
 
@@ -21,7 +20,7 @@ Delete
 Expunge
    delete messages from the cyrus folder index that have the
    "\Deleted" flag set using EXPUNGE via IMAP client. With
-   "expunge_mode: delayed", this doesn't delete the file from the
+   "expunge_mode: delayed", this doesn’t delete the file from the
    filesystem.
 
 Unexpunge
@@ -80,7 +79,7 @@ imapd.conf(5):
 New in version 2.3.9.
 
 The default prefix for deleted mailboxes is "DELETED" but it probably
-doesn't hurt to specify it in imapd.conf(5) as well:
+doesn’t hurt to specify it in imapd.conf(5) as well:
 
    deletedprefix: DELETED
 
@@ -91,7 +90,7 @@ Undeleting Folders
 ==================
 
 The following assumes that you are using the UNIX hierarchy separator.
-If it's off then replace '/' in the names with '.'
+If it’s off then replace ‘/’ in the names with ‘.’
 
 With the previous configuration options in place, whenever a mail
 folder or mailbox is deleted, it will be renamed to
@@ -116,7 +115,7 @@ deleted:
 
    cyradm> **listmailbox user/john*@example.org**
 
-If there's no output from the above command, the mailbox has not been
+If there’s no output from the above command, the mailbox has not been
 recreated since being deleted and you can rename the mailbox and any
 folders back to the original name as follows. If the mailbox has been
 recreated, you will probably want to rename the deleted folders into a
@@ -127,7 +126,7 @@ subfolder of the new mailbox, for example
 "user/john/restored/Sent@example.org"
 
 In either case the commands are similar but with the latter option you
-need to insert the extra "/restored" after the "user/john":
+need to insert the extra “/restored” after the "user/john":
 
    cyradm> **listmailbox DELETED/user/john*@example.org**
    DELETED/user/john/4D88AF31@example.org (HasNoChildren)
@@ -139,12 +138,12 @@ need to insert the extra "/restored" after the "user/john":
    cyradm> **renamemailbox DELETED/user/john/Sent/4D88AF34@example.org user/john/Sent@example.org**
    cyradm> **renamemailbox DELETED/user/john/Trash/4D88AF35@example.org user/john/Trash@example.org**
 
-Unfortunately there's no easy way to rename the entire mailbox back
+Unfortunately there’s no easy way to rename the entire mailbox back
 including all the subfolders and the hex timestamp can vary between
 folders in the same mailbox if it was a mailbox with some large
 folders.
 
-This is because it's the time that particular folder was deleted, not
+This is because it’s the time that particular folder was deleted, not
 when the first folder was deleted.
 
 
@@ -184,7 +183,7 @@ To unexpunge all the messages and mark them as undeleted as well:
 
    # **/usr/lib/cyrus-imapd/unexpunge -adv user/john@example.org**
 
-Note: This isn't recursive. It will only restore the messages in the
+Note: This isn’t recursive. It will only restore the messages in the
   folder specified.
 
 To find other folders, ctl_mboxlist can be used.
@@ -198,7 +197,7 @@ To find other folders, ctl_mboxlist can be used.
 Run the unexpunge command for every folder that needs to have mail
 undeleted.
 
-For folder names that have spaces ' ', the spaces need to be escaped
+For folder names that have spaces ‘ ‘, the spaces need to be escaped
 with a backslash.
 
    # **/usr/lib/cyrus-imapd/unexpunge -adv user/john/DeletedMessages@example.org**

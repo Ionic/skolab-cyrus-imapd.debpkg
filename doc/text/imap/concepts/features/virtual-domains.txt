@@ -1,4 +1,3 @@
-
 Virtual Domains
 ***************
 
@@ -45,7 +44,7 @@ Note: If you are providing calendaring services, you MUST use the
   consistent single authoritative fully-qualified email address for
   each user in order to function, and this is the only configuration
   that provides it.The "virtdomains: off" and "virtdomains: on"
-  configurations both allow users' domains to be changed from outside
+  configurations both allow users’ domains to be changed from outside
   of Cyrus without Cyrus knowing about it, which fundamentally breaks
   calendaring.  These configurations are only suitable for IMAP-only
   deployments.
@@ -55,7 +54,7 @@ Concepts
 ========
 
 Everyone is in a domain
-   It's best to think of every user as existing inside a domain.
+   It’s best to think of every user as existing inside a domain.
    Unqualified users are technically inside the "defaultdomain".
 
 Names can be qualified
@@ -75,7 +74,7 @@ Names can be qualified
 
       * "cyradm> setaclmailbox user.lukecage@example.net
         mercedesknight@example.net read" - give Mercedes Knight read
-        access to Luke Cage's mailbox
+        access to Luke Cage’s mailbox
 
       * "cyradm> listmailbox *@example.net" - list all mailboxes in
         the example.net domain
@@ -122,10 +121,10 @@ installation, the name of the existing domain (domain of the server
 hostname) should be specified using the "defaultdomain" option in
 imapd.conf(5).  This allows users to continue to access their
 mailboxes using unqualified userids.  For example, if the primary IP
-address on your server resolves to 'www.xxx.yyy.zzz', then set
-"defaultdomain" to 'xxx.yyy.zzz'.
+address on your server resolves to ‘www.xxx.yyy.zzz’, then set
+"defaultdomain" to ‘xxx.yyy.zzz’.
 
-Even for new installations, set the "defaultdomain" to the "real"
+Even for new installations, set the "defaultdomain" to the “real”
 domain of the server (domain of its primary hostname). See
 Administrators for further discussion.
 
@@ -161,7 +160,7 @@ hostname of the receiving interface.  For example:
    192.168.0.3  ->  mail.foo.bar
 
 Once the server obtains the fully qualified hostname of the interface,
-it removes the localpart (i.e., 'mail') and uses the remainder as the
+it removes the localpart (i.e., ‘mail’) and uses the remainder as the
 domain for any user that logs in.
 
 This address to hostname mapping would usually be done via DNS,
@@ -191,7 +190,7 @@ Some items to be aware of:
 
      "example.com              cyrusv2:/var/imap/socket/lmtp"
 
-* You'll have to use the Cyrus mailer in LMTP mode, and you'll have
+* You’ll have to use the Cyrus mailer in LMTP mode, and you’ll have
   to change the mailer flags so that it provides the full domain while
   communicating via LMTP.  Specifically these changes:
 
@@ -201,7 +200,7 @@ Some items to be aware of:
 Mail Clients
 ------------
 
-The only changes you'll need to make to mail clients is to change
+The only changes you’ll need to make to mail clients is to change
 usernames to the fully qualified domain names, i.e.,
 "user@example.com". The "user%example.com" form of userid is also
 supported.
@@ -214,7 +213,7 @@ Administrators
 --------------
 
 The Cyrus virtual domains implementation supports per-domain
-administrators as well as "global" (inter-domain) administrators.
+administrators as well as “global” (inter-domain) administrators.
 Domain-specific administrators are specified with a fully qualified
 userid in the "admins" option (e.g., "admin@example.net") and only
 have access to mailboxes in the associated domain.  Mailbox names
@@ -232,14 +231,14 @@ be necessary to fully qualify the userid with the "defaultdomain".
 Global admins must use "mailbox@domain" syntax when specifying
 mailboxes outside of the "defaultdomain".  Examples (using "cyradm"):
 
-To create a new INBOX for user 'test' in "defaultdomain":
+To create a new INBOX for user ‘test’ in "defaultdomain":
 
    cm user.test
 
-To create a new INBOX for user 'test' in domain 'example.com':
+To create a new INBOX for user ‘test’ in domain ‘example.com’:
 
    cm user.test@example.com
 
-To list all mailboxes in domain 'example.com':
+To list all mailboxes in domain ‘example.com’:
 
    lm *@example.com

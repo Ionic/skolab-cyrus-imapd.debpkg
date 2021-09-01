@@ -1,9 +1,8 @@
-
 Developer Test Environment
 **************************
 
-This assumes you have your basic server running and you've made some
-changes and you want to test them to work out what's going right... or
+This assumes you have your basic server running and you’ve made some
+changes and you want to test them to work out what’s going right… or
 wrong.
 
 
@@ -14,9 +13,9 @@ Cassandane is a Perl-based integration test suite for Cyrus.
 Cassandane documentation includes information on setting up tests and
 writing new tests.
 
-Why "Cassandane"? Wikipedia indicates that Cassandane was the name of
+Why “Cassandane”? Wikipedia indicates that Cassandane was the name of
 the consort of King Cyrus the Great of Persia, founder of the
-Achaemenid Persian Empire.  So that's kinda cool.
+Achaemenid Persian Empire.  So that’s kinda cool.
 
 
 Install and configure Cassandane
@@ -68,7 +67,7 @@ Install and configure Cassandane
 
       * Set "destdir" to "/var/tmp/cyrus"
 
-      * Add "[valgrind]" if you're using it.
+      * Add "[valgrind]" if you’re using it.
 
       * Add an "[imaptest]" section.  For the moment, it may be
         necessary to suppress the binary tests as they are buggy
@@ -94,7 +93,7 @@ Install and configure Cassandane
       * "sudo visudo"
 
       * add a line like:"username ALL = (cyrus) NOPASSWD: ALL",
-        where "username" is your own username
+        where “username” is your own username
 
 8. Make the "destdir" directory, as the "cyrus" user
 
@@ -123,23 +122,23 @@ installation.
         for make install)
 
       * The "--with-dovecot=<path>" parameter is used to specify
-        path to Dovecot v2.2 sources' root directory.
+        path to Dovecot v2.2 sources’ root directory.
 
 
 Rebuild Cyrus for Testing
 =========================
 
 Prepare to rebuild by making the source tree shiny and clean as if
-you've done a brand new checkout. Leave no old artifacts lying around!
+you’ve done a brand new checkout. Leave no old artifacts lying around!
 
    cd /path/to/cyrus-imapd
    make clean
    git clean -f -x -d
    autoreconf -v -i
 
-Warning: Apply caution! The "git clean" removes anything that's a
-  build product, but also anything it doesn't know about: which may
-  include your new source files you haven't added yet.
+Warning: Apply caution! The "git clean" removes anything that’s a
+  build product, but also anything it doesn’t know about: which may
+  include your new source files you haven’t added yet.
 
 Set the compile flags for testing and debugging. It may be of use to
 also add "--std=gnu99" here.  That does TONS of warnings, and "-g"
@@ -159,10 +158,10 @@ Configure the environment.
 
 And finally, make it.
 
-If you're testing across versions, the binsymlinks is necessary as
-older Cyrus doesn't have the binaries in the new locations. This uses
+If you’re testing across versions, the binsymlinks is necessary as
+older Cyrus doesn’t have the binaries in the new locations. This uses
 the default install path of "/usr/cyrus/". It can be useful to also
-have "/usr/cyrus25", "/usr/cyrus24", etc, if you're testing with older
+have "/usr/cyrus25", "/usr/cyrus24", etc, if you’re testing with older
 versions as well.
 
    make -j16 && make -j16 check
@@ -185,17 +184,17 @@ Debugging and stacktraces
 
 Check out the guide to running Cyrus components under gdb.
 
-In the event of a crash, here's how to generate a stacktrace.
+In the event of a crash, here’s how to generate a stacktrace.
 
 
 Tips and Tricks
 ===============
 
-Read the script to see other options. If you're having problems, add
+Read the script to see other options. If you’re having problems, add
 more "-v" options to the testrunner to get more info out.
 
-**Looking for memory leaks?** Run with --valgrind to use valgrind (if
-it's installed). It is slower, which is why it doesn't need to be
+**Looking for memory leaks?** Run with –valgrind to use valgrind (if
+it’s installed). It is slower, which is why it doesn’t need to be
 always used.
 
 Running with -v -v is very noisy, but gives a lot more data.  For

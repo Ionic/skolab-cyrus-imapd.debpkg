@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.0.x Release Notes
 ******************************
 
@@ -46,10 +45,10 @@ Changes to the Cyrus IMAP Server since 2.0.16
 
 * configure now checks for DB3.3
 
-* SQUAT (Rob O'Callahan, roc@cs.cmu.edu)
+* SQUAT (Rob O’Callahan, roc@cs.cmu.edu)
 
 * change SEARCH HEADER x to SEARCH x utilizing internal cache where
-  possible (Rob O'Callahan, roc@cs.cmu.edu)
+  possible (Rob O’Callahan, roc@cs.cmu.edu)
 
 * an improved directory hashing option (Gary Mills,
   mills@cc.UManitoba.CA)
@@ -68,12 +67,12 @@ Changes to the Cyrus IMAP Server since 2.0.16
 
 * Received: header (with TLS and AUTH info)
 
-* added '-i' switch to sendmail command line for SIEVE reject,
+* added ‘-i’ switch to sendmail command line for SIEVE reject,
   redirect and vacation
 
 * small fixes to notify_unix
 
-* added "duplicatesuppression" switch to imapd.conf for
+* added “duplicatesuppression” switch to imapd.conf for
   enabling/disabling duplicate delivery suppression (Birger Toedtmann,
   birger@takatukaland.de)
 
@@ -108,7 +107,7 @@ Changes to the Cyrus IMAP Server since 2.0.14
 * pop3d now can also reuse processes.
 
 * fix a bug in imclient that would strike when cyradm specifies a
-  mechanism on the command-line. (SASL mechanism names aren't case
+  mechanism on the command-line. (SASL mechanism names aren’t case
   sensitive.)
 
 * fix some bugs in handling SIGHUP in master
@@ -137,13 +136,13 @@ Changes to the Cyrus IMAP Server since 2.0.12
 
 * pop3d can now disable USER/PASS commands.
 
-* STARTTLS now accepts a SSLv23 hello but doesn't allow SSLv23 to be
+* STARTTLS now accepts a SSLv23 hello but doesn’t allow SSLv23 to be
   negotiated.
 
 * imtest no longer buffers to aid use as an automated layer.
 
 * master now supports maximum number of service processes via the
-  "maxchild" modifier.
+  “maxchild” modifier.
 
 * fixed a bug in the Sieve string lexer.
 
@@ -165,7 +164,7 @@ Changes to the Cyrus IMAP Server since 2.0.9
 
 * some small memory savings
 
-* the "fud" daemon once again works correctly
+* the “fud” daemon once again works correctly
 
 * the IDLE extension now uses signals correctly
 
@@ -204,7 +203,7 @@ Changes to the Cyrus IMAP Server since 2.0.8
 
 * remembered to update this file
 
-* bug in Cyrus::IMAP perl module affecting cyradm's setquota fixed
+* bug in Cyrus::IMAP perl module affecting cyradm’s setquota fixed
 
 * portability fix with socklen_t
 
@@ -220,7 +219,7 @@ Changes to the Cyrus IMAP Server since 2.0.7
 
 * portability fixes and other small bugfixes
 
-* added "-a" flag to lmtpd
+* added “-a” flag to lmtpd
 
 * master process can now export statistics about running processes
   via UCD SNMP AgentX
@@ -237,11 +236,11 @@ Changes to the Cyrus IMAP Server since 2.0.6
 
 * recursive RENAME was a little to eager; fixed. RENAME will also
   give the client a hint that a sub-RENAME failed. (mostly probably
-  useful for cyradm, but cyradm doesn't take advantage of it yet.)
+  useful for cyradm, but cyradm doesn’t take advantage of it yet.)
 
 * THREAD=X-JWZ has turned into THREAD=REFERENCES (Ken Murchison)
 
-* DELETE wasn't failing cleanly in database code; fixed.
+* DELETE wasn’t failing cleanly in database code; fixed.
 
 * off-by-one bug in seen_db fixed.
 
@@ -251,7 +250,7 @@ Changes to the Cyrus IMAP Server since 2.0.6
 * master will now accept port numbers instead of just service names
   in cyrus.conf. also logs even more verbosely (see bug #115.)
 
-* libwrap_init() is now inside the loop, since i don't quite
+* libwrap_init() is now inside the loop, since i don’t quite
   understand the semantics of libwrap calls.
 
 * setquota in cyradm now behaves more sanely (and gives correct
@@ -261,7 +260,7 @@ Changes to the Cyrus IMAP Server since 2.0.6
 
 * small fixes in timsieved.
 
-* added a "make dist" target so i won't dread releases as much.
+* added a “make dist” target so i won’t dread releases as much.
 
 Changes to the Cyrus IMAP Server since 2.0.5
 
@@ -275,7 +274,7 @@ Changes to the Cyrus IMAP Server since 2.0.5
 
 * unfortunately, the format of the mailboxes file has changed.
 
-* implementation of "JWZ" threading, a first pass on the forthcoming
+* implementation of “JWZ” threading, a first pass on the forthcoming
   THREAD=REFERENCES.
 
 * bugfixes in libacap.
@@ -284,7 +283,7 @@ Changes to the Cyrus IMAP Server since 2.0.5
 
 * removal of dead code.
 
-* will now look in CYRUS_PREFIX/etc/imapd.conf if there's no
+* will now look in CYRUS_PREFIX/etc/imapd.conf if there’s no
   /etc/imapd.conf.
 
 * more paranoid implementation of ID.
@@ -308,7 +307,7 @@ Changes to the Cyrus IMAP Server since 2.0.5
 Changes to the Cyrus IMAP Server SINCE 2.0.4
 
 * Now should work with Berkeley DB 3.1, but does not auto-upgrade
-  3.0 databases (and, in fact, I haven't written any upgrade software
+  3.0 databases (and, in fact, I haven’t written any upgrade software
   yet).
 
 * SORT and THREAD should now function correctly.
@@ -397,7 +396,7 @@ Changes to the Cyrus IMAP Server in 2.0
 * RENAME is now hierarchical.
 
 * The right that controls whether a mailbox may be deleted is now
-  "c". (It used to be "d".)
+  “c”. (It used to be “d”.)
 
 * An additional backend for seen state has been created, seen_db. It
   stores seen state in a per-user database.

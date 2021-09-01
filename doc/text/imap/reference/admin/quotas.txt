@@ -1,4 +1,3 @@
-
 Quotas
 ******
 
@@ -27,15 +26,15 @@ different sites, via the use of several settings in imapd.conf(5):
       "lmtp_over_quota_perm_failure:" 0
 
          If enabled, lmtpd returns a permanent failure code when a
-         user's mailbox is over quota.  By default, the failure is
+         user’s mailbox is over quota.  By default, the failure is
          temporary, causing the MTA to queue the message and retry
          later.
 
       "lmtp_strict_quota:" 0
 
          If enabled, lmtpd returns a failure code when the incoming
-         message will cause the user's mailbox to exceed its quota.
-         By default, the failure won't occur until the mailbox is
+         message will cause the user’s mailbox to exceed its quota.
+         By default, the failure won’t occur until the mailbox is
          already over quota.
 
       "quotawarn:" 90
@@ -62,7 +61,7 @@ different sites, via the use of several settings in imapd.conf(5):
          *lmtpd(8)* message delivery if *autocreate_post* is enabled,
          provided their INBOX did not yet already exist.
 
-         The user's quota is set to the value if it is greater than
+         The user’s quota is set to the value if it is greater than
          zero, otherwise the user has unlimited quota.
 
          Note that quota is specified in kilobytes.
@@ -86,8 +85,8 @@ Quota Database
 ==============
 
 Quota information is stored either in a database (i.e. twoskip,
-skiplist) or in "quotalegacy" format, which is a filesystem hierarchy.
-This is controlled by the "quota_db" setting in imapd.conf(5).  Here's
+skiplist) or in “quotalegacy” format, which is a filesystem hierarchy.
+This is controlled by the "quota_db" setting in imapd.conf(5).  Here’s
 more about the pertinent settings:
 
       "quota_db:" quotalegacy
@@ -109,8 +108,8 @@ Converting Quotas Database
 ==========================
 
 The cvt_cyrusdb(8) utility may be used to convert between formats.
-It's usage with "quotalegacy" is a special case, in that the first
-argument ("<old db>") will be the path to the *base* of the
+It’s usage with "quotalegacy" is a special case, in that the first
+argument (“<old db>”) will be the path to the *base* of the
 "quotalegacy" directory structure, not to a particular file.
 
 For example, given this typical layout:

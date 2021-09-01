@@ -1,4 +1,3 @@
-
 Releasing new builds of ancient Cyrus IMAP versions
 ***************************************************
 
@@ -36,11 +35,11 @@ For contemporary releases, see Releasing Cyrus IMAP
 Prerequisites
 =============
 
-You will need a GPG key that you can use for signing.  Ellie doesn't
+You will need a GPG key that you can use for signing.  Ellie doesn’t
 remember off the top of her head how to create one of these, so for
 now just read the manual like she did. :)
 
-Once you have a GPG key, it's helpful to upload your public key to the
+Once you have a GPG key, it’s helpful to upload your public key to the
 MIT key-server
 
 And you need permission to send to the cyrus-announce mailing list.
@@ -91,14 +90,14 @@ Pre-release testing
    5. Configure it: "./configure [...]" (provide the same arguments
       you would when building for Cassandane at any other time).
 
-   6. Compile it: "make" -- it should build correctly.
+   6. Compile it: "make" – it should build correctly.
 
-   7. Run the unit tests if there are any: "make check" -- they
+   7. Run the unit tests if there are any: "make check" – they
       should pass.
 
-Note: We don't bother to run "make distcheck" on the old branches,
-  because it almost certainly won't work.  We also don't bother to run
-  Cassandane, for much the same reason.  If it builds, that's about as
+Note: We don’t bother to run "make distcheck" on the old branches,
+  because it almost certainly won’t work.  We also don’t bother to run
+  Cassandane, for much the same reason.  If it builds, that’s about as
   much as we can do.
 
 
@@ -133,7 +132,7 @@ Building the release
    cyrus-imapd-<version>"
 
 3. You will be prompted to enter a commit message for the tag.  I
-   use the following, just because it's what the old instructions
+   use the following, just because it’s what the old instructions
    said:
 
       We are pleased to announce the release of Cyrus IMAP version <version>.
@@ -162,7 +161,7 @@ Building the release
     uploading.
 
 11. Push the tag upstream: "git push ci cyrus-imapd-<version>"
-    (assuming your remote is named "ci").
+    (assuming your remote is named “ci”).
 
 
 Finishing up

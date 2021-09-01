@@ -1,4 +1,3 @@
-
 Cyrus IMAP Murder (Server Aggregation)
 **************************************
 
@@ -7,20 +6,20 @@ functioning as one large, transparent IMAP cluster.
 
 In a Cyrus IMAP Murder, one or more servers with a *frontend* role
 receive client connections, and proxy connections through to one of
-the servers with a *backend* role -- these host the payload for the
-cluster -- on the basis of where the current mailbox selected resides.
+the servers with a *backend* role – these host the payload for the
+cluster – on the basis of where the current mailbox selected resides.
 
 This makes access to mailboxes transparent to the client, even though
 different mailboxes to which the user has access reside on different
 servers.
 
-To illustrate, let John's IMAP client connect to "imap.example.org":
+To illustrate, let John’s IMAP client connect to "imap.example.org":
 
 [graph]
 
-John's mailbox may not reside on the node that the client connects to,
-though, and instead be located on a *backend* node -- as is typical
-for larger deployments.
+John’s mailbox may not reside on the node that the client connects to,
+though, and instead be located on a *backend* node – as is typical for
+larger deployments.
 
 The client connection is therefore to be proxied to the appropriate
 *backend* node.
@@ -44,7 +43,7 @@ servers typically needed to serve static files such as images and
 scripts (that require no server-side processing).
 
 In the case of IMAP, a commonly used IMAP proxy is NGINX. However,
-NGINX can proxy John's connection to only one backend at a time. NGINX
+NGINX can proxy John’s connection to only one backend at a time. NGINX
 allows an external script to respond with a target backend address
 based on the authentication of the user [1].
 
@@ -58,12 +57,12 @@ the same backend node his client connection is proxied to, and John
 nor Jane can share their mailboxes with one another [2].
 
 For the proxy to be fully-featured, the proxy would need to catch all
-IMAP commands that John's client issues [3], and determine what is the
-most appropriate backend to serve the request -- not unlike the
+IMAP commands that John’s client issues [3], and determine what is the
+most appropriate backend to serve the request – not unlike the
 aforementioned web proxies.
 
-So, when John's client issues a "SELECT INBOX", the connection is to
-be proxied to "backend1.example.org", but when John's client is to
+So, when John’s client issues a "SELECT INBOX", the connection is to
+be proxied to "backend1.example.org", but when John’s client is to
 issue a "SELECT "Other Users/jane"", the connection is to be proxied
 to "backend2.example.org".
 
@@ -83,7 +82,7 @@ to "backend2.example.org".
   level and decide where the connection needs to be proxied to
 
 * Nodes with a *frontend* role also arbiter between backends when a
-  message is moved from John's "INBOX" to Jane's "INBOX" or vice-
+  message is moved from John’s "INBOX" to Jane’s "INBOX" or vice-
   versa.
 
 
@@ -106,18 +105,18 @@ Use-Cases for the Cyrus IMAP Murder
 Administrators of larger infrastructures will be aware of the fact
 that vertical scaling a single node only stretches so far.
 
-When mail environments are to serve many thousands of users' mailboxes
+When mail environments are to serve many thousands of users’ mailboxes
 (or more), multiple nodes are put to purpose, effectively scaling
 horizontally rather than vertically.
 
 In such environments it is likely that multiple backends are used to
 store mailboxes, and depending on the requirements for the
 environment, users with mailboxes distributed over these backends may
-be required to share content with one another -- shared folders.
+be required to share content with one another – shared folders.
 
 Should John be required to be able to share one or more of his
 mailboxes with Jane, or vice-versa, one could attempt to ensure both
-users' mailboxes reside on the same backend node (read: both users'
+users’ mailboxes reside on the same backend node (read: both users’
 client connections are proxied to the same backend node).
 
 In larger environments however (again), users that are required to be
@@ -144,7 +143,7 @@ Cyrus IMAP can do so in either one of three topologies:
 
 3. Unified Murder
 
-   There's no distinction between backends and frontends, and all
+   There’s no distinction between backends and frontends, and all
    backends perform frontend roles, but not all frontends are
    automatically also backends.
 

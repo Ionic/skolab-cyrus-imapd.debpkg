@@ -1,4 +1,3 @@
-
 **cyradm**
 **********
 
@@ -52,45 +51,45 @@ available, cyradm will use it.
 COMMAND-LINE ARGUMENTS
 ======================
 
-"--u", "--user" *user*
+* "--u", "--user" *user*
 
    Authenticate with the specified username.
 
-"--authz" *user*
+* "--authz" *user*
 
    Authorize the connection as being the specified username.
 
-"--norc", "--rc"
+* "--norc", "--rc"
 
    (Do not) load the configuration files.
 
-"--systemrc" *file*
+* "--systemrc" *file*
 
    Use the system configuration file specified.
 
-"--userrc" *file*
+* "--userrc" *file*
 
    Use the user configuration file specified.
 
-"--port" *port*
+* "--port" *port*
 
    Connect to the *server* specified on the port specified.
 
-"--auth" *mechanism*
+* "--auth" *mechanism*
 
    Use the mechanism specified to authenticate. One of PLAIN, LOGIN,
    DIGEST-MD5, etc.
 
-"--help"
+* "--help"
 
    Show a help message about these command-line options.
 
-"--version"
+* "--version"
 
    Display the version of Cyrus IMAP the current ``cyradm`` command is
    a part of.
 
-"--server" *server*
+* "--server" *server*
 
    The server address to connect to.
 
@@ -137,10 +136,10 @@ style and getopt-style usages are accepted (combining them will
 produce an error). Optionally assign a special use to the mailbox.
 
 New mailboxes inherit the ACL permissions of their parent mailbox,
-except for top-level mailboxes such as the user's INBOX. Mailboxes
-that are the user's INBOX are assigned all to the corresponding user.
+except for top-level mailboxes such as the user’s INBOX. Mailboxes
+that are the user’s INBOX are assigned all to the corresponding user.
 
-Example Usage
+* Example Usage
 
       localhost> :command:`cm user.john`
       localhost> :command:`lm`
@@ -153,7 +152,7 @@ Example Usage
    the "/" (forward slash) character would be used as the hierarchy
    separator, and the example would look as follows:
 
-Example Usage with "unixhierarchysep: 1"
+* Example Usage with "unixhierarchysep: 1"
 
       localhost> :command:`cm user/john`
       localhost> :command:`lm`
@@ -161,7 +160,7 @@ Example Usage with "unixhierarchysep: 1"
       localhost> :command:`lam user/john`
       john lrswipkxtecda
 
-Note
+* Note
 
    The above examples use the unqualified, shorthand user identifier
    john as the mailbox name.
@@ -175,7 +174,7 @@ aliases: "cm", "create"
 deleteaclmailbox
 ----------------
 
-**deleteaclmailbox** *mailbox* *id* [...]
+**deleteaclmailbox** *mailbox* *id* […]
 
 Remove ACLs from the specified mailbox.
 
@@ -311,44 +310,44 @@ mboxconfig
 **mboxconfig** ["--private"] *mailbox* *attribute* *value*
 
 Set mailbox metadata, optionally set the private instead of the shared
-version of the metadata. A value of "none" will remove the attribute.
+version of the metadata. A value of “none” will remove the attribute.
 
 The currently supported attributes are:
 
-"comment" *description*
+* "comment" *description*
 
    Sets a comment or description associated with the mailbox.
 
-"expire" *days*
+* "expire" *days*
 
    Sets the number of days after which messages will be expired from
    the mailbox.
 
-"news2mail" *address*
+* "news2mail" *address*
 
    Sets an email address to which messages injected into the server
    via NNTP will be sent.
 
-"pop3showafter" *time*
+* "pop3showafter" *time*
 
-   Sets a time (in RFC3501 format, for example "6-Jan-2011 11:45:32
-   +1100") which specifies a cutoff date such that POP3 fetching of
+   Sets a time (in RFC3501 format, for example “6-Jan-2011 11:45:32
+   +1100”) which specifies a cutoff date such that POP3 fetching of
    the folder does not see messages whose internaldate is before or
    equal to the date.
 
-"sharedseen" *true|false*
+* "sharedseen" *true|false*
 
    Enables the use of a shared Seen flag on messages rather than a
-   per-user Seen flag.  The 's' right in the mailbox ACL still
+   per-user Seen flag.  The ‘s’ right in the mailbox ACL still
    controls whether a user can set the shared Seen flag.
 
-"sieve" *scriptname*
+* "sieve" *scriptname*
 
    Indicates the name of the global sieve script that should be run
    when a message is delivered to the shared mailbox (not used for
    personal mailboxes).
 
-"squat" *true|false*
+* "squat" *true|false*
 
    Indicates that the mailbox should have a squat index created for
    it.
@@ -386,7 +385,7 @@ server
 
 **server**
 
-**server** *[--noauthenticate]* *[server]*
+**server** *[–noauthenticate]* *[server]*
 
 With no arguments, show the current server.  With an argument, connect
 to that server.  It will prompt for automatic login unless the "--
@@ -394,7 +393,7 @@ noauthenticate"option is specified.  (This may change; in particular,
 either automatic authentication will be removed or all authenticate
 options will be added.)
 
-When connected to a server, **cyradm**'s prompt changes from "cyradm>"
+When connected to a server, **cyradm**’s prompt changes from "cyradm>"
 to "servername>", where *servername* is the fully qualified domain
 name of the connected server.
 
@@ -404,57 +403,57 @@ aliases: "connect", "servername"
 setaclmailbox
 -------------
 
-**setaclmailbox** *mailbox* *id* *rights* [*id* *rights* ...]
+**setaclmailbox** *mailbox* *id* *rights* [*id* *rights* …]
 
 Set ACLs on a mailbox.  The ACL may be one of the special strings
 "none", "read" ("lrs"), "post" ("lrsp"), "append" ("lrsip"),
 "write"("lrswipkxte"), "delete" ("lrxte"), or "all" ("lrswipkxte"), or
 any combinations of the ACL codes:
 
-**l**
+* **l**
 
    Lookup (mailbox is visible to LIST/LSUB, SUBSCRIBE mailbox)
 
-**r**
+* **r**
 
    Read (SELECT/EXAMINE the mailbox, perform STATUS)
 
-**s**
+* **s**
 
    Seen (set/clear SEEN flag via STORE, also set SEEN flag during
-   APPEND/COPY/FETCH BODY[...])
+   APPEND/COPY/FETCH BODY[…])
 
-**w**
+* **w**
 
    Write flags other than SEEN and DELETED
 
-**i**
+* **i**
 
    Insert (APPEND, COPY destination)
 
-**p**
+* **p**
 
    Post (send mail to mailbox)
 
-**k**
+* **k**
 
    Create mailbox (CREATE new sub-mailboxes, parent for new mailbox in
    RENAME)
 
-**x**
+* **x**
 
    Delete mailbox (DELETE mailbox, old mailbox name in RENAME)
 
-**t**
+* **t**
 
    Delete messages (set/clear DELETED flag via STORE, also set DELETED
    flag during APPEND/COPY)
 
-**e**
+* **e**
 
    Perform EXPUNGE and expunge as part of CLOSE
 
-**a**
+* **a**
 
    Administer (SETACL/DELETEACL/GETACL/LISTRIGHTS)
 
@@ -466,34 +465,34 @@ setinfo
 
 **setinfo** *attribute* *value*
 
-Set server metadata.  A value of "none" will remove the attribute. The
+Set server metadata.  A value of “none” will remove the attribute. The
 currently supported attributes are:
 
-"motd" *message*
+* "motd" *message*
 
-   Sets a "message of the day".  The message gets displayed as an
+   Sets a “message of the day”.  The message gets displayed as an
    ALERT upon connection.
 
-"comment" *note*
+* "comment" *note*
 
    Sets a comment or description associated with the server.
 
-"admin" *address*
+* "admin" *address*
 
    Sets the administrator email address for the server.
 
-"shutdown" *message*
+* "shutdown" *message*
 
    Sets a shutdown message.  The message gets displayed as an ALERT
    and all users are disconnected from the server (subsequent logins
    are disallowed).
 
-"expire" *days*
+* "expire" *days*
 
    Sets the number of days after which messages will be expired from
    the server (unless overridden by a mailbox annotation).
 
-"squat" *true|false*
+* "squat" *true|false*
 
    Indicates that all mailboxes should have a squat indexes created
    for them (unless overridden by a mailbox annotation).
@@ -502,7 +501,7 @@ currently supported attributes are:
 setmetadata
 -----------
 
-**setmetadata** [--private] mailbox [*annotation*] *value*
+**setmetadata** [–private] mailbox [*annotation*] *value*
 
 Set metadata on mailbox, where *annotation* is one of
 [comment|expire|news2mail|pop3showafter|sharedseen|sieve|specialuse|
@@ -513,13 +512,13 @@ additional backslash.  For example:
 
    setmetadata --private Spam specialuse "\\Junk"
 
-Note, too, that "private" annotations are private to the user
+Note, too, that “private” annotations are private to the user
 currently authenticated as, not necessarily the owner of the mailbox.
 To set annotations for another user you must authorize as that user.
 
-In addition to the use of optional flag **--private**, one may use a
-more explicit syntax, prefixing the annotation with '/shared/' or
-'/private/' as in this example:
+In addition to the use of optional flag **–private**, one may use a
+more explicit syntax, prefixing the annotation with ‘/shared/’ or
+‘/private/’ as in this example:
 
    setmetadata Spam /private/specialuse "\\Junk"
 
@@ -529,7 +528,7 @@ aliases: "setmd"
 setquota
 --------
 
-**setquota** *root* *resource* *value* [*resource* *value* ...]
+**setquota** *root* *resource* *value* [*resource* *value* …]
 
 Set a quota on the specified root, which may or may not be an actual
 mailbox. The *resources* understood by **Cyrus** are "STORAGE",

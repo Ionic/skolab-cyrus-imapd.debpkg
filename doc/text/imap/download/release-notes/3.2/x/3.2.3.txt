@@ -1,4 +1,3 @@
-
 Cyrus IMAP 3.2.3 Release Notes
 ******************************
 
@@ -20,7 +19,7 @@ Changes since 3.2.2
 Build changes
 -------------
 
-* Fixed Issue #3073: misleading message when Xapian "words"
+* Fixed Issue #3073: misleading message when Xapian “words”
   tokenisation unavailable
 
 * Fixed Issue #3102: removed checks for unused CLD2 dependency
@@ -63,10 +62,10 @@ Bug fixes
 
 * Fixed Issue #3123: XFER now recognises 3.1, 3.2 and 3.3 backends
 
-* Fixed: XFER now syslogs a warning when it doesn't recognise the
+* Fixed: XFER now syslogs a warning when it doesn’t recognise the
   backend Cyrus version
 
-* Fixed: crash in Sieve "date :regex" matches
+* Fixed: crash in Sieve “date :regex” matches
 
 * Fixed Issue #3152: DAV crash when no displayname and path is one
   segment (thanks Felix J. Ogris)

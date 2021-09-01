@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Cyrus IMAP 2.0.x Release Notes &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Cyrus IMAP 2.0.x Release Notes &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../../index.html"/>
         <link rel="up" title="Release Notes" href="../index.html"/>
         <link rel="next" title="Cyrus IMAP 2.1.x Release Notes" href="../2.1/2.1.x.html"/>
         <link rel="prev" title="Cyrus IMAP 1.x Release Notes" href="../1/1.x.x.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../../download.html">Download</a> &raquo;</li>
       
@@ -802,8 +803,8 @@
 <li>do setgid and initgroups in master (as urged by several people)</li>
 <li>added more config info to IMAP ID (in a vain attempt to improve debugging)</li>
 <li>configure now checks for DB3.3</li>
-<li>SQUAT (Rob O'Callahan, <a class="reference external" href="mailto:roc&#37;&#52;&#48;cs&#46;cmu&#46;edu">roc<span>&#64;</span>cs<span>&#46;</span>cmu<span>&#46;</span>edu</a>)</li>
-<li>change SEARCH HEADER x to SEARCH x utilizing internal cache where possible (Rob O'Callahan, <a class="reference external" href="mailto:roc&#37;&#52;&#48;cs&#46;cmu&#46;edu">roc<span>&#64;</span>cs<span>&#46;</span>cmu<span>&#46;</span>edu</a>)</li>
+<li>SQUAT (Rob O’Callahan, <a class="reference external" href="mailto:roc&#37;&#52;&#48;cs&#46;cmu&#46;edu">roc<span>&#64;</span>cs<span>&#46;</span>cmu<span>&#46;</span>edu</a>)</li>
+<li>change SEARCH HEADER x to SEARCH x utilizing internal cache where possible (Rob O’Callahan, <a class="reference external" href="mailto:roc&#37;&#52;&#48;cs&#46;cmu&#46;edu">roc<span>&#64;</span>cs<span>&#46;</span>cmu<span>&#46;</span>edu</a>)</li>
 <li>an improved directory hashing option (Gary Mills, <a class="reference external" href="mailto:mills&#37;&#52;&#48;cc&#46;UManitoba&#46;CA">mills<span>&#64;</span>cc<span>&#46;</span>UManitoba<span>&#46;</span>CA</a>)</li>
 <li>use of EGD for SSL/TLS (Amos Gouaux, <a class="reference external" href="mailto:amos&#37;&#52;&#48;utdallas&#46;edu">amos<span>&#64;</span>utdallas<span>&#46;</span>edu</a>)</li>
 <li>separate certs/keys for services (Henning P. Schmiedehausen, <a class="reference external" href="mailto:hps&#37;&#52;&#48;intermeta&#46;de">hps<span>&#64;</span>intermeta<span>&#46;</span>de</a>)</li>
@@ -811,9 +812,9 @@
 <li>fixed zero quota bugs in cyradm (Leena Heino, <a class="reference external" href="mailto:liinu&#37;&#52;&#48;uta&#46;fi">liinu<span>&#64;</span>uta<span>&#46;</span>fi</a>)</li>
 <li>ignore trailing whitespace in imapd.conf</li>
 <li>Received: header (with TLS and AUTH info)</li>
-<li>added '-i' switch to sendmail command line for SIEVE reject, redirect and vacation</li>
+<li>added ‘-i’ switch to sendmail command line for SIEVE reject, redirect and vacation</li>
 <li>small fixes to notify_unix</li>
-<li>added &quot;duplicatesuppression&quot; switch to imapd.conf for enabling/disabling duplicate delivery suppression (Birger Toedtmann, <a class="reference external" href="mailto:birger&#37;&#52;&#48;takatukaland&#46;de">birger<span>&#64;</span>takatukaland<span>&#46;</span>de</a>)</li>
+<li>added “duplicatesuppression” switch to imapd.conf for enabling/disabling duplicate delivery suppression (Birger Toedtmann, <a class="reference external" href="mailto:birger&#37;&#52;&#48;takatukaland&#46;de">birger<span>&#64;</span>takatukaland<span>&#46;</span>de</a>)</li>
 </ul>
 <p>Changes to the Cyrus IMAP Server since 2.0.15</p>
 <ul class="simple">
@@ -829,7 +830,7 @@
 <li>we now clean up better when deleting a user</li>
 <li>fixed an endian bug in ipurge</li>
 <li>pop3d now can also reuse processes.</li>
-<li>fix a bug in imclient that would strike when cyradm specifies a mechanism on the command-line. (SASL mechanism names aren't case sensitive.)</li>
+<li>fix a bug in imclient that would strike when cyradm specifies a mechanism on the command-line. (SASL mechanism names aren’t case sensitive.)</li>
 <li>fix some bugs in handling SIGHUP in master</li>
 <li>fix a couple of goofs in Admin.pm</li>
 </ul>
@@ -846,9 +847,9 @@
 <li>refactored code so less duplication</li>
 <li>added alternate config file for partial virtual domain support</li>
 <li>pop3d can now disable USER/PASS commands.</li>
-<li>STARTTLS now accepts a SSLv23 hello but doesn't allow SSLv23 to be negotiated.</li>
+<li>STARTTLS now accepts a SSLv23 hello but doesn’t allow SSLv23 to be negotiated.</li>
 <li>imtest no longer buffers to aid use as an automated layer.</li>
-<li>master now supports maximum number of service processes via the &quot;maxchild&quot; modifier.</li>
+<li>master now supports maximum number of service processes via the “maxchild” modifier.</li>
 <li>fixed a bug in the Sieve string lexer.</li>
 <li>one imapd process can now service multiple clients in sequence, eliminating a large number of forks.</li>
 </ul>
@@ -862,7 +863,7 @@
 <p>Changes to the Cyrus IMAP Server since 2.0.9</p>
 <ul class="simple">
 <li>some small memory savings</li>
-<li>the &quot;fud&quot; daemon once again works correctly</li>
+<li>the “fud” daemon once again works correctly</li>
 <li>the IDLE extension now uses signals correctly</li>
 <li>problems with libwrap have been resolved</li>
 <li>imapd and pop3d now log connections protected via TLS.</li>
@@ -882,7 +883,7 @@
 <p>Changes to the Cyrus IMAP Server since 2.0.8</p>
 <ul class="simple">
 <li>remembered to update this file</li>
-<li>bug in Cyrus::IMAP perl module affecting cyradm's setquota fixed</li>
+<li>bug in Cyrus::IMAP perl module affecting cyradm’s setquota fixed</li>
 <li>portability fix with socklen_t</li>
 </ul>
 <p>Changes to the Cyrus IMAP Server since 2.0.7</p>
@@ -891,7 +892,7 @@
 <li>THREAD=REFERENCES now part of the normal build.</li>
 <li>tweaks to the installation documentation and suggested Sendmail configuration</li>
 <li>portability fixes and other small bugfixes</li>
-<li>added &quot;-a&quot; flag to lmtpd</li>
+<li>added “-a” flag to lmtpd</li>
 <li>master process can now export statistics about running processes via UCD SNMP AgentX</li>
 <li>many fixes to Cyrus Murder-related code</li>
 <li>fixes to perl code, especially the Sieve interface. added an IMSP interface to the perl code, but it still needs work.</li>
@@ -899,17 +900,17 @@
 <p>Changes to the Cyrus IMAP Server since 2.0.6</p>
 <ul class="simple">
 <li>some number of random static variables eliminated, to save on memory footprint</li>
-<li>recursive RENAME was a little to eager; fixed. RENAME will also give the client a hint that a sub-RENAME failed. (mostly probably useful for cyradm, but cyradm doesn't take advantage of it yet.)</li>
+<li>recursive RENAME was a little to eager; fixed. RENAME will also give the client a hint that a sub-RENAME failed. (mostly probably useful for cyradm, but cyradm doesn’t take advantage of it yet.)</li>
 <li>THREAD=X-JWZ has turned into THREAD=REFERENCES (Ken Murchison)</li>
-<li>DELETE wasn't failing cleanly in database code; fixed.</li>
+<li>DELETE wasn’t failing cleanly in database code; fixed.</li>
 <li>off-by-one bug in seen_db fixed.</li>
 <li>starting/committing/aborting transactions now logged more correctly in cyrsudb_db3</li>
 <li>master will now accept port numbers instead of just service names in cyrus.conf. also logs even more verbosely (see bug #115.)</li>
-<li>libwrap_init() is now inside the loop, since i don't quite understand the semantics of libwrap calls.</li>
+<li>libwrap_init() is now inside the loop, since i don’t quite understand the semantics of libwrap calls.</li>
 <li>setquota in cyradm now behaves more sanely (and gives correct usage message).</li>
 <li>bugfixes to the managesieve client perl api. (still needs work.)</li>
 <li>small fixes in timsieved.</li>
-<li>added a &quot;make dist&quot; target so i won't dread releases as much.</li>
+<li>added a “make dist” target so i won’t dread releases as much.</li>
 </ul>
 <p>Changes to the Cyrus IMAP Server since 2.0.5</p>
 <ul class="simple">
@@ -917,11 +918,11 @@
 <li>mailboxes file can once again be a flat text file. (compile-time choice)</li>
 <li>subscriptions file can be flat text or berkeley db. likewise for seen state.</li>
 <li>unfortunately, the format of the mailboxes file has changed.</li>
-<li>implementation of &quot;JWZ&quot; threading, a first pass on the forthcoming THREAD=REFERENCES.</li>
+<li>implementation of “JWZ” threading, a first pass on the forthcoming THREAD=REFERENCES.</li>
 <li>bugfixes in libacap.</li>
 <li>bugfixes in other Murder related functionality.</li>
 <li>removal of dead code.</li>
-<li>will now look in CYRUS_PREFIX/etc/imapd.conf if there's no /etc/imapd.conf.</li>
+<li>will now look in CYRUS_PREFIX/etc/imapd.conf if there’s no /etc/imapd.conf.</li>
 <li>more paranoid implementation of ID.</li>
 <li>more descriptive lmtp errors.</li>
 <li>finished implementation of LMTP 8BITMIME.</li>
@@ -933,7 +934,7 @@
 </ul>
 <p>Changes to the Cyrus IMAP Server SINCE 2.0.4</p>
 <ul class="simple">
-<li>Now should work with Berkeley DB 3.1, but does not auto-upgrade 3.0 databases (and, in fact, I haven't written any upgrade software yet).</li>
+<li>Now should work with Berkeley DB 3.1, but does not auto-upgrade 3.0 databases (and, in fact, I haven’t written any upgrade software yet).</li>
 <li>SORT and THREAD should now function correctly.</li>
 <li>Some configure fixes.</li>
 <li>Some fixes for possible race conditions in initializing services and database structures.</li>
@@ -971,7 +972,7 @@
 <li>Bugfix in modified UTF-7 processing (for mailbox names). Bugfix in index_searchcacheheader().</li>
 <li>Implemented the extension MULTIAPPEND.</li>
 <li>RENAME is now hierarchical.</li>
-<li>The right that controls whether a mailbox may be deleted is now &quot;c&quot;. (It used to be &quot;d&quot;.)</li>
+<li>The right that controls whether a mailbox may be deleted is now “c”. (It used to be “d”.)</li>
 <li>An additional backend for seen state has been created, seen_db. It stores seen state in a per-user database.</li>
 </ul>
 </div>
@@ -997,7 +998,7 @@
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Apr 29 2020
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1014,7 +1015,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1023,7 +1024,7 @@
       <script type="text/javascript" src="../../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../../_static/language_data.js"></script>
 
   
 

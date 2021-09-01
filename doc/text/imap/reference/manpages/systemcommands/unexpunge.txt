@@ -1,4 +1,3 @@
-
 **unexpunge**
 *************
 
@@ -44,8 +43,8 @@ Options
 -t time-interval
 
    Unexpunge messages which where expunged within the last "time-
-   interval" seconds. Use one of the trailing modifiers -- "m"
-   (minutes), "h" (hours), "d" (days) or "w" (weeks) -- to specify a
+   interval" seconds. Use one of the trailing modifiers – "m"
+   (minutes), "h" (hours), "d" (days) or "w" (weeks) – to specify a
    different time unit.
 
 -a
@@ -95,7 +94,7 @@ Examples
 
    **unexpunge -a** *user.johnsmit.Trash*
 
-   Unexpunge all messages in a user's Trash, but leave them flagged
+   Unexpunge all messages in a user’s Trash, but leave them flagged
    *\Deleted*.
 
    **unexpunge -a -f** *Flagged user.johnsmith.Trash*

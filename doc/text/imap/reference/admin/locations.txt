@@ -1,4 +1,3 @@
-
 File & Directory Locations
 **************************
 
@@ -65,15 +64,15 @@ Each of these are discussed in their own sections of the
 documentation. All share in common a few aspects in how they are
 configured.  For each partition defined, you must tell Cyrus where the
 partition is rooted in the filesystem.  This is accomplished via a
-"*partition*-*name*:" directive for each partition, where
-"*partition*" specifies the partition type and "*name*" is the actual
+“*partition*-*name*:” directive for each partition, where
+“*partition*” specifies the partition type and “*name*” is the actual
 name of the partition.
 
 Here are some sample declarations of each different type of partition
-supported within Cyrus.  For the purposes of this example, we'll
+supported within Cyrus.  For the purposes of this example, we’ll
 stipulate the following:
 
-* There are two main storage pools, "fast" and "slow," which are on
+* There are two main storage pools, “fast” and “slow,” which are on
   SSDs and traditional disks, respectively.
 
 * The mailboxes are divided alphabetically, with A to M in one group
@@ -121,7 +120,7 @@ distributions use "default" and "/var/spool/cyrus" or
       for new mailboxes.
 
       Note that the partition specified by this option must also be
-      specified as *partition-name*, where you substitute 'name' for
+      specified as *partition-name*, where you substitute ‘name’ for
       the alphanumeric string you set *defaultpartition* to.
 
    "partition-name:" <none>
@@ -165,9 +164,9 @@ Archive Partitions
 
 Cyrus Archiving will migrate mailbox data from the normal mail spool
 partitions to separate archive partitions, based upon criteria such as
-age and size.  Typical use cases would be to keep so-called "hot"
+age and size.  Typical use cases would be to keep so-called “hot”
 data, such as recent messages, on fast drives, such as SSDs, and
-migrate "cold" data, such as older or large messages, to slower but
+migrate “cold” data, such as older or large messages, to slower but
 cheaper media.
 
    "archivepartition-name:" <none>
@@ -178,7 +177,7 @@ cheaper media.
       stored in a corresponding directory on **archivepartition-
       name**. Note that not every **partition-name** option is
       strictly required to have a corresponding **archivepartition-
-      name** option, but that without one there's no benefit to
+      name** option, but that without one there’s no benefit to
       enabling archiving.
 
 
@@ -186,7 +185,7 @@ Search Partitions
 -----------------
 
 Modern Cyrus uses the Xapian search engine to index messages for
-server-side search support.  Index data are stored in search "tiers"
+server-side search support.  Index data are stored in search “tiers”
 which are themselves related to search partitions.  There are two key
 settings for search tiers:
 
@@ -210,7 +209,7 @@ settings for search tiers:
       For example: if *defaultpartition* is defined as part1 and
       *defaultsearchtier* as tier1 then the configuration must contain
       an entry *tier1searchpartition-part1* that defines the path
-      where to store this tier1's search index for the part1
+      where to store this tier1’s search index for the part1
       partition.
 
       This option MUST be specified for xapian search.

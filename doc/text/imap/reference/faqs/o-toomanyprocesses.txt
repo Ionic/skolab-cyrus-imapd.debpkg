@@ -1,4 +1,3 @@
-
 The process count keeps growing!
 ********************************
 
@@ -31,7 +30,7 @@ option in cyrus.conf(5).
 
 While POP connections are short lived, IMAP connections can be long
 lived. And then there are processes trying to listen to a client
-that's no longer alive.
+that’s no longer alive.
 
 Setting **tcp_keepalive** option in imapd.conf(5) to **1** can be used
 to test if connections are still alive. The operating system will send

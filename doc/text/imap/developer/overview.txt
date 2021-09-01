@@ -1,4 +1,3 @@
-
 Overview of Cyrus development environment
 *****************************************
 
@@ -9,7 +8,7 @@ The pre-requisites
 While Cyrus itself can be run under many operating systems, we
 recommend the following operating systems for development, because the
 dependencies and libraries are known. If you get a development
-environment working under a different operating system, we'd love to
+environment working under a different operating system, we’d love to
 hear about it.
    * Debian / Ubuntu
 
@@ -24,7 +23,7 @@ Source
 ------
 
 Cyrus IMAPd
-   Can't do anything without this!
+   Can’t do anything without this!
 
    Follow the Cyrus IMAP installation guide.
 
@@ -33,7 +32,7 @@ Cyrus SASL
 
    When developing against Cyrus, however, we assume that Cyrus SASL
    is a third party pre-built component. There is a separate section
-   on compiling from source if you're interested in *contributing to
+   on compiling from source if you’re interested in *contributing to
    Cyrus SASL*.
 
 

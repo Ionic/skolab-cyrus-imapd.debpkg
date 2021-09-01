@@ -1,4 +1,3 @@
-
 RSS Feeds
 *********
 
@@ -35,28 +34,28 @@ rss_feeds
       A wildmat pattern specifying which mailbox hierarchies should be
       treated as RSS feeds.  Only mailboxes matching the wildmat will
       have their messages available via RSS.  If not set, a default
-      wildmat of "*" (ALL mailboxes) will be used.
+      wildmat of “*” (ALL mailboxes) will be used.
 
 The list of available RSS feeds can be obtained by clients by
 accessing the "/rss/" URL on the Cyrus server.
 
-The rss_feeds option uses the "wildmat" (**RFC 3977#section-4**)
+The rss_feeds option uses the “wildmat” (**RFC 3977#section-4**)
 format to specify which mailboxes/folders will be made available via
 RSS. This list is further limited to only those mailboxes and folders
 that the authenticated user has permissions to see.
 
-The rss_feeds option uses the internal namespace, which uses "." as a
+The rss_feeds option uses the internal namespace, which uses “.” as a
 hierarchy separator, regardless of what "unixhierarchysep" is set to.
 
 Examples:
 
-* "user.bob" - will serve only user "Bob"'s inbox.
+* "user.bob" - will serve only user “Bob“‘s inbox.
 
 * "rss.*" - will serve all folders under the shared mailbox called
-  "rss".
+  “rss”.
 
 * "rss*" - will serve all content under mailboxes that start with
-  "rss": rss-cool and rss-important will be included, for example.
+  “rss”: rss-cool and rss-important will be included, for example.
 
 * "*,!user" - will serve all shared mailboxes, but no personal
   mailboxes.
@@ -80,10 +79,10 @@ rss_feedlist_template
       displaying the list of available RSS feeds.  A single instance
       of the variable %RSS_FEEDLIST% should appear in the file, which
       will be replaced by a nested unordered list of feeds.  The
-      toplevel unordered list will be tagged with an id of "feed" (<ul
-      id='feed'>) which can be used by stylesheet(s) in your template.
+      toplevel unordered list will be tagged with an id of “feed” (<ul
+      id=’feed’>) which can be used by stylesheet(s) in your template.
       The dynamically created list of feeds based on the HTML template
-      will be accessible at the "/rss" URL on the server.
+      will be accessible at the “/rss” URL on the server.
 
 By default, the server will present the list as a simple unordered
 list in an HTML document. To customize the look and feel of the feed

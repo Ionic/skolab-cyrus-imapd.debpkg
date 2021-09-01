@@ -1,4 +1,3 @@
-
 Cyrus NNTP
 **********
 
@@ -90,7 +89,7 @@ Create a mailbox for each newsgroup to receive/export. If some groups
 are private, be sure to set the ACLs accordingly. The mknewsgroups(8)
 script can be used to help facilitate mass creation of newsgroup
 mailboxes. When using this script, be sure to add posting rights for
-'anyone' (eg. "mknewsgroups -a 'anyone +p' ...") so that articles can
+‘anyone’ (eg. "mknewsgroups -a 'anyone +p' ...") so that articles can
 be fed/posted.
 
 News groups can be defined in two ways:
@@ -116,7 +115,7 @@ sam commands.)
    $ sam ournews/mynewsgroup anyone lrsp
 
 The above gives **L** Lookup, **R** Read, **S** Seen, and **P** Post
-permissions (basically read/write -- see the man page for more) to
+permissions (basically read/write – see the man page for more) to
 anyone logged into the server. More restrictive permissions are
 possible. (Note: This example assumes *unixhierarchysep* is being used
 in imapd.conf(5))
@@ -164,12 +163,12 @@ control.cancel, etc) if it exists, so that they may be reviewed by an
 administrator.
 
 Automatic execution of control messages is only performed if the
-newsmaster (default = "news") user has the proper access control for
+newsmaster (default = “news”) user has the proper access control for
 the given mailbox. For example, to allow cancel control messages to be
-performed for "misc.test" articles, give the "news" user the 'd' right
-on "misc.test". To allow newgroup, rmgroup and mvgroup control
-messages to be performed on the "misc" hierarchy, give the "news" user
-the 'c' right on "misc".
+performed for "misc.test" articles, give the “news” user the ‘d’ right
+on “misc.test”. To allow newgroup, rmgroup and mvgroup control
+messages to be performed on the “misc” hierarchy, give the “news” user
+the ‘c’ right on “misc”.
 
 NOTE: No sender or PGP verification of control messages is currently
 implemented.
@@ -210,7 +209,7 @@ imapd.conf.
 Email clients
 -------------
 
-If you are exporting Usenet via IMAP, and your users' messaging
+If you are exporting Usenet via IMAP, and your users’ messaging
 clients are not savvy enough to reply to and post articles via NNTP,
 then you will have to configure your server so your users can reply to
 and post articles via SMTP.
@@ -218,8 +217,8 @@ and post articles via SMTP.
 To help facilitate this, you can set the **newspostuser** option to a
 pseudo user which will be used to construct email delivery addresses
 for each incoming article. These addresses are inserted into a Reply-
-To: in the article. For example, if set to "post", an article posted
-to comp.mail.imap will have an address of "post+comp.mail.imap"
+To: in the article. For example, if set to “post”, an article posted
+to comp.mail.imap will have an address of “post+comp.mail.imap”
 inserted into the Reply-To: header. This will allow a user to easily
 reply to an article via email. Otherwise, the users will have to learn
 the correct email address format for posting and replying to articles.
@@ -239,7 +238,7 @@ For other configurations, consult the lmtp2nntp and documentation and
 your MTA documentation.
 
 NOTE: If anonymous logins are disabled (default) in imapd.conf(5),
-then you should configure lmtp2nntp to use its "feed" operation mode.
+then you should configure lmtp2nntp to use its “feed” operation mode.
 
 
 Expiring articles

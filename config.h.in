@@ -160,6 +160,9 @@
 /* Define to 1 if you have the `getgrouplist' function. */
 #undef HAVE_GETGROUPLIST
 
+/* Define to 1 if you have the `getline' function. */
+#undef HAVE_GETLINE
+
 /* Do we have a getnameinfo? */
 #undef HAVE_GETNAMEINFO
 

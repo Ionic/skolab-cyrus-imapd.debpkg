@@ -1,4 +1,3 @@
-
 Cyrus Sieve
 ***********
 
@@ -49,7 +48,7 @@ if sieveshell(1) is used to place the scripts on the server.
 Sieve scripts can be placed either by the timsieved(8) daemon
 (implementing the ManageSieve protocol **RFC 5804**; this is the
 preferred options since it allows for syntax checking) or in the
-user's home directory as a .sieve file.
+user’s home directory as a .sieve file.
 
 
 Installing Sieve
@@ -63,7 +62,7 @@ NOT compile the server with sieve support.
 Configure sieve
 ---------------
 
-Depending on what's in your "/etc/services" file, sieve will usually
+Depending on what’s in your "/etc/services" file, sieve will usually
 be set to listen on port 2000 (old convention) or port 4190 (as
 specified by **RFC 5804**).
 
@@ -84,14 +83,14 @@ Configure outgoing mail
 
 Some Sieve actions (redirect, vacation) can send outgoing mail.
 
-You'll need to make sure that lmtpd can send outgoing messages.
+You’ll need to make sure that lmtpd can send outgoing messages.
 Currently, it invokes "/usr/lib/sendmail" by default to send messages.
 Change this by adding a line like:
 
    sendmail: /usr/sbin/sendmail
 
-in your imapd.conf(5). If you're using Postfix or another MTA, make
-sure that the sendmail referenced in "/etc/imapd.conf" is Sendmail-
+in your imapd.conf(5). If you’re using Postfix or another MTA, make
+sure that the sendmail referenced in “/etc/imapd.conf” is Sendmail-
 compatible.
 
 
@@ -115,7 +114,7 @@ Cyrus has two types of repositories where Sieve scripts can live:
 
 1. **Personal** is per user and
 
-2. **Global** is for every user. Global scripts aren't applied on
+2. **Global** is for every user. Global scripts aren’t applied on
    incoming messages by default: users must include them in their
    scripts.  Note that there are two types of Global scripts:
    **global** and **global per domain**.
@@ -134,7 +133,7 @@ admin in imapd.conf(5)):
   To edit personal scripts of some user.
 
 Scripts for shared folders work different from user scripts. The last
-ones are loaded to the user's repository and attached to the inbox
+ones are loaded to the user’s repository and attached to the inbox
 when activated. The first ones must be loaded to the global domain
 repository and attached to a shared folder by a user that has
 permission on it. Use the second combination listed above to load them
@@ -156,11 +155,11 @@ Tim Martin, who desperately wanted something named after him in the
 Cyrus distribution.
 
 From your normal account, telnet to the sieve port on the server
-you're setting up:
+you’re setting up:
 
    telnet servername sieve
 
-If your server is running, you'll get a message similar to the
+If your server is running, you’ll get a message similar to the
 following one:
 
    Trying 128.2.10.192...
@@ -173,26 +172,26 @@ following one:
 
 Any message other than one similar to the one above means there is a
 problem. Make sure all of authentication methods you wish to support
-are listed. This list should be identical to the one listed by "imapd"
+are listed. This list should be identical to the one listed by “imapd”
 earlier. Next terminate the connection, by typing:
 
    logout
 
 Next test authenticating to the sieve server. To do this run the
 sieveshell(1) utility. You must specify the server. If you run this
-utility from a different machine without the "sieve" entry in
-"/etc/services", port 2000 will be used.
+utility from a different machine without the “sieve” entry in
+“/etc/services”, port 2000 will be used.
 
    sieveshell servername
    Please enter your password: ******
    > quit
 
-This should produce the message "Authentication failed" with a
+This should produce the message “Authentication failed” with a
 description of the failure if there was a problem.
 
 Next you should attempt to place a sieve script on the server. To do
 this create a file named "myscript.script" with the following lines.
-Replace "foo@example.org" with an email address you can send mail
+Replace “foo@example.org” with an email address you can send mail
 from, but that is not the one you are working on now.
 
    require ["reject","fileinto"];
@@ -213,10 +212,10 @@ This should place your script on the server and make it the active
 script.
 
 Test that the sieve script is actually run. Send a message to the
-address you're working on from the address mentioned in the sieve
+address you’re working on from the address mentioned in the sieve
 script. The message should be rejected.
 
-When you're done, don't forget to delete your testing script:
+When you’re done, don’t forget to delete your testing script:
 
    sieveshell servername
    Please enter your password: ******
@@ -332,7 +331,7 @@ or flagged; to test messages for spam or viruses; or to reject
 messages at or after delivery. Sieve.info has more information on
 sieve and its uses.
 
-There's a good sieve reference online which describes the language.
+There’s a good sieve reference online which describes the language.
 
 For those who prefer a client to write code in, Sieve.info has a list
 of desktop, web and command line clients.

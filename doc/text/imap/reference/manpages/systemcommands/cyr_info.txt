@@ -1,4 +1,3 @@
-
 **cyr_info**
 ************
 
@@ -96,7 +95,7 @@ Examples
 
    **cyr_info** *proc*
 
-   List all the proc files and who they're logged in as.
+   List all the proc files and who they’re logged in as.
 
    **cyr_info** *conf-lint*
 

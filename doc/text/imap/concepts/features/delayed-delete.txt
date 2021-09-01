@@ -1,9 +1,8 @@
-
 Delayed Delete
 **************
 
 It is not uncommon for a folder or hierarchy of folders in IMAP to
-contain large amounts of information -- after all, IMAP preserves a
+contain large amounts of information – after all, IMAP preserves a
 copy of the messages on the server unless it is specifically deleted.
 
 Three challenges arise when users delete folders especially if an
@@ -61,6 +60,6 @@ See also:
 
   * Delayed Expunge
 
-  * When is What ... Deleted, Expired, Expunged or Purged?
+  * When is What … Deleted, Expired, Expunged or Purged?
 
 Back to Features

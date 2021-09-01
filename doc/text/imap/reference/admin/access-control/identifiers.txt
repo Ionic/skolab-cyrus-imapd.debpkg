@@ -1,13 +1,12 @@
-
 Access Control Identifier (ACI)
 *******************************
 
 The Access Control Identifier (ACI) part of an ACL entry specifies the
 user or group for which the entry applies.  Group identifiers are
-distinguished be the prefix "group:".  For example,
-"group:accounting".
+distinguished be the prefix “group:”.  For example,
+“group:accounting”.
 
-There are two special identifiers, "anonymous", and "anyone", which
+There are two special identifiers, “anonymous”, and “anyone”, which
 are explained below. The meaning of other identifiers usually depends
 on the authorization mechanism being used (selected by "--with-auth"
 at compile time, defaulting to Unix).
@@ -56,7 +55,7 @@ way (without associated "/etc/passwd" entries) is not recommended.
 
 Note: Cyrus requires the getgrent(3) POSIX sysctl. As such, NSS
   needs to be configured to have the groups available, one of which
-  includes "files", but could also include "ldap".NSS augmentations,
+  includes “files”, but could also include “ldap”.NSS augmentations,
   such as "nss_ldap", "pam_ldap" or "sssd" may be used to provide
   Cyrus access to group information via NSS.
 

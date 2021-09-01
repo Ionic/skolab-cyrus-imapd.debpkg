@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Cyrus NNTP &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Cyrus NNTP &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../index.html"/>
         <link rel="up" title="Administrator Guide" href="../admin.html"/>
         <link rel="next" title="Cyrus Prot Layer" href="protlayer.html"/>
         <link rel="prev" title="Cyrus Backups" href="backups.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../operations.html">Operations</a> &raquo;</li>
       
@@ -792,32 +793,32 @@
 </div>
 <p>Cyrus includes a NNTP server. The NNTP works a lot like the IMAP server, it uses the same authentication and authorization. It also stores messages like IMAP. This means the messages are stored in one file per post.</p>
 <p>Cyrus has the ability to export Usenet via IMAP and/or export shared IMAP mailboxes via NNTP.</p>
-<p>This <a class="reference download internal" href="../../../_downloads/netnews.png" download=""><code class="xref download docutils literal"><span class="pre">diagram</span></code></a> shows how the various NNTP components interact.</p>
+<p>This <a class="reference download internal" download="" href="../../../_downloads/b567d54b4a8856e017843f865ac3309f/netnews.png"><code class="xref download docutils literal notranslate"><span class="pre">diagram</span></code></a> shows how the various NNTP components interact.</p>
 </div>
 <div class="section" id="nntp-setup">
 <h2>NNTP Setup<a class="headerlink" href="#nntp-setup" title="Permalink to this headline">¶</a></h2>
 <p>Decide where the newsgroup mailboxes will reside: either at the toplevel of the hierarchy (eg, comp.mail.imap) or rooted elsewhere (eg, netnews.comp.mail.imap). If the newsgroup mailboxes are not at the toplevel of the hierarchy, then the parent must be specified using <strong>newsprefix</strong> in <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.</p>
 <ol class="arabic">
-<li><p class="first">Make sure that Cyrus is built with NNTP support using the <code class="docutils literal"><span class="pre">--enable-nntp</span></code> switch. This builds nntpd and the associated utilities.</p>
+<li><p class="first">Make sure that Cyrus is built with NNTP support using the <code class="docutils literal notranslate"><span class="pre">--enable-nntp</span></code> switch. This builds nntpd and the associated utilities.</p>
 <blockquote>
 <div><p>In many pre-packaged versions of Cyrus, the NNTP server is in its own package (Example: Debian has a cyrus-nntpd-2.2 package that must be installed in addition to the rest of Cyrus).</p>
 </div></blockquote>
 </li>
-<li><p class="first">Edit <code class="docutils literal"><span class="pre">/etc/cyrus.conf</span></code>.</p>
+<li><p class="first">Edit <code class="docutils literal notranslate"><span class="pre">/etc/cyrus.conf</span></code>.</p>
 <blockquote>
 <div><p>In order to receive usenet articles, make sure that the Cyrus nntpd service is enabled in cyrus.conf. The master/conf/normal.conf and master/conf/prefork.conf sample configs both include entries for nntpd (disabled by default).</p>
 <p>Add a new line in the SERVICES section with something like this:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">nntp</span><span class="p">:</span> <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;nntpd&quot;</span>  <span class="n">listen</span><span class="o">=</span><span class="s2">&quot;nntp&quot;</span> <span class="n">prefork</span><span class="o">=</span><span class="s2">&quot;0&quot;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">nntp</span><span class="p">:</span> <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;nntpd&quot;</span>  <span class="n">listen</span><span class="o">=</span><span class="s2">&quot;nntp&quot;</span> <span class="n">prefork</span><span class="o">=</span><span class="s2">&quot;0&quot;</span>
 </pre></div>
 </div>
 <p>This defines a new service that will run the nntpd command (man nntpd for more info) on the nntp port (defined in /etc/services). Since the prefork is listed as 0, Cyrus will not start a new process for this.</p>
 </div></blockquote>
 </li>
-<li><p class="first">Edit <code class="docutils literal"><span class="pre">/etc/imapd.conf</span></code>.</p>
+<li><p class="first">Edit <code class="docutils literal notranslate"><span class="pre">/etc/imapd.conf</span></code>.</p>
 <blockquote>
 <div><p>There are many directives for news that can be placed in /etc/imapd.conf. Check out <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> to learn more.</p>
 <p>At minimum, something like this:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># News:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># News:</span>
 <span class="n">partition</span><span class="o">-</span><span class="n">news</span><span class="p">:</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">spool</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/</span><span class="n">news</span>
 <span class="n">newsprefix</span><span class="p">:</span> <span class="n">ournews</span>
 </pre></div>
@@ -827,7 +828,7 @@
 <li>Where the news partition should be stored (should be similar to the value in <strong>partition-default</strong>)</li>
 <li>What part of the Cyrus tree should be treated as the location for news groups.</li>
 </ul>
-<p>The <strong>newsprefix</strong> is a path in the IMAP directory hierarchy (that is, the hierarchy used with cyradm). User accounts, for instance, are often in the <code class="docutils literal"><span class="pre">users</span></code> hierarchy. Here, we are telling it to put the news in the <code class="docutils literal"><span class="pre">ournews</span></code> hierarchy.</p>
+<p>The <strong>newsprefix</strong> is a path in the IMAP directory hierarchy (that is, the hierarchy used with cyradm). User accounts, for instance, are often in the <code class="docutils literal notranslate"><span class="pre">users</span></code> hierarchy. Here, we are telling it to put the news in the <code class="docutils literal notranslate"><span class="pre">ournews</span></code> hierarchy.</p>
 </div></blockquote>
 </li>
 <li><p class="first">Restart your server.</p>
@@ -836,7 +837,7 @@
 </div>
 <div class="section" id="defining-newsgroups">
 <h2>Defining Newsgroups<a class="headerlink" href="#defining-newsgroups" title="Permalink to this headline">¶</a></h2>
-<p>Create a mailbox for each newsgroup to receive/export. If some groups are private, be sure to set the ACLs accordingly. The <a class="reference internal" href="../manpages/systemcommands/mknewsgroups.html#std:cyrusman-mknewsgroups(8)">mknewsgroups(8)</a> script can be used to help facilitate mass creation of newsgroup mailboxes. When using this script, be sure to add posting rights for 'anyone' (eg. <code class="docutils literal"><span class="pre">mknewsgroups</span> <span class="pre">-a</span> <span class="pre">'anyone</span> <span class="pre">+p'</span> <span class="pre">...</span></code>) so that articles can be fed/posted.</p>
+<p>Create a mailbox for each newsgroup to receive/export. If some groups are private, be sure to set the ACLs accordingly. The <a class="reference internal" href="../manpages/systemcommands/mknewsgroups.html#std:cyrusman-mknewsgroups(8)">mknewsgroups(8)</a> script can be used to help facilitate mass creation of newsgroup mailboxes. When using this script, be sure to add posting rights for ‘anyone’ (eg. <code class="docutils literal notranslate"><span class="pre">mknewsgroups</span> <span class="pre">-a</span> <span class="pre">'anyone</span> <span class="pre">+p'</span> <span class="pre">...</span></code>) so that articles can be fed/posted.</p>
 <p>News groups can be defined in two ways:</p>
 <ol class="arabic simple">
 <li>Use <a class="reference internal" href="../manpages/systemcommands/mknewsgroups.html#std:cyrusman-mknewsgroups(8)">mknewsgroups(8)</a>, which is a very simple wrapper for creating groups</li>
@@ -846,14 +847,14 @@
 <div class="section" id="using-cyradm">
 <h3>Using Cyradm<a class="headerlink" href="#using-cyradm" title="Permalink to this headline">¶</a></h3>
 <p>Create a new group like creating a new mailbox:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>$ cm ournews/mynewsgroup
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cm ournews/mynewsgroup
 </pre></div>
 </div>
 <p>Next, set some permissions. (See <a class="reference internal" href="../manpages/systemcommands/cyradm.html#std:cyrusman-cyradm(8)">cyradm(8)</a> for more info on the cm and sam commands.)</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>$ sam ournews/mynewsgroup anyone lrsp
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ sam ournews/mynewsgroup anyone lrsp
 </pre></div>
 </div>
-<p>The above gives <strong>L</strong> Lookup, <strong>R</strong> Read, <strong>S</strong> Seen, and <strong>P</strong> Post permissions (basically read/write -- see the man page for more) to anyone logged into the server. More restrictive permissions are possible. (Note: This example assumes <em>unixhierarchysep</em> is being used in <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>)</p>
+<p>The above gives <strong>L</strong> Lookup, <strong>R</strong> Read, <strong>S</strong> Seen, and <strong>P</strong> Post permissions (basically read/write – see the man page for more) to anyone logged into the server. More restrictive permissions are possible. (Note: This example assumes <em>unixhierarchysep</em> is being used in <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>)</p>
 </div>
 </div>
 <div class="section" id="configuration">
@@ -864,22 +865,22 @@
 </div>
 <div class="section" id="pull-suck-feeds">
 <h3>Pull (suck) feeds<a class="headerlink" href="#pull-suck-feeds" title="Permalink to this headline">¶</a></h3>
-<p>If pulling articles from the peer is preferred (and the provider allows it), then use the <code class="docutils literal"><span class="pre">fetchnews</span></code> utility which will retrieve articles from the peer and feed them to the Cyrus server. If supported by the peer, fetchnews will use the NEWNEWS command, otherwise it will fallback to keeping track of the high water mark of each group. Configure fetchnews as an EVENT in <a class="reference internal" href="../manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a> to be called periodically (eg, once an hour, every 15 minutes, etc).</p>
+<p>If pulling articles from the peer is preferred (and the provider allows it), then use the <code class="docutils literal notranslate"><span class="pre">fetchnews</span></code> utility which will retrieve articles from the peer and feed them to the Cyrus server. If supported by the peer, fetchnews will use the NEWNEWS command, otherwise it will fallback to keeping track of the high water mark of each group. Configure fetchnews as an EVENT in <a class="reference internal" href="../manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a> to be called periodically (eg, once an hour, every 15 minutes, etc).</p>
 </div>
 <div class="section" id="imapfeed">
 <h3>imapfeed<a class="headerlink" href="#imapfeed" title="Permalink to this headline">¶</a></h3>
-<p>Alternatively, if there is an INN v2.3 server in-house use the included <code class="docutils literal"><span class="pre">imapfeed</span></code> utility (written by the authors of Cyrus) to feed articles to the Cyrus server via LMTP. Consult the INN documentation for further details.</p>
+<p>Alternatively, if there is an INN v2.3 server in-house use the included <code class="docutils literal notranslate"><span class="pre">imapfeed</span></code> utility (written by the authors of Cyrus) to feed articles to the Cyrus server via LMTP. Consult the INN documentation for further details.</p>
 </div>
 <div class="section" id="control-messages">
 <h3>Control Messages<a class="headerlink" href="#control-messages" title="Permalink to this headline">¶</a></h3>
-<p>Control messages are accepted, parsed and delivered to the corresponding <code class="docutils literal"><span class="pre">control.*</span></code> pseudo-group (eg, control.newgroup, control.cancel, etc) if it exists, so that they may be reviewed by an administrator.</p>
-<p>Automatic execution of control messages is only performed if the newsmaster (default = &quot;news&quot;) user has the proper access control for the given mailbox. For example, to allow cancel control messages to be performed for <code class="docutils literal"><span class="pre">misc.test</span></code> articles, give the &quot;news&quot; user the 'd' right on &quot;misc.test&quot;. To allow newgroup, rmgroup and mvgroup control messages to be performed on the &quot;misc&quot; hierarchy, give the &quot;news&quot; user the 'c' right on &quot;misc&quot;.</p>
+<p>Control messages are accepted, parsed and delivered to the corresponding <code class="docutils literal notranslate"><span class="pre">control.*</span></code> pseudo-group (eg, control.newgroup, control.cancel, etc) if it exists, so that they may be reviewed by an administrator.</p>
+<p>Automatic execution of control messages is only performed if the newsmaster (default = “news”) user has the proper access control for the given mailbox. For example, to allow cancel control messages to be performed for <code class="docutils literal notranslate"><span class="pre">misc.test</span></code> articles, give the “news” user the ‘d’ right on “misc.test”. To allow newgroup, rmgroup and mvgroup control messages to be performed on the “misc” hierarchy, give the “news” user the ‘c’ right on “misc”.</p>
 <p>NOTE: No sender or PGP verification of control messages is currently implemented.</p>
 </div>
 <div class="section" id="reading-posting-articles">
 <h3>Reading/Posting articles<a class="headerlink" href="#reading-posting-articles" title="Permalink to this headline">¶</a></h3>
 <p>In order to have articles posted by your local users propagate to the outside world, you must specify the name of your usenet peer(s) with the newspeer option in <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>. This is the host(s) that nntpd contacts to feed outgoing articles. Depending on the configuration of the newspeer option, articles will be fed to the upstream server(s) using either the POST or IHAVE command. Also note that you may specify an optional wildmat to filter which groups will be fed (see <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> for details).</p>
-<p>Newsgroups can also be gatewayed to email by setting <code class="docutils literal"><span class="pre">/vendor/cmu/cyrus-imapd/news2mail</span></code> mailbox <a class="reference internal" href="../faqs/o-annotations.html#faqs-o-annotations"><span class="std std-ref">annotations</span></a> to the corresponding email addresses.</p>
+<p>Newsgroups can also be gatewayed to email by setting <code class="docutils literal notranslate"><span class="pre">/vendor/cmu/cyrus-imapd/news2mail</span></code> mailbox <a class="reference internal" href="../faqs/o-annotations.html#faqs-o-annotations"><span class="std std-ref">annotations</span></a> to the corresponding email addresses.</p>
 </div>
 <div class="section" id="news-clients">
 <h3>News clients<a class="headerlink" href="#news-clients" title="Permalink to this headline">¶</a></h3>
@@ -888,23 +889,23 @@
 </div>
 <div class="section" id="email-clients">
 <h3>Email clients<a class="headerlink" href="#email-clients" title="Permalink to this headline">¶</a></h3>
-<p>If you are exporting Usenet via IMAP, and your users' messaging clients are not savvy enough to reply to and post articles via NNTP, then you will have to configure your server so your users can reply to and post articles via SMTP.</p>
-<p>To help facilitate this, you can set the <strong>newspostuser</strong> option to a pseudo user which will be used to construct email delivery addresses for each incoming article. These addresses are inserted into a Reply-To: in the article. For example, if set to &quot;post&quot;, an article posted to comp.mail.imap will have an address of &quot;post+comp.mail.imap&quot; inserted into the Reply-To: header. This will allow a user to easily reply to an article via email. Otherwise, the users will have to learn the correct email address format for posting and replying to articles.</p>
+<p>If you are exporting Usenet via IMAP, and your users’ messaging clients are not savvy enough to reply to and post articles via NNTP, then you will have to configure your server so your users can reply to and post articles via SMTP.</p>
+<p>To help facilitate this, you can set the <strong>newspostuser</strong> option to a pseudo user which will be used to construct email delivery addresses for each incoming article. These addresses are inserted into a Reply-To: in the article. For example, if set to “post”, an article posted to comp.mail.imap will have an address of “post+comp.mail.imap” inserted into the Reply-To: header. This will allow a user to easily reply to an article via email. Otherwise, the users will have to learn the correct email address format for posting and replying to articles.</p>
 <p>In order for these email messages to be fed into your news server (and subsequently to the outside world) you need to use an email to news gateway, such as lmtp2nntp. You need to configure your MTA (Sendmail, Postfix, etc) so that lmtp2nntp is used as the local mailer whenever it receives a news article. A simple rule for doing this in Sendmail is shown below:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span># mail addressed to post+ goes to lmtp2nntp@localhost
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># mail addressed to post+ goes to lmtp2nntp@localhost
 LOCAL_RULE_0
 Rpost + $+ &lt; @ $=w . &gt;              $#lmtp2nntp $@ localhost $: $1
 </pre></div>
 </div>
 <p>For other configurations, consult the lmtp2nntp and documentation and your MTA documentation.</p>
-<p>NOTE: If anonymous logins are disabled (default) in <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>, then you should configure lmtp2nntp to use its &quot;feed&quot; operation mode.</p>
+<p>NOTE: If anonymous logins are disabled (default) in <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>, then you should configure lmtp2nntp to use its “feed” operation mode.</p>
 </div>
 <div class="section" id="expiring-articles">
 <h3>Expiring articles<a class="headerlink" href="#expiring-articles" title="Permalink to this headline">¶</a></h3>
-<p>Expiration of articles is done by the <a class="reference internal" href="../manpages/systemcommands/cyr_expire.html#std:cyrusman-cyr_expire(8)">cyr_expire(8)</a> utility. Control over when articles are expunged is accomplished with the <code class="docutils literal"><span class="pre">/vendor/cmu/cyrus-imapd/expire</span></code> mailbox <a class="reference internal" href="../faqs/o-annotations.html#faqs-o-annotations"><span class="std std-ref">annotation</span></a>. This annotation sets the number of days that messages should be kept in the mailbox before they expire. All entries in the duplicate deliver database that correspond to these messages are also kept for the same number of days before they are purged (overriding the <code class="docutils literal"><span class="pre">cyr_expire</span> <span class="pre">-E</span></code> option).</p>
+<p>Expiration of articles is done by the <a class="reference internal" href="../manpages/systemcommands/cyr_expire.html#std:cyrusman-cyr_expire(8)">cyr_expire(8)</a> utility. Control over when articles are expunged is accomplished with the <code class="docutils literal notranslate"><span class="pre">/vendor/cmu/cyrus-imapd/expire</span></code> mailbox <a class="reference internal" href="../faqs/o-annotations.html#faqs-o-annotations"><span class="std std-ref">annotation</span></a>. This annotation sets the number of days that messages should be kept in the mailbox before they expire. All entries in the duplicate deliver database that correspond to these messages are also kept for the same number of days before they are purged (overriding the <code class="docutils literal notranslate"><span class="pre">cyr_expire</span> <span class="pre">-E</span></code> option).</p>
 <p>Setting the expire time to 0 (zero) for a mailbox will ensure that neither the messages nor the corresponding database entries will ever be expired. This can be useful for shared mailboxes (e.g. mailing list archives) which are being exported via NNTP. Note that this will cause the duplicate delivery database to consistently grow in proportion to the number of messages in such mailboxes.</p>
-<p>If a mailbox does not have an expire time set on it, then the messages will never be expunged, but the corresponding database entries WILL be expired after the default number of days (<code class="docutils literal"><span class="pre">cyr_expire</span> <span class="pre">-E</span></code> option).</p>
-<p>Note that the <code class="docutils literal"><span class="pre">/vendor/cmu/cyrus-imapd/expire</span></code> mailbox <a class="reference internal" href="../faqs/o-annotations.html#faqs-o-annotations"><span class="std std-ref">annotation</span></a> is inherited by child mailboxes, so that you may control expiration on an entire mailbox/newsgroup hierarchy simply by setting the annotation on the root of the hierarchy. For example, if you set the annotation on <code class="docutils literal"><span class="pre">comp</span></code>, then ALL of the newsgroups in the <code class="docutils literal"><span class="pre">comp</span></code> hierarchy will be expired at the same time. Similarly, if you set the annotation on <code class="docutils literal"><span class="pre">alt.binaries</span></code>, all of the binary newsgroups under <code class="docutils literal"><span class="pre">alt</span></code> will be expired at the same time (independently from <code class="docutils literal"><span class="pre">comp</span></code>).</p>
+<p>If a mailbox does not have an expire time set on it, then the messages will never be expunged, but the corresponding database entries WILL be expired after the default number of days (<code class="docutils literal notranslate"><span class="pre">cyr_expire</span> <span class="pre">-E</span></code> option).</p>
+<p>Note that the <code class="docutils literal notranslate"><span class="pre">/vendor/cmu/cyrus-imapd/expire</span></code> mailbox <a class="reference internal" href="../faqs/o-annotations.html#faqs-o-annotations"><span class="std std-ref">annotation</span></a> is inherited by child mailboxes, so that you may control expiration on an entire mailbox/newsgroup hierarchy simply by setting the annotation on the root of the hierarchy. For example, if you set the annotation on <code class="docutils literal notranslate"><span class="pre">comp</span></code>, then ALL of the newsgroups in the <code class="docutils literal notranslate"><span class="pre">comp</span></code> hierarchy will be expired at the same time. Similarly, if you set the annotation on <code class="docutils literal notranslate"><span class="pre">alt.binaries</span></code>, all of the binary newsgroups under <code class="docutils literal notranslate"><span class="pre">alt</span></code> will be expired at the same time (independently from <code class="docutils literal notranslate"><span class="pre">comp</span></code>).</p>
 </div>
 </div>
 <div class="section" id="further-information">
@@ -934,7 +935,7 @@ Rpost + $+ &lt; @ $=w . &gt;              $#lmtp2nntp $@ localhost $: $1
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on May 11 2017
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -951,7 +952,7 @@ Rpost + $+ &lt; @ $=w . &gt;              $#lmtp2nntp $@ localhost $: $1
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -960,7 +961,7 @@ Rpost + $+ &lt; @ $=w . &gt;              $#lmtp2nntp $@ localhost $: $1
       <script type="text/javascript" src="../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
 
   
 

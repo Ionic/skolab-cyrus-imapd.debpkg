@@ -1,4 +1,3 @@
-
 Installing Cyrus
 ****************
 
@@ -43,8 +42,8 @@ Optional Components
 Setting up syslog
 =================
 
-A lot of Cyrus's debugging information gets logged with "syslog", so
-you'll want to be able to capture it and find it later (especially
+A lot of Cyrus’s debugging information gets logged with "syslog", so
+you’ll want to be able to capture it and find it later (especially
 when debugging cassandane tests)
 
 1. Find the correct place to edit syslog config for your system
@@ -60,7 +59,7 @@ when debugging cassandane tests)
 
       "sudo /etc/init.d/rsyslog restart"
 
-4. Arrange to rotate "/var/log/imapd.log" so it doesn't get
+4. Arrange to rotate "/var/log/imapd.log" so it doesn’t get
    stupendously large. Create "/etc/logrotate.d/cyrus.conf" with
    content like:
 
@@ -86,8 +85,8 @@ Create Cyrus environment
 Set up the cyrus:mail user and group
 ------------------------------------
 
-Now let's create a **special user account just for the Cyrus server**
-to sandbox Cyrus: called "cyrus". We'll also create a "mail" group as
+Now let’s create a **special user account just for the Cyrus server**
+to sandbox Cyrus: called "cyrus". We’ll also create a "mail" group as
 well. This allows Cyrus to give other programs some permissions if
 they are run under the "mail" group, again, without causing a Cyrus
 bug to delete all of your cat pictures. Disaster!
@@ -133,12 +132,12 @@ the PKI files.  On Debian/Ubuntu systems, for example, this group is
 Authentication with SASL
 ------------------------
 
-Now, let's set up **SASL**. This will allow you to connect to your
+Now, let’s set up **SASL**. This will allow you to connect to your
 local IMAP server and login, just like any IMAP user would before
 checking for new emails.
 
 Create a "saslauth" group and add the "cyrus" user to the group, so
-Cyrus can access SASL. (on Debian, this group is called 'sasl': adjust
+Cyrus can access SASL. (on Debian, this group is called ‘sasl’: adjust
 the following commands to suit.)
 
    groupadd -fr saslauth
@@ -155,7 +154,7 @@ Start the SASL auth daemon:
 
    /etc/init.d/saslauthd start
 
-Now, we'll create the IMAP user inside SASL. This is the user you'll
+Now, we’ll create the IMAP user inside SASL. This is the user you’ll
 use to login to the IMAP server later on.
 
    echo 'secret' | saslpasswd2 -p -c imapuser
@@ -181,7 +180,7 @@ server.
 Install Sendmail
 ~~~~~~~~~~~~~~~~
 
-We'll set up LMTP with the Sendmail SMTP server.
+We’ll set up LMTP with the Sendmail SMTP server.
 
    sudo apt-get install -y sendmail
 
@@ -196,7 +195,7 @@ And right below "MAILER_DEFINITIONS", add this:
    MAILER(`cyrusv2')dnl
 
 This enables the **cyrusv2** mailer for local mail delivery. This is a
-sendmail property that tells sendmail it's talking to Cyrus. (Cyrus
+sendmail property that tells sendmail it’s talking to Cyrus. (Cyrus
 3.x works with this property, despite the naming confusion.)
 
 Next, we run a script that takes the "/etc/mail/sendmail.mc" file and
@@ -222,7 +221,7 @@ Protocol ports
 
 The Cyrus IMAP server provides service interfaces via either TCP/IP
 ports or Unix domain sockets.  For the former, Cyrus requires that
-there are proper entries in the host's "/etc/services" file.  The
+there are proper entries in the host’s "/etc/services" file.  The
 following are required for any host using the listed services:
 
    pop3      110/tcp  # Post Office Protocol v3
@@ -257,13 +256,13 @@ The "/var/spool/cyrus" directory is the partition where Cyrus will
 store mail and must be allocated sufficient storage. The exact
 location can be configured in imapd.conf(5) in the partitions options.
 
-Let's add some basic configuration for the Cyrus IMAP server. Two
+Let’s add some basic configuration for the Cyrus IMAP server. Two
 files have to be added: "/etc/imapd.conf" and "/etc/cyrus.conf".
 There are several examples included with the software, in
 "doc/examples/". Pick one each from the "imapd_conf" and "cyrus_conf"
 directories, or create your own.
 
-For imapd.conf(5), let's start with the "normal.conf" example:
+For imapd.conf(5), let’s start with the "normal.conf" example:
 
    # Suggested minimal imapd.conf
    # See imapd.conf(5) for more information and more options
@@ -393,7 +392,7 @@ Note: The admin user is the "imapuser" created earlier for
   authentication against sasl. Change this value if you named your
   user something different.
 
-For cyrus.conf(5), again we'll start with the "normal.conf" example:
+For cyrus.conf(5), again we’ll start with the "normal.conf" example:
 
    # standard standalone server implementation
 
@@ -492,11 +491,11 @@ Prepare ephemeral (run-time) storage directories
 
 If you will be using ephemeral (run-time) storage locations on an OS
 or distro on which the directory skeleton does not persist over
-reboots, you will need to use your distro's standard method to ensure
+reboots, you will need to use your distro’s standard method to ensure
 that any such directories your installation depends upon exist *prior*
 to launching the daemon.
 
-Here's how to do so for Debian/Ubuntu.  Use the provided
+Here’s how to do so for Debian/Ubuntu.  Use the provided
 "statoverride" facility to manage the ownership and permissions of
 these directories:
 
@@ -562,7 +561,7 @@ Launch Cyrus
 Check "/var/log/syslog" for errors so you can quickly understand any
 problems.
 
-When you're ready, you can create init scripts to start and stop your
+When you’re ready, you can create init scripts to start and stop your
 daemons. This https://www.linux.com/learn/managing-linux-daemons-init-
 scripts is old, but has a good explanation of the concepts required.
 
@@ -579,10 +578,10 @@ check if:
 
 * You can see the email stored on your filesystem.
 
-Note: *SMTP servers are also often called an "MTA," for Mail
+Note: *SMTP servers are also often called an “MTA,” for Mail
   Transport Agent
 
-But first, create a mailbox to send the test email to. We'll call this
+But first, create a mailbox to send the test email to. We’ll call this
 test mailbox *example@localhost*.
 
    echo 'createmailbox user/example@localhost' | cyradm -u imapuser -w secret localhost
@@ -602,7 +601,7 @@ The command will produce the following output:
    localhost> localhost>
 
 This happens because cyradm is normally used interactively, with a
-prompt. We aren't using a prompt, so this output is expected.
+prompt. We aren’t using a prompt, so this output is expected.
 
 Now that the mailbox exists, we can send an email using telnet with
 raw SMTP commands.
@@ -619,7 +618,7 @@ You should see a prompt appear:
    Escape character is '^]'.
    220 ... ESMTP Sendmail ...
 
-Now, we'll send the SMTP commands to the server. These are responsible
+Now, we’ll send the SMTP commands to the server. These are responsible
 for ordering the MTA to store an email:
 
    EHLO localhost
@@ -635,7 +634,7 @@ safely copy and paste this bit into the terminal before hitting your
 ENTER key. If not, you may want to paste these commands one by one (or
 make sure you enable *PIPELINING* in the SMTP config).
 
-If you see a message like **250 2.0.0 ... Message accepted for
+If you see a message like **250 2.0.0 … Message accepted for
 delivery**, you did it! You should now have a file called *1.* in the
 */var/spool/cyrus/user/example* directory, with the content of the
 email you sent just before.
@@ -696,7 +695,7 @@ Just make sure to change **path/to/cyrus** to the actual path to the
 Cyrus source code directory. This should be something like "/home/jack
 /cyrus-src/perl".
 
--[ I can't connect to the IMAP server ]-
+-[ I can’t connect to the IMAP server ]-
 
 Make sure that the SASL auth daemon is running. You can start it with
 this command:
@@ -712,7 +711,7 @@ Make sure that you have started Sendmail, which you can do like this:
 
    /etc/init.d/sendmail start
 
--[ My IMAP server (master) can't authenticate users to SASL ]-
+-[ My IMAP server (master) can’t authenticate users to SASL ]-
 
 Check that the groups setting on your cyrus user is correct.
 
@@ -729,14 +728,14 @@ failures:
 
 Master will need to be restarted if you needed to change the groups.
 
--[ Something is not working but I can't figure out why ]-
+-[ Something is not working but I can’t figure out why ]-
 
 More information is almost always logged to **syslog**. Make sure you
 start syslog with this command before starting the Cyrus server:
 
    /etc/init.d/rsyslog start
 
--[ My question isn't answered here ]-
+-[ My question isn’t answered here ]-
 
-Join us in the #cyrus IRC channel on Freenode or on the mailing lists
-if you need help or just want to chat about Cyrus, IMAP, etc.
+Join us on the mailing lists if you need help or just want to chat
+about Cyrus, IMAP, etc.

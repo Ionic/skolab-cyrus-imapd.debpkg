@@ -1,4 +1,3 @@
-
 Quickstart Guide
 ****************
 
@@ -16,7 +15,7 @@ in 5 minutes.
 The first place to start with a new installation of Cyrus IMAP is with
 your OS distribution of choice and their packaging, where available.
 
-If there is no Cyrus IMAP 3.4.1 package available yet from your
+If there is no Cyrus IMAP 3.4.2 package available yet from your
 distro, download the official source tarball from GitHub.  The
 Compiling guide will help you get it built and installed.
 
@@ -24,18 +23,18 @@ Compiling guide will help you get it built and installed.
 1. Install Cyrus package(s)
 ---------------------------
 
-Install the Cyrus IMAP package(s), either from your distribution's
+Install the Cyrus IMAP package(s), either from your distribution’s
 package manager, or from a release tarball.
 
 Your distribution might have split Cyrus IMAP into several packages.
-Check their documentation if you're not sure what you need.
+Check their documentation if you’re not sure what you need.
 
 
 2. Setup the cyrus:mail user and group
 --------------------------------------
 
-Now let's create a **special user account just for the Cyrus server**
-to sandbox Cyrus: called "cyrus". We'll also create a "mail" group as
+Now let’s create a **special user account just for the Cyrus server**
+to sandbox Cyrus: called "cyrus". We’ll also create a "mail" group as
 well. This allows Cyrus to give other programs some permissions if
 they are run under the "mail" group, again, without causing a Cyrus
 bug to delete all of your cat pictures. Disaster!
@@ -81,12 +80,12 @@ the PKI files.  On Debian/Ubuntu systems, for example, this group is
 3. Setting up authentication with SASL
 --------------------------------------
 
-Now, let's set up **SASL**. This will allow you to connect to your
+Now, let’s set up **SASL**. This will allow you to connect to your
 local IMAP server and login, just like any IMAP user would before
 checking for new emails.
 
 Create a "saslauth" group and add the "cyrus" user to the group, so
-Cyrus can access SASL. (on Debian, this group is called 'sasl': adjust
+Cyrus can access SASL. (on Debian, this group is called ‘sasl’: adjust
 the following commands to suit.)
 
    groupadd -fr saslauth
@@ -103,7 +102,7 @@ Start the SASL auth daemon:
 
    /etc/init.d/saslauthd start
 
-Now, we'll create the IMAP user inside SASL. This is the user you'll
+Now, we’ll create the IMAP user inside SASL. This is the user you’ll
 use to login to the IMAP server later on.
 
    echo 'secret' | saslpasswd2 -p -c imapuser
@@ -129,7 +128,7 @@ server.
 Install Sendmail
 ~~~~~~~~~~~~~~~~
 
-We'll set up LMTP with the Sendmail SMTP server.
+We’ll set up LMTP with the Sendmail SMTP server.
 
    sudo apt-get install -y sendmail
 
@@ -144,7 +143,7 @@ And right below "MAILER_DEFINITIONS", add this:
    MAILER(`cyrusv2')dnl
 
 This enables the **cyrusv2** mailer for local mail delivery. This is a
-sendmail property that tells sendmail it's talking to Cyrus. (Cyrus
+sendmail property that tells sendmail it’s talking to Cyrus. (Cyrus
 3.x works with this property, despite the naming confusion.)
 
 Next, we run a script that takes the "/etc/mail/sendmail.mc" file and
@@ -168,7 +167,7 @@ Cyrus to deliver/receive emails:
 Install Postfix
 ~~~~~~~~~~~~~~~
 
-We'll set up LMTP with the Postfix SMTP server (consider which other
+We’ll set up LMTP with the Postfix SMTP server (consider which other
 Postfix related packages you may also desire):
 
    sudo apt-get install -y postfix postfix-doc postfix-pcre postfix-ldap ...
@@ -179,9 +178,9 @@ the "postconf" commands to run to add the necessary configuration to
 "/etc/postfix/main.cf", these are not complete configurations.
 
 Note: Postfix supports a great many configurations for mail delivery
-  transport, so these settings will depend on whether you're planning
+  transport, so these settings will depend on whether you’re planning
   to use the "local", "virtual" or "lmtp" destination definitions. For
-  our examples we'll be using "virtual".  Adjust as needed for your
+  our examples we’ll be using "virtual".  Adjust as needed for your
   purposes, and please consult the Postfix documentation at
   http://www.postfix.org/postconf.5.html
 
@@ -215,7 +214,7 @@ Note: Postfix supports a great many configurations for mail delivery
       postconf -e "virtual_transport=lmtp:inet:lmtp.example.org:2003"
 
    If your Postfix and Cyrus are on the same host, then use some
-   version of this, where the socket patch matches what's set in the
+   version of this, where the socket patch matches what’s set in the
    "lmtpsocket" option in imapd.conf(5):
 
       postconf -e "virtual_transport=lmtp:unix:/run/cyrus/socket/lmtp"
@@ -226,7 +225,7 @@ Note: Postfix supports a great many configurations for mail delivery
 
 The Cyrus IMAP server provides service interfaces via either TCP/IP
 ports or Unix domain sockets.  For the former, Cyrus requires that
-there are proper entries in the host's "/etc/services" file.  The
+there are proper entries in the host’s "/etc/services" file.  The
 following are required for any host using the listed services:
 
    pop3      110/tcp  # Post Office Protocol v3
@@ -290,7 +289,7 @@ A basic description of these files:
     intended to work with any of the above files from the "cyrus_conf"
     directory.
 
-* Cyrus Aggregation - Murder -- configurations (these constitute a
+* Cyrus Aggregation - Murder – configurations (these constitute a
   set, with at least one of each required):
 
   * murder-mupdate.conf
@@ -327,7 +326,7 @@ A basic description of these files:
     are intended to be used together.
 
 You should review each of these and then install as desired to
-"/etc/", making changes as needed.  In particular, you'll need to set
+"/etc/", making changes as needed.  In particular, you’ll need to set
 passwords for the various users used to authenticate between instances
 in a Murder or Replication environment.
 
@@ -345,7 +344,7 @@ For example:
 ---------------
 
 If using a distribution package, you probably now have an init script
-installed, that you can invoke with your system's usual service
+installed, that you can invoke with your system’s usual service
 control mechanism.
 
 If you built from source, you will need to write your own init script.

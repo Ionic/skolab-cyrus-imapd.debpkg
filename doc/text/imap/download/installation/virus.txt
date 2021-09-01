@@ -1,4 +1,3 @@
-
 Virus Scanner
 *************
 
@@ -11,7 +10,7 @@ Currently, only ClamAV is supported.
 
 Infected mail can be reported on, or removed.
 
-It is possible to use Cyrus's virus scanner support **without** a
+It is possible to use Cyrus’s virus scanner support **without** a
 virus scanner, by passing in an IMAP SEARCH string. Messages matching
 that string are treated as infected.
 

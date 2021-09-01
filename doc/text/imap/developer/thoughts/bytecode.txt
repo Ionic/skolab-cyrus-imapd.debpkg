@@ -1,4 +1,3 @@
-
 Cyrus IMAP Server: Sieve Bytecode
 *********************************
 
@@ -30,7 +29,7 @@ In the final bytecode, each opcode/parameter is aligned on a 4-byte
 boundary. Strings are NUL-terminated (and padded to a 4-byte boundary
 as needed).
 
-Ideally, we'd have all integers in network byte order, so as to make
+Ideally, we’d have all integers in network byte order, so as to make
 the scripts portable, but version 1 does not have this feature.
 
 At the beginning of the file, there is a magic header to identify it
@@ -41,7 +40,7 @@ the version number are the opcodes that relate to the script.
 Generation
 ==========
 
-A Sieve Bytecode file is generated in three "passes":
+A Sieve Bytecode file is generated in three “passes”:
 
 * Generate a parse tree using lex/yacc from the sieve script.
   (addr.y, addr-lex.l, sieve.y, sieve-lex.l).
@@ -67,7 +66,7 @@ More complicated options have a sequence of arguments that are emitted
 following the initial opcode.
 
 For example, single argument commands such as REJECT, FILEINTO,
-REDIRECT are followed by a bytecode_t for a string's length, and then
+REDIRECT are followed by a bytecode_t for a string’s length, and then
 a bytecode_t which contains a pointer to a string.
 
 Commands such as ADDFLAG, SETFLAG, REMOVEFLAG, which take a
@@ -106,7 +105,7 @@ bc_emit: sieve_emit_bytecode / bc_action_emit.
 
 This results in a totally serialized representation, using byte
 offsets within the file instead of indexes into the array of
-bytecode_t's. In addition to the manipulations that are necessary to
+bytecode_t’s. In addition to the manipulations that are necessary to
 do this, there are several other changes in format.
 
 Two new opcodes exist: NULL and JUMP (which performs an unconditional

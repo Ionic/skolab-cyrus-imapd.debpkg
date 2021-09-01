@@ -1,4 +1,3 @@
-
 Cyrus IMAP Server: Replication Protocol v2.4+
 *********************************************
 
@@ -25,7 +24,7 @@ types
 atom
 ~~~~
 
-An atom is actually a sequence of any character other than '\0', the
+An atom is actually a sequence of any character other than ‘\0’, the
 NULL byte. Character encoding is not specified, but it can contain 8
 bit characters, and is probably utf8
 
@@ -58,7 +57,7 @@ map
 ~~~
 
 Like atom, but can contain NULL. All values are parsed off the wire as
-'map' type and then converted on demand into the requested type
+‘map’ type and then converted on demand into the requested type
 
 
 list

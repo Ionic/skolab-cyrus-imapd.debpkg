@@ -1,9 +1,8 @@
-
 Cyrus Murder Failure Modes
 **************************
 
 This page is for documenting what happens when a part of the Cyrus
-Murder fails, how to recover from failures, and commons DOs and DON'Ts
+Murder fails, how to recover from failures, and commons DOs and DON’Ts
 of Murder operation.
 
 
@@ -22,8 +21,8 @@ What happens when the Murder mupdate master is unavailable?
    exists because they only get updates from the mupdate master.
 
 4. Creating a mailbox (or folder) fails with an error message like
-   "can not connect to mupdate server for reservation on
-   'user.foo.test'".
+   “can not connect to mupdate server for reservation on
+   ‘user.foo.test’”.
 
 
 What happens when the Murder mupdate master is available again?
@@ -55,7 +54,7 @@ Easy recovery
 You can restore the murder master mailbox list from your text backup
 (created with "ctl_mboxlist -d")
 
-Don't have a backup? Well it is still easy if you have a frontend. The
+Don’t have a backup? Well it is still easy if you have a frontend. The
 mailboxes.db on your frontend and your murdermaster are in the same
 format.
 
@@ -77,9 +76,9 @@ the file.
 Hard recovery
 -------------
 
-It's not currently possible to recover the master's mailboxes.db with
+It’s not currently possible to recover the master’s mailboxes.db with
 a dump from "ctl_mboxlist -d". The mailboxes.db recovered on the
-master with "ctl_mboxlist -u" won't have the "remote" flag set.
+master with "ctl_mboxlist -u" won’t have the “remote” flag set.
 
 1. Stop Cyrus on your frontends.
 

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Event Notifications &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Event Notifications &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../index.html"/>
         <link rel="up" title="Features" href="../features.html"/>
         <link rel="next" title="CalDAV Collections" href="caldav-collections.html"/>
         <link rel="prev" title="Server Side Filtering (Sieve)" href="server-side-filtering.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../overview.html">Overview</a> &raquo;</li>
       
@@ -877,13 +878,13 @@ notifications, and <span class="target" id="index-1"></span><a class="rfc refere
 <h2>Example Event Notifications<a class="headerlink" href="#example-event-notifications" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="aclchange">
 <span id="imap-features-event-notifications-aclchange"></span><h3>AclChange<a class="headerlink" href="#aclchange" title="Permalink to this headline">¶</a></h3>
-<p>The ACL Change notification is emitted when a command <code class="docutils literal"><span class="pre">SETACL</span></code> is
+<p>The ACL Change notification is emitted when a command <code class="docutils literal notranslate"><span class="pre">SETACL</span></code> is
 issued.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">This event notification is added to Cyrus IMAP outside of any RFC.</p>
 </div>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -913,12 +914,12 @@ issued.</p>
 <span id="imap-features-event-notifications-flagsclear"></span><h3>FlagsClear<a class="headerlink" href="#flagsclear" title="Permalink to this headline">¶</a></h3>
 <p>The FlagsClear notification is emitted when all flags are removed from a
 message.</p>
-<p>This includes <code class="docutils literal"><span class="pre">\Deleted</span></code>, <code class="docutils literal"><span class="pre">\Seen</span></code> and <code class="docutils literal"><span class="pre">\Flagged</span></code>, and as such are,
+<p>This includes <code class="docutils literal notranslate"><span class="pre">\Deleted</span></code>, <code class="docutils literal notranslate"><span class="pre">\Seen</span></code> and <code class="docutils literal notranslate"><span class="pre">\Flagged</span></code>, and as such are,
 in part, the counter-parts to
 <a class="reference internal" href="#imap-features-event-notifications-messagetrash"><span class="std std-ref">MessageTrash</span></a>,
 <a class="reference internal" href="#imap-features-event-notifications-messageread"><span class="std std-ref">MessageRead</span></a>, and
 <a class="reference internal" href="#imap-features-event-notifications-flagsset"><span class="std std-ref">FlagsSet</span></a>.</p>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -959,11 +960,11 @@ in part, the counter-parts to
 <div class="section" id="flagsset">
 <span id="imap-features-event-notifications-flagsset"></span><h3>FlagsSet<a class="headerlink" href="#flagsset" title="Permalink to this headline">¶</a></h3>
 <p>The FlagsSet notification is emitted when flags are set on a message,
-but not including the <code class="docutils literal"><span class="pre">\Deleted</span></code> and <code class="docutils literal"><span class="pre">\Seen</span></code> flags, which emit
+but not including the <code class="docutils literal notranslate"><span class="pre">\Deleted</span></code> and <code class="docutils literal notranslate"><span class="pre">\Seen</span></code> flags, which emit
 <a class="reference internal" href="#imap-features-event-notifications-messagetrash"><span class="std std-ref">MessageTrash</span></a> and
 <a class="reference internal" href="#imap-features-event-notifications-messageread"><span class="std std-ref">MessageRead</span></a> event notifications
 respectively.</p>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -1003,7 +1004,7 @@ respectively.</p>
 </div>
 <div class="section" id="login">
 <span id="imap-features-event-notifications-login"></span><h3>Login<a class="headerlink" href="#login" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -1033,7 +1034,7 @@ respectively.</p>
 </div>
 <div class="section" id="logout">
 <span id="imap-features-event-notifications-logout"></span><h3>Logout<a class="headerlink" href="#logout" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -1063,7 +1064,7 @@ respectively.</p>
 </div>
 <div class="section" id="mailboxcreate">
 <span id="imap-features-event-notifications-mailboxcreate"></span><h3>MailboxCreate<a class="headerlink" href="#mailboxcreate" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -1092,7 +1093,7 @@ respectively.</p>
 <p class="last">A mailbox deletion event notification is issued once for each top-
 level mailbox in a hierarchy being deleted.</p>
 </div>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -1116,7 +1117,7 @@ level mailbox in a hierarchy being deleted.</p>
 </div>
 <div class="section" id="mailboxrename">
 <span id="imap-features-event-notifications-mailboxrename"></span><h3>MailboxRename<a class="headerlink" href="#mailboxrename" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -1142,7 +1143,7 @@ level mailbox in a hierarchy being deleted.</p>
 </div>
 <div class="section" id="mailboxsubscribe">
 <span id="imap-features-event-notifications-mailboxsubscribe"></span><h3>MailboxSubscribe<a class="headerlink" href="#mailboxsubscribe" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
 3
 4
@@ -1164,7 +1165,7 @@ level mailbox in a hierarchy being deleted.</p>
 </div>
 <div class="section" id="mailboxunsubscribe">
 <span id="imap-features-event-notifications-mailboxunsubscribe"></span><h3>MailboxUnSubscribe<a class="headerlink" href="#mailboxunsubscribe" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
 3
 4
@@ -1186,7 +1187,7 @@ level mailbox in a hierarchy being deleted.</p>
 </div>
 <div class="section" id="messageappend">
 <span id="imap-features-event-notifications-messageappend"></span><h3>MessageAppend<a class="headerlink" href="#messageappend" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -1228,7 +1229,7 @@ level mailbox in a hierarchy being deleted.</p>
 </div>
 <div class="section" id="messagecopy">
 <span id="imap-features-event-notifications-messagecopy"></span><h3>MessageCopy<a class="headerlink" href="#messagecopy" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -1273,7 +1274,7 @@ level mailbox in a hierarchy being deleted.</p>
 </div>
 <div class="section" id="messageexpunge">
 <span id="imap-features-event-notifications-messageexpunge"></span><h3>MessageExpunge<a class="headerlink" href="#messageexpunge" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -1313,9 +1314,9 @@ level mailbox in a hierarchy being deleted.</p>
 <span id="imap-features-event-notifications-messagemove"></span><h3>MessageMove<a class="headerlink" href="#messagemove" title="Permalink to this headline">¶</a></h3>
 <div class="admonition important">
 <p class="first admonition-title">Important</p>
-<p class="last">The <code class="docutils literal"><span class="pre">MessageMove</span></code> event is an event type not documented in an RFC.</p>
+<p class="last">The <code class="docutils literal notranslate"><span class="pre">MessageMove</span></code> event is an event type not documented in an RFC.</p>
 </div>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -1357,7 +1358,7 @@ level mailbox in a hierarchy being deleted.</p>
 </div>
 <div class="section" id="messagenew">
 <span id="imap-features-event-notifications-messagenew"></span><h3>MessageNew<a class="headerlink" href="#messagenew" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -1453,7 +1454,7 @@ level mailbox in a hierarchy being deleted.</p>
 </div>
 <div class="section" id="messageread">
 <span id="imap-features-event-notifications-messageread"></span><h3>MessageRead<a class="headerlink" href="#messageread" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -1491,7 +1492,7 @@ level mailbox in a hierarchy being deleted.</p>
 </div>
 <div class="section" id="messagetrash">
 <span id="imap-features-event-notifications-messagetrash"></span><h3>MessageTrash<a class="headerlink" href="#messagetrash" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -1536,7 +1537,7 @@ level mailbox in a hierarchy being deleted.</p>
 notification, if the quota change leads the quota root to allow more
 resources than currently in use.</p>
 </div>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -1566,15 +1567,15 @@ resources than currently in use.</p>
 </div>
 <div class="section" id="quotaexceed">
 <span id="imap-features-event-notifications-quotaexceed"></span><h3>QuotaExceed<a class="headerlink" href="#quotaexceed" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="docutils literal"><span class="pre">user</span></code> parameter in the event notification is the user to whom the
+<p>The <code class="docutils literal notranslate"><span class="pre">user</span></code> parameter in the event notification is the user to whom the
 quota applies, that is being exceeded, otherwise known as the owner of
 the <a class="reference internal" href="namespaces.html#imap-features-namespaces-personal"><span class="std std-ref">Personal Namespace</span></a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Quota being exceeded on shared folders cannot include an &quot;owner&quot; for
+<p class="last">Quota being exceeded on shared folders cannot include an “owner” for
 the quota root.</p>
 </div>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -1604,12 +1605,12 @@ the quota root.</p>
 </div>
 <div class="section" id="quotawithin">
 <span id="imap-features-event-notifications-quotawithin"></span><h3>QuotaWithin<a class="headerlink" href="#quotawithin" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="docutils literal"><span class="pre">QuotaWithin</span></code> event typically follows a
+<p>The <code class="docutils literal notranslate"><span class="pre">QuotaWithin</span></code> event typically follows a
 <a class="reference internal" href="#imap-features-event-notifications-mailboxdelete"><span class="std std-ref">MailboxDelete</span></a> <a class="footnote-reference" href="#id5" id="id1">[1]</a>,
 <a class="reference internal" href="#imap-features-event-notifications-messageexpunge"><span class="std std-ref">MessageExpunge</span></a> <a class="footnote-reference" href="#id6" id="id2">[2]</a>,
 <a class="reference internal" href="#imap-features-event-notifications-messagemove"><span class="std std-ref">MessageMove</span></a> <a class="footnote-reference" href="#id7" id="id3">[3]</a>, or
 <a class="reference internal" href="#imap-features-event-notifications-quotachange"><span class="std std-ref">QuotaChange</span></a> <a class="footnote-reference" href="#id8" id="id4">[4]</a>.</p>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -1640,7 +1641,7 @@ the quota root.</p>
 <table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>A <code class="docutils literal"><span class="pre">QuotaWithin</span></code> event follows a <code class="docutils literal"><span class="pre">MailboxDelete</span></code> event if the
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>A <code class="docutils literal notranslate"><span class="pre">QuotaWithin</span></code> event follows a <code class="docutils literal notranslate"><span class="pre">MailboxDelete</span></code> event if the
 mailbox deleted resides inside a quota root, and lowers the
 resources used to below the existing quota thresholds.</td></tr>
 </tbody>
@@ -1648,7 +1649,7 @@ resources used to below the existing quota thresholds.</td></tr>
 <table class="docutils footnote" frame="void" id="id6" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>A <code class="docutils literal"><span class="pre">QuotaWithin</span></code> event follows a <code class="docutils literal"><span class="pre">MessageExpunge</span></code> event if the
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>A <code class="docutils literal notranslate"><span class="pre">QuotaWithin</span></code> event follows a <code class="docutils literal notranslate"><span class="pre">MessageExpunge</span></code> event if the
 messages purged reside inside a quota root, and amount to a number
 or size that lowers the amount of resources used to below the
 existing quota thresholds.</td></tr>
@@ -1657,7 +1658,7 @@ existing quota thresholds.</td></tr>
 <table class="docutils footnote" frame="void" id="id7" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3">[3]</a></td><td>A <code class="docutils literal"><span class="pre">QuotaWithin</span></code> event follows a <code class="docutils literal"><span class="pre">MessageMove</span></code> event if the
+<tr><td class="label"><a class="fn-backref" href="#id3">[3]</a></td><td>A <code class="docutils literal notranslate"><span class="pre">QuotaWithin</span></code> event follows a <code class="docutils literal notranslate"><span class="pre">MessageMove</span></code> event if the
 source folder of the messages moved resides inside a quota root, and
 the target folder to which the messages have been moved does not
 reside within the same quota root, and the number or size of the
@@ -1669,7 +1670,7 @@ quota thresholds.</td></tr>
 <table class="docutils footnote" frame="void" id="id8" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id4">[4]</a></td><td>A <code class="docutils literal"><span class="pre">QuotaWithin</span></code> event follows a <code class="docutils literal"><span class="pre">QuotaChange</span></code> event if the quota
+<tr><td class="label"><a class="fn-backref" href="#id4">[4]</a></td><td>A <code class="docutils literal notranslate"><span class="pre">QuotaWithin</span></code> event follows a <code class="docutils literal notranslate"><span class="pre">QuotaChange</span></code> event if the quota
 change raised the threshold on the amount of resources used within
 the quota root to a level higher than the existing amount of
 resources used.</td></tr>
@@ -1678,9 +1679,9 @@ resources used.</td></tr>
 </div>
 <div class="section" id="calendaralarm">
 <span id="imap-features-event-notifications-calendaralarm"></span><h3>CalendarAlarm<a class="headerlink" href="#calendaralarm" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="docutils literal"><span class="pre">CalendarAlarm</span></code> event occurs when a calendar event triggers an
+<p>The <code class="docutils literal notranslate"><span class="pre">CalendarAlarm</span></code> event occurs when a calendar event triggers an
 alarm.</p>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
  4
@@ -1730,10 +1731,10 @@ alarm.</p>
 <span id="imap-features-event-notifications-applepushservice"></span><h3>ApplePushService<a class="headerlink" href="#applepushservice" title="Permalink to this headline">¶</a></h3>
 <p>While Cyrus supports the Apple Push Service, Apple has only licensed Apple Push
 for mail to a couple of large mail providers: FastMail and Yahoo. If you own an
-OS X Server license, you also get a key for personal use. But it's not
+OS X Server license, you also get a key for personal use. But it’s not
 a supported option for third party developers at this time.</p>
-<p>The <code class="docutils literal"><span class="pre">ApplePushService</span></code> event occurs when</p>
-<div class="highlight-json"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+<p>The <code class="docutils literal notranslate"><span class="pre">ApplePushService</span></code> event occurs when</p>
+<div class="highlight-json notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
 3
 4
@@ -1756,9 +1757,9 @@ a supported option for third party developers at this time.</p>
 <dt>apsVersion</dt>
 <dd>Version of the Apple Push Service this message is compliant with.</dd>
 <dt>apsAccountId</dt>
-<dd>Service Provider's accountID with the Apple Push Service.</dd>
+<dd>Service Provider’s accountID with the Apple Push Service.</dd>
 <dt>apsDeviceToken</dt>
-<dd>Unique identifier for the user's device registered with Apple.</dd>
+<dd>Unique identifier for the user’s device registered with Apple.</dd>
 <dt>apsSubtopic</dt>
 <dd>TODO: describe this</dd>
 </dl>
@@ -1788,7 +1789,7 @@ a supported option for third party developers at this time.</p>
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on May 26 2017
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1805,7 +1806,7 @@ a supported option for third party developers at this time.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1814,7 +1815,7 @@ a supported option for third party developers at this time.</p>
       <script type="text/javascript" src="../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
 
   
 

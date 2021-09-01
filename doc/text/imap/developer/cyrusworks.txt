@@ -1,4 +1,3 @@
-
 Cyrus Works
 ***********
 
@@ -6,7 +5,7 @@ Cyrus Works
 About Cyrus Works
 =================
 
-Cyrus Works is a domain redirection to the Cyrus IMAP project's Travis
+Cyrus Works is a domain redirection to the Cyrus IMAP project’s Travis
 CI dashboard.
 
 Whenever the Cyrus team push changes to the project repository, Travis

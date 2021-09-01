@@ -1,4 +1,3 @@
-
 Access Control Lists Rights Reference
 *************************************
 
@@ -42,7 +41,7 @@ Individual Rights Reference
 
       Note that if the user has l right to a mailbox "A/B", but not to
       its parent mailbox "A", the "LIST" command should behave as if
-      the mailbox "A" doesn't exist, for example:
+      the mailbox "A" doesn’t exist, for example:
 
          C: A777 LIST "" *
          S: * LIST (\NoInferiors) "/" "A/B"
@@ -70,7 +69,7 @@ Individual Rights Reference
 
    Stands for **seen**.
 
-   The ACI subject is permitted to maintain the ACI subject's seen
+   The ACI subject is permitted to maintain the ACI subject’s seen
    state for this folder, or the shared seen state in case the
    "/vendor/cmu/cyrus-imapd/sharedseen" has been set to "1" (see
    NAME).
@@ -94,7 +93,7 @@ Individual Rights Reference
 
    Note: IMAP clients may expect to be able to set flags other than
      "\Seen" and "\Deleted" and attempt to set those flags immediately
-     along with a "Mark as read" action, but without the ACI subject
+     along with a “Mark as read” action, but without the ACI subject
      actually being permitted to set some of those flags through the w
      right.**RFC 4314**, section 4., page 15, states that the server
      SHOULD NOT fail, as the tagged NO response is not handled very
@@ -137,7 +136,7 @@ Individual Rights Reference
    Stands for **create**.
 
    The create right is a right introduced with **RFC 2086**,
-   indicating the ACI subject's right to create new sub-folders in the
+   indicating the ACI subject’s right to create new sub-folders in the
    parent folder on which this right has been assigned, but also to
    delete the same folder.
 
@@ -161,7 +160,7 @@ Individual Rights Reference
 
    The rights required for a "RENAME" to be successful could be
    illustrated by describing a "RENAME" as a "CREATE" of the new
-   folder, not exactly followed by a "COPY" on the old folder's
+   folder, not exactly followed by a "COPY" on the old folder’s
    contents, but more like a move like on a filesystem, and finally a
    "DELETE" on the old folder.
 
@@ -186,17 +185,17 @@ Individual Rights Reference
    (short for "SETACL """) and to execute "GETACL" or "LISTRIGHTS".
 
    Note: IMAP clients may issue a "GETACL" in order to obtain the
-     ACI subject's rights on the folder, where they should be using
+     ACI subject’s rights on the folder, where they should be using
      "MYRIGHTS", as "GETACL" or "LISTRIGHTS" return the full Access
-     Control List, including other ACI subject's identifiers.However
+     Control List, including other ACI subject’s identifiers.However
      unless the ACI subject has the a right on a folder, issuing a
      "GETACL" or "LISTRIGHTS" will cause Cyrus IMAP to send a tagged
      "NO: Permission denied" response if the ACI subject has the l
      right on the folder, and a "NO: No Such Mailbox" response
      otherwise, as per section 8 of **RFC 2086** and section 6 of
-     **RFC 4314** -- both conveniently called *Security
-     Considerations* -- which state that the IMAP server must not
-     inadvertently admit the mailbox exists.
+     **RFC 4314** – both conveniently called *Security Considerations*
+     – which state that the IMAP server must not inadvertently admit
+     the mailbox exists.
 
 
 "x"
@@ -215,7 +214,7 @@ Individual Rights Reference
    "\Deleted".
 
    In IMAP, messages are only actually deleted (i.e. in a way that
-   makes them invisible to users of the folder) after the folder's
+   makes them invisible to users of the folder) after the folder’s
    contents have been expunged.
 
    For the corresponding "EXPUNGE" command however, the e right is
@@ -229,7 +228,7 @@ Individual Rights Reference
    folder, in compliance with **RFC 5257**.
 
    Note: The ACI subject must also have at least the r right, as
-     otherwise the ACI subject won't know which messages are available
+     otherwise the ACI subject won’t know which messages are available
      to annotate.This is not explicitly mentioned in the **RFC 5257**,
      but implied.
 
@@ -247,11 +246,11 @@ Individual Rights Reference
    "\Deleted". For the ACI subject to be able to flag messages as
    "\Deleted" however, the t right is required.
 
-   We say "remove from all visibility", because the implementation of
+   We say “remove from all visibility”, because the implementation of
    expunging messages in Cyrus IMAP is subject to the "expunge_mode"
    setting in imapd.conf(5), which when set to "delayed" only causes
    the reference to the expunged messages to be deleted from the
-   folder index database -- effectively removing the expunged
+   folder index database – effectively removing the expunged
    message(s) from all visibility, while the individual message files
    remain in place on the Cyrus IMAP server filesystem.
 

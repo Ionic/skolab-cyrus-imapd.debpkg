@@ -1,4 +1,3 @@
-
 **deliver**
 ***********
 
@@ -48,18 +47,18 @@ Options
 
    Deliver to **mailbox**.  If any *userid*s are specified, attempts
    to deliver to "user."*userid*".mailbox" for each *userid*. If the
-   ACL on any such mailbox does not grant the sender the "p" right or
+   ACL on any such mailbox does not grant the sender the “p” right or
    if **-m** is not specified, then delivers to the INBOX for the
    *userid*, regardless of the ACL on the INBOX.
 
    If no *userid*s are specified, attempts to deliver to *mailbox*. If
-   the ACL on *mailbox* does not grant the sender the "p" right, the
+   the ACL on *mailbox* does not grant the sender the “p” right, the
    delivery fails.
 
 -a  auth-id
 
    Specify the authorization id of the sender.  Defaults to
-   "anonymous".
+   “anonymous”.
 
 -q  user-id
 
@@ -77,9 +76,9 @@ Depending on the setting of "reject8bit" in imapd.conf(5), deliver
 either rejects/accepts messages with 8-bit-set characters in the
 headers. If we accept messages with 8-bit-set characters in the
 headers, then depending on the setting of "munge8bit", these
-characters are either left un-touched or changed to "X".
+characters are either left un-touched or changed to “X”.
 
-This is because such characters can't be interpreted since the
+This is because such characters can’t be interpreted since the
 character set is not known, although some communities not well-served
 by US-ASCII assume that those characters can be used to represent
 characters not present in US-ASCII.

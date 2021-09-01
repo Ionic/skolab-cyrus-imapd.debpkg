@@ -1,4 +1,3 @@
-
 **rehash**
 **********
 
@@ -44,7 +43,7 @@ imapd.conf
 
 -n
 
-   In -n "no change" mode, it will just print the changes.  Note,
+   In -n “no change” mode, it will just print the changes.  Note,
    verbose is always turned on in no-change mode.
 
 -f | -F

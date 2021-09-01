@@ -1,5 +1,4 @@
-
-"unable to join environment" error
+“unable to join environment” error
 **********************************
 
 This error is caused if you build Berkley DB 4 with threading support,

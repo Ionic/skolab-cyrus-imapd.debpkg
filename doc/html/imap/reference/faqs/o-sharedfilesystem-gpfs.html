@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Shared File Systems GPFS for high availability &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Shared File Systems GPFS for high availability &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../index.html"/>
         <link rel="up" title="Frequently Asked Questions" href="../faq.html"/>
         <link rel="next" title="How to enable telemetry" href="o-telemetry.html"/>
         <link rel="prev" title="Why does reconstruct -m not work?" href="o-reconstruct.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4 current"><a class="current reference internal" href="#">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../operations.html">Operations</a> &raquo;</li>
       
@@ -787,19 +788,19 @@
 <p>Stephen L. Ulmer (<a class="reference external" href="mailto:ulmer&#37;&#52;&#48;ufl&#46;edu">ulmer<span>&#64;</span>ufl<span>&#46;</span>edu</a>) actually has used Cyrus with GPFS, and
 writes:</p>
 <p>FOR THE LOVE OF GOD, RUN AWAY!</p>
-<p>We had our Cyrus message store on GPFS for just about a year. I've been
+<p>We had our Cyrus message store on GPFS for just about a year. I’ve been
 a Unix systems administrator for almost 15 years; It was the worst
 single judgement of my professional career. Period.</p>
 <p>During the 18 months when we had GPFS deployed, my unit had TWO crit
 sits and uncovered over 30 bugs in the GPFS software alone (not counting
 stuff we found in VSD, AIX, et cetera). The situation ended with the
-GPFS architect suggesting that we do something else. He's a great guy,
-and he helped us many times, but the product just doesn't do what we
+GPFS architect suggesting that we do something else. He’s a great guy,
+and he helped us many times, but the product just doesn’t do what we
 wanted.</p>
 <p>GPFS is the successor to the Multi-Media Filesystem, which was used in
-IBM's Videocharger product. It's excellent at streaming small numbers of
-large files (like, say, movies). It's horrible when you get above a few
-hundred-thousand files, as the systems can't possibly have enough memory
+IBM’s Videocharger product. It’s excellent at streaming small numbers of
+large files (like, say, movies). It’s horrible when you get above a few
+hundred-thousand files, as the systems can’t possibly have enough memory
 to keep track of the filesystem meta-data.</p>
 <p>Our Cyrus installation has about 80K users, close to 1TB of disk, and
 many millions of files. Just the number of files alone would be enough
@@ -807,30 +808,30 @@ to kill the idea of using GPFS.</p>
 <p>Cyrus makes pretty extensive use of mmap().
 While GPFS implements mmap(), the GPFS architect had some words about
 the way certain operations are accomplished in Cyrus. I think there are
-(or used to be) places where an mmap'd file is opened for write with
-another file handle (or from another process). GPFS doesn't handle this
+(or used to be) places where an mmap’d file is opened for write with
+another file handle (or from another process). GPFS doesn’t handle this
 well. This technique works accidentally on non-clustered filesystems
-because AIX (also) mmap's things for you behind your back (in addition
+because AIX (also) mmap’s things for you behind your back (in addition
 to whatever you do) and then serializes all of the access to regions of
-those files. That's really the only reason why Cyrus works on JFS.</p>
+those files. That’s really the only reason why Cyrus works on JFS.</p>
 <p>Also note that the other groups/developers within IBM (especially the
 group that does the automounter) have their collective heads up their
-ass with respect to supporting &quot;after market&quot; filesystems on AIX. After
-two freakin' years of PMRs they still couldn't figure out how to make
+ass with respect to supporting “after market” filesystems on AIX. After
+two freakin’ years of PMRs they still couldn’t figure out how to make
 autofs interact predictably with locally-mounted GPFSs. I constantly had
 to employ work-arounds in my automounter maps.</p>
 <p>If you just want failover, then use the HACMP product to deal with the
 failover scenario. If you need to scale beyond one system image, try out
-a Cyrus Murder. That's what we're using now, it works great.</p>
+a Cyrus Murder. That’s what we’re using now, it works great.</p>
 <p>Note that in the Murder scenario, you can still use HACMP to have one of
 your back-ends take over for another if it fails. You just have to
 carefully craft your cyrus.conf files to only bind to a single IP
 address, so that you can run two separate instances of Cyrus on the same
 machine during the failover.</p>
 <p>I will be happy to discuss our particular situation, implementation
-choices and details with you if you'd like to contact me out-of-band.</p>
-<p>We're currently running our Murder on:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="mi">2</span> <span class="n">x</span> <span class="n">p630</span> <span class="p">[</span><span class="n">backends</span><span class="p">]</span>
+choices and details with you if you’d like to contact me out-of-band.</p>
+<p>We’re currently running our Murder on:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">2</span> <span class="n">x</span> <span class="n">p630</span> <span class="p">[</span><span class="n">backends</span><span class="p">]</span>
     <span class="mi">4</span> <span class="n">x</span> <span class="mf">1.4</span><span class="n">GHz</span> <span class="n">Power4</span><span class="o">+</span> <span class="n">CPU</span>
     <span class="mi">8</span><span class="n">GB</span> <span class="n">Real</span> <span class="n">Memory</span>
 
@@ -839,18 +840,18 @@ choices and details with you if you'd like to contact me out-of-band.</p>
     <span class="mi">4</span><span class="n">GB</span> <span class="n">Real</span> <span class="n">Memory</span>
 </pre></div>
 </div>
-<p>The frontends are also the web servers for our Virtual Hosting cluster. We're running version 2.1.x of Cyrus. Now that 2.2.x is stable we'll upgrade, but you can imagine that it'll take some planning.</p>
-<p>In short, we don't recommend it. If you want to do it, it may possibly work but you may also lose your email or have corrupted cyrus.* files. You can look at the mailing list archives for more information.</p>
+<p>The frontends are also the web servers for our Virtual Hosting cluster. We’re running version 2.1.x of Cyrus. Now that 2.2.x is stable we’ll upgrade, but you can imagine that it’ll take some planning.</p>
+<p>In short, we don’t recommend it. If you want to do it, it may possibly work but you may also lose your email or have corrupted cyrus.* files. You can look at the mailing list archives for more information.</p>
 <p>There are several critical things that must be supported for this to work:</p>
 <blockquote>
 <div><ul class="simple">
 <li>file locking</li>
 <li>mmap()</li>
-<li>writing to an mmap()'d file with the write() syscall</li>
+<li>writing to an mmap()’d file with the write() syscall</li>
 </ul>
 </div></blockquote>
-<p>In general, this is bad news. Don't do it. Really. About the closest you can currently get is having a &quot;warm spare&quot; that takes over the IP of the affected backend, and have a SAN between the two systems.</p>
-<p><a class="reference internal" href="../admin/murder/murder.html#murder"><span class="std std-ref">Cyrus Murder</span></a> may be a &quot;good enough&quot; solution in some environments, as a way to partition failures and spread load across many machines. Combined with a warm-spare approach this can be a good way to achieve highly available systems (though not ones which are fully redundant)</p>
+<p>In general, this is bad news. Don’t do it. Really. About the closest you can currently get is having a “warm spare” that takes over the IP of the affected backend, and have a SAN between the two systems.</p>
+<p><a class="reference internal" href="../admin/murder/murder.html#murder"><span class="std std-ref">Cyrus Murder</span></a> may be a “good enough” solution in some environments, as a way to partition failures and spread load across many machines. Combined with a warm-spare approach this can be a good way to achieve highly available systems (though not ones which are fully redundant)</p>
 </div>
 
 
@@ -874,7 +875,7 @@ choices and details with you if you'd like to contact me out-of-band.</p>
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Oct 30 2018
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -891,7 +892,7 @@ choices and details with you if you'd like to contact me out-of-band.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -900,7 +901,7 @@ choices and details with you if you'd like to contact me out-of-band.</p>
       <script type="text/javascript" src="../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
 
   
 

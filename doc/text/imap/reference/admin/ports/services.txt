@@ -1,10 +1,9 @@
-
 Cyrus Service Definitions
 *************************
 
 The Cyrus IMAP server provides service interfaces via either TCP/IP
 ports or Unix domain sockets.  For the former, Cyrus requires that
-there are proper entries in the host's "/etc/services" file.  The
+there are proper entries in the host’s "/etc/services" file.  The
 following are required for any host using the listed services:
 
    pop3      110/tcp  # Post Office Protocol v3

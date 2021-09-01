@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Ubuntu &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Ubuntu &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../../index.html"/>
         <link rel="up" title="Get Cyrus" href="../../getcyrus.html"/>
         <link rel="next" title="Release Notes" href="../../release-notes/index.html"/>
         <link rel="prev" title="Red Hat Enterprise Linux" href="rhel.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../../download.html">Download</a> &raquo;</li>
       
@@ -840,14 +841,14 @@ wish to install any or all of these packages:</p>
 <li>cyrus-caldav-2.4</li>
 </ul>
 </div>
-<p>Once you've decided which services to support (IMAP, POP3, NNTP, CalDav),
+<p>Once you’ve decided which services to support (IMAP, POP3, NNTP, CalDav),
 and whether those services shall be available in secured versions,
-you'll need to edit <code class="docutils literal"><span class="pre">/etc/cyrus.conf</span></code> and check the <code class="docutils literal"><span class="pre">SERVICES</span></code>
+you’ll need to edit <code class="docutils literal notranslate"><span class="pre">/etc/cyrus.conf</span></code> and check the <code class="docutils literal notranslate"><span class="pre">SERVICES</span></code>
 section, commenting and uncommenting as needed to enable or disable the
 proper versions of those services.</p>
-<p>Here's the stock version of the <code class="docutils literal"><span class="pre">SERVICES</span></code> section of
-<code class="docutils literal"><span class="pre">/etc/cyrus.conf</span></code> as shipped with these packages:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">SERVICES</span> <span class="p">{</span>
+<p>Here’s the stock version of the <code class="docutils literal notranslate"><span class="pre">SERVICES</span></code> section of
+<code class="docutils literal notranslate"><span class="pre">/etc/cyrus.conf</span></code> as shipped with these packages:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SERVICES</span> <span class="p">{</span>
     <span class="c1"># --- Normal cyrus spool, or Murder backends ---</span>
     <span class="c1"># add or remove based on preferences</span>
     <span class="n">imap</span>            <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;imapd -U 30&quot;</span> <span class="n">listen</span><span class="o">=</span><span class="s2">&quot;imap&quot;</span> <span class="n">prefork</span><span class="o">=</span><span class="mi">0</span> <span class="n">maxchild</span><span class="o">=</span><span class="mi">100</span>
@@ -898,17 +899,17 @@ proper versions of those services.</p>
 <p class="last">The default settings, as shown above, are for non-secure protocol
 access.</p>
 </div>
-<p>Edit <code class="docutils literal"><span class="pre">/etc/imapd.conf</span></code> and change the default settings as needed.
+<p>Edit <code class="docutils literal notranslate"><span class="pre">/etc/imapd.conf</span></code> and change the default settings as needed.
 Please consult
 <a class="reference internal" href="../../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> for details.</p>
 <ul class="simple">
-<li>You MUST, at the very least, uncomment the <code class="docutils literal"><span class="pre">admins:</span></code> line.</li>
-<li>As documented in the man page, &quot;the values <code class="docutils literal"><span class="pre">yes</span></code>, <code class="docutils literal"><span class="pre">on</span></code>, <code class="docutils literal"><span class="pre">t</span></code>, <code class="docutils literal"><span class="pre">true</span></code> and <code class="docutils literal"><span class="pre">1</span></code> turn the option  on,  the  values  <code class="docutils literal"><span class="pre">no</span></code>,  <code class="docutils literal"><span class="pre">off</span></code>, <code class="docutils literal"><span class="pre">f</span></code>, <code class="docutils literal"><span class="pre">false</span></code> and <code class="docutils literal"><span class="pre">0</span></code> turn the option off.&quot;</li>
-<li>If you are NOT using SSL and/or STARTTLS, you MUST enable plain text logins, and set <code class="docutils literal"><span class="pre">sasl_minimum_layer:</span> <span class="pre">0</span></code> for authentication to work, or have some other protection layer in place.</li>
-<li>Consider enabling the commonly used settings <code class="docutils literal"><span class="pre">altnamespace</span></code> and <code class="docutils literal"><span class="pre">unixhierarchysep</span></code> as these will default to <code class="docutils literal"><span class="pre">on</span></code> beginning in version 3.0.</li>
-<li>Check your <code class="docutils literal"><span class="pre">sasl_pwcheck_method</span></code> setting, as this defaults to <code class="docutils literal"><span class="pre">auxprop</span></code> with these packages, which is likely not what you want.  Change it to <code class="docutils literal"><span class="pre">saslauthd</span></code> or <code class="docutils literal"><span class="pre">pwcheck</span></code> as needed.</li>
+<li>You MUST, at the very least, uncomment the <code class="docutils literal notranslate"><span class="pre">admins:</span></code> line.</li>
+<li>As documented in the man page, “the values <code class="docutils literal notranslate"><span class="pre">yes</span></code>, <code class="docutils literal notranslate"><span class="pre">on</span></code>, <code class="docutils literal notranslate"><span class="pre">t</span></code>, <code class="docutils literal notranslate"><span class="pre">true</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code> turn the option  on,  the  values  <code class="docutils literal notranslate"><span class="pre">no</span></code>,  <code class="docutils literal notranslate"><span class="pre">off</span></code>, <code class="docutils literal notranslate"><span class="pre">f</span></code>, <code class="docutils literal notranslate"><span class="pre">false</span></code> and <code class="docutils literal notranslate"><span class="pre">0</span></code> turn the option off.”</li>
+<li>If you are NOT using SSL and/or STARTTLS, you MUST enable plain text logins, and set <code class="docutils literal notranslate"><span class="pre">sasl_minimum_layer:</span> <span class="pre">0</span></code> for authentication to work, or have some other protection layer in place.</li>
+<li>Consider enabling the commonly used settings <code class="docutils literal notranslate"><span class="pre">altnamespace</span></code> and <code class="docutils literal notranslate"><span class="pre">unixhierarchysep</span></code> as these will default to <code class="docutils literal notranslate"><span class="pre">on</span></code> beginning in version 3.0.</li>
+<li>Check your <code class="docutils literal notranslate"><span class="pre">sasl_pwcheck_method</span></code> setting, as this defaults to <code class="docutils literal notranslate"><span class="pre">auxprop</span></code> with these packages, which is likely not what you want.  Change it to <code class="docutils literal notranslate"><span class="pre">saslauthd</span></code> or <code class="docutils literal notranslate"><span class="pre">pwcheck</span></code> as needed.</li>
 </ul>
-<p>Next, set a password for the default administrative user <code class="docutils literal"><span class="pre">cyrus</span></code>.
+<p>Next, set a password for the default administrative user <code class="docutils literal notranslate"><span class="pre">cyrus</span></code>.
 Your choice of authentication system will dictate the proper way to do
 this.  Shown below are examples for *nix password file and SASL methods:</p>
 <pre class="literal-block">
@@ -926,14 +927,14 @@ Again (for verification):
 cyrus&#64;newhost.example.com: userPassword
 </pre>
 <p>To enable
-<em class="manpage">saslauthd</em>, edit <code class="docutils literal"><span class="pre">/etc/default/saslauthd</span></code> and set
-<code class="docutils literal"><span class="pre">START=yes</span></code>.  Make sure to change any other settings here as needed.</p>
+<em class="manpage">saslauthd</em>, edit <code class="docutils literal notranslate"><span class="pre">/etc/default/saslauthd</span></code> and set
+<code class="docutils literal notranslate"><span class="pre">START=yes</span></code>.  Make sure to change any other settings here as needed.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">If you're planning to integrate Cyrus with the Postfix MTA, it is
-necessary to either relocate the socket used by <code class="docutils literal"><span class="pre">saslauthd</span></code>, or
-else to disable <code class="docutils literal"><span class="pre">chroot</span></code> as noted in <code class="docutils literal"><span class="pre">/etc/default/saslauthd</span></code>,
-so the Postfix <code class="docutils literal"><span class="pre">smtpd</span></code> daemon can access it.</p>
+<p class="last">If you’re planning to integrate Cyrus with the Postfix MTA, it is
+necessary to either relocate the socket used by <code class="docutils literal notranslate"><span class="pre">saslauthd</span></code>, or
+else to disable <code class="docutils literal notranslate"><span class="pre">chroot</span></code> as noted in <code class="docutils literal notranslate"><span class="pre">/etc/default/saslauthd</span></code>,
+so the Postfix <code class="docutils literal notranslate"><span class="pre">smtpd</span></code> daemon can access it.</p>
 </div>
 <p>Start <em class="manpage">saslauthd</em> if needed:</p>
 <pre class="literal-block">
@@ -951,7 +952,7 @@ boots:</p>
 # <strong class="command">service cyrus-imapd start</strong>
 # <strong class="command">update-rc.d cyrus-imapd enable</strong>
 </pre>
-<p>You should now be able to login as the <code class="docutils literal"><span class="pre">cyrus</span></code> user, which is
+<p>You should now be able to login as the <code class="docutils literal notranslate"><span class="pre">cyrus</span></code> user, which is
 configured by default as an administrator for Cyrus IMAP:</p>
 <pre class="literal-block">
 # <strong class="command">imtest -t &quot;&quot; -u cyrus -a cyrus localhost</strong>
@@ -999,7 +1000,7 @@ Connection closed.
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on May 08 2017
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1016,7 +1017,7 @@ Connection closed.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1025,7 +1026,7 @@ Connection closed.
       <script type="text/javascript" src="../../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../../_static/language_data.js"></script>
 
   
 

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Releasing new builds of ancient Cyrus IMAP versions &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Releasing new builds of ancient Cyrus IMAP versions &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../index.html"/>
         <link rel="up" title="IMAP Developer Guide" href="../developer.html"/>
         <link rel="next" title="Cyrus Works" href="cyrusworks.html"/>
         <link rel="prev" title="Releasing Cyrus IMAP" href="releasing.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../developers.html">Developers</a> &raquo;</li>
       
@@ -808,19 +809,19 @@ not contain RST-based documentation or infrastructure.  This includes 2.3 and
 </div>
 <div class="section" id="prerequisites">
 <h2><a class="toc-backref" href="#id3">Prerequisites</a><a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
-<p>You will need a GPG key that you can use for signing.  Ellie doesn't remember
+<p>You will need a GPG key that you can use for signing.  Ellie doesn’t remember
 off the top of her head how to create one of these, so for now just read the
 manual like she did. :)</p>
-<p>Once you have a GPG key, it's helpful to upload your public key to
+<p>Once you have a GPG key, it’s helpful to upload your public key to
 <a class="reference external" href="http://pgp.mit.edu">the MIT key-server</a></p>
 <p>And you need permission to send to the cyrus-announce mailing list.</p>
 </div>
 <div class="section" id="release-notes-and-version-update">
 <h2><a class="toc-backref" href="#id4">Release notes and version update</a><a class="headerlink" href="#release-notes-and-version-update" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li>Write up the changes, and add them to the top of the <code class="docutils literal"><span class="pre">doc/changes.html</span></code>
+<li>Write up the changes, and add them to the top of the <code class="docutils literal notranslate"><span class="pre">doc/changes.html</span></code>
 file with a suitable new heading.  Stick to very basic HTML here.</li>
-<li>Update the <code class="docutils literal"><span class="pre">VERSION</span> <span class="pre">=</span> <span class="pre">..</span></code> line in <code class="docutils literal"><span class="pre">Makefile.in</span></code> to specify the new
+<li>Update the <code class="docutils literal notranslate"><span class="pre">VERSION</span> <span class="pre">=</span> <span class="pre">..</span></code> line in <code class="docutils literal notranslate"><span class="pre">Makefile.in</span></code> to specify the new
 version number.</li>
 <li>Commit these changes to git.</li>
 </ol>
@@ -828,33 +829,33 @@ version number.</li>
 <div class="section" id="pre-release-testing">
 <h2><a class="toc-backref" href="#id5">Pre-release testing</a><a class="headerlink" href="#pre-release-testing" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
-<li>Ensure your git repository is clean, using something like <code class="docutils literal"><span class="pre">git</span> <span class="pre">clean</span> <span class="pre">-xfd</span></code>.
+<li>Ensure your git repository is clean, using something like <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clean</span> <span class="pre">-xfd</span></code>.
 Note that this command will destroy any uncommitted work you might have,
 so make sure your ducks are in line before proceeding.</li>
-<li>Generate a configure script: <code class="docutils literal"><span class="pre">autoreconf</span> <span class="pre">-i</span> <span class="pre">-s</span> <span class="pre">-I</span> <span class="pre">cmulocal</span></code></li>
-<li>Generate everything else: <code class="docutils literal"><span class="pre">./configure</span> <span class="pre">--enable-maintainer-mode</span></code> (you do not
+<li>Generate a configure script: <code class="docutils literal notranslate"><span class="pre">autoreconf</span> <span class="pre">-i</span> <span class="pre">-s</span> <span class="pre">-I</span> <span class="pre">cmulocal</span></code></li>
+<li>Generate everything else: <code class="docutils literal notranslate"><span class="pre">./configure</span> <span class="pre">--enable-maintainer-mode</span></code> (you do not
 need any other options at this stage).</li>
-<li>Run <code class="docutils literal"><span class="pre">make</span> <span class="pre">dist</span></code>.  This will generate a distribution tarball.</li>
+<li>Run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">dist</span></code>.  This will generate a distribution tarball.</li>
 <li>Test the tarball:<ol class="lowerroman">
-<li>The tarball will be called something like <code class="docutils literal"><span class="pre">cyrus-imapd-2.3.19.tar.gz</span></code>
-(this is based on the <code class="docutils literal"><span class="pre">VERSION</span> <span class="pre">=</span> <span class="pre">...</span></code> line in <code class="docutils literal"><span class="pre">Makefile.in</span></code>)</li>
+<li>The tarball will be called something like <code class="docutils literal notranslate"><span class="pre">cyrus-imapd-2.3.19.tar.gz</span></code>
+(this is based on the <code class="docutils literal notranslate"><span class="pre">VERSION</span> <span class="pre">=</span> <span class="pre">...</span></code> line in <code class="docutils literal notranslate"><span class="pre">Makefile.in</span></code>)</li>
 <li>Visually inspect the contents of the tarball, making sure it looks like
-it contains everything it needs to: <code class="docutils literal"><span class="pre">tar</span> <span class="pre">tfz</span> <span class="pre">cyrus-imapd-*.tar.gz</span> <span class="pre">|</span> <span class="pre">less</span></code>
-(substitute version for <code class="docutils literal"><span class="pre">*</span></code>).</li>
-<li>Extract it: <code class="docutils literal"><span class="pre">tar</span> <span class="pre">xfz</span> <span class="pre">cyrus-imapd-*.tar.gz</span></code></li>
-<li>Change into the directory: <code class="docutils literal"><span class="pre">cd</span> <span class="pre">cyrus-imapd-*</span></code></li>
-<li>Configure it: <code class="docutils literal"><span class="pre">./configure</span> <span class="pre">[...]</span></code> (provide the same arguments you would
+it contains everything it needs to: <code class="docutils literal notranslate"><span class="pre">tar</span> <span class="pre">tfz</span> <span class="pre">cyrus-imapd-*.tar.gz</span> <span class="pre">|</span> <span class="pre">less</span></code>
+(substitute version for <code class="docutils literal notranslate"><span class="pre">*</span></code>).</li>
+<li>Extract it: <code class="docutils literal notranslate"><span class="pre">tar</span> <span class="pre">xfz</span> <span class="pre">cyrus-imapd-*.tar.gz</span></code></li>
+<li>Change into the directory: <code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">cyrus-imapd-*</span></code></li>
+<li>Configure it: <code class="docutils literal notranslate"><span class="pre">./configure</span> <span class="pre">[...]</span></code> (provide the same arguments you would
 when building for Cassandane at any other time).</li>
-<li>Compile it: <code class="docutils literal"><span class="pre">make</span></code> -- it should build correctly.</li>
-<li>Run the unit tests if there are any: <code class="docutils literal"><span class="pre">make</span> <span class="pre">check</span></code> -- they should pass.</li>
+<li>Compile it: <code class="docutils literal notranslate"><span class="pre">make</span></code> – it should build correctly.</li>
+<li>Run the unit tests if there are any: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">check</span></code> – they should pass.</li>
 </ol>
 </li>
 </ol>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">We don't bother to run <code class="docutils literal"><span class="pre">make</span> <span class="pre">distcheck</span></code> on the old branches, because it
-almost certainly won't work.  We also don't bother to run Cassandane, for
-much the same reason.  If it builds, that's about as much as we can do.</p>
+<p class="last">We don’t bother to run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">distcheck</span></code> on the old branches, because it
+almost certainly won’t work.  We also don’t bother to run Cassandane, for
+much the same reason.  If it builds, that’s about as much as we can do.</p>
 </div>
 </div>
 <div class="section" id="cross-pollination-of-release-notes">
@@ -863,25 +864,25 @@ much the same reason.  If it builds, that's about as much as we can do.</p>
 release notes for these versions appear on the cyrusimap.org website, they need to
 be added to current branches as well.</p>
 <ol class="arabic simple">
-<li>Change to the current stable branch (at time of writing, this is <code class="docutils literal"><span class="pre">cyrus-imapd-3.0</span></code>).</li>
+<li>Change to the current stable branch (at time of writing, this is <code class="docutils literal notranslate"><span class="pre">cyrus-imapd-3.0</span></code>).</li>
 <li>Create a new release notes document at the appropriate location under
-<code class="docutils literal"><span class="pre">docsrc/imap/download/release-notes/</span></code>.</li>
+<code class="docutils literal notranslate"><span class="pre">docsrc/imap/download/release-notes/</span></code>.</li>
 <li>Add the release notes you wrote earlier, this time using RST format rather
 than simple HTML.</li>
 <li>Test, commit, push, and they will be online at the next hour.</li>
-<li>Also cherry-pick this commit to the <code class="docutils literal"><span class="pre">master</span></code> branch.</li>
+<li>Also cherry-pick this commit to the <code class="docutils literal notranslate"><span class="pre">master</span></code> branch.</li>
 </ol>
 </div>
 <div class="section" id="building-the-release">
 <h2><a class="toc-backref" href="#id7">Building the release</a><a class="headerlink" href="#building-the-release" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic">
-<li><p class="first">Ensure your repository is clean again: <code class="docutils literal"><span class="pre">git</span> <span class="pre">clean</span> <span class="pre">-xfd</span></code></p>
+<li><p class="first">Ensure your repository is clean again: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clean</span> <span class="pre">-xfd</span></code></p>
 </li>
-<li><p class="first">Create a signed, annotated tag for the new version: <code class="docutils literal"><span class="pre">git</span> <span class="pre">tag</span> <span class="pre">-s</span> <span class="pre">cyrus-imapd-&lt;version&gt;</span></code></p>
+<li><p class="first">Create a signed, annotated tag for the new version: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">tag</span> <span class="pre">-s</span> <span class="pre">cyrus-imapd-&lt;version&gt;</span></code></p>
 </li>
 <li><p class="first">You will be prompted to enter a commit message for the tag.  I use the
-following, just because it's what the old instructions said:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">We</span> <span class="n">are</span> <span class="n">pleased</span> <span class="n">to</span> <span class="n">announce</span> <span class="n">the</span> <span class="n">release</span> <span class="n">of</span> <span class="n">Cyrus</span> <span class="n">IMAP</span> <span class="n">version</span> <span class="o">&lt;</span><span class="n">version</span><span class="o">&gt;.</span>
+following, just because it’s what the old instructions said:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">We</span> <span class="n">are</span> <span class="n">pleased</span> <span class="n">to</span> <span class="n">announce</span> <span class="n">the</span> <span class="n">release</span> <span class="n">of</span> <span class="n">Cyrus</span> <span class="n">IMAP</span> <span class="n">version</span> <span class="o">&lt;</span><span class="n">version</span><span class="o">&gt;.</span>
 
 <span class="n">This</span> <span class="n">release</span> <span class="n">contains</span> <span class="n">features</span> <span class="ow">and</span> <span class="n">fixes</span> <span class="n">you</span> <span class="n">can</span> <span class="n">find</span> <span class="n">on</span> <span class="n">the</span> <span class="n">following</span> <span class="n">pages</span><span class="p">:</span>
 
@@ -891,22 +892,22 @@ following, just because it's what the old instructions said:</p>
 </li>
 <li><p class="first">You will also be prompted to enter the pass phrase for your GPG key, do it.</p>
 </li>
-<li><p class="first">Generate a configure script: <code class="docutils literal"><span class="pre">autoreconf</span> <span class="pre">-i</span> <span class="pre">-s</span> <span class="pre">-I</span> <span class="pre">cmulocal</span></code></p>
+<li><p class="first">Generate a configure script: <code class="docutils literal notranslate"><span class="pre">autoreconf</span> <span class="pre">-i</span> <span class="pre">-s</span> <span class="pre">-I</span> <span class="pre">cmulocal</span></code></p>
 </li>
-<li><p class="first">Generate everything else: <code class="docutils literal"><span class="pre">./configure</span> <span class="pre">--enable-maintainer-mode</span></code></p>
+<li><p class="first">Generate everything else: <code class="docutils literal notranslate"><span class="pre">./configure</span> <span class="pre">--enable-maintainer-mode</span></code></p>
 </li>
-<li><p class="first">Create the distribution tarball: <code class="docutils literal"><span class="pre">make</span> <span class="pre">dist</span></code></p>
+<li><p class="first">Create the distribution tarball: <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">dist</span></code></p>
 </li>
 <li><p class="first">If anything goes wrong up to here, delete the tag, fix the issue, and start
 again from scratch.</p>
 </li>
-<li><p class="first">Sign the distribution tarball: <code class="docutils literal"><span class="pre">gpg</span> <span class="pre">--sign</span> <span class="pre">-b</span> <span class="pre">cyrus-imapd-&lt;version&gt;.tar.gz</span></code></p>
+<li><p class="first">Sign the distribution tarball: <code class="docutils literal notranslate"><span class="pre">gpg</span> <span class="pre">--sign</span> <span class="pre">-b</span> <span class="pre">cyrus-imapd-&lt;version&gt;.tar.gz</span></code></p>
 </li>
 <li><p class="first">Ellie also likes to copy the tarball and signature file somewhere safe,
 just in case something happens between now and uploading.</p>
 </li>
-<li><p class="first">Push the tag upstream: <code class="docutils literal"><span class="pre">git</span> <span class="pre">push</span> <span class="pre">ci</span> <span class="pre">cyrus-imapd-&lt;version&gt;</span></code> (assuming your
-remote is named &quot;ci&quot;).</p>
+<li><p class="first">Push the tag upstream: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span> <span class="pre">ci</span> <span class="pre">cyrus-imapd-&lt;version&gt;</span></code> (assuming your
+remote is named “ci”).</p>
 </li>
 </ol>
 </div>
@@ -937,7 +938,7 @@ remote is named &quot;ci&quot;).</p>
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Mar 06 2020
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -954,7 +955,7 @@ remote is named &quot;ci&quot;).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -963,7 +964,7 @@ remote is named &quot;ci&quot;).</p>
       <script type="text/javascript" src="../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../_static/language_data.js"></script>
 
   
 

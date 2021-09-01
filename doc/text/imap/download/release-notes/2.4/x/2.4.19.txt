@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.4.19 Release Notes
 *******************************
 
@@ -6,19 +5,19 @@ Cyrus IMAP 2.4.19 Release Notes
   implementation (thanks Thomas Jarosh).  This fixes a bunch of bugs
   and race conditions that were inherent to the older implementation
 
-* New option "imapidletimeout" overrides "timeout" specifically for
+* New option “imapidletimeout” overrides “timeout” specifically for
   connections in IDLE state
 
 * OpenSSL 1.1.0 is now supported
 
-* Fixed: imap ENABLED doesn't print * ENABLED when nothing new
+* Fixed: imap ENABLED doesn’t print * ENABLED when nothing new
   enabled
 
 * Fixed: mailbox lock management over rename (thanks Thomas Jarosh)
 
 * Fixed: added overflow protection to urlfetch range checks
 
-* Fixed: lmtpd can now deliver when mupdate server isn't available
+* Fixed: lmtpd can now deliver when mupdate server isn’t available
   (thanks Michael Menge)
 
 * Fixed T227: service processes no longer divide by zero when
@@ -33,9 +32,9 @@ Cyrus IMAP 2.4.19 Release Notes
 * Fixed: XFER to 2.5 and later no longer downgrades index to oldest
   version
 
-* Fixed: nonsensical "TEXT.MIME" section now handled as "HEADER"
+* Fixed: nonsensical “TEXT.MIME” section now handled as “HEADER”
 
-* Fixed: added missing 'auditlog: ' prefix to backend connections
+* Fixed: added missing ‘auditlog: ‘ prefix to backend connections
   (thanks Wolfgang Breyha)
 
 * Fixed: IMAP SEARCH crash on some platforms

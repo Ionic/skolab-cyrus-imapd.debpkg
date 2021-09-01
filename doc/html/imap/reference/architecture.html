@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System Architecture &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>System Architecture &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../index.html"/>
         <link rel="up" title="Administrator Guide" href="admin.html"/>
         <link rel="next" title="File &amp; Directory Locations" href="admin/locations.html"/>
         <link rel="prev" title="Administrator Guide" href="admin.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../operations.html">Operations</a> &raquo;</li>
       
@@ -823,12 +824,12 @@ Frontends are IMAP/POP3/Sieve/LMTP proxies.</p>
 stores. Unlike the frontends, each backends is unique: each holds a
 subset of data. Backends are IMAP/POP3/Sieve/LMTP servers.</p>
 <p>So when a user logs in to a frontend (say F1), how does F1 know from
-which backend to fetch the user's data? This is where <strong>mupdate</strong>
+which backend to fetch the user’s data? This is where <strong>mupdate</strong>
 comes in: the <strong>mupdate</strong> master holds the mapping of mailboxes to back
 ends. Any time a backend has a change to their user data (i.e. mailbox
 add/delete/move/subscribe), it sends the change to the <strong>mupdate</strong>
 master which then notifies all the frontends of the latest mapping.</p>
-<p>A user's data is not necessarily all stored on a single backend,
+<p>A user’s data is not necessarily all stored on a single backend,
 either: it can be split across disk partitions or backends.</p>
 <p>The mapping on mupdate goes something like this:</p>
 <table border="1" class="docutils">
@@ -877,7 +878,7 @@ the configuration (credentials on the replica host, port and hostname)
 for how to communicate to that replica.</p>
 <p>Each channel (ie: each replica) has its own set of log files on the
 master, and its own <strong>sync_client</strong> instance which processes those log
-files and sends them to the replica's <strong>sync_server</strong>.</p>
+files and sends them to the replica’s <strong>sync_server</strong>.</p>
 <p>When a replication master generates a change, it calls <strong>sync_log</strong>.
 This writes the change to all the log files (one per channel). The log
 files are rotated every few seconds. The $PID on the log file set is
@@ -893,7 +894,7 @@ which sync logs to write to, and the configuration on the master to
 know the imap credentials on the replica to allow it to send details to
 the replica. It is the port configuration on the replica to know where
 to listen for change updates.</p>
-<p>There's two standard channel configurations:</p>
+<p>There’s two standard channel configurations:</p>
 <ol class="arabic simple">
 <li>Single master keeping all replicas up to date.</li>
 <li>Single master updates the replicas via chaining. (master updates
@@ -903,25 +904,25 @@ replica 1, which updates replica 2)</li>
 you have two replicas in a different data centre, you can chain them and
 avoid sending all the data over the link twice.  You can always re-
 establish replication to the second replica by creating a direct channel
-and running <code class="docutils literal"><span class="pre">sync_client</span> <span class="pre">-A</span></code> to make sure everything is up-to-date.</p>
+and running <code class="docutils literal notranslate"><span class="pre">sync_client</span> <span class="pre">-A</span></code> to make sure everything is up-to-date.</p>
 </div>
 <div class="section" id="log-file">
 <h3>Log file<a class="headerlink" href="#log-file" title="Permalink to this headline">¶</a></h3>
 <p>The log file is a list of users and/or mailboxes which have been
 altered.  When sync_log is enabled, all of the daemons which might
 alter a mailbox or user will write a line to this log each time they do
-so.  That means the obvious suspects -- imapd, pop3d, timsieved, lmtpd,
-etc. -- but also cyr_expire and friends.</p>
+so.  That means the obvious suspects – imapd, pop3d, timsieved, lmtpd,
+etc. – but also cyr_expire and friends.</p>
 <p>So when sync_client processes a sync_log, it needs to look at an actual
 copy of the user/mailbox in order to determine its current state, and
 needs to look at both copies to work out what to replicate between
 them. It uses sync_send_lookup to ask for the current state of an item,
 and sync_response_parse to process the response to then make suitable
 changes to perform the synchronisation.</p>
-<p>Sync client supports doing a single user with '-u', a single mailbox
-with '-m', etc.  All the entries in the sync_log file are triggers to
-replicate with that same value, so a line <code class="docutils literal"><span class="pre">USER</span> <span class="pre">vader&#64;darth.net</span></code> is
-the same as running <code class="docutils literal"><span class="pre">sync_client</span> <span class="pre">-u</span> <span class="pre">vader&#64;darth.net</span></code>.</p>
+<p>Sync client supports doing a single user with ‘-u’, a single mailbox
+with ‘-m’, etc.  All the entries in the sync_log file are triggers to
+replicate with that same value, so a line <code class="docutils literal notranslate"><span class="pre">USER</span> <span class="pre">vader&#64;darth.net</span></code> is
+the same as running <code class="docutils literal notranslate"><span class="pre">sync_client</span> <span class="pre">-u</span> <span class="pre">vader&#64;darth.net</span></code>.</p>
 </div>
 </div>
 <div class="section" id="invoking-cyrus">
@@ -935,8 +936,8 @@ the same as running <code class="docutils literal"><span class="pre">sync_client
 </div></blockquote>
 <div class="section" id="imapd-conf">
 <h3>imapd.conf<a class="headerlink" href="#imapd-conf" title="Permalink to this headline">¶</a></h3>
-<p>Cyrus is invoked via <code class="docutils literal"><span class="pre">imapd</span> <span class="pre">-C</span> <span class="pre">path/to/imapd.conf</span></code>.</p>
-<p>The format of <a class="reference internal" href="manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> is in <code class="docutils literal"><span class="pre">key:</span> <span class="pre">value</span></code> pairs.</p>
+<p>Cyrus is invoked via <code class="docutils literal notranslate"><span class="pre">imapd</span> <span class="pre">-C</span> <span class="pre">path/to/imapd.conf</span></code>.</p>
+<p>The format of <a class="reference internal" href="manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> is in <code class="docutils literal notranslate"><span class="pre">key:</span> <span class="pre">value</span></code> pairs.</p>
 </div>
 <div class="section" id="cyrus-conf">
 <h3>cyrus.conf<a class="headerlink" href="#cyrus-conf" title="Permalink to this headline">¶</a></h3>
@@ -974,7 +975,7 @@ the same as running <code class="docutils literal"><span class="pre">sync_client
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jan 16 2021
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -991,7 +992,7 @@ the same as running <code class="docutils literal"><span class="pre">sync_client
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1000,7 +1001,7 @@ the same as running <code class="docutils literal"><span class="pre">sync_client
       <script type="text/javascript" src="../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../_static/language_data.js"></script>
 
   
 

@@ -1,4 +1,3 @@
-
 Tweaking Cyrus IMAP
 *******************
 
@@ -9,8 +8,8 @@ Storage Tiering
 Various opportunities exist to tier storage. With storage tiering, we
 mean to distribute payload over different levels of storage, where
 levels mean to refer to storage cost, performance and capacity, in a
-way that makes optimal use of the storage solution(s) -- with an eye
-on excellent performance yet remain cost-effective.
+way that makes optimal use of the storage solution(s) – with an eye on
+excellent performance yet remain cost-effective.
 
 Imagine that you have the following levels of storage:
 
@@ -27,12 +26,12 @@ Cyrus IMAP server:
 
 1. Partitioning the mail spool;
 
-   where you divide a single backend server's mail spool in to
+   where you divide a single backend server’s mail spool in to
    multiple *partitions*, presumably at least two, and make sure that
    mail folders end up on the correct partition.
 
    You would have one partition mounted off of the fast storage
-   contain the *day-to-day* payload, such as user's INBOX folders,
+   contain the *day-to-day* payload, such as user’s INBOX folders,
    while the partition mounted off of the slower, cheap storage holds
    less frequently used data, such as archive folders.
 
@@ -73,13 +72,13 @@ Cyrus IMAP server:
    While the access patterns for data and metadata are different, so
    could their storage locations be.
 
-   In this scenario, you would distinguish between a mail folder's
-   message content and metadata -- the metadata consists of mail
+   In this scenario, you would distinguish between a mail folder’s
+   message content and metadata – the metadata consists of mail
    headers, indexes created for the purpose of searching, and such,
    while mail messages are stored in separate files.
 
    When a mail folder is opened, and the messages in the folder are
-   listed, no mail message content is touched -- the results come
+   listed, no mail message content is touched – the results come
    entirely from metadata.
 
    It is only when the individual mail message is being fetched, that
@@ -102,7 +101,7 @@ Synchronous File Operations
 ===========================
 
 A default Kolab Groupware installation comes with a set of settings
-suitable for the vast majority of our users -- mostly home users and
+suitable for the vast majority of our users – mostly home users and
 other small(er) deployments.
 
 It is typical for these installations to **not** have battery-backed

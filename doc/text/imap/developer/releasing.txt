@@ -1,4 +1,3 @@
-
 Releasing Cyrus IMAP
 ********************
 
@@ -37,11 +36,11 @@ ancient Cyrus IMAP versions
 Prerequisites
 =============
 
-You will need a GPG key that you can use for signing.  Ellie doesn't
+You will need a GPG key that you can use for signing.  Ellie doesn’t
 remember off the top of her head how to create one of these, so for
 now just read the manual like she did. :)
 
-Once you have a GPG key, it's helpful to upload your public key to the
+Once you have a GPG key, it’s helpful to upload your public key to the
 MIT key-server
 
 And you need permission to send to the cyrus-announce mailing list.
@@ -50,19 +49,19 @@ And you need permission to send to the cyrus-announce mailing list.
 Order of operations
 ===================
 
-Sometimes you're releasing several new versions all at once(ish), for
-example maybe there's been a security fix that affected 2.4, 2.5 and
+Sometimes you’re releasing several new versions all at once(ish), for
+example maybe there’s been a security fix that affected 2.4, 2.5 and
 3.0.
 
-Github's release page will put a "Latest Release" graphic on the
+Github’s release page will put a “Latest Release” graphic on the
 release with the newest tag (by timestamp, I think).  This means that,
-if you're doing new releases for several different versions, you want
+if you’re doing new releases for several different versions, you want
 to do the oldest one first, and only do the release for the current-
 stable branch last.
 
 If you start at the current stable branch and then work your way
-backwards through the older ones, you'll get Github saying "2.5.15 is
-the Latest Release" even though 3.0.13 was also just released... so,
+backwards through the older ones, you’ll get Github saying “2.5.15 is
+the Latest Release” even though 3.0.13 was also just released… so,
 even though releasing the current-stable fix feels more urgent, suck
 it up and get the older-branch ones out first.
 
@@ -76,8 +75,8 @@ linked up.
 
 Commit and push your changes, and then wait for cyrusimap.org to
 rebuild (happens each hour, and takes a few mins, so check at about 5
-past).  The new release notes will be available at their direct URL --
-easiest way to find it is to browse to some earlier version's release
+past).  The new release notes will be available at their direct URL –
+easiest way to find it is to browse to some earlier version’s release
 notes, then change version in the address bar to load up the new one.
 Confirm that they are correct and complete.
 
@@ -98,10 +97,10 @@ Pre-release testing
 4. Run "make distcheck".  This will generate a distribution
    tarball, and test it in various ways.  It takes about 10-15 mins to
    run, depending on your hardware.  If this command fails*, you are
-   not ready to release -- fix the problems, get them tested and
+   not ready to release – fix the problems, get them tested and
    committed, then restart the pre-release testing.
 
-5. "make distcheck" can only test so much (it doesn't know about
+5. "make distcheck" can only test so much (it doesn’t know about
    cunit or cassandane), so you also need to check the tarball against
    those.
 
@@ -117,25 +116,25 @@ Pre-release testing
    4. Configure it: "./configure [...]" (provide the same arguments
       you would when building for Cassandane at any other time).
 
-   5. Compile it: "make -j4" -- it should build correctly.
+   5. Compile it: "make -j4" – it should build correctly.
 
-   6. Run the unit tests: "make -j4 check" -- they should pass.
+   6. Run the unit tests: "make -j4 check" – they should pass.
 
    7. Install it to your Cassandane prefix: "make install"
 
-   8. Then run Cassandane normally -- it should pass.
+   8. Then run Cassandane normally – it should pass.
 
    9. If any of this fails, fix it, commit it, then restart the
       pre- release testing.
 
-Note: "make distcheck" doesn't work on the 2.5 branch.  For 2.5,
+Note: "make distcheck" doesn’t work on the 2.5 branch.  For 2.5,
   just use "make dist" instead.
 
-Note: Realistically, there's usually some set of expected Cassandane
-  failures from each Cyrus branch, especially for 2.5.  If you're
-  doing releases regularly, you've probably got a good gut feel for
-  which failures are a problem and which ones are just "that old
-  thing".  If you don't do releases regularly, try to pull in someone
+Note: Realistically, there’s usually some set of expected Cassandane
+  failures from each Cyrus branch, especially for 2.5.  If you’re
+  doing releases regularly, you’ve probably got a good gut feel for
+  which failures are a problem and which ones are just “that old
+  thing”.  If you don’t do releases regularly, try to pull in someone
   who does for guidance about which failures are ignorable, and which
   should be a source of stress.If in doubt, try building and testing
   the previous release from the same series, and compare the test
@@ -145,14 +144,14 @@ Note: Realistically, there's usually some set of expected Cassandane
 Linking up release notes
 ========================
 
-The linkage of release notes is handled in "docsrc/conf.py".  There's
+The linkage of release notes is handled in "docsrc/conf.py".  There’s
 a bunch of places it needs to be updated.  We should iterate these in
 detail at some point, but for now the easiest thing to do is look for
 lines containing the previous version and, if it makes sense to do so,
 update them to contain the new version.
 
 After this change is committed and pushed upstream, the cyrusimap.org
-website will start showing the new version as the "current" version at
+website will start showing the new version as the “current” version at
 the next hourly update.  So ellie likes to do this step at about 5-10
 past the hour, which then gives her 50 minutes to finish the rest of
 the release process without the website updating before the downloads
@@ -173,7 +172,7 @@ a mess.
    cyrus-imapd-<version>"
 
 3. You will be prompted to enter a commit message for the tag.  I
-   use the following, just because it's what the old instructions
+   use the following, just because it’s what the old instructions
    said:
 
       We are pleased to announce the release of Cyrus IMAP version <version>.
@@ -190,7 +189,7 @@ a mess.
 6. Generate everything else: "./configure --enable-maintainer-mode"
 
 7. Create the distribution tarball: "make distcheck" (yes, again!
-   this time will have the correct version, now that you've tagged
+   this time will have the correct version, now that you’ve tagged
    it.)
 
 8. If anything goes wrong up to here, delete the tag, fix the
@@ -204,7 +203,7 @@ a mess.
     uploading.
 
 11. Push the tag upstream: "git push ci cyrus-imapd-<version>"
-    (assuming your remote is named "ci").
+    (assuming your remote is named “ci”).
 
 
 Inter-version website consistency
@@ -237,7 +236,7 @@ you bother to copy release notes back to this branch, a naive cherry-
 pick will not put them in the right place!
 
 This step often gets forgotten, so if you actually follow it, and
-notice some missing versions, just go ahead and add them while you're
+notice some missing versions, just go ahead and add them while you’re
 there.
 
 
@@ -257,24 +256,22 @@ Time to upload the release tarball and signature file!
 
 3. Click on the tag name
 
-4. Click "Edit tag" on the right
+4. Click “Edit tag” on the right
 
 5. *Leave every field on the page as it is (probably blank!),
    except*:
 
-6. Use the "Attach binaries by dropping them here or selecting
-   them" widget to upload the tarball and signature files
+6. Use the “Attach binaries by dropping them here or selecting
+   them” widget to upload the tarball and signature files
 
-7. If this is an alpha/beta/rc release, click the "This is a pre-
-   release" checkbox
+7. If this is an alpha/beta/rc release, click the “This is a pre-
+   release” checkbox
 
-8. Click "Save".  The commit message from the tag annotation will
+8. Click “Save”.  The commit message from the tag annotation will
    be used as the release description.
 
 
 Tell the world
 ==============
 
-1. Update the topic in the #cyrus IRC channel.
-
-2. Send an announcement to the info-cyrus and cyrus-announce lists.
+1. Send an announcement to the info-cyrus and cyrus-announce lists.

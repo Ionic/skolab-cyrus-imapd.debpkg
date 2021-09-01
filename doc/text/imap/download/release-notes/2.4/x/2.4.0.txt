@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.4.0 Release Notes
 ******************************
 
@@ -18,7 +17,7 @@ Changes to the Cyrus IMAP Server since 2.3.x
   cyrus.expunge, inclusion of user Seen flag, and much more.
 
 * Replication code largely rewritten to provide better performance,
-  consistency checking, and recovery from "split-brain" scenarios.
+  consistency checking, and recovery from “split-brain” scenarios.
 
 * Added support for LIST-EXTENDED IMAP extension. Removed support
   for deprecated (compile-time) LISTEXT IMAP extension. Based on work
@@ -43,7 +42,7 @@ Changes to the Cyrus IMAP Server since 2.3.x
 * Modified user_deny.db code to open database once at service
   startup time.
 
-* ... and hundreds of tiny things too numerous to mention in a short
-  change log ...
+* … and hundreds of tiny things too numerous to mention in a short
+  change log …
 
 Cyrus IMAP 2.4 Releases

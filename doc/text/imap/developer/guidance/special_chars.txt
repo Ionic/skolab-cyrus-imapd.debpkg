@@ -1,8 +1,7 @@
-
 Cyrus IMAP Server: Special Characters
 *************************************
 
-This document is supposed to be a repository of "special characters"
+This document is supposed to be a repository of “special characters”
 used in Cyrus naming of users, folders, directory paths, etc.
 
 
@@ -30,7 +29,7 @@ Current Uses
    Character: ^
 
 * [mailbox names] In unixhierarchysep, ^ is the part of the internal
-  name that represents a '.'
+  name that represents a ‘.’
 
 
    Characters: @ %

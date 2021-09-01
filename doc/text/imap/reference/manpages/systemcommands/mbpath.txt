@@ -1,4 +1,3 @@
-
 **mbpath**
 **********
 
@@ -16,7 +15,7 @@ Description
 
 Given a mailbox name or a space separated list of mailbox names,
 **mbpath** outputs the filesystem path(s) of the mailbox.  By default,
-the mailboxes' data partition paths are shown (same as **-D**). See
+the mailboxes’ data partition paths are shown (same as **-D**). See
 Selectors for selecting which filesystem path(s) to output.
 
 **mbpath** reads its configuration options out of the imapd.conf(5)

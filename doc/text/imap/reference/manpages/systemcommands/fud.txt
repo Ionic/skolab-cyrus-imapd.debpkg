@@ -1,4 +1,3 @@
-
 **fud**
 *******
 
@@ -16,7 +15,7 @@ Description
 
 **fud** is a long lived datagram daemon started from master that
 provides information about when a user last read their mail, when mail
-last arrived in a user's mailbox, and how many messages are recent for
+last arrived in a user’s mailbox, and how many messages are recent for
 that user.
 
 **fud** reads its configuration options out of the imapd.conf(5) file
@@ -109,7 +108,7 @@ Though not really a bug, **fud** will silently ignore any requests
 that it does not consider valid.
 
 Also not really a bug, **fud** requires that the anonymous user has
-the 0 (zero) right on the mailbox in question.  This is only a "bug"
+the 0 (zero) right on the mailbox in question.  This is only a “bug”
 because 0 is not a standard IMAP ACL bit.
 
 **fud** is an experimental interface meant to provide information to

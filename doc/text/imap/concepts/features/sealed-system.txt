@@ -1,4 +1,3 @@
-
 Sealed System Design
 ********************
 
@@ -6,7 +5,7 @@ Cyrus IMAP is designed to run on *sealed system*, meaning that no
 user-related information needs to be available to the POSIX system,
 aside from the user and group Cyrus IMAP itself runs under.
 
-This eliminates the requirement for any of the service's users to hold
+This eliminates the requirement for any of the service’s users to hold
 POSIX account information attributes, and eliminates the need for
 Cyrus IMAP to maintain a super-privileged process allowed to
 substitute user.
@@ -22,6 +21,6 @@ troubleshoot and administer a Cyrus IMAP environment.
 Note: Since all files and directories are held by the user and group
   that Cyrus IMAP runs under, any filesystem quota being used does not
   apply to anyone other than this user and group, voiding the ability
-  to count disk usage towards a billing account's quota.
+  to count disk usage towards a billing account’s quota.
 
 Back to Features

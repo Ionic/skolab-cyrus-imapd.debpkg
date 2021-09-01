@@ -1,4 +1,3 @@
-
 Cyrus IMAP 3.0.10 Release Notes
 *******************************
 
@@ -24,7 +23,7 @@ Changes Since 3.0.9
 Release changes
 ---------------
 
-We're trialing using the Github Releases feature.  If you have trouble
+We’re trialing using the Github Releases feature.  If you have trouble
 downloading this release, please report this to the mailing lists.
 Thanks!
 

@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.5.12 Release Notes
 *******************************
 
@@ -36,7 +35,7 @@ ClamAV now configures and builds correctly, using pkg-config for
 detection. You can use the "--without-clamav" option to configure if
 you have ClamAV installed but do *not* want to build Cyrus with
 support for it.  The old "--with-clamav=DIR" variant no longer works
-(but it also didn't work before!)
+(but it also didn’t work before!)
 
 Cyrus should now build cleanly with LibreSSL 2.7 (thanks Bernard
 Spil).
@@ -78,7 +77,7 @@ Bug fixes
 
 * Fixed: tls_prune memory leak
 
-* Fixed: tls_prune doesn't fail when tls_sessions.db is missing
+* Fixed: tls_prune doesn’t fail when tls_sessions.db is missing
 
 * Fixed Issue #2199: recovery from mupdate failure now in correct
   order (thanks Michael Menge)

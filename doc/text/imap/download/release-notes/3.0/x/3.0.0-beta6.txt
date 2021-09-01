@@ -1,9 +1,8 @@
-
 Cyrus IMAP 3.0.0 beta6 Release Notes
 ************************************
 
 Warning: Cyrus IMAP 3.0 is under active development, and subject to
-  change.Do **NOT** use this version unless you're a developer of
+  change.Do **NOT** use this version unless you’re a developer of
   sorts.
 
 Download from GitHub:
@@ -60,11 +59,11 @@ Major changes since the 2.5.x series
   partition.  "sync_client" now accepts a "-p" option.
 
 * The "defaultdomain" setting in imapd.conf now defaults to
-  "internal" (was: NULL)
+  “internal” (was: NULL)
 
 * Added experimental backup service.  See Cyrus Backups
 
-* Support for Apple's Push service (XAPPLEPUSH).  See Cyrus
+* Support for Apple’s Push service (XAPPLEPUSH).  See Cyrus
   Eventsource
 
 * Sieve now supports special use folders.  See Cyrus Sieve
@@ -109,7 +108,7 @@ Major changes since the 2.5.x series
 * Added support for OpenSSL 1.1.0.
 
 * Replication now supports incremental partial updates, so massive
-  updates (such as mail imports) won't stall replication for other
+  updates (such as mail imports) won’t stall replication for other
   users.  See "sync_batchsize" in imapd.conf
 
 * The mailbox cache minor version has been incremented to store a
@@ -134,7 +133,7 @@ Significant bugfixes
 * Lots of fixes to caldav and carddav.
 
   Includes the addition of a new daemon (calalarmd) which periodically
-  processes a global database containing the "next" alarm for each
+  processes a global database containing the “next” alarm for each
   item, and sends the relevant mboxevents. (See configure.ac "--with-
   calalarmd")
 
@@ -145,7 +144,7 @@ Significant bugfixes
 * Extensive cleanup of mailbox name handling
 
 * "master" now requests a sane maximum number of open file
-  descriptors, and only complains if this isn't allowed.
+  descriptors, and only complains if this isn’t allowed.
 
 * Fixes to compiling on Solaris (thanks Jens Erat, Marty Lee)
 

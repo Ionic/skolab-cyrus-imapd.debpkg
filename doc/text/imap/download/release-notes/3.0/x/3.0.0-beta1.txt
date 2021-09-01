@@ -1,9 +1,8 @@
-
 Cyrus IMAP 3.0.0 beta1 Release Notes
 ************************************
 
 Warning: Cyrus IMAP 3.0 is under active development, and subject to
-  change.Do **NOT** use this version unless you're a developer of
+  change.Do **NOT** use this version unless you’re a developer of
   sorts.
 
 Download from GitHub:
@@ -57,7 +56,7 @@ Significant bugfixes
 * Lots of fixes to caldav and carddav.
 
   Includes the addition of a new daemon (calalarmd) which periodically
-  processes a global database containing the "next" alarm for each
+  processes a global database containing the “next” alarm for each
   item, and sends the relevant mboxevents. (See configure.ac "--with-
   calalarmd")
 

@@ -65,7 +65,7 @@ Bug fixes
 
 * Fixed Issue #1901: CyrusDB API is now C++-friendly
 
-* Fixed: don't mix up X-NUM-FOLDERS quota usage on rename
+* Fixed: don’t mix up X-NUM-FOLDERS quota usage on rename
 
 * Fixed Issue #1944: SQLite only required if compiling with features
   that need it
@@ -82,7 +82,7 @@ Bug fixes
 
 * Fixed Issue #1964: correctly detect when librt is needed
 
-* Fixed Issue #1909: tidy up --enable-sphinx/enable-xapian configure
+* Fixed Issue #1909: tidy up –enable-sphinx/enable-xapian configure
   options (thanks Дилян Палаузов)
 
 * Fixed: pkgconfig files now contain exec_prefix (thanks Дилян

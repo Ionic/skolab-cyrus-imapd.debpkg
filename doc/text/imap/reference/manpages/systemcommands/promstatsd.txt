@@ -1,4 +1,3 @@
-
 **promstatsd**
 **************
 
@@ -26,7 +25,7 @@ Cyrus service processes will count statistics as they run.
 Prometheus can ingest.
 
 The report produced by **promstatsd** is served by httpd(8) at the
-"/metrics" URL, if "prometheus" has been set in **httpmodules** in
+“/metrics” URL, if “prometheus” has been set in **httpmodules** in
 imapd.conf(5).
 
 **promstatsd** reads its configuration options out of the
@@ -49,7 +48,7 @@ In the third synopsis, **promstatsd** will immediately update the
 report once, and then exit.  This can be safely used while another
 **promstatsd** process runs in daemon form.  It is useful if you need
 to update the report *now* for some reason, rather than waiting for
-the daemon's next update.
+the daemon’s next update.
 
 
 Options
@@ -75,7 +74,7 @@ Options
 
 -d
 
-   Debug mode -- **promstatsd** will not background itself, for aid in
+   Debug mode – **promstatsd** will not background itself, for aid in
    debugging.
 
 -f frequency

@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.4.12 Release Notes
 *******************************
 
@@ -41,7 +40,7 @@ Changes to the Cyrus IMAP Server since 2.4.11
 
 * Bug #3545 - fix sign extension in squat_decode_64
 
-* Bug #3558 - return error if backend doesn't support LIST-EXTENDED
+* Bug #3558 - return error if backend doesn’t support LIST-EXTENDED
 
 * Bug #3565 - clean up in preparation for automake
 
