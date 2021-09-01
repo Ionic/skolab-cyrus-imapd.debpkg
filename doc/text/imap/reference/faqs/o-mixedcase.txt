@@ -1,9 +1,8 @@
-
 Why is mail being rejected with No Mailbox found due to MiXed CaSe incoming e-mail?
 ***********************************************************************************
 
 If you are using a newer and standard compliant MTA to deliver mail to
-Cyrus IMAP's LMTP agent you may run into a problem where mail will be
+Cyrus IMAP’s LMTP agent you may run into a problem where mail will be
 bounced and not delivered with errors like this in your maillog:
 
    Feb 29 10:01:02 myhost lmtpunix[12345]: append_check() of 'MyDomain.tld!user.MyUser' failed (Mailbox does not exist)
@@ -20,7 +19,7 @@ that can be added into the imapd.conf:
    lmtp_downcase_rcpt: true
 
 Inserting that into your imapd.conf(5) and restarting cyrus imap will
-cause cyrus to "downcase" the e-mail address up to the recipient
+cause cyrus to “downcase” the e-mail address up to the recipient
 delimiter of +. The result will be this:
 
    User@MyDomain.tld -> user@mydomain.tld

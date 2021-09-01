@@ -1,4 +1,3 @@
-
 Documentation
 *************
 
@@ -7,14 +6,14 @@ Overview
 ========
 
 Our documentation for the website is held under git source control,
-the same as the source. We'd love to have your contributions, which
+the same as the source. We’d love to have your contributions, which
 can be sent to the mailing list or you can submit a patch directly
 against the source.
 
 Our helpfile source uses Sphinx and Restructured Text.
 
 While editing the documentation can take place in any text editor,
-you'll need tools to fetch the source, generate man pages and html for
+you’ll need tools to fetch the source, generate man pages and html for
 testing.
 
 
@@ -88,7 +87,7 @@ Makefile (generated as part of building the source):
 This runs "make doc-html doc-text man" and places the relevant output
 in "doc/html/", "doc/text/" and "man/" directories.
 
-If you don't have a full source build environment and just want to
+If you don’t have a full source build environment and just want to
 manage the documentation on its own, from the *docsrc/`* directory
 run:
 
@@ -107,17 +106,17 @@ Submitting updates
 Using GitHub pull requests
 --------------------------
 
-We operate on the GitHub fork/pull model. We'd love to have your pull
+We operate on the GitHub fork/pull model. We’d love to have your pull
 request come through!
 
-If you're new to GitHub or the fork/pull model, we have a Quick GitHub
+If you’re new to GitHub or the fork/pull model, we have a Quick GitHub
 guide to get you going.
 
 
 Patches through the mailing list
 --------------------------------
 
-If you're not planning on regularly submitting changes, you can just
+If you’re not planning on regularly submitting changes, you can just
 send your patch through to the mailing list and one of the regular
 maintainers will incorporate it.
 
@@ -162,13 +161,13 @@ number defined in conf.py.
 
 Usage: "|imap_current_stable_version|"
 
-Produces 3.4.1.
+Produces 3.4.2.
 
 
 Conventions: Man Pages
 ======================
 
-For Unix manual, or "man" pages, we follow the conventions laid out in
+For Unix manual, or “man” pages, we follow the conventions laid out in
 the man page for man(1) itself:
 
 Note: Conventional section names include NAME, SYNOPSIS,
@@ -181,8 +180,8 @@ Note: Conventional section names include NAME, SYNOPSIS,
    *italic text* - replace with appropriate argument.
    [-abc]        - any or all arguments within [ ] are optional.
    -a|-b - options delimited by | cannot be used together.
-   argument ... - argument is repeatable.
-   [expression] ... - entire expression within [ ] is repeatable.
+   argument … - argument is repeatable.
+   [expression] … - entire expression within [ ] is repeatable.
 
 Note: Exact rendering may vary depending on the output device. For
   instance, man will usually not be able to render italics when
@@ -212,13 +211,13 @@ SYNOPSIS
 
 **ipurge** [ **-f** ] [ **-C** *config-file* ] [ **-x** ] [ **-X** ] [
 **-i** ] [ **-s** ] [ **-o** ] [ **-d** *days* | **-b** *bytes* |
-**-k** *Kbytes* | **-m** *Mbytes* ] [ *mailbox-pattern*... ]
+**-k** *Kbytes* | **-m** *Mbytes* ] [ *mailbox-pattern*… ]
 
 
 Examples
 --------
 
-In order to preserve space in traditional man page output, we're using
+In order to preserve space in traditional man page output, we’re using
 the ".. only:: html" directive in the reStructured Text (.rst) files
 for the verbose output of the Examples for commands.
 

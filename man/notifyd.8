@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "NOTIFYD" "8" "May 10, 2021" "3.4.1" "Cyrus IMAP"
+.TH "NOTIFYD" "8" "September 01, 2021" "3.4.2" "Cyrus IMAP"
 .SH NAME
 notifyd \- Cyrus IMAP documentation
 .
@@ -96,7 +96,7 @@ Log the notification to syslog (for testing).
 .INDENT 0.0
 .INDENT 3.5
 Email the notification.  This method can ONLY be used in a
-Sieve \(aqnotify\(aq action as it requires a \fImailto:\fP URL to be
+Sieve ‘notify’ action as it requires a \fImailto:\fP URL to be
 specified as an \fI:option\fP\&.
 .UNINDENT
 .UNINDENT
@@ -104,7 +104,7 @@ specified as an \fI:option\fP\&.
 \fBzephyr\fP
 .INDENT 0.0
 .INDENT 3.5
-Send the notification as a zephyrgram.  If used in a Sieve \(aqnotify\(aq
+Send the notification as a zephyrgram.  If used in a Sieve ‘notify’
 action, additional recipients can be specified as \fI:options\fP\&.
 .UNINDENT
 .UNINDENT

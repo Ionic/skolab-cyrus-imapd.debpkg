@@ -1,4 +1,3 @@
-
 Sitemap
 *******
 
@@ -331,7 +330,7 @@ Sitemap
 
           * Negative Rights
 
-          * Calculating a Users' Rights
+          * Calculating a Users’ Rights
 
         * Login Authentication
 
@@ -373,9 +372,9 @@ Sitemap
 
         * Partitions
 
-          * Specifying Partitions with "create"
+          * Specifying Partitions with “create”
 
-          * Changing Partitions with "rename"
+          * Changing Partitions with “rename”
 
         * News
 
@@ -1991,8 +1990,7 @@ Sitemap
           * Compilation errors about kssl.h and krb5.h on Red Hat
             Linux/Fedora
 
-          * Help! There must be an easier way to get all this
-            going...
+          * Help! There must be an easier way to get all this going…
 
           * OpenSSL Version Mismatches
 
@@ -2022,7 +2020,7 @@ Sitemap
 
           * Why can I not delete a mailbox as an admin user?
 
-          * When is What ... Deleted, Expired, Expunged or Purged?
+          * When is What … Deleted, Expired, Expunged or Purged?
 
             * Users and IMAP Clients Deleting Messages
 
@@ -2062,17 +2060,17 @@ Sitemap
 
             * 3. Clean up connections that are no longer in use
 
-          * "unable to join environment" error
+          * “unable to join environment” error
 
           * Why does Cyrus set the MAIL FROM address of the sender
-            of vacation responses to '<>'?
+            of vacation responses to ‘<>’?
 
         * Common Interoperability Problems
 
           * Why does Cyrus reject 8-bit characters in the headers of
             my messages?
 
-          * Why does Cyrus reject messages with "bare newlines"?
+          * Why does Cyrus reject messages with “bare newlines”?
 
           * How do I get Cyrus Sieve to play nice with Exim?
 
@@ -2562,8 +2560,6 @@ Sitemap
       * Found a bug?
 
       * Mailing lists
-
-      * IRC
 
       * Weekly meetings
 

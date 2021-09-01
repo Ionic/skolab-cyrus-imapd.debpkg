@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ctl_backups &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>ctl_backups &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../../index.html"/>
         <link rel="up" title="Man pages" href="../commands.html"/>
         <link rel="next" title="ctl_conversationsdb" href="ctl_conversationsdb.html"/>
         <link rel="prev" title="chk_cyrus" href="chk_cyrus.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -805,8 +806,8 @@ backups.</p>
 See <a class="reference internal" href="#ctl-backups-modes"><span class="std std-ref">Modes</span></a> below.</p>
 <p><strong>ctl_backups</strong> provides the following sub-commands:</p>
 <dl class="option">
-<dt id="cmdoption-ctl_backups-arg-compact">
-<code class="descname">compact</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-arg-compact" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-ctl-backups-arg-compact">
+<code class="descname">compact</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl-backups-arg-compact" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reduce storage required by the named backups.  Compact behaviour is
 influenced by the <strong>backup_compact_minsize</strong>, <strong>backup_compact_maxsize</strong>,
 <strong>backup_compact_work_threshold</strong>, and <strong>backup_retention_days</strong>
@@ -820,8 +821,8 @@ them with a timestamp).  This is useful for debugging.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-arg-list">
-<code class="descname">list</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-arg-list" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-ctl-backups-arg-list">
+<code class="descname">list</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl-backups-arg-list" title="Permalink to this definition">¶</a></dt>
 <dd><p>List backups.  See <a class="reference internal" href="#ctl-backups-list-options"><span class="std std-ref">List Options</span></a> for options specific
 to the <strong>list</strong> sub-command.  Columns are separated by tabs, and are:</p>
 <ul class="simple">
@@ -835,16 +836,16 @@ known backups (as if invoked with the <strong>-A</strong> mode).</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-arg-lock">
-<code class="descname">lock</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-arg-lock" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-ctl-backups-arg-lock">
+<code class="descname">lock</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl-backups-arg-lock" title="Permalink to this definition">¶</a></dt>
 <dd><p>Obtain and hold a lock on the named backup.  Useful for operating on
 Cyrus backup files using non-Cyrus tools (such as UNIX tools or custom
 scripts) in relative safety.  See <a class="reference internal" href="#ctl-backups-lock-options"><span class="std std-ref">Lock Options</span></a> for details.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-arg-reindex">
-<code class="descname">reindex</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-arg-reindex" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-ctl-backups-arg-reindex">
+<code class="descname">reindex</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl-backups-arg-reindex" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rebuild the indexes for the named backups, based on the raw backup data.
 This is useful if their index files have been corrupted, or if the index
 format has changed.</p>
@@ -854,8 +855,8 @@ timestamp).  This is useful for debugging.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-arg-stat">
-<code class="descname">stat</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-arg-stat" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-ctl-backups-arg-stat">
+<code class="descname">stat</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl-backups-arg-stat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Display stats for the named backups.  Columns are separated by tabs, and
 are:</p>
 <ul class="simple">
@@ -876,8 +877,8 @@ been compacted will probably still report less than 100% utilisation.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-arg-verify">
-<code class="descname">verify</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-arg-verify" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-ctl-backups-arg-verify">
+<code class="descname">verify</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl-backups-arg-verify" title="Permalink to this definition">¶</a></dt>
 <dd><p>Verify consistency of the named backups by performing deep checks on both
 the raw backup data and its index.</p>
 </dd></dl>
@@ -886,21 +887,21 @@ the raw backup data and its index.</p>
 <div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <dl class="option">
-<dt id="cmdoption-ctl_backups-C">
-<code class="descname">-C</code><code class="descclassname"> config-file</code><a class="headerlink" href="#cmdoption-ctl_backups-C" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-ctl-backups-c">
+<code class="descname">-C</code><code class="descclassname"> config-file</code><a class="headerlink" href="#cmdoption-ctl-backups-c" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use the specified configuration file <em>config-file</em> rather than the default <a class="reference internal" href="../configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-F">
-<code class="descname">-F</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-F" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-ctl-backups-f">
+<code class="descname">-F</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl-backups-f" title="Permalink to this definition">¶</a></dt>
 <dd><p>Force the operation to occur, even if it is determined to be unnecessary.
 This is mostly useful with the <strong>compact</strong> sub-command.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-S">
-<code class="descname">-S</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-S" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-ctl-backups-s">
+<code class="descname">-S</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl-backups-s" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stop-on-error.  With this option, if a sub-command fails for any
 particular backup, <strong>ctl_backups</strong> will immediately exit with an error,
 without processing further backups.</p>
@@ -908,31 +909,31 @@ without processing further backups.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-V">
-<code class="descname">-V</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-V" title="Permalink to this definition">¶</a></dt>
-<dd><p>Don't verify backup checksums for read-only operations.</p>
+<dt id="cmdoption-ctl-backups-v">
+<code class="descname">-V</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl-backups-v" title="Permalink to this definition">¶</a></dt>
+<dd><p>Don’t verify backup checksums for read-only operations.</p>
 <p>The read-only operations <strong>list</strong> and <strong>stat</strong> will normally perform a
-&quot;quick&quot; verification of the backup file being read, which checks the
+“quick” verification of the backup file being read, which checks the
 checksums of the most recent chunk.  This can be slow for backups
 whose most recent backup chunk is very large.</p>
 <p>With this option, the verification step will be skipped.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-j">
-<code class="descname">-j</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-j" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-ctl-backups-j">
+<code class="descname">-j</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl-backups-j" title="Permalink to this definition">¶</a></dt>
 <dd><p>Produce output in JSON format.  The default is plain text.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-v">
-<code class="descname">-v</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-v" title="Permalink to this definition">¶</a></dt>
+<dt id="id1">
+<code class="descname">-v</code><code class="descclassname"></code><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
 <dd><p>Increase the verbosity.  Can be specified multiple times.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-w">
-<code class="descname">-w</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-w" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-ctl-backups-w">
+<code class="descname">-w</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl-backups-w" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wait for locks.  With this option, if a backup named on the command line is
 locked, execution will block until the lock becomes available.</p>
 <p>The default is to skip backups that are currently locked.</p>
@@ -943,8 +944,8 @@ locked, execution will block until the lock becomes available.</p>
 <span id="ctl-backups-list-options"></span><h2>List Options<a class="headerlink" href="#list-options" title="Permalink to this headline">¶</a></h2>
 <p>Options that apply only to the <strong>list</strong> sub-command.</p>
 <dl class="option">
-<dt id="cmdoption-ctl_backups-t">
-<code class="descname">-t</code><code class="descclassname"> [hours]</code><a class="headerlink" href="#cmdoption-ctl_backups-t" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-ctl-backups-t">
+<code class="descname">-t</code><code class="descclassname"> [hours]</code><a class="headerlink" href="#cmdoption-ctl-backups-t" title="Permalink to this definition">¶</a></dt>
 <dd><p>List stale backups only, that is, backups that have received no updates
 in <em>hours</em>.  If <em>hours</em> is unspecified, it defaults to 24.</p>
 </dd></dl>
@@ -954,32 +955,32 @@ in <em>hours</em>.  If <em>hours</em> is unspecified, it defaults to 24.</p>
 <span id="ctl-backups-lock-options"></span><h2>Lock Options<a class="headerlink" href="#lock-options" title="Permalink to this headline">¶</a></h2>
 <p>Options that apply only to the <strong>lock</strong> sub-command.</p>
 <dl class="option">
-<dt id="cmdoption-ctl_backups-c">
-<code class="descname">-c</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-c" title="Permalink to this definition">¶</a></dt>
+<dt id="id2">
+<code class="descname">-c</code><code class="descclassname"></code><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exclusively create the named backup while obtaining the lock.  Exits
 immediately with an error if the named backup already exists.</p>
 <p>When the lock is successfully obtained, continue as per the other options.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-p">
-<code class="descname">-p</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-p" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-ctl-backups-p">
+<code class="descname">-p</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl-backups-p" title="Permalink to this definition">¶</a></dt>
 <dd><p>Locks the named backup, and then waits for EOF on the standard input
 stream.  Unlocks the backup and exits once EOF is received.  This is the
 default mode of operation.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-s">
-<code class="descname">-s</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-s" title="Permalink to this definition">¶</a></dt>
+<dt id="id3">
+<code class="descname">-s</code><code class="descclassname"></code><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
 <dd><p>Locks the named backup, and with the lock held, opens its index file in
 the <em class="manpage">sqlite3(1)</em> program.  The lock is automatically released when
 sqlite3 exits.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-x">
-<code class="descname">-x</code><code class="descclassname"> command</code><a class="headerlink" href="#cmdoption-ctl_backups-x" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-ctl-backups-x">
+<code class="descname">-x</code><code class="descclassname"> command</code><a class="headerlink" href="#cmdoption-ctl-backups-x" title="Permalink to this definition">¶</a></dt>
 <dd><p>Locks the named backup, and with the lock held, executes <em>command</em> using
 <strong>/bin/sh</strong> (as per <em class="manpage">system(3)</em>).  The lock is automatically
 released when <em>command</em> completes.</p>
@@ -992,45 +993,45 @@ in the environment variables <strong>$ctl_backups_lock_data_fname</strong> and
 <div class="section" id="modes">
 <span id="ctl-backups-modes"></span><h2>Modes<a class="headerlink" href="#modes" title="Permalink to this headline">¶</a></h2>
 <dl class="option">
-<dt id="cmdoption-ctl_backups-A">
-<code class="descname">-A</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-A" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-ctl-backups-a">
+<code class="descname">-A</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl-backups-a" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run sub-command over all known backups.</p>
 <p>Known backups are recorded in the database specified by the <strong>backup_db</strong>
 and <strong>backup_db_path</strong> configuration options.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-D">
-<code class="descname">-D</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-D" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-ctl-backups-d">
+<code class="descname">-D</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl-backups-d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Backups specified on the command line are interpreted as domains.  Run
 sub-command over known backups for users in these domains.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-P">
-<code class="descname">-P</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-P" title="Permalink to this definition">¶</a></dt>
+<dt id="id4">
+<code class="descname">-P</code><code class="descclassname"></code><a class="headerlink" href="#id4" title="Permalink to this definition">¶</a></dt>
 <dd><p>Backups specified on the command line are interpreted as userid prefixes.
 Run sub-command over known backups for users matching these prefixes.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-f">
-<code class="descname">-f</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-f" title="Permalink to this definition">¶</a></dt>
+<dt id="id5">
+<code class="descname">-f</code><code class="descclassname"></code><a class="headerlink" href="#id5" title="Permalink to this definition">¶</a></dt>
 <dd><p>Backups specified on the command line are interpreted as filenames.  Run
 sub-command over the matching backup files.  The backup files do not need
 to be known about in the backups database.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-m">
-<code class="descname">-m</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-m" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-ctl-backups-m">
+<code class="descname">-m</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl-backups-m" title="Permalink to this definition">¶</a></dt>
 <dd><p>Backups specified on the command line are interpreted as mailbox names.
 Run sub-command over known backups containing these mailboxes.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-ctl_backups-u">
-<code class="descname">-u</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl_backups-u" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-ctl-backups-u">
+<code class="descname">-u</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-ctl-backups-u" title="Permalink to this definition">¶</a></dt>
 <dd><p>Backups specified on the command line are interpreted as userids.  Run
 sub-command over known backups for matching users.</p>
 <p>This is the default if no mode is specified.</p>
@@ -1084,7 +1085,7 @@ EVENTS {
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on May 30 2017
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1101,7 +1102,7 @@ EVENTS {
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1110,7 +1111,7 @@ EVENTS {
       <script type="text/javascript" src="../../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../../_static/language_data.js"></script>
 
   
 

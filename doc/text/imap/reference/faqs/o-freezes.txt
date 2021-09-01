@@ -1,4 +1,3 @@
-
 I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!
 *************************************************************************************************
 
@@ -10,6 +9,6 @@ the service.
 
 Certain characters, while not strictly forbidden, should not be used
 in these names, because they will cause the name to be truncated. For
-example, "imap" and "imap_remote" will result in the same lockfile
+example, “imap” and “imap_remote” will result in the same lockfile
 ("/var/imapd/socket/imap-0.lock"). It is best to only use letters and
 digits.

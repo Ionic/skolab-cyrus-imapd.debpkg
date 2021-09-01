@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.5.1 Release Notes
 ******************************
 
@@ -47,7 +46,7 @@ Bug fixes
   2013 (Thanks Leena Heino)
 
 * Fixed task 116 : LIST now correctly handles domains starting with
-  "inbox."
+  “inbox.”
 
 * Fixed task 120 : admin users can now SETANNOTATION correctly
 
@@ -55,7 +54,7 @@ Bug fixes
   listed
 
 * Fixed task 156 : LMTP no longer incorrectly rejects messages
-  delivered using 'deliver'
+  delivered using ‘deliver’
 
 * Fixed task 76 : lmtpd no longer crashes when delivering to a
   shared mailbox (Thanks Leena Heino)

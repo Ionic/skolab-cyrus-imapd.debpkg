@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.3.14 Release Notes
 *******************************
 
@@ -43,7 +42,7 @@ Changes to the Cyrus IMAP Server since 2.3.13
   to ensure correct replication of delayed delete of entire users
 
 * Always overwrite the seen DB on the replica with the full DB from
-  the master on "setseen_all" to guarantee consistency
+  the master on “setseen_all” to guarantee consistency
 
 * Sync all mailbox annotations, not just condstore, ensuring mailbox
   is consistent on both ends (solves POP3_NEW_UIDL bug)

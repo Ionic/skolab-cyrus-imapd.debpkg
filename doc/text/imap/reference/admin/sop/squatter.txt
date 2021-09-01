@@ -1,4 +1,3 @@
-
 Using Squatter for Faster IMAP SEARCH
 *************************************
 

@@ -2681,13 +2681,10 @@ int propfind_curprivset(const xmlChar *name, xmlNsPtr ns,
 
     if (!propstat) {
         /* Prescreen "property" request */
-        if (fctx->req_tgt->collection ||
-            (fctx->req_tgt->userid && fctx->depth >= 1) || fctx->depth >= 2) {
-            /* Add namespaces for possible privileges */
-            ensure_ns(fctx->ns, NS_CYRUS, fctx->root, XML_NS_CYRUS, "CY");
-            if (fctx->req_tgt->namespace->id == URL_NS_CALENDAR) {
-                ensure_ns(fctx->ns, NS_CALDAV, fctx->root, XML_NS_CALDAV, "C");
-            }
+        /* Add namespaces for possible privileges */
+        ensure_ns(fctx->ns, NS_CYRUS, fctx->root, XML_NS_CYRUS, "CY");
+        if (fctx->req_tgt->namespace->id == URL_NS_CALENDAR) {
+            ensure_ns(fctx->ns, NS_CALDAV, fctx->root, XML_NS_CALDAV, "C");
         }
 
         return 0;
@@ -6111,7 +6108,7 @@ EXPORTED int meth_propfind(struct transaction_t *txn, void *params)
     xmlDocPtr indoc = NULL, outdoc = NULL;
     xmlNodePtr root, cur = NULL, props = NULL;
     xmlNsPtr ns[NUM_NAMESPACE];
-    struct hash_table ns_table = { 0, NULL, NULL };
+    struct hash_table ns_table = HASH_TABLE_INITIALIZER;
     struct propfind_ctx fctx;
 
     memset(&fctx, 0, sizeof(struct propfind_ctx));
@@ -8086,7 +8083,7 @@ int meth_report(struct transaction_t *txn, void *params)
     xmlNodePtr inroot = NULL, outroot = NULL, cur, prop = NULL, props = NULL;
     const struct report_type_t *report = NULL;
     xmlNsPtr ns[NUM_NAMESPACE];
-    struct hash_table ns_table = { 0, NULL, NULL };
+    struct hash_table ns_table = HASH_TABLE_INITIALIZER;
     struct propfind_ctx fctx;
 
     memset(&fctx, 0, sizeof(struct propfind_ctx));

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CalDAV &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>CalDAV &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../../index.html"/>
         <link rel="up" title="HTTP modules" href="../manage-dav.html"/>
         <link rel="next" title="CardDAV" href="carddav.html"/>
         <link rel="prev" title="HTTP modules" href="../manage-dav.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../../setup.html">Setup</a> &raquo;</li>
       
@@ -793,29 +794,29 @@
 <blockquote>
 <div><em>This shows the default value: change it in imapd.conf to suit your needs.</em></div></blockquote>
 <blockquote class="last">
-<div><p><code class="docutils literal"><span class="pre">calendarprefix:</span></code> #calendars</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">calendarprefix:</span></code> #calendars</p>
 <blockquote>
 <div>The prefix for the calendar mailboxes hierarchies.  The hierarchy
 delimiter will be automatically appended.  The public calendar
 hierarchy will be at the toplevel of the shared namespace.  A
-user's personal calendar hierarchy will be a child of their Inbox.</div></blockquote>
+user’s personal calendar hierarchy will be a child of their Inbox.</div></blockquote>
 </div></blockquote>
 </div>
 <p>When enabled, the CalDAV module allows Cyrus to function as a calendar and
 scheduling server. This module uses a subset of the mailbox hierarchy as
-calendar collections, the toplevel of which is specified by the <code class="docutils literal"><span class="pre">calendarprefix</span></code>
+calendar collections, the toplevel of which is specified by the <code class="docutils literal notranslate"><span class="pre">calendarprefix</span></code>
 option. The public calendar hierarchy will reside at the toplevel of the shared
-mailbox namespace. A user's personal calendar hierarchy will be a child of
+mailbox namespace. A user’s personal calendar hierarchy will be a child of
 their Inbox.</p>
 <p>For example, using the default value for calendarprefix, a
-calendar named Default for user &quot;murch&quot; would reside in the mailbox named
-<code class="docutils literal"><span class="pre">user.murch.#calendars.Default</span></code>.</p>
+calendar named Default for user “murch” would reside in the mailbox named
+<code class="docutils literal notranslate"><span class="pre">user.murch.#calendars.Default</span></code>.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">Note that mailboxes in the calendar hierarchies (those under
 calendarprefix) <strong>should not</strong> be accessed with an IMAP client as doing so will
 leave a mailbox in a state unsuitable for CalDAV. To this end, calendar
-mailboxes will not returned by Cyrus imapd in response to an IMAP client's
+mailboxes will not returned by Cyrus imapd in response to an IMAP client’s
 request for the available calendar list, but Cyrus imapd can not otherwise
 prevent an IMAP client from accessing them.</p>
 </div>
@@ -824,9 +825,9 @@ prevent an IMAP client from accessing them.</p>
 <blockquote>
 <div><em>This shows the default value: change it in imapd.conf to suit your needs.</em></div></blockquote>
 <blockquote class="last">
-<div><p><code class="docutils literal"><span class="pre">caldav_allowscheduling:</span></code> on</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">caldav_allowscheduling:</span></code> on</p>
 <blockquote>
-<div>Enable calendar scheduling operations. If set to &quot;apple&quot;, the
+<div>Enable calendar scheduling operations. If set to “apple”, the
 server will emulate Apple CalendarServer behavior as closely as
 possible.
 Allowed values: <em>off</em>, <em>on</em>, <em>apple</em></div></blockquote>
@@ -835,7 +836,7 @@ Allowed values: <em>off</em>, <em>on</em>, <em>apple</em></div></blockquote>
 <p>By default, the CalDAV module will automatically perform scheduling operations
 when a scheduling object (invite or reply) is stored on or deleted from the
 server. Support for the calendar-auto-schedule feature can be disabled with the
-<code class="docutils literal"><span class="pre">caldav_allowscheduling</span></code> option.</p>
+<code class="docutils literal notranslate"><span class="pre">caldav_allowscheduling</span></code> option.</p>
 </div>
 <div class="section" id="administration">
 <h2>Administration<a class="headerlink" href="#administration" title="Permalink to this headline">¶</a></h2>
@@ -847,23 +848,23 @@ user MUST have an existing IMAP Inbox in order for the calendars to be created.<
 <blockquote>
 <div><em>This shows the default value: change it in imapd.conf to suit your needs.</em></div></blockquote>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">caldav_create_default:</span></code> 1</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">caldav_create_default:</span></code> 1</p>
 <blockquote>
-<div>Create the 'Default' calendar if it doesn't already exist</div></blockquote>
+<div>Create the ‘Default’ calendar if it doesn’t already exist</div></blockquote>
 </div></blockquote>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">caldav_create_attach:</span></code> 1</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">caldav_create_attach:</span></code> 1</p>
 <blockquote>
-<div>Create the 'Attachments' collection if it doesn't already exist</div></blockquote>
+<div>Create the ‘Attachments’ collection if it doesn’t already exist</div></blockquote>
 </div></blockquote>
 <blockquote class="last">
-<div><p><code class="docutils literal"><span class="pre">caldav_create_sched:</span></code> 1</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">caldav_create_sched:</span></code> 1</p>
 <blockquote>
-<div>Create the 'Inbox' and 'Outbox' calendars if they don't already exist</div></blockquote>
+<div>Create the ‘Inbox’ and ‘Outbox’ calendars if they don’t already exist</div></blockquote>
 </div></blockquote>
 </div>
 <p>Autocreate of the various calendars can be disabled with the
-&quot;caldav_create_default/sched/attach&quot; options, if you have an alternate
+“caldav_create_default/sched/attach” options, if you have an alternate
 mechanism to create calendars.</p>
 <p>There is also a Cyrus web GUI for managing calendar resources.
 It allows you to:</p>
@@ -877,19 +878,19 @@ It allows you to:</p>
 </ul>
 </div></blockquote>
 <p>The Cyrus web GUI for CalDAV Collection Management is disabled by
-default, but can be enabled with the &quot;caldav_allowcalendaradmin&quot; option.</p>
+default, but can be enabled with the “caldav_allowcalendaradmin” option.</p>
 <div class="sidebar">
 <p class="first sidebar-title">caldav_allowcalendaradmin</p>
 <blockquote>
 <div><em>This shows the default value: change it in imapd.conf to suit your needs.</em></div></blockquote>
 <blockquote class="last">
-<div><p><code class="docutils literal"><span class="pre">caldav_allowcalendaradmin:</span></code> 0</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">caldav_allowcalendaradmin:</span></code> 0</p>
 <blockquote>
 <div>Enable per-user calendar administration web UI on the CalDAV server.</div></blockquote>
 </div></blockquote>
 </div>
 <p>To access the Cyrus web GUI for CalDAV Collection Management, point
-a web browser at <code class="docutils literal"><span class="pre">https://&lt;servername&gt;/dav/calendars/user/&lt;username&gt;</span></code></p>
+a web browser at <code class="docutils literal notranslate"><span class="pre">https://&lt;servername&gt;/dav/calendars/user/&lt;username&gt;</span></code></p>
 <div class="section" id="calendar-access-controls">
 <span id="calendar-acl"></span><h3>Calendar access controls<a class="headerlink" href="#calendar-access-controls" title="Permalink to this headline">¶</a></h3>
 <p>The CalDAV module uses the same access controls as the other Cyrus services. The
@@ -1084,15 +1085,15 @@ The tables below show how the access controls are used by the CalDAV module.</p>
 <p>When enabled in conjunction with the CalDAV module, the Freebusy URL module
 allows non-CalDAV and/or remote calendaring clients to query the freebusy
 information of Cyrus CalDAV users.</p>
-<p>Access to the freebusy information is controlled by the &quot;freebusy&quot; ACL (9) on a
-user's home calendar collection. (e.g. a mailbox named
-<code class="docutils literal"><span class="pre">user.murch.#calendars</span></code>). To enable unauthenticated users (non-Cyrus) to
-access freebusy information, the freebusy ACL must be given to &quot;anyone&quot;.</p>
-<p>Freebusy information, consolidating the data of all user's calendars, is
+<p>Access to the freebusy information is controlled by the “freebusy” ACL (9) on a
+user’s home calendar collection. (e.g. a mailbox named
+<code class="docutils literal notranslate"><span class="pre">user.murch.#calendars</span></code>). To enable unauthenticated users (non-Cyrus) to
+access freebusy information, the freebusy ACL must be given to “anyone”.</p>
+<p>Freebusy information, consolidating the data of all user’s calendars, is
 accessed via URLs of the following form:
-<code class="docutils literal"><span class="pre">https://&lt;servername&gt;/freebusy/user/&lt;userid&gt;</span></code>.  Querying individual CalDAV
-collections, when they have explicitly &quot;freebusy&quot; ACL (9) set, is done via
-<code class="docutils literal"><span class="pre">https://&lt;servername&gt;/freebusy/user/&lt;userid&gt;/&lt;collection&gt;</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">https://&lt;servername&gt;/freebusy/user/&lt;userid&gt;</span></code>.  Querying individual CalDAV
+collections, when they have explicitly “freebusy” ACL (9) set, is done via
+<code class="docutils literal notranslate"><span class="pre">https://&lt;servername&gt;/freebusy/user/&lt;userid&gt;/&lt;collection&gt;</span></code>.</p>
 <p>Query parameters can be added to the URL per Section 4 of
 <a class="reference external" href="http://www.calconnect.org/pubdocs/CD0903%20Freebusy%20Read%20URL.pdf">Freebusy Read URL</a>,
 allowing the user to choose to set the start, end, period and format of
@@ -1110,7 +1111,7 @@ the time zone information up to date then falls upon the Cyrus administrator.</p
 <p>TZDist is optional: without Cyrus having TZDist enabled, calendar clients should
 still be able to get their timezone information from their client or their OS.</p>
 <p>TZDist is also required if you want the CalDAV server to strip known VTIMEZONEs
-from incoming iCalendar data (as advertised by the <code class="docutils literal"><span class="pre">calendar-no-timezone</span></code> DAV
+from incoming iCalendar data (as advertised by the <code class="docutils literal notranslate"><span class="pre">calendar-no-timezone</span></code> DAV
 option from <span class="target" id="index-2"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7809.html"><strong>RFC 7809</strong></a>).</p>
 </div>
 <div class="section" id="id2">
@@ -1120,7 +1121,7 @@ option from <span class="target" id="index-2"></span><a class="rfc reference ext
 <blockquote>
 <div><em>This shows the default value: change it in imapd.conf to suit your needs.</em></div></blockquote>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">zoneinfo_db_path:</span></code> &lt;none&gt;</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">zoneinfo_db_path:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>The absolute path to the zoneinfo db file.  If not specified,
 will be configdirectory/zoneinfo.db</div></blockquote>
@@ -1129,31 +1130,31 @@ will be configdirectory/zoneinfo.db</div></blockquote>
 <div class="line"><br /></div>
 </div>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">zoneinfo_db:</span></code> twoskip</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">zoneinfo_db:</span></code> twoskip</p>
 <blockquote>
 <div>The cyrusdb backend to use for zoneinfo.  This database is used by the
-&quot;tzdist&quot; <em>httpmodules</em>, and is managed by <strong>ctl_zoneinfo(8)</strong>.
+“tzdist” <em>httpmodules</em>, and is managed by <strong>ctl_zoneinfo(8)</strong>.
 Allowed values: <em>flat</em>, <em>skiplist</em>, <em>twoskip</em>, <em>zeroskip</em></div></blockquote>
 </div></blockquote>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
 <blockquote class="last">
-<div><p><code class="docutils literal"><span class="pre">zoneinfo_dir:</span></code> &lt;none&gt;</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">zoneinfo_dir:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div><p>The absolute path to the zoneinfo directory, containing timezone
 definitions as generated by the vzic tool.  If not specified, whatever
 definitions libical finds will be used.</p>
 <p>If you are providing a Time Zone Data Distribution Service (i.e. you have
-&quot;tzdist&quot; listed in <em>httpmodules</em>), then this configuration option MUST
+“tzdist” listed in <em>httpmodules</em>), then this configuration option MUST
 be specified.</p>
 </div></blockquote>
 </div></blockquote>
 </div>
-<p>The TZDist module requires the <code class="docutils literal"><span class="pre">zoneinfo_dir</span></code> setting in <a class="reference internal" href="../../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>
+<p>The TZDist module requires the <code class="docutils literal notranslate"><span class="pre">zoneinfo_dir</span></code> setting in <a class="reference internal" href="../../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>
 to be set to the directory where your time zone data is stored.</p>
 <p>The data is indexed by a database whose location is specified by the
-<code class="docutils literal"><span class="pre">zoneinfo_db_path</span></code> option, using the format specified by the <code class="docutils literal"><span class="pre">zoneinfo_db</span></code>
+<code class="docutils literal notranslate"><span class="pre">zoneinfo_db_path</span></code> option, using the format specified by the <code class="docutils literal notranslate"><span class="pre">zoneinfo_db</span></code>
 option.</p>
 </div>
 <div class="section" id="id3">
@@ -1163,9 +1164,9 @@ Olson Database) converted to the iCalendar format.</p>
 <p>We provide a modified <a class="reference external" href="https://github.com/libical/vzic">vzic</a> to convert IANA
 formatted data into iCalendar format, in the <a class="reference external" href="https://github.com/cyrusimap/cyrus-timezones">cyrus-timezones package</a> to make the following steps
 easier.</p>
-<p>The steps to populate the <code class="docutils literal"><span class="pre">zoneinfo_dir</span></code> directory are:</p>
+<p>The steps to populate the <code class="docutils literal notranslate"><span class="pre">zoneinfo_dir</span></code> directory are:</p>
 <ol class="arabic">
-<li><p class="first">Acquire and build your choice of <code class="docutils literal"><span class="pre">vzic</span></code> tool.</p>
+<li><p class="first">Acquire and build your choice of <code class="docutils literal notranslate"><span class="pre">vzic</span></code> tool.</p>
 </li>
 <li><p class="first">Download the latest version of the
 <a class="reference external" href="http://www.iana.org/time-zones">Time Zone Database data from IANA</a>. Note
@@ -1173,32 +1174,32 @@ you only need the <strong>data</strong>, not the code.</p>
 </li>
 <li><p class="first">Expand the downloaded time zone data into a temporary directory of your choice.</p>
 </li>
-<li><p class="first">Populate <code class="docutils literal"><span class="pre">zoneinfo_dir</span></code> with iCalendar data:</p>
+<li><p class="first">Populate <code class="docutils literal notranslate"><span class="pre">zoneinfo_dir</span></code> with iCalendar data:</p>
 <p><em>Initial Install Only</em></p>
 <ol class="loweralpha">
 <li><p class="first">Convert the raw data into iCalendar format by running vzic as follows:
-<code class="docutils literal"><span class="pre">vzic</span> <span class="pre">--pure</span> <span class="pre">--olson-dir</span> <span class="pre">&lt;location-of-raw-data&gt;</span> <span class="pre">--output-dir</span> <span class="pre">&lt;zoneinfo_dir&gt;</span></code></p>
+<code class="docutils literal notranslate"><span class="pre">vzic</span> <span class="pre">--pure</span> <span class="pre">--olson-dir</span> <span class="pre">&lt;location-of-raw-data&gt;</span> <span class="pre">--output-dir</span> <span class="pre">&lt;zoneinfo_dir&gt;</span></code></p>
 <p>This will create and install iCalendar data directly into the
-<code class="docutils literal"><span class="pre">&lt;zoneinfo_dir&gt;</span></code> directory.</p>
+<code class="docutils literal notranslate"><span class="pre">&lt;zoneinfo_dir&gt;</span></code> directory.</p>
 </li>
 </ol>
 <p><em>Updating Data Only</em></p>
 <ol class="loweralpha" start="2">
 <li><p class="first">Convert the raw data into iCalendar format by running vzic as follows:
-<code class="docutils literal"><span class="pre">vzic</span> <span class="pre">--pure</span> <span class="pre">--olson-dir</span> <span class="pre">&lt;location-of-raw-data&gt;</span></code></p>
+<code class="docutils literal notranslate"><span class="pre">vzic</span> <span class="pre">--pure</span> <span class="pre">--olson-dir</span> <span class="pre">&lt;location-of-raw-data&gt;</span></code></p>
 <p>This will create a zoneinfo/ subdirectory in your current location</p>
 </li>
-<li><p class="first">Merge new/updated iCalendar data into the <code class="docutils literal"><span class="pre">&lt;zoneinfo_dir&gt;</span></code> directory
+<li><p class="first">Merge new/updated iCalendar data into the <code class="docutils literal notranslate"><span class="pre">&lt;zoneinfo_dir&gt;</span></code> directory
 by running vzic-merge.pl in your current location:
-<code class="docutils literal"><span class="pre">vzic-merge.pl</span></code></p>
+<code class="docutils literal notranslate"><span class="pre">vzic-merge.pl</span></code></p>
 </li>
 </ol>
 </li>
 <li><p class="first">Rebuild the Cyrus zoneinfo index by running <a class="reference internal" href="../../../reference/manpages/systemcommands/ctl_zoneinfo.html#std:cyrusman-ctl_zoneinfo(8)">ctl_zoneinfo(8)</a> as
 follows:
-<code class="docutils literal"><span class="pre">ctl_zoneinfo</span> <span class="pre">-r</span> <span class="pre">&lt;version-string&gt;</span></code></p>
+<code class="docutils literal notranslate"><span class="pre">ctl_zoneinfo</span> <span class="pre">-r</span> <span class="pre">&lt;version-string&gt;</span></code></p>
 <p>where &lt;version-string&gt; contains description of the recently downloaded time
-zone data, colon, and the version of the data (e.g. &quot;IANA Time Zone Database:2020a&quot;).</p>
+zone data, colon, and the version of the data (e.g. “IANA Time Zone Database:2020a”).</p>
 </li>
 <li><p class="first">Check that the zoneinfo index database and all iCalendar data files/links
 are readable by the cyrus user.</p>
@@ -1217,9 +1218,9 @@ are readable by the cyrus user.</p>
 <p><a class="reference external" href="https://tools.ietf.org/id/draft-desruisseaux-ischedule">iSchedule</a>
 allows CalDAV servers to:</p>
 <ul class="simple">
-<li>query an event participant's free/busy status prior to invitation in order
+<li>query an event participant’s free/busy status prior to invitation in order
 to set up a good meeting time, which cannot be done over email.</li>
-<li>keep participant's local event current by updating the status of other
+<li>keep participant’s local event current by updating the status of other
 participants automatically. This is not done when scheduling over email as it
 would result in too much mail traffic and extra manual overhead for the users.</li>
 </ul>
@@ -1228,16 +1229,16 @@ would result in too much mail traffic and extra manual overhead for the users.</
 <blockquote>
 <div><em>This shows the default value: change it in imapd.conf to suit your needs.</em></div></blockquote>
 <blockquote class="last">
-<div><p><code class="docutils literal"><span class="pre">caldav_allowscheduling:</span></code> on</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">caldav_allowscheduling:</span></code> on</p>
 <blockquote>
-<div>Enable calendar scheduling operations. If set to &quot;apple&quot;, the
+<div>Enable calendar scheduling operations. If set to “apple”, the
 server will emulate Apple CalendarServer behavior as closely as
 possible.
 Allowed values: <em>off</em>, <em>on</em>, <em>apple</em></div></blockquote>
 </div></blockquote>
 </div>
 <p>iSchedule is automatically enabled in Cyrus if both the CalDAV module and the
-<code class="docutils literal"><span class="pre">caldav_allowscheduling</span></code> options are enabled in a
+<code class="docutils literal notranslate"><span class="pre">caldav_allowscheduling</span></code> options are enabled in a
 <a class="reference internal" href="../../../reference/admin/murder/murder.html#murder"><span class="std std-ref">Cyrus Murder</span></a>. In this instance, Cyrus uses iSchedule to move
 scheduling messages from frontend to backend servers.</p>
 <p>Support for scheduling with external servers is currently under development
@@ -1270,7 +1271,7 @@ or corruption.</p>
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Oct 02 2020
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1287,7 +1288,7 @@ or corruption.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1296,7 +1297,7 @@ or corruption.</p>
       <script type="text/javascript" src="../../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../../_static/language_data.js"></script>
 
   
 

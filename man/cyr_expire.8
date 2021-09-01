@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "CYR_EXPIRE" "8" "May 10, 2021" "3.4.1" "Cyrus IMAP"
+.TH "CYR_EXPIRE" "8" "September 01, 2021" "3.4.2" "Cyrus IMAP"
 .SH NAME
 cyr_expire \- Cyrus IMAP documentation
 .
@@ -50,9 +50,9 @@ expire messages from mailboxes, and
 .IP \(bu 2
 expire entries from the duplicate delivery database, and
 .IP \(bu 2
-cleanse mailboxes of partially expunged messages (when using the "delayed" expunge mode), and
+cleanse mailboxes of partially expunged messages (when using the “delayed” expunge mode), and
 .IP \(bu 2
-remove deleted mailboxes (when using the "delayed" delete mode), and
+remove deleted mailboxes (when using the “delayed” delete mode), and
 .IP \(bu 2
 expire entries from conversations databases, and
 .IP \(bu 2
@@ -125,7 +125,7 @@ This feature was introduced in version 3.0.
 .TP
 .B \-D delete\-duration
 Remove previously deleted mailboxes older than \fIdelete\-duration\fP
-(when using the "delayed" delete mode).
+(when using the “delayed” delete mode).
 The value can be a floating point number, and may have a suffix to
 specify the unit of time.  If no suffix, the value is number of days.
 Valid suffixes are \fBd\fP (days), \fBh\fP (hours), \fBm\fP (minutes) and
@@ -145,7 +145,7 @@ Format is the same as delete\-duration.
 .TP
 .B \-X expunge\-duration
 Expunge previously deleted messages older than \fIexpunge\-duration\fP
-(when using the "delayed" expunge mode).
+(when using the “delayed” expunge mode).
 Format is the same as delete\-duration.
 .UNINDENT
 .INDENT 0.0
@@ -168,13 +168,13 @@ the machine.
 .TP
 .B \-p mailbox\-prefix
 Only find mailboxes starting with this prefix,  e.g.
-"user.justgotspammedlots".
+“user.justgotspammedlots”.
 .UNINDENT
 .INDENT 0.0
 .TP
 .B \-u userid
 Only find mailboxes belonging to this user,  e.g.
-"\fI\%justgotspammedlots@example.com\fP".
+“\fI\%justgotspammedlots@example.com\fP”.
 .UNINDENT
 .INDENT 0.0
 .TP

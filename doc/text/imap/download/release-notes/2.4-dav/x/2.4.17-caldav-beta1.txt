@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.4.17-caldav-beta1 Release Notes
 ********************************************
 

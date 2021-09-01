@@ -1,4 +1,3 @@
-
 Xapian for searching
 ********************
 
@@ -74,7 +73,7 @@ You also need (at least one) search tier. Add this to imapd.conf(5).
    partition-base: /var/cyrus/spool
    t1searchpartition-base: /var/cyrus/search
 
-If you want to do more complex search tiers and repacking, you'll want
+If you want to do more complex search tiers and repacking, you’ll want
 to read:
 
 http://lists.tartarus.org/pipermail/xapian-

@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "SIEVESHELL" "1" "May 10, 2021" "3.4.1" "Cyrus IMAP"
+.TH "SIEVESHELL" "1" "September 01, 2021" "3.4.2" "Cyrus IMAP"
 .SH NAME
 sieveshell \- Cyrus IMAP documentation
 .
@@ -35,11 +35,11 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 sieveshell \- remotely manipulate sieve scripts
 .SH SYNOPSIS
 .sp
-sieveshell [\fB\-\-user\fP=\fIuser\fP] [\fB\-\-authname\fP=\fIauthname\fP]
-[\fB\-\-realm\fP=\fIrealm\fP] [\fB\-\-password\fP=\fIpassword\fP]
-[\fB\-\-exec\fP=\fIscript\fP] [\fB\-\-execfile\fP=\fIfile\fP] \fIserver\fP[\fB:\fP\fIport\fP]
+sieveshell [\fB–user\fP=\fIuser\fP] [\fB–authname\fP=\fIauthname\fP]
+[\fB–realm\fP=\fIrealm\fP] [\fB–password\fP=\fIpassword\fP]
+[\fB–exec\fP=\fIscript\fP] [\fB–execfile\fP=\fIfile\fP] \fIserver\fP[\fB:\fP\fIport\fP]
 .sp
-sieveshell \fB\-\-help\fP
+sieveshell \fB–help\fP
 .SH DESCRIPTION
 .sp
 \fBsieveshell\fP allows users to manipulate their scripts on a remote
@@ -59,47 +59,59 @@ The following commands are recognized:
 .sp
 \fBdeactivate\fP deactivate all scripts.
 .SH OPTIONS
-.sp
-\fB\-u\fP \fIuser\fP, \fB\-\-user\fP=\fIuser\fP
+.INDENT 0.0
+.IP \(bu 2
+\fB\-u\fP \fIuser\fP, \fB–user\fP=\fIuser\fP
+.UNINDENT
 .INDENT 0.0
 .INDENT 3.5
 The user whose mailboxes you want to work on. If not specified, it uses the same
 as \-a.
 .UNINDENT
 .UNINDENT
-.sp
-\fB\-a\fP \fIauthname\fP, \fB\-\-authname\fP=\fIauthname\fP
+.INDENT 0.0
+.IP \(bu 2
+\fB\-a\fP \fIauthname\fP, \fB–authname\fP=\fIauthname\fP
+.UNINDENT
 .INDENT 0.0
 .INDENT 3.5
 The user to use for authentication. If not specified, it defaults to the
 current login user.
 .UNINDENT
 .UNINDENT
-.sp
-\fB\-r\fP \fIrealm\fP, \fB\-\-realm\fP=\fIrealm\fP
+.INDENT 0.0
+.IP \(bu 2
+\fB\-r\fP \fIrealm\fP, \fB–realm\fP=\fIrealm\fP
+.UNINDENT
 .INDENT 0.0
 .INDENT 3.5
 The realm to attempt authentication in.
 .UNINDENT
 .UNINDENT
-.sp
-\fB\-p\fP \fIpassword\fP, \fB\-\-password\fP=\fIpassword\fP
+.INDENT 0.0
+.IP \(bu 2
+\fB\-p\fP \fIpassword\fP, \fB–password\fP=\fIpassword\fP
+.UNINDENT
 .INDENT 0.0
 .INDENT 3.5
 The password to use when authenticating to server. Note that this
 parameter can be seen in the process list. \fBUse with caution!\fP
 .UNINDENT
 .UNINDENT
-.sp
-\fB\-e\fP \fIscript\fP, \fB\-\-exec\fP=\fIscript\fP
+.INDENT 0.0
+.IP \(bu 2
+\fB\-e\fP \fIscript\fP, \fB–exec\fP=\fIscript\fP
+.UNINDENT
 .INDENT 0.0
 .INDENT 3.5
 Instead of working interactively, run commands from \fIscript\fP, and
 exit when done.
 .UNINDENT
 .UNINDENT
-.sp
-\fB\-f\fP \fIfile\fP, \fB\-\-execfile\fP=\fIfile\fP
+.INDENT 0.0
+.IP \(bu 2
+\fB\-f\fP \fIfile\fP, \fB–execfile\fP=\fIfile\fP
+.UNINDENT
 .INDENT 0.0
 .INDENT 3.5
 Instead of working interactively, run commands from file \fIfile\fP and
@@ -108,8 +120,8 @@ exit when done.
 .UNINDENT
 .SH REFERENCES
 .sp
-[MANAGESIEVE] Martin, T.; "A Protocol for Remotely Managing Sieve
-Scripts", RFC 5804; May 2001
+[MANAGESIEVE] Martin, T.; “A Protocol for Remotely Managing Sieve
+Scripts”, RFC 5804; May 2001
 .SH AUTHOR
 .sp
 Tim Martin <\fI\%tmartin@mirapoint.com\fP>, and the rest of the Cyrus

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mailbox Creation Distribution &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Mailbox Creation Distribution &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../index.html"/>
         <link rel="up" title="Configuration Guide" href="../deployment.html"/>
         <link rel="next" title="Known Protocol Limitations" href="known_protocol_limitations.html"/>
         <link rel="prev" title="Databases" href="databases.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../setup.html">Setup</a> &raquo;</li>
       
@@ -789,15 +790,15 @@
 <li>the backend with the most free disk space is selected on the Murder frontend</li>
 <li>the partition with the most free disk space is selected on the backend</li>
 </ul>
-<p>This may not be the most appropriate backend or partition to create the new mailbox on, and Cyrus IMAP therefor allows for a variety of additional modes of calculating and selecting the most appropriate backend and partition. The exact mode for the selection is controlled with the <code class="docutils literal"><span class="pre">imapd.conf</span></code> setting <code class="docutils literal"><span class="pre">serverlist_select_mode</span></code> on the frontend and <code class="docutils literal"><span class="pre">partition_select_mode</span></code> on the backend.</p>
-<p>Alternatively, a default backend can be configured with the <code class="docutils literal"><span class="pre">defaultserver</span></code> setting on a frontend, and a default partition can be configured with the <code class="docutils literal"><span class="pre">defaultpartition</span></code> on a backend.</p>
+<p>This may not be the most appropriate backend or partition to create the new mailbox on, and Cyrus IMAP therefor allows for a variety of additional modes of calculating and selecting the most appropriate backend and partition. The exact mode for the selection is controlled with the <code class="docutils literal notranslate"><span class="pre">imapd.conf</span></code> setting <code class="docutils literal notranslate"><span class="pre">serverlist_select_mode</span></code> on the frontend and <code class="docutils literal notranslate"><span class="pre">partition_select_mode</span></code> on the backend.</p>
+<p>Alternatively, a default backend can be configured with the <code class="docutils literal notranslate"><span class="pre">defaultserver</span></code> setting on a frontend, and a default partition can be configured with the <code class="docutils literal notranslate"><span class="pre">defaultpartition</span></code> on a backend.</p>
 <p>Prior to Cyrus IMAP version 2.5, when creating a mailbox, should no
 target partition have been specified, the mailbox is either created on:</p>
 <ul class="simple">
-<li>the configured <code class="docutils literal"><span class="pre">defaultserver</span></code>, or</li>
+<li>the configured <code class="docutils literal notranslate"><span class="pre">defaultserver</span></code>, or</li>
 <li>the server that is found to have the most free disk space, and</li>
-<li>the configured <code class="docutils literal"><span class="pre">defaultpartition</span></code>, or</li>
-<li>the most fitting partition if <code class="docutils literal"><span class="pre">defaultpartition</span></code> is not
+<li>the configured <code class="docutils literal notranslate"><span class="pre">defaultpartition</span></code>, or</li>
+<li>the most fitting partition if <code class="docutils literal notranslate"><span class="pre">defaultpartition</span></code> is not
 configured.</li>
 </ul>
 <p>New configuration options are available since Cyrus IMAP 2.5, that
@@ -805,7 +806,7 @@ allow more weighted and better balanced backend and partition
 selection.</p>
 <div class="section" id="selection-mode">
 <h2>Selection Mode<a class="headerlink" href="#selection-mode" title="Permalink to this headline">¶</a></h2>
-<p>Among the partitions, how the most fitting one is selected depends on the configured selection mode: <code class="docutils literal"><span class="pre">partition_mode</span></code> setting in <code class="docutils literal"><span class="pre">/etc/imapd.conf</span></code></p>
+<p>Among the partitions, how the most fitting one is selected depends on the configured selection mode: <code class="docutils literal notranslate"><span class="pre">partition_mode</span></code> setting in <code class="docutils literal notranslate"><span class="pre">/etc/imapd.conf</span></code></p>
 <div class="section" id="available-selection-modes">
 <h3>Available Selection Modes<a class="headerlink" href="#available-selection-modes" title="Permalink to this headline">¶</a></h3>
 <ul>
@@ -819,15 +820,15 @@ selection.</p>
 <div><p>The partition which has the most free space (counted in KiB units) is selected.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Example of <code class="docutils literal"><span class="pre">freespace-most</span></code> selection on backend</p>
+<p>Example of <code class="docutils literal notranslate"><span class="pre">freespace-most</span></code> selection on backend</p>
 <p>Suppose that the configured partitions are:</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">part1</span></code> which has a 1000GiB capacity, 400GiB being free (that is, 40% free space)</li>
-<li><code class="docutils literal"><span class="pre">part2</span></code> which has a 1000GiB capacity, 600GiB being free (that is, 60% free space)</li>
-<li><code class="docutils literal"><span class="pre">part3</span></code> which has a 100GiB capacity, 30GiB being free (that is, 30% free space)</li>
-<li><code class="docutils literal"><span class="pre">part4</span></code> which has a 100GiB capacity, 70GiB being free (that is, 70% free space)</li>
+<li><code class="docutils literal notranslate"><span class="pre">part1</span></code> which has a 1000GiB capacity, 400GiB being free (that is, 40% free space)</li>
+<li><code class="docutils literal notranslate"><span class="pre">part2</span></code> which has a 1000GiB capacity, 600GiB being free (that is, 60% free space)</li>
+<li><code class="docutils literal notranslate"><span class="pre">part3</span></code> which has a 100GiB capacity, 30GiB being free (that is, 30% free space)</li>
+<li><code class="docutils literal notranslate"><span class="pre">part4</span></code> which has a 100GiB capacity, 70GiB being free (that is, 70% free space)</li>
 </ul>
-<p class="last">In that case <code class="docutils literal"><span class="pre">part2</span></code> will be selected as most fitting, since 600GiB of free space is the biggest of all partitions.</p>
+<p class="last">In that case <code class="docutils literal notranslate"><span class="pre">part2</span></code> will be selected as most fitting, since 600GiB of free space is the biggest of all partitions.</p>
 </div>
 </div></blockquote>
 </li>
@@ -836,8 +837,8 @@ selection.</p>
 <div><p>The partition which has the most percentage of free space is selected.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Example of <code class="docutils literal"><span class="pre">freespace-percent-most</span></code> selection on backend</p>
-<p class="last">In the same conditions, <code class="docutils literal"><span class="pre">part4</span></code> would be selected as most fitting, since 70% of free space is the biggest of all partitions.</p>
+<p>Example of <code class="docutils literal notranslate"><span class="pre">freespace-percent-most</span></code> selection on backend</p>
+<p class="last">In the same conditions, <code class="docutils literal notranslate"><span class="pre">part4</span></code> would be selected as most fitting, since 70% of free space is the biggest of all partitions.</p>
 </div>
 </div></blockquote>
 </li>
@@ -847,20 +848,20 @@ selection.</p>
 <p>As such, the more free space the partition has, the more chances it has to be selected.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Example of <code class="docutils literal"><span class="pre">freespace-percent-weighted</span></code> selection on backend</p>
+<p>Example of <code class="docutils literal notranslate"><span class="pre">freespace-percent-weighted</span></code> selection on backend</p>
 <p>In the same conditions, the weight of each partition would be:</p>
 <ul class="simple">
-<li>40 for <code class="docutils literal"><span class="pre">part1</span></code></li>
-<li>60 for <code class="docutils literal"><span class="pre">part2</span></code></li>
-<li>30 for <code class="docutils literal"><span class="pre">part3</span></code></li>
-<li>70 for <code class="docutils literal"><span class="pre">part4</span></code></li>
+<li>40 for <code class="docutils literal notranslate"><span class="pre">part1</span></code></li>
+<li>60 for <code class="docutils literal notranslate"><span class="pre">part2</span></code></li>
+<li>30 for <code class="docutils literal notranslate"><span class="pre">part3</span></code></li>
+<li>70 for <code class="docutils literal notranslate"><span class="pre">part4</span></code></li>
 </ul>
 <p>The sum of each weight being 200, the probability for each partition to be selected as most fitting would be:</p>
 <ul class="last simple">
-<li>20% for <code class="docutils literal"><span class="pre">part1</span></code></li>
-<li>30% for <code class="docutils literal"><span class="pre">part2</span></code></li>
-<li>15% for <code class="docutils literal"><span class="pre">part3</span></code></li>
-<li>35% for <code class="docutils literal"><span class="pre">part4</span></code></li>
+<li>20% for <code class="docutils literal notranslate"><span class="pre">part1</span></code></li>
+<li>30% for <code class="docutils literal notranslate"><span class="pre">part2</span></code></li>
+<li>15% for <code class="docutils literal notranslate"><span class="pre">part3</span></code></li>
+<li>35% for <code class="docutils literal notranslate"><span class="pre">part4</span></code></li>
 </ul>
 </div>
 </div></blockquote>
@@ -869,12 +870,12 @@ selection.</p>
 </div>
 <div class="section" id="usage-convergence">
 <h3>Usage convergence<a class="headerlink" href="#usage-convergence" title="Permalink to this headline">¶</a></h3>
-<p>In <code class="docutils literal"><span class="pre">freespace-percent-weighted</span></code> mode, partitions percentage usages converge towards 100%. So if they have different usages, those differences will stay and only really diminish upon reaching 100% of usage.</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">freespace-percent-weighted</span></code> mode, partitions percentage usages converge towards 100%. So if they have different usages, those differences will stay and only really diminish upon reaching 100% of usage.</p>
 <p>You may also observe growing differences between partitions usage when those partitions do not have the same total disk space.</p>
 <ul class="simple">
 <li>freespace-percent-weighted-delta</li>
 </ul>
-<p>As for <code class="docutils literal"><span class="pre">freespace-percent-weighted</span></code>, a weight is associated to each partition. It is computed as follows: (<em>percentage of freespace of partition</em>) - (<em>lowest percentage of freespace of all partitions</em>) + 0.5</p>
+<p>As for <code class="docutils literal notranslate"><span class="pre">freespace-percent-weighted</span></code>, a weight is associated to each partition. It is computed as follows: (<em>percentage of freespace of partition</em>) - (<em>lowest percentage of freespace of all partitions</em>) + 0.5</p>
 <p>Then a weighted choice is performed to select one of those partitions.</p>
 <p>As such, considering the percentages of usage, the more the partition is lagging behind the most used partition (which is the one with the lowest percentage of free space), the more chances it has to be selected.</p>
 </div>
@@ -886,20 +887,20 @@ selection.</p>
 <p><strong>Example of ``freespace-percent-weighted-delta`` Selection on Backend</strong></p>
 <p>In the same conditions, the weight of each partition would be:</p>
 <ul class="simple">
-<li>40 - 30 + 0.5 = 10.5 for <code class="docutils literal"><span class="pre">part1</span></code></li>
-<li>60 - 30 + 0.5 = 30.5 for <code class="docutils literal"><span class="pre">part2</span></code></li>
-<li>30 - 30 + 0.5 = 0.5 for <code class="docutils literal"><span class="pre">part3</span></code></li>
-<li>70 - 30 + 0.5 = 40.5 for <code class="docutils literal"><span class="pre">part4</span></code></li>
+<li>40 - 30 + 0.5 = 10.5 for <code class="docutils literal notranslate"><span class="pre">part1</span></code></li>
+<li>60 - 30 + 0.5 = 30.5 for <code class="docutils literal notranslate"><span class="pre">part2</span></code></li>
+<li>30 - 30 + 0.5 = 0.5 for <code class="docutils literal notranslate"><span class="pre">part3</span></code></li>
+<li>70 - 30 + 0.5 = 40.5 for <code class="docutils literal notranslate"><span class="pre">part4</span></code></li>
 </ul>
 <p>Then the probability for each partition to be selected as most fitting would be:</p>
 <ul class="simple">
-<li>12.8% for <code class="docutils literal"><span class="pre">part1</span></code></li>
-<li>37.2% for <code class="docutils literal"><span class="pre">part2</span></code></li>
-<li>0.6% for <code class="docutils literal"><span class="pre">part3</span></code></li>
-<li>49.4% for <code class="docutils literal"><span class="pre">part4</span></code></li>
+<li>12.8% for <code class="docutils literal notranslate"><span class="pre">part1</span></code></li>
+<li>37.2% for <code class="docutils literal notranslate"><span class="pre">part2</span></code></li>
+<li>0.6% for <code class="docutils literal notranslate"><span class="pre">part3</span></code></li>
+<li>49.4% for <code class="docutils literal notranslate"><span class="pre">part4</span></code></li>
 </ul>
 <p><strong>Usage convergence</strong></p>
-<p class="last">In <code class="docutils literal"><span class="pre">freespace-percent-weighted-delta</span></code> mode, partitions percentage usages converge towards the most used one. And then partitions usages grow equally.</p>
+<p class="last">In <code class="docutils literal notranslate"><span class="pre">freespace-percent-weighted-delta</span></code> mode, partitions percentage usages converge towards the most used one. And then partitions usages grow equally.</p>
 </div>
 </div>
 </div>
@@ -907,19 +908,19 @@ selection.</p>
 <h2>Special cases<a class="headerlink" href="#special-cases" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="what-happens-when-two-partitions-are-equal-as-most-fitting">
 <h3>What happens when two partitions are equal as most fitting?<a class="headerlink" href="#what-happens-when-two-partitions-are-equal-as-most-fitting" title="Permalink to this headline">¶</a></h3>
-<p>Suppose you are using the <code class="docutils literal"><span class="pre">freespace-most</span></code> selection mode, that two (or more) partitions have the same free size, and that this freespace happens to be the biggest one of all configured partitions.</p>
-<p>In that case, only one of those partitions will be selected. You may not know in advance which one will be: it depends of the order in which configured partitions are stored in memory (<code class="docutils literal"><span class="pre">hashtable</span></code>). In particular, it may not be the first one that appears listed in your <code class="docutils literal"><span class="pre">/etc/imapd.conf</span></code> configuration file.</p>
+<p>Suppose you are using the <code class="docutils literal notranslate"><span class="pre">freespace-most</span></code> selection mode, that two (or more) partitions have the same free size, and that this freespace happens to be the biggest one of all configured partitions.</p>
+<p>In that case, only one of those partitions will be selected. You may not know in advance which one will be: it depends of the order in which configured partitions are stored in memory (<code class="docutils literal notranslate"><span class="pre">hashtable</span></code>). In particular, it may not be the first one that appears listed in your <code class="docutils literal notranslate"><span class="pre">/etc/imapd.conf</span></code> configuration file.</p>
 <p>Also note that since the selected partition will now have less free space, it shall not be seen as most fitting next time.</p>
 </div>
 <div class="section" id="what-happens-when-two-partitions-point-to-the-same-device">
 <h3>What happens when two partitions point to the same device?<a class="headerlink" href="#what-happens-when-two-partitions-point-to-the-same-device" title="Permalink to this headline">¶</a></h3>
-<p>Suppose you are using the <code class="docutils literal"><span class="pre">freespace-most</span></code> or <code class="docutils literal"><span class="pre">freespace-percent-most</span></code> selection mode, and that two (or more) partitions actually point to the same device (that is the device id is the same).</p>
-<p>In that case, only one of those partitions will be checked, as if the others were not configured. You may not know in advance which one will be: it depends of the order in which configured partitions are stored in memory (<code class="docutils literal"><span class="pre">hashtable</span></code>). In particular, it may not be the first one that appears listed in your <code class="docutils literal"><span class="pre">/etc/imapd.conf</span></code> configuration file.</p>
+<p>Suppose you are using the <code class="docutils literal notranslate"><span class="pre">freespace-most</span></code> or <code class="docutils literal notranslate"><span class="pre">freespace-percent-most</span></code> selection mode, and that two (or more) partitions actually point to the same device (that is the device id is the same).</p>
+<p>In that case, only one of those partitions will be checked, as if the others were not configured. You may not know in advance which one will be: it depends of the order in which configured partitions are stored in memory (<code class="docutils literal notranslate"><span class="pre">hashtable</span></code>). In particular, it may not be the first one that appears listed in your <code class="docutils literal notranslate"><span class="pre">/etc/imapd.conf</span></code> configuration file.</p>
 </div>
 </div>
 <div class="section" id="partitions-exclusion">
 <h2>Partitions Exclusion<a class="headerlink" href="#partitions-exclusion" title="Permalink to this headline">¶</a></h2>
-<p>Partitions listed in the <code class="docutils literal"><span class="pre">partition_mode_exclude</span></code> setting are permanently excluded from being selected.</p>
+<p>Partitions listed in the <code class="docutils literal notranslate"><span class="pre">partition_mode_exclude</span></code> setting are permanently excluded from being selected.</p>
 <ul>
 <li><p class="first">partition_mode_exclude</p>
 <blockquote>
@@ -927,7 +928,7 @@ selection.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>Example of permanent partition exclusion</p>
-<p>With the following configuration in <cite>/etc/imapd.conf</cite>, <code class="docutils literal"><span class="pre">parta</span></code> and <code class="docutils literal"><span class="pre">partb</span></code> would be permanently excluded from being selected:</p>
+<p>With the following configuration in <cite>/etc/imapd.conf</cite>, <code class="docutils literal notranslate"><span class="pre">parta</span></code> and <code class="docutils literal notranslate"><span class="pre">partb</span></code> would be permanently excluded from being selected:</p>
 <p>partition-part1: /path/to/part1
 partition-part2: /path/to/part2
 partition-part3: /path/to/part3
@@ -935,7 +936,7 @@ partition-part4: /path/to/part4
 partition-parta: /path/to/parta
 partition-partb: /path/to/partb</p>
 <p>partition_mode_exclude: parta partb</p>
-<p class="last">When using a selection mode other than <code class="docutils literal"><span class="pre">random</span></code>, partitions are automatically excluded if their usage percentage is beyond the <code class="docutils literal"><span class="pre">partition_mode_soft_usage_limit</span></code> integer setting.</p>
+<p class="last">When using a selection mode other than <code class="docutils literal notranslate"><span class="pre">random</span></code>, partitions are automatically excluded if their usage percentage is beyond the <code class="docutils literal notranslate"><span class="pre">partition_mode_soft_usage_limit</span></code> integer setting.</p>
 </div>
 </div></blockquote>
 </li>
@@ -944,9 +945,9 @@ partition-partb: /path/to/partb</p>
 <div><p>If all partitions are beyond the configured value, this feature is automatically deactivated. A partition is thus selected as if the setting was not set.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Example of partition exclusion using <code class="docutils literal"><span class="pre">partition_mode_soft_usage_limit</span></code></p>
-<p>In the same conditions than &lt;xref linkend=&quot;exam-Deployment_Guide-Available_Selection_Modes_on_Backend-Example_of_freespace_most_Selection_on_Backend&quot; /&gt;, setting <code class="docutils literal"><span class="pre">partition_mode_soft_usage_limit</span></code> to <code class="docutils literal"><span class="pre">50</span></code> would exclude partitions <code class="docutils literal"><span class="pre">part1</span></code> and <code class="docutils literal"><span class="pre">part3</span></code> since their disk usage is respectively 60% and 70%.</p>
-<p class="last">But setting the option to <code class="docutils literal"><span class="pre">20</span></code> would have no effect, since the usage of all partitions is beyond 20%.</p>
+<p>Example of partition exclusion using <code class="docutils literal notranslate"><span class="pre">partition_mode_soft_usage_limit</span></code></p>
+<p>In the same conditions than &lt;xref linkend=”exam-Deployment_Guide-Available_Selection_Modes_on_Backend-Example_of_freespace_most_Selection_on_Backend” /&gt;, setting <code class="docutils literal notranslate"><span class="pre">partition_mode_soft_usage_limit</span></code> to <code class="docutils literal notranslate"><span class="pre">50</span></code> would exclude partitions <code class="docutils literal notranslate"><span class="pre">part1</span></code> and <code class="docutils literal notranslate"><span class="pre">part3</span></code> since their disk usage is respectively 60% and 70%.</p>
+<p class="last">But setting the option to <code class="docutils literal notranslate"><span class="pre">20</span></code> would have no effect, since the usage of all partitions is beyond 20%.</p>
 </div>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
@@ -961,20 +962,20 @@ partition-partb: /path/to/partb</p>
 </div>
 <div class="section" id="partitions-usage-data-reset">
 <h2>Partitions Usage Data Reset<a class="headerlink" href="#partitions-usage-data-reset" title="Permalink to this headline">¶</a></h2>
-<p>By default partitions usage data are retrieved only once upon service initialization. This only concerns selection modes other than <code class="docutils literal"><span class="pre">random</span></code>.</p>
-<p>If you tend to use the same service instance for a long lapse of time and performs a large amount of mailboxes creation, it may be useful to configure the <code class="docutils literal"><span class="pre">partition_mode_usage_reinit</span></code> so that partitions usage data are refreshed after the configured number of creation requests.</p>
+<p>By default partitions usage data are retrieved only once upon service initialization. This only concerns selection modes other than <code class="docutils literal notranslate"><span class="pre">random</span></code>.</p>
+<p>If you tend to use the same service instance for a long lapse of time and performs a large amount of mailboxes creation, it may be useful to configure the <code class="docutils literal notranslate"><span class="pre">partition_mode_usage_reinit</span></code> so that partitions usage data are refreshed after the configured number of creation requests.</p>
 </div>
 <div class="section" id="mailbox-creation-distribution-through-murder-frontend">
-<h2>Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code><a class="headerlink" href="#mailbox-creation-distribution-through-murder-frontend" title="Permalink to this headline">¶</a></h2>
+<h2>Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code><a class="headerlink" href="#mailbox-creation-distribution-through-murder-frontend" title="Permalink to this headline">¶</a></h2>
 <p>Upon creating a user mailbox, if the target server is not given as extra parameter, the mailbox is either created on</p>
 <ul class="simple">
-<li>the configured <code class="docutils literal"><span class="pre">defaultserver</span></code> backend</li>
-<li>the most fitting backend among the servers listed in the <code class="docutils literal"><span class="pre">serverlist</span></code> setting, if <code class="docutils literal"><span class="pre">defaultserver</span></code> is not configured</li>
+<li>the configured <code class="docutils literal notranslate"><span class="pre">defaultserver</span></code> backend</li>
+<li>the most fitting backend among the servers listed in the <code class="docutils literal notranslate"><span class="pre">serverlist</span></code> setting, if <code class="docutils literal notranslate"><span class="pre">defaultserver</span></code> is not configured</li>
 </ul>
 <div class="section" id="id1">
 <h3>Selection Mode<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
-<p>Among the backends, how the most fitting one is selected depends on the configured selection mode: <code class="docutils literal"><span class="pre">serverlist_mode</span></code> setting in <code class="docutils literal"><span class="pre">/etc/imapd.conf</span></code>.</p>
-<p>The principle is similar to the mailbox creation distribution on backend (see &lt;xref linkend=&quot;sect-Deployment_Guide-Mailbox_Creation_Distribution-On_backend&quot; /&gt;).</p>
+<p>Among the backends, how the most fitting one is selected depends on the configured selection mode: <code class="docutils literal notranslate"><span class="pre">serverlist_mode</span></code> setting in <code class="docutils literal notranslate"><span class="pre">/etc/imapd.conf</span></code>.</p>
+<p>The principle is similar to the mailbox creation distribution on backend (see &lt;xref linkend=”sect-Deployment_Guide-Mailbox_Creation_Distribution-On_backend” /&gt;).</p>
 </div>
 <div class="section" id="available-selection-modes-on-frontend">
 <h3>Available Selection Modes on Frontend<a class="headerlink" href="#available-selection-modes-on-frontend" title="Permalink to this headline">¶</a></h3>
@@ -989,33 +990,33 @@ partition-partb: /path/to/partb</p>
 <div><p>The backend which has the most free space (counted in KiB units) is selected. The considered free space is the sum of all available partitions free space on the backend.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Example of <code class="docutils literal"><span class="pre">freespace-most</span></code> Selection on Frontend</p>
+<p>Example of <code class="docutils literal notranslate"><span class="pre">freespace-most</span></code> Selection on Frontend</p>
 <p>Suppose that the configured backends are:</p>
 <ul class="last">
-<li><p class="first"><code class="docutils literal"><span class="pre">backend1</span></code> which has a 2000GiB capacity, 1000GiB being free (that is, 50% free space), composed of 2 partitions</p>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">backend1</span></code> which has a 2000GiB capacity, 1000GiB being free (that is, 50% free space), composed of 2 partitions</p>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">part1</span></code> which has a 1000GiB capacity, 500GiB being free (that is, 50% free space)</p>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">part1</span></code> which has a 1000GiB capacity, 500GiB being free (that is, 50% free space)</p>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">part2</span></code> which has a 1000GiB capacity, 500GiB being free (that is, 50% free space)</p>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">part2</span></code> which has a 1000GiB capacity, 500GiB being free (that is, 50% free space)</p>
 <blockquote>
 <div><ul>
-<li><p class="first"><code class="docutils literal"><span class="pre">backend2</span></code> which has a 2000GiB capacity, 900GiB being free (that is, 45% free space), composed of 2 partitions</p>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">backend2</span></code> which has a 2000GiB capacity, 900GiB being free (that is, 45% free space), composed of 2 partitions</p>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">part1</span></code> which has a 1000GiB capacity, 200GiB being free (that is, 20% free space)</p>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">part1</span></code> which has a 1000GiB capacity, 200GiB being free (that is, 20% free space)</p>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">part2</span></code> which has a 1000GiB capacity, 700GiB being free (that is, 70% free space)</p>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">part2</span></code> which has a 1000GiB capacity, 700GiB being free (that is, 70% free space)</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal"><span class="pre">backend3</span></code> which has a 200GiB capacity, 110GiB being free (that is, 55% free space), composed of 2 partitions</li>
-<li><code class="docutils literal"><span class="pre">part1</span></code> which has a 100GiB capacity, 30GiB being free (that is, 30% free space)</li>
-<li><code class="docutils literal"><span class="pre">part2</span></code> which has a 100GiB capacity, 80GiB being free (that is, 80% free space)</li>
+<li><code class="docutils literal notranslate"><span class="pre">backend3</span></code> which has a 200GiB capacity, 110GiB being free (that is, 55% free space), composed of 2 partitions</li>
+<li><code class="docutils literal notranslate"><span class="pre">part1</span></code> which has a 100GiB capacity, 30GiB being free (that is, 30% free space)</li>
+<li><code class="docutils literal notranslate"><span class="pre">part2</span></code> which has a 100GiB capacity, 80GiB being free (that is, 80% free space)</li>
 </ul>
 </div></blockquote>
 </li>
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first">In that case <code class="docutils literal"><span class="pre">backend1</span></code> will be selected as most fitting, since 1000GiB of free space is the biggest of all backends.</p>
+<li><p class="first">In that case <code class="docutils literal notranslate"><span class="pre">backend1</span></code> will be selected as most fitting, since 1000GiB of free space is the biggest of all backends.</p>
 </li>
 </ul>
 </div>
@@ -1026,8 +1027,8 @@ partition-partb: /path/to/partb</p>
 <div><p>On each backend, the partition with the most percentage of free space is considered. The selected backend is the one whose partition has the most percentage of free space.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Example of <code class="docutils literal"><span class="pre">freespace-percent-most</span></code> Selection on Frontend</p>
-<p class="last">In the same conditions than &lt;xref linkend=&quot;exam-Deployment_Guide-Available_Selection_Modes_on_Frontend-Example_of_freespace_most_Selection_on_Frontend&quot; /&gt; <code class="docutils literal"><span class="pre">backend3</span></code> would be selected as most fitting, since it has a partition with 80% of free space which is the biggest of all backends.</p>
+<p>Example of <code class="docutils literal notranslate"><span class="pre">freespace-percent-most</span></code> Selection on Frontend</p>
+<p class="last">In the same conditions than &lt;xref linkend=”exam-Deployment_Guide-Available_Selection_Modes_on_Frontend-Example_of_freespace_most_Selection_on_Frontend” /&gt; <code class="docutils literal notranslate"><span class="pre">backend3</span></code> would be selected as most fitting, since it has a partition with 80% of free space which is the biggest of all backends.</p>
 </div>
 </div></blockquote>
 </li>
@@ -1036,21 +1037,21 @@ partition-partb: /path/to/partb</p>
 <div><p>On each backend, the partition with the most percentage of free space is considered: it is the backend weight. Then a weighted choice is performed to select one of the backends.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Example of <code class="docutils literal"><span class="pre">freespace-percent-weighted</span></code> Selection on Frontend</p>
-<p>In the same conditions than &lt;xref linkend=&quot;exam-Deployment_Guide-Available_Selection_Modes_on_Frontend-Example_of_freespace_most_Selection_on_Frontend&quot; /&gt;, the weight of each backend would be:</p>
+<p>Example of <code class="docutils literal notranslate"><span class="pre">freespace-percent-weighted</span></code> Selection on Frontend</p>
+<p>In the same conditions than &lt;xref linkend=”exam-Deployment_Guide-Available_Selection_Modes_on_Frontend-Example_of_freespace_most_Selection_on_Frontend” /&gt;, the weight of each backend would be:</p>
 <blockquote>
 <div><ul class="simple">
-<li>50 for <code class="docutils literal"><span class="pre">backend1</span></code></li>
-<li>70 for <code class="docutils literal"><span class="pre">backend2</span></code></li>
-<li>80 for <code class="docutils literal"><span class="pre">backend3</span></code></li>
+<li>50 for <code class="docutils literal notranslate"><span class="pre">backend1</span></code></li>
+<li>70 for <code class="docutils literal notranslate"><span class="pre">backend2</span></code></li>
+<li>80 for <code class="docutils literal notranslate"><span class="pre">backend3</span></code></li>
 </ul>
 </div></blockquote>
 <p>The sum of each weight being 200, the probability for each backend to be selected as most fitting would be:</p>
 <blockquote class="last">
 <div><ul class="simple">
-<li>25% for <code class="docutils literal"><span class="pre">backend1</span></code></li>
-<li>35% for <code class="docutils literal"><span class="pre">backend2</span></code></li>
-<li>40% for <code class="docutils literal"><span class="pre">backend3</span></code></li>
+<li>25% for <code class="docutils literal notranslate"><span class="pre">backend1</span></code></li>
+<li>35% for <code class="docutils literal notranslate"><span class="pre">backend2</span></code></li>
+<li>40% for <code class="docutils literal notranslate"><span class="pre">backend3</span></code></li>
 </ul>
 </div></blockquote>
 </div>
@@ -1059,23 +1060,23 @@ partition-partb: /path/to/partb</p>
 <li><p class="first">freespace-percent-weighted-delta</p>
 </li>
 </ul>
-<p>On each backend, the partition with the most percentage of free space is considered. As for <code class="docutils literal"><span class="pre">freespace-percent-weighted</span></code>, a weight is associated to each backend. It is computed as follows: (<em>percentage of freespace on backend</em>) - (<em>lowest percentage of freespace of all backends</em>) + 0.5</p>
+<p>On each backend, the partition with the most percentage of free space is considered. As for <code class="docutils literal notranslate"><span class="pre">freespace-percent-weighted</span></code>, a weight is associated to each backend. It is computed as follows: (<em>percentage of freespace on backend</em>) - (<em>lowest percentage of freespace of all backends</em>) + 0.5</p>
 <p>Then a weighted choice is performed to select one of the backends.</p>
 <blockquote>
 <div><div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p><strong>Example of ``freespace-percent-weighted-delta`` Selection on Frontend</strong></p>
-<p>In the same conditions than &lt;xref linkend=&quot;exam-Deployment_Guide-Available_Selection_Modes_on_Frontend-Example_of_freespace_most_Selection_on_Frontend&quot; /&gt;, the weight of each backend would be:</p>
+<p>In the same conditions than &lt;xref linkend=”exam-Deployment_Guide-Available_Selection_Modes_on_Frontend-Example_of_freespace_most_Selection_on_Frontend” /&gt;, the weight of each backend would be:</p>
 <ul class="simple">
-<li>50 - 50 + 0.5 = 0.5 for <code class="docutils literal"><span class="pre">backend1</span></code></li>
-<li>70 - 50 + 0.5 = 20.5 for <code class="docutils literal"><span class="pre">backend2</span></code></li>
-<li>80 - 50 + 0.5 = 30.5 for <code class="docutils literal"><span class="pre">backend3</span></code></li>
+<li>50 - 50 + 0.5 = 0.5 for <code class="docutils literal notranslate"><span class="pre">backend1</span></code></li>
+<li>70 - 50 + 0.5 = 20.5 for <code class="docutils literal notranslate"><span class="pre">backend2</span></code></li>
+<li>80 - 50 + 0.5 = 30.5 for <code class="docutils literal notranslate"><span class="pre">backend3</span></code></li>
 </ul>
 <p>Then the probability for each backend to be selected as most fitting would be:</p>
 <ul class="last simple">
-<li>1.0% for <code class="docutils literal"><span class="pre">backend1</span></code></li>
-<li>39.8% for <code class="docutils literal"><span class="pre">backend2</span></code></li>
-<li>59.2% for <code class="docutils literal"><span class="pre">backend3</span></code></li>
+<li>1.0% for <code class="docutils literal notranslate"><span class="pre">backend1</span></code></li>
+<li>39.8% for <code class="docutils literal notranslate"><span class="pre">backend2</span></code></li>
+<li>59.2% for <code class="docutils literal notranslate"><span class="pre">backend3</span></code></li>
 </ul>
 </div>
 </div></blockquote>
@@ -1083,16 +1084,16 @@ partition-partb: /path/to/partb</p>
 </div>
 <div class="section" id="backends-exclusion">
 <h2>Backends Exclusion<a class="headerlink" href="#backends-exclusion" title="Permalink to this headline">¶</a></h2>
-<p>When using a selection mode other than <code class="docutils literal"><span class="pre">random</span></code>, backends are automatically excluded if their considered usage percentage is beyond the <code class="docutils literal"><span class="pre">serverlist_mode_soft_usage_limit</span></code> integer setting.</p>
+<p>When using a selection mode other than <code class="docutils literal notranslate"><span class="pre">random</span></code>, backends are automatically excluded if their considered usage percentage is beyond the <code class="docutils literal notranslate"><span class="pre">serverlist_mode_soft_usage_limit</span></code> integer setting.</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">partition_mode_soft_usage_limit</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">partition_mode_soft_usage_limit</span></code></li>
 </ul>
 <p>If all backends are beyond the configured value, this feature is automatically deactivated. A backend is thus selected as if the setting was not set.</p>
 <blockquote>
 <div><div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Example of partition exclusion using <code class="docutils literal"><span class="pre">serverlist_mode_soft_usage_limit</span></code></p>
-<p class="last">In the same conditions than &lt;xref linkend=&quot;exam-Deployment_Guide-Available_Selection_Modes_on_Frontend-Example_of_freespace_most_Selection_on_Frontend&quot; /&gt;, using <code class="docutils literal"><span class="pre">freespace-most</span></code> selection mode, setting <code class="docutils literal"><span class="pre">serverlist_mode_soft_usage_limit</span></code> to <code class="docutils literal"><span class="pre">49</span></code> would exclude <code class="docutils literal"><span class="pre">backend1</span></code> and <code class="docutils literal"><span class="pre">backend2</span></code> since in that mode they have a disk usage of 50% and 55%. In other modes it would however only exclude <code class="docutils literal"><span class="pre">backend1</span></code> whose considered partition has a disk usage of 50%, while on <code class="docutils literal"><span class="pre">backend2</span></code> the considered partition has a disk usage of 30%.</p>
+<p>Example of partition exclusion using <code class="docutils literal notranslate"><span class="pre">serverlist_mode_soft_usage_limit</span></code></p>
+<p class="last">In the same conditions than &lt;xref linkend=”exam-Deployment_Guide-Available_Selection_Modes_on_Frontend-Example_of_freespace_most_Selection_on_Frontend” /&gt;, using <code class="docutils literal notranslate"><span class="pre">freespace-most</span></code> selection mode, setting <code class="docutils literal notranslate"><span class="pre">serverlist_mode_soft_usage_limit</span></code> to <code class="docutils literal notranslate"><span class="pre">49</span></code> would exclude <code class="docutils literal notranslate"><span class="pre">backend1</span></code> and <code class="docutils literal notranslate"><span class="pre">backend2</span></code> since in that mode they have a disk usage of 50% and 55%. In other modes it would however only exclude <code class="docutils literal notranslate"><span class="pre">backend1</span></code> whose considered partition has a disk usage of 50%, while on <code class="docutils literal notranslate"><span class="pre">backend2</span></code> the considered partition has a disk usage of 30%.</p>
 </div>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
@@ -1105,8 +1106,8 @@ partition-partb: /path/to/partb</p>
 </div>
 <div class="section" id="backends-usage-data-reset">
 <h2>Backends Usage Data Reset<a class="headerlink" href="#backends-usage-data-reset" title="Permalink to this headline">¶</a></h2>
-<p>By default backends usage data are retrieved only once upon service initialization. This only concerns selection modes other than <code class="docutils literal"><span class="pre">random</span></code>.</p>
-<p>If you tend to use the same service instance for a long lapse of time and performs a large amount of mailboxes creation, it may be useful to configure the <code class="docutils literal"><span class="pre">serverlist_mode_usage_reinit</span></code> so that backends usage data are refreshed after the configured number of creation requests.</p>
+<p>By default backends usage data are retrieved only once upon service initialization. This only concerns selection modes other than <code class="docutils literal notranslate"><span class="pre">random</span></code>.</p>
+<p>If you tend to use the same service instance for a long lapse of time and performs a large amount of mailboxes creation, it may be useful to configure the <code class="docutils literal notranslate"><span class="pre">serverlist_mode_usage_reinit</span></code> so that backends usage data are refreshed after the configured number of creation requests.</p>
 </div>
 </div>
 
@@ -1131,7 +1132,7 @@ partition-partb: /path/to/partb</p>
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Aug 26 2016
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1148,7 +1149,7 @@ partition-partb: /path/to/partb</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1157,7 +1158,7 @@ partition-partb: /path/to/partb</p>
       <script type="text/javascript" src="../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
 
   
 

@@ -1,4 +1,3 @@
-
 Mailbox Distribution
 ********************
 
@@ -124,7 +123,7 @@ Note: **Usage convergence** Using the freespace-percent-weighted
 
    Then a weighted choice is performed to select one of those items.
 
-   (The added 0.5 in item's weight is so that selection gets smoother
+   (The added 0.5 in item’s weight is so that selection gets smoother
    when all items usage percentages get close to each other.)
 
    As such, considering the usage percentages, the more the item is
@@ -304,8 +303,8 @@ Selection Modes to determine how most fitting backends are selected.
 Backends Exclusion
 ------------------
 
-For details on exclusion based on disk usage, see Section "Items
-Exclusion".
+For details on exclusion based on disk usage, see Section “Items
+Exclusion”.
 
 
 Example of backend exclusion using serverlist_select_soft_usage_limit

@@ -1,4 +1,3 @@
-
 Mailing Lists
 *************
 
@@ -6,7 +5,7 @@ Cyrus is discussed at a few official mailing lists hosted by Topicbox
 — which is, itself, powered by Cyrus!
 
 At the links below you can browse the archives and subscribe to the
-lists.  You can request a daily summary if you don't want to receive
+lists.  You can request a daily summary if you don’t want to receive
 every message in real time.
 
 * Cyrus Announcements

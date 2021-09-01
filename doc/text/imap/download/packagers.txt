@@ -1,4 +1,3 @@
-
 Notes for Packagers
 *******************
 
@@ -84,7 +83,7 @@ The configuration file for the various programs: imapd.conf
 -----------------------------------------------------------
 
 The sample imapd.conf(5) files must be adapted for use from site to
-site.  Here, therefore, we'll attempt to point you towards some
+site.  Here, therefore, we’ll attempt to point you towards some
 reasonable settings which take advantage of recent improvements and
 features, and may help guide you and your users to a better performing
 Cyrus installation.
@@ -95,7 +94,7 @@ Ephemeral files and temporary filesystems
 
 In addition to Unix domain sockets and lock files, several databases
 used by Cyrus programs may be located in temporary filesystems, such
-as those backed by RAM (i.e. tmpfs, md, etc.).  Here's a list of such
+as those backed by RAM (i.e. tmpfs, md, etc.).  Here’s a list of such
 files.  In this example, the filesystem "/run" is on tmpfs:
 
    proc_path: /run/cyrus/proc
@@ -137,8 +136,8 @@ Services in "/etc/services"
 Listing named services through "/etc/services" aids in cross-system
 consistency and cross-platform interoperability. Furthermore, it
 enables administrators and users to refer to the service by name (for
-example in "/etc/cyrus.conf", 'listen=mupdate' can be specified
-instead of 'listen=3905').
+example in "/etc/cyrus.conf", ‘listen=mupdate’ can be specified
+instead of ‘listen=3905’).
 
 Some of the services Cyrus IMAP would like to see available through
 "/etc/services" have not been assigned an IANA port number, and few
@@ -146,7 +145,7 @@ have configuration options.
 
 The Cyrus IMAP server provides service interfaces via either TCP/IP
 ports or Unix domain sockets.  For the former, Cyrus requires that
-there are proper entries in the host's "/etc/services" file.  The
+there are proper entries in the host’s "/etc/services" file.  The
 following are required for any host using the listed services:
 
    pop3      110/tcp  # Post Office Protocol v3

@@ -1,4 +1,3 @@
-
 Cyrus IMAP 3.0.11 Release Notes
 *******************************
 
@@ -24,7 +23,7 @@ Changes Since 3.0.10
 Release changes
 ---------------
 
-We're trialing using the Github Releases feature.  If you have trouble
+We’re trialing using the Github Releases feature.  If you have trouble
 downloading this release, please report this to the mailing lists.
 Thanks!
 
@@ -58,10 +57,10 @@ and 2.5 do not replace modseq of 0 when upgrading indexes.
 
 A new API introduced in Cyrus IMAP 3.0.0 resulted in index records
 with a modseq of 0 being completely ignored (therefore invisible to
-users, and apparently "missing").  This includes the *reconstruct*
-utility, which means that attempting to fix the "missing messages" by
+users, and apparently “missing”).  This includes the *reconstruct*
+utility, which means that attempting to fix the “missing messages” by
 running *reconstruct* will ignore (and maybe remove) the existing
-index records, and then "rediscover" the message files on disk and add
+index records, and then “rediscover” the message files on disk and add
 new records for them (without the index-only data from the old record,
 like seen state and other flags).
 

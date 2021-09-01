@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Sitemap &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Sitemap &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="index.html"/> 
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="index.html"/> 
 
   
   
@@ -152,7 +154,7 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="imap/download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -236,7 +238,7 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -253,14 +255,14 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#news">News</a></li>
@@ -375,7 +377,7 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -543,7 +545,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="imap/reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -560,7 +562,7 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -572,13 +574,13 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="imap/reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -695,7 +697,6 @@
 <li class="toctree-l1"><a class="reference internal" href="support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="imap/support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="imap/support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="imap/support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="imap/support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -740,7 +741,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -760,7 +761,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="index.html">Docs v3.4.2</a> &raquo;</li>
       
     <li>Sitemap</li>
       <li class="wy-breadcrumbs-aside">
@@ -881,7 +882,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l5"><a class="reference internal" href="imap/download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="imap/download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1028,12 +1029,12 @@
 </ul>
 </li>
 <li class="toctree-l6"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a><ul>
-<li class="toctree-l7"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#anonymous-and-anyone"><code class="docutils literal"><span class="pre">anonymous</span></code> and <code class="docutils literal"><span class="pre">anyone</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#anonymous-and-anyone"><code class="docutils literal notranslate"><span class="pre">anonymous</span></code> and <code class="docutils literal notranslate"><span class="pre">anyone</span></code></a></li>
 <li class="toctree-l7"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#kerberos-vs-unix-authorization">Kerberos vs. Unix Authorization</a></li>
 </ul>
 </li>
 <li class="toctree-l6"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l6"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l6"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l5"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -1058,14 +1059,14 @@
 <li class="toctree-l7"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#mailboxes-over-quota">Mailboxes Over Quota</a></li>
 </ul>
 </li>
-<li class="toctree-l6"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l6"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l6"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l5"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l5"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l6"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l6"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l6"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l6"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l5"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#news">News</a></li>
@@ -1251,7 +1252,7 @@
 </li>
 <li class="toctree-l6"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l6"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l6"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a><ul>
 <li class="toctree-l7"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#id1">Selection Mode</a></li>
 <li class="toctree-l7"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#available-selection-modes-on-frontend">Available Selection Modes on Frontend</a></li>
 </ul>
@@ -2155,7 +2156,7 @@
 </li>
 <li class="toctree-l5"><a class="reference internal" href="imap/reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l6"><a class="reference internal" href="imap/reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l6"><a class="reference internal" href="imap/reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l6"><a class="reference internal" href="imap/reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l6"><a class="reference internal" href="imap/reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -2172,7 +2173,7 @@
 <li class="toctree-l6"><a class="reference internal" href="imap/reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l6"><a class="reference internal" href="imap/reference/faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l6"><a class="reference internal" href="imap/reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l6"><a class="reference internal" href="imap/reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="imap/reference/faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a><ul>
 <li class="toctree-l7"><a class="reference internal" href="imap/reference/faqs/o-deleted-expired-expunged-purged.html#users-and-imap-clients-deleting-messages">Users and IMAP Clients Deleting Messages</a></li>
 <li class="toctree-l7"><a class="reference internal" href="imap/reference/faqs/o-deleted-expired-expunged-purged.html#deleting-folders">Deleting Folders</a></li>
 <li class="toctree-l7"><a class="reference internal" href="imap/reference/faqs/o-deleted-expired-expunged-purged.html#where-are-the-messages">Where are the Messages?</a></li>
@@ -2194,13 +2195,13 @@
 <li class="toctree-l7"><a class="reference internal" href="imap/reference/faqs/o-toomanyprocesses.html#clean-up-connections-that-are-no-longer-in-use">3. Clean up connections that are no longer in use</a></li>
 </ul>
 </li>
-<li class="toctree-l6"><a class="reference internal" href="imap/reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l6"><a class="reference internal" href="imap/reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l6"><a class="reference internal" href="imap/reference/faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l6"><a class="reference internal" href="imap/reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l5"><a class="reference internal" href="imap/reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l6"><a class="reference internal" href="imap/reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l6"><a class="reference internal" href="imap/reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l6"><a class="reference internal" href="imap/reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l6"><a class="reference internal" href="imap/reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l6"><a class="reference internal" href="imap/reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -2448,7 +2449,7 @@
 <li class="toctree-l7"><a class="reference internal" href="imap/developer/guidance/internationalization.html#external-interface">external interface</a></li>
 <li class="toctree-l7"><a class="reference internal" href="imap/developer/guidance/internationalization.html#the-translate-macro-using-the-transcoding-tables">the TRANSLATE macro: using the transcoding tables</a></li>
 <li class="toctree-l7"><a class="reference internal" href="imap/developer/guidance/internationalization.html#searching-and-compiled-patterns">searching and compiled patterns</a></li>
-<li class="toctree-l7"><a class="reference internal" href="imap/developer/guidance/internationalization.html#generating-the-tables-mkchartable">generating the tables: <code class="docutils literal"><span class="pre">mkchartable</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="imap/developer/guidance/internationalization.html#generating-the-tables-mkchartable">generating the tables: <code class="docutils literal notranslate"><span class="pre">mkchartable</span></code></a></li>
 <li class="toctree-l7"><a class="reference internal" href="imap/developer/guidance/internationalization.html#for-the-future">for the future</a></li>
 <li class="toctree-l7"><a class="reference internal" href="imap/developer/guidance/internationalization.html#references">references</a></li>
 </ul>
@@ -2462,9 +2463,9 @@
 <li class="toctree-l6"><a class="reference internal" href="imap/developer/guidance/mailbox-format.html">Cyrus IMAP Server: Mailbox File Formats</a><ul>
 <li class="toctree-l7"><a class="reference internal" href="imap/developer/guidance/mailbox-format.html#intro">Intro</a></li>
 <li class="toctree-l7"><a class="reference internal" href="imap/developer/guidance/mailbox-format.html#message-files">Message Files</a></li>
-<li class="toctree-l7"><a class="reference internal" href="imap/developer/guidance/mailbox-format.html#cyrus-header"><code class="docutils literal"><span class="pre">cyrus.header</span></code></a></li>
-<li class="toctree-l7"><a class="reference internal" href="imap/developer/guidance/mailbox-format.html#cyrus-cache"><code class="docutils literal"><span class="pre">cyrus.cache</span></code></a></li>
-<li class="toctree-l7"><a class="reference internal" href="imap/developer/guidance/mailbox-format.html#cyrus-index"><code class="docutils literal"><span class="pre">cyrus.index</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="imap/developer/guidance/mailbox-format.html#cyrus-header"><code class="docutils literal notranslate"><span class="pre">cyrus.header</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="imap/developer/guidance/mailbox-format.html#cyrus-cache"><code class="docutils literal notranslate"><span class="pre">cyrus.cache</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="imap/developer/guidance/mailbox-format.html#cyrus-index"><code class="docutils literal notranslate"><span class="pre">cyrus.index</span></code></a></li>
 <li class="toctree-l7"><a class="reference internal" href="imap/developer/guidance/mailbox-format.html#notes">Notes</a></li>
 <li class="toctree-l7"><a class="reference internal" href="imap/developer/guidance/mailbox-format.html#future-considerations">Future considerations</a></li>
 </ul>
@@ -2531,7 +2532,6 @@
 <li class="toctree-l3"><a class="reference internal" href="support.html">Support/Community</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="imap/support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l4"><a class="reference internal" href="overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -2596,7 +2596,7 @@
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Aug 19 2016
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -2613,7 +2613,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -2622,7 +2622,7 @@
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
 
   
 

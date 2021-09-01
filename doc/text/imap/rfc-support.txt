@@ -1,4 +1,3 @@
-
 RFCs Supported by Cyrus IMAP
 ****************************
 
@@ -150,7 +149,7 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
 **RFC 2518**
 
-   HTTP Extensions for Distributed Authoring -- WEBDAV
+   HTTP Extensions for Distributed Authoring – WEBDAV
 
 **RFC 2595**
 
@@ -240,7 +239,7 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
 **RFC 3598**
 
-   Sieve Email Filtering -- Subaddress Extension, obsoleted by **RFC
+   Sieve Email Filtering – Subaddress Extension, obsoleted by **RFC
    5233**.
 
 **RFC 3656**
@@ -502,8 +501,8 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
 **RFC 5490**
 
-   The Sieve Mail-Filtering Language -- Extensions for Checking
-   Mailbox Status and Accessing Mailbox Metadata
+   The Sieve Mail-Filtering Language – Extensions for Checking Mailbox
+   Status and Accessing Mailbox Metadata
 
 **RFC 5524**
 
@@ -576,7 +575,7 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
 **RFC 6131**
 
-   Sieve Vacation Extension: "Seconds" Parameter
+   Sieve Vacation Extension: “Seconds” Parameter
 
 **RFC 6134**
 
@@ -721,7 +720,7 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
 **RFC 7617**
 
-   The 'Basic' HTTP Authentication Scheme
+   The ‘Basic’ HTTP Authentication Scheme
 
 **RFC 7692**
 
@@ -818,11 +817,11 @@ draft-murchison-lmtp-ignorequota
 
 draft-ietf-sieve-regex
 
-   Sieve Email Filtering -- Regular Expression Extension
+   Sieve Email Filtering – Regular Expression Extension
 
 draft-martin-sieve-notify
 
-   Sieve -- An extension for providing instant notifications
+   Sieve – An extension for providing instant notifications
 
 draft-york-vpoll
 
@@ -841,7 +840,7 @@ draft-thomson-hybi-http-timeout
    Hypertext Transfer Protocol (HTTP) Keep-Alive Header
 
    caldav-ctag     Calendar Collection Entity Tag (CTag) in CalDAV
-   Brief Header    Microsoft 'Brief' header extension
+   Brief Header    Microsoft ‘Brief’ header extension
 
 
 RFC Wishlist

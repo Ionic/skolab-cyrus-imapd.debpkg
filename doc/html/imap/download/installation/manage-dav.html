@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>HTTP modules &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>HTTP modules &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../index.html"/>
         <link rel="up" title="Installing Cyrus" href="../../installing.html"/>
         <link rel="next" title="CalDAV" href="http/caldav.html"/>
         <link rel="prev" title="Installing Cyrus" href="../../installing.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../setup.html">Setup</a> &raquo;</li>
       
@@ -855,13 +856,13 @@ CalDAV/CardDAV web GUIs).</li>
 <div class="sidebar">
 <p class="first sidebar-title">httpmodules</p>
 <blockquote class="last">
-<div><p><code class="docutils literal"><span class="pre">httpmodules:</span></code> &lt;empty string&gt;</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">httpmodules:</span></code> &lt;empty string&gt;</p>
 <blockquote>
 <div><p>Space-separated list of HTTP modules that will be enabled in
 httpd(8).  This option has no effect on modules that are disabled
 at compile time due to missing dependencies (e.g. libical).</p>
-<p>Note that &quot;domainkey&quot; depends on &quot;ischedule&quot; being enabled, and
-that both &quot;freebusy&quot; and &quot;ischedule&quot; depend on &quot;caldav&quot; being
+<p>Note that “domainkey” depends on “ischedule” being enabled, and
+that both “freebusy” and “ischedule” depend on “caldav” being
 enabled.
 Allowed values: <em>admin</em>, <em>caldav</em>, <em>carddav</em>, <em>cgi</em>, <em>domainkey</em>, <em>freebusy</em>, <em>ischedule</em>, <em>jmap</em>, <em>prometheus</em>, <em>rss</em>, <em>tzdist</em>, <em>webdav</em></p>
 </div></blockquote>
@@ -869,10 +870,10 @@ Allowed values: <em>admin</em>, <em>caldav</em>, <em>carddav</em>, <em>cgi</em>,
 </div>
 <p>The support for RSS, CalDAV, and CardDAV is divided into separate modules which
 run as part of the Cyrus httpd service. Selection of which module(s) are enabled
-is done by setting the <code class="docutils literal"><span class="pre">httpmodules</span></code> option. <strong>By default, no modules
+is done by setting the <code class="docutils literal notranslate"><span class="pre">httpmodules</span></code> option. <strong>By default, no modules
 are enabled.</strong></p>
 <p>Cyrus httpd also can serve static content, the location of which is set by the
-<code class="docutils literal"><span class="pre">httpdocroot</span></code> option. Any content contained in the specified directory (including
+<code class="docutils literal notranslate"><span class="pre">httpdocroot</span></code> option. Any content contained in the specified directory (including
 sub-directories) will be served as static content only. Cyrus httpd does NOT
 have the ability to execute any server-side scripts.</p>
 </div>
@@ -889,7 +890,7 @@ are only available in Cyrus SASL 2.1.16 (and higher).</p>
 <blockquote>
 <div><em>This shows the default value: change it in imapd.conf to suit your needs.</em></div></blockquote>
 <blockquote class="last">
-<div><p><code class="docutils literal"><span class="pre">allowplaintext:</span></code> 0</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">allowplaintext:</span></code> 0</p>
 <blockquote>
 <div><p>If enabled, allows the use of cleartext passwords on the wire.</p>
 <p>By default, the use of cleartext passwords requires a TLS/SSL
@@ -902,7 +903,7 @@ authentication, see the <em>tls_required</em> option.</p>
 </div>
 <p>Similar to plaintext login commands supported by the other Cyrus services (IMAP
 LOGIN, POP3 USER/PASS), the Cyrus httpd service determines whether to advertise
-the HTTP Basic authentication scheme based on the <code class="docutils literal"><span class="pre">allowplaintext</span></code> option and
+the HTTP Basic authentication scheme based on the <code class="docutils literal notranslate"><span class="pre">allowplaintext</span></code> option and
 whether the client has connected over a TLS protected connection (HTTPS).</p>
 <p>The availability of the other HTTP authentication schemes is controlled by the
 <a class="reference external" href="https://www.cyrusimap.org/sasl/sasl/options.html#options" title="(in Cyrus SASL v2.1.27)"><span class="xref std std-ref">SASL mech_list option</span></a> option. For Cyrus httpd
@@ -958,7 +959,7 @@ needs to be customized to your specific hostnames.</p>
 <dt>CalDAV</dt>
 <dd><ul class="first last">
 <li>Many clients find calendars automatically if you provide the correct server, username and password.</li>
-<li>Otherwise, use the direct URL: <code class="docutils literal"><span class="pre">https://&lt;servername&gt;/dav/calendars/user/&lt;userid&gt;/&lt;calendar&gt;/</span></code></li>
+<li>Otherwise, use the direct URL: <code class="docutils literal notranslate"><span class="pre">https://&lt;servername&gt;/dav/calendars/user/&lt;userid&gt;/&lt;calendar&gt;/</span></code></li>
 </ul>
 </dd>
 </dl>
@@ -966,8 +967,8 @@ needs to be customized to your specific hostnames.</p>
 <li><dl class="first docutils">
 <dt>Freebusy</dt>
 <dd><ul class="first last">
-<li><code class="docutils literal"><span class="pre">https://&lt;servername&gt;/freebusy/user/&lt;userid&gt;</span></code> - considers all CalDAV collections of the user</li>
-<li><code class="docutils literal"><span class="pre">https://&lt;servername&gt;/freebusy/user/&lt;userid&gt;/&lt;collection-name&gt;</span></code> - considers a single CalDAV collection</li>
+<li><code class="docutils literal notranslate"><span class="pre">https://&lt;servername&gt;/freebusy/user/&lt;userid&gt;</span></code> - considers all CalDAV collections of the user</li>
+<li><code class="docutils literal notranslate"><span class="pre">https://&lt;servername&gt;/freebusy/user/&lt;userid&gt;/&lt;collection-name&gt;</span></code> - considers a single CalDAV collection</li>
 <li>Query parameters can be added to the URL per Section 4 of
 <a class="reference external" href="http://www.calconnect.org/pubdocs/CD0903%20Freebusy%20Read%20URL.pdf">Freebusy Read URL</a>.</li>
 </ul>
@@ -978,7 +979,7 @@ needs to be customized to your specific hostnames.</p>
 <dt>CardDAV</dt>
 <dd><ul class="first last">
 <li>Many clients find addressbooks automatically if you provide the correct server, username and password.</li>
-<li>Otherwise, use the direct URL:<code class="docutils literal"><span class="pre">https://&lt;servername&gt;/dav/addressbooks/&lt;userid&gt;/&lt;addressbook&gt;</span></code></li>
+<li>Otherwise, use the direct URL:<code class="docutils literal notranslate"><span class="pre">https://&lt;servername&gt;/dav/addressbooks/&lt;userid&gt;/&lt;addressbook&gt;</span></code></li>
 <li>The address book(s) are automatically filtered based on the username and password supplied.</li>
 </ul>
 </dd>
@@ -987,7 +988,7 @@ needs to be customized to your specific hostnames.</p>
 <li><dl class="first docutils">
 <dt>WebDAV</dt>
 <dd><ul class="first last">
-<li><code class="docutils literal"><span class="pre">https://&lt;servername&gt;/dav/drive/user/&lt;userid&gt;</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">https://&lt;servername&gt;/dav/drive/user/&lt;userid&gt;</span></code></li>
 </ul>
 </dd>
 </dl>
@@ -995,7 +996,7 @@ needs to be customized to your specific hostnames.</p>
 <li><dl class="first docutils">
 <dt>RSS</dt>
 <dd><ul class="first last">
-<li><code class="docutils literal"><span class="pre">https://&lt;servername&gt;/rss/</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">https://&lt;servername&gt;/rss/</span></code></li>
 <li>Serves up all mailboxes (read-only) that the authenticated user has access to.</li>
 </ul>
 </dd>
@@ -1026,7 +1027,7 @@ needs to be customized to your specific hostnames.</p>
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jan 16 2021
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1043,7 +1044,7 @@ needs to be customized to your specific hostnames.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1052,7 +1053,7 @@ needs to be customized to your specific hostnames.</p>
       <script type="text/javascript" src="../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
 
   
 

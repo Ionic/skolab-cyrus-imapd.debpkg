@@ -1,4 +1,3 @@
-
 Why can I not delete a mailbox as an admin user?
 ************************************************
 
@@ -8,5 +7,5 @@ mailbox.
 
 To delete a mailbox, you need to give appropriate rights with the
 command "sam user.mailbox username all" after that you can delete the
-mailbox. Even just giving the user the "c" right (Create and Delete
+mailbox. Even just giving the user the “c” right (Create and Delete
 mailbox) is enough.

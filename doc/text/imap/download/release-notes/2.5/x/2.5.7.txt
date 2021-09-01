@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.5.7 Release Notes
 ******************************
 
@@ -59,7 +58,7 @@ Bug fixes
 
 * Fixed: setrlimit error on startup
 
-* Fixed task 216: don't break quotas when transferring mailboxes
+* Fixed task 216: don’t break quotas when transferring mailboxes
   between backends
 
 * Fixed: idled shutdown on platforms without pselect (thanks Thomas
@@ -83,6 +82,6 @@ Bug fixes
 Debian patches
 --------------
 
-A number of patches from Debian's repository have been merged.  Thanks
+A number of patches from Debian’s repository have been merged.  Thanks
 to the various developers who contributed them to the Debian project,
 and to Ondřej Surý for collating and sending them upstream.

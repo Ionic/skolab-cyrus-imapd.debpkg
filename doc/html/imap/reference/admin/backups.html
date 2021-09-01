@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Cyrus Backups &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Cyrus Backups &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../index.html"/>
         <link rel="up" title="Administrator Guide" href="../admin.html"/>
         <link rel="next" title="Cyrus NNTP" href="nntp.html"/>
         <link rel="prev" title="Cyrus Sieve" href="sieve.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../operations.html">Operations</a> &raquo;</li>
       
@@ -857,7 +858,7 @@ better compression</li>
 <li>locking tool, for safe non-cyrus operations on backup files</li>
 <li>recovery of data back into a Cyrus IMAP server</li>
 </ul>
-<p>The following components don't yet exist in a workable state -- these tasks
+<p>The following components don’t yet exist in a workable state – these tasks
 must be massaged through manually (with care):</p>
 <ul class="simple">
 <li>reconstruct of backups.db from backup files</li>
@@ -869,7 +870,7 @@ must be massaged through manually (with care):</p>
 <li>mailbox message records, flags, and annotations</li>
 </ul>
 <p>The following types of information are currently backed up, but tools to
-recover them don't yet exist:</p>
+recover them don’t yet exist:</p>
 <ul class="simple">
 <li>sieve scripts (but not active script status)</li>
 <li>subscriptions</li>
@@ -906,7 +907,7 @@ locations</p>
 <div class="section" id="cyrus-backups-server">
 <h3><a class="toc-backref" href="#id8">Cyrus Backups server</a><a class="headerlink" href="#cyrus-backups-server" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic">
-<li><p class="first">Compile cyrus with the <code class="docutils literal"><span class="pre">--enable-backup</span></code> configure option and install it.</p>
+<li><p class="first">Compile cyrus with the <code class="docutils literal notranslate"><span class="pre">--enable-backup</span></code> configure option and install it.</p>
 </li>
 <li><p class="first">Set up an <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> file for it with the following options
 (default values shown):</p>
@@ -923,7 +924,7 @@ locations</p>
 The replication protocol will transfer as many as 1024 messages in a
 single sync operation, so, conservatively, this directory needs to
 contain enough storage for 1024 * your maximum message size * number
-of running backupd's, plus some wiggle room.</p>
+of running backupd’s, plus some wiggle room.</p>
 </dd>
 <dt>backup_retention_days: 7</dt>
 <dd><p class="first last">Number of days for which backup data (messages etc) should be kept
@@ -959,13 +960,13 @@ of delayed recovery of storage space.</p>
 </div></blockquote>
 </li>
 <li><p class="first">Create a user for authenticating to the backup system, and add it to the
-<code class="docutils literal"><span class="pre">admins</span></code> setting in <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a></p>
+<code class="docutils literal notranslate"><span class="pre">admins</span></code> setting in <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a></p>
 </li>
-<li><p class="first">Add appropriate <code class="docutils literal"><span class="pre">sasl_*</span></code> settings for your authentication method to
+<li><p class="first">Add appropriate <code class="docutils literal notranslate"><span class="pre">sasl_*</span></code> settings for your authentication method to
 <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a></p>
 </li>
 <li><p class="first">Set up a <a class="reference internal" href="../manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a> file for it:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">START</span> <span class="p">{</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">START</span> <span class="p">{</span>
     <span class="c1"># this is required</span>
     <span class="n">recover</span> <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;ctl_cyrusdb -r&quot;</span>
 <span class="p">}</span>
@@ -993,9 +994,9 @@ authenticate to backupd</p>
 <div class="section" id="cyrus-imap-servers">
 <h3><a class="toc-backref" href="#id9">Cyrus IMAP servers</a><a class="headerlink" href="#cyrus-imap-servers" title="Permalink to this headline">¶</a></h3>
 <p>Your Cyrus IMAP servers must be running version 3 or later of Cyrus, and must
-have been compiled with the <code class="docutils literal"><span class="pre">--enable-replication</span></code> configure option.  It does
-<em>not</em> need to be recompiled with the <code class="docutils literal"><span class="pre">--enable-backup</span></code> option.</p>
-<p>It's recommended to set up a dedicated replication channel for backups, so that
+have been compiled with the <code class="docutils literal notranslate"><span class="pre">--enable-replication</span></code> configure option.  It does
+<em>not</em> need to be recompiled with the <code class="docutils literal notranslate"><span class="pre">--enable-backup</span></code> option.</p>
+<p>It’s recommended to set up a dedicated replication channel for backups, so that
 your backup replication can coexist independently of your other replication
 configurations</p>
 <p>Add settings to <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> like (default values shown):</p>
@@ -1003,31 +1004,31 @@ configurations</p>
 <dt><em>channel</em>_sync_host: backup-server.example.com</dt>
 <dd>The host name of your Cyrus Backup server</dd>
 <dt><em>channel</em>_sync_port: csync</dt>
-<dd>The port on which your Cyrus Backup server's backupd process listens</dd>
-<dt><em>channel</em>_sync_authname: ...</dt>
+<dd>The port on which your Cyrus Backup server’s backupd process listens</dd>
+<dt><em>channel</em>_sync_authname: …</dt>
 <dd>Credentials for authenticating to the Cyrus Backup server</dd>
-<dt><em>channel</em>_sync_password: ...</dt>
+<dt><em>channel</em>_sync_password: …</dt>
 <dd>Credentials for authenticating to the Cyrus Backup server</dd>
 </dl>
 <div class="section" id="using-rolling-replication">
 <h4><a class="toc-backref" href="#id10">Using rolling replication</a><a class="headerlink" href="#using-rolling-replication" title="Permalink to this headline">¶</a></h4>
 <p>You can configure backups to use rolling replication.  Depending on the sync
 repeat interval you configure, this can be used to keep your backups very
-current -- potentially as current as your other replicas.</p>
+current – potentially as current as your other replicas.</p>
 <p>To configure rolling replication, add additional settings to
 <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> like:</p>
 <dl class="docutils">
 <dt>sync_log: 1</dt>
-<dd>Enable sync log if it wasn't already.</dd>
+<dd>Enable sync log if it wasn’t already.</dd>
 <dt>sync_log_channels: <em>channel</em></dt>
-<dd>Add a new channel &quot;<em>channel</em>&quot; to whatever was already here. Suggest calling
-this &quot;backup&quot;</dd>
+<dd>Add a new channel “<em>channel</em>” to whatever was already here. Suggest calling
+this “backup”</dd>
 <dt><em>channel</em>_sync_repeat_interval: 1</dt>
 <dd>Minimum time in seconds between rolling replication runs. Smaller value
 means livelier backups but more network I/O. Larger value reduces I/O.</dd>
 </dl>
 <p>Update <a class="reference internal" href="../manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a> to add a <a class="reference internal" href="../manpages/systemcommands/sync_client.html#std:cyrusman-sync_client(8)">sync_client(8)</a> invocation
-to the DAEMON section specifying (at least) the <code class="docutils literal"><span class="pre">-r</span></code> and <code class="docutils literal"><span class="pre">-n</span> <span class="pre">channel</span></code>
+to the DAEMON section specifying (at least) the <code class="docutils literal notranslate"><span class="pre">-r</span></code> and <code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">channel</span></code>
 options.</p>
 <p>See <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> for additional <em>sync_</em> settings that can
 be used to affect the replication behaviour.  Many can be prefixed with
@@ -1039,7 +1040,7 @@ a channel to limit their affect to only backups, if necessary.</p>
 server.</p>
 <p>To do this, add <a class="reference internal" href="../manpages/systemcommands/sync_client.html#std:cyrusman-sync_client(8)">sync_client(8)</a> invocations to the EVENTS section
 of <a class="reference internal" href="../manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a> (or cron, etc), specifying at least the
-<code class="docutils literal"><span class="pre">-n</span> <span class="pre">channel</span></code> option (to use the channel-specific configuration), plus
+<code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">channel</span></code> option (to use the channel-specific configuration), plus
 whatever other options you need for selecting users to back up. See the
 <a class="reference internal" href="../manpages/systemcommands/sync_client.html#std:cyrusman-sync_client(8)">sync_client(8)</a> manpage for details.</p>
 <p>You could also invoke <a class="reference internal" href="../manpages/systemcommands/sync_client.html#std:cyrusman-sync_client(8)">sync_client(8)</a> in a similar way from a
@@ -1058,12 +1059,12 @@ setting to <a class="reference internal" href="../manpages/configs/imapd.conf.ht
 <dd>Enables the XBACKUP command in imapd.</dd>
 </dl>
 <p>Your custom script can then authenticate to the IMAP server as an admin
-user, and invoke the command <code class="docutils literal"><span class="pre">XBACKUP</span> <span class="pre">pattern</span> <span class="pre">[channel]</span></code>.  A replication
+user, and invoke the command <code class="docutils literal notranslate"><span class="pre">XBACKUP</span> <span class="pre">pattern</span> <span class="pre">[channel]</span></code>.  A replication
 of the users or shared mailboxes matching the specified pattern will occur
 to the backup server defined by the named channel.  If no channel is
 specified, default sync configuration will be used.</p>
 <p>For example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">C</span><span class="p">:</span> <span class="mi">1</span> <span class="n">XBACKUP</span> <span class="n">user</span><span class="o">.*</span> <span class="n">backup</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">C</span><span class="p">:</span> <span class="mi">1</span> <span class="n">XBACKUP</span> <span class="n">user</span><span class="o">.*</span> <span class="n">backup</span>
 <span class="n">S</span><span class="p">:</span> <span class="o">*</span> <span class="n">OK</span> <span class="n">USER</span> <span class="n">anne</span>
 <span class="n">S</span><span class="p">:</span> <span class="o">*</span> <span class="n">OK</span> <span class="n">USER</span> <span class="n">bethany</span>
 <span class="n">S</span><span class="p">:</span> <span class="o">*</span> <span class="n">NO</span> <span class="n">USER</span> <span class="n">cassandane</span> <span class="p">(</span><span class="n">Operation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">supported</span> <span class="n">on</span> <span class="n">mailbox</span><span class="p">)</span>
@@ -1080,16 +1081,16 @@ specified, default sync configuration will be used.</p>
 <h2><a class="toc-backref" href="#id13">Administration</a><a class="headerlink" href="#administration" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="storage-requirements">
 <h3><a class="toc-backref" href="#id14">Storage requirements</a><a class="headerlink" href="#storage-requirements" title="Permalink to this headline">¶</a></h3>
-<p>It's not really known yet how to predict the storage requirements for a backup
+<p>It’s not really known yet how to predict the storage requirements for a backup
 server. Experimentation in dev environment suggests around 20-40% compressed
 backup file size relative to the backed up data, depending on compact settings,
 but this is with relatively tiny mailboxes and non-pathological data.</p>
 <p>The backup staging spool conservatively needs to be large enough to hold an
-entire sync's worth of message files at once. Which is your maximum message
-size * 1024 messages * the number of backupd processes you're running, plus
-some wiggle room probably. In practice it'll probably not hit this limit
-unless someone is trying to. (Most users, I suspect, don't have 1024
-maximum-sized messages in their account, or don't receive them all at once
+entire sync’s worth of message files at once. Which is your maximum message
+size * 1024 messages * the number of backupd processes you’re running, plus
+some wiggle room probably. In practice it’ll probably not hit this limit
+unless someone is trying to. (Most users, I suspect, don’t have 1024
+maximum-sized messages in their account, or don’t receive them all at once
 anyway.)</p>
 <p>Certain invocations of ctl_backups and cyr_backup also require staging spool
 space, due to the way replication protocol (and thus backup data) parsing
@@ -1100,12 +1101,12 @@ handles messages. So keep this in mind I suppose.</p>
 <p>Once a Cyrus Backup system is configured and running, new users that are
 created on the IMAP servers will be backed up seamlessly without administrator
 intervention.</p>
-<p>The very first backup taken of a pre-existing mailbox will be big -- the entire
-mailbox in one hit. It's suggested that, when initially provisioning a Cyrus
+<p>The very first backup taken of a pre-existing mailbox will be big – the entire
+mailbox in one hit. It’s suggested that, when initially provisioning a Cyrus
 Backup server for an existing Cyrus IMAP environment, that the
 <a class="reference internal" href="../manpages/systemcommands/sync_client.html#std:cyrusman-sync_client(8)">sync_client(8)</a> commands be run carefully, for a small group of
 mailboxes at a time, until all/most of your mailboxes have been backed up at
-least once. Also run the <a class="reference internal" href="../manpages/systemcommands/ctl_backups.html#std:cyrusman-ctl_backups(8)">ctl_backups(8)</a> <code class="docutils literal"><span class="pre">compact</span></code> command on the
+least once. Also run the <a class="reference internal" href="../manpages/systemcommands/ctl_backups.html#std:cyrusman-ctl_backups(8)">ctl_backups(8)</a> <code class="docutils literal notranslate"><span class="pre">compact</span></code> command on the
 backups, to break up big chunks, if you wish.  Only then should you enable
 rolling/scheduled replication.</p>
 </div>
@@ -1126,46 +1127,46 @@ whereas backupd will never block.</p>
 </div>
 <div class="section" id="moving-backup-files-to-different-backup-partitions">
 <h3><a class="toc-backref" href="#id18">Moving backup files to different backup partitions</a><a class="headerlink" href="#moving-backup-files-to-different-backup-partitions" title="Permalink to this headline">¶</a></h3>
-<p>There's no tool for this (yet). To do it manually, stop backupd, copy the files
-to the new partition, then use <a class="reference internal" href="../manpages/systemcommands/cyr_dbtool.html#std:cyrusman-cyr_dbtool(8)">cyr_dbtool(8)</a> to update the user's
+<p>There’s no tool for this (yet). To do it manually, stop backupd, copy the files
+to the new partition, then use <a class="reference internal" href="../manpages/systemcommands/cyr_dbtool.html#std:cyrusman-cyr_dbtool(8)">cyr_dbtool(8)</a> to update the user’s
 backups.db entry to point to the new location. Run the
-<a class="reference internal" href="../manpages/systemcommands/ctl_backups.html#std:cyrusman-ctl_backups(8)">ctl_backups(8)</a> <code class="docutils literal"><span class="pre">verify</span></code> command on both the new filename (<code class="docutils literal"><span class="pre">-f</span></code>
-mode) and the user's userid (<code class="docutils literal"><span class="pre">-u</span></code> mode) to ensure everything is okay, then
+<a class="reference internal" href="../manpages/systemcommands/ctl_backups.html#std:cyrusman-ctl_backups(8)">ctl_backups(8)</a> <code class="docutils literal notranslate"><span class="pre">verify</span></code> command on both the new filename (<code class="docutils literal notranslate"><span class="pre">-f</span></code>
+mode) and the user’s userid (<code class="docutils literal notranslate"><span class="pre">-u</span></code> mode) to ensure everything is okay, then
 restart backupd.</p>
 </div>
 <div class="section" id="provoking-a-backup-for-a-particular-user-user-group-everyone-etc-right-now">
 <h3><a class="toc-backref" href="#id19">Provoking a backup for a particular user/user group/everyone/etc right now</a><a class="headerlink" href="#provoking-a-backup-for-a-particular-user-user-group-everyone-etc-right-now" title="Permalink to this headline">¶</a></h3>
 <p>Just run <a class="reference internal" href="../manpages/systemcommands/sync_client.html#std:cyrusman-sync_client(8)">sync_client(8)</a> by hand with appropriate options (as cyrus
 user, of course). See its man page for ways of specifying items to replicate.</p>
-<p>If the IMAP server with the user's mail has been configured with the
-<code class="docutils literal"><span class="pre">xbackup_enabled:</span> <span class="pre">yes</span></code> option in <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>, then an admin
-user can cause a backup to occur by sending the IMAP server an <code class="docutils literal"><span class="pre">XBACKUP</span></code>
+<p>If the IMAP server with the user’s mail has been configured with the
+<code class="docutils literal notranslate"><span class="pre">xbackup_enabled:</span> <span class="pre">yes</span></code> option in <a class="reference internal" href="../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>, then an admin
+user can cause a backup to occur by sending the IMAP server an <code class="docutils literal notranslate"><span class="pre">XBACKUP</span></code>
 command.</p>
 </div>
 <div class="section" id="what-about-tape-backups">
 <h3><a class="toc-backref" href="#id20">What about tape backups?</a><a class="headerlink" href="#what-about-tape-backups" title="Permalink to this headline">¶</a></h3>
 <p>As long as backupd, ctl_backups and cyr_backup are not currently running (and
-assuming no-one's poking around in things otherwise), it's safe to take/restore
+assuming no-one’s poking around in things otherwise), it’s safe to take/restore
 a filesystem snapshot of backup partitions. So to schedule, say, a nightly tape
 dump of your Cyrus Backup server, make your cron job shut down Cyrus, make the
 copy, then restart Cyrus.</p>
 <p>Meanwhile, your Cyrus IMAP servers are still online and available.  Regular
 backups will resume once your backupd is running again.</p>
-<p>If you can work at a finer granularity than file system, you don't need to shut
-down backupd. Just use the <a class="reference internal" href="../manpages/systemcommands/ctl_backups.html#std:cyrusman-ctl_backups(8)">ctl_backups(8)</a> <code class="docutils literal"><span class="pre">lock</span></code> command to hold
+<p>If you can work at a finer granularity than file system, you don’t need to shut
+down backupd. Just use the <a class="reference internal" href="../manpages/systemcommands/ctl_backups.html#std:cyrusman-ctl_backups(8)">ctl_backups(8)</a> <code class="docutils literal notranslate"><span class="pre">lock</span></code> command to hold
 a lock on each backup while you work with its files, and the rest of the backup
 system will work around that.</p>
 <p>Restoring is more complicated, depending on what you actually need to do:
 when you restart the backupd after restoring a filesystem snapshot, the next
 time your Cyrus IMAP server replicates to it, the restored backups will be
-brought up to date. Probably not what you wanted -- so don't restart backupd
-until you've done whatever you were doing.</p>
+brought up to date. Probably not what you wanted – so don’t restart backupd
+until you’ve done whatever you were doing.</p>
 </div>
 <div class="section" id="multiple-imap-servers-one-backup-server">
 <h3><a class="toc-backref" href="#id21">Multiple IMAP servers, one backup server</a><a class="headerlink" href="#multiple-imap-servers-one-backup-server" title="Permalink to this headline">¶</a></h3>
 <p>This is fine, as long as each user being backed up is only being backed up by
 one server (or they are otherwise synchronised). If IMAP servers have different
-ideas about the state of a user's mailboxes, one of those will be in sync with
+ideas about the state of a user’s mailboxes, one of those will be in sync with
 the backup server and the other will get a lot of replication failures.</p>
 </div>
 <div class="section" id="multiple-imap-servers-multiple-backup-servers">
@@ -1207,9 +1208,9 @@ across multiple/all backups</p>
 <p>Supported operations:</p>
 <dl class="docutils">
 <dt>compact</dt>
-<dd><p class="first">Reduce backups' disk usage by:</p>
+<dd><p class="first">Reduce backups’ disk usage by:</p>
 <ul class="last simple">
-<li>combining small chunks for better gzip compression -- especially
+<li>combining small chunks for better gzip compression – especially
 important for hot backups, which produce many tiny chunks</li>
 <li>removing deleted content that has passed its retention period</li>
 </ul>
@@ -1223,14 +1224,14 @@ important for hot backups, which produce many tiny chunks</li>
 becomes corrupted by some bug, or invalidated by working on data with
 non-cyrus tools.</dd>
 <dt>stat</dt>
-<dd>Show statistics about backups -- disk usage, compression ratio, etc.</dd>
+<dd>Show statistics about backups – disk usage, compression ratio, etc.</dd>
 <dt>verify</dt>
 <dd><p class="first">Deep verification of backups. Verifies that:</p>
 <ul class="last simple">
 <li>Checksums for each chunk in index match data</li>
-<li>Mailbox states are in the chunk that the index says they're in</li>
+<li>Mailbox states are in the chunk that the index says they’re in</li>
 <li>Mailbox states match indexed states</li>
-<li>Messages are in the chunk the index says they're in</li>
+<li>Messages are in the chunk the index says they’re in</li>
 <li>Message data checksum matches indexed checksums</li>
 </ul>
 </dd>
@@ -1245,7 +1246,7 @@ additional arguments</p>
 <dl class="docutils">
 <dt>list [ chunks | mailboxes | messages | all ]</dt>
 <dd>Line-per-item listing of information stored in a backup.</dd>
-<dt>show [ chunks | mailboxes | messages ] items...</dt>
+<dt>show [ chunks | mailboxes | messages ] items…</dt>
 <dd>Paragraph-per-item listing of information for specified items. Chunk items
 are specified by id, mailboxes by mboxname or uniqueid, messages by guid.</dd>
 <dt>dump [ chunk | message ] item</dt>
@@ -1294,7 +1295,7 @@ messages.</p>
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jun 22 2020
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1311,7 +1312,7 @@ messages.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1320,7 +1321,7 @@ messages.</p>
       <script type="text/javascript" src="../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
 
   
 

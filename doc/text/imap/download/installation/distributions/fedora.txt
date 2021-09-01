@@ -1,18 +1,17 @@
-
 Fedora
 ******
 
 Fedora is a Linux distribution that does not generally enforce a
 policy of not providing you with upgrades of software during the life-
-cycle of any of the distribution's released versions, or what could
-otherwise be expected to constitute "stable".
+cycle of any of the distribution’s released versions, or what could
+otherwise be expected to constitute “stable”.
 
 While package maintainers tend to want to prevent unpleasant surprises
 from being deployed to your Fedora system, and therefore generally
 ship only versions of one series to any one given released
 distribution version, the Cyrus project cannot guarantee you will not
 receive an upgrade at some point, and cannot guarantee this upgrade
-will run smoothly -- even though we do our best.
+will run smoothly – even though we do our best.
 
 To install the version of Cyrus IMAP that comes with the operating
 system, issue the following command for Fedora 18 or below:

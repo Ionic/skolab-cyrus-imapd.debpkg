@@ -1,4 +1,3 @@
-
 **smtptest**
 ************
 
@@ -37,7 +36,7 @@ Options
 -t  keyfile
 
    Enable TLS.  *keyfile* contains the TLS public and private keys.
-   Specify **""** to negotiate a TLS encryption layer but not use TLS
+   Specify **“”** to negotiate a TLS encryption layer but not use TLS
    authentication.
 
 -p  port
@@ -109,7 +108,7 @@ Options
 
 -i
 
-   Don't send an initial client response for SASL mechanisms, even if
+   Don’t send an initial client response for SASL mechanisms, even if
    the protocol supports it.
 
 -I  file

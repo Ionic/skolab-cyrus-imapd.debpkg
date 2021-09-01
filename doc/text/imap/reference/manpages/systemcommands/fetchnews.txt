@@ -1,4 +1,3 @@
-
 **fetchnews**
 *************
 
@@ -36,11 +35,11 @@ Options
 -s  servername
 
    Hostname of the Cyrus server (with optional port) to which articles
-   should be fed.  Defaults to "localhost:nntp".
+   should be fed.  Defaults to “localhost:nntp”.
 
 -n
 
-   Don't use the NEWNEWS command. **fetchnews** will keep track of the
+   Don’t use the NEWNEWS command. **fetchnews** will keep track of the
    high and low water marks for each group and use them to fetch new
    articles.
 
@@ -52,7 +51,7 @@ Options
 -w  wildmat
 
    Wildmat pattern specifying which newsgroups to search for new
-   articles.  Defaults to "*".
+   articles.  Defaults to “*”.
 
 -f  tstampfile
 

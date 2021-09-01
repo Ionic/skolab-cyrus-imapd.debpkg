@@ -1,4 +1,3 @@
-
 Notes for backup implementation
 *******************************
 
@@ -86,11 +85,11 @@ sieve:
    timestamp deleted           -> time that it was deleted, or NULL if still alive
 
 sieve scripts and messages are both identified by a GUID but APPLY
-SIEVE doesn't take a GUID, it seems to be generated locally? the GUID
+SIEVE doesn’t take a GUID, it seems to be generated locally? the GUID
 in the response to APPLY SIEVE is generated in the process of reading
 the script from disk (sync_sieve_list_generate)
 
-can't activate scripts because only bytecode files are activated, but
+can’t activate scripts because only bytecode files are activated, but
 we neither receive bytecode files over sync protocol nor do we compile
 them ourselves.
 
@@ -104,7 +103,7 @@ messages
 ========
 
 APPLY MESSAGE is a list of messages, not necessarily only one message.
-Actually, it's a list of messages for potentially multiple users, but
+Actually, it’s a list of messages for potentially multiple users, but
 we avoid this by rejecting GET MESSAGES requests that span multiple
 users (so that sync_client retries at USER level, and so we only see
 APPLY MESSAGE requests for a single user).
@@ -138,44 +137,43 @@ APPLY RENAME %(OLDMBOXNAME old NEWMBOXNAME new PARTITION p UIDVALIDITY
 We identify mboxes by uniqueid, so when we start seeing sync data for
 the same uniqueid with a new mboxname we just transparently update it
 anyway, without needing to handle the APPLY RENAME.  Not sure if this
-is a problem...  Do we need to record an mbox's previous names
-somehow?
+is a problem…  Do we need to record an mbox’s previous names somehow?
 
-I think it's possible to use this to rename a USER though, something
+I think it’s possible to use this to rename a USER though, something
 like:
 
 APPLY RENAME %(OLDMBOXNAME example.com!user.smithj NEWMBOXNAME
-example.com!user.jsmith ...)
+example.com!user.jsmith …)
 
--- in which case, without special handling of the RENAME command
+– in which case, without special handling of the RENAME command
 itself, there will be a backup for the old user that ends with the
 RENAME, and a backup of the new user that (probably) duplicates
-everything again (except for stuff that's been expunged).
+everything again (except for stuff that’s been expunged).
 
 And if someone else gets given the original name, like
 
 APPLY RENAME %(OLDMBOXNAME example.com!user.samantha-mithj NEWMBOXNAME
-example.com!user.smithj ...)
+example.com!user.smithj …)
 
 Then anything that was expunged from the original user but still
 available in backup disappears?  Or the two backups get conflated, and
-samantha can "restore" the original smithj's old mail?
+samantha can “restore” the original smithj’s old mail?
 
 Uggh.
 
-if there's a mailboxes database pointing to the backup files, then the
-backup file names don't need to be based on the userid, they could
-e.g. be based on the user's inbox's uniqueid.  this would make it
-easier to deal with user renames because the backup filename wouldn't
+if there’s a mailboxes database pointing to the backup files, then the
+backup file names don’t need to be based on the userid, they could
+e.g. be based on the user’s inbox’s uniqueid.  this would make it
+easier to deal with user renames because the backup filename wouldn’t
 need to change.  but this depends on the uniqueid(s) in question being
 present on most areas of the sync protocol, otherwise when starting a
-backup of a brand new user we won't be able to tell where to store it.
+backup of a brand new user we won’t be able to tell where to store it.
 workaround in the meantime could be to make some kind of backup id
 from the mailboxes database, and base the filename on this.
 
-actually, using "some kind of backup id from the mailboxes database"
+actually, using “some kind of backup id from the mailboxes database”
 is probably the best solution.  otherwise the lock complexity of
-renaming a user while making sure their new backup filename doesn't
+renaming a user while making sure their new backup filename doesn’t
 already exist is frightful.
 
 maybe do something with mkstemp()?
@@ -183,8 +181,8 @@ maybe do something with mkstemp()?
 furthermore: what if a mailbox is moved from one user to another?
 like:
 
-APPLY RENAME %(OLD... example.com!user.foo.something NEW...
-example.com!user.bar.something ...)
+APPLY RENAME %(OLD… example.com!user.foo.something NEW…
+example.com!user.bar.something …)
 
 when a different-uid rename IS a rename of a user (and not just a
 folder being moved to a different user), what does it look like? *
@@ -199,10 +197,10 @@ file itself. but how to tell when the appends are finished?
 how can we tell the difference between folder(s) moved to a different
 user vs user has been renamed?
 
-there is a setting: 'allowusermoves: 0' which, when enabled, allows
+there is a setting: ‘allowusermoves: 0’ which, when enabled, allows
 users to be renamed via IMAP rename/xfer commands.  but the default is
 that this is disabled.  we could initially require this to be disabled
-while using backups...
+while using backups…
 
 not sure what the workflow looks like for renaming a user if this is
 not enabled.
@@ -210,10 +208,10 @@ not enabled.
 not sure what the sync flow looks like in either case.
 
 looking at sync_apply_rename and mboxlist_renamemailbox, it seems like
-we'll see an APPLY RENAME for each affected mbox when a recursive
+we’ll see an APPLY RENAME for each affected mbox when a recursive
 rename is occurring.
 
-there doesn't seem to be anything preventing user/a/foo -> user/b/foo
+there doesn’t seem to be anything preventing user/a/foo -> user/b/foo
 in the general (non-INBOX) case.
 
 renames might be a little easier to handle if the index replicated the
@@ -260,7 +258,7 @@ one way to do this would be to have backup_index_end() store a
 checksum of the corresponding data contents in the index.
 
 when opening a backup, verify this checksum against the data, and
-refuse to load the index if it doesn't match.
+refuse to load the index if it doesn’t match.
 
 * sha1sum of (compressed) contents of file prior to each chunk
 
@@ -290,7 +288,7 @@ reindex
 
 * convert user mailbox name to backup name
 
-* complain if there's no backup data file?
+* complain if there’s no backup data file?
 
 * lock, rename .index to .index.old, init new .index
 
@@ -317,21 +315,21 @@ already holding lock ? bump timestamp : obtain lock * write data to
 gzname, flush immediately * index data
 
 periodic cleanup: * check timestamp of each held lock * if stale
-(define: stale?), release * FIXME if we've appended more than the
+(define: stale?), release * FIXME if we’ve appended more than the
 chunk size we would compact to, release
 
 sync restart: * release each held lock
 
 exit: * release each held lock
 
-need a "backup_index_abort" to complete the backup_index_start/end
+need a “backup_index_abort” to complete the backup_index_start/end
 set. _start should create a transaction, _end should commit it, and
 _abort should roll it back.  then, if backupd fails to write to the
 gzip file for some reason, the (now invalid) index info we added can
 be discarded too.
 
 flushing immediately on write results in poor gzip compression, but
-for incremental backups that's not a problem.  when the compact
+for incremental backups that’s not a problem.  when the compact
 process hits the file it will recompress the data more efficiently.
 
 
@@ -345,7 +343,7 @@ restore
 =======
 
 restoration is effectively a reverse-direction replication
-(replicating TO master), which means we can't necessarily supply
+(replicating TO master), which means we can’t necessarily supply
 things like uid, modseq, etc without racing against normal message
 arrivals.  so instead we add an extra command to the protocol to
 restore a message to a folder but let the destination determine the
@@ -353,8 +351,8 @@ tasty bits.
 
 protocol flow looks something like:
 
-c: APPLY RESERVE ... # as usual s: * MISSING (foo bar) s: OK c: APPLY
-MESSAGE ... # as usual s: OK c: RESTORE MAILBOX ... # new sync proto
+c: APPLY RESERVE … # as usual s: * MISSING (foo bar) s: OK c: APPLY
+MESSAGE … # as usual s: OK c: RESTORE MAILBOX … # new sync proto
 command s: OK
 
 we introduce a new command, RESTORE MAILBOX, which is similar to the
@@ -364,23 +362,23 @@ state plus the message records relevant to the restore.
 the imapd/sync_server receiving the RESTORE command creates the
 mailbox if necessary, and then adds the message records to it as new
 records (i.e. generating new uid etc). this will end up generating new
-events in the backup channel's sync log, and then the messages will be
+events in the backup channel’s sync log, and then the messages will be
 backed up again with their new uids, etc.  additional wire transfer of
 message data should be avoided by keeping the same guid.
 
 if the mailbox already exists but its uniqueid does not match the one
 from the backup, then what?  this probably means user has deleted
-folder and contents, then made new folder with same name.  so it's
+folder and contents, then made new folder with same name.  so it’s
 probably v common for mailbox uniqueid to not match like this.  so we
-don't care about special handling for this case.  just add any
-messages that aren't already there.
+don’t care about special handling for this case.  just add any
+messages that aren’t already there.
 
-if the mailbox doesn't already exist on the destination (e.g. if
-rebuilding a server from backups) then it's safe and good to reuse
+if the mailbox doesn’t already exist on the destination (e.g. if
+rebuilding a server from backups) then it’s safe and good to reuse
 uidvalidity, uniqueid, uid, modseq etc, such that connecting clients
 can preserve their state.  so the imapd/sync_server receiving the
 restore request accepts these fields as optional, but only preserves
-them if it's safe to do so.
+them if it’s safe to do so.
 
 * restore: sbin program for selecting and restoring messages
 
@@ -388,7 +386,7 @@ restore command needs options: + whether or not to trim deletedprefix
 off mailbox names to be restored + whether or not to restore uniqueid,
 highestmodseq, uid and so on + whether or not to limit to/exclude
 expunged messages + whether or not to restore sub-mailboxes +
-sync_client-like options (servername, local_only, partition, ...) +
+sync_client-like options (servername, local_only, partition, …) +
 user/mailbox/backup file(s) to restore from + mailbox to restore to
 (override location in backup) + override acl?
 
@@ -401,7 +399,7 @@ uniqueid or guid?
 
 usage:
    restore [options] server [mode] backup [mboxname | uniqueid |
-   guid]...
+   guid]…
 
 options:
    -A acl
@@ -414,7 +412,7 @@ options:
 
    -D
 
-   # don't trim deletedprefix before restoring
+   # don’t trim deletedprefix before restoring
 
    -F input-file
 
@@ -438,7 +436,7 @@ options:
 
    -X
 
-   # don't restore expunged messages
+   # don’t restore expunged messages
 
    -a
 
@@ -446,7 +444,7 @@ options:
 
    -n
 
-   # calculate work required but don't perform restoration
+   # calculate work required but don’t perform restoration
 
    -r
 
@@ -487,7 +485,7 @@ compact
 
 # finding messages that are to be kept (either exist as unexpunged
 somewhere, # or exist as expunged but more recently than threshold) #
-(to get unique rows, add "distinct" and remove mm.expunged from
+(to get unique rows, add “distinct” and remove mm.expunged from
 fields) sqlite> select m.*, mm.expunged from message as m join
 mailbox_message as mm on m.id = mm.message_id and (mm.expunged is null
 or mm.expunged > 1437709300);
@@ -524,7 +522,7 @@ thoughts:
      * can we detect chunks that are going to significantly reduce
        in size as result of discarding individual lines?
 
-* "quick" vs "full" compaction
+* “quick” vs “full” compaction
 
 settings:
 
@@ -542,13 +540,13 @@ backup_min_chunk_duration: 0 for no minimum backup_max_chunk_duration:
 
 data we absolutely need to keep:
 
-* the most recent APPLY MAILBOX for each mailbox we're keeping
+* the most recent APPLY MAILBOX for each mailbox we’re keeping
   (mailbox state)
 
 * the APPLY MAILBOX containing the most recent RECORD for each
-  message we're keeping (record state)
+  message we’re keeping (record state)
 
-* the APPLY MESSAGE for each message we're keeping (message data)
+* the APPLY MESSAGE for each message we’re keeping (message data)
 
 data that we should practically keep:
 
@@ -558,7 +556,7 @@ data that we should practically keep:
 * all APPLY MAILBOXes containing a RECORD for a given message from
   the chunk identified as its last
 
-* the APPLY MESSAGE for each message we're keeping
+* the APPLY MESSAGE for each message we’re keeping
 
 four kinds of compaction (probably at least two simultaneously):
 
@@ -572,11 +570,11 @@ four kinds of compaction (probably at least two simultaneously):
 
 * removing unused messages from within a message line
 
-"unused messages"
+“unused messages”
    messages for which all records have been expunged for longer than
    the retention period
 
-"unused chunks"
+“unused chunks”
    chunks which contain only unused messages
 
 algorithm:
@@ -591,20 +589,20 @@ algorithm:
 
 * foreach line in the chunk:
 
-* next line if we don't need to keep it
+* next line if we don’t need to keep it
 
 * create new line
 
 * foreach message in line:
 
-* if we still need the message, or if we're not doing message
+* if we still need the message, or if we’re not doing message
   granularity
 
 * add the message to the new line
 
 * write and index tmp line to backup.new
 
-* if the new chunk is big enough, or if we're not combining
+* if the new chunk is big enough, or if we’re not combining
 
 * end chunk and start a new one
 
@@ -622,20 +620,20 @@ command line utility to lock a backup (for e.g. safely poking around
 in the .index on a live system).
 
 example failure: $ctl_backups lock -f /path/to/backup * Trying to
-obtain lock on /path/to/backup... NO some error <EOF>
+obtain lock on /path/to/backup… NO some error <EOF>
 
 example success: $ctl_backups lock -f /path/to/backup * Trying to
-obtain lock on /path/to/backup... [potentially a delay here if we need
+obtain lock on /path/to/backup… [potentially a delay here if we need
 to wait for another process to release the lock] OK locked [waits for
 its stdin to close, then unlocks and exits]
 
 if you need to rummage around in backup.index, run this program in
-another shell, do your work, then ^D it when you're finished.
+another shell, do your work, then ^D it when you’re finished.
 
 you could also call this from e.g. perl over a bidirectional pipe -
-wait to read "OK locked", then you've got your lock.  close the pipe
-to unlock when you're finished working.  if you don't read "OK locked"
-before the pipe closes then something went wrong and you didn't get
+wait to read “OK locked”, then you’ve got your lock.  close the pipe
+to unlock when you’re finished working.  if you don’t read “OK locked”
+before the pipe closes then something went wrong and you didn’t get
 the lock.
 
 specify backups by -f filename, -m mailbox, -u userid default run mode
@@ -661,13 +659,13 @@ scan each backup partition for backup files:
 
    * skip directories etc
 
-what's the correct procedure for repopulating a cyrus database? keep
+what’s the correct procedure for repopulating a cyrus database? keep
 copy of the previous (presumably broken) one?
 
 trim off mkstemp suffix (if any) to find userid can we use a
 recognisable character to delimit the mkstemp suffix?
 
-what if there's multiple backup files for a given userid? precedence?
+what if there’s multiple backup files for a given userid? precedence?
 
 verify found backups before recording.  reindex?
 
@@ -675,14 +673,14 @@ locking? what if something has a filename and does stuff with it while
 reconstruct runs?
 
 backupd always uses db for opens, so as long as reconstruct keeps the
-db locked while it works, the db won't clash.  but backupd might have
+db locked while it works, the db won’t clash.  but backupd might have
 backups still open from before reconstruct started, which it will
 write to quite happily, even though reconstruct might decide that some
-other file is the correct one for that user...
+other file is the correct one for that user…
 
 a backup server would generally be used only for backups, and
-sync_client is quite resilient when the destination isn't there, so
-it's actually no problem to just shut down cyrus while reconstruct
+sync_client is quite resilient when the destination isn’t there, so
+it’s actually no problem to just shut down cyrus while reconstruct
 runs.  no outage to user-facing services, just maybe some sync backlog
 to catch up on once cyrus is restarted.
 
@@ -701,7 +699,7 @@ needs:
 
    * delete a backup
 
-   * verify a backup (check all sha1's, not just most recent)
+   * verify a backup (check all sha1’s, not just most recent)
 
 not sure if these should be included, or separate tools:
    * reindex a backup (or more)
@@ -715,15 +713,15 @@ not sure if these should be included, or separate tools:
 usage:
    ctl_backups [options] reconstruct                       #
    reconstruct backups.db from disk files ctl_backups [options] list
-   [list_opts] [[mode] backup...] # list backup info for given/all
-   users ctl_backups [options] move new_fname [mode] backup      #
-   rename a backup (think about this more) ctl_backups [options]
-   delete [mode] backup              # delete a backup ctl_backups
-   [options] verify [mode] backup...           # verify specified
-   backups ctl_backups [options] reindex [mode] backup...          #
-   reindex specified backups ctl_backups [options] compact [mode]
-   backup...          # compact specified backups ctl_backups
-   [options] lock [lock_opts] [mode] backup    # lock specified backup
+   [list_opts] [[mode] backup…] # list backup info for given/all users
+   ctl_backups [options] move new_fname [mode] backup      # rename a
+   backup (think about this more) ctl_backups [options] delete [mode]
+   backup              # delete a backup ctl_backups [options] verify
+   [mode] backup…           # verify specified backups ctl_backups
+   [options] reindex [mode] backup…          # reindex specified
+   backups ctl_backups [options] compact [mode] backup…          #
+   compact specified backups ctl_backups [options] lock [lock_opts]
+   [mode] backup    # lock specified backup
 
 options:
    -C alt_config
@@ -744,7 +742,7 @@ options:
 
    -w
 
-   # wait for locks (i.e. don't skip locked backups)
+   # wait for locks (i.e. don’t skip locked backups)
 
 mode:
    -A
@@ -789,7 +787,7 @@ lock_opts:
    # lock backup and wait for eof on stdin (default)
 
 list_opts:
-   -t [hours]          # "stale" (no update in hours) backups only
+   -t [hours]          # “stale” (no update in hours) backups only
    (default: 24)
 
 
@@ -814,13 +812,13 @@ needs:
 
 usage:
    cyr_backup [options] [mode] backup list [all | chunks | mailboxes |
-   messages]... cyr_backup [options] [mode] backup show chunks [id...]
-   cyr_backup [options] [mode] backup show messages [guid...]
-   cyr_backup [options] [mode] backup show mailboxes [mboxname |
-   uniqueid]... cyr_backup [options] [mode] backup dump [dump_opts]
-   chunk id cyr_backup [options] [mode] backup dump [dump_opts]
-   message guid cyr_backup [options] [mode] backup json [chunks |
-   mailboxes | messages]...
+   messages]… cyr_backup [options] [mode] backup show chunks [id…]
+   cyr_backup [options] [mode] backup show messages [guid…] cyr_backup
+   [options] [mode] backup show mailboxes [mboxname | uniqueid]…
+   cyr_backup [options] [mode] backup dump [dump_opts] chunk id
+   cyr_backup [options] [mode] backup dump [dump_opts] message guid
+   cyr_backup [options] [mode] backup json [chunks | mailboxes |
+   messages]…
 
 options:
    -C alt_config
@@ -862,14 +860,14 @@ partitions
 not enough information in sync protocol to handle partitions easily?
 
 we know what the partition is when we do an APPLY operation (mailbox,
-message, etc), but the initial GET operations don't include it.  so we
+message, etc), but the initial GET operations don’t include it.  so we
 need to already know where the appropriate backup is partitioned in
 order to find the backup file in order to look inside it to respond to
 the GET request
 
 if we have a mailboxes database (indexed by mboxname, uniqueid and
-userid) then maybe that would make it feasible?  if it's not in the
-mailboxes database then we don't have a backup for it yet, so we
+userid) then maybe that would make it feasible?  if it’s not in the
+mailboxes database then we don’t have a backup for it yet, so we
 respond accordingly, and get sent enough information to create it.
 
 does that mean the backup api needs to take an mbname on open, and it
@@ -879,17 +877,17 @@ appropriate thing to open?
 can we use sqlite for such a database, or is the load on it going to
 be too heavy?  locking?  we have lots of database formats up our
 sleeves here, so even though we use sqlite for the backup index there
-isn't any particular reason we're beholden to it for the mailboxes db
+isn’t any particular reason we’re beholden to it for the mailboxes db
 too
 
 if we have a mailboxes db then we need a reconstruct tool for that,
 too
 
-what if we support multiple backup partitions, but don't expect these
-to necessarily correspond with mailbox partitions.  they're just for
+what if we support multiple backup partitions, but don’t expect these
+to necessarily correspond with mailbox partitions.  they’re just for
 spreading disk usage around.
 
-* when creating a backup for a previously-unseen user we'd pick a
+* when creating a backup for a previously-unseen user we’d pick a
   random partition to put them on
 
 * ctl_backups would need a command to move an existing backup to a
@@ -898,15 +896,15 @@ spreading disk usage around.
 * ctl_backups would need a command to pre-create a user backup on a
   given partition for initial distribution
 
-* instead of "backup_data_path" setting, have one-or-more
-  "backuppartition-<name>" settings, ala partition- and friends
+* instead of “backup_data_path” setting, have one-or-more
+  “backuppartition-<name>” settings, ala partition- and friends
 
-see imap/partlist.[ch] for partition list management stuff.  it's
-complicated and doesn't have a test suite, so maybe save this
+see imap/partlist.[ch] for partition list management stuff.  it’s
+complicated and doesn’t have a test suite, so maybe save this
 implementation until needed.
 
-but... maybe rename backup_data_path to backuppartition-default in the
-meantime, so that when we do add this it's not a complicated reconfig
+but… maybe rename backup_data_path to backuppartition-default in the
+meantime, so that when we do add this it’s not a complicated reconfig
 to update?
 
 partlist_local_select (and lazy-loaded partlist_local_init) are where
@@ -929,7 +927,7 @@ backup indexes:
    * how to detect corruption? assume sqlite will notice, complain?
 
 backup data:
-   * what's zlib's failure mode? do we lose the entire chunk or just
+   * what’s zlib’s failure mode? do we lose the entire chunk or just
      the corrupt bit?
 
    * verify will notice sha1sum mismatches
@@ -940,17 +938,17 @@ backup data:
 
    * message data has its own checksums (guid)
 
-   * reindex: should skip messages that don't match their own
+   * reindex: should skip messages that don’t match their own
      checksums
 
-   * compact: "full" compact will only keep useful data according to
+   * compact: “full” compact will only keep useful data according to
      index
 
-   * backupd: will sync anything that's in user mailbox but not in
+   * backupd: will sync anything that’s in user mailbox but not in
      backup index
 
 i think this means that if a message or mailbox state becomes
-corrupted in the backup data file, and it still exists in the user's
+corrupted in the backup data file, and it still exists in the user’s
 real mailbox, you recover from the corruption by reindexing and then
 letting the sync process copy the missing data back in again.  and you
 can tidy up the data file by running a compact over it.
@@ -959,13 +957,13 @@ you detect data corruption in most recent chunk reactively as soon as
 the backup system needs to open it again (quick verify on open)
 
 you detect data corruption in older chunks reactively by trying to
-restore from it.  may be too late: if a message needs restoring it's
+restore from it.  may be too late: if a message needs restoring it’s
 because user mailbox no longer has it
 
 you detect data corruption preemptively by running the verify tool
 over it. recommend scheduling this in EVENTS/cron?
 
-if data corruption occurs in message that's no longer in user's
+if data corruption occurs in message that’s no longer in user’s
 mailbox, that message is lost.  it was going to be deleted from the
 backup after $retention period anyway (by compact), but if it needs
 restoring in the meantime, sorry
@@ -974,11 +972,11 @@ restoring in the meantime, sorry
 installation instructions
 =========================
 
-(obviously, most of this won't work at this point, because the code
-doesn't exist.  but this is, approximately, where things are heading.)
+(obviously, most of this won’t work at this point, because the code
+doesn’t exist.  but this is, approximately, where things are heading.)
 
 on your backup server:
-   * compile with --enable-backup configure option and install
+   * compile with –enable-backup configure option and install
 
    * imapd.conf:
 
@@ -989,13 +987,13 @@ on your backup server:
 
    * cyrus.conf SERVICES:
 
-        backupd cmd="backupd" listen="csync" prefork=0 (remove other
+        backupd cmd=”backupd” listen=”csync” prefork=0 (remove other
         services, most likely) (should i create a
         master/conf/backup.conf example file?)
 
    * cyrus.conf EVENTS:
 
-        compact cmd="ctl_backups compact -A" at=0400
+        compact cmd=”ctl_backups compact -A” at=0400
 
    * start server as usual
 
@@ -1006,17 +1004,17 @@ on your imap server:
 
         sync_log_channels: backup sync_log: 1 backup_sync_host:
         backup-server.example.com backup_sync_port: csync
-        backup_sync_authname: ... backup_sync_password: ...
-        backup_sync_repeat_interval: ... # seconds, smaller value =
-        livelier backups but more i/o backup_sync_shutdown_file: ....
+        backup_sync_authname: … backup_sync_password: …
+        backup_sync_repeat_interval: … # seconds, smaller value =
+        livelier backups but more i/o backup_sync_shutdown_file: ….
 
    * cyrus.conf STARTUP:
 
-        backup_sync cmd="sync_client -r -n backup"
+        backup_sync cmd=”sync_client -r -n backup”
 
    * cyrus.conf SERVICES:
 
-        restored cmd="restored" [...]
+        restored cmd=”restored” […]
 
    * start/restart master
 
@@ -1025,12 +1023,12 @@ files and such:
    mapping userids to backup locations {backuppartition-
    name}/<hash>/<userid>_XXXXXX       - backup data stream for userid
    {backuppartition-name}/<hash>/<userid>_XXXXXX.index - index into
-   userid's backup data stream
+   userid’s backup data stream
 
 do i want rhost in the path?
    * protects from issue if multiple servers are trying to back up
      their own version of same user (though this is its own problem
-     that the backup system shouldn't have to compensate for)
+     that the backup system shouldn’t have to compensate for)
 
    * but makes location of undifferentiated user unpredictable
 
@@ -1130,19 +1128,19 @@ todo list
 * perl tool to anonymise sync proto talk
 
 * verification step to check entire data stream for errors (even
-  chunks that aren't indexed)
+  chunks that aren’t indexed)
 
 * prot_fill_cb: extra argument to pass back an error string to
   prot_fill
 
 * ctl_backups verify: set level
 
-* backupd: don't block on locked backups, return mailbox locked --
-  but sync_client doesn't handle this
+* backupd: don’t block on locked backups, return mailbox locked –
+  but sync_client doesn’t handle this
 
 * test multiple backup partitions
 
-* configure: error if backups requested and we don't have zlib
+* configure: error if backups requested and we don’t have zlib
 
 * valgrind
 

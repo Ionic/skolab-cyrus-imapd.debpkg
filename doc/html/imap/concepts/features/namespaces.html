@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mailbox Namespaces &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Mailbox Namespaces &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../index.html"/>
         <link rel="up" title="Features" href="../features.html"/>
         <link rel="next" title="Virtual Domains" href="virtual-domains.html"/>
         <link rel="prev" title="Automatic Creation of Mailboxes" href="automatic-creation-of-mailboxes.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../overview.html">Overview</a> &raquo;</li>
       
@@ -787,25 +788,25 @@
 <div class="section" id="namespace-basics">
 <h2>Namespace Basics<a class="headerlink" href="#namespace-basics" title="Permalink to this headline">¶</a></h2>
 <p><strong>What is a namespace?</strong> A namespace is a hierarchical list of mailboxes a user has access to, named to maintain uniqueness and provide access control.</p>
-<p>There are four different uses of the term &quot;namespace&quot; within Cyrus:</p>
+<p>There are four different uses of the term “namespace” within Cyrus:</p>
 <ol class="arabic">
 <li><p class="first"><strong>IMAP NAMESPACE command</strong></p>
 <blockquote>
-<div><p>This is the set of mailboxes a user has access to and is the namespace as defined by <span class="target" id="index-0"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2342.html"><strong>RFC 2342</strong></a> in response to the <code class="docutils literal"><span class="pre">IMAP</span> <span class="pre">NAMESPACE</span></code> command.</p>
-<p>A user can have access to three different kinds of mailboxes: their own (known as <em>personal</em>), other people's mailboxes that they have shared access to (known as <em>other users</em>) and any mailboxes that have more than one owner (known as <em>shared</em>).</p>
+<div><p>This is the set of mailboxes a user has access to and is the namespace as defined by <span class="target" id="index-0"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2342.html"><strong>RFC 2342</strong></a> in response to the <code class="docutils literal notranslate"><span class="pre">IMAP</span> <span class="pre">NAMESPACE</span></code> command.</p>
+<p>A user can have access to three different kinds of mailboxes: their own (known as <em>personal</em>), other people’s mailboxes that they have shared access to (known as <em>other users</em>) and any mailboxes that have more than one owner (known as <em>shared</em>).</p>
 <p>More info at <a class="reference internal" href="#imap-admin-namespaces-user-access"><span class="std std-ref">User Access Namespaces</span></a>.</p>
 </div></blockquote>
 </li>
 <li><p class="first"><strong>User namespace mode: altnamespace</strong></p>
 <blockquote>
-<div><p>Cyrus's user namespace mode controls how it responds to the <code class="docutils literal"><span class="pre">IMAP</span> <span class="pre">NAMESPACE</span></code> command and what the hierarchy of mailboxes looks like in response to an <code class="docutils literal"><span class="pre">IMAP</span> <span class="pre">LIST</span></code> command for a user. The config setting <em>altnamespace</em>: on or off in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> manages the mode. It is also affected by the hierarchy separator, which can be &quot;/&quot; (default: on) or &quot;.&quot; (off) controlled by <em>unixhierarchysep</em> in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.</p>
+<div><p>Cyrus’s user namespace mode controls how it responds to the <code class="docutils literal notranslate"><span class="pre">IMAP</span> <span class="pre">NAMESPACE</span></code> command and what the hierarchy of mailboxes looks like in response to an <code class="docutils literal notranslate"><span class="pre">IMAP</span> <span class="pre">LIST</span></code> command for a user. The config setting <em>altnamespace</em>: on or off in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> manages the mode. It is also affected by the hierarchy separator, which can be “/” (default: on) or “.” (off) controlled by <em>unixhierarchysep</em> in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.</p>
 <ol class="arabic">
 <li><p class="first">altnamespace: on (default)</p>
 <blockquote>
 <div><ul class="simple">
-<li>personal: &quot;&quot; (empty string)</li>
-<li>other users: &quot;Other Users&quot; (The string can be changed in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> with <code class="docutils literal"><span class="pre">userprefix</span></code>)</li>
-<li>shared: &quot;Shared Folders&quot; (The string can be changed in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> with <code class="docutils literal"><span class="pre">sharedprefix</span></code>)</li>
+<li>personal: “” (empty string)</li>
+<li>other users: “Other Users” (The string can be changed in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> with <code class="docutils literal notranslate"><span class="pre">userprefix</span></code>)</li>
+<li>shared: “Shared Folders” (The string can be changed in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> with <code class="docutils literal notranslate"><span class="pre">sharedprefix</span></code>)</li>
 </ul>
 </div></blockquote>
 </li>
@@ -814,29 +815,29 @@
 <div><ul class="simple">
 <li>personal: INBOX</li>
 <li>other users: user</li>
-<li>shared: &quot;&quot; (empty string)</li>
+<li>shared: “” (empty string)</li>
 </ul>
 </div></blockquote>
 </li>
 </ol>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">altnamespace mode is valid only for the <em>user</em> namespace: it doesn't affect the <a class="reference internal" href="#imap-admin-namespaces-administrator"><span class="std std-ref">administrator's view</span></a>.</p>
+<p class="last">altnamespace mode is valid only for the <em>user</em> namespace: it doesn’t affect the <a class="reference internal" href="#imap-admin-namespaces-administrator"><span class="std std-ref">administrator’s view</span></a>.</p>
 </div>
-<p>Consider a user &quot;uhura&quot;. Uhura can see all the folders from user &quot;spock&quot;, some folders from users &quot;kirk&quot;, as well as the shared folder &quot;commandcrew&quot;.</p>
-<p>Under altnamespace:off mode with a <code class="docutils literal"><span class="pre">.</span></code> separator, she sees her folders as:</p>
+<p>Consider a user “uhura”. Uhura can see all the folders from user “spock”, some folders from users “kirk”, as well as the shared folder “commandcrew”.</p>
+<p>Under altnamespace:off mode with a <code class="docutils literal notranslate"><span class="pre">.</span></code> separator, she sees her folders as:</p>
 <blockquote>
 <div><ul class="simple">
 <li>INBOX</li>
 <li>INBOX.folder-1</li>
 <li>INBOX.folder-2 (etc)</li>
-<li>user.spock (this is INBOX for &quot;spock&quot;)</li>
+<li>user.spock (this is INBOX for “spock”)</li>
 <li>user.spock.folder-x</li>
-<li>user.kirk.folder-y (&quot;kirk&quot; hasn't shared their INBOX)</li>
+<li>user.kirk.folder-y (“kirk” hasn’t shared their INBOX)</li>
 <li>commandcrew</li>
 </ul>
 </div></blockquote>
-<p>Under altnamespace:on mode with a <code class="docutils literal"><span class="pre">/</span></code> separator, she sees her folders as:</p>
+<p>Under altnamespace:on mode with a <code class="docutils literal notranslate"><span class="pre">/</span></code> separator, she sees her folders as:</p>
 <blockquote>
 <div><ul class="simple">
 <li>INBOX (INBOX is special in IMAP and is always the users Inbox)</li>
@@ -850,9 +851,9 @@
 </div></blockquote>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">When using a <code class="docutils literal"><span class="pre">.</span></code> separator (unixhierarchysep: off), user names and folder names
-internally swap the <code class="docutils literal"><span class="pre">.</span></code> with <code class="docutils literal"><span class="pre">^</span></code>. This is because dots mark a subfolder if
-you're not using unixhierarchy separators. Some IMAP clients do not cope well with the ^ character, which is why
+<p class="last">When using a <code class="docutils literal notranslate"><span class="pre">.</span></code> separator (unixhierarchysep: off), user names and folder names
+internally swap the <code class="docutils literal notranslate"><span class="pre">.</span></code> with <code class="docutils literal notranslate"><span class="pre">^</span></code>. This is because dots mark a subfolder if
+you’re not using unixhierarchy separators. Some IMAP clients do not cope well with the ^ character, which is why
 unixhierarchysep: on is now the default as it allows dots in usernames and folder names.</p>
 </div>
 <p>More info at <a class="reference internal" href="#imap-admin-namespaces-mode"><span class="std std-ref">User Namespace Mode</span></a>.</p>
@@ -860,8 +861,8 @@ unixhierarchysep: on is now the default as it allows dots in usernames and folde
 </li>
 <li><p class="first"><strong>Administrator namespace</strong></p>
 <blockquote>
-<div><p>While a user has their three kinds of mailboxes they have access to, an administrator can see all mailboxes (optionally restricted to the administrator's own domain). As a result, the response to <code class="docutils literal"><span class="pre">LIST</span></code> commands is different for administrators.</p>
-<p>In the administrator namespace, all user mailboxes are presented as <code class="docutils literal"><span class="pre">user/&lt;username&gt;/&lt;folder&gt;</span></code> (with unixhierarchysep: on) and with <code class="docutils literal"><span class="pre">&#64;&lt;domain&gt;</span></code> appended in virtual domain mode. Shared folders appear at the top level. The user namespace mode (altnamespace on/off) does NOT affect administrator mode; only the hierarchy separator affects display.</p>
+<div><p>While a user has their three kinds of mailboxes they have access to, an administrator can see all mailboxes (optionally restricted to the administrator’s own domain). As a result, the response to <code class="docutils literal notranslate"><span class="pre">LIST</span></code> commands is different for administrators.</p>
+<p>In the administrator namespace, all user mailboxes are presented as <code class="docutils literal notranslate"><span class="pre">user/&lt;username&gt;/&lt;folder&gt;</span></code> (with unixhierarchysep: on) and with <code class="docutils literal notranslate"><span class="pre">&#64;&lt;domain&gt;</span></code> appended in virtual domain mode. Shared folders appear at the top level. The user namespace mode (altnamespace on/off) does NOT affect administrator mode; only the hierarchy separator affects display.</p>
 <p>For unixhierarchy separators:</p>
 <blockquote>
 <div><ul class="simple">
@@ -879,7 +880,7 @@ unixhierarchysep: on is now the default as it allows dots in usernames and folde
 </li>
 <li><p class="first"><strong>Internal namespace</strong></p>
 <blockquote>
-<div><p>Developer reference only. This is how each mailbox is uniquely stored inside <code class="docutils literal"><span class="pre">mailboxes.db</span></code>. Each mailbox name has a unique representation that is the &quot;key&quot; in the mailboxes.db key-value database.</p>
+<div><p>Developer reference only. This is how each mailbox is uniquely stored inside <code class="docutils literal notranslate"><span class="pre">mailboxes.db</span></code>. Each mailbox name has a unique representation that is the “key” in the mailboxes.db key-value database.</p>
 <blockquote>
 <div><ul class="simple">
 <li>commandcrew (??)</li>
@@ -902,12 +903,12 @@ unixhierarchysep: on is now the default as it allows dots in usernames and folde
 <span id="imap-features-namespaces-personal"></span><h3>Personal Namespace<a class="headerlink" href="#personal-namespace" title="Permalink to this headline">¶</a></h3>
 <p>The personal namespace refers to the hierarchy of mailboxes that a
 Cyrus IMAP user owns, such as user <em>Nyota Uhura &lt;nyota.uhura&#64;example.com&gt;</em>
-being the owner of the <code class="docutils literal"><span class="pre">user/nyota.uhura&#64;example.com</span></code> hierarchy.</p>
-<p>Mailboxes in the personal namespace start with the literal string <code class="docutils literal"><span class="pre">user</span></code>.</p>
+being the owner of the <code class="docutils literal notranslate"><span class="pre">user/nyota.uhura&#64;example.com</span></code> hierarchy.</p>
+<p>Mailboxes in the personal namespace start with the literal string <code class="docutils literal notranslate"><span class="pre">user</span></code>.</p>
 <p>Uhura will typically view her personal namespace such that sub-folders of
-her INBOX may not have a distinguished prefix -- other than perhaps
-<code class="docutils literal"><span class="pre">INBOX</span></code> if <code class="docutils literal"><span class="pre">altnamespace</span></code> is disabled:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">INBOX</span>
+her INBOX may not have a distinguished prefix – other than perhaps
+<code class="docutils literal notranslate"><span class="pre">INBOX</span></code> if <code class="docutils literal notranslate"><span class="pre">altnamespace</span></code> is disabled:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">INBOX</span>
 <span class="n">Drafts</span>
 <span class="n">Sent</span> <span class="n">Items</span>
 <span class="n">Spam</span>
@@ -918,15 +919,15 @@ her INBOX may not have a distinguished prefix -- other than perhaps
 <div class="section" id="other-users-namespace">
 <span id="imap-features-namespaces-other-users"></span><h3>Other Users Namespace<a class="headerlink" href="#other-users-namespace" title="Permalink to this headline">¶</a></h3>
 <p>The Other Users namespace is a namespace that is reserved for mailboxes
-in other user's personal namespaces, that have been shared with the
+in other user’s personal namespaces, that have been shared with the
 current user.</p>
 <p>With <em>Spock</em> and <em>Kirk</em> in the same environment, who are also sharing
 their personal mailboxes with <em>Uhura</em>, the
 <a class="reference internal" href="#imap-features-namespaces-other-users"><span class="std std-ref">Other Users Namespace</span></a> namespace kicks in when
 these mailboxes are viewed.</p>
 <p>For <em>Nyota Uhura &lt;nyota.uhura&#64;example.org&gt;</em>, with
-<em>James Kirk &lt;james.kirk&#64;example.org&gt;</em> sharing a selection of his mailboxes, Uhura's mailbox list looks like:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">INBOX</span>
+<em>James Kirk &lt;james.kirk&#64;example.org&gt;</em> sharing a selection of his mailboxes, Uhura’s mailbox list looks like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">INBOX</span>
 <span class="n">Drafts</span>
 <span class="n">Sent</span> <span class="n">Items</span>
 <span class="n">Spam</span>
@@ -935,10 +936,10 @@ these mailboxes are viewed.</p>
 <span class="n">Other</span> <span class="n">Users</span><span class="o">/</span><span class="n">james</span><span class="o">.</span><span class="n">kirk</span><span class="o">/</span><span class="n">Subfolder</span>
 </pre></div>
 </div>
-<p>Note that the prefix used here is &quot;Other Users&quot; to show the mailbox
-in question is part of another user's personal namespace.</p>
+<p>Note that the prefix used here is “Other Users” to show the mailbox
+in question is part of another user’s personal namespace.</p>
 <p>The other users namespace can be suppressed in LIST commands by setting
-<code class="docutils literal"><span class="pre">disable_user_namespace</span></code> to <code class="docutils literal"><span class="pre">1</span></code> in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>. This
+<code class="docutils literal notranslate"><span class="pre">disable_user_namespace</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code> in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>. This
 is useful in larger environments because of the nature of the
 <a class="reference internal" href="../../reference/admin/access-control.html#imap-admin-access-control-lists-discretionary"><span class="std std-ref">Discretionary Access Control</span></a> Cyrus IMAP
 entertains by default.</p>
@@ -949,25 +950,25 @@ entertains by default.</p>
 that are not owned by any one user, though one or more actual
 users have administrative rights on the folders.</p>
 <p>More than one shared namespaces can be created (aside from those named
-<code class="docutils literal"><span class="pre">user</span></code> as this hierarchy is reserved for the
+<code class="docutils literal notranslate"><span class="pre">user</span></code> as this hierarchy is reserved for the
 <a class="reference internal" href="#imap-features-namespaces-personal"><span class="std std-ref">Personal Namespace</span></a> of each user).</p>
 <p>Examples of shared folders could include:</p>
 <p class="rubric">Shared mail folders for mailing list traffic</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">lists/cyrus.imap/announce&#64;example.org</span></code></li>
-<li><code class="docutils literal"><span class="pre">lists/cyrus.imap/devel&#64;example.org</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">lists/cyrus.imap/announce&#64;example.org</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">lists/cyrus.imap/devel&#64;example.org</span></code></li>
 </ul>
 <p class="rubric">Shared mail folders for common email addresses</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">shared/contact&#64;example.org</span></code></li>
-<li><code class="docutils literal"><span class="pre">shared/hostmaster&#64;example.org</span></code></li>
-<li><code class="docutils literal"><span class="pre">shared/info&#64;example.org</span></code></li>
-<li><code class="docutils literal"><span class="pre">shared/postmaster&#64;example.org</span></code></li>
-<li><code class="docutils literal"><span class="pre">shared/root&#64;example.org</span></code></li>
-<li><code class="docutils literal"><span class="pre">shared/webmaster&#64;example.org</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">shared/contact&#64;example.org</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">shared/hostmaster&#64;example.org</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">shared/info&#64;example.org</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">shared/postmaster&#64;example.org</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">shared/root&#64;example.org</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">shared/webmaster&#64;example.org</span></code></li>
 </ul>
 <p>The shared namespace can be suppressed in LIST commands by setting
-<code class="docutils literal"><span class="pre">disable_shared_namespace</span></code> to <code class="docutils literal"><span class="pre">1</span></code> in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>. This
+<code class="docutils literal notranslate"><span class="pre">disable_shared_namespace</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code> in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>. This
 is useful in larger environments that want to avoid all LIST
 operations which can result in large, long lists of folders.</p>
 </div>
@@ -980,52 +981,52 @@ operations which can result in large, long lists of folders.</p>
 <p class="first admonition-title">Note</p>
 <p class="last">If you are upgrading an existing server which uses <a class="reference internal" href="../../reference/manpages/systemcommands/timsieved.html#std:cyrusman-timsieved(8)">timsieved(8)</a> to manage Sieve scripts and choose to swap namespace modes, you should run the script <a class="reference internal" href="../../reference/manpages/systemcommands/translatesieve.html#std:cyrusman-translatesieve(8)">translatesieve(8)</a> after configuring the namespace option(s). This script will translate the folder names in fileinto actions.</p>
 </div>
-<p>By default  Cyrus IMAP uses <em>altnamespace: on</em> , and unixhierarchysep: on &quot;/&quot; (slash) character for the
+<p>By default  Cyrus IMAP uses <em>altnamespace: on</em> , and unixhierarchysep: on “/” (slash) character for the
 hierarchy separator.</p>
 <p>The following limits also apply:</p>
 <ul class="simple">
 <li>Mailbox names are case-sensitive,</li>
-<li>A mailbox name may not start with a <code class="docutils literal"><span class="pre">.</span></code> (dot) character,</li>
-<li>A mailbox name may not contain two <code class="docutils literal"><span class="pre">.</span></code> (dot) characters in a row,</li>
+<li>A mailbox name may not start with a <code class="docutils literal notranslate"><span class="pre">.</span></code> (dot) character,</li>
+<li>A mailbox name may not contain two <code class="docutils literal notranslate"><span class="pre">.</span></code> (dot) characters in a row,</li>
 <li>Non-ASCII characters and shell meta-characters are not permitted in
 mailbox names.</li>
 </ul>
 <p>While these limits apply under all circumstances, use of the unix hierarchy separator can also affect the display.</p>
-<p>When using the altnamespace:off namespace mode, a user's
-shorthand qualifier (e.g. <code class="docutils literal"><span class="pre">john</span></code> for <code class="docutils literal"><span class="pre">john&#64;example.org</span></code>) MAY NOT
-contain a <code class="docutils literal"><span class="pre">.</span></code> (dot) character, as the character is being used as a
+<p>When using the altnamespace:off namespace mode, a user’s
+shorthand qualifier (e.g. <code class="docutils literal notranslate"><span class="pre">john</span></code> for <code class="docutils literal notranslate"><span class="pre">john&#64;example.org</span></code>) MAY NOT
+contain a <code class="docutils literal notranslate"><span class="pre">.</span></code> (dot) character, as the character is being used as a
 hierarchy separator in mailbox names, and would thus create a personal
-mailbox rather then a user's INBOX. Using <code class="docutils literal"><span class="pre">john.doe</span></code> for
+mailbox rather then a user’s INBOX. Using <code class="docutils literal notranslate"><span class="pre">john.doe</span></code> for
 the INBOX name for user <em>John Doe &lt;john.doe&#64;example.org&gt;</em> does not work,
-as it would create a sub-folder <code class="docutils literal"><span class="pre">doe</span></code> for the INBOX <code class="docutils literal"><span class="pre">user.john</span></code>.</p>
+as it would create a sub-folder <code class="docutils literal notranslate"><span class="pre">doe</span></code> for the INBOX <code class="docutils literal notranslate"><span class="pre">user.john</span></code>.</p>
 <p>The same limitation goes for the use of virtual domains. Since a mailbox
 in a virtual domain typically uses a fully qualified user identifier
-(e.g. <code class="docutils literal"><span class="pre">john&#64;example.org</span></code>, thus including a valid (sub-)domain name),
-the <code class="docutils literal"><span class="pre">.</span></code> (dot) character is inherited from the Domain Name System
-naming convention. This poses a problem without the use of the <code class="docutils literal"><span class="pre">.</span></code>
+(e.g. <code class="docutils literal notranslate"><span class="pre">john&#64;example.org</span></code>, thus including a valid (sub-)domain name),
+the <code class="docutils literal notranslate"><span class="pre">.</span></code> (dot) character is inherited from the Domain Name System
+naming convention. This poses a problem without the use of the <code class="docutils literal notranslate"><span class="pre">.</span></code>
 (dot) character as a mailbox hierarchy separator.</p>
 </div>
 <div class="section" id="example">
 <h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
 <p>In a default situation using the altnamespace:on namespace
 mode, a user <em>John Doe &lt;john&#64;example.org&gt;</em> would start out with a
-mailbox <code class="docutils literal"><span class="pre">INBOX</span></code>, and will want to create sub-folders such as
+mailbox <code class="docutils literal notranslate"><span class="pre">INBOX</span></code>, and will want to create sub-folders such as
 for drafted and sent messages.</p>
-<p>These mailboxes will be presented to John's client as follows (assuming dot separator):</p>
+<p>These mailboxes will be presented to John’s client as follows (assuming dot separator):</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">INBOX</span></code></li>
-<li><code class="docutils literal"><span class="pre">Drafts</span></code></li>
-<li><code class="docutils literal"><span class="pre">Sent</span> <span class="pre">Items</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">INBOX</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">Drafts</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">Sent</span> <span class="pre">Items</span></code></li>
 </ul>
 <p>Where altnamespace is set to off, this looks like:</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">INBOX</span></code></li>
-<li><code class="docutils literal"><span class="pre">INBOX.Drafts</span></code></li>
-<li><code class="docutils literal"><span class="pre">INBOX.Sent</span> <span class="pre">Items</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">INBOX</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">INBOX.Drafts</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">INBOX.Sent</span> <span class="pre">Items</span></code></li>
 </ul>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">Changing <code class="docutils literal"><span class="pre">altnamespace</span></code> in an active operating environment will
+<p class="last">Changing <code class="docutils literal notranslate"><span class="pre">altnamespace</span></code> in an active operating environment will
 cause all IMAP clients to need to resync the entire hierarchy.</p>
 </div>
 <hr class="docutils" />
@@ -1033,8 +1034,8 @@ cause all IMAP clients to need to resync the entire hierarchy.</p>
 </div>
 <div class="section" id="administrator-namespaces">
 <span id="imap-admin-namespaces-administrator"></span><h2>Administrator Namespaces<a class="headerlink" href="#administrator-namespaces" title="Permalink to this headline">¶</a></h2>
-<p>An administrator -- a user for which the username is included in the
-<code class="docutils literal"><span class="pre">admins</span></code> setting in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> -- has a different
+<p>An administrator – a user for which the username is included in the
+<code class="docutils literal notranslate"><span class="pre">admins</span></code> setting in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> – has a different
 perspective when using the IMAP protocol to perform administrative
 tasks.</p>
 <div class="admonition note">
@@ -1044,54 +1045,54 @@ tasks.</p>
 <p>With the UNIX hierarchy separator enabled, the list would look as
 follows:</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">user/jane</span></code></li>
-<li><code class="docutils literal"><span class="pre">user/jane/Drafts</span></code></li>
-<li><code class="docutils literal"><span class="pre">user/jane/Sent</span> <span class="pre">Items</span></code></li>
-<li><code class="docutils literal"><span class="pre">user/john</span></code></li>
-<li><code class="docutils literal"><span class="pre">user/john/Drafts</span></code></li>
-<li><code class="docutils literal"><span class="pre">user/john/Sent</span> <span class="pre">Items</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/jane</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/jane/Drafts</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/jane/Sent</span> <span class="pre">Items</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/john</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/john/Drafts</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/john/Sent</span> <span class="pre">Items</span></code></li>
 </ul>
 <p>Continuing with the UNIX hierarchy separator enabled, should virtual
 domains be in use, the list may appear to the administrator user
-<code class="docutils literal"><span class="pre">cyrus</span></code> as follows:</p>
+<code class="docutils literal notranslate"><span class="pre">cyrus</span></code> as follows:</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">user/jane&#64;example.org</span></code></li>
-<li><code class="docutils literal"><span class="pre">user/jane/Drafts&#64;example.org</span></code></li>
-<li><code class="docutils literal"><span class="pre">user/jane/Sent</span> <span class="pre">Items&#64;example.org</span></code></li>
-<li><code class="docutils literal"><span class="pre">user/john&#64;example.org</span></code></li>
-<li><code class="docutils literal"><span class="pre">user/john/Drafts&#64;example.org</span></code></li>
-<li><code class="docutils literal"><span class="pre">user/john/Sent</span> <span class="pre">Items&#64;example.org</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/jane&#64;example.org</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/jane/Drafts&#64;example.org</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/jane/Sent</span> <span class="pre">Items&#64;example.org</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/john&#64;example.org</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/john/Drafts&#64;example.org</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/john/Sent</span> <span class="pre">Items&#64;example.org</span></code></li>
 </ul>
-<p>But the <code class="docutils literal"><span class="pre">admins</span></code> setting in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> allows for a
-username of <code class="docutils literal"><span class="pre">admin&#64;example.org</span></code> to be specified as an administrator as
-well. Should <code class="docutils literal"><span class="pre">admin&#64;example.org</span></code> take a peek, then the following list
+<p>But the <code class="docutils literal notranslate"><span class="pre">admins</span></code> setting in <a class="reference internal" href="../../reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> allows for a
+username of <code class="docutils literal notranslate"><span class="pre">admin&#64;example.org</span></code> to be specified as an administrator as
+well. Should <code class="docutils literal notranslate"><span class="pre">admin&#64;example.org</span></code> take a peek, then the following list
 would appear:</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">user/jane</span></code></li>
-<li><code class="docutils literal"><span class="pre">user/jane/Drafts</span></code></li>
-<li><code class="docutils literal"><span class="pre">user/jane/Sent</span> <span class="pre">Items</span></code></li>
-<li><code class="docutils literal"><span class="pre">user/john</span></code></li>
-<li><code class="docutils literal"><span class="pre">user/john/Drafts</span></code></li>
-<li><code class="docutils literal"><span class="pre">user/john/Sent</span> <span class="pre">Items</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/jane</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/jane/Drafts</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/jane/Sent</span> <span class="pre">Items</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/john</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/john/Drafts</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/john/Sent</span> <span class="pre">Items</span></code></li>
 </ul>
 <div class="admonition important">
 <p class="first admonition-title">Important</p>
 <p>In multi-domain or multi-tenant environments, the following
 mailboxes may exist:</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">user/john</span></code></li>
-<li><code class="docutils literal"><span class="pre">user/john&#64;example.com</span></code></li>
-<li><code class="docutils literal"><span class="pre">user/john&#64;example.org</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/john</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/john&#64;example.com</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">user/john&#64;example.org</span></code></li>
 </ul>
-<p class="last">Be aware that an unrealmed <code class="docutils literal"><span class="pre">cyrus</span></code> administrator user
+<p class="last">Be aware that an unrealmed <code class="docutils literal notranslate"><span class="pre">cyrus</span></code> administrator user
 can administrator mailboxes in each of the three realms (null for
-<code class="docutils literal"><span class="pre">user/john</span></code>, <code class="docutils literal"><span class="pre">example.com</span></code> for <code class="docutils literal"><span class="pre">user/john&#64;example.com</span></code> and
-<code class="docutils literal"><span class="pre">example.org</span></code> for <code class="docutils literal"><span class="pre">user/john&#64;example.org</span></code>), but a realmed
-administrator <code class="docutils literal"><span class="pre">admin&#64;example.org</span></code> will be able to see and administer
-mailboxes restricted to the <code class="docutils literal"><span class="pre">example.org</span></code> authorization realm.
-In this case they will see <code class="docutils literal"><span class="pre">john&#64;example.com</span></code>
-being presented as <code class="docutils literal"><span class="pre">user/john</span></code> -- not to be confused with the
-actually unrealmed <code class="docutils literal"><span class="pre">user/john</span></code> mailbox that exists on the system
+<code class="docutils literal notranslate"><span class="pre">user/john</span></code>, <code class="docutils literal notranslate"><span class="pre">example.com</span></code> for <code class="docutils literal notranslate"><span class="pre">user/john&#64;example.com</span></code> and
+<code class="docutils literal notranslate"><span class="pre">example.org</span></code> for <code class="docutils literal notranslate"><span class="pre">user/john&#64;example.org</span></code>), but a realmed
+administrator <code class="docutils literal notranslate"><span class="pre">admin&#64;example.org</span></code> will be able to see and administer
+mailboxes restricted to the <code class="docutils literal notranslate"><span class="pre">example.org</span></code> authorization realm.
+In this case they will see <code class="docutils literal notranslate"><span class="pre">john&#64;example.com</span></code>
+being presented as <code class="docutils literal notranslate"><span class="pre">user/john</span></code> – not to be confused with the
+actually unrealmed <code class="docutils literal notranslate"><span class="pre">user/john</span></code> mailbox that exists on the system
 as well.</p>
 </div>
 </div>
@@ -1118,7 +1119,7 @@ as well.</p>
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on May 08 2017
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1135,7 +1136,7 @@ as well.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1144,7 +1145,7 @@ as well.</p>
       <script type="text/javascript" src="../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
 
   
 

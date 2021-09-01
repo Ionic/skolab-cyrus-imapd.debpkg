@@ -1,4 +1,3 @@
-
 **notifyd**
 ***********
 
@@ -67,12 +66,12 @@ NOTIFICATION METHODS
 **mailto**
 
    Email the notification.  This method can ONLY be used in a Sieve
-   'notify' action as it requires a *mailto:* URL to be specified as
+   ‘notify’ action as it requires a *mailto:* URL to be specified as
    an *:option*.
 
 **zephyr**
 
-   Send the notification as a zephyrgram.  If used in a Sieve 'notify'
+   Send the notification as a zephyrgram.  If used in a Sieve ‘notify’
    action, additional recipients can be specified as *:options*.
 
 **external**

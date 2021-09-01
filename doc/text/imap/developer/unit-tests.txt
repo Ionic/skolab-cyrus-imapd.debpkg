@@ -1,4 +1,3 @@
-
 Unit Tests
 **********
 
@@ -49,7 +48,7 @@ never enough unit tests!).
 
 The definition on Wikipedia sheds some light:
 
-   ...**unit testing** is a method by which individual units of source
+   …**unit testing** is a method by which individual units of source
    code are tested to determine if they are fit for use. A unit is the
    smallest testable part of an application.
 
@@ -58,7 +57,7 @@ code, like individual functions, modules, or classes, work in
 isolation. It is **not** about testing the system as a whole.
 
 The tests implemented here are also **regression tests**, which in
-Wikipedia's words means:
+Wikipedia’s words means:
 
    **Regression testing** is any type of software testing that seeks
    to uncover software errors after changes to the program (e.g.
@@ -68,21 +67,21 @@ Wikipedia's words means:
 
 In other words, the tests are designed to be easy to run and to work
 out fully automatically whether they have passed or failed, so that
-they can be run usefully by people who didn't write them.
+they can be run usefully by people who didn’t write them.
 
 
 3. Running The Tests
 ====================
 
-This section takes you through the process of running Cyrus' unit
+This section takes you through the process of running Cyrus’ unit
 tests.
 
 
 3.1. Setting Up The Machine
 ---------------------------
 
-Cyrus' unit tests are all located in a new directory, "cyrus-
-imapd/cunit/". They're written in C, like the remainder of Cyrus, and
+Cyrus’ unit tests are all located in a new directory, "cyrus-
+imapd/cunit/". They’re written in C, like the remainder of Cyrus, and
 use the CUnit library from SourceForge, with some home grown wrappers
 and other improvements to make our lives easier.
 
@@ -93,8 +92,8 @@ CUnit, for example on Ubuntu you can just do:
    me@ubuntu> sudo apt-get install libcunit1-dev
 
 Alternately, you can download the CUnit source, build it and install
-it. It's not a complicated or difficult library, this shouldn't take
-long. When you've done, install it in "/usr/include" and "/usr/lib".
+it. It’s not a complicated or difficult library, this shouldn’t take
+long. When you’ve done, install it in "/usr/include" and "/usr/lib".
 
 
 3.2 Configure Script
@@ -156,7 +155,7 @@ Then, use the new "check:" target to build and run the unit tests.
                   asserts 1079745 1079745 1079745       0
    make[1]: Leaving directory `/home/me/cyrus-imapd/cunit'
 
-Let's take a closer look at what's happening here.
+Let’s take a closer look at what’s happening here.
 
 1. The "check:" target causes automake to re-run itself. This is
    normal automake behaviour. Note that the older build system used to
@@ -226,31 +225,31 @@ To run the unit tests with Valgrind, use the new "valgrind:" target.
    ==2999==
    ...
 
-Here's an explanation of what's happening in the example.
+Here’s an explanation of what’s happening in the example.
 
 1. The test executable is run as before, but using the "valgrind"
-   program. The first thing we see is Valgrind's banner message.
+   program. The first thing we see is Valgrind’s banner message.
 
-2. The test executable proceeds as normal and eventually emits it's
+2. The test executable proceeds as normal and eventually emits it’s
    run summary, then exits.
 
 3. After the test executable exits, Valgrind checks for memory
    leaks and prints both a summary of all leaks and a stack trace
    showing where each block of leaked memory was allocated.
 
-I'd just like to say that I love Valgrind and I think it's immensely
+I’d just like to say that I love Valgrind and I think it’s immensely
 useful. I would have made running the tests under Valgrind the only
 option for the "check:" target, except that Valgrind is not available
-on all of Cyrus' supported platforms.
+on all of Cyrus’ supported platforms.
 
 
 3.5 The Tests Are Failing
 -------------------------
 
-So you've noticed that some of the tests are failing. Let me make the
+So you’ve noticed that some of the tests are failing. Let me make the
 guiding principle of unit testing as clear as possible: **THE UNIT
 TESTS SHOULD NOT FAIL**. All of the tests are designed to pass all the
-time, in everyone's environment. The unit tests are run automatically
+time, in everyone’s environment. The unit tests are run automatically
 every twelve hours on the Cyrus Continuous Integration server, and a
 failing test fails the whole build and makes people unhappy.
 
@@ -259,12 +258,12 @@ most benefit out of unit testing
 
 * If you see a test failing, investigate it.
 
-* If you can't investigate, complain on the mailing list or raise a
+* If you can’t investigate, complain on the mailing list or raise a
   bug so that somebody else can investigate.
 
 * When writing tests, write them to work in all environments and all
-  combinations of "configure" script options. It's ok to have a test
-  which is empty in some circumstances; it's not ok to have a test
+  combinations of "configure" script options. It’s ok to have a test
+  which is empty in some circumstances; it’s not ok to have a test
   that fails.
 
 * When adding code, write new tests for the new code.
@@ -279,7 +278,7 @@ most benefit out of unit testing
 ====================
 
 With the new Cyrus build system, the file "cunit/unit" is no longer an
-executable, it's a shell script which sets up some environment
+executable, it’s a shell script which sets up some environment
 variables before running the real executable which is hidden away.
 This makes debugging a failing test somewhat challenging. The solution
 is:
@@ -314,7 +313,7 @@ useful for manual debugging.
 4. Adding Your Own Tests
 ========================
 
-Adding your own tests is quite simple. Here's how.
+Adding your own tests is quite simple. Here’s how.
 
 
 4.1 Where To Put Your Tests
@@ -324,8 +323,8 @@ The unit test code in Cyrus is contained in a set of C source files in
 the "cunit" directory. For reasons too complex to go into here, these
 are named *whatever*.testc instead of the more usual *whatever*.c. If
 you look closely, you will see that each of those C source files maps
-to a "Suite" in CUnit parlance. For example, "cunit/glob.testc" is
-listed as the Suite "glob" in CUnit's runtime output.
+to a “Suite” in CUnit parlance. For example, "cunit/glob.testc" is
+listed as the Suite “glob” in CUnit’s runtime output.
 
 Typically, each Suite tests a single module or a related set of
 functions; for example, "cunit/glob.testc" contains tests for the glob
@@ -333,14 +332,14 @@ module in "lib/glob.c".
 
 So, if you want to add a new test for a module which already has some
 existing tests, the sensible thing to do is to add a new test to the
-existing suite. Otherwise, you'll need to add a new Suite.
+existing suite. Otherwise, you’ll need to add a new Suite.
 
 
 4.1 Adding A New Suite
 ======================
 
 Each Suite is a single C source file in the "cunit/" directory. Your
-first step is to create a new C source file. For this example, you'll
+first step is to create a new C source file. For this example, you’ll
 create a new Suite to test the CRC32 routines which live in
 "lib/crc32.c".
 
@@ -363,14 +362,14 @@ The file should contain something like this.
        CU_ASSERT_EQUAL(c, CRC32);  (g)
    }
 
-Here's an explanation of what all these bits are for.
+Here’s an explanation of what all these bits are for.
 
 1. You need to include the header ""cunit/cyrunit.h"", which is a
-   thin Cyrus wrapper around the CUnit's library's header,
+   thin Cyrus wrapper around the CUnit’s library’s header,
    "<CUnit/CUnit.h>" with some extra conveniences.
 
 2. You should also include any headers you need for declarations of
-   the functions which you'll be testing. Note that the Cyrus "lib/"
+   the functions which you’ll be testing. Note that the Cyrus "lib/"
    and "imap/" directories are already in the include path, so any
    header in there can be included without the directory prefix, e.g.
    ""crc32.h"" for "lib/crc32.h".
@@ -380,26 +379,26 @@ Here's an explanation of what all these bits are for.
    may be "static" or "extern", but I recommend "static". Functions
    with this signature are automatically discovered in the source code
    by the Cyrus unit test infrastructure, so all you have to do is
-   write the function. Later, a CUnit test named "whatever" will be
+   write the function. Later, a CUnit test named “whatever” will be
    created automatically for your "test_whatever" function.
 
-4. Here's a good place to define the test inputs and expected
+4. Here’s a good place to define the test inputs and expected
    outputs. Note that for this example you have no idea of the actual
    correct output. The right thing to do there is to manually
    calculate the expected result from first principles, or to use a
    different piece of software which you believe to be working. For
-   this example, let's just use a known incorrect value and see what
+   this example, let’s just use a known incorrect value and see what
    happens.
 
-5. Here's a good place for local variables you need during the
+5. Here’s a good place for local variables you need during the
    test.
 
 6. Call the function under test ("crc32_map()" in this example)
    with known inputs, and capture the results in a local variable "c".
 
 7. Compare the actual result in "c" with the expected result in
-   "CRC32". The "CU_ASSERT_EQUAL()" macro checks that it's two
-   arguments are equal (using an integer comparison), and if they're
+   "CRC32". The "CU_ASSERT_EQUAL()" macro checks that it’s two
+   arguments are equal (using an integer comparison), and if they’re
    different it prints a message and records a failure. Note that
    unlike the libc "assert()" macro, control will continue even if the
    assert fails. The CUnit library provides a whole family of similar
@@ -430,7 +429,7 @@ At this point you should be able to just rebuild and rerun using
 **make check**. You can also just rebuild without rerunning by using
 the command **make cunit/unit**.
 
-Note that sometimes this doesn't quite work right, and you may be able
+Note that sometimes this doesn’t quite work right, and you may be able
 to work around this problem using the command **rm
 cunit/default.cunit**.
 
@@ -453,12 +452,12 @@ cunit/default.cunit**.
 
 Note how the test failure told us which in source file and at what
 line number the failure occurred, and what the actual and expected
-values were. Let's go and fix that up now.
+values were. Let’s go and fix that up now.
 
    static const char TEXT[] = "lorem ipsum";
    static uint32\_t CRC32 = 0x72d7748e;
 
-Re-run "make check" and you'll see your test being rebuilt and rerun,
+Re-run "make check" and you’ll see your test being rebuilt and rerun,
 and this time passing.
 
    me@mybox> make check
@@ -482,7 +481,7 @@ and this time passing.
 
 Adding a new test to an existing test is easy: all you have to do is
 add a new function to an existing C source file in the "cunit/"
-directory. As an example, let's add a test for the "crc_iovec()"
+directory. As an example, let’s add a test for the "crc_iovec()"
 function.
 
    me@mybox> vi cunit/crc32.testc
@@ -506,22 +505,22 @@ function.
        CU_ASSERT_EQUAL(c, CRC32);  (f)
    }
 
-Here's an explanation of what all these bits are for.
+Here’s an explanation of what all these bits are for.
 
 1. Your new test function should look like this: it takes no
    arguments, returns void, and is named "test_whatever". It may be
    "static" or "extern", but I recommend "static". Functions with this
    signature are automatically discovered in the source code by the
    Cyrus unit test infrastructure, so all you have to do is write the
-   function. Later, a CUnit test named "whatever" will be created
+   function. Later, a CUnit test named “whatever” will be created
    automatically for your "test_whatever" function. Note that the
    opening curly brace must be on the next line or the unit test
    infrastructure will not find the function.
 
-2. Here's a good place to define the test inputs and expected
+2. Here’s a good place to define the test inputs and expected
    outputs.
 
-3. Here's a good place for local variables you need during the
+3. Here’s a good place for local variables you need during the
    test.
 
 4. Here you set up the input conditions for the function under
@@ -531,14 +530,14 @@ Here's an explanation of what all these bits are for.
    the results in a local variable, here "c".
 
 6. Compare the actual result in "c" with the expected result in
-   "CRC32". The "CU_ASSERT_EQUAL()" macro checks that it's two
-   arguments are equal (using an integer comparison), and if they're
+   "CRC32". The "CU_ASSERT_EQUAL()" macro checks that it’s two
+   arguments are equal (using an integer comparison), and if they’re
    different it prints a message and records a failure. Note that
    unlike the libc "assert()" macro, control will continue even if the
    assert fails. The CUnit library provides a whole family of similar
    macros, see the online CUnit documentation for more details.
 
-Now run "make check" and you'll see your test being built and run.
+Now run "make check" and you’ll see your test being built and run.
 
    me@mybox> make check
    ...
@@ -568,7 +567,7 @@ presence of certain files.
 These kinds of functions need special treatment to ensure that their
 behaviour is locked down during the running of your tests. Otherwise,
 all sorts of strange behaviour may confuse the results of the tests.
-For example, a test might succeed the first time it's run in a given
+For example, a test might succeed the first time it’s run in a given
 directory and fail the next time. Or a test might succeed when run by
 the author of the test but fail when run by another user.
 
@@ -578,7 +577,7 @@ functions that you write and which live in the suite source. They are
 called from CUnit respectively before any of the tests in the suite is
 run, and after all tests from that suite are run.
 
-Here's how to use them. The suite setup function should set up any
+Here’s how to use them. The suite setup function should set up any
 global state that the functions under test rely on, in such a way that
 their state is predictable and always the same no matter who runs the
 test or when or how many times. Similarly the suite teardown function

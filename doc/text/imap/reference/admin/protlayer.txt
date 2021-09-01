@@ -1,4 +1,3 @@
-
 Cyrus Prot Layer
 ****************
 
@@ -16,7 +15,7 @@ like IMAP.
 Events
 ======
 
-The prot layer allows "events" to be associated with each prot stream.
+The prot layer allows “events” to be associated with each prot stream.
 These events are trigger at the given time or after when the
 protstream is attempted to be read from.
 
@@ -69,7 +68,7 @@ Use **prot_removewaitevent()** to remove an event:
 
 It requires event to have been returned from prot_addwaitevent()
 previously. No further references are allowed to event or its fields.
-"event->rock" is not free'd nor examined in any way. This function may
+"event->rock" is not free’d nor examined in any way. This function may
 be called while inside the callback "event->proc()". If an event is
 removed inside of its callback, that callback must return NULL.
 

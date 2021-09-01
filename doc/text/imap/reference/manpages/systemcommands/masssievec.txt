@@ -1,4 +1,3 @@
-
 **masssievec**
 **************
 
@@ -18,7 +17,7 @@ Description
 on the files found in the **sievedir**  config from the "imapd.conf"
 file.
 
-It cannot compile scripts stored in user's home directories.
+It cannot compile scripts stored in user’s home directories.
 
 
 Options

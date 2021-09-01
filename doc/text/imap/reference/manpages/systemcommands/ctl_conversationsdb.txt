@@ -1,4 +1,3 @@
-
 **ctl_conversationsdb**
 ***********************
 
@@ -30,7 +29,7 @@ default location of the conversations database.
 In the first synopsis, the **-d** option dumps the contents of a
 conversations database to standard output in an ASCII format.  In the
 second synopsis, the resulting *file* is fed back in, using the **-u**
-option to "undump" from standard input.  This pair of commands is
+option to “undump” from standard input.  This pair of commands is
 useful for disaster recovery, or for changing the backend used to
 store the conversations database.
 
@@ -58,7 +57,7 @@ Options
 
 -u userid
 
-   "Undumps" the conversations database corresponding to the user
+   “Undumps” the conversations database corresponding to the user
    *userid*, i.e. replaces all the entries with data from ASCII
    records parsed from standard input.  The output from the **-d**
    option can be used as input.
@@ -75,14 +74,14 @@ Options
 -z
 
    Remove all conversation information from the conversations database
-   for user *userid*, and from all the user's mailboxes.  The
+   for user *userid*, and from all the user’s mailboxes.  The
    information can all be recalculated (eventually) from message
    headers, using the **-b** option.
 
 -b
 
    Rebuild all conversation information in the conversations database
-   for user *userid*, and in all the user's mailboxes, from the header
+   for user *userid*, and in all the user’s mailboxes, from the header
    information in messages.  Does not affect messages which already
    have conversation information.
 

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>cyradm &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>cyradm &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../../index.html"/>
         <link rel="up" title="Man pages" href="../commands.html"/>
         <link rel="next" title="cyrdump" href="cyrdump.html"/>
         <link rel="prev" title="cyr_virusscan" href="cyr_virusscan.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -773,7 +774,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../../../../_sources/imap/reference/manpages/systemcommands/cyradm.txt" rel="nofollow"> View page source</a>
+            <a href="../../../../_sources/imap/reference/manpages/systemcommands/cyradm.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -790,16 +791,16 @@
 </div>
 <div class="section" id="synopsis">
 <h2>SYNOPSIS<a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-perl"><div class="highlight"><pre><span></span><span class="nv">$</span> <span class="nv">cyradm</span> <span class="p">[</span><span class="o">--</span><span class="n">user</span> <span class="n">authid</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">authz</span> <span class="n">authzid</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="p">[</span><span class="k">no</span><span class="p">]</span><span class="n">rc</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">systemrc</span> <span class="n">file</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">userrc</span> <span class="n">file</span><span class="p">]</span> <span class="o">\</span>
+<div class="highlight-perl notranslate"><div class="highlight"><pre><span></span><span class="nv">$</span> <span class="nv">cyradm</span> <span class="p">[</span><span class="o">--</span><span class="n">user</span> <span class="n">authid</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">authz</span> <span class="n">authzid</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="p">[</span><span class="k">no</span><span class="p">]</span><span class="n">rc</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">systemrc</span> <span class="n">file</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">userrc</span> <span class="n">file</span><span class="p">]</span> <span class="o">\</span>
 <span class="o">&gt;</span> <span class="p">[</span><span class="o">--</span><span class="n">port</span> <span class="n">n</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">auth</span> <span class="n">mechanism</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">server</span><span class="p">]</span> <span class="n">server</span>
 </pre></div>
 </div>
 <p>but possibly</p>
-<div class="highlight-perl"><div class="highlight"><pre><span></span><span class="nv">$</span> <span class="nv">perl</span> <span class="o">-</span><span class="nn">MCyrus::IMAP::</span><span class="n">Shell</span> <span class="o">-</span><span class="n">e</span> <span class="s">&#39;run(&quot;myscript&quot;)&#39;</span>
+<div class="highlight-perl notranslate"><div class="highlight"><pre><span></span><span class="nv">$</span> <span class="nv">perl</span> <span class="o">-</span><span class="nn">MCyrus::IMAP::</span><span class="n">Shell</span> <span class="o">-</span><span class="n">e</span> <span class="s">&#39;run(&quot;myscript&quot;)&#39;</span>
 </pre></div>
 </div>
 <p>or even (not recommended)</p>
-<div class="highlight-perl"><div class="highlight"><pre><span></span><span class="k">use</span> <span class="nn">Cyrus::IMAP::Admin::Shell</span><span class="p">;</span>
+<div class="highlight-perl notranslate"><div class="highlight"><pre><span></span><span class="k">use</span> <span class="nn">Cyrus::IMAP::Admin::Shell</span><span class="p">;</span>
 
 <span class="n">run</span><span class="p">(</span><span class="s">&#39;myscriptname&#39;</span><span class="p">);</span>
 </pre></div>
@@ -824,34 +825,54 @@ available, cyradm will use it.</p>
 </div>
 <div class="section" id="command-line-arguments">
 <h2>COMMAND-LINE ARGUMENTS<a class="headerlink" href="#command-line-arguments" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal"><span class="pre">--u</span></code>, <code class="docutils literal"><span class="pre">--user</span></code> <em>user</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">--u</span></code>, <code class="docutils literal notranslate"><span class="pre">--user</span></code> <em>user</em></li>
+</ul>
 <blockquote>
 <div>Authenticate with the specified username.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">--authz</span></code> <em>user</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">--authz</span></code> <em>user</em></li>
+</ul>
 <blockquote>
 <div>Authorize the connection as being the specified username.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">--norc</span></code>, <code class="docutils literal"><span class="pre">--rc</span></code></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">--norc</span></code>, <code class="docutils literal notranslate"><span class="pre">--rc</span></code></li>
+</ul>
 <blockquote>
 <div>(Do not) load the configuration files.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">--systemrc</span></code> <em>file</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">--systemrc</span></code> <em>file</em></li>
+</ul>
 <blockquote>
 <div>Use the system configuration file specified.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">--userrc</span></code> <em>file</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">--userrc</span></code> <em>file</em></li>
+</ul>
 <blockquote>
 <div>Use the user configuration file specified.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">--port</span></code> <em>port</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">--port</span></code> <em>port</em></li>
+</ul>
 <blockquote>
 <div>Connect to the *server* specified on the port specified.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">--auth</span></code> <em>mechanism</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">--auth</span></code> <em>mechanism</em></li>
+</ul>
 <blockquote>
 <div>Use the mechanism specified to authenticate. One of PLAIN, LOGIN, DIGEST-MD5, etc.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">--help</span></code></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">--help</span></code></li>
+</ul>
 <blockquote>
 <div>Show a help message about these command-line options.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">--version</span></code></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">--version</span></code></li>
+</ul>
 <blockquote>
 <div>Display the version of Cyrus IMAP the current ``cyradm`` command is a part of.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">--server</span></code> <em>server</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">--server</span></code> <em>server</em></li>
+</ul>
 <blockquote>
 <div>The server address to connect to.</div></blockquote>
 </div>
@@ -859,48 +880,52 @@ available, cyradm will use it.</p>
 <h2>COMMANDS<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="authenticate">
 <span id="imap-reference-manpages-systemcommands-cyradm-authenticate"></span><h3>authenticate<a class="headerlink" href="#authenticate" title="Permalink to this headline">¶</a></h3>
-<p><strong>authenticate</strong> [<code class="docutils literal"><span class="pre">--minssf</span></code> <em>N</em>] [<code class="docutils literal"><span class="pre">--maxssf</span></code> <em>N</em>] [<code class="docutils literal"><span class="pre">--mechanisms</span></code> <em>list</em>] [<code class="docutils literal"><span class="pre">--service</span></code> <em>name</em>] [<code class="docutils literal"><span class="pre">--tlskey</span></code> <em>keyfile</em>] [<code class="docutils literal"><span class="pre">--notls</span></code>] [<code class="docutils literal"><span class="pre">--cafile</span></code> <em>cacertfile</em>] [<code class="docutils literal"><span class="pre">--capath</span></code> <em>cacertdir</em>] <em>user</em></p>
+<p><strong>authenticate</strong> [<code class="docutils literal notranslate"><span class="pre">--minssf</span></code> <em>N</em>] [<code class="docutils literal notranslate"><span class="pre">--maxssf</span></code> <em>N</em>] [<code class="docutils literal notranslate"><span class="pre">--mechanisms</span></code> <em>list</em>] [<code class="docutils literal notranslate"><span class="pre">--service</span></code> <em>name</em>] [<code class="docutils literal notranslate"><span class="pre">--tlskey</span></code> <em>keyfile</em>] [<code class="docutils literal notranslate"><span class="pre">--notls</span></code>] [<code class="docutils literal notranslate"><span class="pre">--cafile</span></code> <em>cacertfile</em>] [<code class="docutils literal notranslate"><span class="pre">--capath</span></code> <em>cacertdir</em>] <em>user</em></p>
 <p>Authenticate to server.  You must already be connected to a server and
 Cyrus imapd will refuse to allow you to re-authenticate once you have
 authenticated once.</p>
-<p>aliases: <code class="docutils literal"><span class="pre">auth</span></code>, <code class="docutils literal"><span class="pre">login</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">auth</span></code>, <code class="docutils literal notranslate"><span class="pre">login</span></code></p>
 </div>
 <div class="section" id="chdir">
 <span id="imap-reference-manpages-systemcommands-cyradm-chdir"></span><h3>chdir<a class="headerlink" href="#chdir" title="Permalink to this headline">¶</a></h3>
 <p><strong>chdir</strong> <em>directory</em></p>
-<p>Change directory.  A <code class="docutils literal"><span class="pre">pwd</span></code> builtin is not provided, but the default command
-action will run <code class="docutils literal"><span class="pre">pwd</span></code> from a shell if invoked.</p>
-<p>aliases: <code class="docutils literal"><span class="pre">cd</span></code></p>
+<p>Change directory.  A <code class="docutils literal notranslate"><span class="pre">pwd</span></code> builtin is not provided, but the default command
+action will run <code class="docutils literal notranslate"><span class="pre">pwd</span></code> from a shell if invoked.</p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">cd</span></code></p>
 </div>
 <div class="section" id="createmailbox">
 <span id="imap-reference-manpages-systemcommands-cyradm-createmailbox"></span><h3>createmailbox<a class="headerlink" href="#createmailbox" title="Permalink to this headline">¶</a></h3>
-<p><strong>createmailbox</strong> [<code class="docutils literal"><span class="pre">--partition</span></code> <em>partition</em>] [<code class="docutils literal"><span class="pre">--specialuse</span></code> <em>specialuse</em>] <em>mailbox</em></p>
-<p><strong>createmailbox</strong> [<code class="docutils literal"><span class="pre">--specialuse</span></code> <em>specialuse</em>] <em>mailbox</em> <em>partition</em></p>
+<p><strong>createmailbox</strong> [<code class="docutils literal notranslate"><span class="pre">--partition</span></code> <em>partition</em>] [<code class="docutils literal notranslate"><span class="pre">--specialuse</span></code> <em>specialuse</em>] <em>mailbox</em></p>
+<p><strong>createmailbox</strong> [<code class="docutils literal notranslate"><span class="pre">--specialuse</span></code> <em>specialuse</em>] <em>mailbox</em> <em>partition</em></p>
 <p>Create a mailbox on the default or a specified partition.  Both old-style
 and getopt-style usages are accepted (combining them will produce an error).
 Optionally assign a special use to the mailbox.</p>
 <p>New mailboxes inherit the ACL permissions of
-their parent mailbox, except for top-level mailboxes such as the user's
-INBOX. Mailboxes that are the user's INBOX are assigned all to the
+their parent mailbox, except for top-level mailboxes such as the user’s
+INBOX. Mailboxes that are the user’s INBOX are assigned all to the
 corresponding user.</p>
-<p>Example Usage</p>
+<ul class="simple">
+<li>Example Usage</li>
+</ul>
 <blockquote>
-<div><div class="highlight-perl"><div class="highlight"><pre><span></span><span class="n">localhost</span><span class="o">&gt;</span> <span class="p">:</span><span class="n">command:</span><span class="sb">`cm user.john`</span>
+<div><div class="highlight-perl notranslate"><div class="highlight"><pre><span></span><span class="n">localhost</span><span class="o">&gt;</span> <span class="p">:</span><span class="n">command:</span><span class="sb">`cm user.john`</span>
 <span class="n">localhost</span><span class="o">&gt;</span> <span class="p">:</span><span class="n">command:</span><span class="sb">`lm`</span>
 <span class="n">user</span><span class="o">.</span><span class="n">john</span> <span class="p">(</span><span class="o">\</span><span class="n">HasNoChildren</span><span class="p">)</span>
 <span class="n">localhost</span><span class="o">&gt;</span> <span class="p">:</span><span class="n">command:</span><span class="sb">`lam user.john`</span>
 <span class="n">john</span> <span class="n">lrswipkxtecda</span>
 </pre></div>
 </div>
-<p>Note that in the above example, the <code class="docutils literal"><span class="pre">unixhierarchysep</span></code> setting in
-imapd.conf is set to <code class="docutils literal"><span class="pre">0</span></code>. When using the UNIX
-hierarchy separator, the <code class="docutils literal"><span class="pre">/</span></code> (forward slash) character would be
+<p>Note that in the above example, the <code class="docutils literal notranslate"><span class="pre">unixhierarchysep</span></code> setting in
+imapd.conf is set to <code class="docutils literal notranslate"><span class="pre">0</span></code>. When using the UNIX
+hierarchy separator, the <code class="docutils literal notranslate"><span class="pre">/</span></code> (forward slash) character would be
 used as the hierarchy separator, and the example would look as
 follows:</p>
 </div></blockquote>
-<p>Example Usage with <code class="docutils literal"><span class="pre">unixhierarchysep:</span> <span class="pre">1</span></code></p>
+<ul class="simple">
+<li>Example Usage with <code class="docutils literal notranslate"><span class="pre">unixhierarchysep:</span> <span class="pre">1</span></code></li>
+</ul>
 <blockquote>
-<div><div class="highlight-perl"><div class="highlight"><pre><span></span><span class="n">localhost</span><span class="o">&gt;</span> <span class="p">:</span><span class="n">command:</span><span class="sb">`cm user/john`</span>
+<div><div class="highlight-perl notranslate"><div class="highlight"><pre><span></span><span class="n">localhost</span><span class="o">&gt;</span> <span class="p">:</span><span class="n">command:</span><span class="sb">`cm user/john`</span>
 <span class="n">localhost</span><span class="o">&gt;</span> <span class="p">:</span><span class="n">command:</span><span class="sb">`lm`</span>
 <span class="n">user</span><span class="o">/</span><span class="n">john</span> <span class="p">(</span><span class="o">\</span><span class="n">HasNoChildren</span><span class="p">)</span>
 <span class="n">localhost</span><span class="o">&gt;</span> <span class="p">:</span><span class="n">command:</span><span class="sb">`lam user/john`</span>
@@ -908,58 +933,60 @@ follows:</p>
 </pre></div>
 </div>
 </div></blockquote>
-<p>Note</p>
+<ul class="simple">
+<li>Note</li>
+</ul>
 <blockquote>
 <div><p>The above examples use the unqualified, shorthand user
 identifier john as the mailbox name.</p>
 <p>With the use of virtual domains, controlled through the
-<code class="docutils literal"><span class="pre">virtdomains</span></code> setting in imapd.conf(5).</p>
+<code class="docutils literal notranslate"><span class="pre">virtdomains</span></code> setting in imapd.conf(5).</p>
 </div></blockquote>
-<p>aliases: <code class="docutils literal"><span class="pre">cm</span></code>, <code class="docutils literal"><span class="pre">create</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">cm</span></code>, <code class="docutils literal notranslate"><span class="pre">create</span></code></p>
 </div>
 <div class="section" id="deleteaclmailbox">
 <span id="imap-reference-manpages-systemcommands-cyradm-deleteaclmailbox"></span><h3>deleteaclmailbox<a class="headerlink" href="#deleteaclmailbox" title="Permalink to this headline">¶</a></h3>
-<p><strong>deleteaclmailbox</strong> <em>mailbox</em> <em>id</em> [...]</p>
+<p><strong>deleteaclmailbox</strong> <em>mailbox</em> <em>id</em> […]</p>
 <p>Remove ACLs from the specified mailbox.</p>
-<p>aliases: <code class="docutils literal"><span class="pre">delteacl</span></code>, <code class="docutils literal"><span class="pre">dam</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">delteacl</span></code>, <code class="docutils literal notranslate"><span class="pre">dam</span></code></p>
 </div>
 <div class="section" id="deletemailbox">
 <span id="imap-reference-manpages-systemcommands-cyradm-deletemailbox"></span><h3>deletemailbox<a class="headerlink" href="#deletemailbox" title="Permalink to this headline">¶</a></h3>
 <p><strong>deletemailbox</strong> <em>mailbox</em></p>
 <p>Delete the specified mailbox.</p>
 <p>Administrators do not have implicit delete rights on mailboxes.  Use the
-<a class="reference internal" href="#setaclmailbox">setaclmailbox</a> command to grant the <code class="docutils literal"><span class="pre">x</span></code> permission to your
+<a class="reference internal" href="#setaclmailbox">setaclmailbox</a> command to grant the <code class="docutils literal notranslate"><span class="pre">x</span></code> permission to your
 principal if you need to delete a mailbox you do not own.</p>
 <p>Note that the online help admits to an optional host argument.  This argument
 is not currently used, and will be rejected with an error if specified; it
 is reserved for IMSP.</p>
-<p>aliases: <code class="docutils literal"><span class="pre">delete</span></code>, <code class="docutils literal"><span class="pre">dm</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">delete</span></code>, <code class="docutils literal notranslate"><span class="pre">dm</span></code></p>
 </div>
 <div class="section" id="disconnect">
 <span id="imap-reference-manpages-systemcommands-cyradm-disconnect"></span><h3>disconnect<a class="headerlink" href="#disconnect" title="Permalink to this headline">¶</a></h3>
 <p><strong>disconnect</strong></p>
-<p>Disconnect from the current server.  The prompt will revert to <code class="docutils literal"><span class="pre">cyradm&gt;</span></code>.
+<p>Disconnect from the current server.  The prompt will revert to <code class="docutils literal notranslate"><span class="pre">cyradm&gt;</span></code>.
 This does not quit cyradm.</p>
-<p>aliases: <code class="docutils literal"><span class="pre">disc</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">disc</span></code></p>
 </div>
 <div class="section" id="exit">
 <span id="imap-reference-manpages-systemcommands-cyradm-exit"></span><h3>exit<a class="headerlink" href="#exit" title="Permalink to this headline">¶</a></h3>
 <p><strong>exit</strong> [<em>number</em>]</p>
-<p>Exit <code class="docutils literal"><span class="pre">cyradm</span></code>, optionally with a specific exit status; the exit status of the
+<p>Exit <code class="docutils literal notranslate"><span class="pre">cyradm</span></code>, optionally with a specific exit status; the exit status of the
 last command will be used if one is not specified.</p>
-<p>aliases: <code class="docutils literal"><span class="pre">quit</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">quit</span></code></p>
 </div>
 <div class="section" id="help">
 <span id="imap-reference-manpages-systemcommands-cyradm-help"></span><h3>help<a class="headerlink" href="#help" title="Permalink to this headline">¶</a></h3>
 <p><strong>help</strong> [command]</p>
-<p>Show help for <code class="docutils literal"><span class="pre">command</span></code> or all commands.</p>
-<p>aliases: <code class="docutils literal"><span class="pre">?</span></code></p>
+<p>Show help for <code class="docutils literal notranslate"><span class="pre">command</span></code> or all commands.</p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">?</span></code></p>
 </div>
 <div class="section" id="getmetadata">
 <span id="imap-reference-manpages-systemcommands-cyradm-getmetadata"></span><h3>getmetadata<a class="headerlink" href="#getmetadata" title="Permalink to this headline">¶</a></h3>
 <p><strong>getmetadata</strong> [<em>mailbox</em>]</p>
 <p>Display mailbox/server metadata</p>
-<p>aliases: <code class="docutils literal"><span class="pre">getmd</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">getmd</span></code></p>
 </div>
 <div class="section" id="info">
 <span id="imap-reference-manpages-systemcommands-cyradm-info"></span><h3>info<a class="headerlink" href="#info" title="Permalink to this headline">¶</a></h3>
@@ -970,22 +997,22 @@ last command will be used if one is not specified.</p>
 <span id="imap-reference-manpages-systemcommands-cyradm-listaclmailbox"></span><h3>listaclmailbox<a class="headerlink" href="#listaclmailbox" title="Permalink to this headline">¶</a></h3>
 <p><strong>listaclmailbox</strong> <em>mailbox</em></p>
 <p>List ACLs on the specified mailbox.</p>
-<p>aliases: <code class="docutils literal"><span class="pre">lam</span></code>, <code class="docutils literal"><span class="pre">listacl</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">lam</span></code>, <code class="docutils literal notranslate"><span class="pre">listacl</span></code></p>
 </div>
 <div class="section" id="listmailbox">
 <span id="imap-reference-manpages-systemcommands-cyradm-listmailbox"></span><h3>listmailbox<a class="headerlink" href="#listmailbox" title="Permalink to this headline">¶</a></h3>
-<p><strong>listmailbox</strong> [<code class="docutils literal"><span class="pre">--subscribed</span></code>] [<code class="docutils literal"><span class="pre">--specialuse</span></code>] [<em>pattern</em> [<em>reference</em>]]</p>
+<p><strong>listmailbox</strong> [<code class="docutils literal notranslate"><span class="pre">--subscribed</span></code>] [<code class="docutils literal notranslate"><span class="pre">--specialuse</span></code>] [<em>pattern</em> [<em>reference</em>]]</p>
 <p>List all, or all subscribed or special-use, mailboxes matching the specified
-pattern.  The pattern may have embedded wildcards <code class="docutils literal"><span class="pre">'\*'</span></code> or <code class="docutils literal"><span class="pre">'%'</span></code>, which
+pattern.  The pattern may have embedded wildcards <code class="docutils literal notranslate"><span class="pre">'\*'</span></code> or <code class="docutils literal notranslate"><span class="pre">'%'</span></code>, which
 match anything or anything except the separator character, respectively.</p>
 <p>Mailboxes returned will be relative to the specified reference if one
 is specified.  This allows a mailbox list to be limited to a particular
 hierarchy.</p>
-<p>In some cases when the <code class="docutils literal"><span class="pre">'%'</span></code> wildcard is used to end a pattern, it may
+<p>In some cases when the <code class="docutils literal notranslate"><span class="pre">'%'</span></code> wildcard is used to end a pattern, it may
 match an entry which is not a mailbox but which contains other mailboxes.
 In this case, the entry will be parenthesized to indicate that it is a
 root for other mailboxes, as opposed to a mailbox itself.</p>
-<p>aliases: <code class="docutils literal"><span class="pre">list</span></code>, <code class="docutils literal"><span class="pre">lm</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">lm</span></code></p>
 </div>
 <div class="section" id="listquota">
 <span id="imap-reference-manpages-systemcommands-cyradm-listquota"></span><h3>listquota<a class="headerlink" href="#listquota" title="Permalink to this headline">¶</a></h3>
@@ -993,178 +1020,226 @@ root for other mailboxes, as opposed to a mailbox itself.</p>
 <p>List quotas on specified root.  If the specified mailbox path does not have
 a quota assigned, an error will be raised; see <a class="reference internal" href="#listquotaroot">listquotaroot</a> for a way to
 find the quota root for a mailbox.</p>
-<p>aliases: <code class="docutils literal"><span class="pre">lq</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">lq</span></code></p>
 </div>
 <div class="section" id="listquotaroot">
 <span id="imap-reference-manpages-systemcommands-cyradm-listquotaroot"></span><h3>listquotaroot<a class="headerlink" href="#listquotaroot" title="Permalink to this headline">¶</a></h3>
 <p><strong>listquotaroot</strong> <em>mailbox</em></p>
 <p>Show quota roots and quotas for mailbox</p>
-<p>aliases: <code class="docutils literal"><span class="pre">lqm</span></code>, <code class="docutils literal"><span class="pre">lqr</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">lqm</span></code>, <code class="docutils literal notranslate"><span class="pre">lqr</span></code></p>
 </div>
 <div class="section" id="mboxconfig">
 <span id="imap-reference-manpages-systemcommands-cyradm-mboxconfig"></span><h3>mboxconfig<a class="headerlink" href="#mboxconfig" title="Permalink to this headline">¶</a></h3>
-<p><strong>mboxconfig</strong> [<code class="docutils literal"><span class="pre">--private</span></code>] <em>mailbox</em> <em>attribute</em> <em>value</em></p>
+<p><strong>mboxconfig</strong> [<code class="docutils literal notranslate"><span class="pre">--private</span></code>] <em>mailbox</em> <em>attribute</em> <em>value</em></p>
 <p>Set mailbox metadata, optionally set the private instead of the shared
-version of the metadata. A value of &quot;none&quot; will remove the attribute.</p>
+version of the metadata. A value of “none” will remove the attribute.</p>
 <p>The currently supported attributes are:</p>
-<p><code class="docutils literal"><span class="pre">comment</span></code> <em>description</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">comment</span></code> <em>description</em></li>
+</ul>
 <blockquote>
 <div>Sets a comment or description associated with the mailbox.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">expire</span></code> <em>days</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">expire</span></code> <em>days</em></li>
+</ul>
 <blockquote>
 <div>Sets the number of days after which messages will be expired from the mailbox.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">news2mail</span></code> <em>address</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">news2mail</span></code> <em>address</em></li>
+</ul>
 <blockquote>
 <div>Sets an email address to which messages injected into the server via NNTP
 will be sent.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">pop3showafter</span></code> <em>time</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">pop3showafter</span></code> <em>time</em></li>
+</ul>
 <blockquote>
-<div>Sets a time (in RFC3501 format, for example &quot;6-Jan-2011 11:45:32 +1100&quot;)
+<div>Sets a time (in RFC3501 format, for example “6-Jan-2011 11:45:32 +1100”)
 which specifies a cutoff date such that POP3 fetching of the folder does
 not see messages whose internaldate is before or equal to the date.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">sharedseen</span></code> <em>true|false</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">sharedseen</span></code> <em>true|false</em></li>
+</ul>
 <blockquote>
 <div>Enables the use of a shared Seen flag on messages rather than a
-per-user Seen flag.  The 's' right in the mailbox ACL still controls
+per-user Seen flag.  The ‘s’ right in the mailbox ACL still controls
 whether a user can set the shared Seen flag.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">sieve</span></code> <em>scriptname</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">sieve</span></code> <em>scriptname</em></li>
+</ul>
 <blockquote>
 <div>Indicates the name of the global sieve script that should be run when
 a message is delivered to the shared mailbox (not used for personal
 mailboxes).</div></blockquote>
-<p><code class="docutils literal"><span class="pre">squat</span></code> <em>true|false</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">squat</span></code> <em>true|false</em></li>
+</ul>
 <blockquote>
 <div>Indicates that the mailbox should have a squat index created for it.</div></blockquote>
-<p>aliases: <code class="docutils literal"><span class="pre">mboxcfg</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">mboxcfg</span></code></p>
 </div>
 <div class="section" id="reconstruct">
 <span id="imap-reference-manpages-systemcommands-cyradm-reconstruct"></span><h3>reconstruct<a class="headerlink" href="#reconstruct" title="Permalink to this headline">¶</a></h3>
-<p><strong>reconstruct</strong> [<code class="docutils literal"><span class="pre">-r</span></code>] <em>mailbox</em></p>
-<p>Reconstruct the specified mailbox, optionally recursing and reconstructing child mailboxes if the <code class="docutils literal"><span class="pre">-r</span></code> flag is given.</p>
+<p><strong>reconstruct</strong> [<code class="docutils literal notranslate"><span class="pre">-r</span></code>] <em>mailbox</em></p>
+<p>Reconstruct the specified mailbox, optionally recursing and reconstructing child mailboxes if the <code class="docutils literal notranslate"><span class="pre">-r</span></code> flag is given.</p>
 <p>For more information see reconstruct(8).</p>
 </div>
 <div class="section" id="renamemailbox">
 <span id="imap-reference-manpages-systemcommands-cyradm-renamemailbox"></span><h3>renamemailbox<a class="headerlink" href="#renamemailbox" title="Permalink to this headline">¶</a></h3>
-<p><strong>renamemailbox</strong> [<code class="docutils literal"><span class="pre">--partition</span></code> <em>partition</em>] <em>oldname</em> <em>newname</em></p>
+<p><strong>renamemailbox</strong> [<code class="docutils literal notranslate"><span class="pre">--partition</span></code> <em>partition</em>] <em>oldname</em> <em>newname</em></p>
 <p><strong>renamemailbox</strong> <em>oldname</em> <em>newname</em> [<em>partition</em>]</p>
 <p>Rename the specified mailbox, optionally moving it to a different partition.
 Both old-style and getopt-style usages are accepted; combining them will
 produce an error.</p>
-<p>aliases: <code class="docutils literal"><span class="pre">rename</span></code>, <code class="docutils literal"><span class="pre">renm</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">rename</span></code>, <code class="docutils literal notranslate"><span class="pre">renm</span></code></p>
 </div>
 <div class="section" id="server">
 <span id="imap-reference-manpages-systemcommands-cyradm-server"></span><h3>server<a class="headerlink" href="#server" title="Permalink to this headline">¶</a></h3>
 <p><strong>server</strong></p>
-<p><strong>server</strong> <em>[--noauthenticate]</em> <em>[server]</em></p>
+<p><strong>server</strong> <em>[–noauthenticate]</em> <em>[server]</em></p>
 <p>With no arguments, show the current server.  With an argument, connect to that
-server.  It will prompt for automatic login unless the <code class="docutils literal"><span class="pre">--noauthenticate</span></code>option is specified.  (This may change; in particular, either automatic
+server.  It will prompt for automatic login unless the <code class="docutils literal notranslate"><span class="pre">--noauthenticate</span></code>option is specified.  (This may change; in particular, either automatic
 authentication will be removed or all <a class="reference internal" href="#authenticate">authenticate</a> options will be added.)</p>
-<p>When connected to a server, <strong>cyradm</strong>'s prompt changes from <code class="docutils literal"><span class="pre">cyradm&gt;</span></code> to
-<code class="docutils literal"><span class="pre">servername&gt;</span></code>, where <em>servername</em> is the fully qualified domain name
+<p>When connected to a server, <strong>cyradm</strong>’s prompt changes from <code class="docutils literal notranslate"><span class="pre">cyradm&gt;</span></code> to
+<code class="docutils literal notranslate"><span class="pre">servername&gt;</span></code>, where <em>servername</em> is the fully qualified domain name
 of the connected server.</p>
-<p>aliases: <code class="docutils literal"><span class="pre">connect</span></code>, <code class="docutils literal"><span class="pre">servername</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">connect</span></code>, <code class="docutils literal notranslate"><span class="pre">servername</span></code></p>
 </div>
 <div class="section" id="setaclmailbox">
 <span id="imap-reference-manpages-systemcommands-cyradm-setaclmailbox"></span><h3>setaclmailbox<a class="headerlink" href="#setaclmailbox" title="Permalink to this headline">¶</a></h3>
-<p><strong>setaclmailbox</strong> <em>mailbox</em> <em>id</em> <em>rights</em> [<em>id</em> <em>rights</em> ...]</p>
-<p>Set ACLs on a mailbox.  The ACL may be one of the special strings <code class="docutils literal"><span class="pre">none</span></code>,
-<code class="docutils literal"><span class="pre">read</span></code> (<code class="docutils literal"><span class="pre">lrs</span></code>), <code class="docutils literal"><span class="pre">post</span></code> (<code class="docutils literal"><span class="pre">lrsp</span></code>), <code class="docutils literal"><span class="pre">append</span></code> (<code class="docutils literal"><span class="pre">lrsip</span></code>), <code class="docutils literal"><span class="pre">write</span></code>(<code class="docutils literal"><span class="pre">lrswipkxte</span></code>), <code class="docutils literal"><span class="pre">delete</span></code> (<code class="docutils literal"><span class="pre">lrxte</span></code>), or <code class="docutils literal"><span class="pre">all</span></code> (<code class="docutils literal"><span class="pre">lrswipkxte</span></code>), or
+<p><strong>setaclmailbox</strong> <em>mailbox</em> <em>id</em> <em>rights</em> [<em>id</em> <em>rights</em> …]</p>
+<p>Set ACLs on a mailbox.  The ACL may be one of the special strings <code class="docutils literal notranslate"><span class="pre">none</span></code>,
+<code class="docutils literal notranslate"><span class="pre">read</span></code> (<code class="docutils literal notranslate"><span class="pre">lrs</span></code>), <code class="docutils literal notranslate"><span class="pre">post</span></code> (<code class="docutils literal notranslate"><span class="pre">lrsp</span></code>), <code class="docutils literal notranslate"><span class="pre">append</span></code> (<code class="docutils literal notranslate"><span class="pre">lrsip</span></code>), <code class="docutils literal notranslate"><span class="pre">write</span></code>(<code class="docutils literal notranslate"><span class="pre">lrswipkxte</span></code>), <code class="docutils literal notranslate"><span class="pre">delete</span></code> (<code class="docutils literal notranslate"><span class="pre">lrxte</span></code>), or <code class="docutils literal notranslate"><span class="pre">all</span></code> (<code class="docutils literal notranslate"><span class="pre">lrswipkxte</span></code>), or
 any combinations of the ACL codes:</p>
-<p><strong>l</strong></p>
+<ul class="simple">
+<li><strong>l</strong></li>
+</ul>
 <blockquote>
 <div>Lookup (mailbox is visible to LIST/LSUB, SUBSCRIBE mailbox)</div></blockquote>
-<p><strong>r</strong></p>
+<ul class="simple">
+<li><strong>r</strong></li>
+</ul>
 <blockquote>
 <div>Read (SELECT/EXAMINE the mailbox, perform STATUS)</div></blockquote>
-<p><strong>s</strong></p>
+<ul class="simple">
+<li><strong>s</strong></li>
+</ul>
 <blockquote>
-<div>Seen (set/clear SEEN flag via STORE, also set SEEN flag during APPEND/COPY/FETCH BODY[...])</div></blockquote>
-<p><strong>w</strong></p>
+<div>Seen (set/clear SEEN flag via STORE, also set SEEN flag during APPEND/COPY/FETCH BODY[…])</div></blockquote>
+<ul class="simple">
+<li><strong>w</strong></li>
+</ul>
 <blockquote>
 <div>Write flags other than SEEN and DELETED</div></blockquote>
-<p><strong>i</strong></p>
+<ul class="simple">
+<li><strong>i</strong></li>
+</ul>
 <blockquote>
 <div>Insert (APPEND, COPY destination)</div></blockquote>
-<p><strong>p</strong></p>
+<ul class="simple">
+<li><strong>p</strong></li>
+</ul>
 <blockquote>
 <div>Post (send mail to mailbox)</div></blockquote>
-<p><strong>k</strong></p>
+<ul class="simple">
+<li><strong>k</strong></li>
+</ul>
 <blockquote>
 <div>Create mailbox (CREATE new sub-mailboxes, parent for new mailbox in RENAME)</div></blockquote>
-<p><strong>x</strong></p>
+<ul class="simple">
+<li><strong>x</strong></li>
+</ul>
 <blockquote>
 <div>Delete mailbox (DELETE mailbox, old mailbox name in RENAME)</div></blockquote>
-<p><strong>t</strong></p>
+<ul class="simple">
+<li><strong>t</strong></li>
+</ul>
 <blockquote>
 <div>Delete messages (set/clear DELETED flag via STORE, also set DELETED flag during APPEND/COPY)</div></blockquote>
-<p><strong>e</strong></p>
+<ul class="simple">
+<li><strong>e</strong></li>
+</ul>
 <blockquote>
 <div>Perform EXPUNGE and expunge as part of CLOSE</div></blockquote>
-<p><strong>a</strong></p>
+<ul class="simple">
+<li><strong>a</strong></li>
+</ul>
 <blockquote>
 <div>Administer (SETACL/DELETEACL/GETACL/LISTRIGHTS)</div></blockquote>
-<p>aliases: <code class="docutils literal"><span class="pre">setacl</span></code>, <code class="docutils literal"><span class="pre">sam</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">setacl</span></code>, <code class="docutils literal notranslate"><span class="pre">sam</span></code></p>
 </div>
 <div class="section" id="setinfo">
 <span id="imap-reference-manpages-systemcommands-cyradm-setinfo"></span><h3>setinfo<a class="headerlink" href="#setinfo" title="Permalink to this headline">¶</a></h3>
 <p><strong>setinfo</strong> <em>attribute</em> <em>value</em></p>
-<p>Set server metadata.  A value of &quot;none&quot; will remove the attribute.
+<p>Set server metadata.  A value of “none” will remove the attribute.
 The currently supported attributes are:</p>
-<p><code class="docutils literal"><span class="pre">motd</span></code> <em>message</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">motd</span></code> <em>message</em></li>
+</ul>
 <blockquote>
-<div>Sets a &quot;message of the day&quot;.  The message gets displayed as an ALERT upon
+<div>Sets a “message of the day”.  The message gets displayed as an ALERT upon
 connection.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">comment</span></code> <em>note</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">comment</span></code> <em>note</em></li>
+</ul>
 <blockquote>
 <div>Sets a comment or description associated with the server.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">admin</span></code> <em>address</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">admin</span></code> <em>address</em></li>
+</ul>
 <blockquote>
 <div>Sets the administrator email address for the server.</div></blockquote>
-<p><code class="docutils literal"><span class="pre">shutdown</span></code> <em>message</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">shutdown</span></code> <em>message</em></li>
+</ul>
 <blockquote>
 <div>Sets a shutdown message.  The message gets displayed as an ALERT and
 all users are disconnected from the server (subsequent logins are disallowed).</div></blockquote>
-<p><code class="docutils literal"><span class="pre">expire</span></code> <em>days</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">expire</span></code> <em>days</em></li>
+</ul>
 <blockquote>
 <div>Sets the number of days after which messages will be expired from the
 server (unless overridden by a mailbox annotation).</div></blockquote>
-<p><code class="docutils literal"><span class="pre">squat</span></code> <em>true|false</em></p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">squat</span></code> <em>true|false</em></li>
+</ul>
 <blockquote>
 <div>Indicates that all mailboxes should have a squat indexes created for
 them (unless overridden by a mailbox annotation).</div></blockquote>
 </div>
 <div class="section" id="setmetadata">
 <span id="imap-reference-manpages-systemcommands-cyradm-setmetadata"></span><h3>setmetadata<a class="headerlink" href="#setmetadata" title="Permalink to this headline">¶</a></h3>
-<p><strong>setmetadata</strong> [--private] mailbox [<em>annotation</em>] <em>value</em></p>
+<p><strong>setmetadata</strong> [–private] mailbox [<em>annotation</em>] <em>value</em></p>
 <p>Set metadata on mailbox, where <em>annotation</em> is one of
 [comment|expire|news2mail|pop3showafter|sharedseen|sieve|specialuse|
 squat|/&lt;explicit annotation&gt;].</p>
 <p>Note that <em>value</em> with a leading backslash must be escaped with an
 additional backslash.  For example:</p>
-<div class="highlight-perl"><div class="highlight"><pre><span></span><span class="n">setmetadata</span> <span class="o">--</span><span class="n">private</span> <span class="n">Spam</span> <span class="n">specialuse</span> <span class="s">&quot;\\Junk&quot;</span>
+<div class="highlight-perl notranslate"><div class="highlight"><pre><span></span><span class="n">setmetadata</span> <span class="o">--</span><span class="n">private</span> <span class="n">Spam</span> <span class="n">specialuse</span> <span class="s">&quot;\\Junk&quot;</span>
 </pre></div>
 </div>
-<p>Note, too, that &quot;private&quot; annotations are private to the user currently
+<p>Note, too, that “private” annotations are private to the user currently
 authenticated as, not necessarily the owner of the mailbox.  To set
 annotations for another user you must authorize as that user.</p>
-<p>In addition to the use of optional flag <strong>--private</strong>, one may use a more
-explicit syntax, prefixing the annotation with '/shared/' or '/private/'
+<p>In addition to the use of optional flag <strong>–private</strong>, one may use a more
+explicit syntax, prefixing the annotation with ‘/shared/’ or ‘/private/’
 as in this example:</p>
-<div class="highlight-perl"><div class="highlight"><pre><span></span><span class="n">setmetadata</span> <span class="n">Spam</span> <span class="sr">/private/s</span><span class="n">pecialuse</span> <span class="s">&quot;\\Junk&quot;</span>
+<div class="highlight-perl notranslate"><div class="highlight"><pre><span></span><span class="n">setmetadata</span> <span class="n">Spam</span> <span class="sr">/private/s</span><span class="n">pecialuse</span> <span class="s">&quot;\\Junk&quot;</span>
 </pre></div>
 </div>
-<p>aliases: <code class="docutils literal"><span class="pre">setmd</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">setmd</span></code></p>
 </div>
 <div class="section" id="setquota">
 <span id="imap-reference-manpages-systemcommands-cyradm-setquota"></span><h3>setquota<a class="headerlink" href="#setquota" title="Permalink to this headline">¶</a></h3>
-<p><strong>setquota</strong> <em>root</em> <em>resource</em> <em>value</em> [<em>resource</em> <em>value</em> ...]</p>
+<p><strong>setquota</strong> <em>root</em> <em>resource</em> <em>value</em> [<em>resource</em> <em>value</em> …]</p>
 <p>Set a quota on the specified root, which may or may not be an actual
-mailbox. The <em>resources</em> understood by <strong>Cyrus</strong> are <code class="docutils literal"><span class="pre">STORAGE</span></code>,
-<code class="docutils literal"><span class="pre">MESSAGE</span></code>, <code class="docutils literal"><span class="pre">X-NUM-FOLDERS</span></code> and <code class="docutils literal"><span class="pre">X-ANNOTATION-STORAGE</span></code>.  The storage
+mailbox. The <em>resources</em> understood by <strong>Cyrus</strong> are <code class="docutils literal notranslate"><span class="pre">STORAGE</span></code>,
+<code class="docutils literal notranslate"><span class="pre">MESSAGE</span></code>, <code class="docutils literal notranslate"><span class="pre">X-NUM-FOLDERS</span></code> and <code class="docutils literal notranslate"><span class="pre">X-ANNOTATION-STORAGE</span></code>.  The storage
 units are, as defined in RFC 2087, groups of 1024 octets (i.e.
-Kilobytes). The <em>value</em> may be the special string <code class="docutils literal"><span class="pre">none</span></code> which will
+Kilobytes). The <em>value</em> may be the special string <code class="docutils literal notranslate"><span class="pre">none</span></code> which will
 remove the quota.</p>
-<p>aliases: <code class="docutils literal"><span class="pre">sq</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">sq</span></code></p>
 </div>
 <div class="section" id="subscribe">
 <span id="imap-reference-manpages-systemcommands-cyradm-subscribe"></span><h3>subscribe<a class="headerlink" href="#subscribe" title="Permalink to this headline">¶</a></h3>
@@ -1180,16 +1255,16 @@ remove the quota.</p>
 <span id="imap-reference-manpages-systemcommands-cyradm-version"></span><h3>version<a class="headerlink" href="#version" title="Permalink to this headline">¶</a></h3>
 <p><strong>version</strong></p>
 <p>Display the version info of the current server.</p>
-<p>aliases: <code class="docutils literal"><span class="pre">ver</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">ver</span></code></p>
 </div>
 <div class="section" id="xfermailbox">
 <span id="imap-reference-manpages-systemcommands-cyradm-xfermailbox"></span><h3>xfermailbox<a class="headerlink" href="#xfermailbox" title="Permalink to this headline">¶</a></h3>
-<p><strong>xfermailbox</strong> [<code class="docutils literal"><span class="pre">--partition</span></code> <em>partition</em>] <em>mailbox</em> <em>server</em></p>
+<p><strong>xfermailbox</strong> [<code class="docutils literal notranslate"><span class="pre">--partition</span></code> <em>partition</em>] <em>mailbox</em> <em>server</em></p>
 <p><strong>xfermailbox</strong> <em>mailbox</em> <em>server</em> [<em>partition</em>]</p>
 <p>Transfer (relocate) the specified mailbox to a different server.
 Both old-style and getopt-style usages are accepted; combining them will
 produce an error.</p>
-<p>aliases: <code class="docutils literal"><span class="pre">xfer</span></code></p>
+<p>aliases: <code class="docutils literal notranslate"><span class="pre">xfer</span></code></p>
 </div>
 </div>
 <div class="section" id="notes">
@@ -1198,19 +1273,19 @@ produce an error.</p>
 may be abbreviated.</p>
 <p>Tcl-style options are provided as a compatibility feature.  They will
 probably go away in the future.</p>
-<p>Multiple commands can be given on a line, separated by <code class="docutils literal"><span class="pre">';'</span></code> characters.</p>
+<p>Multiple commands can be given on a line, separated by <code class="docutils literal notranslate"><span class="pre">';'</span></code> characters.</p>
 <p>All commands set an exit status, which at present is not useful.</p>
 <p>Unknown commands are passed to a subshell for execution.</p>
 <p>The Tcl version of <strong>cyradm</strong> is used for scripting as well as interactively.
-While this is possible to a limited extent by use of the <code class="docutils literal"><span class="pre">run</span></code> method,
-scripting would normally be done with <code class="docutils literal"><span class="pre">Cyrus::IMAP::Admin</span></code>, which is far
-more flexible than either interactive <code class="docutils literal"><span class="pre">cyradm</span></code> or the Tcl scripting
+While this is possible to a limited extent by use of the <code class="docutils literal notranslate"><span class="pre">run</span></code> method,
+scripting would normally be done with <code class="docutils literal notranslate"><span class="pre">Cyrus::IMAP::Admin</span></code>, which is far
+more flexible than either interactive <code class="docutils literal notranslate"><span class="pre">cyradm</span></code> or the Tcl scripting
 mechanism for Cyrus.</p>
 <p><strong>cyradm</strong> understands <strong>/bin/sh</strong>-style redirection:  any command can have
 its standard or error output redirected, with all <strong>sh</strong>-style redirections
-(except <code class="docutils literal"><span class="pre">&lt;&gt;</span></code>) supported.  It does not currently understand pipes
+(except <code class="docutils literal notranslate"><span class="pre">&lt;&gt;</span></code>) supported.  It does not currently understand pipes
 or backgrounding.</p>
-<p>If the <code class="docutils literal"><span class="pre">Term::Readline::Perl</span></code> or <code class="docutils literal"><span class="pre">Term::Readline::GNU</span></code> modules are
+<p>If the <code class="docutils literal notranslate"><span class="pre">Term::Readline::Perl</span></code> or <code class="docutils literal notranslate"><span class="pre">Term::Readline::GNU</span></code> modules are
 available, <strong>cyradm</strong> will use it.</p>
 <p>An alias facility is implemented internally, but no access is currently
 provided to it.  This will change, if only to allow some of the predefined
@@ -1250,7 +1325,7 @@ sh(1), perl(1), imapd(8), imapd.conf(5), reconstruct(8)</p>
         &copy; Copyright 1993-2018, The Cyrus Team.
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1267,7 +1342,7 @@ sh(1), perl(1), imapd(8), imapd.conf(5), reconstruct(8)</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1276,7 +1351,7 @@ sh(1), perl(1), imapd(8), imapd.conf(5), reconstruct(8)</p>
       <script type="text/javascript" src="../../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../../_static/language_data.js"></script>
 
   
 

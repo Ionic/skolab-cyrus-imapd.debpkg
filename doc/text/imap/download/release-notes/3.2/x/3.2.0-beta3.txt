@@ -1,4 +1,3 @@
-
 Cyrus IMAP 3.2.0-beta3 Release Notes
 ************************************
 
@@ -79,7 +78,7 @@ Major changes since the 3.0.x series
   mapping nearly everything to EX_TEMPFAIL
 
 * CyrusDB errors now syslog the actual error instead of just
-  "cyrusdb error"
+  “cyrusdb error”
 
 * New *allowdeleted* imapd.conf(5) option (default off), which
   allows admin users to see deleted mailboxes and expunged messages
@@ -89,14 +88,14 @@ Major changes since the 3.0.x series
   sent about infected messages that have been deleted
 
 * imapd.conf(5) options that represent a time duration now accept
-  'd', 'h', 'm', 's' suffixes rather than arbitrary units
+  ‘d’, ‘h’, ‘m’, ‘s’ suffixes rather than arbitrary units
 
 * The *tls_server_cert* and *tls_server_key* imapd.conf(5) options
   now allow two certificate/key pairs (e.g. RSA and EC) to be used.
   Thanks Дилян Палаузов
 
 * Mailbox create/delete/rename are now performed under a lock on the
-  user's namespace, to prevent races (especially during big renames)
+  user’s namespace, to prevent races (especially during big renames)
 
 * The cyr_info(8) *conf-lint* subcommand no longer complains about
   channel-prefixed sync options
@@ -129,7 +128,7 @@ maybe change during the process.
 
 * The *specialusealways* option is now enabled by default. It must
   explicitly be disabled for interoperability with legacy clients that
-  can't handle RFC 6154 attributes in extended LIST commands.
+  can’t handle RFC 6154 attributes in extended LIST commands.
 
 * The values accepted by *expunge_mode* have changed, please see the
   documentation for more information about the changes.
@@ -142,7 +141,7 @@ maybe change during the process.
 
 * The *tzdist* http module now finds its timezone data directory
   according to the new *zoneinfo_dir* imapd.conf(5) option, instead of
-  being hardcoded to "{configdirectory}/zoneinfo".  If you are using
+  being hardcoded to “{configdirectory}/zoneinfo”.  If you are using
   this module, you MUST now set this option explicitly.  Calendaring
   services will use the same timezone definitions.
 

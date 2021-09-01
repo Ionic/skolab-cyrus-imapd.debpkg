@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Cyrus IMAP Server: Internationalization &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Cyrus IMAP Server: Internationalization &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../index.html"/>
         <link rel="up" title="Developer Guidance" href="../guidance.html"/>
         <link rel="next" title="Cyrus IMAP Server: Locking" href="locking.html"/>
         <link rel="prev" title="Cyrus IMAP Server: Hacking" href="hacking.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../developers.html">Developers</a> &raquo;</li>
       
@@ -791,26 +792,26 @@ searching. The base spec of IMAP4 only requires understanding multiple
 character sets to properly implement SEARCH. Since the base spec came
 out, several extensions have been proposed that require further charset
 support: SORT, THREAD, and the Sieve subsystem. As of this writing,
-Cyrus doesn't correctly support these other commands.</p>
+Cyrus doesn’t correctly support these other commands.</p>
 <p>Cyrus currently only believes in 16-bit characters. Technically, Unicode
 has up to 21-bit characters (expressible in UTF-16 and 3-byte UTF-8) and
-ISO 10646 allows up to 31-bit characters (though ISO's current policy is
+ISO 10646 allows up to 31-bit characters (though ISO’s current policy is
 to not allocate any characters outside of the 21-bit Unicode range). The
 lower 16-bit characters make up the basic multilingual plane (BMP) where
 the majority of languages live. This restriction is apparent in
-<code class="docutils literal"><span class="pre">charset.c:writeutf8()</span></code>, the UTF-8 decoders, and the Unicode
-canonicalization table used by Cyrus. Since Cyrus's known character sets
-(except for UTF-8) don't contain any characters off of the BMP this
-isn't seen to be a major problem.</p>
+<code class="docutils literal notranslate"><span class="pre">charset.c:writeutf8()</span></code>, the UTF-8 decoders, and the Unicode
+canonicalization table used by Cyrus. Since Cyrus’s known character sets
+(except for UTF-8) don’t contain any characters off of the BMP this
+isn’t seen to be a major problem.</p>
 <p>Throughout this text, Unicode and ISO 10646 will be used interchangeable
 to refer to the 16-bit character set of the BMP, regardless of encoding.
-&quot;Character&quot;, unless otherwise specified, refers to a single Unicode
-character <code class="docutils literal"><span class="pre">ffff</span></code> or under.</p>
+“Character”, unless otherwise specified, refers to a single Unicode
+character <code class="docutils literal notranslate"><span class="pre">ffff</span></code> or under.</p>
 </div>
 <div class="section" id="cyrus-canonical-form">
 <h2>cyrus canonical form<a class="headerlink" href="#cyrus-canonical-form" title="Permalink to this headline">¶</a></h2>
-<p>Since when users search e-mail messages it's much easier for them to
-eliminate false positives than realize there are hits that aren't
+<p>Since when users search e-mail messages it’s much easier for them to
+eliminate false positives than realize there are hits that aren’t
 displayed, the Cyrus searching algorithm errs on the side of more
 matches. Before comparing any two strings, Cyrus puts them in a
 canonical form. Logically, the process works as follows:</p>
@@ -820,19 +821,19 @@ canonical form. Logically, the process works as follows:</p>
 single uppercase character may transform into multiple lowercase
 characters.)</li>
 <li>each character is fully decomposed.</li>
-<li>all whitespace (Unicode general categories starting with <code class="docutils literal"><span class="pre">Z</span></code>) is
+<li>all whitespace (Unicode general categories starting with <code class="docutils literal notranslate"><span class="pre">Z</span></code>) is
 removed.</li>
 <li>combining diacritical marks, such as the accent on é, are removed.
-(These are Unicode characters <code class="docutils literal"><span class="pre">0300</span></code>-<code class="docutils literal"><span class="pre">03ff</span></code>.)</li>
+(These are Unicode characters <code class="docutils literal notranslate"><span class="pre">0300</span></code>-<code class="docutils literal notranslate"><span class="pre">03ff</span></code>.)</li>
 <li>certain characters are expanded to alternative spellings using ASCII
-characters, such as &quot;æ&quot; to &quot;ae&quot;.</li>
+characters, such as “æ” to “ae”.</li>
 <li>the output characters are then encoded in UTF-8.</li>
 </ul>
 <p>The actual transcoding does all of these steps at once with the aid of
 tables, carefully built at compile-time.</p>
-<p>The central part of Cyrus's internationalization support is it's
-transcoding routines in <code class="docutils literal"><span class="pre">lib/charset.[ch]</span></code>, and
-<code class="docutils literal"><span class="pre">lib/chartable.[ch]</span></code>. Cyrus's transcoding routines are very elegant
+<p>The central part of Cyrus’s internationalization support is it’s
+transcoding routines in <code class="docutils literal notranslate"><span class="pre">lib/charset.[ch]</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">lib/chartable.[ch]</span></code>. Cyrus’s transcoding routines are very elegant
 and very compact, thus somewhat intimidating. During compilation, Cyrus
 builds up a large number of tables (see <a class="reference external" href="#mkchartable">mkchartable</a>)
 and uses them so that it never has to consider more than a single octet
@@ -840,74 +841,74 @@ at a time while outputting the Cyrus canonical form for an input string.</p>
 </div>
 <div class="section" id="external-interface">
 <h2>external interface<a class="headerlink" href="#external-interface" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal"><span class="pre">lib/charset.h</span></code> is the public interface for Cyrus lib clients to get
+<p><code class="docutils literal notranslate"><span class="pre">lib/charset.h</span></code> is the public interface for Cyrus lib clients to get
 character canonicalization and searching support. In contains the
 following functions:</p>
 <dl class="docutils">
-<dt><code class="docutils literal"><span class="pre">char</span> <span class="pre">*charset_convert(const</span> <span class="pre">char</span> <span class="pre">*s,</span> <span class="pre">int</span> <span class="pre">charset,</span> <span class="pre">char</span> <span class="pre">*buf,</span> <span class="pre">int</span> <span class="pre">bufsz)</span></code></dt>
+<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*charset_convert(const</span> <span class="pre">char</span> <span class="pre">*s,</span> <span class="pre">int</span> <span class="pre">charset,</span> <span class="pre">char</span> <span class="pre">*buf,</span> <span class="pre">int</span> <span class="pre">bufsz)</span></code></dt>
 <dd>Given a string <em>s</em> in charset <em>charset</em>, decode it into canonical
 form in <em>buf</em>. <em>buf</em> must be reallocable and currently at least size
 <em>bufsz</em>.</dd>
-<dt><code class="docutils literal"><span class="pre">char</span> <span class="pre">*charset_decode_mimeheader(const</span> <span class="pre">char</span> <span class="pre">*s,</span> <span class="pre">char</span> <span class="pre">*buf,</span> <span class="pre">int</span> <span class="pre">bufsz)</span></code></dt>
+<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*charset_decode_mimeheader(const</span> <span class="pre">char</span> <span class="pre">*s,</span> <span class="pre">char</span> <span class="pre">*buf,</span> <span class="pre">int</span> <span class="pre">bufsz)</span></code></dt>
 <dd>Given a string <em>s</em> containing possible MIME encoded substrings (per
 RFC 2047), decode into canonical form in <em>buf</em>. <em>buf</em> must be
 reallocable and currently at least size <em>bufsz</em>.</dd>
-<dt><code class="docutils literal"><span class="pre">charset_index</span> <span class="pre">charset_lookupname(const</span> <span class="pre">char</span> <span class="pre">*name)</span></code></dt>
+<dt><code class="docutils literal notranslate"><span class="pre">charset_index</span> <span class="pre">charset_lookupname(const</span> <span class="pre">char</span> <span class="pre">*name)</span></code></dt>
 <dd>Given <em>name</em> return the Cyrus charset index. 0 always represents
 US-ASCII. The returned charset_index may be saved in a file; it is
 stable and is an integer. If this version of Cyrus does not support
-the charset, <code class="docutils literal"><span class="pre">CHARSET_UNKNOWN_CHARSET</span></code> is returned.</dd>
-<dt><code class="docutils literal"><span class="pre">comp_pat</span> <span class="pre">*charset_compilepat(const</span> <span class="pre">char</span> <span class="pre">*s)</span></code></dt>
+the charset, <code class="docutils literal notranslate"><span class="pre">CHARSET_UNKNOWN_CHARSET</span></code> is returned.</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">comp_pat</span> <span class="pre">*charset_compilepat(const</span> <span class="pre">char</span> <span class="pre">*s)</span></code></dt>
 <dd>Compiles a NUL-terminated canonicalized string <em>s</em> into a
-Boyer-Moore table for fast searching. I'll describe these <a class="reference external" href="#comp_pat">compiled
+Boyer-Moore table for fast searching. I’ll describe these <a class="reference external" href="#comp_pat">compiled
 patterns</a> later.</dd>
-<dt><code class="docutils literal"><span class="pre">void</span> <span class="pre">charset_freepat(comp_pat</span> <span class="pre">*pat)</span></code></dt>
-<dd>Frees a pattern previously return by <code class="docutils literal"><span class="pre">charset_compilepat()</span></code>.</dd>
-<dt><code class="docutils literal"><span class="pre">int</span> <span class="pre">charset_searchstring(const</span> <span class="pre">char</span> <span class="pre">*substr,</span> <span class="pre">comp_pat</span> <span class="pre">*pat,</span>&#160;&#160;&#160;&#160; <span class="pre">const</span> <span class="pre">char</span> <span class="pre">*s,</span> <span class="pre">int</span> <span class="pre">len)</span></code></dt>
+<dt><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">charset_freepat(comp_pat</span> <span class="pre">*pat)</span></code></dt>
+<dd>Frees a pattern previously return by <code class="docutils literal notranslate"><span class="pre">charset_compilepat()</span></code>.</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">charset_searchstring(const</span> <span class="pre">char</span> <span class="pre">*substr,</span> <span class="pre">comp_pat</span> <span class="pre">*pat,</span>&#160;&#160;&#160;&#160; <span class="pre">const</span> <span class="pre">char</span> <span class="pre">*s,</span> <span class="pre">int</span> <span class="pre">len)</span></code></dt>
 <dd>Searches for a canonicalized string <em>substr</em> in the canonicalized
 string <em>s</em>. <em>s</em> is of length <em>len</em>. <em>substr</em> must have been
 previously compiled into <em>pat</em>. Returns non-zero for a hit, zero for
 no match.</dd>
-<dt><code class="docutils literal"><span class="pre">int</span> <span class="pre">charset_searchfile(const</span> <span class="pre">char</span> <span class="pre">*substr,</span> <span class="pre">comp_pat</span> <span class="pre">*pat,</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">const</span> <span class="pre">char</span> <span class="pre">*msg_base,</span> <span class="pre">int</span> <span class="pre">mapnl,</span> <span class="pre">int</span> <span class="pre">len,</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">charset_index</span> <span class="pre">charset,</span> <span class="pre">int</span> <span class="pre">encoding)</span></code></dt>
+<dt><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">charset_searchfile(const</span> <span class="pre">char</span> <span class="pre">*substr,</span> <span class="pre">comp_pat</span> <span class="pre">*pat,</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">const</span> <span class="pre">char</span> <span class="pre">*msg_base,</span> <span class="pre">int</span> <span class="pre">mapnl,</span> <span class="pre">int</span> <span class="pre">len,</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">charset_index</span> <span class="pre">charset,</span> <span class="pre">int</span> <span class="pre">encoding)</span></code></dt>
 <dd>Searches for the canonicalized string <em>substr</em> with compiled pattern
 <em>pat</em> in a large buffer starting at <em>msg_base</em> of length <em>len</em>. The
 large buffer is of charset <em>charset</em> with the encoding <em>encoding</em>.
-<code class="docutils literal"><span class="pre">charset_searchfile()</span></code> will dynamically unencode and canonicalize
+<code class="docutils literal notranslate"><span class="pre">charset_searchfile()</span></code> will dynamically unencode and canonicalize
 the search text looking for <em>substr</em>. (If <em>mapnl</em> is set, the buffer
-has only <code class="docutils literal"><span class="pre">\n</span></code> instead of <code class="docutils literal"><span class="pre">\r\n</span></code>, but the length assumes that
-each <code class="docutils literal"><span class="pre">\n</span></code> is dynamically converted to <code class="docutils literal"><span class="pre">\r\n</span></code>. This feature is
+has only <code class="docutils literal notranslate"><span class="pre">\n</span></code> instead of <code class="docutils literal notranslate"><span class="pre">\r\n</span></code>, but the length assumes that
+each <code class="docutils literal notranslate"><span class="pre">\n</span></code> is dynamically converted to <code class="docutils literal notranslate"><span class="pre">\r\n</span></code>. This feature is
 deprecated.)</dd>
-<dt><code class="docutils literal"><span class="pre">char</span> <span class="pre">*charset_decode_mimebody(const</span> <span class="pre">char</span> <span class="pre">*msg_base,</span> <span class="pre">int</span> <span class="pre">len,</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">int</span> <span class="pre">encoding,</span> <span class="pre">char</span> <span class="pre">**buf,</span> <span class="pre">int</span> <span class="pre">*bufsz,</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">int</span> <span class="pre">*outlen)</span></code></dt>
+<dt><code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*charset_decode_mimebody(const</span> <span class="pre">char</span> <span class="pre">*msg_base,</span> <span class="pre">int</span> <span class="pre">len,</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">int</span> <span class="pre">encoding,</span> <span class="pre">char</span> <span class="pre">**buf,</span> <span class="pre">int</span> <span class="pre">*bufsz,</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">int</span> <span class="pre">*outlen)</span></code></dt>
 <dd>Decode the MIME body part (per RFC 2045) located in the large buffer
 starting at <em>msg_base</em> of length <em>len</em>. The large buffer is of
-encoding <em>encoding</em>. <code class="docutils literal"><span class="pre">charset_decode_mimebody()</span></code> will decode into
+encoding <em>encoding</em>. <code class="docutils literal notranslate"><span class="pre">charset_decode_mimebody()</span></code> will decode into
 <em>buf</em>. <em>buf</em> must be reallocable and currently at least size
 <em>bufsz</em>. The number of decoded bytes is returned in <em>outlen</em>.</dd>
-<dt><code class="docutils literal"><span class="pre">charset_extractfile()</span></code></dt>
-<dd>Used by <code class="docutils literal"><span class="pre">squatter</span></code> and possibly other text indexing engines, but
+<dt><code class="docutils literal notranslate"><span class="pre">charset_extractfile()</span></code></dt>
+<dd>Used by <code class="docutils literal notranslate"><span class="pre">squatter</span></code> and possibly other text indexing engines, but
 not described here.</dd>
 </dl>
 </div>
 <div class="section" id="the-translate-macro-using-the-transcoding-tables">
 <h2>the TRANSLATE macro: using the transcoding tables<a class="headerlink" href="#the-translate-macro-using-the-transcoding-tables" title="Permalink to this headline">¶</a></h2>
-<p>The external interface is implemented with the help of the <code class="docutils literal"><span class="pre">START</span></code> and
-<code class="docutils literal"><span class="pre">TRANSLATE</span></code> macros:</p>
+<p>The external interface is implemented with the help of the <code class="docutils literal notranslate"><span class="pre">START</span></code> and
+<code class="docutils literal notranslate"><span class="pre">TRANSLATE</span></code> macros:</p>
 <dl class="docutils">
-<dt><code class="docutils literal"><span class="pre">void</span> <span class="pre">START(struct</span> <span class="pre">decode_state</span> <span class="pre">*state,</span> <span class="pre">const</span> <span class="pre">unsigned</span> <span class="pre">char</span> <span class="pre">(*table)[256][4])</span></code></dt>
-<dd><code class="docutils literal"><span class="pre">START</span></code> initializes <em>state</em> to be ready for transcoding of the
+<dt><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">START(struct</span> <span class="pre">decode_state</span> <span class="pre">*state,</span> <span class="pre">const</span> <span class="pre">unsigned</span> <span class="pre">char</span> <span class="pre">(*table)[256][4])</span></code></dt>
+<dd><code class="docutils literal notranslate"><span class="pre">START</span></code> initializes <em>state</em> to be ready for transcoding of the
 charset translation table given with <em>table</em>. The starting active
 table is always the first one in the list passed in.</dd>
-<dt><code class="docutils literal"><span class="pre">void</span> <span class="pre">TRANSLATE(struct</span> <span class="pre">decode_state</span> <span class="pre">*state,</span> <span class="pre">unsigned</span> <span class="pre">char</span> <span class="pre">input,</span> <span class="pre">unsigned</span> <span class="pre">char</span> <span class="pre">*outbuf,</span> <span class="pre">unsigned</span> <span class="pre">outindex)</span></code></dt>
-<dd><code class="docutils literal"><span class="pre">TRANSLATE</span></code> takes four parameters: <em>state</em> is the current state of
-the translation; it must have been initialized with <code class="docutils literal"><span class="pre">START</span></code> and is
-modified by <code class="docutils literal"><span class="pre">TRANSLATE</span></code>; <em>input</em> is one octet of input from the
+<dt><code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">TRANSLATE(struct</span> <span class="pre">decode_state</span> <span class="pre">*state,</span> <span class="pre">unsigned</span> <span class="pre">char</span> <span class="pre">input,</span> <span class="pre">unsigned</span> <span class="pre">char</span> <span class="pre">*outbuf,</span> <span class="pre">unsigned</span> <span class="pre">outindex)</span></code></dt>
+<dd><code class="docutils literal notranslate"><span class="pre">TRANSLATE</span></code> takes four parameters: <em>state</em> is the current state of
+the translation; it must have been initialized with <code class="docutils literal notranslate"><span class="pre">START</span></code> and is
+modified by <code class="docutils literal notranslate"><span class="pre">TRANSLATE</span></code>; <em>input</em> is one octet of input from the
 stream to be transcoded; <em>outbuf</em> is a pointer to the start of the
 buffer to write output characters; <em>outindex</em> is the index where
 this translation should be written. The size of <em>outbuf</em> must be at
 least <em>outindex + charset_max_translation</em>.</dd>
 </dl>
 <p>Each charset consists of a set of one or more tables; the <em>table</em>
-parameter passed into <code class="docutils literal"><span class="pre">START</span></code> is the first of these tables and the
+parameter passed into <code class="docutils literal notranslate"><span class="pre">START</span></code> is the first of these tables and the
 others are adjacent in memory. Characters are transcoded by indexing
 into the active table with <em>input</em> and examining the 4 octet
 translation. The 4 octet translation may consist of 0–3 character
@@ -920,7 +921,7 @@ codes RET, END, JSR, or JMP must occur in the 4 octet translation.</p>
 <p>Control codes are represented by uppercase US-ASCII characters since no
 uppercase characters can appear in the output translation (recall that
 Cyrus canonical form downcases). Any uppercase US-ASCII character
-(<code class="docutils literal"><span class="pre">[A</span> <span class="pre">..</span> <span class="pre">Z]</span></code>) is thus interpreted specially by the <code class="docutils literal"><span class="pre">TRANSLATE</span></code>
+(<code class="docutils literal notranslate"><span class="pre">[A</span> <span class="pre">..</span> <span class="pre">Z]</span></code>) is thus interpreted specially by the <code class="docutils literal notranslate"><span class="pre">TRANSLATE</span></code>
 virtual machine. Any other octet encountered as an output translation is
 presumed to be part of the UTF-8 output sequence and copied to the
 output.</p>
@@ -930,7 +931,7 @@ understand, I use them in discussing their semantics.</p>
 </div>
 <div class="section" id="control-code-reference">
 <h3>control code reference<a class="headerlink" href="#control-code-reference" title="Permalink to this headline">¶</a></h3>
-<p><code class="docutils literal"><span class="pre">TRANSLATE</span></code> recognizes the following &quot;normal&quot; control codes:</p>
+<p><code class="docutils literal notranslate"><span class="pre">TRANSLATE</span></code> recognizes the following “normal” control codes:</p>
 <dl class="docutils">
 <dt>XLT</dt>
 <dd>This is the first octet of the four octet sequence, indicating that
@@ -940,11 +941,11 @@ chartables_long_translations[] table. After that translation is
 copied to the outbuf, the final octet is interpreted (it must be
 either a RET or an END).</dd>
 <dt>JSR</dt>
-<dd><p class="first">The <code class="docutils literal"><span class="pre">TRANSLATE</span></code> virtual machine has a stack, fixed at size 1. A
+<dd><p class="first">The <code class="docutils literal notranslate"><span class="pre">TRANSLATE</span></code> virtual machine has a stack, fixed at size 1. A
 JSR copies address of the current active table to the stack and
 transitions to the active table given by the next two octets. (For
 instance, table 1 would be the next table after the table given as a
-parameter to <code class="docutils literal"><span class="pre">START</span></code>.) Translation of the current octet stops
+parameter to <code class="docutils literal notranslate"><span class="pre">START</span></code>.) Translation of the current octet stops
 after encountering a JSR.</p>
 <p>JSRs are useful for converting a two octet input character: the
 first octet in the character will make a JSR to some table; the
@@ -967,18 +968,18 @@ character translates into nothing (it might be whitespace, for
 instance).</dd>
 <dt>END</dt>
 <dd>Indicates we are done translating this input octet. When
-<code class="docutils literal"><span class="pre">TRANSLATE</span></code> is next called, that input octet will be interpreted
+<code class="docutils literal notranslate"><span class="pre">TRANSLATE</span></code> is next called, that input octet will be interpreted
 against the current active table; the stack does not change.</dd>
 </dl>
-<p>In addition, it recognizes the following &quot;special&quot; control codes for
-charsets that aren't easily represented by a set of tables, UTF-8 and
+<p>In addition, it recognizes the following “special” control codes for
+charsets that aren’t easily represented by a set of tables, UTF-8 and
 UTF-7:</p>
 <dl class="docutils">
 <dt>U7F</dt>
 <dd>UTF-7 consists of US-ASCII characters and a special escape character
 that indicates a transition to base-64 encoded UTF-16 characters.
 The virtual machine has built in code to handle the base64 decoding.
-In UTF-7's base64, 8 input octets result in 3 characters, so the
+In UTF-7’s base64, 8 input octets result in 3 characters, so the
 tables would be rather large.</dd>
 <dt>U7N</dt>
 <dd>This indicates that the current octet is the continuation of the
@@ -996,7 +997,7 @@ to the 3rd table.</dd>
 <dd>3rd octet of a 3-octet UTF-8 input. This produces the output
 characters and has an implicit jump to the 1st table of UTF-8.</dd>
 </dl>
-<p>Finally, it's useful to mention the special character <code class="docutils literal"><span class="pre">EMPTY</span></code> which is
+<p>Finally, it’s useful to mention the special character <code class="docutils literal notranslate"><span class="pre">EMPTY</span></code> which is
 guaranteed not to match any character. It is also represented by an
 uppercase US-ASCII character.</p>
 </div>
@@ -1014,14 +1015,14 @@ uppercase US-ASCII character.</p>
 </div>
 </div>
 <div class="section" id="generating-the-tables-mkchartable">
-<h2>generating the tables: <code class="docutils literal"><span class="pre">mkchartable</span></code><a class="headerlink" href="#generating-the-tables-mkchartable" title="Permalink to this headline">¶</a></h2>
-<p>The program <code class="docutils literal"><span class="pre">mkchartable</span></code> is used to generate the charset transcoding
+<h2>generating the tables: <code class="docutils literal notranslate"><span class="pre">mkchartable</span></code><a class="headerlink" href="#generating-the-tables-mkchartable" title="Permalink to this headline">¶</a></h2>
+<p>The program <code class="docutils literal notranslate"><span class="pre">mkchartable</span></code> is used to generate the charset transcoding
 tables used by TRANSLATE. These tables are carefully constructed so no
 more than a single octet need be examined at a time; this octet results
 in either an output stream of UTF-8 characters being generated or some
 sort of state change.</p>
-<p><code class="docutils literal"><span class="pre">mkchartable</span></code> uses three different sorts of input files to generate
-these tables. These files are located in the <code class="docutils literal"><span class="pre">lib/charset</span></code> directory.</p>
+<p><code class="docutils literal notranslate"><span class="pre">mkchartable</span></code> uses three different sorts of input files to generate
+these tables. These files are located in the <code class="docutils literal notranslate"><span class="pre">lib/charset</span></code> directory.</p>
 <div class="section" id="charset-tables">
 <h3>charset tables<a class="headerlink" href="#charset-tables" title="Permalink to this headline">¶</a></h3>
 <p>Each charset file maps a single charset to the corresponding Unicode
@@ -1029,35 +1030,35 @@ characters. For the US-ASCII and ISO-8859-x character sets this is
 trivial: each input byte corresponds to a single Unicode character.
 (Actually, some ISO-8859-x octets do not map to any Unicode character.
 In that case, the file either does not contain that octet or map it to
-&quot;<code class="docutils literal"><span class="pre">????</span></code>&quot;.)</p>
+“<code class="docutils literal notranslate"><span class="pre">????</span></code>”.)</p>
 <p>Other character sets are trickier. For instance, GB-2312 has both single
 and double byte characters, but is still a simple map from input
 character to output character. More complicated are modal character
 encodings. For instance, ISO-2022-JP starts in US-ASCII mode and uses
-<code class="docutils literal"><span class="pre">1B</span></code> as an escape character followed by another two characters to
+<code class="docutils literal notranslate"><span class="pre">1B</span></code> as an escape character followed by another two characters to
 select a new mode.</p>
-<p>The input charset labels modes with &quot;<code class="docutils literal"><span class="pre">:</span></code>&quot; followed by the mode name.
-The starting mode &quot;<code class="docutils literal"><span class="pre">US-ASCII</span></code>&quot; in ISO-2022-JP is preceded by
-&quot;<code class="docutils literal"><span class="pre">:US-ASCII</span></code>&quot;. Mode transitions are denoted by a Unicode conversion of
-&quot;<code class="docutils literal"><span class="pre">&gt;newmode</span></code>&quot; or &quot;<code class="docutils literal"><span class="pre">:newmode</span></code>&quot;. To denote that the octet <code class="docutils literal"><span class="pre">42</span></code>
-transitions into the &quot;<code class="docutils literal"><span class="pre">US-ASCII</span></code>&quot; mode, the charset file has
-&quot;<code class="docutils literal"><span class="pre">42</span> <span class="pre">&gt;US-ASCII</span></code>&quot;. The mode names themselves are arbitrary labels and
+<p>The input charset labels modes with “<code class="docutils literal notranslate"><span class="pre">:</span></code>” followed by the mode name.
+The starting mode “<code class="docutils literal notranslate"><span class="pre">US-ASCII</span></code>” in ISO-2022-JP is preceded by
+“<code class="docutils literal notranslate"><span class="pre">:US-ASCII</span></code>”. Mode transitions are denoted by a Unicode conversion of
+“<code class="docutils literal notranslate"><span class="pre">&gt;newmode</span></code>” or “<code class="docutils literal notranslate"><span class="pre">:newmode</span></code>”. To denote that the octet <code class="docutils literal notranslate"><span class="pre">42</span></code>
+transitions into the “<code class="docutils literal notranslate"><span class="pre">US-ASCII</span></code>” mode, the charset file has
+“<code class="docutils literal notranslate"><span class="pre">42</span> <span class="pre">&gt;US-ASCII</span></code>”. The mode names themselves are arbitrary labels and
 have no effect on the output.</p>
-<p>The input charset labels modes with &quot;:&quot; followed by the mode name. The
-mode name is optionally followed by a space and the &quot;<code class="docutils literal"><span class="pre">&lt;</span></code>&quot; character.
-If the &quot;<code class="docutils literal"><span class="pre">&lt;</span></code>&quot; character is present, then all translations will be
+<p>The input charset labels modes with “:” followed by the mode name. The
+mode name is optionally followed by a space and the “<code class="docutils literal notranslate"><span class="pre">&lt;</span></code>” character.
+If the “<code class="docutils literal notranslate"><span class="pre">&lt;</span></code>” character is present, then all translations will be
 followed by a RET instruction instead of an END instruction.</p>
-<p>The transition &quot;<code class="docutils literal"><span class="pre">&gt;newmode</span></code>&quot; results in a JSR instruction being
+<p>The transition “<code class="docutils literal notranslate"><span class="pre">&gt;newmode</span></code>” results in a JSR instruction being
 generated. A JMP instruction is generated by a transition of
-&quot;<code class="docutils literal"><span class="pre">:newmode</span></code>&quot;.</p>
-<p>The input byte can be specified as &quot;<code class="docutils literal"><span class="pre">*</span></code>&quot;. This is used to define the
-&quot;default action&quot; which is used for input bytes that are not otherwise
+“<code class="docutils literal notranslate"><span class="pre">:newmode</span></code>”.</p>
+<p>The input byte can be specified as “<code class="docutils literal notranslate"><span class="pre">*</span></code>”. This is used to define the
+“default action” which is used for input bytes that are not otherwise
 defined for the mode. If the default action is not explicitly stated, it
 is a translation to EMPTY.</p>
 </div>
 <div class="section" id="unicode-data-table">
 <h3>unicode data table<a class="headerlink" href="#unicode-data-table" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="docutils literal"><span class="pre">unidata2.txt</span></code> file is verbatim from the Unicode standard. More
+<p>The <code class="docutils literal notranslate"><span class="pre">unidata2.txt</span></code> file is verbatim from the Unicode standard. More
 recent versions should be available <a class="reference external" href="http://www.unicode.org/xxx">from their
 website</a>. Each entry in the file
 describers a Unicode character by the following properties, separated by
@@ -1070,7 +1071,7 @@ semicolons:</p>
 <li>bidirection category (unused)</li>
 <li>character decomposition</li>
 <li>decimal digit value (unused)</li>
-<li>digit value (unused, and, no, I don't know the difference)</li>
+<li>digit value (unused, and, no, I don’t know the difference)</li>
 <li>numeric value including fractions (unused)</li>
 <li>mirrored character (unused)</li>
 <li>Unicode 1.0 name (unused)</li>
@@ -1083,15 +1084,15 @@ the decomposed value otherwise.</p>
 </div>
 <div class="section" id="unicode-fixup-table">
 <h3>unicode fixup table<a class="headerlink" href="#unicode-fixup-table" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="docutils literal"><span class="pre">unifix.txt</span></code> file contains Cyrus-specific mappings for characters.
-It overrides the <code class="docutils literal"><span class="pre">unidata2.txt</span></code> table. Each rule in the file is
-explained with a comment. It's helpful to remember that the Unicode
-general categories starting with <code class="docutils literal"><span class="pre">Z</span></code> represent whitespace, and
+<p>The <code class="docutils literal notranslate"><span class="pre">unifix.txt</span></code> file contains Cyrus-specific mappings for characters.
+It overrides the <code class="docutils literal notranslate"><span class="pre">unidata2.txt</span></code> table. Each rule in the file is
+explained with a comment. It’s helpful to remember that the Unicode
+general categories starting with <code class="docutils literal notranslate"><span class="pre">Z</span></code> represent whitespace, and
 whitespace is always removed.</p>
 </div>
 <div class="section" id="generating-chartable-c">
-<h3>generating <code class="docutils literal"><span class="pre">chartable.c</span></code><a class="headerlink" href="#generating-chartable-c" title="Permalink to this headline">¶</a></h3>
-<p>how <code class="docutils literal"><span class="pre">mkchartable</span></code> works: collapses the encoding modes, the unicode
+<h3>generating <code class="docutils literal notranslate"><span class="pre">chartable.c</span></code><a class="headerlink" href="#generating-chartable-c" title="Permalink to this headline">¶</a></h3>
+<p>how <code class="docutils literal notranslate"><span class="pre">mkchartable</span></code> works: collapses the encoding modes, the unicode
 translations, and other normalizations into the output tables described
 above xxx</p>
 </div>
@@ -1116,7 +1117,7 @@ though this increases the size of each control code by 1 octet.</p>
 <div class="section" id="make-utf-8-more-regular">
 <h3>make UTF-8 more regular<a class="headerlink" href="#make-utf-8-more-regular" title="Permalink to this headline">¶</a></h3>
 <p>consider whether we really need U83, U83_2, U83_3. also consider
-changing <code class="docutils literal"><span class="pre">{</span> <span class="pre">U83,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0</span> <span class="pre">}</span></code> translations to <code class="docutils literal"><span class="pre">{</span> <span class="pre">U83,</span> <span class="pre">JMP,</span> <span class="pre">0,</span> <span class="pre">1</span> <span class="pre">}</span></code>
+changing <code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">U83,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0</span> <span class="pre">}</span></code> translations to <code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">U83,</span> <span class="pre">JMP,</span> <span class="pre">0,</span> <span class="pre">1</span> <span class="pre">}</span></code>
 sequences to at least eliminate the implicit jump.</p>
 </div>
 <div class="section" id="require-minimal-utf-8-characters">
@@ -1157,7 +1158,7 @@ sequences to at least eliminate the implicit jump.</p>
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Mar 06 2018
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1174,7 +1175,7 @@ sequences to at least eliminate the implicit jump.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1183,7 +1184,7 @@ sequences to at least eliminate the implicit jump.</p>
       <script type="text/javascript" src="../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
 
   
 

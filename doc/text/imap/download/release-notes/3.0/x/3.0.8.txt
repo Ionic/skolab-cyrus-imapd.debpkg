@@ -1,4 +1,3 @@
-
 Cyrus IMAP 3.0.8 Release Notes
 ******************************
 
@@ -24,7 +23,7 @@ Changes Since 3.0.7
 Release changes
 ---------------
 
-We're trialing using the Github Releases feature.  If you have trouble
+We’re trialing using the Github Releases feature.  If you have trouble
 downloading this release, please report this to the mailing lists.
 Thanks!
 
@@ -32,7 +31,7 @@ Thanks!
 New configuration options
 -------------------------
 
-* The "search_fuzzy_always" option in imapd.conf(5) can be set to
+* The “search_fuzzy_always” option in imapd.conf(5) can be set to
   true to enable RFC6203 FUZZY search for all IMAP searches.
 
 

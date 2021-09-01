@@ -1,4 +1,3 @@
-
 **cyr_virusscan**
 *****************
 
@@ -28,7 +27,7 @@ such as Phish.
 A table of infected messages will be output.
 
 To remove infected messages, use the **-r** flag. Infected messages
-will be expunged from the user's mailbox.
+will be expunged from the user’s mailbox.
 
 With the notify flag, **-n**, notifications will be appended to the
 inbox of the mailbox owner, containing message digest information for
@@ -82,7 +81,7 @@ owners when infected messages are removed.  One notification is sent
 per owner, containing a digest of each message that was deleted from
 any of their mailboxes.
 
-The default notification subject is "Automatically deleted mail",
+The default notification subject is “Automatically deleted mail”,
 which can be overridden by setting "virusscan_notification_subject" in
 imapd.conf(5) to a UTF-8 value.
 
@@ -125,13 +124,13 @@ Examples
    **cyr_virusscan** -r -n user/bovik
 
    Scan mailbox *user/bovik*, removing infected messages and append
-   notifications to Bovik's inbox.
+   notifications to Bovik’s inbox.
 
    **cyr_virusscan** -r -n -s 'SUBJECT "Fedex"' user/bovik
 
    Search mailbox user/bovik for messages which have Fedex in the
    subject line, removing them all, and appending notifications to
-   Bovik's inbox.
+   Bovik’s inbox.
 
 
 History

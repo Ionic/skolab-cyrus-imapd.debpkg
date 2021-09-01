@@ -1,4 +1,3 @@
-
 Preface
 *******
 
@@ -13,9 +12,9 @@ move to a better scalable, standards-compliant mail system that met or
 exceeded the feature set of AMS, it started the Cyrus project.
 
 Cyrus IMAP is named after Cyrus The Great (559 - 530 B.C.) who founded
-the Persian kingdom. Cyrus the Great also founded the world's first
-modern postal system whose motto was: "stopped by neither snow, rain,
-heat or gloom of night". The Pony Express was based on the Persian
+the Persian kingdom. Cyrus the Great also founded the world’s first
+modern postal system whose motto was: “stopped by neither snow, rain,
+heat or gloom of night”. The Pony Express was based on the Persian
 system and later the United States Postal Service adopted the slightly
 modified version of the Persian motto as their own.
 

@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.5.15 Release Notes
 *******************************
 
@@ -33,17 +32,17 @@ Security fixes
 --------------
 
 * Fixed CVE-2019-19783: When creating a missing mailbox as part of a
-  sieve 'fileinto' directive, lmtpd would create it as administrator,
+  sieve ‘fileinto’ directive, lmtpd would create it as administrator,
   bypassing ACL checks.
 
-  lmtpd creates missing mailboxes as part of a sieve 'fileinto'
+  lmtpd creates missing mailboxes as part of a sieve ‘fileinto’
   directive if:
 
   * (2.5+) the *anysievefolder* option is enabled (default: not), or
 
-  * (3.0+) the *sieve_extensions* option has the 'mailbox' extension
-    enabled (default: enabled) and the 'fileinto' directive contains
-    the ":create" argument
+  * (3.0+) the *sieve_extensions* option has the ‘mailbox’ extension
+    enabled (default: enabled) and the ‘fileinto’ directive contains
+    the “:create” argument
 
   Under these conditions, a user with the ability to upload a custom
   sieve script to their account could use it to create any valid
@@ -51,8 +50,8 @@ Security fixes
   usual).
 
   lmtpd no longer creates these mailboxes as administrator, so users
-  may no longer use a 'fileinto' directive to create a mailbox they
-  couldn't create otherwise.
+  may no longer use a ‘fileinto’ directive to create a mailbox they
+  couldn’t create otherwise.
 
 
 Bug fixes

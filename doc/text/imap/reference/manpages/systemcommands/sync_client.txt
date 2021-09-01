@@ -1,4 +1,3 @@
-
 **sync_client**
 ***************
 
@@ -37,7 +36,7 @@ Options
 -A
 
    All users mode. Sync every user on the server to the replica
-   (doesn't do non-user mailboxes at all... this could be considered a
+   (doesn’t do non-user mailboxes at all… this could be considered a
    bug and maybe it should do those mailboxes independently)
 
 -d delay
@@ -45,7 +44,7 @@ Options
    Minimum delay between replication runs in rolling replication mode.
    Larger values provide better efficiency as transactions can be
    merged. Smaller values mean that the replica system is more up to
-   date and that you don't end up with large blocks of replication
+   date and that you don’t end up with large blocks of replication
    transactions as a single group. Default: 3 seconds.
 
 -f input-file
@@ -93,7 +92,7 @@ Options
 
    No copyback mode. Replication will stop if the replica reports a
    CRC error, rather than doing a full mailbox sync. Useful if moving
-   users to a new server, where you don't want any errors to cause the
+   users to a new server, where you don’t want any errors to cause the
    source servers to change the account.
 
 -p partition

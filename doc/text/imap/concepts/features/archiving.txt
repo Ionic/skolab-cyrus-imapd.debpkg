@@ -1,4 +1,3 @@
-
 Archiving
 *********
 
@@ -6,8 +5,8 @@ Archiving
 Description
 ===========
 
-When we talk about "Archiving" in Cyrus (from 3.0 onwards) we're not
-talking about data retention, what we're really talking about is time-
+When we talk about “Archiving” in Cyrus (from 3.0 onwards) we’re not
+talking about data retention, what we’re really talking about is time-
 tiered storage.  Elsewhere in these documents we discuss storage
 tiering based on things like space limitations or scalability.
 Archiving is somewhat like this, but with an accompanying
@@ -20,7 +19,7 @@ Purpose
 
 The general intent of archiving, as deployed within Cyrus, is to allow
 administrators to dictate that there be two tiers of data storage for
-each mail spool partition: "current" and "archive."  The common use
+each mail spool partition: “current” and “archive.”  The common use
 case is to use higher speed storage media for the former, and lower
 cost media for the latter; Current goes on SSDs, and Archive goes on
 traditional spinning media.
@@ -54,7 +53,7 @@ partitions:
       stored in a corresponding directory on **archivepartition-
       name**. Note that not every **partition-name** option is
       strictly required to have a corresponding **archivepartition-
-      name** option, but that without one there's no benefit to
+      name** option, but that without one there’s no benefit to
       enabling archiving.
 
 
@@ -74,12 +73,12 @@ partitions:
 
    "archive_maxsize:" 1024
 
-      The size in kilobytes of the largest message that won't be
+      The size in kilobytes of the largest message that won’t be
       archived immediately.  Default is 1Mb
 
    "archive_keepflagged:" 0
 
-      If set, messages with the \Flagged system flag won't be
+      If set, messages with the \Flagged system flag won’t be
       archived, provided they are smaller than **archive_maxsize**.
 
 Note: Further explanation is probably required for the
@@ -87,7 +86,7 @@ Note: Further explanation is probably required for the
   larger than this threshold will be immediately put onto the archive
   partition, rather than waiting "archive_days" number of days. This
   is to keep the high speed storage available for the largest number
-  of "current" messages.So "archive_maxsize" is not the maximum size
+  of “current” messages.So "archive_maxsize" is not the maximum size
   of messages which will be archived, but rather is the threshold
   above which they will immediately be.
 

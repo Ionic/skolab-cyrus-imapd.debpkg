@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "CYR_VIRUSSCAN" "8" "May 10, 2021" "3.4.1" "Cyrus IMAP"
+.TH "CYR_VIRUSSCAN" "8" "September 01, 2021" "3.4.2" "Cyrus IMAP"
 .SH NAME
 cyr_virusscan \- Cyrus IMAP documentation
 .
@@ -52,7 +52,7 @@ without a distinct signature, such as Phish.
 A table of infected messages will be output.
 .sp
 To remove infected messages, use the \fB\-r\fP flag. Infected messages will be expunged
-from the user\(aqs mailbox.
+from the user’s mailbox.
 .sp
 With the notify flag, \fB\-n\fP, notifications will be appended to the inbox of
 the mailbox owner, containing message digest information for the affected mail.
@@ -103,7 +103,7 @@ when infected messages are removed.  One notification is sent per owner,
 containing a digest of each message that was deleted from any of their
 mailboxes.
 .sp
-The default notification subject is "Automatically deleted mail", which
+The default notification subject is “Automatically deleted mail”, which
 can be overridden by setting \fBvirusscan_notification_subject\fP in
 imapd.conf(5) to a UTF\-8 value.
 .sp
@@ -152,7 +152,7 @@ remove infected messages.
 .INDENT 0.0
 .INDENT 3.5
 Scan mailbox \fIuser/bovik\fP, removing infected messages and append
-notifications to Bovik\(aqs inbox.
+notifications to Bovik’s inbox.
 .UNINDENT
 .UNINDENT
 .sp
@@ -163,7 +163,7 @@ notifications to Bovik\(aqs inbox.
 .INDENT 3.5
 Search mailbox user/bovik for messages which have Fedex in the
 subject line, removing them all, and appending notifications to
-Bovik\(aqs inbox.
+Bovik’s inbox.
 .UNINDENT
 .UNINDENT
 .SH HISTORY

@@ -3390,14 +3390,18 @@ static int guidsearch_rank_expr(struct conversations_state *cstate,
         struct buf hash0 = BUF_INITIALIZER, hash = BUF_INITIALIZER;
         search_expr_t *child = e->children;
         int rank = guidsearch_rank_clause(cstate, child, &hash0);
-        if (rank == 1 || rank == -1) return -1;
-        for (child = child->next ; child; child = child->next) {
-            int childrank = guidsearch_rank_clause(cstate, child, &hash);
-            if (childrank == 1 || childrank == -1 || buf_cmp(&hash0, &hash)) {
-                rank = -1;
-                break;
+        if (rank == 1 || rank == -1) {
+            rank = -1;
+        }
+        else {
+            for (child = child->next ; child; child = child->next) {
+                int childrank = guidsearch_rank_clause(cstate, child, &hash);
+                if (childrank == 1 || childrank == -1 || buf_cmp(&hash0, &hash)) {
+                    rank = -1;
+                    break;
+                }
+                else rank |= childrank;
             }
-            rank |= childrank;
         }
         buf_free(&hash0);
         buf_free(&hash);
@@ -4330,7 +4334,7 @@ static void _email_querychanges_collapsed(jmap_req_t *req,
     memset(&touched_ids, 0, sizeof(hash_table));
     construct_hash_table(&touched_ids, mdcount + 1, 0);
 
-    hashu64_table touched_cids = HASH_TABLE_INITIALIZER;
+    hashu64_table touched_cids = HASHU64_TABLE_INITIALIZER;
     memset(&touched_cids, 0, sizeof(hashu64_table));
     construct_hashu64_table(&touched_cids, mdcount + 1, 0);
 

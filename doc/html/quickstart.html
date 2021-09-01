@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Quickstart Guide &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Quickstart Guide &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="index.html"/>
         <link rel="next" title="Introduction to Cyrus IMAP" href="imap/quickstart/introduction.html"/>
         <link rel="prev" title="Notes for Packagers" href="imap/download/packagers.html"/> 
 
@@ -154,7 +156,7 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="imap/download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -238,7 +240,7 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -255,14 +257,14 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#news">News</a></li>
@@ -377,7 +379,7 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -545,7 +547,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="imap/reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -562,7 +564,7 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -574,13 +576,13 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="imap/reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -697,7 +699,6 @@
 <li class="toctree-l1"><a class="reference internal" href="support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="imap/support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="imap/support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="imap/support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="imap/support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -742,7 +743,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -762,7 +763,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="index.html">Docs v3.4.2</a> &raquo;</li>
       
     <li>Quickstart Guide</li>
       <li class="wy-breadcrumbs-aside">
@@ -792,97 +793,97 @@
 <p>A quick guide to getting a basic installation of Cyrus up and running in 5 minutes.</p>
 <p>The first place to start with a new installation of Cyrus IMAP is with
 your OS distribution of choice and their packaging, where available.</p>
-<p>If there is no Cyrus IMAP 3.4.1 package available yet
+<p>If there is no Cyrus IMAP 3.4.2 package available yet
 from your distro, download the official source tarball from <a class="reference external" href="https://github.com/cyrusimap/cyrus-imapd/releases">GitHub</a>.  The
 <a class="reference internal" href="imap/developer/compiling.html#compiling"><span class="std std-ref">Compiling</span></a> guide will help you get it built and installed.</p>
 <div class="section" id="install-cyrus-package-s">
 <h3>1. Install Cyrus package(s)<a class="headerlink" href="#install-cyrus-package-s" title="Permalink to this headline">¶</a></h3>
-<p>Install the Cyrus IMAP package(s), either from your distribution's package
+<p>Install the Cyrus IMAP package(s), either from your distribution’s package
 manager, or from a release tarball.</p>
 <p>Your distribution might have split Cyrus IMAP into several packages.  Check
-their documentation if you're not sure what you need.</p>
+their documentation if you’re not sure what you need.</p>
 </div>
 <div class="section" id="setup-the-cyrus-mail-user-and-group">
 <h3>2. Setup the cyrus:mail user and group<a class="headerlink" href="#setup-the-cyrus-mail-user-and-group" title="Permalink to this headline">¶</a></h3>
-<p>Now let's create a <strong>special user account just for the Cyrus server</strong>
-to sandbox Cyrus: called <code class="docutils literal"><span class="pre">cyrus</span></code>. We'll also create a <code class="docutils literal"><span class="pre">mail</span></code> group
+<p>Now let’s create a <strong>special user account just for the Cyrus server</strong>
+to sandbox Cyrus: called <code class="docutils literal notranslate"><span class="pre">cyrus</span></code>. We’ll also create a <code class="docutils literal notranslate"><span class="pre">mail</span></code> group
 as well. This allows Cyrus to give other programs some permissions if
-they are run under the <code class="docutils literal"><span class="pre">mail</span></code> group, again, without causing a Cyrus
+they are run under the <code class="docutils literal notranslate"><span class="pre">mail</span></code> group, again, without causing a Cyrus
 bug to delete all of your cat pictures. Disaster!</p>
 <p>If you have installed from packages, your package vendor may have
 already done this for you.  To check, use these commands:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>$ getent group mail
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ getent group mail
 mail:x:8:
 </pre></div>
 </div>
-<div class="highlight-default"><div class="highlight"><pre><span></span>$ getent passwd cyrus
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ getent passwd cyrus
 cyrus:x:999:8:Cyrus IMAP Server:/var/lib/imap:/bin/bash
 </pre></div>
 </div>
 <p>Example group and user creation commands for GNU/Linux:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">groupadd</span> <span class="o">-</span><span class="n">fr</span> <span class="n">mail</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">groupadd</span> <span class="o">-</span><span class="n">fr</span> <span class="n">mail</span>
 <span class="n">useradd</span> <span class="o">-</span><span class="n">c</span> <span class="s2">&quot;Cyrus IMAP Server&quot;</span> <span class="o">-</span><span class="n">d</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">imap</span> <span class="o">-</span><span class="n">g</span> <span class="n">mail</span> <span class="o">-</span><span class="n">s</span> <span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">bash</span> <span class="o">-</span><span class="n">r</span> <span class="n">cyrus</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal"><span class="pre">var/lib/imap</span></code> directory above is an example. Use the same directory
-specified in the <code class="docutils literal"><span class="pre">configdirectory</span></code> option in <a class="reference internal" href="imap/reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">var/lib/imap</span></code> directory above is an example. Use the same directory
+specified in the <code class="docutils literal notranslate"><span class="pre">configdirectory</span></code> option in <a class="reference internal" href="imap/reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.</p>
 <div class="sidebar">
 <p class="first sidebar-title">configdirectory</p>
 <p><em>This shows the default value: change it in imapd.conf to suit your needs.</em></p>
 <blockquote class="last">
-<div><p><code class="docutils literal"><span class="pre">configdirectory:</span></code> &lt;none&gt;</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">configdirectory:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>The pathname of the IMAP configuration directory.  This field is
 required.</div></blockquote>
 </div></blockquote>
 </div>
 <p>If your installation uses system locations for things like SSL
-certificates (i.e. <code class="docutils literal"><span class="pre">/etc/ssl/certs</span> <span class="pre">/etc/ssl/private</span></code>), then you should
-also add the <code class="docutils literal"><span class="pre">cyrus</span></code> user to the appropriate group to gain access to
+certificates (i.e. <code class="docutils literal notranslate"><span class="pre">/etc/ssl/certs</span> <span class="pre">/etc/ssl/private</span></code>), then you should
+also add the <code class="docutils literal notranslate"><span class="pre">cyrus</span></code> user to the appropriate group to gain access to
 the PKI files.  On Debian/Ubuntu systems, for example, this group is
-<code class="docutils literal"><span class="pre">ssl-cert</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">usermod</span> <span class="o">-</span><span class="n">aG</span> <span class="n">ssl</span><span class="o">-</span><span class="n">cert</span> <span class="n">cyrus</span>
+<code class="docutils literal notranslate"><span class="pre">ssl-cert</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usermod</span> <span class="o">-</span><span class="n">aG</span> <span class="n">ssl</span><span class="o">-</span><span class="n">cert</span> <span class="n">cyrus</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="setting-up-authentication-with-sasl">
 <h3>3. Setting up authentication with SASL<a class="headerlink" href="#setting-up-authentication-with-sasl" title="Permalink to this headline">¶</a></h3>
-<p>Now, let's set up <strong>SASL</strong>. This will allow you to connect to your
+<p>Now, let’s set up <strong>SASL</strong>. This will allow you to connect to your
 local IMAP server and login, just like any IMAP user would before
 checking for new emails.</p>
-<p>Create a <code class="docutils literal"><span class="pre">saslauth</span></code> group and add the <code class="docutils literal"><span class="pre">cyrus</span></code> user to the group, so
-Cyrus can access SASL. (on Debian, this group is called 'sasl': adjust
+<p>Create a <code class="docutils literal notranslate"><span class="pre">saslauth</span></code> group and add the <code class="docutils literal notranslate"><span class="pre">cyrus</span></code> user to the group, so
+Cyrus can access SASL. (on Debian, this group is called ‘sasl’: adjust
 the following commands to suit.)</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">groupadd</span> <span class="o">-</span><span class="n">fr</span> <span class="n">saslauth</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">groupadd</span> <span class="o">-</span><span class="n">fr</span> <span class="n">saslauth</span>
 <span class="n">usermod</span> <span class="o">-</span><span class="n">aG</span> <span class="n">saslauth</span> <span class="n">cyrus</span>
 </pre></div>
 </div>
 <dl class="docutils">
-<dt>Change the default SASL configuration in <code class="docutils literal"><span class="pre">/etc/default/saslauthd</span></code>.</dt>
+<dt>Change the default SASL configuration in <code class="docutils literal notranslate"><span class="pre">/etc/default/saslauthd</span></code>.</dt>
 <dd><ol class="first last arabic simple">
-<li>Make sure that the <code class="docutils literal"><span class="pre">START</span></code> option is set to <em>yes</em>
-<code class="docutils literal"><span class="pre">(START=yes)</span></code> and</li>
+<li>Make sure that the <code class="docutils literal notranslate"><span class="pre">START</span></code> option is set to <em>yes</em>
+<code class="docutils literal notranslate"><span class="pre">(START=yes)</span></code> and</li>
 <li>Set the``MECHANISMS`` option to <strong>sasldb</strong>
-<code class="docutils literal"><span class="pre">(MECHANISMS=&quot;sasldb&quot;)</span></code>.</li>
+<code class="docutils literal notranslate"><span class="pre">(MECHANISMS=&quot;sasldb&quot;)</span></code>.</li>
 </ol>
 </dd>
 </dl>
 <p>Start the SASL auth daemon:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">init</span><span class="o">.</span><span class="n">d</span><span class="o">/</span><span class="n">saslauthd</span> <span class="n">start</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">init</span><span class="o">.</span><span class="n">d</span><span class="o">/</span><span class="n">saslauthd</span> <span class="n">start</span>
 </pre></div>
 </div>
-<p>Now, we'll create the IMAP user inside SASL. This is the user you'll
+<p>Now, we’ll create the IMAP user inside SASL. This is the user you’ll
 use to login to the IMAP server later on.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">echo</span> <span class="s1">&#39;secret&#39;</span> <span class="o">|</span> <span class="n">saslpasswd2</span> <span class="o">-</span><span class="n">p</span> <span class="o">-</span><span class="n">c</span> <span class="n">imapuser</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">echo</span> <span class="s1">&#39;secret&#39;</span> <span class="o">|</span> <span class="n">saslpasswd2</span> <span class="o">-</span><span class="n">p</span> <span class="o">-</span><span class="n">c</span> <span class="n">imapuser</span>
 </pre></div>
 </div>
-<p>You can replace <code class="docutils literal"><span class="pre">secret</span></code> with a more suitable password you want and
-<code class="docutils literal"><span class="pre">imapuser</span></code> with the username you want. Once this is done, check that
+<p>You can replace <code class="docutils literal notranslate"><span class="pre">secret</span></code> with a more suitable password you want and
+<code class="docutils literal notranslate"><span class="pre">imapuser</span></code> with the username you want. Once this is done, check that
 the user exists and is set up correctly:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">testsaslauthd</span> <span class="o">-</span><span class="n">u</span> <span class="n">imapuser</span> <span class="o">-</span><span class="n">p</span> <span class="n">secret</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">testsaslauthd</span> <span class="o">-</span><span class="n">u</span> <span class="n">imapuser</span> <span class="o">-</span><span class="n">p</span> <span class="n">secret</span>
 </pre></div>
 </div>
-<p>You should get an <code class="docutils literal"><span class="pre">0:</span> <span class="pre">OK</span> <span class="pre">&quot;Success.&quot;</span></code> message.</p>
+<p>You should get an <code class="docutils literal notranslate"><span class="pre">0:</span> <span class="pre">OK</span> <span class="pre">&quot;Success.&quot;</span></code> message.</p>
 </div>
 <div class="section" id="setup-mail-delivery-from-your-mta">
 <h3>4. Setup mail delivery from your MTA<a class="headerlink" href="#setup-mail-delivery-from-your-mta" title="Permalink to this headline">¶</a></h3>
@@ -891,28 +892,28 @@ SMTP server (ie Sendmail, Postfix, etc). In Cyrus, this happens via a
 protocol called LMTP, which is usually supported by your SMTP server.</p>
 <div class="section" id="install-sendmail">
 <h4>Install Sendmail<a class="headerlink" href="#install-sendmail" title="Permalink to this headline">¶</a></h4>
-<p>We'll set up LMTP with the Sendmail SMTP server.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">sendmail</span>
+<p>We’ll set up LMTP with the Sendmail SMTP server.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">sendmail</span>
 </pre></div>
 </div>
-<p>We need to make Sendmail aware of the fact we are using the Cyrus IMAP server: modify the <code class="docutils literal"><span class="pre">/etc/mail/sendmail.mc</span></code> file. Add this line before the <code class="docutils literal"><span class="pre">MAILER_DEFINITIONS</span></code> section:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>define(`confLOCAL_MAILER&#39;, `cyrusv2&#39;)dnl
+<p>We need to make Sendmail aware of the fact we are using the Cyrus IMAP server: modify the <code class="docutils literal notranslate"><span class="pre">/etc/mail/sendmail.mc</span></code> file. Add this line before the <code class="docutils literal notranslate"><span class="pre">MAILER_DEFINITIONS</span></code> section:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>define(`confLOCAL_MAILER&#39;, `cyrusv2&#39;)dnl
 </pre></div>
 </div>
-<p>And right below <code class="docutils literal"><span class="pre">MAILER_DEFINITIONS</span></code>, add this:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>MAILER(`cyrusv2&#39;)dnl
+<p>And right below <code class="docutils literal notranslate"><span class="pre">MAILER_DEFINITIONS</span></code>, add this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>MAILER(`cyrusv2&#39;)dnl
 </pre></div>
 </div>
-<p>This enables the <strong>cyrusv2</strong> mailer for local mail delivery. This is a sendmail property that tells sendmail it's talking to Cyrus. (Cyrus 3.x works with this property, despite the naming confusion.)</p>
-<p>Next, we run a script that takes the <code class="docutils literal"><span class="pre">/etc/mail/sendmail.mc</span></code> file and and prepares it for use by Sendmail. This may take some time.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">sendmailconfig</span>
+<p>This enables the <strong>cyrusv2</strong> mailer for local mail delivery. This is a sendmail property that tells sendmail it’s talking to Cyrus. (Cyrus 3.x works with this property, despite the naming confusion.)</p>
+<p>Next, we run a script that takes the <code class="docutils literal notranslate"><span class="pre">/etc/mail/sendmail.mc</span></code> file and and prepares it for use by Sendmail. This may take some time.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">sendmailconfig</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="sendmail-communication">
 <h4>Sendmail communication<a class="headerlink" href="#sendmail-communication" title="Permalink to this headline">¶</a></h4>
 <p>One last thing we need to do for LMTP to work with Sendmail is to create a folder that will contain the UNIX socket used by Sendmail and Cyrus to deliver/receive emails:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">mkdir</span> <span class="o">-</span><span class="n">p</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">run</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/</span><span class="n">socket</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">mkdir</span> <span class="o">-</span><span class="n">p</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">run</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/</span><span class="n">socket</span>
 <span class="n">sudo</span> <span class="n">chown</span> <span class="n">cyrus</span><span class="p">:</span><span class="n">mail</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">run</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/</span><span class="n">socket</span>
 <span class="n">sudo</span> <span class="n">chmod</span> <span class="mi">750</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">run</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/</span><span class="n">socket</span>
 </pre></div>
@@ -920,40 +921,40 @@ protocol called LMTP, which is usually supported by your SMTP server.</p>
 </div>
 <div class="section" id="install-postfix">
 <h4>Install Postfix<a class="headerlink" href="#install-postfix" title="Permalink to this headline">¶</a></h4>
-<p>We'll set up LMTP with the Postfix SMTP server (consider which other
+<p>We’ll set up LMTP with the Postfix SMTP server (consider which other
 Postfix related packages you may also desire):</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">postfix</span> <span class="n">postfix</span><span class="o">-</span><span class="n">doc</span> <span class="n">postfix</span><span class="o">-</span><span class="n">pcre</span> <span class="n">postfix</span><span class="o">-</span><span class="n">ldap</span> <span class="o">...</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">postfix</span> <span class="n">postfix</span><span class="o">-</span><span class="n">doc</span> <span class="n">postfix</span><span class="o">-</span><span class="n">pcre</span> <span class="n">postfix</span><span class="o">-</span><span class="n">ldap</span> <span class="o">...</span>
 </pre></div>
 </div>
 <p>We need to make Postfix aware of the fact we are using the Cyrus IMAP
 server and engineer delivery via LMTP.  The following examples show the
-<code class="docutils literal"><span class="pre">postconf</span></code> commands to run to add the necessary configuration to
-<code class="docutils literal"><span class="pre">/etc/postfix/main.cf</span></code>, these are not complete configurations.</p>
+<code class="docutils literal notranslate"><span class="pre">postconf</span></code> commands to run to add the necessary configuration to
+<code class="docutils literal notranslate"><span class="pre">/etc/postfix/main.cf</span></code>, these are not complete configurations.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Postfix supports a great many configurations for mail delivery
-transport, so these settings will depend on whether you're planning
-to use the <code class="docutils literal"><span class="pre">local</span></code>, <code class="docutils literal"><span class="pre">virtual</span></code> or <code class="docutils literal"><span class="pre">lmtp</span></code> destination
-definitions.  For our examples we'll be using <code class="docutils literal"><span class="pre">virtual</span></code>.  Adjust
+transport, so these settings will depend on whether you’re planning
+to use the <code class="docutils literal notranslate"><span class="pre">local</span></code>, <code class="docutils literal notranslate"><span class="pre">virtual</span></code> or <code class="docutils literal notranslate"><span class="pre">lmtp</span></code> destination
+definitions.  For our examples we’ll be using <code class="docutils literal notranslate"><span class="pre">virtual</span></code>.  Adjust
 as needed for your purposes, and please consult the Postfix
 documentation at <a class="reference external" href="http://www.postfix.org/postconf.5.html">http://www.postfix.org/postconf.5.html</a></p>
 </div>
 <ol class="arabic">
 <li><p class="first">Setup your recipient maps, thus defining for which recipients the
-<code class="docutils literal"><span class="pre">virtual</span></code> destination will be used:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_mailbox_domains=hash:/etc/postfix/virtual_recipient_domains&quot;</span>
+<code class="docutils literal notranslate"><span class="pre">virtual</span></code> destination will be used:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_mailbox_domains=hash:/etc/postfix/virtual_recipient_domains&quot;</span>
 <span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_mailbox_maps=hash:/etc/postfix/virtual_recipients&quot;</span>
 </pre></div>
 </div>
 <p>or, if you have enabled smmapd you can automatically track mailboxes with:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_mailbox_domains=hash:/etc/postfix/virtual_recipient_domains&quot;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_mailbox_domains=hash:/etc/postfix/virtual_recipient_domains&quot;</span>
 <span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_mailbox_maps=socketmap:unix:/run/cyrus/socket/smmap&quot;</span>
 </pre></div>
 </div>
 </li>
 <li><p class="first">Optional: Set the concurrency and recipient limits for LMTP delivery to the
-<code class="docutils literal"><span class="pre">virtual</span></code> destination:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_destination_concurrency_limit=300&quot;</span>
+<code class="docutils literal notranslate"><span class="pre">virtual</span></code> destination:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_destination_concurrency_limit=300&quot;</span>
 <span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_destination_recipient_limit=300&quot;</span>
 </pre></div>
 </div>
@@ -965,13 +966,13 @@ with lots of recipients into many separate deliveries.</p>
 </li>
 <li><p class="first">Send mail for those recipients to Cyrus via LMTP.  This first
 example is for delivery via TCP to a different host:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_transport=lmtp:inet:lmtp.example.org:2003&quot;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_transport=lmtp:inet:lmtp.example.org:2003&quot;</span>
 </pre></div>
 </div>
 <p>If your Postfix and Cyrus are on the same host, then use some
-version of this, where the socket patch matches what's set in the
-<code class="docutils literal"><span class="pre">lmtpsocket</span></code> option in <a class="reference internal" href="imap/reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_transport=lmtp:unix:/run/cyrus/socket/lmtp&quot;</span>
+version of this, where the socket patch matches what’s set in the
+<code class="docutils literal notranslate"><span class="pre">lmtpsocket</span></code> option in <a class="reference internal" href="imap/reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_transport=lmtp:unix:/run/cyrus/socket/lmtp&quot;</span>
 </pre></div>
 </div>
 </li>
@@ -982,9 +983,9 @@ version of this, where the socket patch matches what's set in the
 <h3>5. Protocol ports<a class="headerlink" href="#protocol-ports" title="Permalink to this headline">¶</a></h3>
 <p>The Cyrus IMAP server provides service interfaces via either TCP/IP
 ports or Unix domain sockets.  For the former, Cyrus requires that there
-are proper entries in the host's <code class="docutils literal"><span class="pre">/etc/services</span></code> file.  The following
+are proper entries in the host’s <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code> file.  The following
 are required for any host using the listed services:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pop3</span>      <span class="mi">110</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># Post Office Protocol v3</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pop3</span>      <span class="mi">110</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># Post Office Protocol v3</span>
 <span class="n">nntp</span>      <span class="mi">119</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># Network News Transport Protocol</span>
 <span class="n">imap</span>      <span class="mi">143</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># Internet Mail Access Protocol rev4</span>
 <span class="n">imsp</span>      <span class="mi">406</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># Internet Message Support Protocol (deprecated)</span>
@@ -1005,21 +1006,21 @@ are required for any host using the listed services:</p>
 <h3>6. Configuring Cyrus<a class="headerlink" href="#configuring-cyrus" title="Permalink to this headline">¶</a></h3>
 <p>(Nearly there)</p>
 <p>Set up a simple directory structure for Cyrus to store emails, owned by
-the <code class="docutils literal"><span class="pre">cyrus</span></code> user and group <code class="docutils literal"><span class="pre">mail</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">mkdir</span> <span class="o">-</span><span class="n">p</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">cyrus</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">spool</span><span class="o">/</span><span class="n">cyrus</span>
+the <code class="docutils literal notranslate"><span class="pre">cyrus</span></code> user and group <code class="docutils literal notranslate"><span class="pre">mail</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">mkdir</span> <span class="o">-</span><span class="n">p</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">cyrus</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">spool</span><span class="o">/</span><span class="n">cyrus</span>
 <span class="n">sudo</span> <span class="n">chown</span> <span class="o">-</span><span class="n">R</span> <span class="n">cyrus</span><span class="p">:</span><span class="n">mail</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">cyrus</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">spool</span><span class="o">/</span><span class="n">cyrus</span>
 <span class="n">sudo</span> <span class="n">chmod</span> <span class="mi">750</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">cyrus</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">spool</span><span class="o">/</span><span class="n">cyrus</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal"><span class="pre">/var/spool/cyrus</span></code> directory is the
+<p>The <code class="docutils literal notranslate"><span class="pre">/var/spool/cyrus</span></code> directory is the
 <a class="reference internal" href="imap/concepts/features/mail-spool-partitions.html#imap-features-mail-spool-partitions"><span class="std std-ref">partition</span></a> where Cyrus will store
 mail and must be allocated sufficient storage. The exact location can be
 configured in <a class="reference internal" href="imap/reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> in the partitions options.</p>
 <p>Following installation, a fairly comprehensive set of sample
 configuration files may be found in
-<code class="docutils literal"><span class="pre">/usr/share/doc/cyrus-doc/examples/</span></code>.  Select one from each of the
-<code class="docutils literal"><span class="pre">cyrus_conf</span></code> and <code class="docutils literal"><span class="pre">imapd_conf</span></code> directories, and install as
-<code class="docutils literal"><span class="pre">/etc/cyrus.conf</span></code> and <code class="docutils literal"><span class="pre">/etc/imapd.conf</span></code> respectively.</p>
+<code class="docutils literal notranslate"><span class="pre">/usr/share/doc/cyrus-doc/examples/</span></code>.  Select one from each of the
+<code class="docutils literal notranslate"><span class="pre">cyrus_conf</span></code> and <code class="docutils literal notranslate"><span class="pre">imapd_conf</span></code> directories, and install as
+<code class="docutils literal notranslate"><span class="pre">/etc/cyrus.conf</span></code> and <code class="docutils literal notranslate"><span class="pre">/etc/imapd.conf</span></code> respectively.</p>
 <p>A basic description of these files:</p>
 <ul>
 <li><p class="first">Stand-alone server configurations (pick one):</p>
@@ -1043,18 +1044,18 @@ faster connection initialization.</dd>
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The <code class="docutils literal"><span class="pre">normal.conf</span></code> file in the <code class="docutils literal"><span class="pre">imapd_conf</span></code> directory
+<p class="last">The <code class="docutils literal notranslate"><span class="pre">normal.conf</span></code> file in the <code class="docutils literal notranslate"><span class="pre">imapd_conf</span></code> directory
 is intended to work with any of the above files from the
-<code class="docutils literal"><span class="pre">cyrus_conf</span></code> directory.</p>
+<code class="docutils literal notranslate"><span class="pre">cyrus_conf</span></code> directory.</p>
 </div>
 </li>
-<li><p class="first">Cyrus Aggregation - Murder -- configurations (these constitute a
+<li><p class="first">Cyrus Aggregation - Murder – configurations (these constitute a
 set, with at least one of each required):</p>
 <ul class="simple">
 <li><dl class="first docutils">
 <dt>murder-mupdate.conf</dt>
 <dd>The Mupdate Master server; holds the canonical copy of the
-<code class="docutils literal"><span class="pre">mailboxes.db</span></code> database.</dd>
+<code class="docutils literal notranslate"><span class="pre">mailboxes.db</span></code> database.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
@@ -1077,7 +1078,7 @@ and at least one replica required):</p>
 <ul class="simple">
 <li><dl class="first docutils">
 <dt>normal-master.conf</dt>
-<dd>The master server which uses the <code class="docutils literal"><span class="pre">sync_client</span></code> program to
+<dd>The master server which uses the <code class="docutils literal notranslate"><span class="pre">sync_client</span></code> program to
 send mailbox updates to each replica on a rolling or
 periodic basis.</dd>
 </dl>
@@ -1092,17 +1093,17 @@ master.</dd>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">When working with replication or aggregation (Murder), the
-example files in <code class="docutils literal"><span class="pre">cyrus_conf</span></code> and <code class="docutils literal"><span class="pre">imapd_conf</span></code> of the same
+example files in <code class="docutils literal notranslate"><span class="pre">cyrus_conf</span></code> and <code class="docutils literal notranslate"><span class="pre">imapd_conf</span></code> of the same
 name are intended to be used together.</p>
 </div>
 </li>
 </ul>
 <p>You should review each of these and then install as desired to
-<code class="docutils literal"><span class="pre">/etc/</span></code>, making changes as needed.  In particular, you'll need to set
+<code class="docutils literal notranslate"><span class="pre">/etc/</span></code>, making changes as needed.  In particular, you’ll need to set
 passwords for the various users used to authenticate between instances
 in a Murder or Replication environment.</p>
 <p>For example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">install</span> <span class="o">-</span><span class="n">m</span> <span class="mi">600</span> <span class="n">doc</span><span class="o">/</span><span class="n">examples</span><span class="o">/</span><span class="n">cyrus_conf</span><span class="o">/</span><span class="n">normal</span><span class="o">.</span><span class="n">conf</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">cyrus</span><span class="o">.</span><span class="n">conf</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">install</span> <span class="o">-</span><span class="n">m</span> <span class="mi">600</span> <span class="n">doc</span><span class="o">/</span><span class="n">examples</span><span class="o">/</span><span class="n">cyrus_conf</span><span class="o">/</span><span class="n">normal</span><span class="o">.</span><span class="n">conf</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">cyrus</span><span class="o">.</span><span class="n">conf</span>
 <span class="n">install</span> <span class="o">-</span><span class="n">m</span> <span class="mi">600</span> <span class="n">doc</span><span class="o">/</span><span class="n">examples</span><span class="o">/</span><span class="n">imapd_conf</span><span class="o">/</span><span class="n">normal</span><span class="o">.</span><span class="n">conf</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">imapd</span><span class="o">.</span><span class="n">conf</span>
 <span class="n">vi</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">imapd</span><span class="o">.</span><span class="n">conf</span>
 <span class="o">...</span>
@@ -1114,7 +1115,7 @@ in a Murder or Replication environment.</p>
 <div class="section" id="launch-cyrus">
 <h3>7. Launch Cyrus<a class="headerlink" href="#launch-cyrus" title="Permalink to this headline">¶</a></h3>
 <p>If using a distribution package, you probably now have an init script
-installed, that you can invoke with your system's usual service control
+installed, that you can invoke with your system’s usual service control
 mechanism.</p>
 <p>If you built from source, you will need to write your own init script.
 The simplest one will simply start/stop the <a class="reference internal" href="imap/reference/manpages/systemcommands/master.html#std:cyrusman-master(8)">master(8)</a> binary,
@@ -1145,7 +1146,7 @@ as soon as it possibly can).</p>
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Apr 29 2020
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1162,7 +1163,7 @@ as soon as it possibly can).</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1171,7 +1172,7 @@ as soon as it possibly can).</p>
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
 
   
 

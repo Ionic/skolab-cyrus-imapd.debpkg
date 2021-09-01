@@ -1,4 +1,3 @@
-
 Cyrus Event Source
 ******************
 
@@ -27,10 +26,10 @@ Compile options
 You can control what kind of events Cyrus generates during the
 "configure" step of compilation.
 
-"--enable_event_notification": Set this to "yes" to have Cyrus
+"--enable_event_notification": Set this to “yes” to have Cyrus
 generate mailbox related events. This is enabled by default.
 
-"--enable-apple-push-service": Set this to "yes" to enable support for
+"--enable-apple-push-service": Set this to “yes” to enable support for
 the Apple Push service. This is *disabled* by default as Apple does
 not provide licenses for Push support to developers at this stage.
 
@@ -43,12 +42,12 @@ These need to be set in imapd.conf(5).
    "event_content_inclusion_mode:" standard
 
       The mode in which message content may be included with
-      MessageAppend and MessageNew. "standard" mode is the default
+      MessageAppend and MessageNew. “standard” mode is the default
       behavior in which message is included up to a size with the
-      notification. In "message" mode, the message is included and may
-      be truncated to a size. In "header" mode, it includes headers
-      truncated to a size. In "body" mode, it includes body truncated
-      to a size. In "headerbody" mode, it includes full headers and
+      notification. In “message” mode, the message is included and may
+      be truncated to a size. In “header” mode, it includes headers
+      truncated to a size. In “body” mode, it includes body truncated
+      to a size. In “headerbody” mode, it includes full headers and
       body truncated to a size Allowed values: *standard*, *message*,
       *header*, *body*, *headerbody*
 
@@ -60,11 +59,11 @@ These need to be set in imapd.conf(5).
 
    "event_exclude_flags:" <none>
 
-      Don't send event notification for given IMAP flag(s)
+      Don’t send event notification for given IMAP flag(s)
 
    "event_exclude_specialuse:" \Junk
 
-      Don't send event notification for folder with given special-use
+      Don’t send event notification for folder with given special-use
       attributes. Set ALL for any folder
 
    "event_extra_params:" timestamp
@@ -93,8 +92,8 @@ These need to be set in imapd.conf(5).
 
    "event_notifier:" <none>
 
-      Notifyd(8) method to use for "EVENT" notifications which are
-      based on the **RFC 5423**.  If not set, "EVENT" notifications
+      Notifyd(8) method to use for “EVENT” notifications which are
+      based on the **RFC 5423**.  If not set, “EVENT” notifications
       are disabled.
 
 
@@ -108,7 +107,7 @@ Accessing events
 ================
 
 While Cyrus only communicates with a single notification process, it
-doesn't have to be its standard notifyd(8). It's possible to write
+doesn’t have to be its standard notifyd(8). It’s possible to write
 your own, providing it conforms with **RFC 5465**.
 
 
@@ -118,8 +117,8 @@ Apple Push Service
 While Cyrus supports the Apple Push Service, Apple has only licensed
 Apple Push for mail to a couple of large mail providers: FastMail and
 Yahoo. If you own an OS X Server license, you also get a key for
-personal use. But it's not generally a supported option for third
-party developers that we're aware of, unfortunately.
+personal use. But it’s not generally a supported option for third
+party developers that we’re aware of, unfortunately.
 
 We have discussed pulling the XAPPLEPUSH code out from upstream Cyrus,
 but right now it remains against the day that Apple do decide to open

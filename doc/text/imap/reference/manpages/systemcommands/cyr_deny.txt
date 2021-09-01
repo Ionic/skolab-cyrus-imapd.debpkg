@@ -1,4 +1,3 @@
-
 **cyr_deny**
 ************
 
@@ -43,7 +42,7 @@ Options
 -s services
 
    Deny access only to the given *services*, which is a comma-
-   separated list of wildcard patterns.  The default is "*" which
+   separated list of wildcard patterns.  The default is “*” which
    denies access to all services.
 
 -m message

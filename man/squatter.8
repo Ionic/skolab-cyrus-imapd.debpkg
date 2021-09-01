@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "SQUATTER" "8" "May 10, 2021" "3.4.1" "Cyrus IMAP"
+.TH "SQUATTER" "8" "September 01, 2021" "3.4.2" "Cyrus IMAP"
 .SH NAME
 squatter \- Cyrus IMAP documentation
 .
@@ -51,11 +51,11 @@ i.e.:
 \fBNOTE:\fP
 .INDENT 0.0
 .INDENT 3.5
-The name "\fBsquatter\fP" once referred both to the SQUAT indexing
+The name “\fBsquatter\fP” once referred both to the SQUAT indexing
 engine and to the command used to create indexes.  Now that Cyrus
-supports more than one index type \-\- SQUAT and Xapian, as of this
-writing \-\- the name "\fBsquatter\fP" refers to the command used to
-control index creation.  The terms "SQUAT" or "SQUAT index(es)"
+supports more than one index type – SQUAT and Xapian, as of this
+writing – the name “\fBsquatter\fP” refers to the command used to
+control index creation.  The terms “SQUAT” or “SQUAT index(es)”
 refers to the indexes used by the older SQUAT indexing engine.
 Post v3 the \fIsearch_engine\fP setting in \fIimapd.conf\fP determines
 which search engine is used.
@@ -88,7 +88,7 @@ mailbox(es).
 For the latter two index modes (mailbox, user) one
 may optionally specify \fB\-r\fP to recurse from the specified start, or
 \fB\-a\fP to limit action only to mailboxes which have the shared
-\fI/vendor/cmu/cyrus\-imapd/squat\fP annotation set to "true".
+\fI/vendor/cmu/cyrus\-imapd/squat\fP annotation set to “true”.
 .sp
 In the fourth synopsis, \fBsquatter\fP runs in rolling mode.  In this
 mode \fBsquatter\fP backgrounds itself and runs as a daemon (unless
@@ -109,7 +109,7 @@ used to specify members of srctiers which must be reindexed.  These files are
 eventually copied with \fIrsync \-a\fP and then removed by \fIrm\fP\&.
 \fIrsync\fP can increase the load average of the system, especially when the
 temporary directory is on \fItmpfs\fP\&.  To throttle \fIrsync\fP it is possible to
-modify the call in \fIimap/search_xapian.c\fP and pass \fI\-\e\-bwlimit=<number>\fP as further
+modify the call in \fIimap/search_xapian.c\fP and pass \fI\-\-bwlimit=<number>\fP as further
 parameter.  The \fB\-o\fP flag may be used to direct that a single index be
 copied, rather than compacted, from \fIsrctier\fP to \fIdesttier\fP\&.  The \fB\-u\fP flag
 may be used to restrict operation to the specified user(s).
@@ -119,7 +119,7 @@ pause \fIseconds\fP seconds after each mailbox, to smooth loads.
 .sp
 When using the Xapian engine the \fB\-Z\fP option may be specified, for
 the indexing modes.  This tells \fBsquatter\fP to consult the Xapian
-internally indexed GUIDs, rather than relying on what\(aqs stored in
+internally indexed GUIDs, rather than relying on what’s stored in
 \fIcyrus.indexed.db\fP, allowing for recovery from broken
 \fIcyrus.indexed.db\fP at the sacrifice of efficiency.
 .sp
@@ -151,16 +151,16 @@ Use the specified configuration file \fIconfig\-file\fP rather than the default 
 .TP
 .B \-a, \-\-squat\-annot
 Only create indexes for mailboxes which have the shared
-\fI/vendor/cmu/cyrus\-imapd/squat\fP annotation set to "true".
+\fI/vendor/cmu/cyrus\-imapd/squat\fP annotation set to “true”.
 .sp
 The value of the \fI/vendor/cmu/cyrus\-imapd/squat\fP annotation is
 inherited by all children of the given mailbox, so an entire
 mailbox tree can be indexed (or not indexed) by setting a single
-annotation on the root of that tree with a value of "true" (or
-"false").  If a mailbox does not have a
+annotation on the root of that tree with a value of “true” (or
+“false”).  If a mailbox does not have a
 \fI/vendor/cmu/cyrus\-imapd/squat\fP annotation set on it (or does not
 inherit one), then the mailbox is not indexed. In other words, the
-implicit value of \fI/vendor/cmu/cyrus\-imapd/squat\fP is "false".
+implicit value of \fI/vendor/cmu/cyrus\-imapd/squat\fP is “false”.
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -171,7 +171,7 @@ This feature is only available on the master branch.
 .INDENT 0.0
 .TP
 .B \-d, \-\-nodaemon
-In rolling mode, don\(aqt background and do emit log messages on
+In rolling mode, don’t background and do emit log messages on
 standard error.  Useful for debugging.
 This feature was introduced in version 3.0.
 .UNINDENT
@@ -218,7 +218,7 @@ the mailbox list derived from other options.
 .TP
 .B \-n channel, \-\-channel=channel
 In rolling mode, specify the name of the sync log \fIchannel\fP that
-\fBsquatter\fP will listen to.  The default is "squatter".  This
+\fBsquatter\fP will listen to.  The default is “squatter”.  This
 channel \fBmust\fP be defined in imapd.conf(5) before
 being used.
 This feature was introduced in version 3.0.
@@ -298,7 +298,7 @@ This feature is only available on the master branch.
 .INDENT 0.0
 .TP
 .B \-S seconds, \-\-sleep=seconds
-After processing each mailbox, sleep for "seconds" before
+After processing each mailbox, sleep for “seconds” before
 continuing. Can be used to provide some load balancing.  Accepts
 fractional amounts. This feature was introduced in version 3.0.
 .UNINDENT
@@ -423,7 +423,7 @@ setting, and MUST define a sync_log channel via the
 \fIsync_log_channels:\fP setting.  If also using replication, you must
 either explicitly specify your replication sync_log channel via the
 \fIsync_log_channels\fP directive with a name, or specify the default
-empty name with "" (the two\-character string U+22 U+22).  [Please
+empty name with “” (the two\-character string U+22 U+22).  [Please
 see imapd.conf(5) for details].
 .UNINDENT
 .UNINDENT
@@ -434,7 +434,7 @@ see imapd.conf(5) for details].
 When configuring rolling search indexing on a \fBreplica\fP, one must
 consider whether sync_logs will be written at all.  In this case,
 please consider the setting \fIsync_log_unsuppressable_channels\fP to
-ensure that the sync_log channel upon which one\(aqs squatter instance
+ensure that the sync_log channel upon which one’s squatter instance
 depends will continue to be written.  See imapd.conf(5)
 for details.
 .UNINDENT

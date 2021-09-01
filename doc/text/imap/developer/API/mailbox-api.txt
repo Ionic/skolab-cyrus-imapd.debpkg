@@ -1,4 +1,3 @@
-
 Mailbox API
 ***********
 
@@ -46,15 +45,15 @@ follows:
 +------------------------------+---------------+----------------+
 
 It should never be necessary to call "mailbox_open_exclusive", but
-it's included for completeness. Use "mailbox_open_iwl" if you expect
-to need to write to the index (or even if you're not sure) and
-"mailbox_open_irl" when you know you're only reading from the file and
+it’s included for completeness. Use "mailbox_open_iwl" if you expect
+to need to write to the index (or even if you’re not sure) and
+"mailbox_open_irl" when you know you’re only reading from the file and
 wish to allow other readers to work concurrently.
 
 Many actions are delayed until the mailbox is closed, or even until
 the *last* mailbox is closed for things that require an exclusive
-namelock to perform like deletion or repack. See below under "delayed
-actions" for more detail.
+namelock to perform like deletion or repack. See below under “delayed
+actions” for more detail.
 
 To avoid opening the same file multiple times, the mailbox API
 refcounts open mailboxes. If you open the same mailbox again (i.e. a
@@ -68,10 +67,10 @@ actions.
 Locking and unlocking
 =====================
 
-You can keep a mailbox "open", maintaining the namelock, while
+You can keep a mailbox “open”, maintaining the namelock, while
 releasing the index lock to allow other processes to make changes to
 the mailbox. By holding the namelock, you know that record numbers
-won't change, and the underlying message files won't be deleted.
+won’t change, and the underlying message files won’t be deleted.
 
 "mailbox_close" will call "mailbox_unlock_index" if the index is still
 locked, so it is not necessary to explicitly unlock the index before
@@ -88,7 +87,7 @@ closing.
 For example, "mailbox_unlock_index" and "mailbox_lock_index" are used
 extensively by the index module, allowing an imap client to maintain a
 long lived connection selected to a mailbox and know that messages
-won't magically disappear from under it - yet at the same time allow
+won’t magically disappear from under it - yet at the same time allow
 new mail delivery to happen or other imap connections to query the
 mailbox.
 
@@ -105,7 +104,7 @@ value instead. For example:
    sdata.recent = 0;
    mailbox_unlock_index(state->mailbox, &sdata);
 
-See "delayed actions" below for delayed actions performed during an
+See “delayed actions” below for delayed actions performed during an
 unlock.
 
 
@@ -113,7 +112,7 @@ Creating, renaming and deleting
 ===============================
 
 **WARNING:** These functions only change the mailbox files on disk.
-They don't update the mailboxes.db records or contact murder servers.
+They don’t update the mailboxes.db records or contact murder servers.
 In most cases you are probably looking for the "mboxlist_" functions
 instead.
 
@@ -129,7 +128,7 @@ the same mailbox that "mailbox_open_exclusive" above would have
 returned, with an exclusive namelock and an exclusive index lock. This
 allows you to perform other consistency operations after creating the
 mailbox with a full guarantee that no other process will even be able
-to know of the mailbox's existence! You can still roll-back by
+to know of the mailbox’s existence! You can still roll-back by
 deleting the mailbox and the next process will get the namelock and
 see no mailbox with that name.
 
@@ -149,7 +148,7 @@ as it will be passed to "mailbox_delete".
 Just like "mailbox_close" above, this closes the mailbox. Before it
 does so, it sets the OPT_MAILBOX_DELETED option flag in the index
 header. The interesting work is actually done in "mailbox_close". See
-below under "delayed actions".
+below under “delayed actions”.
 
 "mailbox_delete" requires an exclusive index lock, but can complete
 quite happily with only a shared namelock.
@@ -158,11 +157,11 @@ quite happily with only a shared namelock.
 Reading and writing records
 ===========================
 
-Ok - so you have a mailbox, it's opened, and the index is locked. Time
+Ok - so you have a mailbox, it’s opened, and the index is locked. Time
 to start reading and writing some records!
 
-At the mailbox level there is no concept of "message numbers" from
-imap, only "record numbers". The canonical variable name to refer to
+At the mailbox level there is no concept of “message numbers” from
+imap, only “record numbers”. The canonical variable name to refer to
 record numbers is "recno". All records are read and written using
 "struct index_record" values.
 
@@ -207,19 +206,19 @@ An example of iterating through a mailbox
    }
    mailbox_iter_done(&iter);
 
-NOTE: "mailbox_rewrite_index_record" doesn't need a recno, as that's
+NOTE: "mailbox_rewrite_index_record" doesn’t need a recno, as that’s
 cached inside the index_record struct.
 
 NOTE: You need an exclusively locked index to use rewrite or append,
 but only a shared index lock to use read.
 
 There are a range of consistency checks done to ensure that a rewrite
-doesn't violate IMAP semantics (an expunged message can never be
-unexpunged, UIDs can't change, etc) and the internal tracking counts
+doesn’t violate IMAP semantics (an expunged message can never be
+unexpunged, UIDs can’t change, etc) and the internal tracking counts
 and quota data are updated as well. They will be committed at unlock
-time, see "delayed actions"
+time, see “delayed actions”
 
-If you don't set the "record.silent" field to a true value before
+If you don’t set the "record.silent" field to a true value before
 rewriting or appending, the "record.modseq" and "record.last_updated"
 values will be changed. This allows condstore to work correctly.
 
@@ -229,7 +228,7 @@ Appending
 
 To append a record, the file must have already been copied into place
 (XXX - plan to move to a stage based system where the mailbox API
-handles the staging, but that's not finished yet) and been parsed into
+handles the staging, but that’s not finished yet) and been parsed into
 the record struct. The UID must be set already, and must be greater
 than the UID of any existing record in the mailbox. There are a range
 of consistency checks done.
@@ -240,7 +239,7 @@ The internal consistency counts are updated by append as well.
 Committing
 ----------
 
-When you have finished making any changes, you need to "commit". This
+When you have finished making any changes, you need to “commit”. This
 will write the updated values for any index header fields, rewite the
 "cyrus.header" file if needed and fsync all changes to disk.
 
@@ -264,8 +263,8 @@ basic API is as follows:
    struct buf *cacheitem_buf(struct index_record *record, int field);
 
 You must always call "mailbox_cacherecord" on a record before trying
-to access any of the cache items. ""field"" above is the individual
-field (there are 10) in the cache record. There's more information on
+to access any of the cache items. “"field"” above is the individual
+field (there are 10) in the cache record. There’s more information on
 those fields in the mailbox internal format documentation.
 
    for (recno = 1; recno <= mailbox->i.num_records; recno++) {
@@ -285,7 +284,7 @@ See "imap/mailbox.h" for the full list of constants.
 Delayed Actions
 ===============
 
-Here's the bit you've been waiting for! What happens during unlock and
+Here’s the bit you’ve been waiting for! What happens during unlock and
 close
 
 
@@ -308,10 +307,10 @@ then: close
 
 next the index is unlocked (see above)
 
-third, any "unlink" commands scheduled for email files are run. These
-can't be done until after the mailbox_commit to ensure consistency -
-the file isn't deleted until the record is written as unlinked! But we
-save the unlink until now so that other tasks aren't waiting for the
+third, any “unlink” commands scheduled for email files are run. These
+can’t be done until after the mailbox_commit to ensure consistency -
+the file isn’t deleted until the record is written as unlinked! But we
+save the unlink until now so that other tasks aren’t waiting for the
 index lock while the unlinks run. Unlink is expensive in IO and time.
 
 finally we check for MAILBOX_NEEDS_REPACK or MAILBOX_DELETED option
@@ -321,5 +320,5 @@ process has the mailbox open, so save the cleanup for them! If it
 succeeds, then go ahead with either "mailbox_delete_cleanup" or
 "mailbox_index_repack" as appropriate.
 
-After this it's just a matter of releasing malloc'd memory and finally
+After this it’s just a matter of releasing malloc’d memory and finally
 releasing the name lock.

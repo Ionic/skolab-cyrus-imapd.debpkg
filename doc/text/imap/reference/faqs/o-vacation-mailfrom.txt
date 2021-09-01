@@ -1,5 +1,4 @@
-
-Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '<>'?
+Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘<>’?
 *************************************************************************************
 
 Because many of the Sieve features are autoresponders, Cyrus tries to
@@ -29,7 +28,7 @@ Also from draft-moore-auto-email-response-02.txt:
    messages, a MAIL FROM address of <> MAY be used for this purpose.
 
 This is of course slightly more applicable to reject than it is to
-vacation, but there isn't a very strong argument why they should be
+vacation, but there isn’t a very strong argument why they should be
 treated differently.
 
 Note that draft-moore-auto-email-response-02.txt also states:

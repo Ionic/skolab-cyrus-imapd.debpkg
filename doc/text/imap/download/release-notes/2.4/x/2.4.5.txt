@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.4.5 Release Notes
 ******************************
 
@@ -36,14 +35,14 @@ Changes to the Cyrus IMAP Server since 2.4.4
   (Bug #3351) - reported by Giles Malet
 
 * Made sync_server report errors earlier if there are extra records
-  on the master which aren't present on the replica (Bug #3355) -
+  on the master which aren’t present on the replica (Bug #3355) -
   thanks to David Carter for finding it and a first pass at a fix
 
 * Stopped expunges to never-reported-messages being showed
-  (basically if the 'EXPUNGE' command was run, and it expunged a
+  (basically if the ‘EXPUNGE’ command was run, and it expunged a
   message that the client had never even seen - seriously rare race
   condition, Bug #3356) - discovered by Bron Gondwana hammering a
-  testbed with Dovecot's imaptest tool
+  testbed with Dovecot’s imaptest tool
 
 * Fixed compile with old PCRE (Bug #3358) - found and fixed by Simon
   Matter

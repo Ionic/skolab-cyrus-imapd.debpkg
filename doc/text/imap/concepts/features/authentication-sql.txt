@@ -1,4 +1,3 @@
-
 SQL Authentication
 ******************
 
@@ -25,7 +24,7 @@ The database connection details are completely changeable and you can
 even use a remote MySQL server, but remember to change them throughout
 the instructions below.
 
-Note: The database table doesn't need to be writable by the Cyrus
+Note: The database table doesn’t need to be writable by the Cyrus
   server. If your master database is held on a different server, you
   could use MySQL replication to replicate just the mail_users table
   to the Cyrus server and make the table read-only on the replica.
@@ -35,7 +34,7 @@ saslauthd
 ---------
 
 saslauthd needs to be configured to use PAM. In the output of **ps ax
-| grep saslauthd** it'll probably look like **saslauthd -a pam**
+| grep saslauthd** it’ll probably look like **saslauthd -a pam**
 Optionally "-r" (realm) parameter with saslauthd if you plan to use
 username@domain style logins instead of just username
 
@@ -43,7 +42,7 @@ username@domain style logins instead of just username
 pam_mysql
 ---------
 
-pam_mysql (0.7) from http://pam-mysql.sourceforge.net/ - it's quite
+pam_mysql (0.7) from http://pam-mysql.sourceforge.net/ - it’s quite
 likely that other MySQL PAM modules would work, but this one
 definitely works and using a different version will require different
 configuration to that described below.
@@ -73,7 +72,7 @@ field.
 
 Next insert an example record for testing purposes. The username must
 match the mailbox created in Cyrus and the login is the full email
-address. If you don't need/want domain based virtual users, you can
+address. If you don’t need/want domain based virtual users, you can
 also just insert a username without the @example.org
 
    INSERT INTO mail_users SET username='jane@example.org',
@@ -133,11 +132,11 @@ file should contain:
 
 Warning: Because this file contains the database password, you
   should ensure it is properly protected. Change the ownership to
-  root:root (if it's not already), and **chmod 600 /etc/mail-pam-
+  root:root (if it’s not already), and **chmod 600 /etc/mail-pam-
   mysql.conf**
 
 Changing verbose to 1 results in a large amount of debugging output in
-the logs, including the SQL being run. This can be useful if it's not
+the logs, including the SQL being run. This can be useful if it’s not
 working as expected. If you are using the MySQL PASSWORD() function,
 change password_crypt to 1
 
@@ -157,9 +156,9 @@ commands:
    $ **testsaslauthd -u jane -r example.org -p janepass -s pop**
    0: NO "authentication failed"
 
-This fails because we haven't setup the PAM config file for the POP
+This fails because we haven’t setup the PAM config file for the POP
 service, update /etc/pam.d/pop by adding the following two
-'sufficient' lines above the appropriate 'required' lines.
+‘sufficient’ lines above the appropriate ‘required’ lines.
 
    auth       sufficient   pam_mysql.so config_file=/etc/mail-pam-mysql.conf
    account    sufficient   pam_mysql.so config_file=/etc/mail-pam-mysql.conf
@@ -186,7 +185,7 @@ Testing everything together
 
 This step assumes Cyrus is already configured and listening on
 localhost port 143 (IMAP). Change the openssl command as required if
-it's not.
+it’s not.
 
    $ **openssl s_client -connect localhost:143 -starttls imap**
    ...
@@ -197,7 +196,7 @@ it's not.
    * BYE LOGOUT received
    0 OK Completed
 
-If you don't get an OK response to the LOGIN command, something isn't
+If you don’t get an OK response to the LOGIN command, something isn’t
 working properly and there may be useful log messages in either
 maillog, messages or secure log files.
 

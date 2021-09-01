@@ -1,4 +1,3 @@
-
 Managing user_deny.db
 *********************
 
@@ -8,8 +7,8 @@ authentication data is also used for other network services.
 
 Use cyr_deny(8) to manage the database.
 
-If the user_deny.db file doesn't exist in %configdirectory% (often
-/var/lib/imap) then you'll need to create it. In the example below,
+If the user_deny.db file doesn’t exist in %configdirectory% (often
+/var/lib/imap) then you’ll need to create it. In the example below,
 /var/lib/imap/ is used.
 
    # echo "" > /tmp/user_deny.flat

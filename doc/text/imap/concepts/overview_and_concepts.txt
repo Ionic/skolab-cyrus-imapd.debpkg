@@ -1,4 +1,3 @@
-
 Concepts
 ********
 
@@ -96,12 +95,12 @@ r
    The user may read the mailbox (**read**).
 
 s
-   Keep per-user seen state (i.e. modify the "Seen" flag)
+   Keep per-user seen state (i.e. modify the “Seen” flag)
    (**setseen**).
 
 w
-   The user may modify flags and keywords other than "Seen" and
-   "Deleted". (**write**)
+   The user may modify flags and keywords other than “Seen” and
+   “Deleted”. (**write**)
 
 i
    The user may insert (append) new messages into the mailbox
@@ -122,15 +121,15 @@ x
    The user may delete the mailbox itself. (**deletembox**)
 
 t
-   The user may store the "Deleted" flag.  In other words, delete
+   The user may store the “Deleted” flag.  In other words, delete
    messages.
 
 e
-   The user may Expunge messages which have the "Deleted" flag already
+   The user may Expunge messages which have the “Deleted” flag already
    set (**expunge**).
 
 d
-   This "legacy" right is treated by the software as a macro for "te"
+   This “legacy” right is treated by the software as a macro for "te"
    (**deletemsg** && **expunge**).
 
 n
@@ -200,7 +199,7 @@ Initial ACLs for Newly Created Mailboxes
 
 When a mailbox is created, its ACL starts off with a copy of the ACL
 of its closest parent mailbox. When a user is created, the ACL on the
-user's "INBOX" starts off with a single entry granting all rights to
+user’s "INBOX" starts off with a single entry granting all rights to
 the user. When a non-user mailbox is created and does not have a
 parent, its ACL is initialized to the value of the "defaultacl" option
 in imapd.conf(5).
@@ -210,7 +209,7 @@ Other Implicit Rights
 ~~~~~~~~~~~~~~~~~~~~~
 
 Note that some rights are available implicitly, for example
-'anonymous' always has 'p' on user INBOXes, and users always have "la"
+‘anonymous’ always has ‘p’ on user INBOXes, and users always have "la"
 rights on mailboxes within their INBOX hierarchy.
 
 
@@ -219,10 +218,10 @@ Access Control Identifier (ACI)
 
 The Access Control Identifier (ACI) part of an ACL entry specifies the
 user or group for which the entry applies.  Group identifiers are
-distinguished be the prefix "group:".  For example,
-"group:accounting".
+distinguished be the prefix “group:”.  For example,
+“group:accounting”.
 
-There are two special identifiers, "anonymous", and "anyone", which
+There are two special identifiers, “anonymous”, and “anyone”, which
 are explained below. The meaning of other identifiers usually depends
 on the authorization mechanism being used (selected by "--with-auth"
 at compile time, defaulting to Unix).
@@ -271,7 +270,7 @@ way (without associated "/etc/passwd" entries) is not recommended.
 
 Note: Cyrus requires the getgrent(3) POSIX sysctl. As such, NSS
   needs to be configured to have the groups available, one of which
-  includes "files", but could also include "ldap".NSS augmentations,
+  includes “files”, but could also include “ldap”.NSS augmentations,
   such as "nss_ldap", "pam_ldap" or "sssd" may be used to provide
   Cyrus access to group information via NSS.
 
@@ -315,7 +314,7 @@ character. The associated rights are then removed from that
 identifier. These are referred to as *negative rights*.
 
 
-Calculating a Users' Rights
+Calculating a Users’ Rights
 ---------------------------
 
 To calculate the set of rights granted to a user, the server first
@@ -340,7 +339,7 @@ logging in) that can be used with Cyrus IMAP.
 
 The Cyrus IMAP server uses the Cyrus SASL library for authentication.
 This section describes how to configure SASL with use with Cyrus
-imapd. Please consult the *Cyrus SASL System Administrator's Guide*
+imapd. Please consult the *Cyrus SASL System Administrator’s Guide*
 for more detailed, up-to-date information.
 
 
@@ -366,7 +365,7 @@ by the SASL "PLAIN" mechanism (under a TLS layer).
 * PAM
 
 * Kerberos v4: Plaintext passwords are verified by obtaining a
-  ticket for the server's Kerberos identity, to protect against
+  ticket for the server’s Kerberos identity, to protect against
   Kerberos server spoofing attacks.
 
 * "/etc/passwd"
@@ -377,7 +376,7 @@ by the SASL "PLAIN" mechanism (under a TLS layer).
 The method of plaintext password verification is always through the
 SASL library, even in the case of the internal LOGIN command. This is
 to allow the SASL library to be the only source of authentication
-information. You'll want to look at the "sasl_pwcheck_method" option
+information. You’ll want to look at the "sasl_pwcheck_method" option
 in the SASL documentation to understand how to configure a plaintext
 password verifier for your system.
 
@@ -394,7 +393,7 @@ mechanism. The mechanism requires that a "srvtab" file exist in the
 location given in the "srvtab" configuration option. The "srvtab" file
 must be readable by the Cyrus server and must contain a
 "imap.$host@$realm" service key, where "$host" is the first component
-of the server's host name and "$realm" is the server's Kerberos realm.
+of the server’s host name and "$realm" is the server’s Kerberos realm.
 
 The server will permit logins by identities in the local realm and
 identities in the realms listed in the "loginrealms" option in
@@ -406,7 +405,7 @@ fields. Any identity matching the first field of a line is permitted
 to log in as the identity in the second field.
 
 If the "loginuseacl" configuration option is turned on, than any
-Kerberos identity that is granted the "a" right on the user's "INBOX"
+Kerberos identity that is granted the "a" right on the user’s "INBOX"
 is permitted to log in as that user.
 
 
@@ -552,7 +551,7 @@ regardless of size, unless "lmtp_strict_quota: on" is set in
 imapd.conf(5).  In that case, delivery of messages will be rejected
 would such delivery exceed quota.
 
-If a delivery puts the mailbox's usage over the quota, the server will
+If a delivery puts the mailbox’s usage over the quota, the server will
 issue an alert notifying the user that usage is close to or over the
 limit, permitting them to correct it. If delivery were not permitted
 in this case, the user would have no practical way of knowing that
@@ -633,23 +632,23 @@ different parts of the Unix filesystem.  This is intended to be used
 to allow hierarchies of mailboxes to be spread across multiple disks.
 
 
-Specifying Partitions with "create"
+Specifying Partitions with “create”
 -----------------------------------
 
 When an administrator creates a new mailbox, the name of the partition
 for the mailbox may be specified using an optional second argument to
-the "create" command.  Non-administrators are not permitted to specify
+the “create” command.  Non-administrators are not permitted to specify
 the partition of a mailbox.  If the partition is not specified, then
 the mailbox inherits the partition of its most immediate parent
 mailbox.  If the mailbox has no parent, it gets the partition
-specified in the "defaultpartition" configuration option.
+specified in the “defaultpartition” configuration option.
 
-The optional second argument to the "create" command can usually be
+The optional second argument to the “create” command can usually be
 given only when using a specialized Cyrus-aware administrative client
 such as "cyradm".
 
 
-Changing Partitions with "rename"
+Changing Partitions with “rename”
 ---------------------------------
 
 An administrator may change the partition of a mailbox by using the
@@ -675,15 +674,15 @@ POP3 Server
 
 The Cyrus IMAP server software comes with a compatibility POP3 server.
 Due to limitations in the POP3 protocol, the server can only access a
-user's "INBOX" and only one instance of a POP3 server may exist for
-any one user at any time.  While a POP3 server has a user's "INBOX"
+user’s "INBOX" and only one instance of a POP3 server may exist for
+any one user at any time.  While a POP3 server has a user’s "INBOX"
 open, expunge operations from any concurrent IMAP session will fail.
 
 When Kerberos login authentication is being used, the POP3 server uses
 the server identity "pop.host@realm" instead of "imap.host@realm",
-where "host" is the first component of the server's host name and
-"realm" is the server's Kerberos realm. When the POP3 server is
-invoked with the "-k" switch, the server exports MIT's KPOP protocol
+where "host" is the first component of the server’s host name and
+"realm" is the server’s Kerberos realm. When the POP3 server is
+invoked with the "-k" switch, the server exports MIT’s KPOP protocol
 instead of generic POP3.
 
 
@@ -724,7 +723,7 @@ directory contains the following files:
 message files
    There is one file per message, containing the message in **RFC
    822** format.  Lines in the message are separated by CRLF, not just
-   LF.  The file name of each message is the message's UID followed by
+   LF.  The file name of each message is the message’s UID followed by
    a dot (.).
 
    In netnews newsgroups, the message files instead follow the format
@@ -805,7 +804,7 @@ the quota root of each mailbox and the quota usage of each quota root.
 Removing Quota Roots
 --------------------
 
-To remove a quota root, remove the quota root's file.  Then run "quota
+To remove a quota root, remove the quota root’s file.  Then run "quota
 -f" to make the quota files consistent again.
 
 
@@ -878,8 +877,8 @@ Local Mail Transfer Protocol (lmtp)
 
 LMTP, the Local Mail Transfer Protocol, is a variant of SMTP design
 for transferring mail to the final message store.  LMTP allows MTAs to
-deliver "local" mail over a network.  This is an easy optimization so
-that the IMAP server doesn't need to maintain a queue of messages or
+deliver “local” mail over a network.  This is an easy optimization so
+that the IMAP server doesn’t need to maintain a queue of messages or
 run an MTA.
 
 The Cyrus server implements LMTP via the "lmtpd" daemon.  LMTP can
@@ -915,7 +914,7 @@ message per partition, and create hard links for all other recipients
 of the message.
 
 Single instance store can be turned off by using the
-"singleinstancestore" flag in the configuration file.
+“singleinstancestore” flag in the configuration file.
 
 
 Duplicate Delivery Suppression
@@ -927,7 +926,7 @@ Cyrus uses the duplicate delivery database to hold this information,
 and it looks approximately 3 days back in the default install.
 
 Duplicate delivery suppression can be turned off by using the
-"duplicatesuppression" flag in the configuration file.
+“duplicatesuppression” flag in the configuration file.
 
 
 Sieve, a Mail Filtering Language

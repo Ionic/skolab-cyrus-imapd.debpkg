@@ -1,4 +1,3 @@
-
 What annotations are available?
 *******************************
 
@@ -7,19 +6,19 @@ Cyrus annotations are based on **RFC 5464**.
 * **/admin** - Sets the administrator email address for the server.
   (See cyradm(8))
 
-* **/check** - Boolean value "true" or "false" that indicates
+* **/check** - Boolean value “true” or “false” that indicates
   whether this mailbox should be checked at regular intervals by the
   client. The interval in minutes is specified by the "/checkperiod"
   entry. (Draft RFC)
 
 * **/checkperiod** - Numeric value indicating a period of minutes
-  that the client uses to determine the interval of regular 'new mail'
+  that the client uses to determine the interval of regular ‘new mail’
   checks for the corresponding mailbox. (Draft RFC)
 
 * **/comment** - Sets a comment or description associated with the
   mailbox. (cyradm(8))
 
-* **/motd** - Sets a "message of the day". The message gets
+* **/motd** - Sets a “message of the day”. The message gets
   displayed as an ALERT after authentication.
 
 * **/sort** - Defines the default sort criteria [I-D.ietf-imapext-
@@ -36,7 +35,7 @@ Cyrus annotations are based on **RFC 5464**.
   extension (modification sequences) on the mailbox. (See cyradm(8))
 
 * **vendor/cmu/cyrus-imapd/duplicatedeliver** - Flag signalling that
-  we're allowing duplicate delivery of messages to the mailbox,
+  we’re allowing duplicate delivery of messages to the mailbox,
   overriding system-wide duplicate suppression. (Cyrus IMAP Server:
   Mailbox File Formats)
 
@@ -52,7 +51,7 @@ Cyrus annotations are based on **RFC 5464**.
 * **/vendor/cmu/cyrus-imapd/freespace** - Undocumented.
 
 * **/vendor/cmu/cyrus-imapd/lastpop** - (time_t) of the last pop3
-  login to this INBOX, used to enforce the "poptimeout" imapd.conf
+  login to this INBOX, used to enforce the “poptimeout” imapd.conf
   option. (Cyrus IMAP Server: Mailbox File Formats)
 
 * **vendor/cmu/cyrus-imapd/lastupdate** - (time_t) of the last time
@@ -65,7 +64,7 @@ Cyrus annotations are based on **RFC 5464**.
 * **/vendor/cmu/cyrus-imapd/partition** - Undocumented.
 
 * **/vendor/cmu/cyrus-imapd/pop3newuidl** - Flag signalling that
-  we're using "uidvalidity.uid" instead of just "uid" for the output
+  we’re using “uidvalidity.uid” instead of just “uid” for the output
   of the POP3 UIDL command. (Cyrus IMAP Server: Mailbox File Formats)
 
 * **/vendor/cmu/cyrus-imapd/serve** - Undocumented.

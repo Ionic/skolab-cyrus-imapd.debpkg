@@ -1,4 +1,3 @@
-
 **cyr_expire**
 **************
 
@@ -25,9 +24,9 @@ Cyrus databases, specifically:
 * expire entries from the duplicate delivery database, and
 
 * cleanse mailboxes of partially expunged messages (when using the
-  "delayed" expunge mode), and
+  “delayed” expunge mode), and
 
-* remove deleted mailboxes (when using the "delayed" delete mode),
+* remove deleted mailboxes (when using the “delayed” delete mode),
   and
 
 * expire entries from conversations databases, and
@@ -102,7 +101,7 @@ Options
 -D delete-duration
 
    Remove previously deleted mailboxes older than *delete-duration*
-   (when using the "delayed" delete mode). The value can be a floating
+   (when using the “delayed” delete mode). The value can be a floating
    point number, and may have a suffix to specify the unit of time.
    If no suffix, the value is number of days. Valid suffixes are **d**
    (days), **h** (hours), **m** (minutes) and **s** (seconds). This
@@ -119,7 +118,7 @@ Options
 -X expunge-duration
 
    Expunge previously deleted messages older than *expunge-duration*
-   (when using the "delayed" expunge mode). Format is the same as
+   (when using the “delayed” expunge mode). Format is the same as
    delete-duration.
 
 -c
@@ -139,12 +138,12 @@ Options
 -p mailbox-prefix
 
    Only find mailboxes starting with this prefix,  e.g.
-   "user.justgotspammedlots".
+   “user.justgotspammedlots”.
 
 -u userid
 
    Only find mailboxes belonging to this user,  e.g.
-   "justgotspammedlots@example.com".
+   “justgotspammedlots@example.com”.
 
 -t
 

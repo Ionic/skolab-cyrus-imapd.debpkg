@@ -1,4 +1,3 @@
-
 Cyrus Backups
 *************
 
@@ -109,7 +108,7 @@ The following components exist and appear to work:
 
 * recovery of data back into a Cyrus IMAP server
 
-The following components don't yet exist in a workable state -- these
+The following components don’t yet exist in a workable state – these
 tasks must be massaged through manually (with care):
 
 * reconstruct of backups.db from backup files
@@ -124,7 +123,7 @@ recoverable
 * mailbox message records, flags, and annotations
 
 The following types of information are currently backed up, but tools
-to recover them don't yet exist:
+to recover them don’t yet exist:
 
 * sieve scripts (but not active script status)
 
@@ -190,7 +189,7 @@ Cyrus Backups server
          operations. The replication protocol will transfer as many as
          1024 messages in a single sync operation, so, conservatively,
          this directory needs to contain enough storage for 1024 *
-         your maximum message size * number of running backupd's, plus
+         your maximum message size * number of running backupd’s, plus
          some wiggle room.
 
       backup_retention_days: 7
@@ -265,7 +264,7 @@ and must have been compiled with the "--enable-replication" configure
 option.  It does *not* need to be recompiled with the "--enable-
 backup" option.
 
-It's recommended to set up a dedicated replication channel for
+It’s recommended to set up a dedicated replication channel for
 backups, so that your backup replication can coexist independently of
 your other replication configurations
 
@@ -275,13 +274,13 @@ Add settings to imapd.conf(5) like (default values shown):
    The host name of your Cyrus Backup server
 
 *channel*_sync_port: csync
-   The port on which your Cyrus Backup server's backupd process
+   The port on which your Cyrus Backup server’s backupd process
    listens
 
-*channel*_sync_authname: ...
+*channel*_sync_authname: …
    Credentials for authenticating to the Cyrus Backup server
 
-*channel*_sync_password: ...
+*channel*_sync_password: …
    Credentials for authenticating to the Cyrus Backup server
 
 
@@ -290,17 +289,17 @@ Using rolling replication
 
 You can configure backups to use rolling replication.  Depending on
 the sync repeat interval you configure, this can be used to keep your
-backups very current -- potentially as current as your other replicas.
+backups very current – potentially as current as your other replicas.
 
 To configure rolling replication, add additional settings to
 imapd.conf(5) like:
 
 sync_log: 1
-   Enable sync log if it wasn't already.
+   Enable sync log if it wasn’t already.
 
 sync_log_channels: *channel*
-   Add a new channel "*channel*" to whatever was already here. Suggest
-   calling this "backup"
+   Add a new channel “*channel*” to whatever was already here. Suggest
+   calling this “backup”
 
 *channel*_sync_repeat_interval: 1
    Minimum time in seconds between rolling replication runs. Smaller
@@ -371,19 +370,19 @@ Administration
 Storage requirements
 --------------------
 
-It's not really known yet how to predict the storage requirements for
+It’s not really known yet how to predict the storage requirements for
 a backup server. Experimentation in dev environment suggests around
 20-40% compressed backup file size relative to the backed up data,
 depending on compact settings, but this is with relatively tiny
 mailboxes and non-pathological data.
 
 The backup staging spool conservatively needs to be large enough to
-hold an entire sync's worth of message files at once. Which is your
+hold an entire sync’s worth of message files at once. Which is your
 maximum message size * 1024 messages * the number of backupd processes
-you're running, plus some wiggle room probably. In practice it'll
+you’re running, plus some wiggle room probably. In practice it’ll
 probably not hit this limit unless someone is trying to. (Most users,
-I suspect, don't have 1024 maximum-sized messages in their account, or
-don't receive them all at once anyway.)
+I suspect, don’t have 1024 maximum-sized messages in their account, or
+don’t receive them all at once anyway.)
 
 Certain invocations of ctl_backups and cyr_backup also require staging
 spool space, due to the way replication protocol (and thus backup
@@ -397,8 +396,8 @@ Once a Cyrus Backup system is configured and running, new users that
 are created on the IMAP servers will be backed up seamlessly without
 administrator intervention.
 
-The very first backup taken of a pre-existing mailbox will be big --
-the entire mailbox in one hit. It's suggested that, when initially
+The very first backup taken of a pre-existing mailbox will be big –
+the entire mailbox in one hit. It’s suggested that, when initially
 provisioning a Cyrus Backup server for an existing Cyrus IMAP
 environment, that the sync_client(8) commands be run carefully, for a
 small group of mailboxes at a time, until all/most of your mailboxes
@@ -429,11 +428,11 @@ will never block.
 Moving backup files to different backup partitions
 --------------------------------------------------
 
-There's no tool for this (yet). To do it manually, stop backupd, copy
+There’s no tool for this (yet). To do it manually, stop backupd, copy
 the files to the new partition, then use cyr_dbtool(8) to update the
-user's backups.db entry to point to the new location. Run the
+user’s backups.db entry to point to the new location. Run the
 ctl_backups(8) "verify" command on both the new filename ("-f" mode)
-and the user's userid ("-u" mode) to ensure everything is okay, then
+and the user’s userid ("-u" mode) to ensure everything is okay, then
 restart backupd.
 
 
@@ -444,7 +443,7 @@ Just run sync_client(8) by hand with appropriate options (as cyrus
 user, of course). See its man page for ways of specifying items to
 replicate.
 
-If the IMAP server with the user's mail has been configured with the
+If the IMAP server with the user’s mail has been configured with the
 "xbackup_enabled: yes" option in imapd.conf(5), then an admin user can
 cause a backup to occur by sending the IMAP server an "XBACKUP"
 command.
@@ -454,15 +453,15 @@ What about tape backups?
 ------------------------
 
 As long as backupd, ctl_backups and cyr_backup are not currently
-running (and assuming no-one's poking around in things otherwise),
-it's safe to take/restore a filesystem snapshot of backup partitions.
+running (and assuming no-one’s poking around in things otherwise),
+it’s safe to take/restore a filesystem snapshot of backup partitions.
 So to schedule, say, a nightly tape dump of your Cyrus Backup server,
 make your cron job shut down Cyrus, make the copy, then restart Cyrus.
 
 Meanwhile, your Cyrus IMAP servers are still online and available.
 Regular backups will resume once your backupd is running again.
 
-If you can work at a finer granularity than file system, you don't
+If you can work at a finer granularity than file system, you don’t
 need to shut down backupd. Just use the ctl_backups(8) "lock" command
 to hold a lock on each backup while you work with its files, and the
 rest of the backup system will work around that.
@@ -471,7 +470,7 @@ Restoring is more complicated, depending on what you actually need to
 do: when you restart the backupd after restoring a filesystem
 snapshot, the next time your Cyrus IMAP server replicates to it, the
 restored backups will be brought up to date. Probably not what you
-wanted -- so don't restart backupd until you've done whatever you were
+wanted – so don’t restart backupd until you’ve done whatever you were
 doing.
 
 
@@ -480,7 +479,7 @@ Multiple IMAP servers, one backup server
 
 This is fine, as long as each user being backed up is only being
 backed up by one server (or they are otherwise synchronised). If IMAP
-servers have different ideas about the state of a user's mailboxes,
+servers have different ideas about the state of a user’s mailboxes,
 one of those will be in sync with the backup server and the other will
 get a lot of replication failures.
 
@@ -539,11 +538,10 @@ arguments across multiple/all backups
 Supported operations:
 
 compact
-   Reduce backups' disk usage by:
+   Reduce backups’ disk usage by:
 
-   * combining small chunks for better gzip compression --
-     especially important for hot backups, which produce many tiny
-     chunks
+   * combining small chunks for better gzip compression – especially
+     important for hot backups, which produce many tiny chunks
 
    * removing deleted content that has passed its retention period
 
@@ -560,19 +558,18 @@ reindex
    data with non-cyrus tools.
 
 stat
-   Show statistics about backups -- disk usage, compression ratio,
-   etc.
+   Show statistics about backups – disk usage, compression ratio, etc.
 
 verify
    Deep verification of backups. Verifies that:
 
    * Checksums for each chunk in index match data
 
-   * Mailbox states are in the chunk that the index says they're in
+   * Mailbox states are in the chunk that the index says they’re in
 
    * Mailbox states match indexed states
 
-   * Messages are in the chunk the index says they're in
+   * Messages are in the chunk the index says they’re in
 
    * Message data checksum matches indexed checksums
 
@@ -590,7 +587,7 @@ Supported operations
 list [ chunks | mailboxes | messages | all ]
    Line-per-item listing of information stored in a backup.
 
-show [ chunks | mailboxes | messages ] items...
+show [ chunks | mailboxes | messages ] items…
    Paragraph-per-item listing of information for specified items.
    Chunk items are specified by id, mailboxes by mboxname or uniqueid,
    messages by guid.

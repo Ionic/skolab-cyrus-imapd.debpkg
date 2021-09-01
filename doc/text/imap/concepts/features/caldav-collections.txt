@@ -1,4 +1,3 @@
-
 CalDAV Collections
 ******************
 

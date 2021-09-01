@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "IMCLIENT" "3" "May 10, 2021" "3.4.1" "Cyrus IMAP"
+.TH "IMCLIENT" "3" "September 01, 2021" "3.4.2" "Cyrus IMAP"
 .SH NAME
 imclient \- Cyrus IMAP documentation
 .
@@ -185,9 +185,9 @@ in \fIavailmech\fP\&.  The argument \fIuser\fP, if not NULL, specifies the user
 to authenticate as. If the user is NULL, the current user is used.
 The argument \fIprotallowed\fP is a bitmask of permissible protection
 mechanisms.
-On success, 0 is returned.  On failure (i.e., "BAD" keyboard, or
+On success, 0 is returned.  On failure (i.e., “BAD” keyboard, or
 no authentication mechanisms worked), 1 is returned. On extreme
-failure (premature "OK"), 2 is returned.
+failure (premature “OK”), 2 is returned.
 .TP
 \fBimclient_havetls()\fP
 Returns a Boolean indicating whether the \fBimclient\fP library was
@@ -205,7 +205,7 @@ The \fICAfile\fP and \fICApath\fP arguments specify a file or directory,
 respectively, of CA certificates for validating server
 certificates. (See \fBSSL_CTX_load_verify_locations(3)\fP for
 details.)  If both of these are NULL, the client will be unable to
-validate the server\(aqs certificate, in which case the connection may
+validate the server’s certificate, in which case the connection may
 succeed but a warning will be printed to stdout.
 .UNINDENT
 .SH EXAMPLES

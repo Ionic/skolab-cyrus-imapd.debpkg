@@ -1,4 +1,3 @@
-
 Does the Cyrus Murder support High Availability configurations?
 ***************************************************************
 
@@ -21,7 +20,7 @@ temporary failures, so the sending MTA should continue to queue the
 mail.
 
 The failure of a backend will result in a partial system wide failure
--- the mailboxes that were stored on that backend will no longer be
+– the mailboxes that were stored on that backend will no longer be
 available for use by any users. Delivery of new mail will again be
 tempfailed, and queued by the sending MTA.
 

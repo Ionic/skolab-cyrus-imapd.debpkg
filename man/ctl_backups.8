@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "CTL_BACKUPS" "8" "May 10, 2021" "3.4.1" "Cyrus IMAP"
+.TH "CTL_BACKUPS" "8" "September 01, 2021" "3.4.2" "Cyrus IMAP"
 .SH NAME
 ctl_backups \- Cyrus IMAP documentation
 .
@@ -166,10 +166,10 @@ The default is to log the error, and continue with the next backup.
 .INDENT 0.0
 .TP
 .B \-V
-Don\(aqt verify backup checksums for read\-only operations.
+Don’t verify backup checksums for read\-only operations.
 .sp
 The read\-only operations \fBlist\fP and \fBstat\fP will normally perform a
-"quick" verification of the backup file being read, which checks the
+“quick” verification of the backup file being read, which checks the
 checksums of the most recent chunk.  This can be slow for backups
 whose most recent backup chunk is very large.
 .sp

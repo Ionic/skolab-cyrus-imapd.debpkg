@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.4.17-caldav-beta6 Release Notes
 ********************************************
 
@@ -19,7 +18,7 @@ Changes to the Cyrus IMAP Server since 2.4.17-caldav-beta5
 
 * Fixed handling of telemetry log file descriptors and truncation
 
-* Allow GET on calendar collections for "exporting" entire calendar
+* Allow GET on calendar collections for “exporting” entire calendar
 
 * Fixed POST on calendar collection (add-member)
 

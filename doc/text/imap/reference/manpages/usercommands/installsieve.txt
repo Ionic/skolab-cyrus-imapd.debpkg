@@ -1,4 +1,3 @@
-
 **installsieve**
 ****************
 
@@ -66,7 +65,7 @@ Options
 -g  name
 
    Get the sieve script with *name* and save it to disk with a
-   ".script" extension. If a file with that name already exists it is
+   “.script” extension. If a file with that name already exists it is
    overwritten.
 
 -u  userid

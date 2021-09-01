@@ -8,11 +8,17 @@
 
 #define yy_create_buffer addr_create_buffer
 #define yy_delete_buffer addr_delete_buffer
-#define yy_flex_debug addr_flex_debug
+#define yy_scan_buffer addr_scan_buffer
+#define yy_scan_string addr_scan_string
+#define yy_scan_bytes addr_scan_bytes
 #define yy_init_buffer addr_init_buffer
 #define yy_flush_buffer addr_flush_buffer
 #define yy_load_buffer_state addr_load_buffer_state
 #define yy_switch_to_buffer addr_switch_to_buffer
+#define yypush_buffer_state addrpush_buffer_state
+#define yypop_buffer_state addrpop_buffer_state
+#define yyensure_buffer_stack addrensure_buffer_stack
+#define yy_flex_debug addr_flex_debug
 #define yyin addrin
 #define yyleng addrleng
 #define yylex addrlex
@@ -28,9 +34,243 @@
 #define FLEX_SCANNER
 #define YY_FLEX_MAJOR_VERSION 2
 #define YY_FLEX_MINOR_VERSION 6
-#define YY_FLEX_SUBMINOR_VERSION 1
+#define YY_FLEX_SUBMINOR_VERSION 4
 #if YY_FLEX_SUBMINOR_VERSION > 0
 #define FLEX_BETA
+#endif
+
+#ifdef yy_create_buffer
+#define addr_create_buffer_ALREADY_DEFINED
+#else
+#define yy_create_buffer addr_create_buffer
+#endif
+
+#ifdef yy_delete_buffer
+#define addr_delete_buffer_ALREADY_DEFINED
+#else
+#define yy_delete_buffer addr_delete_buffer
+#endif
+
+#ifdef yy_scan_buffer
+#define addr_scan_buffer_ALREADY_DEFINED
+#else
+#define yy_scan_buffer addr_scan_buffer
+#endif
+
+#ifdef yy_scan_string
+#define addr_scan_string_ALREADY_DEFINED
+#else
+#define yy_scan_string addr_scan_string
+#endif
+
+#ifdef yy_scan_bytes
+#define addr_scan_bytes_ALREADY_DEFINED
+#else
+#define yy_scan_bytes addr_scan_bytes
+#endif
+
+#ifdef yy_init_buffer
+#define addr_init_buffer_ALREADY_DEFINED
+#else
+#define yy_init_buffer addr_init_buffer
+#endif
+
+#ifdef yy_flush_buffer
+#define addr_flush_buffer_ALREADY_DEFINED
+#else
+#define yy_flush_buffer addr_flush_buffer
+#endif
+
+#ifdef yy_load_buffer_state
+#define addr_load_buffer_state_ALREADY_DEFINED
+#else
+#define yy_load_buffer_state addr_load_buffer_state
+#endif
+
+#ifdef yy_switch_to_buffer
+#define addr_switch_to_buffer_ALREADY_DEFINED
+#else
+#define yy_switch_to_buffer addr_switch_to_buffer
+#endif
+
+#ifdef yypush_buffer_state
+#define addrpush_buffer_state_ALREADY_DEFINED
+#else
+#define yypush_buffer_state addrpush_buffer_state
+#endif
+
+#ifdef yypop_buffer_state
+#define addrpop_buffer_state_ALREADY_DEFINED
+#else
+#define yypop_buffer_state addrpop_buffer_state
+#endif
+
+#ifdef yyensure_buffer_stack
+#define addrensure_buffer_stack_ALREADY_DEFINED
+#else
+#define yyensure_buffer_stack addrensure_buffer_stack
+#endif
+
+#ifdef yylex
+#define addrlex_ALREADY_DEFINED
+#else
+#define yylex addrlex
+#endif
+
+#ifdef yyrestart
+#define addrrestart_ALREADY_DEFINED
+#else
+#define yyrestart addrrestart
+#endif
+
+#ifdef yylex_init
+#define addrlex_init_ALREADY_DEFINED
+#else
+#define yylex_init addrlex_init
+#endif
+
+#ifdef yylex_init_extra
+#define addrlex_init_extra_ALREADY_DEFINED
+#else
+#define yylex_init_extra addrlex_init_extra
+#endif
+
+#ifdef yylex_destroy
+#define addrlex_destroy_ALREADY_DEFINED
+#else
+#define yylex_destroy addrlex_destroy
+#endif
+
+#ifdef yyget_debug
+#define addrget_debug_ALREADY_DEFINED
+#else
+#define yyget_debug addrget_debug
+#endif
+
+#ifdef yyset_debug
+#define addrset_debug_ALREADY_DEFINED
+#else
+#define yyset_debug addrset_debug
+#endif
+
+#ifdef yyget_extra
+#define addrget_extra_ALREADY_DEFINED
+#else
+#define yyget_extra addrget_extra
+#endif
+
+#ifdef yyset_extra
+#define addrset_extra_ALREADY_DEFINED
+#else
+#define yyset_extra addrset_extra
+#endif
+
+#ifdef yyget_in
+#define addrget_in_ALREADY_DEFINED
+#else
+#define yyget_in addrget_in
+#endif
+
+#ifdef yyset_in
+#define addrset_in_ALREADY_DEFINED
+#else
+#define yyset_in addrset_in
+#endif
+
+#ifdef yyget_out
+#define addrget_out_ALREADY_DEFINED
+#else
+#define yyget_out addrget_out
+#endif
+
+#ifdef yyset_out
+#define addrset_out_ALREADY_DEFINED
+#else
+#define yyset_out addrset_out
+#endif
+
+#ifdef yyget_leng
+#define addrget_leng_ALREADY_DEFINED
+#else
+#define yyget_leng addrget_leng
+#endif
+
+#ifdef yyget_text
+#define addrget_text_ALREADY_DEFINED
+#else
+#define yyget_text addrget_text
+#endif
+
+#ifdef yyget_lineno
+#define addrget_lineno_ALREADY_DEFINED
+#else
+#define yyget_lineno addrget_lineno
+#endif
+
+#ifdef yyset_lineno
+#define addrset_lineno_ALREADY_DEFINED
+#else
+#define yyset_lineno addrset_lineno
+#endif
+
+#ifdef yywrap
+#define addrwrap_ALREADY_DEFINED
+#else
+#define yywrap addrwrap
+#endif
+
+#ifdef yyalloc
+#define addralloc_ALREADY_DEFINED
+#else
+#define yyalloc addralloc
+#endif
+
+#ifdef yyrealloc
+#define addrrealloc_ALREADY_DEFINED
+#else
+#define yyrealloc addrrealloc
+#endif
+
+#ifdef yyfree
+#define addrfree_ALREADY_DEFINED
+#else
+#define yyfree addrfree
+#endif
+
+#ifdef yytext
+#define addrtext_ALREADY_DEFINED
+#else
+#define yytext addrtext
+#endif
+
+#ifdef yyleng
+#define addrleng_ALREADY_DEFINED
+#else
+#define yyleng addrleng
+#endif
+
+#ifdef yyin
+#define addrin_ALREADY_DEFINED
+#else
+#define yyin addrin
+#endif
+
+#ifdef yyout
+#define addrout_ALREADY_DEFINED
+#else
+#define yyout addrout
+#endif
+
+#ifdef yy_flex_debug
+#define addr_flex_debug_ALREADY_DEFINED
+#else
+#define yy_flex_debug addr_flex_debug
+#endif
+
+#ifdef yylineno
+#define addrlineno_ALREADY_DEFINED
+#else
+#define yylineno addrlineno
 #endif
 
 /* First, we deal with  platform-specific or compiler-specific issues. */
@@ -103,9 +343,15 @@ typedef unsigned int flex_uint32_t;
 #define UINT32_MAX             (4294967295U)
 #endif
 
+#ifndef SIZE_MAX
+#define SIZE_MAX               (~(size_t)0)
+#endif
+
 #endif /* ! C99 */
 
 #endif /* ! FLEXINT_H */
+
+/* begin standard C++ headers. */
 
 /* TODO: this is always defined, so inline it */
 #define yyconst const
@@ -119,32 +365,26 @@ typedef unsigned int flex_uint32_t;
 /* Returned upon end-of-file. */
 #define YY_NULL 0
 
-/* Promotes a possibly negative, possibly signed char to an unsigned
- * integer for use as an array index.  If the signed char is negative,
- * we want to instead treat it as an 8-bit unsigned char, hence the
- * double cast.
+/* Promotes a possibly negative, possibly signed char to an
+ *   integer in range [0..255] for use as an array index.
  */
-#define YY_SC_TO_UI(c) ((unsigned int) (unsigned char) c)
+#define YY_SC_TO_UI(c) ((YY_CHAR) (c))
 
 /* Enter a start condition.  This macro really ought to take a parameter,
  * but we do it the disgusting crufty way forced on us by the ()-less
  * definition of BEGIN.
  */
 #define BEGIN (yy_start) = 1 + 2 *
-
 /* Translate the current start state into a value that can be later handed
  * to BEGIN to return to the state.  The YYSTATE alias is for lex
  * compatibility.
  */
 #define YY_START (((yy_start) - 1) / 2)
 #define YYSTATE YY_START
-
 /* Action number for EOF rule of a given start state. */
 #define YY_STATE_EOF(state) (YY_END_OF_BUFFER + state + 1)
-
 /* Special action meaning "start processing a new file". */
-#define YY_NEW_FILE addrrestart(addrin  )
-
+#define YY_NEW_FILE yyrestart( yyin  )
 #define YY_END_OF_BUFFER_CHAR 0
 
 /* Size of default input buffer. */
@@ -174,14 +414,14 @@ typedef struct yy_buffer_state *YY_BUFFER_STATE;
 typedef size_t yy_size_t;
 #endif
 
-extern int addrleng;
+extern int yyleng;
 
-extern FILE *addrin, *addrout;
+extern FILE *yyin, *yyout;
 
 #define EOB_ACT_CONTINUE_SCAN 0
 #define EOB_ACT_END_OF_FILE 1
 #define EOB_ACT_LAST_MATCH 2
-
+    
     #define YY_LESS_LINENO(n)
     #define YY_LINENO_REWIND_TO(ptr)
     
@@ -189,16 +429,15 @@ extern FILE *addrin, *addrout;
 #define yyless(n) \
 	do \
 		{ \
-		/* Undo effects of setting up addrtext. */ \
+		/* Undo effects of setting up yytext. */ \
         int yyless_macro_arg = (n); \
         YY_LESS_LINENO(yyless_macro_arg);\
 		*yy_cp = (yy_hold_char); \
 		YY_RESTORE_YY_MORE_OFFSET \
 		(yy_c_buf_p) = yy_cp = yy_bp + yyless_macro_arg - YY_MORE_ADJ; \
-		YY_DO_BEFORE_ACTION; /* set up addrtext again */ \
+		YY_DO_BEFORE_ACTION; /* set up yytext again */ \
 		} \
 	while ( 0 )
-
 #define unput(c) yyunput( c, (yytext_ptr)  )
 
 #ifndef YY_STRUCT_YY_BUFFER_STATE
@@ -258,8 +497,8 @@ struct yy_buffer_state
 	 * possible backing-up.
 	 *
 	 * When we actually see the EOF, we change the status to "new"
-	 * (via addrrestart()), so that the user can continue scanning by
-	 * just pointing addrin at a new input file.
+	 * (via yyrestart()), so that the user can continue scanning by
+	 * just pointing yyin at a new input file.
 	 */
 #define YY_BUFFER_EOF_PENDING 2
 
@@ -280,109 +519,101 @@ static YY_BUFFER_STATE * yy_buffer_stack = NULL; /**< Stack as an array. */
 #define YY_CURRENT_BUFFER ( (yy_buffer_stack) \
                           ? (yy_buffer_stack)[(yy_buffer_stack_top)] \
                           : NULL)
-
 /* Same as previous macro, but useful when we know that the buffer stack is not
  * NULL or when we need an lvalue. For internal use only.
  */
 #define YY_CURRENT_BUFFER_LVALUE (yy_buffer_stack)[(yy_buffer_stack_top)]
 
-/* yy_hold_char holds the character lost when addrtext is formed. */
+/* yy_hold_char holds the character lost when yytext is formed. */
 static char yy_hold_char;
 static int yy_n_chars;		/* number of characters read into yy_ch_buf */
-int addrleng;
+int yyleng;
 
 /* Points to current character in buffer. */
 static char *yy_c_buf_p = NULL;
 static int yy_init = 0;		/* whether we need to initialize */
 static int yy_start = 0;	/* start state number */
 
-/* Flag which is used to allow addrwrap()'s to do buffer switches
- * instead of setting up a fresh addrin.  A bit of a hack ...
+/* Flag which is used to allow yywrap()'s to do buffer switches
+ * instead of setting up a fresh yyin.  A bit of a hack ...
  */
 static int yy_did_buffer_switch_on_eof;
 
-void addrrestart (FILE *input_file  );
-void addr_switch_to_buffer (YY_BUFFER_STATE new_buffer  );
-YY_BUFFER_STATE addr_create_buffer (FILE *file,int size  );
-void addr_delete_buffer (YY_BUFFER_STATE b  );
-void addr_flush_buffer (YY_BUFFER_STATE b  );
-void addrpush_buffer_state (YY_BUFFER_STATE new_buffer  );
-void addrpop_buffer_state (void );
+void yyrestart ( FILE *input_file  );
+void yy_switch_to_buffer ( YY_BUFFER_STATE new_buffer  );
+YY_BUFFER_STATE yy_create_buffer ( FILE *file, int size  );
+void yy_delete_buffer ( YY_BUFFER_STATE b  );
+void yy_flush_buffer ( YY_BUFFER_STATE b  );
+void yypush_buffer_state ( YY_BUFFER_STATE new_buffer  );
+void yypop_buffer_state ( void );
 
-static void addrensure_buffer_stack (void );
-static void addr_load_buffer_state (void );
-static void addr_init_buffer (YY_BUFFER_STATE b,FILE *file  );
+static void yyensure_buffer_stack ( void );
+static void yy_load_buffer_state ( void );
+static void yy_init_buffer ( YY_BUFFER_STATE b, FILE *file  );
+#define YY_FLUSH_BUFFER yy_flush_buffer( YY_CURRENT_BUFFER )
 
-#define YY_FLUSH_BUFFER addr_flush_buffer(YY_CURRENT_BUFFER )
+YY_BUFFER_STATE yy_scan_buffer ( char *base, yy_size_t size  );
+YY_BUFFER_STATE yy_scan_string ( const char *yy_str  );
+YY_BUFFER_STATE yy_scan_bytes ( const char *bytes, int len  );
 
-YY_BUFFER_STATE addr_scan_buffer (char *base,yy_size_t size  );
-YY_BUFFER_STATE addr_scan_string (yyconst char *yy_str  );
-YY_BUFFER_STATE addr_scan_bytes (yyconst char *bytes,int len  );
+void *yyalloc ( yy_size_t  );
+void *yyrealloc ( void *, yy_size_t  );
+void yyfree ( void *  );
 
-void *addralloc (yy_size_t  );
-void *addrrealloc (void *,yy_size_t  );
-void addrfree (void *  );
-
-#define yy_new_buffer addr_create_buffer
-
+#define yy_new_buffer yy_create_buffer
 #define yy_set_interactive(is_interactive) \
 	{ \
 	if ( ! YY_CURRENT_BUFFER ){ \
-        addrensure_buffer_stack (); \
+        yyensure_buffer_stack (); \
 		YY_CURRENT_BUFFER_LVALUE =    \
-            addr_create_buffer(addrin,YY_BUF_SIZE ); \
+            yy_create_buffer( yyin, YY_BUF_SIZE ); \
 	} \
 	YY_CURRENT_BUFFER_LVALUE->yy_is_interactive = is_interactive; \
 	}
-
 #define yy_set_bol(at_bol) \
 	{ \
 	if ( ! YY_CURRENT_BUFFER ){\
-        addrensure_buffer_stack (); \
+        yyensure_buffer_stack (); \
 		YY_CURRENT_BUFFER_LVALUE =    \
-            addr_create_buffer(addrin,YY_BUF_SIZE ); \
+            yy_create_buffer( yyin, YY_BUF_SIZE ); \
 	} \
 	YY_CURRENT_BUFFER_LVALUE->yy_at_bol = at_bol; \
 	}
-
 #define YY_AT_BOL() (YY_CURRENT_BUFFER_LVALUE->yy_at_bol)
 
 /* Begin user sect3 */
 
 #define addrwrap() (/*CONSTCOND*/1)
 #define YY_SKIP_YYWRAP
+typedef flex_uint8_t YY_CHAR;
 
-typedef unsigned char YY_CHAR;
-
-FILE *addrin = NULL, *addrout = NULL;
+FILE *yyin = NULL, *yyout = NULL;
 
 typedef int yy_state_type;
 
-extern int addrlineno;
+extern int yylineno;
+int yylineno = 1;
 
-int addrlineno = 1;
-
-extern char *addrtext;
+extern char *yytext;
 #ifdef yytext_ptr
 #undef yytext_ptr
 #endif
-#define yytext_ptr addrtext
+#define yytext_ptr yytext
 
-static yy_state_type yy_get_previous_state (void );
-static yy_state_type yy_try_NUL_trans (yy_state_type current_state  );
-static int yy_get_next_buffer (void );
-static void yynoreturn yy_fatal_error (yyconst char* msg  );
+static yy_state_type yy_get_previous_state ( void );
+static yy_state_type yy_try_NUL_trans ( yy_state_type current_state  );
+static int yy_get_next_buffer ( void );
+static void yynoreturn yy_fatal_error ( const char* msg  );
 
 /* Done after the current pattern has been matched and before the
- * corresponding action - sets up addrtext.
+ * corresponding action - sets up yytext.
  */
 #define YY_DO_BEFORE_ACTION \
 	(yytext_ptr) = yy_bp; \
-	addrleng = (int) (yy_cp - yy_bp); \
+	yyleng = (int) (yy_cp - yy_bp); \
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
-
 #define YY_NUM_RULES 15
 #define YY_END_OF_BUFFER 16
 /* This struct is not used in this scanner,
@@ -392,7 +623,7 @@ struct yy_trans_info
 	flex_int32_t yy_verify;
 	flex_int32_t yy_nxt;
 	};
-static yyconst flex_int16_t yy_accept[40] =
+static const flex_int16_t yy_accept[40] =
     {   0,
         0,    0,    8,    8,   10,   10,   12,   12,   16,    5,
         5,    6,    6,    1,    3,    4,    7,    2,    8,   15,
@@ -400,7 +631,7 @@ static yyconst flex_int16_t yy_accept[40] =
         5,    6,    8,    0,   10,    0,   12,    0,    0
     } ;
 
-static yyconst YY_CHAR yy_ec[256] =
+static const YY_CHAR yy_ec[256] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    2,    3,
         1,    1,    4,    1,    1,    1,    1,    1,    1,    1,
@@ -432,13 +663,13 @@ static yyconst YY_CHAR yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static yyconst YY_CHAR yy_meta[14] =
+static const YY_CHAR yy_meta[14] =
     {   0,
         1,    2,    3,    4,    5,    6,    7,    7,    8,    9,
         8,    9,   10
     } ;
 
-static yyconst flex_uint16_t yy_base[48] =
+static const flex_int16_t yy_base[48] =
     {   0,
         0,    0,   11,   20,   29,   39,   49,   60,   27,    0,
        73,    0,    0,  182,  182,  182,  182,  182,   14,  182,
@@ -447,7 +678,7 @@ static yyconst flex_uint16_t yy_base[48] =
       118,  128,  138,  147,  152,  162,  172
     } ;
 
-static yyconst flex_int16_t yy_def[48] =
+static const flex_int16_t yy_def[48] =
     {   0,
        39,    1,   40,   40,   41,   41,   42,   42,   39,   43,
        39,   44,   44,   39,   39,   39,   39,   39,   45,   39,
@@ -456,7 +687,7 @@ static yyconst flex_int16_t yy_def[48] =
        39,   39,   39,   39,   39,   39,   39
     } ;
 
-static yyconst flex_uint16_t yy_nxt[196] =
+static const flex_int16_t yy_nxt[196] =
     {   0,
        10,   11,   12,   13,   13,   14,   15,   16,   17,   18,
        17,   17,   10,   20,   20,   38,   21,   36,   34,   38,
@@ -482,7 +713,7 @@ static yyconst flex_uint16_t yy_nxt[196] =
 
     } ;
 
-static yyconst flex_int16_t yy_chk[196] =
+static const flex_int16_t yy_chk[196] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    3,    3,   37,    3,   35,   33,   26,
@@ -511,8 +742,8 @@ static yyconst flex_int16_t yy_chk[196] =
 static yy_state_type yy_last_accepting_state;
 static char *yy_last_accepting_cpos;
 
-extern int addr_flex_debug;
-int addr_flex_debug = 0;
+extern int yy_flex_debug;
+int yy_flex_debug = 0;
 
 /* The intent behind this definition is that it'll catch
  * any uses of REJECT which flex missed.
@@ -521,7 +752,7 @@ int addr_flex_debug = 0;
 #define yymore() yymore_used_but_not_detected
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
-char *addrtext;
+char *yytext;
 #line 1 "sieve/addr-lex.l"
 #line 2 "sieve/addr-lex.l"
 /*
@@ -575,9 +806,10 @@ void addrerror(void*, const char *);
 
 static int ncom;        /* number of open comments */
 #define YY_DECL int addrlex(YYSTYPE* addrlval __attribute__((unused)), void* parse_script)
+#line 810 "sieve/addr-lex.c"
 #define YY_NO_INPUT 1
 
-#line 581 "sieve/addr-lex.c"
+#line 813 "sieve/addr-lex.c"
 
 #define INITIAL 0
 #define QSTRING 1
@@ -596,36 +828,36 @@ static int ncom;        /* number of open comments */
 #define YY_EXTRA_TYPE void *
 #endif
 
-static int yy_init_globals (void );
+static int yy_init_globals ( void );
 
 /* Accessor methods to globals.
    These are made visible to non-reentrant scanners for convenience. */
 
-int addrlex_destroy (void );
+int yylex_destroy ( void );
 
-int addrget_debug (void );
+int yyget_debug ( void );
 
-void addrset_debug (int debug_flag  );
+void yyset_debug ( int debug_flag  );
 
-YY_EXTRA_TYPE addrget_extra (void );
+YY_EXTRA_TYPE yyget_extra ( void );
 
-void addrset_extra (YY_EXTRA_TYPE user_defined  );
+void yyset_extra ( YY_EXTRA_TYPE user_defined  );
 
-FILE *addrget_in (void );
+FILE *yyget_in ( void );
 
-void addrset_in  (FILE * _in_str  );
+void yyset_in  ( FILE * _in_str  );
 
-FILE *addrget_out (void );
+FILE *yyget_out ( void );
 
-void addrset_out  (FILE * _out_str  );
+void yyset_out  ( FILE * _out_str  );
 
-			int addrget_leng (void );
+			int yyget_leng ( void );
 
-char *addrget_text (void );
+char *yyget_text ( void );
 
-int addrget_lineno (void );
+int yyget_lineno ( void );
 
-void addrset_lineno (int _line_number  );
+void yyset_lineno ( int _line_number  );
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -633,9 +865,9 @@ void addrset_lineno (int _line_number  );
 
 #ifndef YY_SKIP_YYWRAP
 #ifdef __cplusplus
-extern "C" int addrwrap (void );
+extern "C" int yywrap ( void );
 #else
-extern int addrwrap (void );
+extern int yywrap ( void );
 #endif
 #endif
 
@@ -644,19 +876,18 @@ extern int addrwrap (void );
 #endif
 
 #ifndef yytext_ptr
-static void yy_flex_strncpy (char *,yyconst char *,int );
+static void yy_flex_strncpy ( char *, const char *, int );
 #endif
 
 #ifdef YY_NEED_STRLEN
-static int yy_flex_strlen (yyconst char * );
+static int yy_flex_strlen ( const char * );
 #endif
 
 #ifndef YY_NO_INPUT
-
 #ifdef __cplusplus
-static int yyinput (void );
+static int yyinput ( void );
 #else
-static int input (void );
+static int input ( void );
 #endif
 
 #endif
@@ -676,7 +907,7 @@ static int input (void );
 /* This used to be an fputs(), but since the string might contain NUL's,
  * we now use fwrite().
  */
-#define ECHO do { if (fwrite( addrtext, (size_t) addrleng, 1, addrout )) {} } while (0)
+#define ECHO do { if (fwrite( yytext, (size_t) yyleng, 1, yyout )) {} } while (0)
 #endif
 
 /* Gets input and stuffs it into "buf".  number of characters read, or YY_NULL,
@@ -687,20 +918,20 @@ static int input (void );
 	if ( YY_CURRENT_BUFFER_LVALUE->yy_is_interactive ) \
 		{ \
 		int c = '*'; \
-		size_t n; \
+		int n; \
 		for ( n = 0; n < max_size && \
-			     (c = getc( addrin )) != EOF && c != '\n'; ++n ) \
+			     (c = getc( yyin )) != EOF && c != '\n'; ++n ) \
 			buf[n] = (char) c; \
 		if ( c == '\n' ) \
 			buf[n++] = (char) c; \
-		if ( c == EOF && ferror( addrin ) ) \
+		if ( c == EOF && ferror( yyin ) ) \
 			YY_FATAL_ERROR( "input in flex scanner failed" ); \
 		result = n; \
 		} \
 	else \
 		{ \
 		errno=0; \
-		while ( (result = (int) fread(buf, 1, max_size, addrin))==0 && ferror(addrin)) \
+		while ( (result = (int) fread(buf, 1, (yy_size_t) max_size, yyin)) == 0 && ferror(yyin)) \
 			{ \
 			if( errno != EINTR) \
 				{ \
@@ -708,7 +939,7 @@ static int input (void );
 				break; \
 				} \
 			errno=0; \
-			clearerr(addrin); \
+			clearerr(yyin); \
 			} \
 		}\
 \
@@ -741,12 +972,12 @@ static int input (void );
 #ifndef YY_DECL
 #define YY_DECL_IS_OURS 1
 
-extern int addrlex (void);
+extern int yylex (void);
 
-#define YY_DECL int addrlex (void)
+#define YY_DECL int yylex (void)
 #endif /* !YY_DECL */
 
-/* Code executed at the beginning of each rule, after addrtext and addrleng
+/* Code executed at the beginning of each rule, after yytext and yyleng
  * have been set up.
  */
 #ifndef YY_USER_ACTION
@@ -780,32 +1011,32 @@ YY_DECL
 		if ( ! (yy_start) )
 			(yy_start) = 1;	/* first start state */
 
-		if ( ! addrin )
-			addrin = stdin;
+		if ( ! yyin )
+			yyin = stdin;
 
-		if ( ! addrout )
-			addrout = stdout;
+		if ( ! yyout )
+			yyout = stdout;
 
 		if ( ! YY_CURRENT_BUFFER ) {
-			addrensure_buffer_stack ();
+			yyensure_buffer_stack ();
 			YY_CURRENT_BUFFER_LVALUE =
-				addr_create_buffer(addrin,YY_BUF_SIZE );
+				yy_create_buffer( yyin, YY_BUF_SIZE );
 		}
 
-		addr_load_buffer_state( );
+		yy_load_buffer_state(  );
 		}
 
 	{
 #line 62 "sieve/addr-lex.l"
 
 
-#line 803 "sieve/addr-lex.c"
+#line 1034 "sieve/addr-lex.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
 		yy_cp = (yy_c_buf_p);
 
-		/* Support of addrtext. */
+		/* Support of yytext. */
 		*yy_cp = (yy_hold_char);
 
 		/* yy_bp points to the position in yy_ch_buf of the start of
@@ -827,9 +1058,9 @@ yy_match:
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
 				if ( yy_current_state >= 40 )
-					yy_c = yy_meta[(unsigned int) yy_c];
+					yy_c = yy_meta[yy_c];
 				}
-			yy_current_state = yy_nxt[yy_base[yy_current_state] + (flex_int16_t) yy_c];
+			yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
 			++yy_cp;
 			}
 		while ( yy_base[yy_current_state] != 182 );
@@ -859,12 +1090,12 @@ do_action:	/* This label is used only to access EOF actions. */
 case 1:
 YY_RULE_SETUP
 #line 64 "sieve/addr-lex.l"
-{ BEGIN QSTRING; return addrtext[0]; }
+{ BEGIN QSTRING; return yytext[0]; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
 #line 65 "sieve/addr-lex.l"
-{ BEGIN DOMAINLIT; return addrtext[0]; }
+{ BEGIN DOMAINLIT; return yytext[0]; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
@@ -893,7 +1124,7 @@ YY_RULE_SETUP
 case 7:
 YY_RULE_SETUP
 #line 75 "sieve/addr-lex.l"
-return addrtext[0];
+return yytext[0];
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
@@ -903,7 +1134,7 @@ return QTEXT;
 case 9:
 YY_RULE_SETUP
 #line 78 "sieve/addr-lex.l"
-{ BEGIN INITIAL; return addrtext[0]; }
+{ BEGIN INITIAL; return yytext[0]; }
 	YY_BREAK
 case YY_STATE_EOF(QSTRING):
 #line 79 "sieve/addr-lex.l"
@@ -919,7 +1150,7 @@ return DTEXT;
 case 11:
 YY_RULE_SETUP
 #line 84 "sieve/addr-lex.l"
-{ BEGIN INITIAL; return addrtext[0]; }
+{ BEGIN INITIAL; return yytext[0]; }
 	YY_BREAK
 case YY_STATE_EOF(DOMAINLIT):
 #line 85 "sieve/addr-lex.l"
@@ -955,7 +1186,7 @@ YY_RULE_SETUP
 #line 100 "sieve/addr-lex.l"
 ECHO;
 	YY_BREAK
-#line 959 "sieve/addr-lex.c"
+#line 1190 "sieve/addr-lex.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -972,15 +1203,15 @@ case YY_STATE_EOF(INITIAL):
 			{
 			/* We're scanning a new file or input source.  It's
 			 * possible that this happened because the user
-			 * just pointed addrin at a new source and called
-			 * addrlex().  If so, then we have to assure
+			 * just pointed yyin at a new source and called
+			 * yylex().  If so, then we have to assure
 			 * consistency between YY_CURRENT_BUFFER and our
 			 * globals.  Here is the right place to do so, because
 			 * this is the first action (other than possibly a
 			 * back-up) that will match for the new input source.
 			 */
 			(yy_n_chars) = YY_CURRENT_BUFFER_LVALUE->yy_n_chars;
-			YY_CURRENT_BUFFER_LVALUE->yy_input_file = addrin;
+			YY_CURRENT_BUFFER_LVALUE->yy_input_file = yyin;
 			YY_CURRENT_BUFFER_LVALUE->yy_buffer_status = YY_BUFFER_NORMAL;
 			}
 
@@ -1033,11 +1264,11 @@ case YY_STATE_EOF(INITIAL):
 				{
 				(yy_did_buffer_switch_on_eof) = 0;
 
-				if ( addrwrap( ) )
+				if ( yywrap(  ) )
 					{
 					/* Note: because we've taken care in
 					 * yy_get_next_buffer() to have set up
-					 * addrtext, we can now set up
+					 * yytext, we can now set up
 					 * yy_c_buf_p so that if some total
 					 * hoser (like flex itself) wants to
 					 * call the scanner after we return the
@@ -1087,7 +1318,7 @@ case YY_STATE_EOF(INITIAL):
 	} /* end of action switch */
 		} /* end of scanning one token */
 	} /* end of user's declarations */
-} /* end of addrlex */
+} /* end of yylex */
 
 /* yy_get_next_buffer - try to read in a new buffer
  *
@@ -1165,7 +1396,8 @@ static int yy_get_next_buffer (void)
 
 				b->yy_ch_buf = (char *)
 					/* Include room in for 2 EOB chars. */
-					addrrealloc((void *) b->yy_ch_buf,b->yy_buf_size + 2  );
+					yyrealloc( (void *) b->yy_ch_buf,
+							 (yy_size_t) (b->yy_buf_size + 2)  );
 				}
 			else
 				/* Can't grow it, we don't own it. */
@@ -1197,7 +1429,7 @@ static int yy_get_next_buffer (void)
 		if ( number_to_move == YY_MORE_ADJ )
 			{
 			ret_val = EOB_ACT_END_OF_FILE;
-			addrrestart(addrin  );
+			yyrestart( yyin  );
 			}
 
 		else
@@ -1214,9 +1446,12 @@ static int yy_get_next_buffer (void)
 	if (((yy_n_chars) + number_to_move) > YY_CURRENT_BUFFER_LVALUE->yy_buf_size) {
 		/* Extend the array by 50%, plus the number we really need. */
 		int new_size = (yy_n_chars) + number_to_move + ((yy_n_chars) >> 1);
-		YY_CURRENT_BUFFER_LVALUE->yy_ch_buf = (char *) addrrealloc((void *) YY_CURRENT_BUFFER_LVALUE->yy_ch_buf,new_size  );
+		YY_CURRENT_BUFFER_LVALUE->yy_ch_buf = (char *) yyrealloc(
+			(void *) YY_CURRENT_BUFFER_LVALUE->yy_ch_buf, (yy_size_t) new_size  );
 		if ( ! YY_CURRENT_BUFFER_LVALUE->yy_ch_buf )
 			YY_FATAL_ERROR( "out of dynamic memory in yy_get_next_buffer()" );
+		/* "- 2" to take care of EOB's */
+		YY_CURRENT_BUFFER_LVALUE->yy_buf_size = (int) (new_size - 2);
 	}
 
 	(yy_n_chars) += number_to_move;
@@ -1249,9 +1484,9 @@ static int yy_get_next_buffer (void)
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
 			if ( yy_current_state >= 40 )
-				yy_c = yy_meta[(unsigned int) yy_c];
+				yy_c = yy_meta[yy_c];
 			}
-		yy_current_state = yy_nxt[yy_base[yy_current_state] + (flex_int16_t) yy_c];
+		yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
 		}
 
 	return yy_current_state;
@@ -1277,9 +1512,9 @@ static int yy_get_next_buffer (void)
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
 		if ( yy_current_state >= 40 )
-			yy_c = yy_meta[(unsigned int) yy_c];
+			yy_c = yy_meta[yy_c];
 		}
-	yy_current_state = yy_nxt[yy_base[yy_current_state] + (flex_int16_t) yy_c];
+	yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
 	yy_is_jam = (yy_current_state == 39);
 
 		return yy_is_jam ? 0 : yy_current_state;
@@ -1313,7 +1548,7 @@ static int yy_get_next_buffer (void)
 
 		else
 			{ /* need more input */
-			int offset = (yy_c_buf_p) - (yytext_ptr);
+			int offset = (int) ((yy_c_buf_p) - (yytext_ptr));
 			++(yy_c_buf_p);
 
 			switch ( yy_get_next_buffer(  ) )
@@ -1330,13 +1565,13 @@ static int yy_get_next_buffer (void)
 					 */
 
 					/* Reset buffer status. */
-					addrrestart(addrin );
+					yyrestart( yyin );
 
 					/*FALLTHROUGH*/
 
 				case EOB_ACT_END_OF_FILE:
 					{
-					if ( addrwrap( ) )
+					if ( yywrap(  ) )
 						return 0;
 
 					if ( ! (yy_did_buffer_switch_on_eof) )
@@ -1356,7 +1591,7 @@ static int yy_get_next_buffer (void)
 		}
 
 	c = *(unsigned char *) (yy_c_buf_p);	/* cast for 8-bit char's */
-	*(yy_c_buf_p) = '\0';	/* preserve addrtext */
+	*(yy_c_buf_p) = '\0';	/* preserve yytext */
 	(yy_hold_char) = *++(yy_c_buf_p);
 
 	return c;
@@ -1368,32 +1603,32 @@ static int yy_get_next_buffer (void)
  * 
  * @note This function does not reset the start condition to @c INITIAL .
  */
-    void addrrestart  (FILE * input_file )
+    void yyrestart  (FILE * input_file )
 {
     
 	if ( ! YY_CURRENT_BUFFER ){
-        addrensure_buffer_stack ();
+        yyensure_buffer_stack ();
 		YY_CURRENT_BUFFER_LVALUE =
-            addr_create_buffer(addrin,YY_BUF_SIZE );
+            yy_create_buffer( yyin, YY_BUF_SIZE );
 	}
 
-	addr_init_buffer(YY_CURRENT_BUFFER,input_file );
-	addr_load_buffer_state( );
+	yy_init_buffer( YY_CURRENT_BUFFER, input_file );
+	yy_load_buffer_state(  );
 }
 
 /** Switch to a different input buffer.
  * @param new_buffer The new input buffer.
  * 
  */
-    void addr_switch_to_buffer  (YY_BUFFER_STATE  new_buffer )
+    void yy_switch_to_buffer  (YY_BUFFER_STATE  new_buffer )
 {
     
 	/* TODO. We should be able to replace this entire function body
 	 * with
-	 *		addrpop_buffer_state();
-	 *		addrpush_buffer_state(new_buffer);
+	 *		yypop_buffer_state();
+	 *		yypush_buffer_state(new_buffer);
      */
-	addrensure_buffer_stack ();
+	yyensure_buffer_stack ();
 	if ( YY_CURRENT_BUFFER == new_buffer )
 		return;
 
@@ -1406,21 +1641,21 @@ static int yy_get_next_buffer (void)
 		}
 
 	YY_CURRENT_BUFFER_LVALUE = new_buffer;
-	addr_load_buffer_state( );
+	yy_load_buffer_state(  );
 
 	/* We don't actually know whether we did this switch during
-	 * EOF (addrwrap()) processing, but the only time this flag
-	 * is looked at is after addrwrap() is called, so it's safe
+	 * EOF (yywrap()) processing, but the only time this flag
+	 * is looked at is after yywrap() is called, so it's safe
 	 * to go ahead and always set it.
 	 */
 	(yy_did_buffer_switch_on_eof) = 1;
 }
 
-static void addr_load_buffer_state  (void)
+static void yy_load_buffer_state  (void)
 {
     	(yy_n_chars) = YY_CURRENT_BUFFER_LVALUE->yy_n_chars;
 	(yytext_ptr) = (yy_c_buf_p) = YY_CURRENT_BUFFER_LVALUE->yy_buf_pos;
-	addrin = YY_CURRENT_BUFFER_LVALUE->yy_input_file;
+	yyin = YY_CURRENT_BUFFER_LVALUE->yy_input_file;
 	(yy_hold_char) = *(yy_c_buf_p);
 }
 
@@ -1430,35 +1665,35 @@ static void addr_load_buffer_state  (void)
  * 
  * @return the allocated buffer state.
  */
-    YY_BUFFER_STATE addr_create_buffer  (FILE * file, int  size )
+    YY_BUFFER_STATE yy_create_buffer  (FILE * file, int  size )
 {
 	YY_BUFFER_STATE b;
     
-	b = (YY_BUFFER_STATE) addralloc(sizeof( struct yy_buffer_state )  );
+	b = (YY_BUFFER_STATE) yyalloc( sizeof( struct yy_buffer_state )  );
 	if ( ! b )
-		YY_FATAL_ERROR( "out of dynamic memory in addr_create_buffer()" );
+		YY_FATAL_ERROR( "out of dynamic memory in yy_create_buffer()" );
 
-	b->yy_buf_size = (yy_size_t)size;
+	b->yy_buf_size = size;
 
 	/* yy_ch_buf has to be 2 characters longer than the size given because
 	 * we need to put in 2 end-of-buffer characters.
 	 */
-	b->yy_ch_buf = (char *) addralloc(b->yy_buf_size + 2  );
+	b->yy_ch_buf = (char *) yyalloc( (yy_size_t) (b->yy_buf_size + 2)  );
 	if ( ! b->yy_ch_buf )
-		YY_FATAL_ERROR( "out of dynamic memory in addr_create_buffer()" );
+		YY_FATAL_ERROR( "out of dynamic memory in yy_create_buffer()" );
 
 	b->yy_is_our_buffer = 1;
 
-	addr_init_buffer(b,file );
+	yy_init_buffer( b, file );
 
 	return b;
 }
 
 /** Destroy the buffer.
- * @param b a buffer created with addr_create_buffer()
+ * @param b a buffer created with yy_create_buffer()
  * 
  */
-    void addr_delete_buffer (YY_BUFFER_STATE  b )
+    void yy_delete_buffer (YY_BUFFER_STATE  b )
 {
     
 	if ( ! b )
@@ -1468,27 +1703,27 @@ static void addr_load_buffer_state  (void)
 		YY_CURRENT_BUFFER_LVALUE = (YY_BUFFER_STATE) 0;
 
 	if ( b->yy_is_our_buffer )
-		addrfree((void *) b->yy_ch_buf  );
+		yyfree( (void *) b->yy_ch_buf  );
 
-	addrfree((void *) b  );
+	yyfree( (void *) b  );
 }
 
 /* Initializes or reinitializes a buffer.
  * This function is sometimes called more than once on the same buffer,
- * such as during a addrrestart() or at EOF.
+ * such as during a yyrestart() or at EOF.
  */
-    static void addr_init_buffer  (YY_BUFFER_STATE  b, FILE * file )
+    static void yy_init_buffer  (YY_BUFFER_STATE  b, FILE * file )
 
 {
 	int oerrno = errno;
     
-	addr_flush_buffer(b );
+	yy_flush_buffer( b );
 
 	b->yy_input_file = file;
 	b->yy_fill_buffer = 1;
 
-    /* If b is the current buffer, then addr_init_buffer was _probably_
-     * called from addrrestart() or through yy_get_next_buffer.
+    /* If b is the current buffer, then yy_init_buffer was _probably_
+     * called from yyrestart() or through yy_get_next_buffer.
      * In that case, we don't want to reset the lineno or column.
      */
     if (b != YY_CURRENT_BUFFER){
@@ -1505,7 +1740,7 @@ static void addr_load_buffer_state  (void)
  * @param b the buffer state to be flushed, usually @c YY_CURRENT_BUFFER.
  * 
  */
-    void addr_flush_buffer (YY_BUFFER_STATE  b )
+    void yy_flush_buffer (YY_BUFFER_STATE  b )
 {
     	if ( ! b )
 		return;
@@ -1525,7 +1760,7 @@ static void addr_load_buffer_state  (void)
 	b->yy_buffer_status = YY_BUFFER_NEW;
 
 	if ( b == YY_CURRENT_BUFFER )
-		addr_load_buffer_state( );
+		yy_load_buffer_state(  );
 }
 
 /** Pushes the new state onto the stack. The new state becomes
@@ -1534,14 +1769,14 @@ static void addr_load_buffer_state  (void)
  *  @param new_buffer The new state.
  *  
  */
-void addrpush_buffer_state (YY_BUFFER_STATE new_buffer )
+void yypush_buffer_state (YY_BUFFER_STATE new_buffer )
 {
     	if (new_buffer == NULL)
 		return;
 
-	addrensure_buffer_stack();
+	yyensure_buffer_stack();
 
-	/* This block is copied from addr_switch_to_buffer. */
+	/* This block is copied from yy_switch_to_buffer. */
 	if ( YY_CURRENT_BUFFER )
 		{
 		/* Flush out information for old buffer. */
@@ -1555,8 +1790,8 @@ void addrpush_buffer_state (YY_BUFFER_STATE new_buffer )
 		(yy_buffer_stack_top)++;
 	YY_CURRENT_BUFFER_LVALUE = new_buffer;
 
-	/* copied from addr_switch_to_buffer. */
-	addr_load_buffer_state( );
+	/* copied from yy_switch_to_buffer. */
+	yy_load_buffer_state(  );
 	(yy_did_buffer_switch_on_eof) = 1;
 }
 
@@ -1564,18 +1799,18 @@ void addrpush_buffer_state (YY_BUFFER_STATE new_buffer )
  *  The next element becomes the new top.
  *  
  */
-void addrpop_buffer_state (void)
+void yypop_buffer_state (void)
 {
     	if (!YY_CURRENT_BUFFER)
 		return;
 
-	addr_delete_buffer(YY_CURRENT_BUFFER );
+	yy_delete_buffer(YY_CURRENT_BUFFER );
 	YY_CURRENT_BUFFER_LVALUE = NULL;
 	if ((yy_buffer_stack_top) > 0)
 		--(yy_buffer_stack_top);
 
 	if (YY_CURRENT_BUFFER) {
-		addr_load_buffer_state( );
+		yy_load_buffer_state(  );
 		(yy_did_buffer_switch_on_eof) = 1;
 	}
 }
@@ -1583,9 +1818,9 @@ void addrpop_buffer_state (void)
 /* Allocates the stack if it does not exist.
  *  Guarantees space for at least one push.
  */
-static void addrensure_buffer_stack (void)
+static void yyensure_buffer_stack (void)
 {
-	int num_to_alloc;
+	yy_size_t num_to_alloc;
     
 	if (!(yy_buffer_stack)) {
 
@@ -1594,11 +1829,11 @@ static void addrensure_buffer_stack (void)
 		 * immediate realloc on the next call.
          */
       num_to_alloc = 1; /* After all that talk, this was set to 1 anyways... */
-		(yy_buffer_stack) = (struct yy_buffer_state**)addralloc
+		(yy_buffer_stack) = (struct yy_buffer_state**)yyalloc
 								(num_to_alloc * sizeof(struct yy_buffer_state*)
 								);
 		if ( ! (yy_buffer_stack) )
-			YY_FATAL_ERROR( "out of dynamic memory in addrensure_buffer_stack()" );
+			YY_FATAL_ERROR( "out of dynamic memory in yyensure_buffer_stack()" );
 
 		memset((yy_buffer_stack), 0, num_to_alloc * sizeof(struct yy_buffer_state*));
 
@@ -1613,12 +1848,12 @@ static void addrensure_buffer_stack (void)
 		yy_size_t grow_size = 8 /* arbitrary grow size */;
 
 		num_to_alloc = (yy_buffer_stack_max) + grow_size;
-		(yy_buffer_stack) = (struct yy_buffer_state**)addrrealloc
+		(yy_buffer_stack) = (struct yy_buffer_state**)yyrealloc
 								((yy_buffer_stack),
 								num_to_alloc * sizeof(struct yy_buffer_state*)
 								);
 		if ( ! (yy_buffer_stack) )
-			YY_FATAL_ERROR( "out of dynamic memory in addrensure_buffer_stack()" );
+			YY_FATAL_ERROR( "out of dynamic memory in yyensure_buffer_stack()" );
 
 		/* zero only the new slots.*/
 		memset((yy_buffer_stack) + (yy_buffer_stack_max), 0, grow_size * sizeof(struct yy_buffer_state*));
@@ -1632,7 +1867,7 @@ static void addrensure_buffer_stack (void)
  * 
  * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE addr_scan_buffer  (char * base, yy_size_t  size )
+YY_BUFFER_STATE yy_scan_buffer  (char * base, yy_size_t  size )
 {
 	YY_BUFFER_STATE b;
     
@@ -1642,11 +1877,11 @@ YY_BUFFER_STATE addr_scan_buffer  (char * base, yy_size_t  size )
 		/* They forgot to leave room for the EOB's. */
 		return NULL;
 
-	b = (YY_BUFFER_STATE) addralloc(sizeof( struct yy_buffer_state )  );
+	b = (YY_BUFFER_STATE) yyalloc( sizeof( struct yy_buffer_state )  );
 	if ( ! b )
-		YY_FATAL_ERROR( "out of dynamic memory in addr_scan_buffer()" );
+		YY_FATAL_ERROR( "out of dynamic memory in yy_scan_buffer()" );
 
-	b->yy_buf_size = size - 2;	/* "- 2" to take care of EOB's */
+	b->yy_buf_size = (int) (size - 2);	/* "- 2" to take care of EOB's */
 	b->yy_buf_pos = b->yy_ch_buf = base;
 	b->yy_is_our_buffer = 0;
 	b->yy_input_file = NULL;
@@ -1656,33 +1891,33 @@ YY_BUFFER_STATE addr_scan_buffer  (char * base, yy_size_t  size )
 	b->yy_fill_buffer = 0;
 	b->yy_buffer_status = YY_BUFFER_NEW;
 
-	addr_switch_to_buffer(b  );
+	yy_switch_to_buffer( b  );
 
 	return b;
 }
 
-/** Setup the input buffer state to scan a string. The next call to addrlex() will
+/** Setup the input buffer state to scan a string. The next call to yylex() will
  * scan from a @e copy of @a str.
  * @param yystr a NUL-terminated string to scan
  * 
  * @return the newly allocated buffer state object.
  * @note If you want to scan bytes that may contain NUL values, then use
- *       addr_scan_bytes() instead.
+ *       yy_scan_bytes() instead.
  */
-YY_BUFFER_STATE addr_scan_string (yyconst char * yystr )
+YY_BUFFER_STATE yy_scan_string (const char * yystr )
 {
     
-	return addr_scan_bytes(yystr,(int) strlen(yystr) );
+	return yy_scan_bytes( yystr, (int) strlen(yystr) );
 }
 
-/** Setup the input buffer state to scan the given bytes. The next call to addrlex() will
+/** Setup the input buffer state to scan the given bytes. The next call to yylex() will
  * scan from a @e copy of @a bytes.
  * @param yybytes the byte buffer to scan
  * @param _yybytes_len the number of bytes in the buffer pointed to by @a bytes.
  * 
  * @return the newly allocated buffer state object.
  */
-YY_BUFFER_STATE addr_scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
+YY_BUFFER_STATE yy_scan_bytes  (const char * yybytes, int  _yybytes_len )
 {
 	YY_BUFFER_STATE b;
 	char *buf;
@@ -1691,18 +1926,18 @@ YY_BUFFER_STATE addr_scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
     
 	/* Get memory for full buffer, including space for trailing EOB's. */
 	n = (yy_size_t) (_yybytes_len + 2);
-	buf = (char *) addralloc(n  );
+	buf = (char *) yyalloc( n  );
 	if ( ! buf )
-		YY_FATAL_ERROR( "out of dynamic memory in addr_scan_bytes()" );
+		YY_FATAL_ERROR( "out of dynamic memory in yy_scan_bytes()" );
 
 	for ( i = 0; i < _yybytes_len; ++i )
 		buf[i] = yybytes[i];
 
 	buf[_yybytes_len] = buf[_yybytes_len+1] = YY_END_OF_BUFFER_CHAR;
 
-	b = addr_scan_buffer(buf,n );
+	b = yy_scan_buffer( buf, n );
 	if ( ! b )
-		YY_FATAL_ERROR( "bad buffer in addr_scan_bytes()" );
+		YY_FATAL_ERROR( "bad buffer in yy_scan_bytes()" );
 
 	/* It's okay to grow etc. this buffer, and we should throw it
 	 * away when we're done.
@@ -1716,9 +1951,9 @@ YY_BUFFER_STATE addr_scan_bytes  (yyconst char * yybytes, int  _yybytes_len )
 #define YY_EXIT_FAILURE 2
 #endif
 
-static void yynoreturn yy_fatal_error (yyconst char* msg )
+static void yynoreturn yy_fatal_error (const char* msg )
 {
-			(void) fprintf( stderr, "%s\n", msg );
+			fprintf( stderr, "%s\n", msg );
 	exit( YY_EXIT_FAILURE );
 }
 
@@ -1728,14 +1963,14 @@ static void yynoreturn yy_fatal_error (yyconst char* msg )
 #define yyless(n) \
 	do \
 		{ \
-		/* Undo effects of setting up addrtext. */ \
+		/* Undo effects of setting up yytext. */ \
         int yyless_macro_arg = (n); \
         YY_LESS_LINENO(yyless_macro_arg);\
-		addrtext[addrleng] = (yy_hold_char); \
-		(yy_c_buf_p) = addrtext + yyless_macro_arg; \
+		yytext[yyleng] = (yy_hold_char); \
+		(yy_c_buf_p) = yytext + yyless_macro_arg; \
 		(yy_hold_char) = *(yy_c_buf_p); \
 		*(yy_c_buf_p) = '\0'; \
-		addrleng = yyless_macro_arg; \
+		yyleng = yyless_macro_arg; \
 		} \
 	while ( 0 )
 
@@ -1744,85 +1979,85 @@ static void yynoreturn yy_fatal_error (yyconst char* msg )
 /** Get the current line number.
  * 
  */
-int addrget_lineno  (void)
+int yyget_lineno  (void)
 {
     
-    return addrlineno;
+    return yylineno;
 }
 
 /** Get the input stream.
  * 
  */
-FILE *addrget_in  (void)
+FILE *yyget_in  (void)
 {
-        return addrin;
+        return yyin;
 }
 
 /** Get the output stream.
  * 
  */
-FILE *addrget_out  (void)
+FILE *yyget_out  (void)
 {
-        return addrout;
+        return yyout;
 }
 
 /** Get the length of the current token.
  * 
  */
-int addrget_leng  (void)
+int yyget_leng  (void)
 {
-        return addrleng;
+        return yyleng;
 }
 
 /** Get the current token.
  * 
  */
 
-char *addrget_text  (void)
+char *yyget_text  (void)
 {
-        return addrtext;
+        return yytext;
 }
 
 /** Set the current line number.
  * @param _line_number line number
  * 
  */
-void addrset_lineno (int  _line_number )
+void yyset_lineno (int  _line_number )
 {
     
-    addrlineno = _line_number;
+    yylineno = _line_number;
 }
 
 /** Set the input stream. This does not discard the current
  * input buffer.
  * @param _in_str A readable stream.
  * 
- * @see addr_switch_to_buffer
+ * @see yy_switch_to_buffer
  */
-void addrset_in (FILE *  _in_str )
+void yyset_in (FILE *  _in_str )
 {
-        addrin = _in_str ;
+        yyin = _in_str ;
 }
 
-void addrset_out (FILE *  _out_str )
+void yyset_out (FILE *  _out_str )
 {
-        addrout = _out_str ;
+        yyout = _out_str ;
 }
 
-int addrget_debug  (void)
+int yyget_debug  (void)
 {
-        return addr_flex_debug;
+        return yy_flex_debug;
 }
 
-void addrset_debug (int  _bdebug )
+void yyset_debug (int  _bdebug )
 {
-        addr_flex_debug = _bdebug ;
+        yy_flex_debug = _bdebug ;
 }
 
 static int yy_init_globals (void)
 {
         /* Initialization is the same as for the non-reentrant scanner.
-     * This function is called from addrlex_destroy(), so don't allocate here.
+     * This function is called from yylex_destroy(), so don't allocate here.
      */
 
     (yy_buffer_stack) = NULL;
@@ -1834,36 +2069,36 @@ static int yy_init_globals (void)
 
 /* Defined in main.c */
 #ifdef YY_STDINIT
-    addrin = stdin;
-    addrout = stdout;
+    yyin = stdin;
+    yyout = stdout;
 #else
-    addrin = NULL;
-    addrout = NULL;
+    yyin = NULL;
+    yyout = NULL;
 #endif
 
     /* For future reference: Set errno on error, since we are called by
-     * addrlex_init()
+     * yylex_init()
      */
     return 0;
 }
 
-/* addrlex_destroy is for both reentrant and non-reentrant scanners. */
-int addrlex_destroy  (void)
+/* yylex_destroy is for both reentrant and non-reentrant scanners. */
+int yylex_destroy  (void)
 {
     
     /* Pop the buffer stack, destroying each element. */
 	while(YY_CURRENT_BUFFER){
-		addr_delete_buffer(YY_CURRENT_BUFFER  );
+		yy_delete_buffer( YY_CURRENT_BUFFER  );
 		YY_CURRENT_BUFFER_LVALUE = NULL;
-		addrpop_buffer_state();
+		yypop_buffer_state();
 	}
 
 	/* Destroy the stack itself. */
-	addrfree((yy_buffer_stack) );
+	yyfree((yy_buffer_stack) );
 	(yy_buffer_stack) = NULL;
 
     /* Reset the globals. This is important in a non-reentrant scanner so the next time
-     * addrlex() is called, initialization will occur. */
+     * yylex() is called, initialization will occur. */
     yy_init_globals( );
 
     return 0;
@@ -1874,7 +2109,7 @@ int addrlex_destroy  (void)
  */
 
 #ifndef yytext_ptr
-static void yy_flex_strncpy (char* s1, yyconst char * s2, int n )
+static void yy_flex_strncpy (char* s1, const char * s2, int n )
 {
 		
 	int i;
@@ -1884,7 +2119,7 @@ static void yy_flex_strncpy (char* s1, yyconst char * s2, int n )
 #endif
 
 #ifdef YY_NEED_STRLEN
-static int yy_flex_strlen (yyconst char * s )
+static int yy_flex_strlen (const char * s )
 {
 	int n;
 	for ( n = 0; s[n]; ++n )
@@ -1894,12 +2129,12 @@ static int yy_flex_strlen (yyconst char * s )
 }
 #endif
 
-void *addralloc (yy_size_t  size )
+void *yyalloc (yy_size_t  size )
 {
 			return malloc(size);
 }
 
-void *addrrealloc  (void * ptr, yy_size_t  size )
+void *yyrealloc  (void * ptr, yy_size_t  size )
 {
 		
 	/* The cast to (char *) in the following accommodates both
@@ -1912,14 +2147,13 @@ void *addrrealloc  (void * ptr, yy_size_t  size )
 	return realloc(ptr, size);
 }
 
-void addrfree (void * ptr )
+void yyfree (void * ptr )
 {
-			free( (char *) ptr );	/* see addrrealloc() for (char *) cast */
+			free( (char *) ptr );	/* see yyrealloc() for (char *) cast */
 }
 
 #define YYTABLES_NAME "yytables"
 
 #line 100 "sieve/addr-lex.l"
-
 
 

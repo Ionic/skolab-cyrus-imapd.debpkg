@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.5.0 Release Notes
 ******************************
 
@@ -55,7 +54,7 @@ administrators to run:
 
    # **/usr/lib/cyrus-imapd/reconstruct -V max** [options]
 
-This command can be run at the administrator's convenience, and while
+This command can be run at the administrator’s convenience, and while
 running the database format upgrade process is not strictly required,
 it is certainly strongly recommended.
 
@@ -65,9 +64,9 @@ used). This may have caused an I/O storm in some situations, which
 2.5.0 aims to address.
 
 The minor version of the "cyrus.index" file in 2.5.0 is **13**. While
-mailboxes with an older format will continue to work "forever", newer
+mailboxes with an older format will continue to work “forever”, newer
 features such as annotation quotas will fail, as there is no space in
-the database formats prior to version 13 to store the new feature's
+the database formats prior to version 13 to store the new feature’s
 information.
 
 Until you upgrade the database format, you may experience slightly
@@ -78,20 +77,20 @@ word boundaries (as well as versions in the 2.4 and 2.5 series).
 If you were running Cyrus 2.3.x with "expunge_mode: delayed", then the
 contents of the "cyrus.expunge" file will be removed the first time
 the mailbox is opened, and the mailbox will act as if "expunge_mode"
-was set to "immediate" -- until it is upgraded.
+was set to "immediate" – until it is upgraded.
 
 This is because version 2.3 mailboxes used the "cyrus.expunge" file,
-and it's not worth the complexity to try to recreate that file.
+and it’s not worth the complexity to try to recreate that file.
 
 This upgrade path supports upgrades from Cyrus IMAP version 2.2.12 and
 later versions.
 
 Important: The above command can run while the Cyrus IMAP services
-  are in operation, and does **not** interfere with the service's
+  are in operation, and does **not** interfere with the service’s
   operations.
 
 Note: Additional options can be specified to reconstruct(8) to more
-  granularly specify which mailboxes' "cyrus.index" is to be upgraded.
+  granularly specify which mailboxes’ "cyrus.index" is to be upgraded.
 
 
 Quota Fixes and Enhancements
@@ -114,7 +113,7 @@ Greater Memory Footprint
 
 For those upgrading from 2.3.X; newer releases of Cyrus IMAP will use
 significantly more memory per selected mailbox.  This is not an error
-or bug; it's a feature.  The newer code is holding more data and
+or bug; it’s a feature.  The newer code is holding more data and
 metadata in memory for purposes of faster access to more of the
 mailbox.  This is not a memory leak.
 
@@ -366,7 +365,7 @@ The following *autocreate* options are now available:
 **autocreate_sieve_folders** (was: "autosievefolders")
 
    Limit the folders that can be created automatically by a Sieve
-   script performing a "fileinto" action, to the folders listed in
+   script performing a “fileinto” action, to the folders listed in
    this configuration option.
 
    Separate the folder names by "|".
@@ -595,7 +594,7 @@ Note: The Phabricator installation suffered a disk failure. We now
 Development: Sphinx for Documentation
 =====================================
 
-While a work in progress still, you're looking at the new and improved
+While a work in progress still, you’re looking at the new and improved
 documentation effort for the Cyrus project as a whole.
 
 This documentation is written in reStructuredText, and rendered by

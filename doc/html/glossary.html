@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Glossary &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Glossary &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="index.html"/> 
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="index.html"/> 
 
   
   
@@ -152,7 +154,7 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="imap/download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="imap/download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -236,7 +238,7 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -253,14 +255,14 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="imap/concepts/overview_and_concepts.html#news">News</a></li>
@@ -375,7 +377,7 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -543,7 +545,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="imap/reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -560,7 +562,7 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -572,13 +574,13 @@
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="imap/reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="imap/reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -695,7 +697,6 @@
 <li class="toctree-l1"><a class="reference internal" href="support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="imap/support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="imap/support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="imap/support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="imap/support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -740,7 +741,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -760,7 +761,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="index.html">Docs v3.4.2</a> &raquo;</li>
       
     <li>Glossary</li>
       <li class="wy-breadcrumbs-aside">
@@ -779,23 +780,23 @@
 <h1>Glossary<a class="headerlink" href="#glossary" title="Permalink to this headline">¶</a></h1>
 <dl class="glossary docutils">
 <dt id="term-authorization-realm">authorization realm</dt>
-<dd><p class="first">The authorization realm is the target user authorization ID's namespace.</p>
-<p>When, for example, a user <em>John Doe</em> logs in with username <code class="docutils literal"><span class="pre">doe</span></code> (the
-&quot;authentication ID&quot;), the original authorization realm (as specified in
-the original username) is <code class="docutils literal"><span class="pre">null</span></code>.</p>
-<p>After user login name <a class="reference internal" href="#term-canonification"><span class="xref std std-term">canonification</span></a> -- a process to translate
-an authentication ID in to an authorization ID -- the resulting
-authorization ID may have become <code class="docutils literal"><span class="pre">john.doe&#64;example.org</span></code>.</p>
+<dd><p class="first">The authorization realm is the target user authorization ID’s namespace.</p>
+<p>When, for example, a user <em>John Doe</em> logs in with username <code class="docutils literal notranslate"><span class="pre">doe</span></code> (the
+“authentication ID”), the original authorization realm (as specified in
+the original username) is <code class="docutils literal notranslate"><span class="pre">null</span></code>.</p>
+<p>After user login name <a class="reference internal" href="#term-canonification"><span class="xref std std-term">canonification</span></a> – a process to translate
+an authentication ID in to an authorization ID – the resulting
+authorization ID may have become <code class="docutils literal notranslate"><span class="pre">john.doe&#64;example.org</span></code>.</p>
 <p>The canonification process is important, because it will also be the
-authorization ID that is used to compose the mailbox path to the user's
+authorization ID that is used to compose the mailbox path to the user’s
 INBOX.</p>
 <p>Continuing our example user, the authorization ID having become
-<code class="docutils literal"><span class="pre">john.doe&#64;example.org</span></code> will result in the session using
-<code class="docutils literal"><span class="pre">user/john.doe&#64;example.org</span></code> as the INBOX.</p>
-<p class="last">The <strong>authorization realm</strong> at this point is one of <code class="docutils literal"><span class="pre">example.org</span></code>. The
+<code class="docutils literal notranslate"><span class="pre">john.doe&#64;example.org</span></code> will result in the session using
+<code class="docutils literal notranslate"><span class="pre">user/john.doe&#64;example.org</span></code> as the INBOX.</p>
+<p class="last">The <strong>authorization realm</strong> at this point is one of <code class="docutils literal notranslate"><span class="pre">example.org</span></code>. The
 user will not be able to access any mailboxes outside this authorization
 realm, meaning the user will be unable to access any mailboxes for which
-the mailbox path does not end in <code class="docutils literal"><span class="pre">&#64;example.org</span></code>.</p>
+the mailbox path does not end in <code class="docutils literal notranslate"><span class="pre">&#64;example.org</span></code>.</p>
 </dd>
 <dt id="term-backend">backend</dt>
 <dd><p class="first">The part of a Cyrus configuration which contains the data.</p>
@@ -810,67 +811,64 @@ the mailbox path does not end in <code class="docutils literal"><span class="pre
 <dd><p class="first">Canonification is the process of translating a login username in
 to the targeted value to use throughout the rest of the
 infrastructure.</p>
-<p>Suppose, for example, a user <code class="docutils literal"><span class="pre">John</span> <span class="pre">Doe</span> <span class="pre">&lt;doe&#64;example.org&gt;</span></code> has an
-email address of <code class="docutils literal"><span class="pre">doe&#64;example.org</span></code>, and a user
-ID of <code class="docutils literal"><span class="pre">doe</span></code>. Suppose therefore his mailbox is
-<code class="docutils literal"><span class="pre">user/doe&#64;example.org</span></code>, and his authorization ID is
-<code class="docutils literal"><span class="pre">doe&#64;example.org</span></code>.</p>
+<p>Suppose, for example, a user <code class="docutils literal notranslate"><span class="pre">John</span> <span class="pre">Doe</span> <span class="pre">&lt;doe&#64;example.org&gt;</span></code> has an
+email address of <code class="docutils literal notranslate"><span class="pre">doe&#64;example.org</span></code>, and a user
+ID of <code class="docutils literal notranslate"><span class="pre">doe</span></code>. Suppose therefore his mailbox is
+<code class="docutils literal notranslate"><span class="pre">user/doe&#64;example.org</span></code>, and his authorization ID is
+<code class="docutils literal notranslate"><span class="pre">doe&#64;example.org</span></code>.</p>
 <p>When John logs in however, he may also use one of his secondary
-recipient addresses, such as <code class="docutils literal"><span class="pre">john.doe&#64;example.org</span></code> or
-<code class="docutils literal"><span class="pre">jdoe&#64;example.org</span></code>.</p>
+recipient addresses, such as <code class="docutils literal notranslate"><span class="pre">john.doe&#64;example.org</span></code> or
+<code class="docutils literal notranslate"><span class="pre">jdoe&#64;example.org</span></code>.</p>
 <p class="last">This login username needs to be translated to
-<code class="docutils literal"><span class="pre">doe&#64;example.org</span></code> in order to obtain the correct INBOX, and
+<code class="docutils literal notranslate"><span class="pre">doe&#64;example.org</span></code> in order to obtain the correct INBOX, and
 allow applications to consistently retrieve profiles with user
 preferences.</p>
 </dd>
-<dt id="term-disk-volume">disk volume</dt>
-<dt id="term-disk-volumes">disk volumes</dt>
-<dd>A disk volume is an entity that &quot;can contain a filesystem&quot;. This
+<dt id="term-disk-volume">disk volume<dt id="term-disk-volumes">disk volumes</dt>
+<dd>A disk volume is an entity that “can contain a filesystem”. This
 may be a complete disk, a set of disks, a disk partition, a
 logical volume, a copy-on-write snapshot, a disk image (file),
 a fiber-channel or iSCSI LUN, or any other such volume.</dd>
-<dt id="term-domain-name-space">domain name space</dt>
-<dt id="term-domain-name-spaces">domain name spaces</dt>
+<dt id="term-domain-name-space">domain name space<dt id="term-domain-name-spaces">domain name spaces</dt>
 <dd><p class="first">A domain name space is, among other things, the qualification of a
-recipient's local-part. It is the domain name appended to the local part
-of an email address, the two of them divided by an '&#64;' character (sender
+recipient’s local-part. It is the domain name appended to the local part
+of an email address, the two of them divided by an ‘&#64;’ character (sender
 specified routing notwithstanding).</p>
-<p>Without domain name spaces, user 'john' would only ever know about user
-'jane' if -- pardon my French to those in the know -- if both 'john' and
-'jane' considered eachother local. In other words, if both 'john' and
-'jane' used the same physical <em>system environment</em>. As you may be aware,
+<p>Without domain name spaces, user ‘john’ would only ever know about user
+‘jane’ if – pardon my French to those in the know – if both ‘john’ and
+‘jane’ considered eachother local. In other words, if both ‘john’ and
+‘jane’ used the same physical <em>system environment</em>. As you may be aware,
 the Internet is composed of a quite a few thousands of such system
 environments.</p>
-<p>What <em>qualifies</em> users 'john' and 'jane' to all other users on the
+<p>What <em>qualifies</em> users ‘john’ and ‘jane’ to all other users on the
 Internet is a <em>name space</em>. The name space must be globally unique
-(literally &quot;globally&quot; -- but technically speaking more like
-&quot;universally unique&quot;).</p>
+(literally “globally” – but technically speaking more like
+“universally unique”).</p>
 <p>The only name spaces available to Internet registrars and therefore
-service providers and therefore users, are called <em>domains</em> -- they are
+service providers and therefore users, are called <em>domains</em> – they are
 composed of a <em>top-level domain (name space)</em> such as .org and .com, and
 a name that a service provider would allow you to register with the
 Internet registrar (a NIC) - each domain is therefore at least one but
 possible more <em>domain name spaces</em>.</p>
 <p>To further illustrate, you require an Internet registrar to obtain your
-own <em>domain name</em> -- unless you are an Internet registrar yourself, of
+own <em>domain name</em> – unless you are an Internet registrar yourself, of
 course, though you still need one, but it just so happens you are one.</p>
 <p>Once you have registered a domain name (and, contrary to popular belief,
-you don't actually own it, ever) nothing prevents you from creating
+you don’t actually own it, ever) nothing prevents you from creating
 additional domain name spaces within the name space of that domain.</p>
-<p>You could, for example, register <code class="docutils literal"><span class="pre">example.org</span></code>, and create a domain
-name space of <code class="docutils literal"><span class="pre">customer1.example.org</span></code> and/or <code class="docutils literal"><span class="pre">family2.example.org</span></code>.</p>
+<p>You could, for example, register <code class="docutils literal notranslate"><span class="pre">example.org</span></code>, and create a domain
+name space of <code class="docutils literal notranslate"><span class="pre">customer1.example.org</span></code> and/or <code class="docutils literal notranslate"><span class="pre">family2.example.org</span></code>.</p>
 <p class="last">In fact, every <a class="reference internal" href="#term-fully-qualified-domain-name"><span class="xref std std-term">fully qualified domain name</span></a> is a domain name
-space in and of its own -- but it identifies on the individual system
+space in and of its own – but it identifies on the individual system
 level as opposed to the environment level.</p>
 </dd>
-<dt id="term-fqdn">FQDN</dt>
-<dt id="term-fully-qualified-domain-name">fully qualified domain name</dt>
+<dt id="term-fqdn">FQDN<dt id="term-fully-qualified-domain-name">fully qualified domain name</dt>
 <dd><p class="first">A Fully Qualified Domain Name is intended to refer to a single node (or
-&quot;operating system instance&quot;, if you will) whether it be traditionally
-physical or virtual, in a manner that is globally (&quot;universally&quot;)
+“operating system instance”, if you will) whether it be traditionally
+physical or virtual, in a manner that is globally (“universally”)
 unique.</p>
 <p class="last">As such, it SHOULD be composed of at least three (3) name space segments
-divided by a dot (.) character -- excluding the implicit top-level dot
+divided by a dot (.) character – excluding the implicit top-level dot
 (.), even if a domain (system environment) is comprised of a single
 system.</p>
 </dd>
@@ -883,8 +881,7 @@ system.</p>
 </ul>
 </div>
 </dd>
-<dt id="term-hba">HBA</dt>
-<dt id="term-host-bus-adapter">Host Bus Adapter</dt>
+<dt id="term-hba">HBA<dt id="term-host-bus-adapter">Host Bus Adapter</dt>
 <dd><p class="first">A Host Bus Adapter is a device to connect a computer to a storage device.</p>
 <div class="last admonition seealso">
 <p class="first admonition-title">See also</p>
@@ -899,20 +896,17 @@ a set of (static) rules controlled (centrally) by a security
 policy administrator describe the level of access subjects to
 objects. As such, no subject controls the level of access of
 other subjects.</dd>
-<dt id="term-msa">msa</dt>
-<dt id="term-mail-submission-agent">Mail Submission Agent</dt>
-<dd>The Mail Submission Agent (<em>MSA</em>) (...)</dd>
-<dt id="term-mta">mta</dt>
-<dt id="term-mail-transfer-agent">Mail Transfer Agent</dt>
-<dd>The Mail Transfer Agent (<em>MTA</em>) (...)</dd>
+<dt id="term-msa">msa<dt id="term-mail-submission-agent">Mail Submission Agent</dt>
+<dd>The Mail Submission Agent (<em>MSA</em>) (…)</dd>
+<dt id="term-mta">mta<dt id="term-mail-transfer-agent">Mail Transfer Agent</dt>
+<dd>The Mail Transfer Agent (<em>MTA</em>) (…)</dd>
 <dt id="term-mtbf">MTBF</dt>
-<dd>Mean time between Failure -- a statistical determination of the
+<dd>Mean time between Failure – a statistical determination of the
 time between failures.</dd>
-<dt id="term-mua">mua</dt>
-<dt id="term-mail-user-agent">Mail User Agent</dt>
-<dd>The Mail User Agent (<em>MUA</em>) (...)</dd>
+<dt id="term-mua">mua<dt id="term-mail-user-agent">Mail User Agent</dt>
+<dd>The Mail User Agent (<em>MUA</em>) (…)</dd>
 <dt id="term-mydestination">mydestination</dt>
-<dd><code class="docutils literal"><span class="pre">mydestination</span></code> is a setting in Postfix, commonly used to
+<dd><code class="docutils literal notranslate"><span class="pre">mydestination</span></code> is a setting in Postfix, commonly used to
 refer to a list of <a class="reference internal" href="#term-domain-name-spaces"><span class="xref std std-term">domain name spaces</span></a> that the local
 <a class="reference internal" href="#term-mta"><span class="xref std std-term">MTA</span></a> is considered the final destination for.</dd>
 <dt id="term-operating-system-disks">operating system disks</dt>
@@ -924,9 +918,8 @@ refer to a list of <a class="reference internal" href="#term-domain-name-spaces"
 </ul>
 </div>
 </dd>
-<dt id="term-partition">partition</dt>
-<dt id="term-partitions">partitions</dt>
-<dd>A partition in Cyrus IMAP (...)</dd>
+<dt id="term-partition">partition<dt id="term-partitions">partitions</dt>
+<dd>A partition in Cyrus IMAP (…)</dd>
 <dt id="term-payload-disks">payload disks</dt>
 <dd>Storage used for information.</dd>
 <dt id="term-storage-volume-level-replication">storage volume level replication</dt>
@@ -947,7 +940,7 @@ refer to a list of <a class="reference internal" href="#term-domain-name-spaces"
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on May 08 2017
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -964,7 +957,7 @@ refer to a list of <a class="reference internal" href="#term-domain-name-spaces"
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -973,7 +966,7 @@ refer to a list of <a class="reference internal" href="#term-domain-name-spaces"
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="_static/language_data.js"></script>
 
   
 

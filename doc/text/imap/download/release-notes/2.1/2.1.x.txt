@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.1.x Release Notes
 ******************************
 
@@ -51,18 +50,18 @@ Changes to the Cyrus IMAP Server since 2.1.13
 
 * Fix some murder+altnamespace/unixhiersep issues
 
-* Fix imclient's handling of literals.
+* Fix imclient’s handling of literals.
 
 * Add support for the windows-1256 character set
 
-* Don't log 'could not shut down filedescriptor' messages when the
+* Don’t log ‘could not shut down filedescriptor’ messages when the
   socket is already not connected
 
 * Now include a script to convert sieve script names to the
   altnamespace format
 
-* Added a --with-extraident configure option to make it easier to
-  set the extra version information that is compiled into the binary.
+* Added a –with-extraident configure option to make it easier to set
+  the extra version information that is compiled into the binary.
 
 * Minor build fixes.
 
@@ -72,7 +71,7 @@ Changes to the Cyrus IMAP Server since 2.1.12
 
 * Add maxfds= option in cyrus.conf
 
-* "The shutdown() Patch" by Henrique de Moraes Holschuh
+* “The shutdown() Patch” by Henrique de Moraes Holschuh
   <hmh@debian.org> and Jeremy Howard <jhoward@fastmail.fm>
 
 * Now report both built-with and running-with OpenSSL versions
@@ -89,9 +88,9 @@ Changes to the Cyrus IMAP Server since 2.1.11
 * Master now has a daemon mode and pidfile support (-d and -p
   options)
 
-* Berkeley DB Configuration methods have changed. Hopefully they're
-  more generic now. You can still use --with-dbdir, or you can use
-  --with-bdb-libdir and --with-bdb-incdir
+* Berkeley DB Configuration methods have changed. Hopefully they’re
+  more generic now. You can still use –with-dbdir, or you can use
+  –with-bdb-libdir and –with-bdb-incdir
 
 * timsieved now handles usernames with dots (when unixhierarchysep
   is active)
@@ -100,7 +99,7 @@ Changes to the Cyrus IMAP Server since 2.1.11
 
 * Squatter now has an option to skip unmodified mailboxes.
 
-* Properly hash username to remove a user's sieve scripts when their
+* Properly hash username to remove a user’s sieve scripts when their
   INBOX is removed.
 
 * Reset output buffer when prot_flush returns EOF.
@@ -142,7 +141,7 @@ Changes to the Cyrus IMAP Server since 2.1.8
 * Better handling of errors in connecting to LMTP servers for
   deliver and lmtpproxyd.
 
-* Fix bug in pop3proxyd's pop3s handling.
+* Fix bug in pop3proxyd’s pop3s handling.
 
 * Fix Exim install documentation.
 
@@ -152,7 +151,7 @@ Changes to the Cyrus IMAP Server since 2.1.7
 
 * Change default locking method to fcntl from flock
 
-* Don't cleanup the original mailbox during a RENAME while holding
+* Don’t cleanup the original mailbox during a RENAME while holding
   the mailbox list lock
 
 * Quoting fixes in cyradm
@@ -202,8 +201,8 @@ Changes to the Cyrus IMAP Server since 2.1.4
   reconnect to the same server multiple times (useful for testing
   SSL/TLS session caching and DIGEST-MD5 fast reauth).
 
-* snmpgen generates stubbed out code so we don't waste resources on
-  something that just doesn't work. At some point in time, we'll make
+* snmpgen generates stubbed out code so we don’t waste resources on
+  something that just doesn’t work. At some point in time, we’ll make
   it work again as it would be useful to gather aggregate statistics
   on what commands are being used so we can better tune the server.
   This change closes bug #1191. New bug 1267 opened to re-enable the
@@ -214,14 +213,14 @@ Changes to the Cyrus IMAP Server since 2.1.4
 
 * ANNOTATEMORE improvements. Server annotation support has been
   added. We are also now using the /vendor/cmu/cyrus-imapd hierarchy.
-  The "info" command in cyradm now returns annotations for the given
+  The “info” command in cyradm now returns annotations for the given
   mailbox (provided that ANNOTATEMORE support is compiled into the
   server)
 
 * The RENAME command has been almost entirely rewritten. Now we rely
   on mailbox-level locking instead of locking the entire mailboxes
   file for the duration of the rename. ctl_cyrusdb -r now also cleans
-  up "reserved" mailboxes that may appear in the event of a crash.
+  up “reserved” mailboxes that may appear in the event of a crash.
 
 * ctl_mboxlist can now dump only a particular partition
 
@@ -246,7 +245,7 @@ Changes to the Cyrus IMAP Server since 2.1.4
 
 Changes to the Cyrus IMAP Server since 2.1.3
 
-* All "MAIL" and "SIEVE" notifications are now handled by notifyd
+* All “MAIL” and “SIEVE” notifications are now handled by notifyd
   which is a daemon that supports multiple notification methods. The
   mailnotifier and sievenotifier options have been added to
   /etc/imapd.conf to configure notifications. (Ken Murchison)
@@ -262,7 +261,7 @@ Changes to the Cyrus IMAP Server since 2.1.3
 * Fixed a bug in imap/append.c that would show itself if a message
   was being delivered to five or more different partitions.
 
-* Deliveries now don't create a redudant temporary file using
+* Deliveries now don’t create a redudant temporary file using
   tmpfile(); the staging directory is used instead. (Ken Murchison)
 
 * Fix a possible crashing bug in squatter. (Ken Murchison)
@@ -306,7 +305,7 @@ Changes to the Cyrus IMAP Server since 2.1.2
 * make the list of acceptable TLS ciphers configurable in
   /etc/imapd.conf
 
-* cyrusdb_skiplist fixes; it's now suitable for using in production
+* cyrusdb_skiplist fixes; it’s now suitable for using in production
   environments though there are still performance problems outstanding
 
 Changes to the Cyrus IMAP Server since 2.1.1
@@ -348,7 +347,7 @@ Changes to the Cyrus IMAP Server since 2.1.0
 
 * make deleting users faster
 
-* add a "-n" switch to remotepurge
+* add a “-n” switch to remotepurge
 
 * cyradm now does implicit SASL authorization
 

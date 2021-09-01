@@ -1,9 +1,8 @@
-
 Cyrus IMAP Server: Hacking
 **************************
 
 This file aims to be a guide to Cyrus coding style/conventions/useful
-utilities for people trying to approach the code in a sane way.  It's
+utilities for people trying to approach the code in a sane way.  It’s
 not well organized right now but hopefully that will improve with time
 ;)
 
@@ -41,7 +40,7 @@ strlcpy vs strncpy vs memcpy
    buf[5] = '\0'
 
 * you should try to avoid "strncpy", since it is much slower than
-  "memcpy" (it zero-fills the rest of the buffer) and isn't as safe as
+  "memcpy" (it zero-fills the rest of the buffer) and isn’t as safe as
   "strlcpy".
 
 * Use of the functions in this way will reduce the confusion
@@ -55,7 +54,7 @@ map_refresh and map_free
 ========================
 
 * In many cases, it is far more effective to read a file via the
-  operating system's mmap facility than it is to via the traditional
+  operating system’s mmap facility than it is to via the traditional
   "read()" and "lseek" system calls.  To this end, Cyrus provides an
   operating system independent wrapper around the "mmap()" services
   (or lack thereof) of the operating system.
@@ -80,7 +79,7 @@ Network Functions
 =================
 
 * Cyrus abstracts socket stream access to a concept we refer to as
-  "prot streams"  Prot Streams take care of all of the necessary SASL
+  “prot streams”  Prot Streams take care of all of the necessary SASL
   and TLS/SSL encryption that may need to happen before data goes
   out/comes in from the network.  The API is documented in lib/prot.h
 
@@ -105,11 +104,11 @@ think may be generally useful to people hacking on the cyrus source:
 * No one should ever call "DB->init()" or "DB->done()" cyrusdb
   functions except for in "libcyrus_init()".
 
-* I've been trying to keep "#include" statements for libcyrus and
+* I’ve been trying to keep "#include" statements for libcyrus and
   libimap alphabetical, and below any system includes, but this is
   merely my personal style
 
-* Don't exit at the bottom of "main" with "exit(x)" use "return"
+* Don’t exit at the bottom of "main" with "exit(x)" use "return"
   instead.
 
 * For all the command line utilities that need to be sure that they
@@ -120,7 +119,7 @@ think may be generally useful to people hacking on the cyrus source:
   ONLY way of exiting the application.  "fatal()" should always make
   an attempt to call "shut_down()" if it can (though it should have a
   recursive "fatal()" trap just in case).  Similarly, command line
-  utilities probably don't need a "shut_down()".
+  utilities probably don’t need a "shut_down()".
 
 
 Coding Standards
@@ -132,15 +131,15 @@ on the cyrus-devel list in June 2010.
 * Spacing is 4 characters with soft tabs at 8 - mixed tabs and
   spaces This corresponds to the vi settings *sw=4 sts=4 ts=8* etc.
 
-* Group the '*' character with the variable not the type, i.e.
+* Group the ‘*’ character with the variable not the type, i.e.
 
    char *foo;  /* correct */
    char* foo;  /* WRONG */
 
-* The keywords 'if', 'for', and 'while' take a space after the
+* The keywords ‘if’, ‘for’, and ‘while’ take a space after the
   keyword. The parentheses around the following expression are not
-  closely connected to the expression without any spaces.  The ';'
-  inside the 'for' expression have a space after them and not before.
+  closely connected to the expression without any spaces.  The ‘;’
+  inside the ‘for’ expression have a space after them and not before.
   For example:
 
    if (condition)              /* correct */
@@ -156,8 +155,8 @@ on the cyrus-devel list in June 2010.
    while(foo)                  /* WRONG */
    while( foo )                /* WRONG */
 
-* Use spaces around the double-character logical operator '||' but
-  don't use spaces around single-character bitwise operator '|'.
+* Use spaces around the double-character logical operator ‘||’ but
+  don’t use spaces around single-character bitwise operator ‘|’.
 
    int flags = FOO|BAR;        /* correct */
    int flags = FOO | BAR;      /* WRONG */
@@ -236,7 +235,7 @@ on the cyrus-devel list in June 2010.
   Specifically:
 
   * open braces are placed at the end of the line containing the
-    statement (such as an 'if') to which they belong, after a single
+    statement (such as an ‘if’) to which they belong, after a single
     space.
 
   * closing braces are placed on a line by themselves, aligned with
@@ -244,9 +243,9 @@ on the cyrus-devel list in June 2010.
     belongs.
 
   * this applies even when the closing brace is followed by an
-    'else' keyword.
+    ‘else’ keyword.
 
-   Yes, it's ugly and hard to read, but you get used to it and most of
+   Yes, it’s ugly and hard to read, but you get used to it and most of
    the code is currently like that.  Deal with it.
 
    while (cond) {              /* correct */
@@ -303,17 +302,17 @@ on the cyrus-devel list in June 2010.
        ...body...              /* WRONG */
    }                           /* WRONG */
 
-* The braces around a block used in an 'if'...'else if'...'else' may
-  be omitted if the statement is very simple and clear, such as a
-  single function call.  This is a judgement call though, so play it
-  safe and use braces.
+* The braces around a block used in an ‘if’…’else if’…’else’ may be
+  omitted if the statement is very simple and clear, such as a single
+  function call.  This is a judgement call though, so play it safe and
+  use braces.
 
    if (cond)                   /* correct, maybe */
        function();             /* correct, maybe */
    else                        /* correct, maybe */
        other_function();       /* correct, maybe */
 
-* The 'goto' keyword needs to be used very very sparingly and only
+* The ‘goto’ keyword needs to be used very very sparingly and only
   with forethought.  The only clearly good example is to goto a label
   at the end of a function to do cleanup under error conditions.
 
@@ -332,14 +331,14 @@ on the cyrus-devel list in June 2010.
        free(x);                /* correct */
    }                           /* correct */
 
-   Very occasionally, it may be permissable to use 'goto' from within
+   Very occasionally, it may be permissable to use ‘goto’ from within
    a complicated or multiply-nested loop, to the top of a loop, but
    only if using another control structure is *less* clear.
 
 * Generally, zero return is SUCCESS and integer return is an error
   code.
 
-* Use ""const char *"" where possible.
+* Use “"const char *"” where possible.
 
    int is_tacky(const char *name)              /* correct */
    {                                           /* correct */
@@ -351,7 +350,7 @@ on the cyrus-devel list in June 2010.
        return !strcmp(name, "britney");        /* WRONG */
    }                                           /* WRONG */
 
-* Use ""struct buf"" for variable length strings where possible.
+* Use “"struct buf"” for variable length strings where possible.
 
 * RAII
   http://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization
@@ -360,19 +359,19 @@ on the cyrus-devel list in June 2010.
   called whenever the structure needs cleaning up.  Likewise, any
   resources allocated during a function should be cleaned up in the
   same function, in a single code block at the end of the function
-  (see the comments on 'goto').
+  (see the comments on ‘goto’).
 
 * If you find yourself passing the same multiple parameters through
   many functions, create a struct and pass around a pointer to that
   instead.
 
-* DON'T EVER REUSE THE SAME VARIABLE FOR TWO DIFFERENT PURPOSES IN
-  THE SAME FUNCTION.  IN FACT, DON'T REUSE THE SAME VARIABLE _NAME_
-  FOR DIFFERENT PURPOSES.  KTHXBYE.  (note: this doesn't apply to 'i',
-  'n', etc which are used in multiple loops.  It applies to using the
-  same name for an absolute offset and a "within this mmap" offset
+* DON’T EVER REUSE THE SAME VARIABLE FOR TWO DIFFERENT PURPOSES IN
+  THE SAME FUNCTION.  IN FACT, DON’T REUSE THE SAME VARIABLE _NAME_
+  FOR DIFFERENT PURPOSES.  KTHXBYE.  (note: this doesn’t apply to ‘i’,
+  ‘n’, etc which are used in multiple loops.  It applies to using the
+  same name for an absolute offset and a “within this mmap” offset
   though, and it also applies to using the same variable name for
-  native order and network order numbers, which is where I've seen it
+  native order and network order numbers, which is where I’ve seen it
   a few times and been super frustrated!)
 
 * Write RFCs in comments capitalized with space after the RFC, like

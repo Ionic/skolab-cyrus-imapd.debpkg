@@ -1,4 +1,3 @@
-
 Cyrus IMAP 3.0.1 Release Notes
 ******************************
 
@@ -47,7 +46,7 @@ Bug fixes
 
 * Fixed parsing of vcard categories and nicknames
 
-* Fixed Issue #1872: don't crash when removing invalid sessions
+* Fixed Issue #1872: don’t crash when removing invalid sessions
 
 * Fixed Issue #1926: no longer report some client disconnects as
   IOERROR

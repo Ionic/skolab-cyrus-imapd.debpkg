@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Cyrus IMAP Server: Hacking &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Cyrus IMAP Server: Hacking &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../index.html"/>
         <link rel="up" title="Developer Guidance" href="../guidance.html"/>
         <link rel="next" title="Cyrus IMAP Server: Internationalization" href="internationalization.html"/>
         <link rel="prev" title="Developer Guidance" href="../guidance.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../developers.html">Developers</a> &raquo;</li>
       
@@ -785,18 +786,18 @@
   <span class="target" id="imap-developer-guidance-hacking"></span><div class="section" id="cyrus-imap-server-hacking">
 <h1>Cyrus IMAP Server: Hacking<a class="headerlink" href="#cyrus-imap-server-hacking" title="Permalink to this headline">¶</a></h1>
 <p>This file aims to be a guide to Cyrus coding style/conventions/useful
-utilities for people trying to approach the code in a sane way.  It's
+utilities for people trying to approach the code in a sane way.  It’s
 not well organized right now but hopefully that will improve with time
 ;)</p>
 <div class="section" id="memory-allocation">
 <h2>Memory Allocation<a class="headerlink" href="#memory-allocation" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>All cyrus memory allocation should be done through the libcyrus
-functions.  These are all written to correctly call <code class="docutils literal"><span class="pre">fatal()</span></code> in
+functions.  These are all written to correctly call <code class="docutils literal notranslate"><span class="pre">fatal()</span></code> in
 the event of an out-of-memory condition.</li>
-<li>In addition to <code class="docutils literal"><span class="pre">xmalloc</span></code> and <code class="docutils literal"><span class="pre">xrealloc</span></code>, we provide replacements
-for <code class="docutils literal"><span class="pre">strdup</span></code>, <code class="docutils literal"><span class="pre">strndup</span></code>, and a <code class="docutils literal"><span class="pre">malloc</span></code> that will guarantee
-zeroed block of memory (<code class="docutils literal"><span class="pre">xzmalloc</span></code>).</li>
+<li>In addition to <code class="docutils literal notranslate"><span class="pre">xmalloc</span></code> and <code class="docutils literal notranslate"><span class="pre">xrealloc</span></code>, we provide replacements
+for <code class="docutils literal notranslate"><span class="pre">strdup</span></code>, <code class="docutils literal notranslate"><span class="pre">strndup</span></code>, and a <code class="docutils literal notranslate"><span class="pre">malloc</span></code> that will guarantee
+zeroed block of memory (<code class="docutils literal notranslate"><span class="pre">xzmalloc</span></code>).</li>
 <li>If you are going to need to do a large number of small allocations,
 and then free them all at once, you should look at the memory pool
 routines, which are much faster, but will leak memory until you
@@ -806,30 +807,30 @@ free the entire pool at once.</li>
 <div class="section" id="strlcpy-vs-strncpy-vs-memcpy">
 <h2>strlcpy vs strncpy vs memcpy<a class="headerlink" href="#strlcpy-vs-strncpy-vs-memcpy" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>use <code class="docutils literal"><span class="pre">strlcpy</span></code> when you know the size of the buffer, e.g.:</li>
+<li>use <code class="docutils literal notranslate"><span class="pre">strlcpy</span></code> when you know the size of the buffer, e.g.:</li>
 </ul>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">50</span><span class="p">];</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">50</span><span class="p">];</span>
 <span class="n">strlcpy</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">));</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li>use <code class="docutils literal"><span class="pre">memcpy</span></code> to truncate a string into a buffer you know is large
+<li>use <code class="docutils literal notranslate"><span class="pre">memcpy</span></code> to truncate a string into a buffer you know is large
 enough. Note that when you do this the resulting buffer will NOT BE
 NULL TERMINATED:</li>
 </ul>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">memcpy</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">memcpy</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
 <span class="n">buf</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\0</span><span class="s1">&#39;</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li>you should try to avoid <code class="docutils literal"><span class="pre">strncpy</span></code>, since it is much slower than
-<code class="docutils literal"><span class="pre">memcpy</span></code> (it zero-fills the rest of the buffer) and isn't as safe
-as <code class="docutils literal"><span class="pre">strlcpy</span></code>.</li>
+<li>you should try to avoid <code class="docutils literal notranslate"><span class="pre">strncpy</span></code>, since it is much slower than
+<code class="docutils literal notranslate"><span class="pre">memcpy</span></code> (it zero-fills the rest of the buffer) and isn’t as safe
+as <code class="docutils literal notranslate"><span class="pre">strlcpy</span></code>.</li>
 <li>Use of the functions in this way will reduce the confusion involved
 in their various behaviors. In other words, this avoids things that
 look like:</li>
 </ul>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">strncpy</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">strncpy</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
@@ -837,29 +838,29 @@ look like:</li>
 <h2>map_refresh and map_free<a class="headerlink" href="#map-refresh-and-map-free" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>In many cases, it is far more effective to read a file via the
-operating system's mmap facility than it is to via the traditional
-<code class="docutils literal"><span class="pre">read()</span></code> and <code class="docutils literal"><span class="pre">lseek</span></code> system calls.  To this end, Cyrus provides
-an operating system independent wrapper around the <code class="docutils literal"><span class="pre">mmap()</span></code>
+operating system’s mmap facility than it is to via the traditional
+<code class="docutils literal notranslate"><span class="pre">read()</span></code> and <code class="docutils literal notranslate"><span class="pre">lseek</span></code> system calls.  To this end, Cyrus provides
+an operating system independent wrapper around the <code class="docutils literal notranslate"><span class="pre">mmap()</span></code>
 services (or lack thereof) of the operating system.</li>
 <li>Cyrus currently only supports read-only memory maps, all writes back
 to a file need to be done via the more traditional facilities. This
 is to enable very low-performance support for operating systems
-which do not provide an <code class="docutils literal"><span class="pre">mmap()</span></code> facility via a fake userspace
-<code class="docutils literal"><span class="pre">mmap</span></code>.</li>
-<li>To create a map, simply call <code class="docutils literal"><span class="pre">map_refresh</span></code> on the map (details
-are in lib/map.h).  To free it, call <code class="docutils literal"><span class="pre">map_free</span></code> on the same map.</li>
+which do not provide an <code class="docutils literal notranslate"><span class="pre">mmap()</span></code> facility via a fake userspace
+<code class="docutils literal notranslate"><span class="pre">mmap</span></code>.</li>
+<li>To create a map, simply call <code class="docutils literal notranslate"><span class="pre">map_refresh</span></code> on the map (details
+are in lib/map.h).  To free it, call <code class="docutils literal notranslate"><span class="pre">map_free</span></code> on the same map.</li>
 <li>Despite the fact that the maps are read-only, it is often useful
 to open the file descriptors O_RDWR, especially if the file
 descriptors could possibly be used for writing elsewhere in the
 code. Some operating systems REQUIRE file descriptors that are
-<code class="docutils literal"><span class="pre">mmap()</span></code>-ed to be opened O_RDWR, so just do it.</li>
+<code class="docutils literal notranslate"><span class="pre">mmap()</span></code>-ed to be opened O_RDWR, so just do it.</li>
 </ul>
 </div>
 <div class="section" id="network-functions">
 <h2>Network Functions<a class="headerlink" href="#network-functions" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Cyrus abstracts socket stream access to a concept we refer to as
-&quot;prot streams&quot;  Prot Streams take care of all of the necessary
+“prot streams”  Prot Streams take care of all of the necessary
 SASL and TLS/SSL encryption that may need to happen before data
 goes out/comes in from the network.  The API is documented in
 lib/prot.h</li>
@@ -876,23 +877,23 @@ think may be generally useful to people hacking on the cyrus source:</p>
 <li>Command line apps should link cli_fatal.o so they all fatal()
 in the same way, unless there is a really good reason they need to
 do something unique.</li>
-<li>If you call <code class="docutils literal"><span class="pre">cyrus_init()</span></code> you must call <code class="docutils literal"><span class="pre">cyrus_done()</span></code> before
+<li>If you call <code class="docutils literal notranslate"><span class="pre">cyrus_init()</span></code> you must call <code class="docutils literal notranslate"><span class="pre">cyrus_done()</span></code> before
 you exit.</li>
-<li>No one should ever call <code class="docutils literal"><span class="pre">DB-&gt;init()</span></code> or <code class="docutils literal"><span class="pre">DB-&gt;done()</span></code> cyrusdb
-functions except for in <code class="docutils literal"><span class="pre">libcyrus_init()</span></code>.</li>
-<li>I've been trying to keep <code class="docutils literal"><span class="pre">#include</span></code> statements for libcyrus and
+<li>No one should ever call <code class="docutils literal notranslate"><span class="pre">DB-&gt;init()</span></code> or <code class="docutils literal notranslate"><span class="pre">DB-&gt;done()</span></code> cyrusdb
+functions except for in <code class="docutils literal notranslate"><span class="pre">libcyrus_init()</span></code>.</li>
+<li>I’ve been trying to keep <code class="docutils literal notranslate"><span class="pre">#include</span></code> statements for libcyrus and
 libimap alphabetical, and below any system includes, but this is
 merely my personal style</li>
-<li>Don't exit at the bottom of <code class="docutils literal"><span class="pre">main</span></code> with <code class="docutils literal"><span class="pre">exit(x)</span></code> use
-<code class="docutils literal"><span class="pre">return</span></code> instead.</li>
+<li>Don’t exit at the bottom of <code class="docutils literal notranslate"><span class="pre">main</span></code> with <code class="docutils literal notranslate"><span class="pre">exit(x)</span></code> use
+<code class="docutils literal notranslate"><span class="pre">return</span></code> instead.</li>
 <li>For all the command line utilities that need to be sure that they
 are running as the cyrus user, it should be the first thing they
-do, and they should exit with an appropriate <code class="docutils literal"><span class="pre">fatal()</span></code> call.</li>
-<li>All services should have a <code class="docutils literal"><span class="pre">shut_down</span></code> call.  It should be the
-ONLY way of exiting the application.  <code class="docutils literal"><span class="pre">fatal()</span></code> should always
-make an attempt to call <code class="docutils literal"><span class="pre">shut_down()</span></code> if it can (though it should
-have a recursive <code class="docutils literal"><span class="pre">fatal()</span></code> trap just in case).  Similarly,
-command line utilities probably don't need a <code class="docutils literal"><span class="pre">shut_down()</span></code>.</li>
+do, and they should exit with an appropriate <code class="docutils literal notranslate"><span class="pre">fatal()</span></code> call.</li>
+<li>All services should have a <code class="docutils literal notranslate"><span class="pre">shut_down</span></code> call.  It should be the
+ONLY way of exiting the application.  <code class="docutils literal notranslate"><span class="pre">fatal()</span></code> should always
+make an attempt to call <code class="docutils literal notranslate"><span class="pre">shut_down()</span></code> if it can (though it should
+have a recursive <code class="docutils literal notranslate"><span class="pre">fatal()</span></code> trap just in case).  Similarly,
+command line utilities probably don’t need a <code class="docutils literal notranslate"><span class="pre">shut_down()</span></code>.</li>
 </ul>
 </div>
 <div class="section" id="coding-standards">
@@ -902,20 +903,20 @@ out on the cyrus-devel list in June 2010.</p>
 <ul class="simple">
 <li>Spacing is 4 characters with soft tabs at 8 - mixed tabs and spaces
 This corresponds to the vi settings <cite>sw=4 sts=4 ts=8</cite> etc.</li>
-<li>Group the '*' character with the variable not the type, i.e.</li>
+<li>Group the ‘*’ character with the variable not the type, i.e.</li>
 </ul>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">char</span> <span class="o">*</span><span class="n">foo</span><span class="p">;</span>  <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">char</span> <span class="o">*</span><span class="n">foo</span><span class="p">;</span>  <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
 <span class="n">char</span><span class="o">*</span> <span class="n">foo</span><span class="p">;</span>  <span class="o">/*</span> <span class="n">WRONG</span> <span class="o">*/</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li>The keywords 'if', 'for', and 'while' take a space after the keyword.
+<li>The keywords ‘if’, ‘for’, and ‘while’ take a space after the keyword.
 The parentheses around the following expression are not closely
-connected to the expression without any spaces.  The ';' inside
-the 'for' expression have a space after them and not before.
+connected to the expression without any spaces.  The ‘;’ inside
+the ‘for’ expression have a space after them and not before.
 For example:</li>
 </ul>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">condition</span><span class="p">)</span>              <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">condition</span><span class="p">)</span>              <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
 <span class="k">if</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>               <span class="o">/*</span> <span class="n">WRONG</span> <span class="o">*/</span>
 <span class="k">if</span><span class="p">(</span> <span class="n">condition</span> <span class="p">)</span>             <span class="o">/*</span> <span class="n">WRONG</span> <span class="o">*/</span>
 
@@ -931,10 +932,10 @@ For example:</li>
 </div>
 <ul class="simple">
 <li>Use spaces around the double-character logical operator
-'||' but don't use spaces around single-character bitwise
-operator '|'.</li>
+‘||’ but don’t use spaces around single-character bitwise
+operator ‘|’.</li>
 </ul>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nb">int</span> <span class="n">flags</span> <span class="o">=</span> <span class="n">FOO</span><span class="o">|</span><span class="n">BAR</span><span class="p">;</span>        <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">int</span> <span class="n">flags</span> <span class="o">=</span> <span class="n">FOO</span><span class="o">|</span><span class="n">BAR</span><span class="p">;</span>        <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
 <span class="nb">int</span> <span class="n">flags</span> <span class="o">=</span> <span class="n">FOO</span> <span class="o">|</span> <span class="n">BAR</span><span class="p">;</span>      <span class="o">/*</span> <span class="n">WRONG</span> <span class="o">*/</span>
 <span class="k">if</span> <span class="p">(</span><span class="n">itchy</span> <span class="o">||</span> <span class="n">scratchy</span><span class="p">)</span>      <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
 <span class="k">if</span> <span class="p">(</span><span class="n">itchy</span><span class="o">||</span><span class="n">scratchy</span><span class="p">)</span>        <span class="o">/*</span> <span class="n">WRONG</span> <span class="o">*/</span>
@@ -945,7 +946,7 @@ operator '|'.</li>
 all other braces are inline.  Return types are inline with function
 definition.  Old K&amp;R style function definitions are not allowed.</li>
 </ul>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">void</span> <span class="n">thing</span><span class="p">(</span><span class="nb">int</span> <span class="n">val</span><span class="p">)</span>         <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">void</span> <span class="n">thing</span><span class="p">(</span><span class="nb">int</span> <span class="n">val</span><span class="p">)</span>         <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
 <span class="p">{</span>                           <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
     <span class="o">...</span><span class="n">body</span><span class="o">...</span>
 <span class="p">}</span>                           <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
@@ -990,7 +991,7 @@ definition.  Old K&amp;R style function definitions are not allowed.</li>
 with the second and subsequent lines indented so that they
 line up with the start of the first line of arguments.</li>
 </ul>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">void</span> <span class="n">toomanyargs</span><span class="p">(</span><span class="nb">int</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">arg2</span><span class="p">,</span>        <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">void</span> <span class="n">toomanyargs</span><span class="p">(</span><span class="nb">int</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">arg2</span><span class="p">,</span>        <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
                  <span class="n">struct</span> <span class="n">whatever</span> <span class="o">*</span><span class="n">arg3</span><span class="p">,</span> <span class="nb">int</span> <span class="n">arg4</span><span class="p">)</span>   <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
 <span class="p">{</span>                                                   <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
     <span class="o">...</span><span class="n">body</span><span class="o">...</span>
@@ -1016,20 +1017,20 @@ line up with the start of the first line of arguments.</li>
 <li>Within a function, braces are used in old-fashioned K&amp;R style.
 Specifically:<ul>
 <li>open braces are placed at the end of the line containing the
-statement (such as an 'if') to which they belong, after a
+statement (such as an ‘if’) to which they belong, after a
 single space.</li>
 <li>closing braces are placed on a line by themselves, aligned
 with the start of the statement to which their matching
 open brace belongs.</li>
 <li>this applies even when the closing brace is followed by
-an 'else' keyword.</li>
+an ‘else’ keyword.</li>
 </ul>
 </li>
 </ul>
 <blockquote>
-<div>Yes, it's ugly and hard to read, but you get used to it and
+<div>Yes, it’s ugly and hard to read, but you get used to it and
 most of the code is currently like that.  Deal with it.</div></blockquote>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">while</span> <span class="p">(</span><span class="n">cond</span><span class="p">)</span> <span class="p">{</span>              <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">while</span> <span class="p">(</span><span class="n">cond</span><span class="p">)</span> <span class="p">{</span>              <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
     <span class="o">...</span><span class="n">body</span><span class="o">...</span>              <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
 <span class="p">}</span>                           <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
 
@@ -1085,24 +1086,24 @@ most of the code is currently like that.  Deal with it.</div></blockquote>
 </pre></div>
 </div>
 <ul class="simple">
-<li>The braces around a block used in an 'if'...'else if'...'else'
+<li>The braces around a block used in an ‘if’…’else if’…’else’
 may be omitted if the statement is very simple and clear, such
 as a single function call.  This is a judgement call though,
 so play it safe and use braces.</li>
 </ul>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">cond</span><span class="p">)</span>                   <span class="o">/*</span> <span class="n">correct</span><span class="p">,</span> <span class="n">maybe</span> <span class="o">*/</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">cond</span><span class="p">)</span>                   <span class="o">/*</span> <span class="n">correct</span><span class="p">,</span> <span class="n">maybe</span> <span class="o">*/</span>
     <span class="n">function</span><span class="p">();</span>             <span class="o">/*</span> <span class="n">correct</span><span class="p">,</span> <span class="n">maybe</span> <span class="o">*/</span>
 <span class="k">else</span>                        <span class="o">/*</span> <span class="n">correct</span><span class="p">,</span> <span class="n">maybe</span> <span class="o">*/</span>
     <span class="n">other_function</span><span class="p">();</span>       <span class="o">/*</span> <span class="n">correct</span><span class="p">,</span> <span class="n">maybe</span> <span class="o">*/</span>
 </pre></div>
 </div>
 <ul class="simple">
-<li>The 'goto' keyword needs to be used very very sparingly and only
+<li>The ‘goto’ keyword needs to be used very very sparingly and only
 with forethought.  The only clearly good example is to goto
 a label at the end of a function to do cleanup under error
 conditions.</li>
 </ul>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">struct</span> <span class="n">bar</span> <span class="o">*</span><span class="n">b</span><span class="p">)</span>     <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">void</span> <span class="n">foo</span><span class="p">(</span><span class="n">struct</span> <span class="n">bar</span> <span class="o">*</span><span class="n">b</span><span class="p">)</span>     <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
 <span class="p">{</span>                           <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
     <span class="n">char</span> <span class="o">*</span><span class="n">x</span> <span class="o">=</span> <span class="n">xmalloc</span><span class="p">(</span><span class="o">...</span><span class="p">);</span> <span class="o">/*</span> <span class="n">correct</span> <span class="o">*/</span>
 
@@ -1119,14 +1120,14 @@ conditions.</li>
 </pre></div>
 </div>
 <blockquote>
-<div>Very occasionally, it may be permissable to use 'goto' from within
+<div>Very occasionally, it may be permissable to use ‘goto’ from within
 a complicated or multiply-nested loop, to the top of a loop, but
 only if using another control structure is <em>less</em> clear.</div></blockquote>
 <ul class="simple">
 <li>Generally, zero return is SUCCESS and integer return is an error code.</li>
-<li>Use &quot;<code class="docutils literal"><span class="pre">const</span> <span class="pre">char</span> <span class="pre">*</span></code>&quot; where possible.</li>
+<li>Use “<code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char</span> <span class="pre">*</span></code>” where possible.</li>
 </ul>
-<div class="highlight-default"><div class="highlight"><pre><span></span>int is_tacky(const char *name)              /* correct */
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>int is_tacky(const char *name)              /* correct */
 {                                           /* correct */
     return !strcmp(name, &quot;britney&quot;);        /* correct */
 }                                           /* correct */
@@ -1138,25 +1139,25 @@ int is_tacky(char *name)                    /* WRONG */
 </pre></div>
 </div>
 <ul class="simple">
-<li>Use &quot;<code class="docutils literal"><span class="pre">struct</span> <span class="pre">buf</span></code>&quot; for variable length strings where possible.</li>
+<li>Use “<code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">buf</span></code>” for variable length strings where possible.</li>
 <li>RAII <a class="reference external" href="http://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization">http://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization</a>
 In practice, this means each structure should have a single cleanup
 function which handles all possible states of the structure and
 is called whenever the structure needs cleaning up.  Likewise,
 any resources allocated during a function should be cleaned up
 in the same function, in a single code block at the end of the
-function (see the comments on 'goto').</li>
+function (see the comments on ‘goto’).</li>
 <li>If you find yourself passing the same multiple parameters through many
 functions, create a struct and pass around a pointer to that instead.</li>
-<li>DON'T EVER REUSE THE SAME VARIABLE FOR TWO DIFFERENT PURPOSES IN THE SAME
-FUNCTION.  IN FACT, DON'T REUSE THE SAME VARIABLE _NAME_ FOR DIFFERENT
-PURPOSES.  KTHXBYE.  (note: this doesn't apply to 'i', 'n', etc which are
+<li>DON’T EVER REUSE THE SAME VARIABLE FOR TWO DIFFERENT PURPOSES IN THE SAME
+FUNCTION.  IN FACT, DON’T REUSE THE SAME VARIABLE _NAME_ FOR DIFFERENT
+PURPOSES.  KTHXBYE.  (note: this doesn’t apply to ‘i’, ‘n’, etc which are
 used in multiple loops.  It applies to using the same name for an absolute
-offset and a &quot;within this mmap&quot; offset though, and it also applies to
+offset and a “within this mmap” offset though, and it also applies to
 using the same variable name for native order and network order numbers,
-which is where I've seen it a few times and been super frustrated!)</li>
+which is where I’ve seen it a few times and been super frustrated!)</li>
 <li>Write RFCs in comments capitalized with space after the RFC, like
-<code class="docutils literal"><span class="pre">RFC</span> <span class="pre">1234</span></code>, not like <code class="docutils literal"><span class="pre">rfc</span> <span class="pre">1234</span></code> or <code class="docutils literal"><span class="pre">RFC1234</span></code>.</li>
+<code class="docutils literal notranslate"><span class="pre">RFC</span> <span class="pre">1234</span></code>, not like <code class="docutils literal notranslate"><span class="pre">rfc</span> <span class="pre">1234</span></code> or <code class="docutils literal notranslate"><span class="pre">RFC1234</span></code>.</li>
 </ul>
 </div>
 </div>
@@ -1182,7 +1183,7 @@ which is where I've seen it a few times and been super frustrated!)</li>
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on May 17 2020
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1199,7 +1200,7 @@ which is where I've seen it a few times and been super frustrated!)</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1208,7 +1209,7 @@ which is where I've seen it a few times and been super frustrated!)</li>
       <script type="text/javascript" src="../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
 
   
 

@@ -1,14 +1,13 @@
-
 Cyrus Roadmap
 *************
 
 This is a very general, high-level view of where the Cyrus project is
 heading in the future, and the amount of code support you may expect
-to receive if you're running an older version of Cyrus.
+to receive if you’re running an older version of Cyrus.
 
-This is under your control! If there's a feature you'd like to see
-added, or testing/documentation you'd like to see improved, we'd love
-to have your involvement to help make it happen. We're here to support
+This is under your control! If there’s a feature you’d like to see
+added, or testing/documentation you’d like to see improved, we’d love
+to have your involvement to help make it happen. We’re here to support
 you. Contact us and take a look at the Contributor guides.
 
 
@@ -62,7 +61,7 @@ Future
 * Complete compliance with all tests from ImapTest (integrated with
   Cassandane)
 
-* cyr_info utility - configuration 'lint' and dumping tool.
+* cyr_info utility - configuration ‘lint’ and dumping tool.
 
 * MESSAGE quota support (**RFC 2087**)
 

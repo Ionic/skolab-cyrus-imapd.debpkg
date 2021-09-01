@@ -1,10 +1,9 @@
-
 Cyrus IMAP Server: Notes
 ************************
 
-* appending: it's important that the index records for individual
+* appending: it’s important that the index records for individual
   messages make it to disk before the index header indicating that
-  they're there. so something like:
+  they’re there. so something like:
 
   1. sync messages to disk (or depend on "link()" being atomic)
 

@@ -1,4 +1,3 @@
-
 **cyrus.conf**
 **************
 
@@ -25,10 +24,10 @@ into sections of the form
 where *section* is the name of the section, *name* is the name of the
 entry and *arguments* is the whitespace-separated list of arguments
 for the entry.  The *name* may be any sequence of alphabetic and
-numeric characters, but may not contain punctuation such as '-' or
-'_'.  In the **SERVICES** section, names must be unique.
+numeric characters, but may not contain punctuation such as ‘-‘ or
+‘_’.  In the **SERVICES** section, names must be unique.
 
-Blank lines and lines beginning with ``#'' are ignored.
+Blank lines and lines beginning with ``#’’ are ignored.
 
 
 Section Descriptions
@@ -37,7 +36,7 @@ Section Descriptions
 The paragraphs below detail the four sections (**START**,
 **SERVICES**, **EVENTS**, **DAEMON**) that can be placed in the
 "/etc/cyrus.conf" file.  The arguments that are available for each
-entry within the section are described, and each argument's default
+entry within the section are described, and each argument’s default
 value is shown.
 
 An important distinction exists between **SERVICES** and **DAEMON** ;
@@ -52,7 +51,7 @@ Note: If master(8) is started in debugging mode (**-D**) the
   terminated by master(8).
 
 Arguments can appear in any order. Some arguments have no default
-value, these are listed with ``<no default>''.  For string arguments,
+value, these are listed with ``<no default>’‘.  For string arguments,
 the value MUST be enclosed in double quotes.
 
 
@@ -86,7 +85,7 @@ on certain Internet/UNIX sockets.
    **babysit=**0
 
    Integer value - if non-zero, will make sure at least one process is
-   pre-forked, and will set the maxforkrate to 10 if it's zero.
+   pre-forked, and will set the maxforkrate to 10 if it’s zero.
 
    **cmd=**<no default>
 
@@ -149,7 +148,7 @@ on certain Internet/UNIX sockets.
    **maxforkrate=**0
 
    Maximum number of processes to fork per second - the master will
-   insert sleeps to ensure it doesn't fork faster than this on
+   insert sleeps to ensure it doesn’t fork faster than this on
    average.
 
 
@@ -223,8 +222,8 @@ Access Control
 
 When TCP Wrappers is used to control access to Cyrus services, the
 *name* of the service entry should be used as the process name in the
-*hosts_access(5)* table.  For instance, in the example above, "imap",
-"imaps", "lmtpunix" and "lmtp" would be used as the process names.
+*hosts_access(5)* table.  For instance, in the example above, “imap”,
+“imaps”, “lmtpunix” and “lmtp” would be used as the process names.
 This allows a single daemon such as imapd to be run in different modes
 or configurations (i.e., SSL and non-SSL enabled) yet still have
 separate access control rules.

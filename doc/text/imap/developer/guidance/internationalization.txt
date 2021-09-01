@@ -1,4 +1,3 @@
-
 Cyrus IMAP Server: Internationalization
 ***************************************
 
@@ -11,30 +10,30 @@ searching. The base spec of IMAP4 only requires understanding multiple
 character sets to properly implement SEARCH. Since the base spec came
 out, several extensions have been proposed that require further
 charset support: SORT, THREAD, and the Sieve subsystem. As of this
-writing, Cyrus doesn't correctly support these other commands.
+writing, Cyrus doesn’t correctly support these other commands.
 
 Cyrus currently only believes in 16-bit characters. Technically,
 Unicode has up to 21-bit characters (expressible in UTF-16 and 3-byte
-UTF-8) and ISO 10646 allows up to 31-bit characters (though ISO's
+UTF-8) and ISO 10646 allows up to 31-bit characters (though ISO’s
 current policy is to not allocate any characters outside of the 21-bit
 Unicode range). The lower 16-bit characters make up the basic
 multilingual plane (BMP) where the majority of languages live. This
 restriction is apparent in "charset.c:writeutf8()", the UTF-8
 decoders, and the Unicode canonicalization table used by Cyrus. Since
-Cyrus's known character sets (except for UTF-8) don't contain any
-characters off of the BMP this isn't seen to be a major problem.
+Cyrus’s known character sets (except for UTF-8) don’t contain any
+characters off of the BMP this isn’t seen to be a major problem.
 
 Throughout this text, Unicode and ISO 10646 will be used
 interchangeable to refer to the 16-bit character set of the BMP,
-regardless of encoding. "Character", unless otherwise specified,
+regardless of encoding. “Character”, unless otherwise specified,
 refers to a single Unicode character "ffff" or under.
 
 
 cyrus canonical form
 ====================
 
-Since when users search e-mail messages it's much easier for them to
-eliminate false positives than realize there are hits that aren't
+Since when users search e-mail messages it’s much easier for them to
+eliminate false positives than realize there are hits that aren’t
 displayed, the Cyrus searching algorithm errs on the side of more
 matches. Before comparing any two strings, Cyrus puts them in a
 canonical form. Logically, the process works as follows:
@@ -55,16 +54,16 @@ canonical form. Logically, the process works as follows:
   (These are Unicode characters "0300"-"03ff".)
 
 * certain characters are expanded to alternative spellings using
-  ASCII characters, such as "æ" to "ae".
+  ASCII characters, such as “æ” to “ae”.
 
 * the output characters are then encoded in UTF-8.
 
 The actual transcoding does all of these steps at once with the aid of
 tables, carefully built at compile-time.
 
-The central part of Cyrus's internationalization support is it's
+The central part of Cyrus’s internationalization support is it’s
 transcoding routines in "lib/charset.[ch]", and "lib/chartable.[ch]".
-Cyrus's transcoding routines are very elegant and very compact, thus
+Cyrus’s transcoding routines are very elegant and very compact, thus
 somewhat intimidating. During compilation, Cyrus builds up a large
 number of tables (see mkchartable) and uses them so that it never has
 to consider more than a single octet at a time while outputting the
@@ -97,7 +96,7 @@ bufsz)"
 
 "comp_pat *charset_compilepat(const char *s)"
    Compiles a NUL-terminated canonicalized string *s* into a Boyer-
-   Moore table for fast searching. I'll describe these compiled
+   Moore table for fast searching. I’ll describe these compiled
    patterns later.
 
 "void charset_freepat(comp_pat *pat)"
@@ -188,7 +187,7 @@ understand, I use them in discussing their semantics.
 control code reference
 ----------------------
 
-"TRANSLATE" recognizes the following "normal" control codes:
+"TRANSLATE" recognizes the following “normal” control codes:
 
 XLT
    This is the first octet of the four octet sequence, indicating that
@@ -233,15 +232,15 @@ END
    "TRANSLATE" is next called, that input octet will be interpreted
    against the current active table; the stack does not change.
 
-In addition, it recognizes the following "special" control codes for
-charsets that aren't easily represented by a set of tables, UTF-8 and
+In addition, it recognizes the following “special” control codes for
+charsets that aren’t easily represented by a set of tables, UTF-8 and
 UTF-7:
 
 U7F
    UTF-7 consists of US-ASCII characters and a special escape
    character that indicates a transition to base-64 encoded UTF-16
    characters. The virtual machine has built in code to handle the
-   base64 decoding. In UTF-7's base64, 8 input octets result in 3
+   base64 decoding. In UTF-7’s base64, 8 input octets result in 3
    characters, so the tables would be rather large.
 
 U7N
@@ -264,7 +263,7 @@ U83_3
    3rd octet of a 3-octet UTF-8 input. This produces the output
    characters and has an implicit jump to the 1st table of UTF-8.
 
-Finally, it's useful to mention the special character "EMPTY" which is
+Finally, it’s useful to mention the special character "EMPTY" which is
 guaranteed not to match any character. It is also represented by an
 uppercase US-ASCII character.
 
@@ -308,7 +307,7 @@ characters. For the US-ASCII and ISO-8859-x character sets this is
 trivial: each input byte corresponds to a single Unicode character.
 (Actually, some ISO-8859-x octets do not map to any Unicode character.
 In that case, the file either does not contain that octet or map it to
-""????"".)
+“"????"”.)
 
 Other character sets are trickier. For instance, GB-2312 has both
 single and double byte characters, but is still a simple map from
@@ -317,25 +316,25 @@ character encodings. For instance, ISO-2022-JP starts in US-ASCII mode
 and uses "1B" as an escape character followed by another two
 characters to select a new mode.
 
-The input charset labels modes with "":"" followed by the mode name.
-The starting mode ""US-ASCII"" in ISO-2022-JP is preceded by "":US-
-ASCII"". Mode transitions are denoted by a Unicode conversion of
-"">newmode"" or "":newmode"". To denote that the octet "42"
-transitions into the ""US-ASCII"" mode, the charset file has ""42 >US-
-ASCII"". The mode names themselves are arbitrary labels and have no
+The input charset labels modes with “":"” followed by the mode name.
+The starting mode “"US-ASCII"” in ISO-2022-JP is preceded by “":US-
+ASCII"”. Mode transitions are denoted by a Unicode conversion of
+“">newmode"” or “":newmode"”. To denote that the octet "42"
+transitions into the “"US-ASCII"” mode, the charset file has “"42 >US-
+ASCII"”. The mode names themselves are arbitrary labels and have no
 effect on the output.
 
-The input charset labels modes with ":" followed by the mode name. The
-mode name is optionally followed by a space and the ""<"" character.
-If the ""<"" character is present, then all translations will be
+The input charset labels modes with “:” followed by the mode name. The
+mode name is optionally followed by a space and the “"<"” character.
+If the “"<"” character is present, then all translations will be
 followed by a RET instruction instead of an END instruction.
 
-The transition "">newmode"" results in a JSR instruction being
+The transition “">newmode"” results in a JSR instruction being
 generated. A JMP instruction is generated by a transition of
-"":newmode"".
+“":newmode"”.
 
-The input byte can be specified as ""*"". This is used to define the
-"default action" which is used for input bytes that are not otherwise
+The input byte can be specified as “"*"”. This is used to define the
+“default action” which is used for input bytes that are not otherwise
 defined for the mode. If the default action is not explicitly stated,
 it is a translation to EMPTY.
 
@@ -362,7 +361,7 @@ separated by semicolons:
 
 * decimal digit value (unused)
 
-* digit value (unused, and, no, I don't know the difference)
+* digit value (unused, and, no, I don’t know the difference)
 
 * numeric value including fractions (unused)
 
@@ -385,7 +384,7 @@ unicode fixup table
 
 The "unifix.txt" file contains Cyrus-specific mappings for characters.
 It overrides the "unidata2.txt" table. Each rule in the file is
-explained with a comment. It's helpful to remember that the Unicode
+explained with a comment. It’s helpful to remember that the Unicode
 general categories starting with "Z" represent whitespace, and
 whitespace is always removed.
 

@@ -1,4 +1,3 @@
-
 Cyrus IMAP 2.4.6 Release Notes
 ******************************
 
@@ -20,11 +19,11 @@ Changes to the Cyrus IMAP Server since 2.4.5
 
 * Fixed Bug #3369 - crash when undumping mailbox during XFER
 
-* Fixed Bug #3361 - shared folders not listing in LSUB "" % - only
+* Fixed Bug #3361 - shared folders not listing in LSUB “” % - only
   with unixheirsep and altnamespace
 
-* Fixed Bug #3362 - "too many open files" when doing XFER of a user
-  with too many sub mailboxes. Makes XFER less "atomic", but now it
+* Fixed Bug #3362 - “too many open files” when doing XFER of a user
+  with too many sub mailboxes. Makes XFER less “atomic”, but now it
   works, which is good!
 
 * Fixed Bug #3313 - md5 library usage. Properly this time!

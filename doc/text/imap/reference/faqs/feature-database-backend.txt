@@ -1,8 +1,7 @@
-
 Which database backend should I use for which databases?
 ********************************************************
 
-Here's a brief summary of the major database types:
+Here’s a brief summary of the major database types:
 
 * **Skiplist**: Proprietary Cyrus Format, fast enumeration,
   moderately fast write, moderately fast random access, binary support

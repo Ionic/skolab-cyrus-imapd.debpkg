@@ -1,4 +1,3 @@
-
 Cyrus IMAP 3.0.14 Release Notes
 *******************************
 
@@ -35,7 +34,7 @@ Bug fixes
   mboxnames, not internal names (additional fixes that were not
   included in 3.0.13)
 
-* Fixed: don't cross '.' boundaries when iterating DELETED mailboxes
+* Fixed: don’t cross ‘.’ boundaries when iterating DELETED mailboxes
 
 * Fixed Issue #3116: cyr_info(8) now correctly validates
   archivepartition- settings
@@ -44,5 +43,5 @@ Bug fixes
 
 * Fixed Issue #3123: XFER now recognises 3.1, 3.2 and 3.3 backends
 
-* Fixed: XFER now syslogs a warning when it doesn't recognise the
+* Fixed: XFER now syslogs a warning when it doesn’t recognise the
   backend Cyrus version

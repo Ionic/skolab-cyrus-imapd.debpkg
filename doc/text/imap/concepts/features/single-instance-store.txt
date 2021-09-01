@@ -1,8 +1,7 @@
-
 Single-Instance Store
 *********************
 
-It is rather uncommon for last week's holiday photos or last weekend's
+It is rather uncommon for last week’s holiday photos or last weekend’s
 embarrassing pub crawl videos to be sent to just one user of Cyrus
 IMAP.
 

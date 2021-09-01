@@ -1,4 +1,3 @@
-
 Mail Spool Partitions
 *********************
 
@@ -72,7 +71,7 @@ customers without individually restricting each user (to a percentage
 of the total storage).
 
 Warning: Monitoring the storage used is critical, because actually
-  running out of disk space is very costly -- and not a problem the
+  running out of disk space is very costly – and not a problem the
   customer themselves could recover from.
 
 Back to Features

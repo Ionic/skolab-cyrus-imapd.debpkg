@@ -1,4 +1,3 @@
-
 Event Notifications
 *******************
 
@@ -496,7 +495,7 @@ quota applies, that is being exceeded, otherwise known as the owner of
 the Personal Namespace.
 
 Note: Quota being exceeded on shared folders cannot include an
-  "owner" for the quota root.
+  “owner” for the quota root.
 
    {
        "diskQuota": 2,
@@ -594,7 +593,7 @@ ApplePushService
 While Cyrus supports the Apple Push Service, Apple has only licensed
 Apple Push for mail to a couple of large mail providers: FastMail and
 Yahoo. If you own an OS X Server license, you also get a key for
-personal use. But it's not a supported option for third party
+personal use. But it’s not a supported option for third party
 developers at this time.
 
 The "ApplePushService" event occurs when
@@ -613,10 +612,10 @@ apsVersion
    Version of the Apple Push Service this message is compliant with.
 
 apsAccountId
-   Service Provider's accountID with the Apple Push Service.
+   Service Provider’s accountID with the Apple Push Service.
 
 apsDeviceToken
-   Unique identifier for the user's device registered with Apple.
+   Unique identifier for the user’s device registered with Apple.
 
 apsSubtopic
    TODO: describe this

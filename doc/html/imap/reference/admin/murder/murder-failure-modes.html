@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Cyrus Murder Failure Modes &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Cyrus Murder Failure Modes &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../../index.html"/>
         <link rel="up" title="Cyrus Murder" href="murder.html"/>
         <link rel="next" title="Cyrus Murder Mail Delivery" href="murder-mail-delivery.html"/>
         <link rel="prev" title="Cyrus Murder Mupdate Details" href="murder-mupdate-details.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -786,28 +787,28 @@
             
   <div class="section" id="cyrus-murder-failure-modes">
 <h1>Cyrus Murder Failure Modes<a class="headerlink" href="#cyrus-murder-failure-modes" title="Permalink to this headline">¶</a></h1>
-<p>This page is for documenting what happens when a part of the Cyrus Murder fails, how to recover from failures, and commons DOs and DON'Ts of Murder operation.</p>
+<p>This page is for documenting what happens when a part of the Cyrus Murder fails, how to recover from failures, and commons DOs and DON’Ts of Murder operation.</p>
 <div class="section" id="what-happens-when-the-murder-mupdate-master-is-unavailable">
 <h2>What happens when the Murder mupdate master is unavailable?<a class="headerlink" href="#what-happens-when-the-murder-mupdate-master-is-unavailable" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
 <li>Incoming IMAP connections to frontends are still allowed, as are most mailbox operations (see below for exceptions).</li>
 <li>Mail delivery via the frontends is deferred (lmtpproxyd cannot locate mailbox).</li>
 <li>Deleting a mailbox (or folder) works, presumably because this operation cannot create future conflicts in the mailbox list. However, the frontends will still think the mailbox (or folder) exists because they only get updates from the mupdate master.</li>
-<li>Creating a mailbox (or folder) fails with an error message like &quot;can not connect to mupdate server for reservation on 'user.foo.test'&quot;.</li>
+<li>Creating a mailbox (or folder) fails with an error message like “can not connect to mupdate server for reservation on ‘user.foo.test’”.</li>
 </ol>
 </div>
 <div class="section" id="what-happens-when-the-murder-mupdate-master-is-available-again">
 <h2>What happens when the Murder mupdate master is available again?<a class="headerlink" href="#what-happens-when-the-murder-mupdate-master-is-available-again" title="Permalink to this headline">¶</a></h2>
 <p>Frontends will automatically reconnect to the mupdate master after 20 seconds (see <strong>mupdate_retry_delay</strong> in <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>) and synchronize.</p>
-<p>Backends will NOT automatically sync any changes to the mupdate master. If any mailbox changes occurred on a backend (a distinct possibility if IMAP clients were still connected), you will need to manually synchronize the mailbox list from the backend to the mupdate master. As the cyrus user, run <code class="docutils literal"><span class="pre">ctl_mboxlist</span> <span class="pre">-mw</span></code> on each backend to see the list of changes that would be made. If the list looks correct, then run <code class="docutils literal"><span class="pre">ctl_mboxlist</span> <span class="pre">-m</span></code> to actually push those changes to the mupdate master.</p>
+<p>Backends will NOT automatically sync any changes to the mupdate master. If any mailbox changes occurred on a backend (a distinct possibility if IMAP clients were still connected), you will need to manually synchronize the mailbox list from the backend to the mupdate master. As the cyrus user, run <code class="docutils literal notranslate"><span class="pre">ctl_mboxlist</span> <span class="pre">-mw</span></code> on each backend to see the list of changes that would be made. If the list looks correct, then run <code class="docutils literal notranslate"><span class="pre">ctl_mboxlist</span> <span class="pre">-m</span></code> to actually push those changes to the mupdate master.</p>
 </div>
 <div class="section" id="what-if-my-mupdate-master-blows-up-and-i-have-to-recover-it">
 <h2>What if my mupdate master blows up and I have to recover it?<a class="headerlink" href="#what-if-my-mupdate-master-blows-up-and-i-have-to-recover-it" title="Permalink to this headline">¶</a></h2>
 <p>It is either easy, or hard depending on your setup.</p>
 <div class="section" id="easy-recovery">
 <h3>Easy recovery<a class="headerlink" href="#easy-recovery" title="Permalink to this headline">¶</a></h3>
-<p>You can restore the murder master mailbox list from your text backup (created with <code class="docutils literal"><span class="pre">ctl_mboxlist</span> <span class="pre">-d</span></code>)</p>
-<p>Don't have a backup? Well it is still easy if you have a frontend. The mailboxes.db on your frontend and your murdermaster are in the same format.</p>
+<p>You can restore the murder master mailbox list from your text backup (created with <code class="docutils literal notranslate"><span class="pre">ctl_mboxlist</span> <span class="pre">-d</span></code>)</p>
+<p>Don’t have a backup? Well it is still easy if you have a frontend. The mailboxes.db on your frontend and your murdermaster are in the same format.</p>
 <ol class="arabic simple">
 <li>Stop Cyrus on a frontend</li>
 <li>Stop Cyrus on your murder master</li>
@@ -819,11 +820,11 @@
 </div>
 <div class="section" id="hard-recovery">
 <h3>Hard recovery<a class="headerlink" href="#hard-recovery" title="Permalink to this headline">¶</a></h3>
-<p>It's not currently possible to recover the master's mailboxes.db with a dump from <code class="docutils literal"><span class="pre">ctl_mboxlist</span> <span class="pre">-d</span></code>. The mailboxes.db recovered on the master with <code class="docutils literal"><span class="pre">ctl_mboxlist</span> <span class="pre">-u</span></code> won't have the &quot;remote&quot; flag set.</p>
+<p>It’s not currently possible to recover the master’s mailboxes.db with a dump from <code class="docutils literal notranslate"><span class="pre">ctl_mboxlist</span> <span class="pre">-d</span></code>. The mailboxes.db recovered on the master with <code class="docutils literal notranslate"><span class="pre">ctl_mboxlist</span> <span class="pre">-u</span></code> won’t have the “remote” flag set.</p>
 <ol class="arabic simple">
 <li>Stop Cyrus on your frontends.</li>
 <li>Delete the mailboxes.db on the frontends and the mupdate master.</li>
-<li>Use <code class="docutils literal"><span class="pre">ctl_mboxlist</span> <span class="pre">-m</span></code> on each backend to populate the mailboxes.db on the mupdate master.</li>
+<li>Use <code class="docutils literal notranslate"><span class="pre">ctl_mboxlist</span> <span class="pre">-m</span></code> on each backend to populate the mailboxes.db on the mupdate master.</li>
 <li>Start Cyrus on the frontends.</li>
 </ol>
 </div>
@@ -851,7 +852,7 @@
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Oct 30 2018
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -868,7 +869,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -877,7 +878,7 @@
       <script type="text/javascript" src="../../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../../_static/language_data.js"></script>
 
   
 

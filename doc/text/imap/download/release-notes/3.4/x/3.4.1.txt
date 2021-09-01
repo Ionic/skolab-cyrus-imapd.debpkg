@@ -1,4 +1,3 @@
-
 Cyrus IMAP 3.4.1 Release Notes
 ******************************
 
@@ -41,7 +40,7 @@ Bug fixes
 * Fixed Issue #3456: per-server annotations were unable to replicate
 
 * Fixed Issue #3468: *ctl_cyrusdb -r* assertion on startup when
-  mboxlist_db configured to "skiplist" (thanks Felix J. Ogris)
+  mboxlist_db configured to “skiplist” (thanks Felix J. Ogris)
 
 * Fixed: JMAP email updates must result in non-empty mailboxIds
 

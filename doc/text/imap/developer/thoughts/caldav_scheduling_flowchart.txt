@@ -1,4 +1,3 @@
-
 Cyrus CalDAV Scheduling Flowchart
 *********************************
 
@@ -40,8 +39,8 @@ caldav_delete_sched() - remove via HTTP DELETE on a resource
 caldav_post() - busytime query via HTTP POST on Scheduling Outbox
 =================================================================
 
-1. Check the ACL on the owner's Scheduling Outbox. If the
-   authenticated user doesn't have the DACL_SCHEDFB right, fail.
+1. Check the ACL on the owner’s Scheduling Outbox. If the
+   authenticated user doesn’t have the DACL_SCHEDFB right, fail.
 
 2. sched_busytime_query().
 
@@ -57,8 +56,8 @@ sched_pollstatus - perform a voter response update
 sched_request() - perform an organizer request / attendee status update
 =======================================================================
 
-Check the ACL on the owner's Scheduling Outbox. If the authenticated
-user doesn't have the DACL_INVITE right, fail.
+Check the ACL on the owner’s Scheduling Outbox. If the authenticated
+user doesn’t have the DACL_INVITE right, fail.
 
 If the request includes a resource, then set METHOD:REQUEST, otherwise
 set METHOD:CANCEL.
@@ -109,24 +108,24 @@ Foreach ATTENDEE in the cleaned component:
 
 2. Lookup attendee in our hash table.
 
-3. If it doesn't exist, create a clone of our iTIP template and
+3. If it doesn’t exist, create a clone of our iTIP template and
    insert it into our hash table of attendees.
 
-4. Add the component to the attendee's iTIP message.
+4. Add the component to the attendee’s iTIP message.
 
 5. Add the component “number” to our mask of new components
-   appearing in the attendee's iTIP message.
+   appearing in the attendee’s iTIP message.
 
-If the component is not the "master", foreach attendee do
+If the component is not the “master”, foreach attendee do
 sched_exclude().
 
 
 sched_exclude() - exclude an attendee from a recurrence instance
 ================================================================
 
-1. If the component did not appear in the attendee's iTIP message,
+1. If the component did not appear in the attendee’s iTIP message,
    add an EXDATE property (based on the RECURRENCE-ID of the
-   component) to the master component of the attendee's iTIP message.
+   component) to the master component of the attendee’s iTIP message.
 
 
 sched_cancel() - cancel an organizer event/task
@@ -145,8 +144,8 @@ sched_reply() - perform an attendee reply
 Check the CalDAV Scheduling parameters on ORGANIZER. If SCHEDULE-AGENT
 != SERVER, we are done.
 
-Check the ACL on the owner's Scheduling Outbox. If the authenticated
-user doesn't have the DACL_REPLY right, fail.
+Check the ACL on the owner’s Scheduling Outbox. If the authenticated
+user doesn’t have the DACL_REPLY right, fail.
 
 Create a new iTIP (METHOD:REPLY) message, copying over any CALSCALE
 property and VTIMEZONE components.
@@ -155,7 +154,7 @@ Foreach component in the existing resource:
 
 1. trim_attendees().
 
-2. Add the trimmed component and the attendee's PARTSTAT to our
+2. Add the trimmed component and the attendee’s PARTSTAT to our
    hash table keyed by RECURRENCE-ID (for comparison against
    new/modified resource).
 
@@ -243,21 +242,21 @@ sched_deliver() - deliver an iTIP message to a recipient
 sched_deliver_local() - deliver an iTIP message to a local user
 ===============================================================
 
-Check the ACL on the owner's Scheduling Inbox. If the sender doesn't
+Check the ACL on the owner’s Scheduling Inbox. If the sender doesn’t
 have the proper right (DACL_INVITE for request/cancel, DACL_REPLY for
 reply), fail.
 
-Search the recipient's calendars for a resource having the specified
+Search the recipient’s calendars for a resource having the specified
 UID.
 
-If the resource doesn't exist:
+If the resource doesn’t exist:
 
 1. If the iTIP method is REPLY, fail (we are done).
 
 2. If the iTIP method is CANCEL, ignore it (we are done).
 
 3. Otherwise, create a new (empty) attendee object and target the
-   recipient's Default calendar.
+   recipient’s Default calendar.
 
 Otherwise, load the existing resource.
 
@@ -272,13 +271,13 @@ Update the new/existing resource:
 
 4. If the iTIP method is POLLSTATUS, do deliver_merge_pollstatus().
 
-Store the new/updated resource in the recipient's target calendar.
+Store the new/updated resource in the recipient’s target calendar.
 
 Record the delivery status (SCHEDULE-STATUS).
 
 If the iTIP message is something other than just a PARTSTAT update
 from an attendee, store the iTIP message as a new resource in the
-recipient's Inbox.
+recipient’s Inbox.
 
 If the iTIP method is REPLY, send an update other attendees via
 sched_pollstatus() (VPOLL only) or sched_request().
@@ -295,7 +294,7 @@ Foreach component in the iTIP message:
 Lookup (by RECURRENCE-ID) the component from the hash table of
 existing components.
 
-If the component doesn't exist (new recurrence overridden by ATTENDEE)
+If the component doesn’t exist (new recurrence overridden by ATTENDEE)
 create a new recurring component:
 
 1. Clone the existing master component.

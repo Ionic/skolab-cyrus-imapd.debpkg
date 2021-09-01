@@ -1,4 +1,3 @@
-
 Debian
 ******
 
@@ -14,7 +13,7 @@ system, issue the following command:
 
    # **apt-get install cyrus-imapd cyrus-sasl cyrus-sasl-plain**
 
-If you want xapian, you'll need to build all of Cyrus yourself.
+If you want xapian, you’ll need to build all of Cyrus yourself.
 
 Next, set a password for the default administrative user "cyrus":
 

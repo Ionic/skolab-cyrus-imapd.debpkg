@@ -1,10 +1,9 @@
-
 How to enable telemetry
 ***********************
 
 To enable telemetry logging for a user, create a directory on disk for
 that user. Cyrus will automatically write logging information to this
-directory for all new connections. You don't need to restart Cyrus;
+directory for all new connections. You don’t need to restart Cyrus;
 closing the mail client and restarting it will do the trick.
 
 The directory path is:
@@ -20,6 +19,6 @@ The folder will contain files called "imapd-$pid", e.g. imapd-12345.
 It might also have pop3 files, httpd files, one for each daemon.  The
 first part of the name is the service name from cyrus.conf(5).
 
-Warning: These log files won't contain passwords, but may contain
+Warning: These log files won’t contain passwords, but may contain
   other confidential user data such as the content of emails. Check
   them before sharing publicly!

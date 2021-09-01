@@ -1,4 +1,3 @@
-
 Cyrus IMAP Server: Locking
 **************************
 
@@ -65,7 +64,7 @@ SHARED case:
 
 EXCLUSIVE case:
 
-* EXCLUSIVE xapian namelock That's it.  While you've got this, you
+* EXCLUSIVE xapian namelock That’s it.  While you’ve got this, you
   can add or delete items from the xapianactive file, and delete paths
   on disk for directories that you have removed (either during or
   after locking).  No other locks are permitted.
@@ -89,9 +88,9 @@ Mailbox namelock holds the following invariants:
   updated
 
 * cyrus.annotations records may change (kind of buggy and bad,
-  ideally we'd always write new ones if we changed them and keep the
+  ideally we’d always write new ones if we changed them and keep the
   old ones)
 
 * cyrus.cache may be appended, but never changed
 
-* spool files may not be deleted (already can't be changed)
+* spool files may not be deleted (already can’t be changed)

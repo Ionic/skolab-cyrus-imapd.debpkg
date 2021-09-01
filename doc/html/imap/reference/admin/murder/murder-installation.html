@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Cyrus Murder: Installation and Administration &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Cyrus Murder: Installation and Administration &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../../index.html"/>
         <link rel="up" title="Cyrus Murder" href="murder.html"/>
         <link rel="next" title="Cyrus Murder Mupdate Details" href="murder-mupdate-details.html"/>
         <link rel="prev" title="Cyrus Murder: Concepts" href="murder-concepts.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -793,7 +794,7 @@
 IMAP environment across multiple servers. It is similar in nature to
 various proxy solutions such as nginx or perdition with the difference
 being that Murder offers a uniform namespace. Those not currently using
-shared mailboxes and who don't intend to use shared mailboxes in the
+shared mailboxes and who don’t intend to use shared mailboxes in the
 future, should probably just consider using a simple proxy solution.</p>
 <p>Before beginning Cyrus Murder configuration, we strongly recommended a
 thorough review of the <a class="reference internal" href="murder-concepts.html#murder-concepts"><span class="std std-ref">Cyrus Murder Concepts</span></a>
@@ -808,13 +809,13 @@ guide.</p>
 </div>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>Cyrus IMAPd must be built with the <code class="docutils literal"><span class="pre">--enable-murder</span></code> configure
+<p>Cyrus IMAPd must be built with the <code class="docutils literal notranslate"><span class="pre">--enable-murder</span></code> configure
 option. This builds the proxyds and the associated utilities.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Those using their distribution's packages may need to install a
+<p class="last">Those using their distribution’s packages may need to install a
 separate package for aggregation support.  For example, on Debian
-and derived distros, install the <code class="docutils literal"><span class="pre">cyrus-murder</span></code> package.</p>
+and derived distros, install the <code class="docutils literal notranslate"><span class="pre">cyrus-murder</span></code> package.</p>
 </div>
 <div class="section" id="requirements">
 <h3>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h3>
@@ -832,23 +833,23 @@ same as one of the frontend servers.</li>
 <div class="section" id="configuring-the-mupdate-master">
 <h3>Configuring the MUPDATE Master<a class="headerlink" href="#configuring-the-mupdate-master" title="Permalink to this headline">¶</a></h3>
 <p>The MUPDATE Master server needs to be running the mupdate service in
-master mode. The MUPDATE master may be one of the cluster's frontend
+master mode. The MUPDATE master may be one of the cluster’s frontend
 instances, in which case no slave mupdate process should be run on this
 instance.</p>
 <p>On the mupdate master <a class="reference internal" href="../../manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a> must include a line
 similar to the following in the SERVICES section:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mupdate</span>       <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;/usr/cyrus/bin/mupdate -m&quot;</span> <span class="n">listen</span><span class="o">=</span><span class="mi">3905</span> <span class="n">prefork</span><span class="o">=</span><span class="mi">1</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mupdate</span>       <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;/usr/cyrus/bin/mupdate -m&quot;</span> <span class="n">listen</span><span class="o">=</span><span class="mi">3905</span> <span class="n">prefork</span><span class="o">=</span><span class="mi">1</span>
 </pre></div>
 </div>
-<p>Note the <code class="docutils literal"><span class="pre">-m</span></code> option to tell mupdate that it should start in master
+<p>Note the <code class="docutils literal notranslate"><span class="pre">-m</span></code> option to tell mupdate that it should start in master
 mode.</p>
 <p>The MUPDATE Master will also need at least a skeleton
 <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> that defines the config directory, a bogus
-partition-default and the <code class="docutils literal"><span class="pre">admin</span></code>s who can authenticate to the server.
+partition-default and the <code class="docutils literal notranslate"><span class="pre">admin</span></code>s who can authenticate to the server.
 Slave mupdate servers as well as the back end servers will need to be
 able to authenticate as admins on the master.</p>
 <p>Here is a very simple <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> for a master server:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">configdirectory</span><span class="p">:</span> <span class="o">/</span><span class="n">imap</span><span class="o">/</span><span class="n">conf</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">configdirectory</span><span class="p">:</span> <span class="o">/</span><span class="n">imap</span><span class="o">/</span><span class="n">conf</span>
 <span class="n">partition</span><span class="o">-</span><span class="n">default</span><span class="p">:</span> <span class="o">/</span><span class="n">tmp</span>
 
 <span class="n">admins</span><span class="p">:</span> <span class="n">mupdateslave1</span> <span class="n">backend1</span>
@@ -859,7 +860,7 @@ able to authenticate as admins on the master.</p>
 <div class="section" id="setting-up-the-backends-to-push-changes-to-the-mupdate-master">
 <h3>Setting up the backends to push changes to the MUPDATE Master<a class="headerlink" href="#setting-up-the-backends-to-push-changes-to-the-mupdate-master" title="Permalink to this headline">¶</a></h3>
 <p>On the backends, configuration to be a part of a murder is easy. Simply
-set the <code class="docutils literal"><span class="pre">mupdate_server</span></code> option in <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> and add
+set the <code class="docutils literal notranslate"><span class="pre">mupdate_server</span></code> option in <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> and add
 an entry to <a class="reference internal" href="../../manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a> to push the mailboxes list to
 the MUPDATE Master.</p>
 <p>Depending on the authentication mechanisms used, some or all of the
@@ -876,7 +877,7 @@ following settings in <a class="reference internal" href="../../manpages/configs
 <p>Once these settings are made, any mailbox operation on the backend will
 be sent to the mupdate master for confirmation and entry into the
 mupdate database.</p>
-<p>At least one user/group must be configured using the <code class="docutils literal"><span class="pre">proxyservers</span></code>
+<p>At least one user/group must be configured using the <code class="docutils literal notranslate"><span class="pre">proxyservers</span></code>
 <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> option. This user should not be an
 administrator, as that would give anyone compromising this credential
 full administrative control on all back ends.</p>
@@ -886,7 +887,7 @@ full administrative control on all back ends.</p>
 appear in the lmtp_admins entry.</p>
 </div>
 <p>Example of the <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> settings discussed thus far:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># How this server identifies itself within the murder</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># How this server identifies itself within the murder</span>
 <span class="n">servername</span><span class="p">:</span> <span class="n">mailbox</span><span class="o">.</span><span class="n">example</span><span class="o">.</span><span class="n">com</span>
 <span class="c1"># Who&#39;s permitted to authenticate for which purposes</span>
 <span class="n">admins</span><span class="p">:</span> <span class="n">cyrus</span>
@@ -903,17 +904,17 @@ appear in the lmtp_admins entry.</p>
 the MUPDATE Master and the back end, as well.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Do not set <code class="docutils literal"><span class="pre">proxyservers</span></code> on frontends.</p>
+<p class="last">Do not set <code class="docutils literal notranslate"><span class="pre">proxyservers</span></code> on frontends.</p>
 </div>
 </div>
 <div class="section" id="exporting-the-database-from-the-backend">
 <h3>Exporting the database from the backend<a class="headerlink" href="#exporting-the-database-from-the-backend" title="Permalink to this headline">¶</a></h3>
 <p>The existing mailboxes database must be exported to the MUPDATE Master.
 Use the <a class="reference internal" href="../../manpages/systemcommands/ctl_mboxlist.html#std:cyrusman-ctl_mboxlist(8)">ctl_mboxlist(8)</a> command to do so. For the first
-synchronization, change to the cyrus user, and run <code class="docutils literal"><span class="pre">ctl_mboxlist</span> <span class="pre">-m</span></code>.</p>
+synchronization, change to the cyrus user, and run <code class="docutils literal notranslate"><span class="pre">ctl_mboxlist</span> <span class="pre">-m</span></code>.</p>
 <div class="admonition important">
 <p class="first admonition-title">Important</p>
-<p class="last">One should use <code class="docutils literal"><span class="pre">ctl_mboxlist</span> <span class="pre">-mw</span></code> (dry run) first to be sure of
+<p class="last">One should use <code class="docutils literal notranslate"><span class="pre">ctl_mboxlist</span> <span class="pre">-mw</span></code> (dry run) first to be sure of
 understanding all the operations that this command will perform,
 since it does require that all mailboxes are unique in the murder
 namespace and could lead to deletions of conflicting mailboxes on
@@ -930,7 +931,7 @@ can).</p>
 of their local mailboxes database with the master on start up. This is
 configured by adding the following to the START section of
 <a class="reference internal" href="../../manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a> on the backends:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mupdatepush</span>   <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;ctl_mboxlist -m&quot;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mupdatepush</span>   <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;ctl_mboxlist -m&quot;</span>
 </pre></div>
 </div>
 <p>This will perform synchronization with the mupdate master each time the
@@ -956,7 +957,7 @@ mupdate_server (and friends) as done for the backends above. However,
 as the frontends only talk to the mupdate master via a slave running on
 the local machine, also set up a slave on the same machine, in the
 SERVICES section of <a class="reference internal" href="../../manpages/configs/cyrus.conf.html#std:cyrusman-cyrus.conf(5)">cyrus.conf(5)</a>, like so:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># mupdate database service - must prefork at least 1</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># mupdate database service - must prefork at least 1</span>
 <span class="n">mupdate</span>       <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;mupdate&quot;</span> <span class="n">listen</span><span class="o">=</span><span class="mi">3905</span> <span class="n">prefork</span><span class="o">=</span><span class="mi">1</span>
 </pre></div>
 </div>
@@ -965,7 +966,7 @@ synchronizes at startup. Otherwise, the service will not start running
 until after receiving a mupdate client connection to the slave (which
 is not a recommended configuration at this point).</p>
 <p>The front end SERVICES section should now look like this:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mupdate</span>       <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;mupdate&quot;</span> <span class="n">listen</span><span class="o">=</span><span class="mi">3905</span> <span class="n">prefork</span><span class="o">=</span><span class="mi">1</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mupdate</span>       <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;mupdate&quot;</span> <span class="n">listen</span><span class="o">=</span><span class="mi">3905</span> <span class="n">prefork</span><span class="o">=</span><span class="mi">1</span>
 
 <span class="n">imap</span>          <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;imap&quot;</span> <span class="n">listen</span><span class="o">=</span><span class="s2">&quot;imap&quot;</span> <span class="n">prefork</span><span class="o">=</span><span class="mi">5</span>
 <span class="n">imaps</span>         <span class="n">cmd</span><span class="o">=</span><span class="s2">&quot;imap -s&quot;</span> <span class="n">listen</span><span class="o">=</span><span class="s2">&quot;imaps&quot;</span> <span class="n">prefork</span><span class="o">=</span><span class="mi">1</span>
@@ -986,10 +987,10 @@ internally.</p>
 <p>Additionally, entries in <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> are required to
 indicate the proxy auth name and passwords (if using a SASL mechanism
 that requires them) to the backends.</p>
-<p>For example, if the backends are <code class="docutils literal"><span class="pre">mail1.andrew.cmu.edu</span></code> and
-<code class="docutils literal"><span class="pre">mail2.andrew.cmu.edu</span></code> with passwords of <code class="docutils literal"><span class="pre">foo</span></code> and <code class="docutils literal"><span class="pre">bar</span></code>, and an
-auth name of <code class="docutils literal"><span class="pre">mailproxy</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mail1_password</span><span class="p">:</span> <span class="n">foo</span>
+<p>For example, if the backends are <code class="docutils literal notranslate"><span class="pre">mail1.andrew.cmu.edu</span></code> and
+<code class="docutils literal notranslate"><span class="pre">mail2.andrew.cmu.edu</span></code> with passwords of <code class="docutils literal notranslate"><span class="pre">foo</span></code> and <code class="docutils literal notranslate"><span class="pre">bar</span></code>, and an
+auth name of <code class="docutils literal notranslate"><span class="pre">mailproxy</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mail1_password</span><span class="p">:</span> <span class="n">foo</span>
 <span class="n">mail2_password</span><span class="p">:</span> <span class="n">bar</span>
 <span class="n">proxy_authname</span><span class="p">:</span> <span class="n">mailproxy</span>
 </pre></div>
@@ -997,10 +998,10 @@ auth name of <code class="docutils literal"><span class="pre">mailproxy</span></
 <p>For SASL mechanisms not using authnames or passwords (e.g.
 KERBEROS_V4), the password options are not required. Note the use of
 the same authname as configured in the proxyservers line of the
-backend's <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> above.</p>
+backend’s <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> above.</p>
 <p>Upon starting <a class="reference internal" href="../../manpages/systemcommands/master.html#std:cyrusman-master(8)">master(8)</a> on the frontend, the local
 mailboxes database should automatically synchronize with the contents
-of the MUPDATE master, and it's ready to go. Clients should connect to
+of the MUPDATE master, and it’s ready to go. Clients should connect to
 the frontends, and the frontends will proxy or refer as applicable to
 the backend servers.</p>
 </div>
@@ -1028,14 +1029,14 @@ domain socket.</p>
 <h3>Keeping the database synced<a class="headerlink" href="#keeping-the-database-synced" title="Permalink to this headline">¶</a></h3>
 <p>Consistency in the database is maintained by pushing the current status
 of the backends to the master, and having the frontends stay up to date
-with the master's database. Since the frontends resync themselves
+with the master’s database. Since the frontends resync themselves
 entirely when they startup, downtime should not be a problem.
 (While they are up they should be continuously receiving database
 updates, as well when they lose connection to the master, they will
 try to reconnect and resync their database upon reconnection)</p>
 <p>Provided that the namespace of the backend servers is kept discrete
 (with no mailboxes existing on the same server), it is not a big deal
-to resync the mupdate master using <code class="docutils literal"><span class="pre">ctl_mboxlist</span> <span class="pre">-m</span></code>. If two servers
+to resync the mupdate master using <code class="docutils literal notranslate"><span class="pre">ctl_mboxlist</span> <span class="pre">-m</span></code>. If two servers
 do have the same mailbox, this will need to be resolved before database
 consistency can be guaranteed.</p>
 </div>
@@ -1045,10 +1046,10 @@ consistency can be guaranteed.</p>
 issue a rename command to a frontend (as you would to move a mailbox
 between partitions), and replace the partition name with the name of
 the new backend, it will move the mailbox to the indicated backend. You
-can also use the format <code class="docutils literal"><span class="pre">backend.domain.com!partition</span></code> to move to a
+can also use the format <code class="docutils literal notranslate"><span class="pre">backend.domain.com!partition</span></code> to move to a
 specific partition (otherwise the default partition will be used).</p>
 <p>In cyradm, this looks like:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>cyrus.andrew.cmu.edu&gt; rename user.bcyrus user.bcyrus mail2.andrew.cmu.edu!u2
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>cyrus.andrew.cmu.edu&gt; rename user.bcyrus user.bcyrus mail2.andrew.cmu.edu!u2
 </pre></div>
 </div>
 <p>Note that since seen state is stored per-user, it is possible that when
@@ -1062,13 +1063,13 @@ mailbox, however, only that individual mailbox is moved. If it is a
 quota root, the new quota root is instantiated on the new server, but
 otherwise quotas can appear to be violated, since each backend only
 takes care of its own quota.</p>
-<p>In general, it's better to leave trees of mailboxes on the same server,
+<p>In general, it’s better to leave trees of mailboxes on the same server,
 and not move submailboxes of inboxes between servers.</p>
 </div>
 <div class="section" id="adding-additional-backend-servers">
 <h3>Adding additional backend servers<a class="headerlink" href="#adding-additional-backend-servers" title="Permalink to this headline">¶</a></h3>
 <p>This is very easy to do, simply configure an empty backend server and
-set its <code class="docutils literal"><span class="pre">mupdate_server</span></code> parameter to point at the mupdate master.
+set its <code class="docutils literal notranslate"><span class="pre">mupdate_server</span></code> parameter to point at the mupdate master.
 Then, issue mailbox creates to it as you would any other backend
 server.</p>
 </div>
@@ -1079,7 +1080,7 @@ distribution of new users and mailboxes within a murder; across servers
 and partitions.  We recommend exploring these:</p>
 <blockquote>
 <div><blockquote>
-<div><p><code class="docutils literal"><span class="pre">partition_select_mode:</span></code> freespace-most</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">partition_select_mode:</span></code> freespace-most</p>
 <blockquote>
 <div><p>Partition selection mode.</p>
 <dl class="docutils">
@@ -1104,18 +1105,18 @@ selected, and those chances increase when other partitions get closer</p>
 </div></blockquote>
 </div></blockquote>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">partition_select_exclude:</span></code> &lt;none&gt;</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">partition_select_exclude:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>List of partitions to exclude from selection mode.</div></blockquote>
 </div></blockquote>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">partition_select_usage_reinit:</span></code> 0</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">partition_select_usage_reinit:</span></code> 0</p>
 <blockquote>
 <div>For a given session, number of <strong>operations</strong> (e.g. partition selection)
 for which partitions usage data are cached.</div></blockquote>
 </div></blockquote>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">partition_select_soft_usage_limit:</span></code> 0</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">partition_select_soft_usage_limit:</span></code> 0</p>
 <blockquote>
 <div><p>Limit of partition usage (%): if a partition is over that limit, it is
 automatically excluded from selection mode.</p>
@@ -1123,14 +1124,14 @@ automatically excluded from selection mode.</p>
 </div></blockquote>
 </div></blockquote>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">serverlist:</span></code> &lt;none&gt;</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">serverlist:</span></code> &lt;none&gt;</p>
 <blockquote>
 <div>Whitespace separated list of backend server names.  Used for
 finding server with the most available free space for proxying
 CREATE.</div></blockquote>
 </div></blockquote>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">serverlist_select_mode:</span></code> freespace-most</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">serverlist_select_mode:</span></code> freespace-most</p>
 <blockquote>
 <div><p>Server selection mode.</p>
 <dl class="docutils">
@@ -1152,13 +1153,13 @@ partition of each backend.</p>
 </div></blockquote>
 </div></blockquote>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">serverlist_select_usage_reinit:</span></code> 0</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">serverlist_select_usage_reinit:</span></code> 0</p>
 <blockquote>
 <div>For a given session, number of <strong>operations</strong> (e.g. backend selection)
 for which backend usage data are cached.</div></blockquote>
 </div></blockquote>
 <blockquote>
-<div><p><code class="docutils literal"><span class="pre">serverlist_select_soft_usage_limit:</span></code> 0</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">serverlist_select_soft_usage_limit:</span></code> 0</p>
 <blockquote>
 <div><p>Limit of backend usage (%): if a backend is over that limit, it is
 automatically excluded from selection mode.</p>
@@ -1176,7 +1177,7 @@ automatically excluded from selection mode.</p>
 <dl class="docutils">
 <dt><strong>Clients dealing with a pool of frontend servers</strong></dt>
 <dd>Some clients may not be terribly efficient caching connections to a
-pool of imap servers, this isn't a problem, as such, but it may
+pool of imap servers, this isn’t a problem, as such, but it may
 mean that you will see many more authentications than you are used
 to.</dd>
 <dt><strong>Kerberos issues</strong></dt>
@@ -1187,7 +1188,7 @@ with different clients trying to authenticate to different services
 clients in use in your environment and be sure that they work with
 whatever keying scheme you use.</dd>
 <dt><strong>Clients dealing with referrals</strong></dt>
-<dd>Some clients (we've had particular trouble with pine, though most
+<dd>Some clients (we’ve had particular trouble with pine, though most
 of these issues have now been resolved and new versions should be
 OK (that is, pine &gt; 4.44), but as referrals have not been
 extensively used by any IMAP server until now, referrals are very
@@ -1195,7 +1196,7 @@ likely to not work correctly or have surprising effects.</dd>
 <dt><strong>Clients dealing with getting a NO on LSUB commands</strong></dt>
 <dd>Some clients (Outlook, for example) may behave poorly if an LSUB
 command returns a NO, which may be the case if the backend server
-with the user's inbox is down. We have, for example, seen this
+with the user’s inbox is down. We have, for example, seen this
 result in the deletion of the disconnected message cache.</dd>
 <dt><strong>Behavior of cyradm / some mailbox operations</strong></dt>
 <dd>The behaviour of some administrative commands might be slightly
@@ -1209,11 +1210,11 @@ a different server (or to create a new top level mailbox) you will
 need to connect directly to the desired backend server.</dd>
 <dt><strong>Subscriptions</strong></dt>
 <dd>If users want subscribe to a mailbox other than on their backend
-home server, they won't be able to, unless you set
-<code class="docutils literal"><span class="pre">allowallsubscribe:</span> <span class="pre">t</span></code> in the backend imapd.confs. This
+home server, they won’t be able to, unless you set
+<code class="docutils literal notranslate"><span class="pre">allowallsubscribe:</span> <span class="pre">t</span></code> in the backend imapd.confs. This
 essentially lets any string be subscribed to successfully.</dd>
 <dt><strong>Restarting the mupdate master</strong></dt>
-<dd>Because <code class="docutils literal"><span class="pre">ctl_cyrusdb</span> <span class="pre">-r</span></code> clears reservations on mailbox, if you
+<dd>Because <code class="docutils literal notranslate"><span class="pre">ctl_cyrusdb</span> <span class="pre">-r</span></code> clears reservations on mailbox, if you
 restart the mupdate master (and run recovery), then this could (we
 suspect, very rarely) lead to inconsistencies in the mupdate
 database.</dd>
@@ -1230,13 +1231,13 @@ it.</dd>
 you may need to restart master. Alternatively, mupdate will retry
 connections every 20 seconds or so for about 20 attempts if the
 master does go down.</dd>
-<dt><strong>A frontend's mailboxes.db is corrupt or out of sync</strong></dt>
+<dt><strong>A frontend’s mailboxes.db is corrupt or out of sync</strong></dt>
 <dd>Restart master on the frontend, and have the mupdate process
 resynch the local database. You may need to remove the local
 mailboxes database if the corruption is extreme.</dd>
-<dt><strong>A mailbox's location keeps switching between two (or more) backend hosts.</strong></dt>
+<dt><strong>A mailbox’s location keeps switching between two (or more) backend hosts.</strong></dt>
 <dd>It probably actually exists on both hosts. Delete the mailbox from
-all but one of the hosts, and run a <code class="docutils literal"><span class="pre">ctl_mboxlist</span> <span class="pre">-m</span></code> on the one
+all but one of the hosts, and run a <code class="docutils literal notranslate"><span class="pre">ctl_mboxlist</span> <span class="pre">-m</span></code> on the one
 where you want it to actually live.</dd>
 <dt><strong>Databases are never created on the frontends/slaves</strong></dt>
 <dd>Check to ensure that the mupdate slave process is started, (is
@@ -1272,7 +1273,7 @@ and <a class="reference external" href="https://github.com/cyrusimap/cyrus-imapd
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on May 28 2019
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1289,7 +1290,7 @@ and <a class="reference external" href="https://github.com/cyrusimap/cyrus-imapd
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1298,7 +1299,7 @@ and <a class="reference external" href="https://github.com/cyrusimap/cyrus-imapd
       <script type="text/javascript" src="../../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../../_static/language_data.js"></script>
 
   
 

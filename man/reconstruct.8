@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "RECONSTRUCT" "8" "May 10, 2021" "3.4.1" "Cyrus IMAP"
+.TH "RECONSTRUCT" "8" "September 01, 2021" "3.4.2" "Cyrus IMAP"
 .SH NAME
 reconstruct \- Cyrus IMAP documentation
 .
@@ -75,7 +75,7 @@ When upgrading versions of Cyrus software, it may be necessary to run
 given version (or \fImax\fP for the most recent).  Note that the \fB\-V\fP
 option cannot be combined with most other reconstruct options.  If
 a mailbox needs reconstructing you should do that first, and then
-upgrade it with \fB\-V\fP once it\(aqs good.
+upgrade it with \fB\-V\fP once it’s good.
 .SH OPTIONS
 .INDENT 0.0
 .TP
@@ -95,7 +95,7 @@ reconstructing them. (not compatible with the use of wildcards)
 When processing a mailbox which is not in the mailbox list (e.g.
 via the \fB\-p\fP or \fB\-f\fP options), do not import the metadata from
 the mailbox, instead create it anew (this specifically affects at
-least the mailbox\(aqs seen state unique identifier, user flags, and
+least the mailbox’s seen state unique identifier, user flags, and
 ACL).
 .UNINDENT
 .INDENT 0.0
@@ -114,9 +114,9 @@ restoring mailboxes from backups.
 .INDENT 0.0
 .TP
 .B \-s
-Don\(aqt stat underlying files.  This makes reconstruct run faster, at
+Don’t stat underlying files.  This makes reconstruct run faster, at
 the expense of not noticing some issues (like zero byte files or
-size mismatches).  "\fBreconstruct \-s\fP" should be quite fast.
+size mismatches).  “\fBreconstruct \-s\fP” should be quite fast.
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -126,7 +126,7 @@ Emit less verbose information to syslog.
 .INDENT 0.0
 .TP
 .B \-n
-Don\(aqt make any changes.  Problems are reported, but not fixed.
+Don’t make any changes.  Problems are reported, but not fixed.
 .UNINDENT
 .INDENT 0.0
 .TP
@@ -140,7 +140,7 @@ individual message issues, including corrupted data files.
 .B \-I
 If two mailboxes exist with the same UNIQUEID and reconstruct visits
 both of them, \-I will cause the second mailbox to have a new UNIQUEID
-created for it.  If you don\(aqt specify \-I, you will just get a syslog
+created for it.  If you don’t specify \-I, you will just get a syslog
 entry telling you of the clash.
 .UNINDENT
 .INDENT 0.0
@@ -148,7 +148,7 @@ entry telling you of the clash.
 .B \-R
 Perform a UID upgrade operation on GUID mismatch files.  Use this
 option if you think your index is corrupted rather than your
-message files, or if all backup attempts have failed and you\(aqre
+message files, or if all backup attempts have failed and you’re
 happy to be served the missing files.
 .UNINDENT
 .INDENT 0.0
@@ -159,7 +159,7 @@ have been unable to restore them from backup.  This will make the
 mailbox IOERROR free and fix replication.
 .sp
 WARNING:
-this deletes corrupt message files for ever \- so make sure you\(aqve
+this deletes corrupt message files for ever \- so make sure you’ve
 exhausted other options first!
 .UNINDENT
 .INDENT 0.0
@@ -212,7 +212,7 @@ files.
 .INDENT 0.0
 .INDENT 3.5
 Recursively reconstruct all mailboxes within the
-\fItech.support.Archive\fP hierarchy with names beginning with \(aq2\(aq,
+\fItech.support.Archive\fP hierarchy with names beginning with ‘2’,
 restoring any directories containing \fBcyrus.header\fP
 files.
 .UNINDENT

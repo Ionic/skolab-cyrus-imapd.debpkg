@@ -1,4 +1,3 @@
-
 Cyrus Murder Mupdate Details
 ****************************
 
@@ -58,16 +57,16 @@ Strings
 Just like IMAP, a string may be either literal or a quoted string.
 
 A literal is a sequence of zero or more octets (including CR and LF),
-prefix-quoted with an octet count in the form of an open brace ("{"),
+prefix-quoted with an octet count in the form of an open brace (“{“),
 the number of octets, an optional plus sign to indicate that the data
 follows immediately (and a ready response is not necessary), a close
-brace ("}"), and CRLF. If the plus sign is omitted, then the receiving
-side MUST send a "+ go ahead" response.
+brace (“}”), and CRLF. If the plus sign is omitted, then the receiving
+side MUST send a “+ go ahead” response.
 
 A quoted string is a sequence of zero or more 7-bit characters,
-excluding CR and LF, with double quote (<">) characters at each end.
+excluding CR and LF, with double quote (<”>) characters at each end.
 
-The empty string is represented as either "" (a quoted string with
+The empty string is represented as either “” (a quoted string with
 zero characters between double quotes) or as {0} followed by CRLF (a
 literal with an octet count of 0).
 
@@ -113,7 +112,7 @@ Response: RESERVE
 -----------------
 
 A tagged RESERVE response includes two parameters, the name of the
-mailbox and a location identifier in the format "server!partition".
+mailbox and a location identifier in the format “server!partition”.
 This response is valid for FIND, UPDATE, and LIST commands. It
 indicates that the mailbox name is currently reserved in the
 namespace, however the mailbox does not currently exist.
@@ -143,7 +142,7 @@ Server Initial Response
 
 The initial response from the server is a two line format. The first
 line MUST start with "* OK MUPDATE" and be followed by three strings:
-   * the server's hostname,
+   * the server’s hostname,
 
    * an implementation-defined string,
 
@@ -279,7 +278,7 @@ The UPDATE command is how a slave initiates an update stream from the
 master (though it is valid to issue the command to a slave as well).
 In response to the command, the server returns a list of all mailboxes
 (as a LIST command with no parameters) and then an OK response. From
-this point forward whenever an update occurs to the master's database,
+this point forward whenever an update occurs to the master’s database,
 it will stream the update to the slave (that is, it will send a
 RESERVE, MAILBOX, or DELETE response as the updates happen to its
 database). Only NOOP or LOGOUT are valid after this command is issued.
@@ -304,7 +303,7 @@ cleanly.
 Synchronization of Slaves to Master
 -----------------------------------
 
-Synchronization of slave databases to the master's database is simple.
+Synchronization of slave databases to the master’s database is simple.
 When the slave issues the UPDATE command to the master, the master
 dumps the entire contents of its database to the slave. The slave may
 then use this information to verify and update its local database.
@@ -315,7 +314,7 @@ Synchronization of Master to Backend Servers
 
 When server that holds mailboxes in the namespace comes up, it should
 perform a LIST operation against the master mupdate server, and then
-issue ACTIVATE and DELETE commands as necessary to bring the master's
+issue ACTIVATE and DELETE commands as necessary to bring the master’s
 list of what is on this particular backend servers into sync with what
 actually exists on the backend server. Note that this document does
 not specify how to deal with conflicts (where one mailbox resides on

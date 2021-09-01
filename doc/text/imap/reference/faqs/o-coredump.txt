@@ -1,4 +1,3 @@
-
 How to enable core dumps
 ************************
 
@@ -14,7 +13,7 @@ Make sure that cores contain the PID of the process.
 
    # echo 1 >/proc/sys/kernel/core_uses_pid
 
-As a security feature, Linux won't generate cores for processes which
+As a security feature, Linux won’t generate cores for processes which
 have changed ownership. This prevents any of the Cyrus processes in
 your test ever dumping core, so you want to turn that feature off.
 

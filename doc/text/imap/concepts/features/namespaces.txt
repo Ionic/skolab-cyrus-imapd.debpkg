@@ -1,4 +1,3 @@
-
 Mailbox Namespaces
 ******************
 
@@ -10,7 +9,7 @@ Namespace Basics
 mailboxes a user has access to, named to maintain uniqueness and
 provide access control.
 
-There are four different uses of the term "namespace" within Cyrus:
+There are four different uses of the term “namespace” within Cyrus:
 
 1. **IMAP NAMESPACE command**
 
@@ -19,7 +18,7 @@ There are four different uses of the term "namespace" within Cyrus:
       NAMESPACE" command.
 
       A user can have access to three different kinds of mailboxes:
-      their own (known as *personal*), other people's mailboxes that
+      their own (known as *personal*), other people’s mailboxes that
       they have shared access to (known as *other users*) and any
       mailboxes that have more than one owner (known as *shared*).
 
@@ -27,22 +26,22 @@ There are four different uses of the term "namespace" within Cyrus:
 
 2. **User namespace mode: altnamespace**
 
-      Cyrus's user namespace mode controls how it responds to the
+      Cyrus’s user namespace mode controls how it responds to the
       "IMAP NAMESPACE" command and what the hierarchy of mailboxes
       looks like in response to an "IMAP LIST" command for a user. The
       config setting *altnamespace*: on or off in imapd.conf(5)
       manages the mode. It is also affected by the hierarchy
-      separator, which can be "/" (default: on) or "." (off)
+      separator, which can be “/” (default: on) or “.” (off)
       controlled by *unixhierarchysep* in imapd.conf(5).
 
       1. altnamespace: on (default)
 
-            * personal: "" (empty string)
+            * personal: “” (empty string)
 
-            * other users: "Other Users" (The string can be changed
+            * other users: “Other Users” (The string can be changed
               in imapd.conf(5) with "userprefix")
 
-            * shared: "Shared Folders" (The string can be changed in
+            * shared: “Shared Folders” (The string can be changed in
               imapd.conf(5) with "sharedprefix")
 
       2. altnamespace: off (was known as standard or regular)
@@ -51,14 +50,14 @@ There are four different uses of the term "namespace" within Cyrus:
 
             * other users: user
 
-            * shared: "" (empty string)
+            * shared: “” (empty string)
 
       Note: altnamespace mode is valid only for the *user*
-        namespace: it doesn't affect the administrator's view.
+        namespace: it doesn’t affect the administrator’s view.
 
-      Consider a user "uhura". Uhura can see all the folders from user
-      "spock", some folders from users "kirk", as well as the shared
-      folder "commandcrew".
+      Consider a user “uhura”. Uhura can see all the folders from user
+      “spock”, some folders from users “kirk”, as well as the shared
+      folder “commandcrew”.
 
       Under altnamespace:off mode with a "." separator, she sees her
       folders as:
@@ -69,11 +68,11 @@ There are four different uses of the term "namespace" within Cyrus:
 
          * INBOX.folder-2 (etc)
 
-         * user.spock (this is INBOX for "spock")
+         * user.spock (this is INBOX for “spock”)
 
          * user.spock.folder-x
 
-         * user.kirk.folder-y ("kirk" hasn't shared their INBOX)
+         * user.kirk.folder-y (“kirk” hasn’t shared their INBOX)
 
          * commandcrew
 
@@ -97,7 +96,7 @@ There are four different uses of the term "namespace" within Cyrus:
 
       Warning: When using a "." separator (unixhierarchysep: off),
         user names and folder names internally swap the "." with "^".
-        This is because dots mark a subfolder if you're not using
+        This is because dots mark a subfolder if you’re not using
         unixhierarchy separators. Some IMAP clients do not cope well
         with the ^ character, which is why unixhierarchysep: on is now
         the default as it allows dots in usernames and folder names.
@@ -108,7 +107,7 @@ There are four different uses of the term "namespace" within Cyrus:
 
       While a user has their three kinds of mailboxes they have access
       to, an administrator can see all mailboxes (optionally
-      restricted to the administrator's own domain). As a result, the
+      restricted to the administrator’s own domain). As a result, the
       response to "LIST" commands is different for administrators.
 
       In the administrator namespace, all user mailboxes are presented
@@ -140,7 +139,7 @@ There are four different uses of the term "namespace" within Cyrus:
 
       Developer reference only. This is how each mailbox is uniquely
       stored inside "mailboxes.db". Each mailbox name has a unique
-      representation that is the "key" in the mailboxes.db key-value
+      representation that is the “key” in the mailboxes.db key-value
       database.
 
          * commandcrew (??)
@@ -176,7 +175,7 @@ Mailboxes in the personal namespace start with the literal string
 "user".
 
 Uhura will typically view her personal namespace such that sub-folders
-of her INBOX may not have a distinguished prefix -- other than perhaps
+of her INBOX may not have a distinguished prefix – other than perhaps
 "INBOX" if "altnamespace" is disabled:
 
    INBOX
@@ -190,7 +189,7 @@ Other Users Namespace
 ---------------------
 
 The Other Users namespace is a namespace that is reserved for
-mailboxes in other user's personal namespaces, that have been shared
+mailboxes in other user’s personal namespaces, that have been shared
 with the current user.
 
 With *Spock* and *Kirk* in the same environment, who are also sharing
@@ -199,7 +198,7 @@ namespace kicks in when these mailboxes are viewed.
 
 For *Nyota Uhura <nyota.uhura@example.org>*, with *James Kirk
 <james.kirk@example.org>* sharing a selection of his mailboxes,
-Uhura's mailbox list looks like:
+Uhura’s mailbox list looks like:
 
    INBOX
    Drafts
@@ -209,8 +208,8 @@ Uhura's mailbox list looks like:
    Other Users/james.kirk
    Other Users/james.kirk/Subfolder
 
-Note that the prefix used here is "Other Users" to show the mailbox in
-question is part of another user's personal namespace.
+Note that the prefix used here is “Other Users” to show the mailbox in
+question is part of another user’s personal namespace.
 
 The other users namespace can be suppressed in LIST commands by
 setting "disable_user_namespace" to "1" in imapd.conf(5). This is
@@ -271,7 +270,7 @@ Note: If you are upgrading an existing server which uses
   in fileinto actions.
 
 By default  Cyrus IMAP uses *altnamespace: on* , and unixhierarchysep:
-on "/" (slash) character for the hierarchy separator.
+on “/” (slash) character for the hierarchy separator.
 
 The following limits also apply:
 
@@ -287,11 +286,11 @@ The following limits also apply:
 While these limits apply under all circumstances, use of the unix
 hierarchy separator can also affect the display.
 
-When using the altnamespace:off namespace mode, a user's shorthand
+When using the altnamespace:off namespace mode, a user’s shorthand
 qualifier (e.g. "john" for "john@example.org") MAY NOT contain a "."
 (dot) character, as the character is being used as a hierarchy
 separator in mailbox names, and would thus create a personal mailbox
-rather then a user's INBOX. Using "john.doe" for the INBOX name for
+rather then a user’s INBOX. Using "john.doe" for the INBOX name for
 user *John Doe <john.doe@example.org>* does not work, as it would
 create a sub-folder "doe" for the INBOX "user.john".
 
@@ -311,7 +310,7 @@ user *John Doe <john@example.org>* would start out with a mailbox
 "INBOX", and will want to create sub-folders such as for drafted and
 sent messages.
 
-These mailboxes will be presented to John's client as follows
+These mailboxes will be presented to John’s client as follows
 (assuming dot separator):
 
 * "INBOX"
@@ -337,8 +336,8 @@ Warning: Changing "altnamespace" in an active operating environment
 Administrator Namespaces
 ========================
 
-An administrator -- a user for which the username is included in the
-"admins" setting in imapd.conf(5) -- has a different perspective when
+An administrator – a user for which the username is included in the
+"admins" setting in imapd.conf(5) – has a different perspective when
 using the IMAP protocol to perform administrative tasks.
 
 Note: The administrator namespace is not affected by the user
@@ -408,5 +407,5 @@ Important: In multi-domain or multi-tenant environments, the
   administrator "admin@example.org" will be able to see and administer
   mailboxes restricted to the "example.org" authorization realm. In
   this case they will see "john@example.com" being presented as
-  "user/john" -- not to be confused with the actually unrealmed
+  "user/john" – not to be confused with the actually unrealmed
   "user/john" mailbox that exists on the system as well.

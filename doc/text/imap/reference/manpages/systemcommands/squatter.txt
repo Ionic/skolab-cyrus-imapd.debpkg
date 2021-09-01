@@ -1,4 +1,3 @@
-
 **squatter**
 ************
 
@@ -23,11 +22,11 @@ Synopsis
 Description
 ===========
 
-Note: The name "**squatter**" once referred both to the SQUAT
+Note: The name “**squatter**” once referred both to the SQUAT
   indexing engine and to the command used to create indexes.  Now that
-  Cyrus supports more than one index type -- SQUAT and Xapian, as of
-  this writing -- the name "**squatter**" refers to the command used
-  to control index creation.  The terms "SQUAT" or "SQUAT index(es)"
+  Cyrus supports more than one index type – SQUAT and Xapian, as of
+  this writing – the name “**squatter**” refers to the command used to
+  control index creation.  The terms “SQUAT” or “SQUAT index(es)”
   refers to the indexes used by the older SQUAT indexing engine. Post
   v3 the *search_engine* setting in *imapd.conf* determines which
   search engine is used.
@@ -60,7 +59,7 @@ mailbox(es).
 For the latter two index modes (mailbox, user) one may optionally
 specify **-r** to recurse from the specified start, or **-a** to limit
 action only to mailboxes which have the shared */vendor/cmu/cyrus-
-imapd/squat* annotation set to "true".
+imapd/squat* annotation set to “true”.
 
 In the fourth synopsis, **squatter** runs in rolling mode.  In this
 mode **squatter** backgrounds itself and runs as a daemon (unless
@@ -82,7 +81,7 @@ reindexed.  These files are eventually copied with *rsync -a* and then
 removed by *rm*. *rsync* can increase the load average of the system,
 especially when the temporary directory is on *tmpfs*.  To throttle
 *rsync* it is possible to modify the call in *imap/search_xapian.c*
-and pass *-\-bwlimit=<number>* as further parameter.  The **-o** flag
+and pass *--bwlimit=<number>* as further parameter.  The **-o** flag
 may be used to direct that a single index be copied, rather than
 compacted, from *srctier* to *desttier*.  The **-u** flag may be used
 to restrict operation to the specified user(s).
@@ -93,7 +92,7 @@ loads.
 
 When using the Xapian engine the **-Z** option may be specified, for
 the indexing modes.  This tells **squatter** to consult the Xapian
-internally indexed GUIDs, rather than relying on what's stored in
+internally indexed GUIDs, rather than relying on what’s stored in
 *cyrus.indexed.db*, allowing for recovery from broken
 *cyrus.indexed.db* at the sacrifice of efficiency.
 
@@ -119,16 +118,16 @@ Options
 -a, --squat-annot
 
    Only create indexes for mailboxes which have the shared
-   */vendor/cmu/cyrus-imapd/squat* annotation set to "true".
+   */vendor/cmu/cyrus-imapd/squat* annotation set to “true”.
 
    The value of the */vendor/cmu/cyrus-imapd/squat* annotation is
    inherited by all children of the given mailbox, so an entire
    mailbox tree can be indexed (or not indexed) by setting a single
-   annotation on the root of that tree with a value of "true" (or
-   "false").  If a mailbox does not have a */vendor/cmu/cyrus-
+   annotation on the root of that tree with a value of “true” (or
+   “false”).  If a mailbox does not have a */vendor/cmu/cyrus-
    imapd/squat* annotation set on it (or does not inherit one), then
    the mailbox is not indexed. In other words, the implicit value of
-   */vendor/cmu/cyrus-imapd/squat* is "false".
+   */vendor/cmu/cyrus-imapd/squat* is “false”.
 
 -A, --audit
 
@@ -137,7 +136,7 @@ Options
 
 -d, --nodaemon
 
-   In rolling mode, don't background and do emit log messages on
+   In rolling mode, don’t background and do emit log messages on
    standard error.  Useful for debugging. This feature was introduced
    in version 3.0.
 
@@ -175,7 +174,7 @@ Options
 -n channel, --channel=channel
 
    In rolling mode, specify the name of the sync log *channel* that
-   **squatter** will listen to.  The default is "squatter".  This
+   **squatter** will listen to.  The default is “squatter”.  This
    channel **must** be defined in imapd.conf(5) before being used.
    This feature was introduced in version 3.0.
 
@@ -239,7 +238,7 @@ Options
 
 -S seconds, --sleep=seconds
 
-   After processing each mailbox, sleep for "seconds" before
+   After processing each mailbox, sleep for “seconds” before
    continuing. Can be used to provide some load balancing.  Accepts
    fractional amounts. This feature was introduced in version 3.0.
 
@@ -339,14 +338,14 @@ Note: When using the *-R* rolling mode, you MUST enable sync_log
   define a sync_log channel via the *sync_log_channels:* setting.  If
   also using replication, you must either explicitly specify your
   replication sync_log channel via the *sync_log_channels* directive
-  with a name, or specify the default empty name with "" (the two-
+  with a name, or specify the default empty name with “” (the two-
   character string U+22 U+22).  [Please see imapd.conf(5) for
   details].
 
 Note: When configuring rolling search indexing on a **replica**, one
   must consider whether sync_logs will be written at all.  In this
   case, please consider the setting *sync_log_unsuppressable_channels*
-  to ensure that the sync_log channel upon which one's squatter
+  to ensure that the sync_log channel upon which one’s squatter
   instance depends will continue to be written.  See imapd.conf(5) for
   details.
 

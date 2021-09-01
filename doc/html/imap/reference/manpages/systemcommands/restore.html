@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>restore &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>restore &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../../index.html"/>
         <link rel="up" title="Man pages" href="../commands.html"/>
         <link rel="next" title="sievec" href="sievec.html"/>
         <link rel="prev" title="rehash" href="rehash.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -798,18 +799,18 @@ to a Cyrus IMAP server.  It must be run from the server containing the backup
 storage.</p>
 <p><strong>restore</strong> reads its configuration options out of the <a class="reference internal" href="../configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> file unless specified otherwise by <strong>-C</strong>.</p>
 <p><em>server</em> specifies the destination server to which content should be restored.
-It should be of the form '<em>host</em>[:<em>port</em>]', where <em>host</em> is either a
+It should be of the form ‘<em>host</em>[:<em>port</em>]’, where <em>host</em> is either a
 hostname, an IPv4 address, or an IPv6 address, and where the optional <em>port</em> is
 either a known service name (see <em class="manpage">services(5)</em>) or a decimal port
-number.  If <em>port</em> is omitted, <code class="docutils literal"><span class="pre">imap</span></code> will be tried first, followed by
-<code class="docutils literal"><span class="pre">csync</span></code>.</p>
+number.  If <em>port</em> is omitted, <code class="docutils literal notranslate"><span class="pre">imap</span></code> will be tried first, followed by
+<code class="docutils literal notranslate"><span class="pre">csync</span></code>.</p>
 <p>The destination server must point to either an <a class="reference internal" href="imapd.html#std:cyrusman-imapd(8)">imapd(8)</a> instance
 with the replication capability enabled, or a <a class="reference internal" href="sync_server.html#std:cyrusman-sync_server(8)">sync_server(8)</a>
 instance.  In either case it must be Cyrus version 3.0 or newer.</p>
 <p><strong>restore</strong> will authenticate to the destination server according to the
 <strong>restore_authname</strong>, <strong>restore_password</strong> and <strong>restore_realm</strong> configuration
 options.  The credentials should correspond with one of the destination
-server's <strong>admins</strong>.</p>
+server’s <strong>admins</strong>.</p>
 <p><em>backup</em> is interpreted according to the specified MODE.
 See <a class="reference internal" href="#restore-modes"><span class="std std-ref">Modes</span></a> below.</p>
 <p>If neither <strong>-a</strong> nor <strong>-F</strong> options were provided, then the remaining
@@ -832,49 +833,49 @@ restoring into mailboxes that already exists) will not have their ACLs altered.<
 <div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <dl class="option">
-<dt id="cmdoption-restore-A">
-<code class="descname">-A</code><code class="descclassname"> [acl]</code><a class="headerlink" href="#cmdoption-restore-A" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-restore-a">
+<code class="descname">-A</code><code class="descclassname"> [acl]</code><a class="headerlink" href="#cmdoption-restore-a" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply specified <em>acl</em> to restored mailboxes, rather than their ACLs as
 stored in the backup.</p>
-<p>If <em>acl</em> is the empty string (e.g. <code class="docutils literal"><span class="pre">-A</span> <span class="pre">&quot;&quot;</span></code>) or is unspecified, mailboxes
+<p>If <em>acl</em> is the empty string (e.g. <code class="docutils literal notranslate"><span class="pre">-A</span> <span class="pre">&quot;&quot;</span></code>) or is unspecified, mailboxes
 will be restored with the default ACL for their destination owner.  This
-is mostly useful when restoring folders from one user's backup into a
-different user's mailbox.</p>
+is mostly useful when restoring folders from one user’s backup into a
+different user’s mailbox.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-restore-C">
-<code class="descname">-C</code><code class="descclassname"> config-file</code><a class="headerlink" href="#cmdoption-restore-C" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-restore-c">
+<code class="descname">-C</code><code class="descclassname"> config-file</code><a class="headerlink" href="#cmdoption-restore-c" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use the specified configuration file <em>config-file</em> rather than the default <a class="reference internal" href="../configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-restore-D">
-<code class="descname">-D</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-restore-D" title="Permalink to this definition">¶</a></dt>
-<dd><p>Don't trim <strong>deletedprefix</strong> from mailbox names prior to restoring.  This
+<dt id="cmdoption-restore-d">
+<code class="descname">-D</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-restore-d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Don’t trim <strong>deletedprefix</strong> from mailbox names prior to restoring.  This
 is mainly useful for rebuilding failed servers, where deleted mailboxes
 should be restored as deleted mailboxes, not as new ones.</p>
 <p>The default is to trim the prefix before restoring.</p>
 <p>If the original server from which the backups were produced had
 <strong>delete_mode</strong> set to <em>immediate</em>, then the mailboxes in the backup will
-not have such a prefix, and this option won't have any useful effect.</p>
+not have such a prefix, and this option won’t have any useful effect.</p>
 <p>See <a class="reference internal" href="../configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a> for information about the <strong>deletedprefix</strong>
 and <strong>delete_mode</strong> configuration options.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-restore-F">
-<code class="descname">-F</code><code class="descclassname"> input-file</code><a class="headerlink" href="#cmdoption-restore-F" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-restore-f">
+<code class="descname">-F</code><code class="descclassname"> input-file</code><a class="headerlink" href="#cmdoption-restore-f" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the list of mailboxes or messages from <em>input-file</em> instead of from
 the command line arguments.</p>
 <p><em>input-file</em> should contain one object specification (either an <em>mboxname</em>,
 a <em>uniqueid</em>, or a <em>guid</em>) per line.  Empty lines, and lines beginning with
-a '#' character, are ignored.</p>
+a ‘#’ character, are ignored.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-restore-L">
-<code class="descname">-L</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-restore-L" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-restore-l">
+<code class="descname">-L</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-restore-l" title="Permalink to this definition">¶</a></dt>
 <dd><p>Local operations only.  Actions required to restore the requested mailboxes
 and messages will be performed on the destination server only.
 <a class="reference internal" href="mupdate.html#std:cyrusman-mupdate(8)">mupdate(8)</a> actions will not occur.</p>
@@ -884,8 +885,8 @@ part of a murder.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-restore-M">
-<code class="descname">-M</code><code class="descclassname"> mboxname</code><a class="headerlink" href="#cmdoption-restore-M" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-restore-m">
+<code class="descname">-M</code><code class="descclassname"> mboxname</code><a class="headerlink" href="#cmdoption-restore-m" title="Permalink to this definition">¶</a></dt>
 <dd><p>Messages are restored to the mailbox with the specified <em>mboxname</em>.  If no
 mailbox of this name exists, one will be created.</p>
 <p>If multiple mailbox objects are to be restored, whether due to being
@@ -899,14 +900,14 @@ their original mailboxes.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-restore-P">
-<code class="descname">-P</code><code class="descclassname"> partition</code><a class="headerlink" href="#cmdoption-restore-P" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-restore-p">
+<code class="descname">-P</code><code class="descclassname"> partition</code><a class="headerlink" href="#cmdoption-restore-p" title="Permalink to this definition">¶</a></dt>
 <dd><p>Restore mailboxes to the specified <em>partition</em></p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-restore-U">
-<code class="descname">-U</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-restore-U" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-restore-u">
+<code class="descname">-U</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-restore-u" title="Permalink to this definition">¶</a></dt>
 <dd><p>Try to preserve uidvalidity and other related fields, such that the
 restored mailboxes and messages appear like they never left, and IMAP
 clients can avoid expensive state updates.</p>
@@ -919,15 +920,15 @@ was specified.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-restore-X">
-<code class="descname">-X</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-restore-X" title="Permalink to this definition">¶</a></dt>
+<dt id="cmdoption-restore-x">
+<code class="descname">-X</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-restore-x" title="Permalink to this definition">¶</a></dt>
 <dd><p>Do not restore messages that are marked as expunged in the <em>backup</em>.</p>
 <p>See also <strong>-x</strong>.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-restore-a">
-<code class="descname">-a</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-restore-a" title="Permalink to this definition">¶</a></dt>
+<dt id="id1">
+<code class="descname">-a</code><code class="descclassname"></code><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
 <dd><p>Try to restore all mailboxes in the specified <em>backup</em>.</p>
 </dd></dl>
 
@@ -963,8 +964,8 @@ for additional verbosity.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-restore-x">
-<code class="descname">-x</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-restore-x" title="Permalink to this definition">¶</a></dt>
+<dt id="id2">
+<code class="descname">-x</code><code class="descclassname"></code><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Only restore messages that are marked as expunged in the <em>backup</em>.</p>
 <p>This can be convenient for restoring messages that were accidentally
 deleted by the user, without needing to track down individual message
@@ -983,15 +984,15 @@ if compression is unavailable.</p>
 <div class="section" id="modes">
 <span id="restore-modes"></span><h2>Modes<a class="headerlink" href="#modes" title="Permalink to this headline">¶</a></h2>
 <dl class="option">
-<dt id="cmdoption-restore-f">
-<code class="descname">-f</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-restore-f" title="Permalink to this definition">¶</a></dt>
+<dt id="id3">
+<code class="descname">-f</code><code class="descclassname"></code><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>backup</em> is interpreted as a filename.  The named file does not need to be
 known about in the backups database.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-restore-m">
-<code class="descname">-m</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-restore-m" title="Permalink to this definition">¶</a></dt>
+<dt id="id4">
+<code class="descname">-m</code><code class="descclassname"></code><a class="headerlink" href="#id4" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>backup</em> is interpreted as a mailbox name.  There must be a known backup
 for the user whose mailbox this is.</p>
 <p>Known backups are recorded in the database specified by the <strong>backup_db</strong>
@@ -999,8 +1000,8 @@ and <strong>backup_db_path</strong> configuration options.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="cmdoption-restore-u">
-<code class="descname">-u</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-restore-u" title="Permalink to this definition">¶</a></dt>
+<dt id="id5">
+<code class="descname">-u</code><code class="descclassname"></code><a class="headerlink" href="#id5" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>backup</em> is interpreted as a userid.  There must be a known backup for
 the specified user.</p>
 <p>This is the default if no mode is specified.</p>
@@ -1048,7 +1049,7 @@ the specified user.</p>
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on May 08 2017
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1065,7 +1066,7 @@ the specified user.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1074,7 +1075,7 @@ the specified user.</p>
       <script type="text/javascript" src="../../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../../_static/language_data.js"></script>
 
   
 

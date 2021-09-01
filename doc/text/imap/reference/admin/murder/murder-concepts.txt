@@ -1,4 +1,3 @@
-
 Cyrus Murder: Concepts
 **********************
 
@@ -82,13 +81,13 @@ are available on that server.
 The imapd processes on a backend server can stand by themselves, so
 that each backend IMAP server can be used in isolation, without a
 MUPDATE server or any frontend servers. However, they are configured
-so that they won't process any mailbox operations (CREATE, DELETE,
+so that they won’t process any mailbox operations (CREATE, DELETE,
 RENAME, SETACL, etc) unless the master MUPDATE server can be contacted
 and authorizes the transaction.
 
 In this mode, the imapd processes update the local mailboxes database
 themselves. Additionally, on a CREATE they need to reserve a place
-with the MUPDATE server to insure that other backend servers aren't
+with the MUPDATE server to insure that other backend servers aren’t
 creating the same mailbox before proceeding. Once the local aspects of
 mailbox creation are complete, the mailbox is activated on the MUPDATE
 server, and is considered available to any client through the
@@ -100,7 +99,7 @@ Frontend Servers
 
 The frontend servers, unlike the backend servers, are fully
 interchangeable with each other and the frontend servers can be
-considered 'dataless'; any loss of a proxy results in no loss of data.
+considered ‘dataless’; any loss of a proxy results in no loss of data.
 The only persistent data that is needed (the mailbox list) is kept on
 the MUPDATE master server. This list is synchronized between the
 frontend and the MUPDATE master when the frontend comes up.
@@ -130,11 +129,11 @@ proxy returns a failure to the connected MTA.
 
 If a sieve script is present, the lmtp proxy server must do the
 processing as the end result of the processing may result in the mail
-message going to a different backend server than where the user's
+message going to a different backend server than where the user’s
 INBOX is.
 
 Note: The current implementation runs SIEVE on the backend servers,
-  and holds the requirement that all of a user's mailboxes live on the
+  and holds the requirement that all of a user’s mailboxes live on the
   same backend.
 
 
@@ -180,7 +179,7 @@ Assumptions
 * IMAP clients are not sensitive to somewhat loose mailbox tree
   consistency, and some amount of consistency can be sacrificed for
   speed. As is, IMAP gives no guarantees about the state of the
-  mailbox tree from one command to the next. However, it's important
+  mailbox tree from one command to the next. However, it’s important
   to note that different IMAP sessions do communicate out of band: two
   sessions for the same client should see sensible results. In the
   Murder case, this means that the same client talking to two
@@ -224,13 +223,13 @@ Subscriptions
 "[LSUB, SUBSCRIBE, UNSUBSCRIBE]"
 
 The frontend server directs the LSUB to the backend server that has
-the user's INBOX. As such, the backend server may have entries in the
+the user’s INBOX. As such, the backend server may have entries in the
 subscription database that do not exist on that server. The frontend
 server needs to process the list returned by the backend server and
 either remove or tag with \NoSelect the entries which are not
 currently active within the murder.
 
-If the user's INBOX server is down and the LSUB fails, then the
+If the user’s INBOX server is down and the LSUB fails, then the
 aggregator replies with NO with an appropriate error message. Clients
 should not assume that the user has no subscriptions (though
 apparently some clients do this).
@@ -259,7 +258,7 @@ murder.
       along the UPDATE channel in order to ensure that we have
       received the latest data from the MUPDATE master.
 
-   4. if mailbox still doesn't exist, fail operation
+   4. if mailbox still doesn’t exist, fail operation
 
    5. if mailbox does exist, and the client supports referrals,
       refer the client. Otherwise continue as a proxy with a selected
@@ -268,7 +267,7 @@ murder.
    SELECT on mailboxes that do not exist are much more expensive but
    the assumption is that this does not frequently occur (or if it
    does, it is just after the mailbox has been created and the
-   frontend hasn't seen the update yet).
+   frontend hasn’t seen the update yet).
 
 
 Operations within a Mailbox
@@ -285,7 +284,7 @@ COPY
 ----
 
 COPY is somewhat special as it acts upon messages in the currently
-SELECT'd mailbox but then interacts with another mailbox.
+SELECT’d mailbox but then interacts with another mailbox.
 
 In the case where the destination mailbox is on the same backend
 server as the source folder, the COPY command is issued to the backend
@@ -327,7 +326,7 @@ Operations on the Mailbox List
 
    The following operations occur for CREATE on the frontend:
 
-   * proxyd: verify that mailbox doesn't exist in MUPDATE mailbox
+   * proxyd: verify that mailbox doesn’t exist in MUPDATE mailbox
      list.
 
    * proxyd: decide where to send CREATE (the server of the parent
@@ -345,7 +344,7 @@ Operations on the Mailbox List
    * imapd: start mailboxes transaction (CRASH: aborted)
 
    * imapd may have to open an MUPDATE connection here if one
-     doesn't already exist
+     doesn’t already exist
 
    * imapd -> MUPDATE: set foo.bar reserved (CRASH: MUPDATE
      externally inconsistent)
@@ -374,7 +373,7 @@ Operations on the Mailbox List
    RENAME is only interesting in the cross-server case. In this case
    it issues a (non-standard) XFER command to the backend that
    currently hosts the mailbox, which performs a binary transfer of
-   the mailbox (and in the case of a user's inbox, their associated
+   the mailbox (and in the case of a user’s inbox, their associated
    seen state and subscription list) to the new backend. During this
    time the mailbox is marked as RESERVED in mupdate, and when it is
    complete it is activated on the new server in MUPDATE. The
@@ -416,10 +415,10 @@ backend server.
 POP
 ---
 
-POP is easy given that POP only allows access to the user's INBOX.
+POP is easy given that POP only allows access to the user’s INBOX.
 When it comes to POP, the IMAP Aggregator acts just like a
 multiplexor. The user authenticates to frontend server. The frontend
-determines where the user's INBOX is located and does a direct pass
+determines where the user’s INBOX is located and does a direct pass
 through of the POP commands from the client to the appropriate backend
 server.
 
@@ -444,7 +443,7 @@ A benefit of having the mailbox information on the frontend is that
 LIST is very cheap. The frontend servers can process this request
 without having to contact each backend server.
 
-We're also assuming that LIST is a much more frequent operation than
+We’re also assuming that LIST is a much more frequent operation than
 any of the mailbox operations and thus should be the case to optimize.
 (In addition to the fact that any operation that needs to be forwarded
 to a backend needs to know to which backend it is being forwarded, so
@@ -473,7 +472,7 @@ What happens when a frontend server comes up?
    its local database copy with the copy on the master server.
 
 
-Where's the true mailboxes file?
+Where’s the true mailboxes file?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    The MUPDATE master contains authoritative information as to the
@@ -514,15 +513,15 @@ Summary of Benefits
   but handling about 20% more concurrent users, this is a success.
 
 * **Management benefits** - As with AFS, administrators have the
-  flexibility of placement of data on the servers, "live" move of data
+  flexibility of placement of data on the servers, “live” move of data
   between servers,
 
 * **User benefits** - The user only needs to know a single server
   name for configuration. The same name can be handed out to all
   users.
 
-     * Users don't lose the ability to share their folders and those
-       folders are visible to other users. A user's INBOX folder
+     * Users don’t lose the ability to share their folders and those
+       folders are visible to other users. A user’s INBOX folder
        hierarchy can also exist across multiple machines.
 
 
@@ -534,7 +533,7 @@ among multiple servers and not just do partitioning for availability.
 
 We are also evaluating using the aggregator to be able to provide
 mailboxes to the user with a different backup policy or even different
-"quality of service." For example, we are looking to give users a
+“quality of service.” For example, we are looking to give users a
 larger quota than default but not back up the servers where these
 mailboxes exist.
 
@@ -559,21 +558,21 @@ multiple machines.
 
 One method is to create a DNS CNAME for each letter of the alphabet.
 Then, each user sets their IMAP server to be the first letter of their
-userid. For example, the userid 'tom' would set his IMAP server to be
+userid. For example, the userid ‘tom’ would set his IMAP server to be
 "T.IMAP.ANDREW.CMU.EDU" and "T.IMAP.ANDREW.CMU.EDU" would resolve to
 an actual mail server.
 
 Given that this does not provide a good distribution, another option
 is to create a DNS CNAME for each user. Using the previous example,
-the user 'tom' would set his IMAP server to be
+the user ‘tom’ would set his IMAP server to be
 "TOM.IMAP.ANDREW.CMU.EDU" which then points to an actual mail server.
 
-The good part is that you don't have all your users on one machine and
+The good part is that you don’t have all your users on one machine and
 growth can be accommodated without any user reconfiguration.
 
 The drawback is with shared folders. The mail client now must support
 multiple servers and users must potentially configure a server for
-each user with a shared folder he wishes to view. Also, the user's
+each user with a shared folder he wishes to view. Also, the user’s
 INBOX hierarchy must also reside on a single machine.
 
 
@@ -596,7 +595,7 @@ Multiplexors references:
 
    * Netscape Messaging Multiplexor
 
-   * Paul Fleming's IMAP Proxy
+   * Paul Fleming’s IMAP Proxy
 
    * Perdition IMAP Proxy
 
@@ -609,7 +608,7 @@ Appendix C: Definitions
 
 IMAP connection
    A single IMAP TCP/IP session with a single IMAP server is a
-   "connection".
+   “connection”.
 
 client
    A client is a process on a remote computer that communicates with
@@ -619,7 +618,7 @@ client
 
 mailbox tree
    The collection of all mailboxes at a given site in a namespace is
-   called the mailbox tree. Generally, the user Bovik's personal data
+   called the mailbox tree. Generally, the user Bovik’s personal data
    is found in "user.bovik".
 
 mailboxes database
@@ -627,11 +626,11 @@ mailboxes database
    particular server.
 
 mailbox dataset
-   The store of mailbox information on the ACAP server is the "mailbox
-   dataset".
+   The store of mailbox information on the ACAP server is the “mailbox
+   dataset”.
 
 mailbox operation
-   The following IMAP commands are "mailbox operations": CREATE,
+   The following IMAP commands are “mailbox operations”: CREATE,
    RENAME, DELETE, and SETACL.
 
 MTA

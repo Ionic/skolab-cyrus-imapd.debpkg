@@ -1,4 +1,3 @@
-
 **imclient** library
 ********************
 
@@ -141,8 +140,8 @@ See below for a description of each function.
    specifies the user to authenticate as. If the user is NULL, the
    current user is used. The argument *protallowed* is a bitmask of
    permissible protection mechanisms. On success, 0 is returned.  On
-   failure (i.e., "BAD" keyboard, or no authentication mechanisms
-   worked), 1 is returned. On extreme failure (premature "OK"), 2 is
+   failure (i.e., “BAD” keyboard, or no authentication mechanisms
+   worked), 1 is returned. On extreme failure (premature “OK”), 2 is
    returned.
 
 **imclient_havetls()**
@@ -161,7 +160,7 @@ See below for a description of each function.
    respectively, of CA certificates for validating server
    certificates. (See *SSL_CTX_load_verify_locations(3)* for details.)
    If both of these are NULL, the client will be unable to validate
-   the server's certificate, in which case the connection may succeed
+   the server’s certificate, in which case the connection may succeed
    but a warning will be printed to stdout.
 
 

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>cyrusdb API &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>cyrusdb API &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../index.html"/>
         <link rel="up" title="Developer APIs" href="../API.html"/>
         <link rel="next" title="Index API" href="index-api.html"/>
         <link rel="prev" title="CyrusDB API" href="cyrusdb.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../developers.html">Developers</a> &raquo;</li>
       
@@ -786,44 +787,44 @@
 <h1>cyrusdb API<a class="headerlink" href="#cyrusdb-api" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="intro">
 <h2>Intro<a class="headerlink" href="#intro" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="docutils literal"><span class="pre">cyrusdb</span></code> API is a common interface to a key-value store, used
+<p>The <code class="docutils literal notranslate"><span class="pre">cyrusdb</span></code> API is a common interface to a key-value store, used
 throughout the Cyrus code. It allows a choice of different backends for
 different access patterns, while ensuring a consistent interface.</p>
 <p>This document will describe the interface, and how to use the cyrusdb
 interface from within parts of Cyrus code, as well as how to implement
 your own backend</p>
 <p>If you pass incorrect values to these APIs, you will get an assertion
-failure in most cases. That's generally considered safer than silently
+failure in most cases. That’s generally considered safer than silently
 breaking things. Exceptions are noted below.</p>
 </div>
 <div class="section" id="code-layout">
 <h2>Code Layout<a class="headerlink" href="#code-layout" title="Permalink to this headline">¶</a></h2>
-<p>The implementation of each interface is in <code class="docutils literal"><span class="pre">lib/cyrusdb_NAME.c</span></code>, for
-example lib/cyrusdb_flat.c. General functions are in <code class="docutils literal"><span class="pre">lib/cyrusdb.c</span></code>
-and the interface in <code class="docutils literal"><span class="pre">lib/cyrusdb.h</span></code>.</p>
+<p>The implementation of each interface is in <code class="docutils literal notranslate"><span class="pre">lib/cyrusdb_NAME.c</span></code>, for
+example lib/cyrusdb_flat.c. General functions are in <code class="docutils literal notranslate"><span class="pre">lib/cyrusdb.c</span></code>
+and the interface in <code class="docutils literal notranslate"><span class="pre">lib/cyrusdb.h</span></code>.</p>
 </div>
 <div class="section" id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
 <p>The name of the backend for each of the main internal databases can be
-configured in imapd.conf, for example: <code class="docutils literal"><span class="pre">annotation_db:</span> <span class="pre">skiplist</span></code>. This
+configured in imapd.conf, for example: <code class="docutils literal notranslate"><span class="pre">annotation_db:</span> <span class="pre">skiplist</span></code>. This
 is then read in imap/global.h and imap/global.c during startup, so that
-the global variable <code class="docutils literal"><span class="pre">config_annotation_db</span></code> gets set to the configured
+the global variable <code class="docutils literal notranslate"><span class="pre">config_annotation_db</span></code> gets set to the configured
 backend name:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">config_annotation_db</span> <span class="o">=</span> <span class="n">config_getstring</span><span class="p">(</span><span class="n">IMAPOPT_ANNOTATION_DB</span><span class="p">);</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">config_annotation_db</span> <span class="o">=</span> <span class="n">config_getstring</span><span class="p">(</span><span class="n">IMAPOPT_ANNOTATION_DB</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>(Beware the misleading naming here: <code class="docutils literal"><span class="pre">config_annotation_db</span></code> is a string
+<p>(Beware the misleading naming here: <code class="docutils literal notranslate"><span class="pre">config_annotation_db</span></code> is a string
 describing the <em>backend</em> used by the database, not, say, its location on
 disk.)</p>
 <p>Internally, the main module for each database sets up struct of pointers
 to the cyrusdb functions it implements, which is registered in
-<code class="docutils literal"><span class="pre">lib/cyrusdb.c</span></code></p>
-<p><code class="docutils literal"><span class="pre">lib/cyrusdb.c</span></code> provides backend-agnostic wrapper functions for
+<code class="docutils literal notranslate"><span class="pre">lib/cyrusdb.c</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">lib/cyrusdb.c</span></code> provides backend-agnostic wrapper functions for
 interacting with cyrusdb databases.</p>
 </div>
 <div class="section" id="a-full-example">
 <h2>A full example<a class="headerlink" href="#a-full-example" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">db</span> <span class="o">*</span><span class="n">db</span> <span class="o">=</span> <span class="n">NULL</span><span class="p">;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">db</span> <span class="o">*</span><span class="n">db</span> <span class="o">=</span> <span class="n">NULL</span><span class="p">;</span>
 <span class="n">struct</span> <span class="n">txn</span> <span class="o">*</span><span class="n">tid</span> <span class="o">=</span> <span class="n">NULL</span><span class="p">;</span>
 <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">filename</span> <span class="o">=</span> <span class="n">NULL</span><span class="p">;</span>
 <span class="nb">int</span> <span class="n">flags</span> <span class="o">=</span> <span class="n">CYRUSDB_CREATE</span><span class="p">;</span>
@@ -845,20 +846,20 @@ interacting with cyrusdb databases.</p>
 </div>
 <p>Note that you always open a database first, and close it at the end. You
 must always call cyrus_init() and cyrus_done() to properly initialize
-and clean up the <code class="docutils literal"><span class="pre">cyrusdb</span></code> environments.</p>
+and clean up the <code class="docutils literal notranslate"><span class="pre">cyrusdb</span></code> environments.</p>
 <p>This example also uses a transaction, meaning that the database is
-locked in exclusive mode between the 'fetch' (the first use of the
+locked in exclusive mode between the ‘fetch’ (the first use of the
 transaction) and the commit.</p>
 </div>
 <div class="section" id="about-transactions">
 <h2>About Transactions<a class="headerlink" href="#about-transactions" title="Permalink to this headline">¶</a></h2>
 <p>The cyrusdb interface works in two modes - transactional and
-non-transactional. The value of the 'tid' parameter decides which mode
+non-transactional. The value of the ‘tid’ parameter decides which mode
 is used. There are three possible values:</p>
 <ul class="simple">
 <li>NULL - non-transactional. Will create a temporary lock for the
-duration of the current action - either a write lock for &quot;store&quot; or a
-read lock for &quot;fetch&quot;. If you call &quot;foreach&quot;, the lock will be
+duration of the current action - either a write lock for “store” or a
+read lock for “fetch”. If you call “foreach”, the lock will be
 dropped between each record fetched</li>
 <li>Pointer to NULL - transactional, transaction not yet started. Will
 always take a write lock on the database, and update the pointer to
@@ -874,33 +875,33 @@ returning an error</em></p>
 </div>
 <div class="section" id="api-reference">
 <h2>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h2>
-<p>All functions follow the normal C API of returning '0' on success, and
+<p>All functions follow the normal C API of returning ‘0’ on success, and
 an error code on failure</p>
 <div class="section" id="cyrusdb-init-void">
 <h3>cyrusdb_init(void)<a class="headerlink" href="#cyrusdb-init-void" title="Permalink to this headline">¶</a></h3>
-<p>Is called once per process. Don't call this yourself, use
-<code class="docutils literal"><span class="pre">cyrus_init()</span></code>. No other calls will be made until this is called.</p>
+<p>Is called once per process. Don’t call this yourself, use
+<code class="docutils literal notranslate"><span class="pre">cyrus_init()</span></code>. No other calls will be made until this is called.</p>
 </div>
 <div class="section" id="cyrusdb-done-void">
 <h3>cyrusdb_done(void)<a class="headerlink" href="#cyrusdb-done-void" title="Permalink to this headline">¶</a></h3>
-<p>The opposite of <code class="docutils literal"><span class="pre">cyrusdb_init()</span></code> - called once per process to do any
-cleaning up after all database usage is finished. Don't call this
-yourself, use <code class="docutils literal"><span class="pre">cyrus_done()</span></code>.</p>
+<p>The opposite of <code class="docutils literal notranslate"><span class="pre">cyrusdb_init()</span></code> - called once per process to do any
+cleaning up after all database usage is finished. Don’t call this
+yourself, use <code class="docutils literal notranslate"><span class="pre">cyrus_done()</span></code>.</p>
 </div>
 <div class="section" id="cyrusdb-sync-const-char-backend">
 <h3>cyrusdb_sync(const char *backend)<a class="headerlink" href="#cyrusdb-sync-const-char-backend" title="Permalink to this headline">¶</a></h3>
 <p>Perform a checkpoint of the database environment. Used by berkeley
-backend. Is called by <code class="docutils literal"><span class="pre">ctl_cyrusdb</span> <span class="pre">-c</span></code> on a regular basis</p>
+backend. Is called by <code class="docutils literal notranslate"><span class="pre">ctl_cyrusdb</span> <span class="pre">-c</span></code> on a regular basis</p>
 </div>
 <div class="section" id="cyrusdb-open-const-char-backend-const-char-fname-int-flags-struct-db-retdb">
 <h3>cyrusdb_open(const char *backend, const char *fname, int flags, struct db **retdb)<a class="headerlink" href="#cyrusdb-open-const-char-backend-const-char-fname-int-flags-struct-db-retdb" title="Permalink to this headline">¶</a></h3>
-<p>Opens the database with the specified 'file name' (or other descriptor,
+<p>Opens the database with the specified ‘file name’ (or other descriptor,
 for example the sql backend is not a filename), and if successful
 returns an opaque database structure</p>
 <p>Flags:</p>
 <ul class="simple">
-<li>CYRUSDB_CREATE - create the database if it doesn't exist</li>
-<li>CYRUSDB_MBOXSORT - sort '.' first, so folder listing is correct</li>
+<li>CYRUSDB_CREATE - create the database if it doesn’t exist</li>
+<li>CYRUSDB_MBOXSORT - sort ‘.’ first, so folder listing is correct</li>
 </ul>
 <p>Errors:</p>
 <ul class="simple">
@@ -911,7 +912,7 @@ corruption detected while loading the file</li>
 <div class="section" id="cyrusdb-close-struct-db-db">
 <h3>cyrusdb_close(struct db *db)<a class="headerlink" href="#cyrusdb-close-struct-db-db" title="Permalink to this headline">¶</a></h3>
 <p>Close the named database. Will release any locks if they are still held,
-but it's bad practice to close without committing or aborting, so the
+but it’s bad practice to close without committing or aborting, so the
 backend should log an error</p>
 <p>Errors:</p>
 <ul class="simple">
@@ -947,24 +948,24 @@ if you are only interested in the length</p>
 </div>
 <div class="section" id="cyrusdb-forone-struct-db-db-const-char-key-size-t-keylen-foreach-p-goodp-foreach-p-procp-void-rock-struct-txn-tidptr">
 <h3>cyrusdb_forone(struct db *db, const char *key, size_t keylen, foreach_p *goodp, foreach_p *procp, void *rock, struct txn **tidptr)<a class="headerlink" href="#cyrusdb-forone-struct-db-db-const-char-key-size-t-keylen-foreach-p-goodp-foreach-p-procp-void-rock-struct-txn-tidptr" title="Permalink to this headline">¶</a></h3>
-<p><code class="docutils literal"><span class="pre">cyrusdb_foreach()</span></code> iterates over all records matching the given
+<p><code class="docutils literal notranslate"><span class="pre">cyrusdb_foreach()</span></code> iterates over all records matching the given
 prefix, in database order (which may be MBOXLIST sort, depending on the
 parameters given to open</p>
 <p>It is legal to give a NULL pointer as prefix if prefixlen is zero, in
 which case it will return all records in the database. It is an error to
 give a non-zero prefixlen with a NULL prefix.</p>
-<p><code class="docutils literal"><span class="pre">cyrusdb_forone()</span></code> &quot;iterates&quot; over the single record matched by the
-given key. If you've already built callbacks for processing each record
+<p><code class="docutils literal notranslate"><span class="pre">cyrusdb_forone()</span></code> “iterates” over the single record matched by the
+given key. If you’ve already built callbacks for processing each record
 from a foreach, this lets you use the same interface to process a single
 record.</p>
-<p><code class="docutils literal"><span class="pre">goodp</span></code> - this function is only used for deciding if the record needs
+<p><code class="docutils literal notranslate"><span class="pre">goodp</span></code> - this function is only used for deciding if the record needs
 to be further processed. It can be used for basic filtering, and returns
 true (non-zero) to process, or zero to skip and move straight to the
-next record. Because goodp can't make any database changes, it doesn't
-break the lock, so it's faster to use goodp to filter records if you
-don't need to process all of them. NULL is a legal value for goodp, and
+next record. Because goodp can’t make any database changes, it doesn’t
+break the lock, so it’s faster to use goodp to filter records if you
+don’t need to process all of them. NULL is a legal value for goodp, and
 means that all records will be processed.</p>
-<p><code class="docutils literal"><span class="pre">procp</span></code> - procp is the main callback function. If you use foreach in
+<p><code class="docutils literal notranslate"><span class="pre">procp</span></code> - procp is the main callback function. If you use foreach in
 non-transactional mode, the database is unlocked before calling procp,
 and locked again afterwards. You are allowed to add, delete or modify
 values in the same database from within procp. If procp returns
@@ -986,8 +987,8 @@ procp MUST NOT be NULL.</p>
 <div class="section" id="cyrusdb-store-struct-db-db-const-char-key-size-t-keylen-const-char-data-size-t-datalen-struct-txn-tidptr">
 <h3>cyrusdb_store(struct db *db, const char *key, size_t keylen, const char *data, size_t datalen, struct txn **tidptr)<a class="headerlink" href="#cyrusdb-store-struct-db-db-const-char-key-size-t-keylen-const-char-data-size-t-datalen-struct-txn-tidptr" title="Permalink to this headline">¶</a></h3>
 <p>Create a new record or replace an existing one. The only difference
-between these two is that <code class="docutils literal"><span class="pre">cyrusdb_create</span></code> will return an error if the
-record already exists, while <code class="docutils literal"><span class="pre">cyrusdb_store</span></code> will replace it</p>
+between these two is that <code class="docutils literal notranslate"><span class="pre">cyrusdb_create</span></code> will return an error if the
+record already exists, while <code class="docutils literal notranslate"><span class="pre">cyrusdb_store</span></code> will replace it</p>
 <p>If tidptr is NULL, create/store will take a write lock for the duration
 of the action.</p>
 <p>Any failure during create/store will abort the current transaction as
@@ -998,7 +999,7 @@ is not legal to pass NULL for key or zero for keylen</p>
 <ul class="simple">
 <li>CYRUSDB_IOERROR - any error to write to the database</li>
 <li>CYRUSDB_LOCKED - if tidptr is incorrect</li>
-<li>CYRUSDB_EXISTS - if <code class="docutils literal"><span class="pre">cyrusdb_create</span></code> is called on an existing key</li>
+<li>CYRUSDB_EXISTS - if <code class="docutils literal notranslate"><span class="pre">cyrusdb_create</span></code> is called on an existing key</li>
 <li>CYRUSDB_AGAIN - if a deadlock is created. The current transaction
 has been aborted, but a retry may succeed</li>
 </ul>
@@ -1006,13 +1007,13 @@ has been aborted, but a retry may succeed</li>
 <div class="section" id="cyrusdb-delete-struct-db-db-const-char-key-size-t-keylen-struct-txn-tidptr-int-force">
 <h3>cyrusdb_delete(struct db *db, const char *key, size_t keylen, struct txn **tidptr, int force)<a class="headerlink" href="#cyrusdb-delete-struct-db-db-const-char-key-size-t-keylen-struct-txn-tidptr-int-force" title="Permalink to this headline">¶</a></h3>
 <p>Delete the given record from the database. If force is true, then
-succeed even if the record doesn't currently exist.</p>
+succeed even if the record doesn’t currently exist.</p>
 <p>It is not legal to pass NULL for key or zero for keylen</p>
 <p>Errors:</p>
 <ul class="simple">
 <li>CYRUSDB_IOERROR - any error to write to the database</li>
 <li>CYRUSDB_LOCKED - if tidptr is incorrect</li>
-<li>CYRUSDB_NOTFOUND - if force is not set and the key doesn't exist</li>
+<li>CYRUSDB_NOTFOUND - if force is not set and the key doesn’t exist</li>
 <li>CYRUSDB_AGAIN - if a deadlock is created. The current transaction
 has been aborted, but a retry may succeed</li>
 </ul>
@@ -1044,12 +1045,12 @@ regardless of success</p>
 <div class="section" id="cyrusdb-dump-struct-db-db-int-detail">
 <h3>cyrusdb_dump(struct db *db, int detail)<a class="headerlink" href="#cyrusdb-dump-struct-db-db-int-detail" title="Permalink to this headline">¶</a></h3>
 <p>Optional function to dump the internal structure of the database to
-stdout for debugging purposes. Don't use.</p>
+stdout for debugging purposes. Don’t use.</p>
 </div>
 <div class="section" id="cyrusdb-consistent-struct-db-db">
 <h3>cyrusdb_consistent(struct db *db)<a class="headerlink" href="#cyrusdb-consistent-struct-db-db" title="Permalink to this headline">¶</a></h3>
-<p>Check if the DB is internally consistent. Looks pretty bogus, and isn't
-used anywhere. Don't use.</p>
+<p>Check if the DB is internally consistent. Looks pretty bogus, and isn’t
+used anywhere. Don’t use.</p>
 </div>
 </div>
 </div>
@@ -1075,7 +1076,7 @@ used anywhere. Don't use.</p>
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Nov 18 2020
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1092,7 +1093,7 @@ used anywhere. Don't use.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1101,7 +1102,7 @@ used anywhere. Don't use.</p>
       <script type="text/javascript" src="../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../_static/language_data.js"></script>
 
   
 

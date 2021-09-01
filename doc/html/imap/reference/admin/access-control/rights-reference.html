@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Access Control Lists Rights Reference &mdash; Cyrus IMAP 3.4.1 documentation</title>
+  <title>Access Control Lists Rights Reference &mdash; Cyrus IMAP 3.4.2 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
   
 
   
+    <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+  
     <link rel="stylesheet" href="../../../../_static/cyrus.css" type="text/css" />
   
 
@@ -35,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.1 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../../index.html"/>
         <link rel="up" title="Access Control" href="../access-control.html"/>
         <link rel="next" title="Quotas" href="../quotas.html"/>
         <link rel="prev" title="Access Control Identifier (ACI)" href="identifiers.html"/> 
@@ -155,7 +157,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../download/packagers.html#the-configuration-file-for-the-various-programs-imapd-conf">The configuration file for the various programs: imapd.conf</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal"><span class="pre">/etc/services</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/packagers.html#services-in-etc-services">Services in <code class="docutils literal notranslate"><span class="pre">/etc/services</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +241,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-defaults">Access Control Defaults</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#access-control-identifier-aci">Access Control Identifier (ACI)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#negative-rights">Negative Rights</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users' Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#calculating-a-users-rights">Calculating a Users’ Rights</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#login-authentication">Login Authentication</a><ul>
@@ -256,14 +258,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-roots">Quota Roots</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#controlling-quota-behavior">Controlling Quota Behavior</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#mail-delivery-behavior">Mail Delivery Behavior</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal"><span class="pre">d</span></code> Rights</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quota-warnings-upon-select-when-user-has-d-rights">Quota Warnings Upon Select When User Has <code class="docutils literal notranslate"><span class="pre">d</span></code> Rights</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#quotas-and-partitions">Quotas and Partitions</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#new-mail-notification">New Mail Notification</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#partitions">Partitions</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with &quot;create&quot;</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with &quot;rename&quot;</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#specifying-partitions-with-create">Specifying Partitions with “create”</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#changing-partitions-with-rename">Changing Partitions with “rename”</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../concepts/overview_and_concepts.html#news">News</a></li>
@@ -378,7 +380,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#special-cases">Special cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-exclusion">Partitions Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#partitions-usage-data-reset">Partitions Usage Data Reset</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#mailbox-creation-distribution-through-murder-frontend">Mailbox Creation Distribution Through <code class="docutils literal notranslate"><span class="pre">murder</span> <span class="pre">frontend</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-exclusion">Backends Exclusion</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../concepts/deployment/mailbox_creation_distribution.html#backends-usage-data-reset">Backends Usage Data Reset</a></li>
 </ul>
@@ -546,7 +548,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#installation-problems">Installation Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-compilationerrors.html">Compilation errors about kssl.h and krb5.h on Red Hat Linux/Fedora</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going...</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/install-install-help.html">Help! There must be an easier way to get all this going…</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/install-linkerwarnings.html">OpenSSL Version Mismatches</a></li>
 </ul>
 </li>
@@ -563,7 +565,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-configdir-tempfs.html">Is it safe to put &lt;configdirectory&gt;/proc and &lt;configdirectory&gt;/lock on a tmpfs filesystem?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-coredump.html">How to enable core dumps</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-delete-mailbox.html">Why can I not delete a mailbox as an admin user?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What ... Deleted, Expired, Expunged or Purged?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deleted-expired-expunged-purged.html">When is What … Deleted, Expired, Expunged or Purged?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-deliverdb-size.html">Why is deliver.db so large?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-freezes.html">I have multiple imapd-SERVICES configured and experience occasional freezes when I try to log in!</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-gdb.html">How to run gdb on Cyrus components</a></li>
@@ -575,13 +577,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-sharedfilesystem-gpfs.html">Shared File Systems GPFS for high availability</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-telemetry.html">How to enable telemetry</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/o-toomanyprocesses.html">The process count keeps growing!</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">&quot;unable to join environment&quot; error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to '&lt;&gt;'?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-unable-join-environment.html">“unable to join environment” error</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/o-vacation-mailfrom.html">Why does Cyrus set the MAIL FROM address of the sender of vacation responses to ‘&lt;&gt;’?</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../faq.html#common-interoperability-problems">Common Interoperability Problems</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-8bit.html">Why does Cyrus reject 8-bit characters in the headers of my messages?</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with &quot;bare newlines&quot;?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-barenewlines.html">Why does Cyrus reject messages with “bare newlines”?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-sieve-exim.html">How do I get Cyrus Sieve to play nice with Exim?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../faqs/interop-slow-delivery.html">Why does mail delivery go slow or hang sometimes?</a></li>
 </ul>
@@ -698,7 +700,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../support.html">Support/Community</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-bugs.html">Found a bug?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-mailing-lists.html">Mailing lists</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-irc.html">IRC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../support/feedback-meetings.html">Weekly meetings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../overview/about_cyrus.html">About</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../../overview/what_is_cyrus.html">What is Cyrus</a><ul>
@@ -743,7 +744,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.org/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.org/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
 </div>
       &nbsp;
     </nav>
@@ -763,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.4.1</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.4.2</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -798,17 +799,17 @@ documents:</p>
 <div class="section" id="individual-rights-reference">
 <h2>Individual Rights Reference<a class="headerlink" href="#individual-rights-reference" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="l">
-<span id="imap-admin-access-control-right-l"></span><h3><code class="docutils literal"><span class="pre">l</span></code><a class="headerlink" href="#l" title="Permalink to this headline">¶</a></h3>
+<span id="imap-admin-access-control-right-l"></span><h3><code class="docutils literal notranslate"><span class="pre">l</span></code><a class="headerlink" href="#l" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Stands for <strong>lookup</strong>.</p>
 <p>The ACI subject can lookup this folder, and see that the folder
 exists, meaning the folder will appear in the response to a
-<code class="docutils literal"><span class="pre">LIST</span> <span class="pre">&quot;&quot;</span> <span class="pre">&quot;*&quot;</span></code> command issued by a client.</p>
+<code class="docutils literal notranslate"><span class="pre">LIST</span> <span class="pre">&quot;&quot;</span> <span class="pre">&quot;*&quot;</span></code> command issued by a client.</p>
 <p>Folders to which the ACI subject has no lookup rights may still be
 subscribed to. The lookup right is only required if Cyrus IMAP has
-been configured with the <code class="docutils literal"><span class="pre">allowallsubscribe</span></code> setting to <code class="docutils literal"><span class="pre">0</span></code>.</p>
-<p>This setting defaults to <code class="docutils literal"><span class="pre">0</span></code>. In a Cyrus IMAP Murder, this setting
-is typically set to <code class="docutils literal"><span class="pre">1</span></code>.</p>
+been configured with the <code class="docutils literal notranslate"><span class="pre">allowallsubscribe</span></code> setting to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+<p>This setting defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code>. In a Cyrus IMAP Murder, this setting
+is typically set to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
 <p>The <a class="reference internal" href="#imap-admin-access-control-right-l"><span class="std std-ref">l</span></a> right can be assigned
 to a folder, without the <a class="reference internal" href="#imap-admin-access-control-right-l"><span class="std std-ref">l</span></a>
 right having been given out for the parent folder. Cyrus IMAP will
@@ -817,8 +818,8 @@ pretend the parent folder does not exist;</p>
 <blockquote class="epigraph">
 <div><p>Note that if the user has
 <a class="reference internal" href="#imap-admin-access-control-right-l"><span class="std std-ref">l</span></a> right to a mailbox
-<code class="docutils literal"><span class="pre">A/B</span></code>, but not to its parent mailbox <code class="docutils literal"><span class="pre">A</span></code>, the <code class="docutils literal"><span class="pre">LIST</span></code>
-command should behave as if the mailbox <code class="docutils literal"><span class="pre">A</span></code> doesn't exist, for
+<code class="docutils literal notranslate"><span class="pre">A/B</span></code>, but not to its parent mailbox <code class="docutils literal notranslate"><span class="pre">A</span></code>, the <code class="docutils literal notranslate"><span class="pre">LIST</span></code>
+command should behave as if the mailbox <code class="docutils literal notranslate"><span class="pre">A</span></code> doesn’t exist, for
 example:</p>
 <pre class="literal-block">
 C: A777 LIST &quot;&quot; *
@@ -831,72 +832,72 @@ S: A777 OK LIST completed
 </div></blockquote>
 </div>
 <div class="section" id="r">
-<span id="imap-admin-access-control-right-r"></span><h3><code class="docutils literal"><span class="pre">r</span></code><a class="headerlink" href="#r" title="Permalink to this headline">¶</a></h3>
+<span id="imap-admin-access-control-right-r"></span><h3><code class="docutils literal notranslate"><span class="pre">r</span></code><a class="headerlink" href="#r" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Stands for <strong>read</strong>.</p>
 <p>The ACI subject can read the contents of this folder, meaning that
-the ACI subject is allowed to <code class="docutils literal"><span class="pre">SELECT</span></code> or <code class="docutils literal"><span class="pre">EXAMINE</span></code> the folder,
-query its <code class="docutils literal"><span class="pre">STATUS</span></code>, <code class="docutils literal"><span class="pre">FETCH</span></code> data, <code class="docutils literal"><span class="pre">SEARCH</span></code> the contents, and
-<code class="docutils literal"><span class="pre">COPY</span></code> contents from the folder.</p>
+the ACI subject is allowed to <code class="docutils literal notranslate"><span class="pre">SELECT</span></code> or <code class="docutils literal notranslate"><span class="pre">EXAMINE</span></code> the folder,
+query its <code class="docutils literal notranslate"><span class="pre">STATUS</span></code>, <code class="docutils literal notranslate"><span class="pre">FETCH</span></code> data, <code class="docutils literal notranslate"><span class="pre">SEARCH</span></code> the contents, and
+<code class="docutils literal notranslate"><span class="pre">COPY</span></code> contents from the folder.</p>
 <p>The <a class="reference internal" href="#imap-admin-access-control-right-r"><span class="std std-ref">r</span></a> right also allows the
-user to <code class="docutils literal"><span class="pre">GETMETADATA</span></code> when used in conjunction with the
+user to <code class="docutils literal notranslate"><span class="pre">GETMETADATA</span></code> when used in conjunction with the
 <a class="reference internal" href="#imap-admin-access-control-right-l"><span class="std std-ref">l</span></a> right, as defined in
 <span class="target" id="index-3"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5464.html"><strong>RFC 5464</strong></a>.</p>
 </div></blockquote>
 </div>
 <div class="section" id="s">
-<span id="imap-admin-access-control-right-s"></span><h3><code class="docutils literal"><span class="pre">s</span></code><a class="headerlink" href="#s" title="Permalink to this headline">¶</a></h3>
+<span id="imap-admin-access-control-right-s"></span><h3><code class="docutils literal notranslate"><span class="pre">s</span></code><a class="headerlink" href="#s" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Stands for <strong>seen</strong>.</p>
-<p>The ACI subject is permitted to maintain the ACI subject's seen
+<p>The ACI subject is permitted to maintain the ACI subject’s seen
 state for this folder, or the shared seen state in case the
-<code class="docutils literal"><span class="pre">/vendor/cmu/cyrus-imapd/sharedseen</span></code> has been set to <code class="docutils literal"><span class="pre">1</span></code> (see
+<code class="docutils literal notranslate"><span class="pre">/vendor/cmu/cyrus-imapd/sharedseen</span></code> has been set to <code class="docutils literal notranslate"><span class="pre">1</span></code> (see
 <a class="reference internal" href="../../manpages/systemcommands/cyradm.html#imap-reference-manpages-systemcommands-cyradm"><span class="std std-ref">NAME</span></a>).</p>
-<p>Additionally, the <code class="docutils literal"><span class="pre">\Recent</span></code> flags are preserved for the ACI
+<p>Additionally, the <code class="docutils literal notranslate"><span class="pre">\Recent</span></code> flags are preserved for the ACI
 subject.</p>
 </div></blockquote>
 </div>
 <div class="section" id="w">
-<span id="imap-admin-access-control-right-w"></span><h3><code class="docutils literal"><span class="pre">w</span></code><a class="headerlink" href="#w" title="Permalink to this headline">¶</a></h3>
+<span id="imap-admin-access-control-right-w"></span><h3><code class="docutils literal notranslate"><span class="pre">w</span></code><a class="headerlink" href="#w" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Stands for <strong>write</strong>.</p>
 <p>The ACI subject is permitted to write to the folder, actually
 meaning the ACI subject is permitted to maintain flags and keywords
-other then <code class="docutils literal"><span class="pre">\Seen</span></code> and <code class="docutils literal"><span class="pre">\Deleted</span></code>, which are controlled using
+other then <code class="docutils literal notranslate"><span class="pre">\Seen</span></code> and <code class="docutils literal notranslate"><span class="pre">\Deleted</span></code>, which are controlled using
 the <a class="reference internal" href="#imap-admin-access-control-right-s"><span class="std std-ref">s</span></a> and
 <a class="reference internal" href="#imap-admin-access-control-right-t"><span class="std std-ref">t</span></a> rights respectively.</p>
 <p>The <a class="reference internal" href="#imap-admin-access-control-right-w"><span class="std std-ref">w</span></a> right also allows the
-user to <code class="docutils literal"><span class="pre">SETMETADATA</span></code> when used in conjunction with the
+user to <code class="docutils literal notranslate"><span class="pre">SETMETADATA</span></code> when used in conjunction with the
 <a class="reference internal" href="#imap-admin-access-control-right-l"><span class="std std-ref">l</span></a> and
 <a class="reference internal" href="#imap-admin-access-control-right-r"><span class="std std-ref">r</span></a> rights, as defined in
 <span class="target" id="index-4"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5464.html"><strong>RFC 5464</strong></a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>IMAP clients may expect to be able to set flags other than
-<code class="docutils literal"><span class="pre">\Seen</span></code> and <code class="docutils literal"><span class="pre">\Deleted</span></code> and attempt to set those flags
-immediately along with a &quot;Mark as read&quot; action, but without the
+<code class="docutils literal notranslate"><span class="pre">\Seen</span></code> and <code class="docutils literal notranslate"><span class="pre">\Deleted</span></code> and attempt to set those flags
+immediately along with a “Mark as read” action, but without the
 ACI subject actually being permitted to set some of those flags
 through the <a class="reference internal" href="#imap-admin-access-control-right-w"><span class="std std-ref">w</span></a> right.</p>
 <p><span class="target" id="index-5"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc4314.html"><strong>RFC 4314</strong></a>, section 4., page 15, states that the server SHOULD
 NOT fail, as the tagged NO response is not handled very well by
 deployed clients.</p>
 <p class="last">In order to comply, we have <a class="reference external" href="https://github.com/cyrusimap/cyrus-imapd/issues/1375">Bug #1375</a>, as
-Cyrus IMAP currently does seem to issue a tagged <code class="docutils literal"><span class="pre">NO</span></code>
+Cyrus IMAP currently does seem to issue a tagged <code class="docutils literal notranslate"><span class="pre">NO</span></code>
 response.</p>
 </div>
 </div></blockquote>
 </div>
 <div class="section" id="i">
-<span id="imap-admin-access-control-right-i"></span><h3><code class="docutils literal"><span class="pre">i</span></code><a class="headerlink" href="#i" title="Permalink to this headline">¶</a></h3>
+<span id="imap-admin-access-control-right-i"></span><h3><code class="docutils literal notranslate"><span class="pre">i</span></code><a class="headerlink" href="#i" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Stands for <strong>insert</strong>.</p>
 <p>The ACI subject is permitted to insert content into a folder,
-meaning the ACI subject may <code class="docutils literal"><span class="pre">COPY</span></code> messages with this folder as
-the target folder, and may <code class="docutils literal"><span class="pre">APPEND</span></code> messages to this folder.</p>
+meaning the ACI subject may <code class="docutils literal notranslate"><span class="pre">COPY</span></code> messages with this folder as
+the target folder, and may <code class="docutils literal notranslate"><span class="pre">APPEND</span></code> messages to this folder.</p>
 </div></blockquote>
 </div>
 <div class="section" id="p">
-<span id="imap-admin-access-control-right-p"></span><h3><code class="docutils literal"><span class="pre">p</span></code><a class="headerlink" href="#p" title="Permalink to this headline">¶</a></h3>
+<span id="imap-admin-access-control-right-p"></span><h3><code class="docutils literal notranslate"><span class="pre">p</span></code><a class="headerlink" href="#p" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Stands for <strong>post</strong>.</p>
 <p>The post right currently is exclusive to Cyrus IMAP, and allows the
@@ -907,25 +908,25 @@ submitted messages.</p>
 <p>Example implementations using the
 <a class="reference internal" href="#imap-admin-access-control-right-p"><span class="std std-ref">p</span></a> right include shared
 folders to which specific recipient addresses are delivered through
-LMTP pre-authorized as the <code class="docutils literal"><span class="pre">postuser</span></code>, which must then also have
+LMTP pre-authorized as the <code class="docutils literal notranslate"><span class="pre">postuser</span></code>, which must then also have
 the <a class="reference internal" href="#imap-admin-access-control-right-p"><span class="std std-ref">p</span></a> right on the target
 folder.</p>
 </div></blockquote>
 </div>
 <div class="section" id="c">
-<span id="imap-admin-access-control-right-c"></span><h3><code class="docutils literal"><span class="pre">c</span></code><a class="headerlink" href="#c" title="Permalink to this headline">¶</a></h3>
+<span id="imap-admin-access-control-right-c"></span><h3><code class="docutils literal notranslate"><span class="pre">c</span></code><a class="headerlink" href="#c" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Stands for <strong>create</strong>.</p>
 <p>The create right is a right introduced with <span class="target" id="index-6"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2086.html"><strong>RFC 2086</strong></a>, indicating
-the ACI subject's right to create new sub-folders in the parent
+the ACI subject’s right to create new sub-folders in the parent
 folder on which this right has been assigned, but also to delete the
 same folder.</p>
 <p>Since <span class="target" id="index-7"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc4314.html"><strong>RFC 4314</strong></a>, the <a class="reference internal" href="#imap-admin-access-control-right-c"><span class="std std-ref">c</span></a>
 right has been replaced with the
 <a class="reference internal" href="#imap-admin-access-control-right-k"><span class="std std-ref">k</span></a> right to allow the ACI
-subject to <code class="docutils literal"><span class="pre">CREATE</span></code> folders, and the
+subject to <code class="docutils literal notranslate"><span class="pre">CREATE</span></code> folders, and the
 <a class="reference internal" href="#imap-admin-access-control-right-x"><span class="std std-ref">x</span></a> right to allow the ACI
-subject to <code class="docutils literal"><span class="pre">DELETE</span></code> folders.</p>
+subject to <code class="docutils literal notranslate"><span class="pre">DELETE</span></code> folders.</p>
 <div class="admonition important">
 <p class="first admonition-title">Important</p>
 <p>The <a class="reference internal" href="#imap-admin-access-control-right-c"><span class="std std-ref">c</span></a> right should no
@@ -944,79 +945,79 @@ implement the successor rights
 </div></blockquote>
 </div>
 <div class="section" id="k">
-<span id="imap-admin-access-control-right-k"></span><h3><code class="docutils literal"><span class="pre">k</span></code><a class="headerlink" href="#k" title="Permalink to this headline">¶</a></h3>
+<span id="imap-admin-access-control-right-k"></span><h3><code class="docutils literal notranslate"><span class="pre">k</span></code><a class="headerlink" href="#k" title="Permalink to this headline">¶</a></h3>
 <blockquote>
-<div><p>The ACI subject has the right to <code class="docutils literal"><span class="pre">CREATE</span></code> a new folder if the
+<div><p>The ACI subject has the right to <code class="docutils literal notranslate"><span class="pre">CREATE</span></code> a new folder if the
 <a class="reference internal" href="#imap-admin-access-control-right-k"><span class="std std-ref">k</span></a> right exists on the parent
 folder of the folder to be created.</p>
-<p>The rights required for a <code class="docutils literal"><span class="pre">RENAME</span></code> to be successful could be
-illustrated by describing a <code class="docutils literal"><span class="pre">RENAME</span></code> as a <code class="docutils literal"><span class="pre">CREATE</span></code> of the new
-folder, not exactly followed by a <code class="docutils literal"><span class="pre">COPY</span></code> on the old folder's
+<p>The rights required for a <code class="docutils literal notranslate"><span class="pre">RENAME</span></code> to be successful could be
+illustrated by describing a <code class="docutils literal notranslate"><span class="pre">RENAME</span></code> as a <code class="docutils literal notranslate"><span class="pre">CREATE</span></code> of the new
+folder, not exactly followed by a <code class="docutils literal notranslate"><span class="pre">COPY</span></code> on the old folder’s
 contents, but more like a move like on a filesystem, and finally a
-<code class="docutils literal"><span class="pre">DELETE</span></code> on the old folder.</p>
+<code class="docutils literal notranslate"><span class="pre">DELETE</span></code> on the old folder.</p>
 <p>As such, the <a class="reference internal" href="#imap-admin-access-control-right-k"><span class="std std-ref">k</span></a> is the right
 required on the parent folder of the target folder, and the
 <a class="reference internal" href="#imap-admin-access-control-right-x"><span class="std std-ref">x</span></a> right on the source folder.</p>
 <p>To further illustrate, suppose the ACI subject has the
 <a class="reference internal" href="#imap-admin-access-control-right-k"><span class="std std-ref">k</span></a> right on folder
-<code class="docutils literal"><span class="pre">C/</span></code>, and the <a class="reference internal" href="#imap-admin-access-control-right-x"><span class="std std-ref">x</span></a> right on
-folder <code class="docutils literal"><span class="pre">A/B</span></code>. The execution of the command <code class="docutils literal"><span class="pre">RENAME</span> <span class="pre">A/B</span> <span class="pre">C/B</span></code>
+<code class="docutils literal notranslate"><span class="pre">C/</span></code>, and the <a class="reference internal" href="#imap-admin-access-control-right-x"><span class="std std-ref">x</span></a> right on
+folder <code class="docutils literal notranslate"><span class="pre">A/B</span></code>. The execution of the command <code class="docutils literal notranslate"><span class="pre">RENAME</span> <span class="pre">A/B</span> <span class="pre">C/B</span></code>
 would succeed.</p>
 </div></blockquote>
 </div>
 <div class="section" id="a">
-<span id="imap-admin-access-control-right-a"></span><h3><code class="docutils literal"><span class="pre">a</span></code><a class="headerlink" href="#a" title="Permalink to this headline">¶</a></h3>
+<span id="imap-admin-access-control-right-a"></span><h3><code class="docutils literal notranslate"><span class="pre">a</span></code><a class="headerlink" href="#a" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Stands for <strong>administer</strong>.</p>
 <p>The ACI subject is allowed to administer the folder, meaning the ACI
 subject is allowed to perform administrative operations on the
 folder.</p>
 <p>The <a class="reference internal" href="#imap-admin-access-control-right-a"><span class="std std-ref">a</span></a> right is needed to
-successfully execute <code class="docutils literal"><span class="pre">SETACL</span></code>, <code class="docutils literal"><span class="pre">DELETEACL</span></code> (short for
-<code class="docutils literal"><span class="pre">SETACL</span> <span class="pre">&quot;&quot;</span></code>) and to execute <code class="docutils literal"><span class="pre">GETACL</span></code> or <code class="docutils literal"><span class="pre">LISTRIGHTS</span></code>.</p>
+successfully execute <code class="docutils literal notranslate"><span class="pre">SETACL</span></code>, <code class="docutils literal notranslate"><span class="pre">DELETEACL</span></code> (short for
+<code class="docutils literal notranslate"><span class="pre">SETACL</span> <span class="pre">&quot;&quot;</span></code>) and to execute <code class="docutils literal notranslate"><span class="pre">GETACL</span></code> or <code class="docutils literal notranslate"><span class="pre">LISTRIGHTS</span></code>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>IMAP clients may issue a <code class="docutils literal"><span class="pre">GETACL</span></code> in order to obtain the ACI
-subject's rights on the folder, where they should be using
-<code class="docutils literal"><span class="pre">MYRIGHTS</span></code>, as <code class="docutils literal"><span class="pre">GETACL</span></code> or <code class="docutils literal"><span class="pre">LISTRIGHTS</span></code> return the full
-Access Control List, including other ACI subject's identifiers.</p>
+<p>IMAP clients may issue a <code class="docutils literal notranslate"><span class="pre">GETACL</span></code> in order to obtain the ACI
+subject’s rights on the folder, where they should be using
+<code class="docutils literal notranslate"><span class="pre">MYRIGHTS</span></code>, as <code class="docutils literal notranslate"><span class="pre">GETACL</span></code> or <code class="docutils literal notranslate"><span class="pre">LISTRIGHTS</span></code> return the full
+Access Control List, including other ACI subject’s identifiers.</p>
 <p class="last">However unless the ACI subject has the
 <a class="reference internal" href="#imap-admin-access-control-right-a"><span class="std std-ref">a</span></a> right on a folder,
-issuing a <code class="docutils literal"><span class="pre">GETACL</span></code> or <code class="docutils literal"><span class="pre">LISTRIGHTS</span></code> will cause Cyrus IMAP to
-send a tagged <code class="docutils literal"><span class="pre">NO:</span> <span class="pre">Permission</span> <span class="pre">denied</span></code> response if the ACI
+issuing a <code class="docutils literal notranslate"><span class="pre">GETACL</span></code> or <code class="docutils literal notranslate"><span class="pre">LISTRIGHTS</span></code> will cause Cyrus IMAP to
+send a tagged <code class="docutils literal notranslate"><span class="pre">NO:</span> <span class="pre">Permission</span> <span class="pre">denied</span></code> response if the ACI
 subject has the <a class="reference internal" href="#imap-admin-access-control-right-l"><span class="std std-ref">l</span></a> right
-on the folder, and a <code class="docutils literal"><span class="pre">NO:</span> <span class="pre">No</span> <span class="pre">Such</span> <span class="pre">Mailbox</span></code> response otherwise,
-as per section 8 of <span class="target" id="index-8"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2086.html"><strong>RFC 2086</strong></a> and section 6 of <span class="target" id="index-9"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc4314.html"><strong>RFC 4314</strong></a> --
-both conveniently called <em>Security Considerations</em> -- which
+on the folder, and a <code class="docutils literal notranslate"><span class="pre">NO:</span> <span class="pre">No</span> <span class="pre">Such</span> <span class="pre">Mailbox</span></code> response otherwise,
+as per section 8 of <span class="target" id="index-8"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2086.html"><strong>RFC 2086</strong></a> and section 6 of <span class="target" id="index-9"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc4314.html"><strong>RFC 4314</strong></a> –
+both conveniently called <em>Security Considerations</em> – which
 state that the IMAP server must not inadvertently admit the
 mailbox exists.</p>
 </div>
 </div></blockquote>
 </div>
 <div class="section" id="x">
-<span id="imap-admin-access-control-right-x"></span><h3><code class="docutils literal"><span class="pre">x</span></code><a class="headerlink" href="#x" title="Permalink to this headline">¶</a></h3>
+<span id="imap-admin-access-control-right-x"></span><h3><code class="docutils literal notranslate"><span class="pre">x</span></code><a class="headerlink" href="#x" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div>Use the <a class="reference internal" href="#imap-admin-access-control-right-x"><span class="std std-ref">x</span></a> right to indicate
-the ACI subject has the right to <code class="docutils literal"><span class="pre">DELETE</span></code> the folder on which the
+the ACI subject has the right to <code class="docutils literal notranslate"><span class="pre">DELETE</span></code> the folder on which the
 ACL is set, as opposed to the now obsolete
 <a class="reference internal" href="#imap-admin-access-control-right-c"><span class="std std-ref">c</span></a> right or
 <a class="reference internal" href="#imap-admin-access-control-right-d"><span class="std std-ref">d</span></a> right.</div></blockquote>
 </div>
 <div class="section" id="t">
-<span id="imap-admin-access-control-right-t"></span><h3><code class="docutils literal"><span class="pre">t</span></code><a class="headerlink" href="#t" title="Permalink to this headline">¶</a></h3>
+<span id="imap-admin-access-control-right-t"></span><h3><code class="docutils literal notranslate"><span class="pre">t</span></code><a class="headerlink" href="#t" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>The ACI subject is allowed to delete messages from this folder,
 meaning that the ACI subject is allowed to flag messages as
-<code class="docutils literal"><span class="pre">\Deleted</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">\Deleted</span></code>.</p>
 <p>In IMAP, messages are only actually deleted (i.e. in a way that
-makes them invisible to users of the folder) after the folder's
+makes them invisible to users of the folder) after the folder’s
 contents have been expunged.</p>
-<p>For the corresponding <code class="docutils literal"><span class="pre">EXPUNGE</span></code> command however, the
+<p>For the corresponding <code class="docutils literal notranslate"><span class="pre">EXPUNGE</span></code> command however, the
 <a class="reference internal" href="#imap-admin-access-control-right-e"><span class="std std-ref">e</span></a> right is required.</p>
 </div></blockquote>
 </div>
 <div class="section" id="n">
-<span id="imap-admin-access-control-right-n"></span><h3><code class="docutils literal"><span class="pre">n</span></code><a class="headerlink" href="#n" title="Permalink to this headline">¶</a></h3>
+<span id="imap-admin-access-control-right-n"></span><h3><code class="docutils literal notranslate"><span class="pre">n</span></code><a class="headerlink" href="#n" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>The ACI subject is allowed to annotate individual messages in this
 folder, in compliance with <span class="target" id="index-10"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5257.html"><strong>RFC 5257</strong></a>.</p>
@@ -1024,28 +1025,28 @@ folder, in compliance with <span class="target" id="index-10"></span><a class="r
 <p class="first admonition-title">Note</p>
 <p>The ACI subject must also have at least the
 <a class="reference internal" href="#imap-admin-access-control-right-r"><span class="std std-ref">r</span></a> right, as otherwise the
-ACI subject won't know which messages are available to annotate.</p>
+ACI subject won’t know which messages are available to annotate.</p>
 <p class="last">This is not explicitly mentioned in the <span class="target" id="index-11"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5257.html"><strong>RFC 5257</strong></a>, but
 implied.</p>
 </div>
 </div></blockquote>
 </div>
 <div class="section" id="e">
-<span id="imap-admin-access-control-right-e"></span><h3><code class="docutils literal"><span class="pre">e</span></code><a class="headerlink" href="#e" title="Permalink to this headline">¶</a></h3>
+<span id="imap-admin-access-control-right-e"></span><h3><code class="docutils literal notranslate"><span class="pre">e</span></code><a class="headerlink" href="#e" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Stands for <strong>expunge</strong>.</p>
 <p>The ACI subject is allowed to expunge messages in this folder,
 meaning the ACI subject has the right to remove all messages that
-have been flagged as <code class="docutils literal"><span class="pre">\Deleted</span></code> from all visibility.</p>
+have been flagged as <code class="docutils literal notranslate"><span class="pre">\Deleted</span></code> from all visibility.</p>
 <p>In IMAP, expunging messages only applies to messages flagged as
-<code class="docutils literal"><span class="pre">\Deleted</span></code>. For the ACI subject to be able to flag messages as
-<code class="docutils literal"><span class="pre">\Deleted</span></code> however, the <a class="reference internal" href="#imap-admin-access-control-right-t"><span class="std std-ref">t</span></a>
+<code class="docutils literal notranslate"><span class="pre">\Deleted</span></code>. For the ACI subject to be able to flag messages as
+<code class="docutils literal notranslate"><span class="pre">\Deleted</span></code> however, the <a class="reference internal" href="#imap-admin-access-control-right-t"><span class="std std-ref">t</span></a>
 right is required.</p>
-<p>We say &quot;remove from all visibility&quot;, because the implementation of
-expunging messages in Cyrus IMAP is subject to the <code class="docutils literal"><span class="pre">expunge_mode</span></code>
-setting in <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>, which when set to <code class="docutils literal"><span class="pre">delayed</span></code>
+<p>We say “remove from all visibility”, because the implementation of
+expunging messages in Cyrus IMAP is subject to the <code class="docutils literal notranslate"><span class="pre">expunge_mode</span></code>
+setting in <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>, which when set to <code class="docutils literal notranslate"><span class="pre">delayed</span></code>
 only causes the reference to the expunged messages to be deleted
-from the folder index database -- effectively removing the expunged
+from the folder index database – effectively removing the expunged
 message(s) from all visibility, while the individual message files
 remain in place on the Cyrus IMAP server filesystem.</p>
 <div class="admonition seealso">
@@ -1056,7 +1057,7 @@ remain in place on the Cyrus IMAP server filesystem.</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">IMAP clients may expect to be able to <code class="docutils literal"><span class="pre">EXPUNGE</span></code> a folder
+<p class="last">IMAP clients may expect to be able to <code class="docutils literal notranslate"><span class="pre">EXPUNGE</span></code> a folder
 regardless of the availability of the
 <a class="reference internal" href="#imap-admin-access-control-right-e"><span class="std std-ref">e</span></a> right to the current
 user.</p>
@@ -1064,22 +1065,22 @@ user.</p>
 </div></blockquote>
 </div>
 <div class="section" id="d">
-<span id="imap-admin-access-control-right-d"></span><h3><code class="docutils literal"><span class="pre">d</span></code><a class="headerlink" href="#d" title="Permalink to this headline">¶</a></h3>
+<span id="imap-admin-access-control-right-d"></span><h3><code class="docutils literal notranslate"><span class="pre">d</span></code><a class="headerlink" href="#d" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Stands for <strong>delete</strong>.</p>
 <p>This is the legacy <span class="target" id="index-12"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2086.html"><strong>RFC 2086</strong></a> access control right for the
-<code class="docutils literal"><span class="pre">DELETE</span></code> command.</p>
+<code class="docutils literal notranslate"><span class="pre">DELETE</span></code> command.</p>
 <p>In versions of Cyrus IMAP implementing only this right (prior to
 2.3.7), ACI subjects were allowed to flag messages as
-<code class="docutils literal"><span class="pre">\Deleted</span></code>, and <code class="docutils literal"><span class="pre">EXPUNGE</span></code> and <code class="docutils literal"><span class="pre">DELETE</span></code> folders.</p>
+<code class="docutils literal notranslate"><span class="pre">\Deleted</span></code>, and <code class="docutils literal notranslate"><span class="pre">EXPUNGE</span></code> and <code class="docutils literal notranslate"><span class="pre">DELETE</span></code> folders.</p>
 <p>The delete right has been split in to three separate rights,
 <a class="reference internal" href="#imap-admin-access-control-right-t"><span class="std std-ref">t</span></a> (flag messages as
-<code class="docutils literal"><span class="pre">\Deleted</span></code>), <a class="reference internal" href="#imap-admin-access-control-right-e"><span class="std std-ref">e</span></a>
-(<code class="docutils literal"><span class="pre">EXPUNGE</span></code> folder) and <a class="reference internal" href="#imap-admin-access-control-right-x"><span class="std std-ref">x</span></a>
-(<code class="docutils literal"><span class="pre">DELETE</span></code> folder).</p>
+<code class="docutils literal notranslate"><span class="pre">\Deleted</span></code>), <a class="reference internal" href="#imap-admin-access-control-right-e"><span class="std std-ref">e</span></a>
+(<code class="docutils literal notranslate"><span class="pre">EXPUNGE</span></code> folder) and <a class="reference internal" href="#imap-admin-access-control-right-x"><span class="std std-ref">x</span></a>
+(<code class="docutils literal notranslate"><span class="pre">DELETE</span></code> folder).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The <code class="docutils literal"><span class="pre">deleteright</span></code> setting in <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>
+<p class="last">The <code class="docutils literal notranslate"><span class="pre">deleteright</span></code> setting in <a class="reference internal" href="../../manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>
 controls the <span class="target" id="index-13"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2086.html"><strong>RFC 2086</strong></a> right which controls whether or not the
 ACI subject may delete a folder. However, this setting (as the
 original specification for the delete right was considered
@@ -1127,7 +1128,7 @@ fully implement the successor rights
         &copy; Copyright 1993-2018, The Cyrus Team. Last updated on May 08 2017
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.9 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
 
 </footer>
         </div>
@@ -1144,7 +1145,7 @@ fully implement the successor rights
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.4.1',
+            VERSION:'3.4.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -1153,7 +1154,7 @@ fully implement the successor rights
       <script type="text/javascript" src="../../../../_static/jquery.js"></script>
       <script type="text/javascript" src="../../../../_static/underscore.js"></script>
       <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js"></script>
+      <script type="text/javascript" src="../../../../_static/language_data.js"></script>
 
   
 

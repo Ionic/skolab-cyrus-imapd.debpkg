@@ -1,4 +1,3 @@
-
 JMAP
 ****
 
@@ -43,7 +42,7 @@ JMAP configuration
 
       Allowed values: *skiplist*, *sql*, *twoskip*, *zeroskip*
 
-Once it's compiled, JMAP needs to be enabled in imapd.conf(5).
+Once it’s compiled, JMAP needs to be enabled in imapd.conf(5).
 
 Enable conversation support
 

@@ -1,4 +1,3 @@
-
 CyrusDB API
 ***********
 
@@ -11,7 +10,7 @@ The interface
    05:50:39GMT.
 
 The cyrusdb interface is a common API for accessing key-value
-datastores from within cyrus code. It's part of the libcyrus shared
+datastores from within cyrus code. It’s part of the libcyrus shared
 object (but not libcyrus_min), used by all cyrus binaries. The use of
 the cyrusdb API abstracts the details of the underlying data store,
 allowing sites to use different database types depending on their
@@ -59,7 +58,7 @@ cyrusdb.c
 cyrusdb_*.c
 -----------
 
-* the actual implementations of each backend! We'll look at some in
+* the actual implementations of each backend! We’ll look at some in
   a sec.
 
 
@@ -113,7 +112,7 @@ You must always call cyrus_init() and cyrus_done() to properly
 initialize and clean up the "cyrusdb" environments.
 
 This example also uses a transaction, meaning that the database is
-locked in exclusive mode between the 'fetch' (the first use of the
+locked in exclusive mode between the ‘fetch’ (the first use of the
 transaction) and the commit.
 
 
@@ -131,12 +130,12 @@ ctl_cyrusdb(8)
 * performs maintenance on the cyrusdb subsystem. This is called in
   two places:
 
-  * START: "ctl_cyrusdb -r" (recovery). This is the ONLY PLACE that
+  * START: “ctl_cyrusdb -r” (recovery). This is the ONLY PLACE that
     code is guaranteed to be run at startup on every cyrus
-    installation, so you'll find quite a lot of detritus has built up
+    installation, so you’ll find quite a lot of detritus has built up
     in this codepath over the years.
 
-  * EVENTS: "ctl_cyrusdb -c" (checkpoint). This is run regularly
+  * EVENTS: “ctl_cyrusdb -c” (checkpoint). This is run regularly
     (period=180 at FastMail, examples in the codebase have period=5 or
     period=30). Both this codepath and cyr_expire tend to run
     periodically on cyrus systems, and cleanup code is spread between
@@ -150,7 +149,7 @@ cvt_cyrusdb(8)
 
 * used for converting a database between versions. This is often
   used to prepare for upgrade, particularly in the past when Cyrus
-  supported berkeley DB which didn't upgrade cleanly across OS
+  supported berkeley DB which didn’t upgrade cleanly across OS
   versions, it was common to use cvt_cyrusdb to turn databases into a
   very portable format (flat or skiplist) before upgrading, upgrade
   the OS, convert back to the fast format (berkeley) and then restart.
@@ -162,7 +161,7 @@ imap/cyr_dbtool
 cyr_dbtool(8)
 
 * once known as brontool, this is the first piece of Cyrus code I
-  ever wrote! It's a fairly dumb wrapper around the CyrusDB interface,
+  ever wrote! It’s a fairly dumb wrapper around the CyrusDB interface,
   and able to be used to read, write, or iterate any parts of a
   database. Its interactive mode is not special-character clean, but
   it can also be used in batch mode, which uses IMAP atom-string
@@ -193,12 +192,12 @@ data, or an opaque token used by the backend to locate a datasource.
 
 Accepted flags:
 
-CYRUSDB_CREATE - if the named database doesn't exist, create a blank
+CYRUSDB_CREATE - if the named database doesn’t exist, create a blank
 database.
 
 CYRUSDB_MBOXSORT - use the abomination called improved_mboxlist_sort
-which re-orders a couple of characters to allow "foo.bar" to sort
-before "foo bar", for perfectly good reasons, but we're going to fix
+which re-orders a couple of characters to allow “foo.bar” to sort
+before “foo bar”, for perfectly good reasons, but we’re going to fix
 it a better way. Not every engine supports arbitrary collation, and if
 many engines corrupt horribly if the same database is opened with
 different choices for this flag. Ouch.
@@ -212,16 +211,16 @@ engine for that database rather than converted. Magic detection only
 currently works for single-file database formats.
 
 CYRUSDB_NOCOMPACT - if the database format supports automatic
-compacting, don't use it. Handy for when you want to read without
+compacting, don’t use it. Handy for when you want to read without
 causing any possible issues (e.g. read-only filesystem during
-recovery) or when performance is critical and you don't want to risk
+recovery) or when performance is critical and you don’t want to risk
 waiting while a recompact happens.
 
-All the remaining functions take that "struct db" pointer.
+All the remaining functions take that “struct db” pointer.
 
-There's also a "cyrusdb_lockopen()" interface which takes a
+There’s also a "cyrusdb_lockopen()" interface which takes a
 transaction pointer and returns with the transaction already active.
-This isn't actually being used yet, but is intended to allow slightly
+This isn’t actually being used yet, but is intended to allow slightly
 more efficient single-operation database use. Right now, open returns
 an unlocked database, but may need to lock as part of the setup, so
 keeping that lock would avoid one extra unlock/lock cycle.
@@ -255,8 +254,8 @@ newer:
 
    "cyrusdb_fetchnext()"
       given an exact key, fetch the following key and value
-      (regardless of whether the key exists), e.g given keys "f" and
-      "g", fetchnext "foo" would return "g", as would fetchnext "f".
+      (regardless of whether the key exists), e.g given keys “f” and
+      “g”, fetchnext “foo” would return “g”, as would fetchnext “f”.
       This can be used to implement foreach (indeed, the skips do
       exactly that).
 
@@ -270,11 +269,11 @@ newer:
          r = cyrusdb_forone(mydb, "folder", 6, p, cb, rock, &tid);
          if (!r) r = cyrusdb_foreach(mydb, "folder.", 7, p, cb, rock, &tid);
 
-      Which does precisely "folder" and its children without visiting
-      any other keys that have "folder" as a prefix.
+      Which does precisely “folder” and its children without visiting
+      any other keys that have “folder” as a prefix.
 
 Since the cyrusdb interface always takes both a pointer and a length,
-it's also possible to use:
+it’s also possible to use:
 
    char *key = "folder.";
    r = cyrusdb_forone(mydb, key, 6, p, cb, rock, &tid);
@@ -293,12 +292,12 @@ The callbacks have an identical signature, but different return codes!
 
 The difference is this: "foreach_p" is called with the database
 locked, always - even if called without a transaction. "foreach_p"
-returns 1 or 0. 0 means "skip this record", 1 means "process this
-record". This is useful to pre-filter records when called without a
+returns 1 or 0. 0 means “skip this record”, 1 means “process this
+record”. This is useful to pre-filter records when called without a
 transaction, because otherwise you lock and unlock all the time.
 
-NULL for "foreach_p" is treated like a test which always returns '1',
-so you can pass NULL if you don't need filtering.
+NULL for "foreach_p" is treated like a test which always returns ‘1’,
+so you can pass NULL if you don’t need filtering.
 
 If "foreach_p" returns 1, then with an unlocked transaction, the
 database is now unlocked BEFORE calling "foreach_cb", the callback.
@@ -326,11 +325,11 @@ does NOT unlock before calling its callback.
 About Transactions
 ------------------
 
-You may have noticed that 'tid' at the end. Every function for acting
+You may have noticed that ‘tid’ at the end. Every function for acting
 on the database takes as its last argument a "struct txn **".
 
 The cyrusdb interface works in two modes - transactional and non-
-transactional. The value of the 'tid' parameter decides which mode is
+transactional. The value of the ‘tid’ parameter decides which mode is
 used. There are three possible values:
 
 * NULL - non-transactional request. Do whatever you need for
@@ -339,7 +338,7 @@ used. There are three possible values:
 
   Note: At least skiplist and twoskip implement a hack where if the
     database IS locked for a non-transactional read request, they will
-    act as if you'd passed the current transaction in for the NULL
+    act as if you’d passed the current transaction in for the NULL
     case. This is a hack around layering violations and kind of sucks.
 
 * &NULL - e.g:
@@ -385,9 +384,9 @@ There are three write operations:
 
 "cyrusdb_store" will either create or overwrite an existing key.
 "cyrusdb_create" will abort if the key already exists.
-"cyrusdb_delete" takes a flag 'force' which just makes it return
-CYRUSDB_OK (0) rather than CYRUSDB_NOTFOUND if the key doesn't exist.
-Strangely, 'force' is after &tid, making it the only cyrusdb API that
+"cyrusdb_delete" takes a flag ‘force’ which just makes it return
+CYRUSDB_OK (0) rather than CYRUSDB_NOTFOUND if the key doesn’t exist.
+Strangely, ‘force’ is after &tid, making it the only cyrusdb API that
 does that, but hey - keeps you on your toes.
 
 &tid behaves exactly the same for the write APIs. If not passed, then
@@ -399,14 +398,14 @@ transaction, does the operation, then commits all within the
 Gotchas!
 ========
 
-* "\0" is permitted in both keys and values, though 'flat' and
-  'quotalegacy' have 8-bit cleanliness issues.
+* "\0" is permitted in both keys and values, though ‘flat’ and
+  ‘quotalegacy’ have 8-bit cleanliness issues.
 
 * zero-length keys are not supported
 
 * zero-length values are theoretically supported, but a little
-  interesting. Certainly, pass "" rather than NULL as the value when
-  writing or things will get weird. I'm pretty sure at least the *skip
+  interesting. Certainly, pass “” rather than NULL as the value when
+  writing or things will get weird. I’m pretty sure at least the *skip
   databases assert on these kinds of weirdness.
 
 * unlocked foreach: this is the land of the gotcha! They key and
@@ -419,7 +418,7 @@ Gotchas!
   which the data was a pointer may have been replaced as the next read
   found a new file and mapped it in!
 
-  also: if you're implementing a backend. Unlocked foreach must find
+  also: if you’re implementing a backend. Unlocked foreach must find
   future records created by the current callback. Consider a database
   containing 4 keys:
 
@@ -431,7 +430,7 @@ Gotchas!
 * Opening the same database multiple times. In the bad old days,
   opening the same database multiple times in the same process led to
   locking bugs (fcntl is braindead). Each database engine is
-  responsible for making sure this doesn't happen. Most engines keep a
+  responsible for making sure this doesn’t happen. Most engines keep a
   linked lists of open databases. If you try to open the same database
   again, they will just return the existing opened copy and bump a
   refcount. Beware. If a database is locked and you try to lock again
@@ -439,7 +438,7 @@ Gotchas!
   and/or error.
 
 I think that covers about everything! Cyrusdb is used just about
-everywhere that sorted key-value databases give what's needed,
+everywhere that sorted key-value databases give what’s needed,
 including mailboxes.db, annotations.db (global and per mailbox
 databases), seen state (non-owner), subscriptions, cyrus.indexed.db
 for Xapian, and the rather massive (and increasingly inaccurately
@@ -455,14 +454,14 @@ stateless server builds on a distributed backend.
 API Reference
 =============
 
-All functions follow the normal C API of returning '0' on success, and
+All functions follow the normal C API of returning ‘0’ on success, and
 an error code on failure
 
 
 cyrusdb_init(void)
 ------------------
 
-Is called once per process. Don't call this yourself, use
+Is called once per process. Don’t call this yourself, use
 "cyrus_init()". No other calls will be made until this is called.
 
 
@@ -470,7 +469,7 @@ cyrusdb_done(void)
 ------------------
 
 The opposite of "cyrusdb_init()" - called once per process to do any
-cleaning up after all database usage is finished. Don't call this
+cleaning up after all database usage is finished. Don’t call this
 yourself, use "cyrus_done()".
 
 
@@ -484,15 +483,15 @@ backend. Is called by "ctl_cyrusdb -c" on a regular basis
 cyrusdb_open(const char *backend, const char *fname, int flags, struct db **retdb)
 ----------------------------------------------------------------------------------
 
-Opens the database with the specified 'file name' (or other
+Opens the database with the specified ‘file name’ (or other
 descriptor, for example the sql backend is not a filename), and if
 successful returns an opaque database structure
 
 Flags:
 
-* CYRUSDB_CREATE - create the database if it doesn't exist
+* CYRUSDB_CREATE - create the database if it doesn’t exist
 
-* CYRUSDB_MBOXSORT - sort '.' first, so folder listing is correct
+* CYRUSDB_MBOXSORT - sort ‘.’ first, so folder listing is correct
 
 Errors:
 
@@ -504,7 +503,7 @@ cyrusdb_close(struct db *db)
 ----------------------------
 
 Close the named database. Will release any locks if they are still
-held, but it's bad practice to close without committing or aborting,
+held, but it’s bad practice to close without committing or aborting,
 so the backend should log an error
 
 Errors:
@@ -560,17 +559,17 @@ It is legal to give a NULL pointer as prefix if prefixlen is zero, in
 which case it will return all records in the database. It is an error
 to give a non-zero prefixlen with a NULL prefix.
 
-"cyrusdb_forone()" "iterates" over the single record matched by the
-given key. If you've already built callbacks for processing each
+"cyrusdb_forone()" “iterates” over the single record matched by the
+given key. If you’ve already built callbacks for processing each
 record from a foreach, this lets you use the same interface to process
 a single record.
 
 "goodp" - this function is only used for deciding if the record needs
 to be further processed. It can be used for basic filtering, and
 returns true (non-zero) to process, or zero to skip and move straight
-to the next record. Because goodp can't make any database changes, it
-doesn't break the lock, so it's faster to use goodp to filter records
-if you don't need to process all of them. NULL is a legal value for
+to the next record. Because goodp can’t make any database changes, it
+doesn’t break the lock, so it’s faster to use goodp to filter records
+if you don’t need to process all of them. NULL is a legal value for
 goodp, and means that all records will be processed.
 
 "procp" - procp is the main callback function. If you use foreach in
@@ -628,7 +627,7 @@ cyrusdb_delete(struct db *db, const char *key, size_t keylen, struct txn **tidpt
 ---------------------------------------------------------------------------------------------
 
 Delete the given record from the database. If force is true, then
-succeed even if the record doesn't currently exist.
+succeed even if the record doesn’t currently exist.
 
 It is not legal to pass NULL for key or zero for keylen
 
@@ -638,7 +637,7 @@ Errors:
 
 * CYRUSDB_LOCKED - if tidptr is incorrect
 
-* CYRUSDB_NOTFOUND - if force is not set and the key doesn't exist
+* CYRUSDB_NOTFOUND - if force is not set and the key doesn’t exist
 
 * CYRUSDB_AGAIN - if a deadlock is created. The current transaction
   has been aborted, but a retry may succeed
@@ -681,11 +680,11 @@ cyrusdb_dump(struct db *db, int detail)
 ---------------------------------------
 
 Optional function to dump the internal structure of the database to
-stdout for debugging purposes. Don't use.
+stdout for debugging purposes. Don’t use.
 
 
 cyrusdb_consistent(struct db *db)
 ---------------------------------
 
 Check if the DB is internally consistent. Looks pretty bogus, and
-isn't used anywhere. Don't use.
+isn’t used anywhere. Don’t use.
