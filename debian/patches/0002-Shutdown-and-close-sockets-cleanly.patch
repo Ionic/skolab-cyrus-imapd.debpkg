@@ -49,7 +49,7 @@ Last-Update: 2020-02-10
  
 --- a/imap/lmtpd.c
 +++ b/imap/lmtpd.c
-@@ -1045,6 +1045,9 @@
+@@ -1047,6 +1047,9 @@
  
      cyrus_done();
  
