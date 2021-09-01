@@ -1,3 +1,9 @@
+cyrus-imapd (3.2.6-2+deb11u1) bullseye; urgency=high
+
+  * Replace string hashing algorithm (Closes: #993433, CVE-2021-33582)
+
+ -- Yadd <yadd@debian.org>  Wed, 01 Sep 2021 07:58:38 +0200
+
 cyrus-imapd (3.2.6-2) unstable; urgency=medium
 
   * Update gbp.conf for Bullseye branch
