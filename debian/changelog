@@ -1,3 +1,9 @@
+cyrus-imapd (3.4.2-1) UNRELEASED; urgency=medium
+
+  * New upstream version 3.4.2
+
+ -- Yadd <yadd@debian.org>  Wed, 01 Sep 2021 23:46:51 +0200
+
 cyrus-imapd (3.4.1-2) unstable; urgency=medium
 
   * Back to unstable
