@@ -1,8 +1,14 @@
 cyrus-imapd (3.4.2-1) UNRELEASED; urgency=medium
 
-  * New upstream version 3.4.2
+  [ lintian-brush ]
+  * Avoid explicitly specifying -Wl,--as-needed linker flag.
 
- -- Yadd <yadd@debian.org>  Wed, 01 Sep 2021 23:46:51 +0200
+  [ Yadd ]
+  * New upstream version 3.4.2 (Closes: #993433, CVE-2021-33582)
+  * Declare compliance with policy 4.6.0
+  * Refresh patches
+
+ -- Yadd <yadd@debian.org>  Wed, 01 Sep 2021 23:48:58 +0200
 
 cyrus-imapd (3.4.1-2) unstable; urgency=medium
 
