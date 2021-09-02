@@ -1,4 +1,4 @@
-cyrus-imapd (3.4.2-1) UNRELEASED; urgency=medium
+cyrus-imapd (3.4.2-1) unstable; urgency=medium
 
   [ lintian-brush ]
   * Avoid explicitly specifying -Wl,--as-needed linker flag.
@@ -8,7 +8,7 @@ cyrus-imapd (3.4.2-1) UNRELEASED; urgency=medium
   * Declare compliance with policy 4.6.0
   * Refresh patches
 
- -- Yadd <yadd@debian.org>  Wed, 01 Sep 2021 23:48:58 +0200
+ -- Yadd <yadd@debian.org>  Thu, 02 Sep 2021 06:17:52 +0200
 
 cyrus-imapd (3.4.1-2) unstable; urgency=medium
 
