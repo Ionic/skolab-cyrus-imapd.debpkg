@@ -1,3 +1,9 @@
+cyrus-imapd (3.0.8-6+deb10u6) buster; urgency=medium
+
+  * Replace string hashing algorithm (Closes: #993433, CVE-2021-33582)
+
+ -- Yadd <yadd@debian.org>  Thu, 02 Sep 2021 07:14:26 +0200
+
 cyrus-imapd (3.0.8-6+deb10u5) buster; urgency=medium
 
   * Fix cron script (Closes: #980240)
