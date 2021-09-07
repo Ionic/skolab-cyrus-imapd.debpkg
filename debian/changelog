@@ -1,3 +1,9 @@
+cyrus-imapd (3.4.2-1~bpo11+1) bullseye-backports; urgency=medium
+
+  * Rebuild for bullseye-backports.
+
+ -- Yadd <yadd@debian.org>  Tue, 07 Sep 2021 18:00:08 +0200
+
 cyrus-imapd (3.4.2-1) unstable; urgency=medium
 
   [ lintian-brush ]
