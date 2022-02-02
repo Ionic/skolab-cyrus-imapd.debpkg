@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>HTTP modules &mdash; Cyrus IMAP 3.4.2 documentation</title>
+  <title>HTTP modules &mdash; Cyrus IMAP 3.4.3 (stable) documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.3 (stable) documentation" href="../../../index.html"/>
         <link rel="up" title="Installing Cyrus" href="../../installing.html"/>
         <link rel="next" title="CalDAV" href="http/caldav.html"/>
         <link rel="prev" title="Installing Cyrus" href="../../installing.html"/> 
@@ -764,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html">Docs v3.4.2</a> &raquo;</li>
+      <li><a href="../../../index.html">Docs v3.4.3 (stable)</a> &raquo;</li>
       
           <li><a href="../../../setup.html">Setup</a> &raquo;</li>
       
@@ -880,7 +880,7 @@ have the ability to execute any server-side scripts.</p>
 <div class="section" id="authentication">
 <h3>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h3>
 <p>As with other Cyrus services, the Cyrus httpd service uses
-<a class="reference external" href="https://www.cyrusimap.org/sasl/index.html#sasl-index" title="(in Cyrus SASL v2.1.27)"><span class="xref std std-ref">Cyrus SASL</span></a> to perform
+<a class="reference external" href="https://www.cyrusimap.org/sasl/index.html#sasl-index" title="(in Cyrus SASL v2.1.28)"><span class="xref std std-ref">Cyrus SASL</span></a> to perform
 its authentication. Cyrus supports the following HTTP authentication schemes:
 Basic, Digest, Negotiate (Kerberos only), NTLM, SCRAM-SHA-1, and SCRAM-SHA-256.
 While Basic and NTLM are available in all versions of SASL, the remaining schemes
@@ -906,7 +906,7 @@ LOGIN, POP3 USER/PASS), the Cyrus httpd service determines whether to advertise
 the HTTP Basic authentication scheme based on the <code class="docutils literal notranslate"><span class="pre">allowplaintext</span></code> option and
 whether the client has connected over a TLS protected connection (HTTPS).</p>
 <p>The availability of the other HTTP authentication schemes is controlled by the
-<a class="reference external" href="https://www.cyrusimap.org/sasl/sasl/options.html#options" title="(in Cyrus SASL v2.1.27)"><span class="xref std std-ref">SASL mech_list option</span></a> option. For Cyrus httpd
+<a class="reference external" href="https://www.cyrusimap.org/sasl/sasl/options.html#options" title="(in Cyrus SASL v2.1.28)"><span class="xref std std-ref">SASL mech_list option</span></a> option. For Cyrus httpd
 the DIGEST-MD5, GSS-SPNEGO, NTLM, SCRAM-SHA-1, and SCRAM-SHA-256 values enable
 support for the Digest, Negotiate, NTLM, SCRAM-SHA-1, and SCRAM-SHA-256 authentication
 schemes respectively, provided that the plugins are installed on the server.</p>
@@ -1044,7 +1044,7 @@ needs to be customized to your specific hostnames.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../',
-            VERSION:'3.4.2',
+            VERSION:'3.4.3 (stable)',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

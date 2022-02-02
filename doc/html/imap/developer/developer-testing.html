@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Developer Test Environment &mdash; Cyrus IMAP 3.4.2 documentation</title>
+  <title>Developer Test Environment &mdash; Cyrus IMAP 3.4.3 (stable) documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.3 (stable) documentation" href="../../index.html"/>
         <link rel="up" title="IMAP Developer Guide" href="../developer.html"/>
         <link rel="next" title="JMAP support" href="jmap.html"/>
         <link rel="prev" title="GitHub guide" href="github-guide.html"/> 
@@ -764,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html">Docs v3.4.2</a> &raquo;</li>
+      <li><a href="../../index.html">Docs v3.4.3 (stable)</a> &raquo;</li>
       
           <li><a href="../../developers.html">Developers</a> &raquo;</li>
       
@@ -788,19 +788,17 @@
 <p>This assumes you have your <a class="reference internal" href="../installing.html#installing"><span class="std std-ref">basic server running</span></a> and you’ve made some changes and you want to test them to work out what’s going right… or wrong.</p>
 <div class="section" id="installing-cassandane">
 <span id="install-cassandane"></span><h2>Installing Cassandane<a class="headerlink" href="#installing-cassandane" title="Permalink to this headline">¶</a></h2>
-<p>Cassandane is a Perl-based integration test suite for Cyrus. <a class="reference external" href="https://github.com/cyrusimap/cassandane/tree/master/doc">Cassandane documentation</a> includes information on setting up tests and writing new tests.</p>
+<p>Cassandane is a Perl-based integration test suite for Cyrus.
+<a class="reference external" href="https://github.com/cyrusimap/cyrus-imapd/tree/master/cassandane/doc">Cassandane documentation</a>
+includes information on setting up tests and writing new tests.</p>
 <p>Why “Cassandane”? Wikipedia indicates that <a class="reference external" href="https://en.wikipedia.org/wiki/Cassandane">Cassandane</a> was the name of
 the consort of King Cyrus the Great of Persia, founder of the Achaemenid
 Persian Empire.  So that’s kinda cool.</p>
 <div class="section" id="install-and-configure-cassandane">
 <h3>Install and configure Cassandane<a class="headerlink" href="#install-and-configure-cassandane" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic">
-<li><p class="first">Clone the Cassandane repository</p>
-<blockquote>
-<div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/cyrusimap/cassandane.git</span></code></li>
-</ul>
-</div></blockquote>
+<li><p class="first">You already have it – it’s in the “cassandane” subdirectory of the cyrus-imapd
+sources.</p>
 </li>
 <li><p class="first">Install dependencies</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt-get install libanyevent-perl libtest-unit-perl libconfig-inifiles-perl <span class="se">\</span>
@@ -832,12 +830,12 @@ sudo cpan -i Math::Int64
 </div>
 </li>
 <li><p class="first">Install Cassandane</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> /path/to/cassandane
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> /path/to/cyrus-imapd/cassandane
 make
 </pre></div>
 </div>
 </li>
-<li><p class="first">Copy <code class="docutils literal notranslate"><span class="pre">cassandane.ini.example</span></code> to <code class="docutils literal notranslate"><span class="pre">cassandane.ini</span></code></p>
+<li><p class="first">Copy <code class="docutils literal notranslate"><span class="pre">cassandane.ini.example</span></code> to <code class="docutils literal notranslate"><span class="pre">cassandane.ini</span></code> in your home directory</p>
 </li>
 <li><p class="first">Edit <code class="docutils literal notranslate"><span class="pre">cassandane.ini</span></code> to set up your cassandane environment.</p>
 <blockquote>
@@ -951,7 +949,7 @@ sudo cp tools/mkimap /usr/cyrus/bin/mkimap
 <div class="section" id="running-the-tests">
 <h2>Running the tests<a class="headerlink" href="#running-the-tests" title="Permalink to this headline">¶</a></h2>
 <p>As user <code class="docutils literal notranslate"><span class="pre">cyrus</span></code>, run the tests.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> /path/to/cassandane
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> /path/to/cyrus-imapd/cassandane
 sudo -u cyrus ./testrunner.pl -f pretty -j <span class="m">8</span>
 </pre></div>
 </div>
@@ -988,7 +986,7 @@ sudo -u cyrus ./testrunner.pl -f pretty -j <span class="m">8</span>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jul 01 2019
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Nov 24 2021
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1008,7 +1006,7 @@ sudo -u cyrus ./testrunner.pl -f pretty -j <span class="m">8</span>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'3.4.2',
+            VERSION:'3.4.3 (stable)',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -4,10 +4,10 @@ What is Cyrus IMAP?
 Cyrus IMAP is an email, contacts and calendar server. Cyrus is free
 and open source.
 
-* This is the documentation for version 3.4.2 of Cyrus IMAP:
-  **stable** branch.
+* This is the documentation for version 3.4.3 (stable) of Cyrus
+  IMAP: **stable** branch.
 
-* The latest development version 3.5.0-alpha0 is at
+* The latest development version 3.7.0-alpha0 is at
   https://www.cyrusimap.org/dev/.
 
 

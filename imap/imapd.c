@@ -3258,6 +3258,7 @@ static void cmd_idle(char *tag)
         idling = 1;
 
         index_release(imapd_index);
+        prot_flush(imapd_out);
         while ((flags = idle_wait(imapd_in->fd))) {
             if (deadline_exceeded(&deadline)) {
                 syslog(LOG_DEBUG, "timeout for user '%s' while idling",
@@ -6575,7 +6576,7 @@ static void cmd_thread(char *tag, int usinguid)
  */
 static void cmd_copy(char *tag, char *sequence, char *name, int usinguid, int ismove)
 {
-    int r, myrights;
+    int r, myrights = 0;
     char *copyuid = NULL;
     mbentry_t *mbentry = NULL;
 
@@ -8752,7 +8753,7 @@ static void cmd_getquotaroot(const char *tag, const char *name)
 {
     mbentry_t *mbentry = NULL;
     struct mailbox *mailbox = NULL;
-    int myrights;
+    int myrights = 0;
     int r, doclose = 0;
 
     char *intname = mboxname_from_external(name, &imapd_namespace, imapd_userid);
@@ -9320,8 +9321,6 @@ static void cmd_status(char *tag, char *name)
 
     /* local mailbox */
 
-    imapd_check(NULL, 0);
-
     c = parse_statusitems(&statusitems, &errstr);
     if (c == EOF) {
         prot_printf(imapd_out, "%s BAD %s\r\n", tag, errstr);
@@ -9345,6 +9344,10 @@ static void cmd_status(char *tag, char *name)
                 IMAP_PERMISSION_DENIED : IMAP_MAILBOX_NONEXISTENT;
         }
     }
+
+    // status of selected mailbox, we need to refresh
+    if (!r && !strcmpsafe(mbentry->name, index_mboxname(imapd_index)))
+        imapd_check(NULL, 0);
 
     if (!r) r = imapd_statusdata(mbentry, statusitems, &sdata);
 
@@ -12026,7 +12029,14 @@ static void cmd_xfer(const char *tag, const char *name,
             list.allow_usersubs = 1;
         }
 
-        mboxlist_findall(NULL, mbname_intname(mbname), 1, NULL, NULL, xfer_addmbox, &list);
+        /* admin namespace, use original name */
+        mboxlist_findall(NULL, name, 1, NULL, NULL, xfer_addmbox, &list);
+    }
+
+    /* bail out if we didn't find anything to do */
+    if (!list.mboxes) {
+        r = IMAP_MAILBOX_NONEXISTENT;
+        goto done;
     }
 
     r = xfer_init(toserver, &xfer);
@@ -12133,7 +12143,7 @@ static void cmd_xfer(const char *tag, const char *name,
         next = item->next;
         free(item);
 
-        if (xfer->userid || mbox_count > 1000) {
+        if (xfer->use_replication && (xfer->userid || mbox_count > 1000)) {
             /* RESTART after each user or after every 1000 mailboxes */
             mbox_count = 0;
 
