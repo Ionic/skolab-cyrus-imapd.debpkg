@@ -9,6 +9,7 @@ Priority: optional
 Build-Depends: bison,
                comerr-dev,
                debhelper-compat (= 13),
+               fig2dev,
                flex,
                ghostscript,
                groff,
