@@ -1,3 +1,14 @@
+cyrus-imapd (3.4.3-1) unstable; urgency=medium
+
+  * Fix warning from cron.daily script, thanks to Stefan Nobis
+    (Closes: #1003444)
+  * Drop useless dependency version constraint
+  * New upstream version 3.4.3
+  * Add build dependency to fig2dev
+  * Update lintian overrides
+
+ -- Yadd <yadd@debian.org>  Wed, 02 Feb 2022 08:30:43 +0100
+
 cyrus-imapd (3.4.2-2) unstable; urgency=medium
 
   * Upgrade script: add "SYNC_CACHE" in known DB types list (Closes: #994025)
