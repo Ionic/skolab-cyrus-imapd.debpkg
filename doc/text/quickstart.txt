@@ -15,7 +15,7 @@ in 5 minutes.
 The first place to start with a new installation of Cyrus IMAP is with
 your OS distribution of choice and their packaging, where available.
 
-If there is no Cyrus IMAP 3.4.2 package available yet from your
+If there is no Cyrus IMAP 3.4.3 package available yet from your
 distro, download the official source tarball from GitHub.  The
 Compiling guide will help you get it built and installed.
 

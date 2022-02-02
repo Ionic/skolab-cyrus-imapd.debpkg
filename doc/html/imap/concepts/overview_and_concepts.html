@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Concepts &mdash; Cyrus IMAP 3.4.2 documentation</title>
+  <title>Concepts &mdash; Cyrus IMAP 3.4.3 (stable) documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../genindex.html"/>
         <link rel="search" title="Search" href="../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.2 documentation" href="../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.4.3 (stable) documentation" href="../../index.html"/>
         <link rel="up" title="Overview" href="../../overview.html"/>
         <link rel="next" title="Setup" href="../../setup.html"/>
         <link rel="prev" title="Cyrus IMAP Murder (Server Aggregation)" href="features/server-aggregation.html"/> 
@@ -764,7 +764,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html">Docs v3.4.2</a> &raquo;</li>
+      <li><a href="../../index.html">Docs v3.4.3 (stable)</a> &raquo;</li>
       
           <li><a href="../../overview.html">Overview</a> &raquo;</li>
       
@@ -1056,7 +1056,7 @@ anonymous user will be granted the rights <code class="docutils literal notransl
 <div class="section" id="login-authentication">
 <span id="imap-concepts-login-authentication"></span><h2>Login Authentication<a class="headerlink" href="#login-authentication" title="Permalink to this headline">¶</a></h2>
 <p>This section discusses different types of authentication (ways of logging in) that can be used with Cyrus IMAP.</p>
-<p>The Cyrus IMAP server uses the Cyrus SASL library for authentication. This section describes how to configure SASL with use with Cyrus imapd. Please consult the <a class="reference external" href="https://www.cyrusimap.org/sasl/index.html#sasl-index" title="(in Cyrus SASL v2.1.27)"><span class="xref std std-ref">Cyrus SASL System Administrator’s Guide</span></a> for more detailed, up-to-date information.</p>
+<p>The Cyrus IMAP server uses the Cyrus SASL library for authentication. This section describes how to configure SASL with use with Cyrus imapd. Please consult the <a class="reference external" href="https://www.cyrusimap.org/sasl/index.html#sasl-index" title="(in Cyrus SASL v2.1.28)"><span class="xref std std-ref">Cyrus SASL System Administrator’s Guide</span></a> for more detailed, up-to-date information.</p>
 <div class="section" id="anonymous-login">
 <h3>Anonymous Login<a class="headerlink" href="#anonymous-login" title="Permalink to this headline">¶</a></h3>
 <p>Regardless of the SASL mechanism used by an individual connection, the
@@ -1087,7 +1087,7 @@ password.</p>
 </div>
 <div class="section" id="shared-secrets-logins">
 <h3>Shared Secrets Logins<a class="headerlink" href="#shared-secrets-logins" title="Permalink to this headline">¶</a></h3>
-<p>Some mechanisms require the user and the server to share a secret (generally a password) that can be used for comparison without actually passing the password in the clear across the network. For these mechanism (such as CRAM-MD5 and DIGEST-MD5), you will need to supply a source of passwords, such as the sasldb (which is described more fully in the <a class="reference external" href="https://www.cyrusimap.org/sasl/index.html#sasl-index" title="(in Cyrus SASL v2.1.27)"><span class="xref std std-ref">Cyrus SASL distribution</span></a>)</p>
+<p>Some mechanisms require the user and the server to share a secret (generally a password) that can be used for comparison without actually passing the password in the clear across the network. For these mechanism (such as CRAM-MD5 and DIGEST-MD5), you will need to supply a source of passwords, such as the sasldb (which is described more fully in the <a class="reference external" href="https://www.cyrusimap.org/sasl/index.html#sasl-index" title="(in Cyrus SASL v2.1.28)"><span class="xref std std-ref">Cyrus SASL distribution</span></a>)</p>
 </div>
 </div>
 <div class="section" id="quotas">
@@ -1528,7 +1528,7 @@ servers to allow for horizontal scalability.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'3.4.2',
+            VERSION:'3.4.3 (stable)',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
