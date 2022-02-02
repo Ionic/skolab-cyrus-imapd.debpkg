@@ -1,3 +1,9 @@
+cyrus-imapd (3.4.3-2) unstable; urgency=medium
+
+  * Improve reproducibility
+
+ -- Yadd <yadd@debian.org>  Wed, 02 Feb 2022 09:30:29 +0100
+
 cyrus-imapd (3.4.3-1) unstable; urgency=medium
 
   * Fix warning from cron.daily script, thanks to Stefan Nobis
