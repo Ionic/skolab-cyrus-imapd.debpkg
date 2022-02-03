@@ -101,7 +101,7 @@ override_dh_auto_configure:
 		> debian/README.configure-options
 	grep '^ac_cs_config=' config.status \
 	| sed -e 's/^ac_cs_config="/configure /;s/"$$//' \
-	| perl -pe 's#'`pwd`'#BUILD_PATH#g'
+	| perl -pe 's#\Q'`pwd`'\E#BUILD_PATH#g'
 		>> debian/README.configure-options
 
 override_dh_auto_build:
