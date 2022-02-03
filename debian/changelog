@@ -1,8 +1,8 @@
-cyrus-imapd (3.4.3-3) UNRELEASED; urgency=medium
+cyrus-imapd (3.4.3-3) unstable; urgency=medium
 
-  * Propagate CFLAGS to Perl build
+  * Propagate CFLAGS to Perl build (makes build reproducible)
 
- -- Yadd <yadd@debian.org>  Thu, 03 Feb 2022 06:36:01 +0100
+ -- Yadd <yadd@debian.org>  Thu, 03 Feb 2022 10:05:56 +0100
 
 cyrus-imapd (3.4.3-2) unstable; urgency=medium
 
