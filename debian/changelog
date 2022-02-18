@@ -1,3 +1,32 @@
+cyrus-imapd (3.4.3-3) unstable; urgency=medium
+
+  * Propagate CFLAGS to Perl build (makes build reproducible)
+
+ -- Yadd <yadd@debian.org>  Thu, 03 Feb 2022 10:05:56 +0100
+
+cyrus-imapd (3.4.3-2) unstable; urgency=medium
+
+  * Improve reproducibility
+
+ -- Yadd <yadd@debian.org>  Wed, 02 Feb 2022 09:30:29 +0100
+
+cyrus-imapd (3.4.3-1) unstable; urgency=medium
+
+  * Fix warning from cron.daily script, thanks to Stefan Nobis
+    (Closes: #1003444)
+  * Drop useless dependency version constraint
+  * New upstream version 3.4.3
+  * Add build dependency to fig2dev
+  * Update lintian overrides
+
+ -- Yadd <yadd@debian.org>  Wed, 02 Feb 2022 08:30:43 +0100
+
+cyrus-imapd (3.4.2-2) unstable; urgency=medium
+
+  * Upgrade script: add "SYNC_CACHE" in known DB types list (Closes: #994025)
+
+ -- Yadd <yadd@debian.org>  Mon, 13 Sep 2021 06:23:11 +0200
+
 cyrus-imapd (3.4.2-1~bpo11+1) bullseye-backports; urgency=medium
 
   * Rebuild for bullseye-backports.

@@ -405,26 +405,36 @@ bin_PROGRAMS = imtest/imtest$(EXEEXT)
 @HTTPD_TRUE@	man/ctl_zoneinfo.8 \
 @HTTPD_TRUE@	man/httpd.8
 
-@BENCH_TRUE@am__append_102 = bench/cyrdbbench
-@REPLICATION_TRUE@am__append_103 = \
+@REPLICATION_TRUE@am__append_102 = \
 @REPLICATION_TRUE@	man/sync_client.8 \
 @REPLICATION_TRUE@	man/sync_reset.8 \
 @REPLICATION_TRUE@	man/sync_server.8
 
-@ZEPHYR_TRUE@am__append_104 = notifyd/notify_zephyr.c notifyd/notify_zephyr.h
-@HAVE_LDAP_TRUE@am__append_105 = ptclient/ldap.c
-@HAVE_LDAP_TRUE@am__append_106 = $(LDAP_LIBS)
-@HAVE_LDAP_TRUE@am__append_107 = $(LDAP_LDFLAGS)
-@USE_AFSKRB_TRUE@am__append_108 = ptclient/afskrb.c
-@USE_AFSKRB_TRUE@am__append_109 = $(AFS_LIBS)
-@USE_AFSKRB_TRUE@am__append_110 = $(AFS_LDFLAGS)
-@JMAP_TRUE@am__append_111 = \
+@MAINTAINER_MODE_TRUE@am__append_103 = \
+@MAINTAINER_MODE_TRUE@	man/ctl_zoneinfo.8 \
+@MAINTAINER_MODE_TRUE@	man/fetchnews.8 \
+@MAINTAINER_MODE_TRUE@	man/httpd.8 \
+@MAINTAINER_MODE_TRUE@	man/nntpd.8 \
+@MAINTAINER_MODE_TRUE@	man/squatter.8 \
+@MAINTAINER_MODE_TRUE@	man/sync_client.8 \
+@MAINTAINER_MODE_TRUE@	man/sync_reset.8 \
+@MAINTAINER_MODE_TRUE@	man/sync_server.8
+
+@BENCH_TRUE@am__append_104 = bench/cyrdbbench
+@ZEPHYR_TRUE@am__append_105 = notifyd/notify_zephyr.c notifyd/notify_zephyr.h
+@HAVE_LDAP_TRUE@am__append_106 = ptclient/ldap.c
+@HAVE_LDAP_TRUE@am__append_107 = $(LDAP_LIBS)
+@HAVE_LDAP_TRUE@am__append_108 = $(LDAP_LDFLAGS)
+@USE_AFSKRB_TRUE@am__append_109 = ptclient/afskrb.c
+@USE_AFSKRB_TRUE@am__append_110 = $(AFS_LIBS)
+@USE_AFSKRB_TRUE@am__append_111 = $(AFS_LDFLAGS)
+@JMAP_TRUE@am__append_112 = \
 @JMAP_TRUE@	imap/jmap_mail_query_parse.c \
 @JMAP_TRUE@	imap/jmap_mail_query_parse.h \
 @JMAP_TRUE@	imap/json_support.c \
 @JMAP_TRUE@	imap/json_support.h
 
-@JMAP_TRUE@am__append_112 = \
+@JMAP_TRUE@am__append_113 = \
 @JMAP_TRUE@	imap/jmap_util.c imap/jmap_mail_query.c imap/jmap_mail_query_parse.c
 
 subdir = .
@@ -2427,6 +2437,7 @@ EXTRA_DIST = \
 	COPYING \
 	README.md \
 	VERSION \
+	cassandane \
 	com_err/et/et_c.awk \
 	com_err/et/et_h.awk \
 	com_err/et/test1.et \
@@ -2623,7 +2634,6 @@ dist_noinst_SCRIPTS = \
 	tools/config2sample \
 	tools/fixsearchpath.pl \
 	tools/git-version.sh \
-	tools/jenkins-build.sh \
 	tools/masssievec \
 	tools/mkimap \
 	tools/mknewsgroups \
@@ -3104,7 +3114,7 @@ dist_man8_MANS = man/arbitron.8 man/backupd.8 man/chk_cyrus.8 \
 	man/pop3d.8 man/quota.8 man/reconstruct.8 man/restore.8 \
 	man/smmapd.8 man/timsieved.8 man/tls_prune.8 man/unexpunge.8 \
 	$(am__append_99) $(am__append_100) $(am__append_101) \
-	$(am__append_103)
+	$(am__append_102) $(am__append_103)
 @BENCH_TRUE@bench_cyrdbbench_SOURCES = bench/cyrdbbench.c imap/mutex_fake.c
 @BENCH_TRUE@bench_cyrdbbench_LDADD = $(LD_BASIC_ADD)
 master_master_SOURCES = \
@@ -3127,7 +3137,7 @@ notifyd_notifyd_SOURCES = imap/mutex_fake.c master/service.c \
 	notifyd/notify_log.c notifyd/notify_log.h \
 	notifyd/notify_mailto.c notifyd/notify_mailto.h \
 	notifyd/notify_null.c notifyd/notify_null.h notifyd/notifyd.c \
-	notifyd/notifyd.h $(am__append_104)
+	notifyd/notifyd.h $(am__append_105)
 notifyd_notifyd_LDADD = $(LD_SERVER_ADD) $(ZEPHYR_LIBS)
 notifyd_notifytest_SOURCES = notifyd/notifytest.c imap/mutex_fake.c
 notifyd_notifytest_LDADD = $(LD_BASIC_ADD)
@@ -3151,11 +3161,11 @@ ptclient_ptdump_LDADD = $(LD_UTILITY_ADD)
 ptclient_ptexpire_SOURCES = imap/cli_fatal.c imap/mutex_fake.c ptclient/ptexpire.c
 ptclient_ptexpire_LDADD = $(LD_UTILITY_ADD)
 ptclient_ptloader_SOURCES = imap/mutex_fake.c ptclient/ptloader.c \
-	ptclient/ptloader.h master/service-thread.c $(am__append_105) \
-	$(am__append_108)
-ptclient_ptloader_LDFLAGS = $(am__append_107) $(am__append_110)
-ptclient_ptloader_LDADD = $(LD_SERVER_ADD) $(am__append_106) \
+	ptclient/ptloader.h master/service-thread.c $(am__append_106) \
 	$(am__append_109)
+ptclient_ptloader_LDFLAGS = $(am__append_108) $(am__append_111)
+ptclient_ptloader_LDADD = $(LD_SERVER_ADD) $(am__append_107) \
+	$(am__append_110)
 
 # Each new version of flex seems to generate new sign-comparison
 # warnings, while they switch code around between int/yy_size_t.
@@ -3184,7 +3194,7 @@ sieve_libcyrus_sieve_la_SOURCES = sieve/bytecode.h sieve/addr.y \
 	sieve/message.h sieve/rebuild.c sieve/script.c sieve/script.h \
 	sieve/sieve.y sieve/tree.c sieve/tree.h sieve/variables.c \
 	sieve/variables.h sieve/varlist.c sieve/varlist.h \
-	$(am__append_111)
+	$(am__append_112)
 sieve_libcyrus_sieve_la_LIBADD = \
     sieve/libcyrus_sieve_lex.la \
     $(COM_ERR_LIBS) \
@@ -3195,7 +3205,7 @@ sieve_libcyrus_sieve_la_CFLAGS = $(AM_CFLAGS) $(CFLAG_VISIBILITY)
 sieve_sievec_LDADD = $(LD_SIEVE_ADD)
 sieve_sieved_LDADD = $(LD_SIEVE_ADD)
 sieve_test_SOURCES = sieve/test.c imap/mutex_fake.c \
-	sieve/sieve_interface.h $(am__append_112)
+	sieve/sieve_interface.h $(am__append_113)
 sieve_test_LDADD = $(LD_SIEVE_ADD) $(LD_UTILITY_ADD)
 sieve_test_mailbox_SOURCES = \
     sieve/test_mailbox.c \
@@ -3816,24 +3826,24 @@ lib/lib_libcyrus_la-chartable.lo: lib/$(am__dirstamp) \
 
 lib/libcyrus.la: $(lib_libcyrus_la_OBJECTS) $(lib_libcyrus_la_DEPENDENCIES) $(EXTRA_lib_libcyrus_la_DEPENDENCIES) lib/$(am__dirstamp)
 	$(AM_V_CCLD)$(lib_libcyrus_la_LINK) -rpath $(libdir) $(lib_libcyrus_la_OBJECTS) $(lib_libcyrus_la_LIBADD) $(LIBS)
-lib/ftruncate.$(OBJEXT): lib/$(am__dirstamp)
-lib/ftruncate.lo: lib/$(am__dirstamp)
+lib/memmem.$(OBJEXT): lib/$(am__dirstamp)
+lib/memmem.lo: lib/$(am__dirstamp)
 lib/strsep.$(OBJEXT): lib/$(am__dirstamp)
 lib/strsep.lo: lib/$(am__dirstamp)
 lib/getdtablesize.$(OBJEXT): lib/$(am__dirstamp)
 lib/getdtablesize.lo: lib/$(am__dirstamp)
-lib/strcasecmp.$(OBJEXT): lib/$(am__dirstamp)
-lib/strcasecmp.lo: lib/$(am__dirstamp)
-lib/memmove.$(OBJEXT): lib/$(am__dirstamp)
-lib/memmove.lo: lib/$(am__dirstamp)
-lib/posix_fadvise.$(OBJEXT): lib/$(am__dirstamp)
-lib/posix_fadvise.lo: lib/$(am__dirstamp)
 lib/strerror.$(OBJEXT): lib/$(am__dirstamp)
 lib/strerror.lo: lib/$(am__dirstamp)
 lib/memrchr.$(OBJEXT): lib/$(am__dirstamp)
 lib/memrchr.lo: lib/$(am__dirstamp)
-lib/memmem.$(OBJEXT): lib/$(am__dirstamp)
-lib/memmem.lo: lib/$(am__dirstamp)
+lib/posix_fadvise.$(OBJEXT): lib/$(am__dirstamp)
+lib/posix_fadvise.lo: lib/$(am__dirstamp)
+lib/ftruncate.$(OBJEXT): lib/$(am__dirstamp)
+lib/ftruncate.lo: lib/$(am__dirstamp)
+lib/memmove.$(OBJEXT): lib/$(am__dirstamp)
+lib/memmove.lo: lib/$(am__dirstamp)
+lib/strcasecmp.$(OBJEXT): lib/$(am__dirstamp)
+lib/strcasecmp.lo: lib/$(am__dirstamp)
 lib/lib_libcyrus_min_la-arrayu64.lo: lib/$(am__dirstamp) \
 	lib/$(DEPDIR)/$(am__dirstamp)
 lib/lib_libcyrus_min_la-assert.lo: lib/$(am__dirstamp) \
@@ -8636,10 +8646,6 @@ valgrind:
 
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status libtool
-
-# Install for Cassandane
-cassandane:
-	$(MAKE) DESTDIR=`cd ../inst ; /bin/pwd` install
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

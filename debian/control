@@ -9,12 +9,13 @@ Priority: optional
 Build-Depends: bison,
                comerr-dev,
                debhelper-compat (= 13),
+               fig2dev,
                flex,
                ghostscript,
                groff,
                libdb-dev,
                libdkim-dev,
-               libical-dev (>= 2.0.0),
+               libical-dev,
                libjansson-dev,
                libclamav-dev,
                libcunit1-dev,
@@ -46,7 +47,6 @@ Build-Depends: bison,
                po-debconf,
                rsync,
                sqlite3,
-               transfig,
                unicode-data,
                vim-common,
                xutils-dev
@@ -138,10 +138,10 @@ Depends: cyrus-common (= ${binary:Version}),
          ${shlibs:Depends}
 Recommends: rsync
 Pre-Depends: ${misc:Pre-Depends}
-Conflicts: imap-server
 Breaks: cyrus-common (<< 3.2.3~)
-Replaces: cyrus-common (<< 3.2.3~)
+Conflicts: imap-server
 Provides: imap-server
+Replaces: cyrus-common (<< 3.2.3~)
 Description: Cyrus mail system - IMAP support
  Cyrus is an IMAP server designed to handle massive quantities of mail,
  with a number of features not found in other IMAP implementations,
@@ -278,8 +278,8 @@ Description: Cyrus mail system - test clients
 
 Package: cyrus-dev
 Architecture: any
-Section: devel
 Multi-Arch: same
+Section: devel
 Depends: cyrus-common (= ${binary:Version}),
          libcyrus-imap-perl (>= ${binary:Version}),
          libsasl2-dev,
@@ -298,8 +298,8 @@ Section: perl
 Depends: ${misc:Depends},
          ${perl:Depends},
          ${shlibs:Depends}
-Pre-Depends: ${misc:Pre-Depends}
 Recommends: libterm-readline-gnu-perl
+Pre-Depends: ${misc:Pre-Depends}
 Description: Interface to Cyrus imap client imclient library
  The Cyrus::IMAP module provides an interface to the Cyrus imclient
  library.  These are primarily useful for implementing cyradm operations

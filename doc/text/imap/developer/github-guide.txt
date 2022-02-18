@@ -42,10 +42,10 @@ it out.
 3. Fork the repository
 ======================
 
-Whether you’re contributing to Cyrus (source, or documentation),
-contributing to tests with Cassandane or into helping out with SASL or
-any of the other Cyrus component projects, use the Fork button to make
-a copy of the repository into your own GitHub work space.
+Whether you’re contributing to Cyrus (source, or documentation), or
+into helping out with SASL or any of the other Cyrus component
+projects, use the Fork button to make a copy of the repository into
+your own GitHub work space.
 
 GitHub has more information on how to fork a repository.
 

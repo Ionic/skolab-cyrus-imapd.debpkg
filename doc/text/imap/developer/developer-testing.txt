@@ -21,9 +21,8 @@ Achaemenid Persian Empire.  So that’s kinda cool.
 Install and configure Cassandane
 --------------------------------
 
-1. Clone the Cassandane repository
-
-      * "git clone https://github.com/cyrusimap/cassandane.git"
+1. You already have it – it’s in the “cassandane” subdirectory of
+   the cyrus-imapd sources.
 
 2. Install dependencies
 
@@ -55,10 +54,11 @@ Install and configure Cassandane
 
 3. Install Cassandane
 
-      cd /path/to/cassandane
+      cd /path/to/cyrus-imapd/cassandane
       make
 
-4. Copy "cassandane.ini.example" to "cassandane.ini"
+4. Copy "cassandane.ini.example" to "cassandane.ini" in your home
+   directory
 
 5. Edit "cassandane.ini" to set up your cassandane environment.
 
@@ -175,7 +175,7 @@ Running the tests
 
 As user "cyrus", run the tests.
 
-   cd /path/to/cassandane
+   cd /path/to/cyrus-imapd/cassandane
    sudo -u cyrus ./testrunner.pl -f pretty -j 8
 
 

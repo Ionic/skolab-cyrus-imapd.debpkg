@@ -1,0 +1,228 @@
+.\" Man page generated from reStructuredText.
+.
+.TH "SYNC_CLIENT" "8" "February 02, 2022" "3.4.3" "Cyrus IMAP"
+.SH NAME
+sync_client \- Cyrus IMAP documentation
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.sp
+Client side of the synchronization (replication) engine
+.SH SYNOPSIS
+.sp
+.nf
+\fBsync_client\fP [ \fB\-v\fP ] [ \fB\-l\fP ] [ \fB\-L\fP ] [ \fB\-z\fP ] [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-S\fP \fIserver\-name\fP ]
+    [ \fB\-f\fP \fIinput\-file\fP ] [ \fB\-F\fP \fIshutdown_file\fP ] [ \fB\-w\fP \fIwait_interval\fP ]
+    [ \fB\-t\fP \fItimeout\fP ] [ \fB\-d\fP \fIdelay\fP ] [ \fB\-r\fP ] [ \fB\-n\fP \fIchannel\fP ] [ \fB\-u\fP ] [ \fB\-m\fP ]
+    [ \fB\-p\fP \fIpartition\fP ] [ \fB\-A\fP ] [ \fB\-s\fP ] [ \fB\-O\fP ] \fIobjects\fP\&...
+.fi
+.SH DESCRIPTION
+.sp
+\fBsync_client\fP is the client side of the replication system.  It runs
+on the client (master) system and connects to the target (replica)
+system and generates an appropriate sequence of transactions to
+synchronize the replica system with the master system.
+.sp
+\fBsync_client\fP reads its configuration options out of the imapd.conf(5) file unless specified otherwise by \fB\-C\fP\&.
+.SH OPTIONS
+.INDENT 0.0
+.TP
+.B \-C config\-file
+Use the specified configuration file \fIconfig\-file\fP rather than the default imapd.conf(5)\&.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-A
+All users mode.
+Sync every user on the server to the replica (doesn’t do non\-user
+mailboxes at all… this could be considered a bug and maybe it
+should do those mailboxes independently)
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-d delay
+Minimum delay between replication runs in rolling replication mode.
+Larger values provide better efficiency as transactions can be
+merged. Smaller values mean that the replica system is more up to
+date and that you don’t end up with large blocks of replication
+transactions as a single group. Default: 3 seconds.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-f input\-file
+In mailbox or user replication mode: provides list of users or
+mailboxes to replicate.  In rolling replication mode, specifies an
+alternate log file (\fBsync_client\fP will exit after processing the
+log file).
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-F shutdown\-file
+Rolling replication checks for this file at the end of each
+replication cycle and shuts down if it is present. Used to request
+a nice clean shutdown at the first convenient point. The file is
+removed on shutdown. Overrides \fBsync_shutdown_file\fP option in
+imapd.conf(5)\&.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-l
+Verbose logging mode.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-L
+Perform only local mailbox operations (do not do mupdate operations).
+This feature was introduced in version 3.0.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-m
+Mailbox mode.
+Remaining arguments are list of mailboxes which should be replicated.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-n channel
+Use the named channel for rolling replication mode.  If multiple
+channels are specified in \fBsync_log_channels\fP then use one of them.
+This option is probably best combined with \fB\-S\fP to connect to a
+different server with each channel.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-o
+Only attempt to connect to the backend server once rather than
+waiting up to 1000 seconds before giving up.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-O
+No copyback mode. Replication will stop if the replica reports a CRC
+error, rather than doing a full mailbox sync. Useful if moving users to a
+new server, where you don’t want any errors to cause the source servers
+to change the account.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-p partition
+In mailbox or user replication mode: provides the name of the
+partition on the replica to which the mailboxes/users should be
+replicated.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-r
+Rolling (repeat) replication mode. Pick up a list of actions
+recorded by the lmtpd(8), imapd(8),
+pop3d(8) and nntpd(8) daemons from the file
+specified in \fBsync_log_file\fP\&. Repeat until \fBsync_shutdown_file\fP
+appears.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-1
+Like rolling replication, but only process a single file before exiting.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-s
+Sieve mode.
+Remaining arguments are list of users whose Sieve files should be
+replicated. Principally used for debugging purposes: not exposed to
+\fI\%sync_client(8)\fP\&.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-S servername
+Tells \fBsync_client\fP with which server to communicate.  Overrides
+the \fBsync_host\fP configuration option.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-t timeout
+Timeout for single replication run in rolling replication.
+\fBsync_client\fP will negotiate a restart after this many seconds.
+Default: 600 seconds
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-u
+User mode.
+Remaining arguments are list of users who should be replicated.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-v
+Verbose mode.  Use twice (\fB\-v \-v\fP) to log all protocol traffic to
+stderr.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-w interval
+Wait this long before starting. This option is typically used so
+that we can attach a debugger to one end of the replication system
+or the other.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-z
+Require compression.
+The replication protocol will always try to enable deflate
+compression if both ends support it.  Set this flag when you want
+to abort if compression is not available.
+.UNINDENT
+.SH EXAMPLES
+.sp
+On a replication master, the following would be added to the START
+section of cyrus.conf(5):
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+syncclient              cmd="/usr/lib/cyrus/bin/sync_client \-r"
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+[NB: More examples needed]
+.SH HISTORY
+.sp
+The \fB\-L\fP feature, local updates only, was added in version 3.0.
+.SH FILES
+.sp
+/etc/imapd.conf
+.SH SEE ALSO
+.sp
+sync_server(8), cyrus.conf(5),
+imapd.conf(5), master(8)
+.SH AUTHOR
+The Cyrus Team, David Carter (dpc22@cam.ac.uk), Ken Murchison (ken@oceana.com), Nic Bernstein (Onlight)
+.SH COPYRIGHT
+1993-2018, The Cyrus Team
+.\" Generated by docutils manpage writer.
+.

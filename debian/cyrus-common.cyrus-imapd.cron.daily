@@ -55,7 +55,7 @@ start-stop-daemon --start --exec /usr/lib/cyrus/bin/ctl_mboxlist --quiet --chuid
 	    } " < "$CONF" | sort | uniq | xargs)
     for i in $partitions ; do
 	find "$i" -name '.stage' -type d -print0 | \
-	  xargs --null -n 1 -r -i'{1}' \
+	  xargs --null -r -i'{1}' \
 	    find {1} -type f -ctime +1 -exec rm -f {} \;
     done
 }
