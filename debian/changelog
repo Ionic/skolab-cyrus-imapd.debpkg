@@ -1,3 +1,9 @@
+cyrus-imapd (3.4.3-3~bpo11+1) bullseye-backports; urgency=medium
+
+  * Rebuild for bullseye-backports.
+
+ -- Yadd <yadd@debian.org>  Fri, 18 Feb 2022 09:53:03 +0100
+
 cyrus-imapd (3.4.3-3) unstable; urgency=medium
 
   * Propagate CFLAGS to Perl build (makes build reproducible)
