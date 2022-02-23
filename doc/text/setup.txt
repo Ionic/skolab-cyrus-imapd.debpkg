@@ -25,11 +25,11 @@ Setup
 
   * Troubleshooting
 
-* Upgrading to 3.4
+* Upgrading to 3.6
 
   * 1. Preparation
 
-  * 2. Install new 3.4 Cyrus
+  * 2. Install new 3.6 Cyrus
 
   * 3. Shut down existing Cyrus
 
@@ -39,7 +39,7 @@ Setup
 
   * 6. Upgrade specific items
 
-  * 7. Start new 3.4 Cyrus and verify
+  * 7. Start new 3.6 Cyrus and verify
 
   * 8. Reconstruct databases and cache
 

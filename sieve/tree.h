@@ -140,7 +140,7 @@ struct Test {
             char *keyname;
             strarray_t *keylist;
         } mm;
-        struct { /* its a duplicate test */
+        struct { /* it's a duplicate test */
             int idtype;
             char *idval;
             char *handle;
@@ -172,7 +172,7 @@ struct Commandlist {
     unsigned type;
     union {
         int jump; /* bytecode parsing/eval only */
-        char *str; /* its a reject or error action */
+        char *str; /* it's a reject or error action */
         struct { /* it's an if statement */
             test_t *t;
             int testend; /* offset to end of test (bytecode parsing/eval only) */
@@ -254,6 +254,14 @@ struct Commandlist {
             arrayu64_t *times;
             char *tzid;
         } sn;
+        struct {
+            int invites_only;
+            int updates_only;
+            int delete_canceled;
+            char *calendarid;
+            char *outcome_var;
+            char *errstr_var;
+        } imip;
     } u;
     struct Commandlist *next;
 

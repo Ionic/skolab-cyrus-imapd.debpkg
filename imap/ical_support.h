@@ -51,11 +51,13 @@
 #include <libical/ical.h>
 #undef icalerror_warn
 #define icalerror_warn(message) \
-{syslog(LOG_WARNING, "icalerror: %s(), %s:%d: %s\n", __FUNCTION__, __FILE__, __LINE__, message);}
+{syslog(LOG_WARNING, "icalerror: %s(), %s:%d: %s", __FUNCTION__, __FILE__, __LINE__, message);}
 
 #include "mailbox.h"
 
-#define PER_USER_CAL_DATA \
+#define ICALENDAR_CONTENT_TYPE "text/calendar; charset=utf-8"
+
+#define PER_USER_CAL_DATA                                       \
     DAV_ANNOT_NS "<" XML_NS_CYRUS ">per-user-calendar-data"
 
 #ifndef HAVE_NEW_CLONE_API
@@ -74,6 +76,8 @@ extern const char *icalparameter_get_value_as_string(icalparameter *param);
 extern struct icaldatetimeperiodtype
 icalproperty_get_datetimeperiod(icalproperty *prop);
 extern time_t icaltime_to_timet(icaltimetype t, const icaltimezone *floatingtz);
+extern void icalproperty_set_xparam(icalproperty *prop,
+                                    const char *name, const char *val, int purge);
 
 /* If range is a NULL period, callback() is executed for ALL occurrences,
    otherwise callback() is only executed for occurrences that overlap the range.
@@ -136,6 +140,10 @@ extern icaltimetype icaltime_convert_to_utc(const struct icaltimetype tt,
 extern int icalcomponent_apply_vpatch(icalcomponent *ical,
                                       icalcomponent *vpatch,
                                       int *num_changes, const char **errstr);
+
+/* Functions to work around libical TZID prefixes */
+extern const char *icaltimezone_get_location_tzid(const icaltimezone *zone);
+extern const char *icaltime_get_location_tzid(icaltimetype t);
 
 /* Functions that should be declared in libical */
 #define icaltimezone_set_zone_directory set_zone_directory

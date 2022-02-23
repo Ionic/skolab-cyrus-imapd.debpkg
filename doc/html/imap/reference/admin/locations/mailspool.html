@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Spool Directories &mdash; Cyrus IMAP 3.4.3 (stable) documentation</title>
+  <title>Spool Directories &mdash; Cyrus IMAP 3.6.0-beta1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.3 (stable) documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.6.0-beta1 documentation" href="../../../../index.html"/>
         <link rel="up" title="File &amp; Directory Locations" href="../locations.html"/>
         <link rel="next" title="Search Tiers" href="searchtiers.html"/>
         <link rel="prev" title="Directory Hashing" href="hashing.html"/> 
@@ -130,6 +130,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#stable-version">Stable Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#development-version">Development Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#supported-product-series">Supported Product Series</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-3-6">Series 3.6</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-3-4">Series 3.4</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-3-2">Series 3.2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/index.html#series-3-0">Series 3.0</a></li>
@@ -137,6 +138,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/release-notes/index.html#development-snapshots">Development snapshots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/3.7/index.html">Cyrus IMAP 3.7 Tags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/3.5/index.html">Cyrus IMAP 3.5 Tags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/3.3/index.html">Cyrus IMAP 3.3 Tags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/release-notes/3.1/index.html">Cyrus IMAP 3.1 Tags</a></li>
@@ -171,12 +173,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#install-cyrus-package-s">1. Install Cyrus package(s)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#setup-the-cyrus-mail-user-and-group">2. Setup the cyrus:mail user and group</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#setting-up-authentication-with-sasl">3. Setting up authentication with SASL</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#setup-mail-delivery-from-your-mta">4. Setup mail delivery from your MTA</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../../quickstart.html#install-sendmail">Install Sendmail</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../quickstart.html#sendmail-communication">Sendmail communication</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../../quickstart.html#install-postfix">Install Postfix</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#setup-mail-delivery-from-your-mta">4. Setup mail delivery from your MTA</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#protocol-ports">5. Protocol ports</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#configuring-cyrus">6. Configuring Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../../quickstart.html#launch-cyrus">7. Launch Cyrus</a></li>
@@ -336,19 +333,20 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../installing.html#troubleshooting">Troubleshooting</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../../../download/upgrade.html">Upgrading to 3.4</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../download/upgrade.html">Upgrading to 3.6</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#preparation">1. Preparation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/upgrade.html#installation-from-tarball">Installation from tarball</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../download/upgrade.html#storage-changes">Storage changes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/upgrade.html#how-are-you-planning-on-upgrading">How are you planning on upgrading?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../download/upgrade.html#do-what-as-who">Do What As Who?</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#install-new-3-4-cyrus">2. Install new 3.4 Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#install-new-3-6-cyrus">2. Install new 3.6 Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#shut-down-existing-cyrus">3. Shut down existing Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#backup-and-copy-existing-data">4. Backup and Copy existing data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#copy-config-files-and-update">5. Copy config files and update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#upgrade-specific-items">6. Upgrade specific items</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#start-new-3-4-cyrus-and-verify">7. Start new 3.4 Cyrus and verify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#start-new-3-6-cyrus-and-verify">7. Start new 3.6 Cyrus and verify</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#reconstruct-databases-and-cache">8. Reconstruct databases and cache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#do-you-want-any-new-features">9. Do you want any new features?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../download/upgrade.html#upgrade-complete">10. Upgrade complete</a></li>
@@ -422,14 +420,14 @@
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="../../../../operations.html">Operations</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../../manpages/commands.html">Man pages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../manpages/commands.html#configuration-files">(5) Configuration Files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../manpages/index.html">Man pages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../manpages/index.html#configuration-files">(5) Configuration Files</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/configs/cyrus.conf.html"><strong>cyrus.conf</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/configs/imapd.conf.html"><strong>imapd.conf</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/configs/krb.equiv.html"><strong>krb.equiv</strong></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../manpages/commands.html#system-commands">(8) System Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../manpages/index.html#system-commands">(8) System Commands</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/arbitron.html"><strong>arbitron</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/backupd.html"><strong>backupd</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/chk_cyrus.html"><strong>chk_cyrus</strong></a></li>
@@ -448,7 +446,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/cyr_df.html"><strong>cyr_df</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/cyr_expire.html"><strong>cyr_expire</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/cyr_info.html"><strong>cyr_info</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/cyr_sequence.html"><strong>cyr_sequence</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/cyr_ls.html"><strong>cyr_ls</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/cyr_synclog.html"><strong>cyr_synclog</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/cyr_userseen.html"><strong>cyr_userseen</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/cyr_virusscan.html"><strong>cyr_virusscan</strong></a></li>
@@ -483,6 +481,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/quota.html"><strong>quota</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/reconstruct.html"><strong>reconstruct</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/rehash.html"><strong>rehash</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/relocate_by_id.html"><strong>relocate_by_id</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/restore.html"><strong>restore</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/sievec.html"><strong>sievec</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/sieved.html"><strong>sieved</strong></a></li>
@@ -497,7 +496,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/systemcommands/unexpunge.html"><strong>unexpunge</strong></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../manpages/commands.html#user-commands">(1) User Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../manpages/index.html#user-commands">(1) User Commands</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/usercommands/arbitronsort.pl.html"><strong>arbitronsort.pl</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/usercommands/dav_reconstruct.html"><strong>dav_reconstruct</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../manpages/usercommands/httptest.html"><strong>httptest</strong></a></li>
@@ -744,7 +743,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.6: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.6"></a>
 </div>
       &nbsp;
     </nav>
@@ -764,7 +763,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.4.3 (stable)</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.6.0-beta1</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -776,7 +775,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.4/docsrc/imap/reference/admin/locations/mailspool.rst" class="fa fa-github"> Edit on GitHub</a>
+            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.6/docsrc/imap/reference/admin/locations/mailspool.rst" class="fa fa-github"> Edit on GitHub</a>
           
         
       </li>
@@ -944,7 +943,7 @@ which spool partitions will have separate metadata partitions.</div></blockquote
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.4.3 (stable)',
+            VERSION:'3.6.0-beta1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

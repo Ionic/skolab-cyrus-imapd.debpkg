@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "MBPATH" "8" "February 02, 2022" "3.4.3" "Cyrus IMAP"
+.TH "MBPATH" "8" "February 23, 2022" "3.6.0" "Cyrus IMAP"
 .SH NAME
 mbpath \- Cyrus IMAP documentation
 .
@@ -35,7 +35,7 @@ Translate mailbox names to filesystem paths
 .SH SYNOPSIS
 .sp
 .nf
-\fBmbpath\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-l\fP ] [ \fB\-m\fP ] [ \fB\-q\fP ] [ \fB\-s\fP ] [ \fB\-u\fP ] [ \fB\-a\fP | \fB\-A\fP | \fB\-M\fP | \fB\-S\fP | \fB\-U\fP ] [ \fImailbox\-names\fP\&... ]
+\fBmbpath\fP [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-l\fP ] [ \fB\-m\fP ] [ \fB\-q\fP ] [ \fB\-s\fP ] [ \fB\-u\fP | \fB\-p\fP ] [ \fB\-a\fP | \fB\-A\fP | \fB\-M\fP | \fB\-S\fP | \fB\-U\fP ] [ \fImailbox\-names\fP\&... ]
 .fi
 .SH DESCRIPTION
 .sp
@@ -77,6 +77,11 @@ If any error occurs, stop processing the list of mailboxes and exit.
 .TP
 .B \-u
 The specified \fImailbox\-names\fP are users, not mailboxes.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-p
+The specified \fImailbox\-names\fP are UNIX mailbox paths, not mailboxes.
 .UNINDENT
 .SH SELECTORS
 .INDENT 0.0

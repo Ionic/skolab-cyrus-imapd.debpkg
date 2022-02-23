@@ -54,3 +54,5 @@ Cyrus IMAP 3.0 Releases
 * Cyrus IMAP 3.0.15 Release Notes
 
 * Cyrus IMAP 3.0.16 Release Notes
+
+* Cyrus IMAP 3.0.17 Release Notes

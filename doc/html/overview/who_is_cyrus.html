@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Who Is Cyrus &mdash; Cyrus IMAP 3.4.3 (stable) documentation</title>
+  <title>Who Is Cyrus &mdash; Cyrus IMAP 3.6.0-beta1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.3 (stable) documentation" href="../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.6.0-beta1 documentation" href="../index.html"/>
         <link rel="up" title="About Cyrus" href="about_cyrus.html"/>
         <link rel="next" title="Cyrus Roadmap" href="cyrus_roadmap.html"/>
         <link rel="prev" title="About Cyrus" href="what_is_cyrus.html"/> 
@@ -130,6 +130,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../imap/download/release-notes/index.html#stable-version">Stable Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../imap/download/release-notes/index.html#development-version">Development Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../imap/download/release-notes/index.html#supported-product-series">Supported Product Series</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../imap/download/release-notes/index.html#series-3-6">Series 3.6</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/download/release-notes/index.html#series-3-4">Series 3.4</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/download/release-notes/index.html#series-3-2">Series 3.2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/download/release-notes/index.html#series-3-0">Series 3.0</a></li>
@@ -137,6 +138,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../imap/download/release-notes/index.html#development-snapshots">Development snapshots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../imap/download/release-notes/3.7/index.html">Cyrus IMAP 3.7 Tags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/download/release-notes/3.5/index.html">Cyrus IMAP 3.5 Tags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/download/release-notes/3.3/index.html">Cyrus IMAP 3.3 Tags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/download/release-notes/3.1/index.html">Cyrus IMAP 3.1 Tags</a></li>
@@ -171,12 +173,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../quickstart.html#install-cyrus-package-s">1. Install Cyrus package(s)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../quickstart.html#setup-the-cyrus-mail-user-and-group">2. Setup the cyrus:mail user and group</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../quickstart.html#setting-up-authentication-with-sasl">3. Setting up authentication with SASL</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../quickstart.html#setup-mail-delivery-from-your-mta">4. Setup mail delivery from your MTA</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../quickstart.html#install-sendmail">Install Sendmail</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../quickstart.html#sendmail-communication">Sendmail communication</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../quickstart.html#install-postfix">Install Postfix</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="../quickstart.html#setup-mail-delivery-from-your-mta">4. Setup mail delivery from your MTA</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../quickstart.html#protocol-ports">5. Protocol ports</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../quickstart.html#configuring-cyrus">6. Configuring Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../quickstart.html#launch-cyrus">7. Launch Cyrus</a></li>
@@ -336,19 +333,20 @@
 <li class="toctree-l3"><a class="reference internal" href="../imap/installing.html#troubleshooting">Troubleshooting</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../imap/download/upgrade.html">Upgrading to 3.4</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../imap/download/upgrade.html">Upgrading to 3.6</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../imap/download/upgrade.html#preparation">1. Preparation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../imap/download/upgrade.html#installation-from-tarball">Installation from tarball</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../imap/download/upgrade.html#storage-changes">Storage changes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/download/upgrade.html#how-are-you-planning-on-upgrading">How are you planning on upgrading?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/download/upgrade.html#do-what-as-who">Do What As Who?</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../imap/download/upgrade.html#install-new-3-4-cyrus">2. Install new 3.4 Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../imap/download/upgrade.html#install-new-3-6-cyrus">2. Install new 3.6 Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../imap/download/upgrade.html#shut-down-existing-cyrus">3. Shut down existing Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../imap/download/upgrade.html#backup-and-copy-existing-data">4. Backup and Copy existing data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../imap/download/upgrade.html#copy-config-files-and-update">5. Copy config files and update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../imap/download/upgrade.html#upgrade-specific-items">6. Upgrade specific items</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../imap/download/upgrade.html#start-new-3-4-cyrus-and-verify">7. Start new 3.4 Cyrus and verify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../imap/download/upgrade.html#start-new-3-6-cyrus-and-verify">7. Start new 3.6 Cyrus and verify</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../imap/download/upgrade.html#reconstruct-databases-and-cache">8. Reconstruct databases and cache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../imap/download/upgrade.html#do-you-want-any-new-features">9. Do you want any new features?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../imap/download/upgrade.html#upgrade-complete">10. Upgrade complete</a></li>
@@ -422,14 +420,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../operations.html">Operations</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../imap/reference/manpages/commands.html">Man pages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../imap/reference/manpages/commands.html#configuration-files">(5) Configuration Files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../imap/reference/manpages/index.html">Man pages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../imap/reference/manpages/index.html#configuration-files">(5) Configuration Files</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/configs/cyrus.conf.html"><strong>cyrus.conf</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/configs/imapd.conf.html"><strong>imapd.conf</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/configs/krb.equiv.html"><strong>krb.equiv</strong></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../imap/reference/manpages/commands.html#system-commands">(8) System Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../imap/reference/manpages/index.html#system-commands">(8) System Commands</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/arbitron.html"><strong>arbitron</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/backupd.html"><strong>backupd</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/chk_cyrus.html"><strong>chk_cyrus</strong></a></li>
@@ -448,7 +446,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/cyr_df.html"><strong>cyr_df</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/cyr_expire.html"><strong>cyr_expire</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/cyr_info.html"><strong>cyr_info</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/cyr_sequence.html"><strong>cyr_sequence</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/cyr_ls.html"><strong>cyr_ls</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/cyr_synclog.html"><strong>cyr_synclog</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/cyr_userseen.html"><strong>cyr_userseen</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/cyr_virusscan.html"><strong>cyr_virusscan</strong></a></li>
@@ -483,6 +481,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/quota.html"><strong>quota</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/reconstruct.html"><strong>reconstruct</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/rehash.html"><strong>rehash</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/relocate_by_id.html"><strong>relocate_by_id</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/restore.html"><strong>restore</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/sievec.html"><strong>sievec</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/sieved.html"><strong>sieved</strong></a></li>
@@ -497,7 +496,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/systemcommands/unexpunge.html"><strong>unexpunge</strong></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../imap/reference/manpages/commands.html#user-commands">(1) User Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../imap/reference/manpages/index.html#user-commands">(1) User Commands</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/usercommands/arbitronsort.pl.html"><strong>arbitronsort.pl</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/usercommands/dav_reconstruct.html"><strong>dav_reconstruct</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../imap/reference/manpages/usercommands/httptest.html"><strong>httptest</strong></a></li>
@@ -744,7 +743,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.6: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.6"></a>
 </div>
       &nbsp;
     </nav>
@@ -764,7 +763,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html">Docs v3.4.3 (stable)</a> &raquo;</li>
+      <li><a href="../index.html">Docs v3.6.0-beta1</a> &raquo;</li>
       
           <li><a href="../support.html">Support/Community</a> &raquo;</li>
       
@@ -774,7 +773,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.4/docsrc/overview/who_is_cyrus.rst" class="fa fa-github"> Edit on GitHub</a>
+            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.6/docsrc/overview/who_is_cyrus.rst" class="fa fa-github"> Edit on GitHub</a>
           
         
       </li>
@@ -785,18 +784,17 @@
             
   <div class="section" id="who-is-cyrus">
 <h1>Who Is Cyrus<a class="headerlink" href="#who-is-cyrus" title="Permalink to this headline">¶</a></h1>
-<p>The Cyrus project was originally started at <a class="reference external" href="http://www.cmu.edu/">Carnegie Mellon University</a> but it has since attracted a very dedicated and diverse group of core contributors. Carnegie Mellon University remains active in development of Cyrus and also provides the infrastructure on which cyrusimap.org runs today, but CMU is now just one of many core contributors to Project Cyrus.</p>
+<p>The Cyrus project was originally started at <a class="reference external" href="http://www.cmu.edu/">Carnegie Mellon University</a> but it has since attracted a very dedicated and diverse group of core contributors.</p>
 <div class="section" id="core-contributors">
 <h2>Core Contributors<a class="headerlink" href="#core-contributors" title="Permalink to this headline">¶</a></h2>
 <p>These are the core organizations who are providing dedicated resources to the Cyrus Project.</p>
-<p><strong>FastMail</strong></p>
-<p><a class="reference external" href="http://www.fastmail.com/">FastMail</a> is a leading e-mail hosting provider that runs on Cyrus software.</p>
+<p><strong>Fastmail</strong></p>
+<p><a class="reference external" href="http://www.fastmail.com/">Fastmail</a> is a leading e-mail hosting provider that runs on Cyrus software.</p>
 <ul class="simple">
 <li>Bron Gondwana</li>
 <li>Ellie Timoney</li>
-<li>Conrad Kleinespel</li>
-<li>Chris Davies</li>
-<li>Nicola Nye</li>
+<li>Ken Murchison</li>
+<li>Robert Stepanek</li>
 </ul>
 <p><strong>Kolab Systems</strong></p>
 <p><a class="reference external" href="http://kolabsys.com/">Kolab Systems AG</a> is the developer of the Kolab Groupware system, of which Cyrus IMAP is a core component.</p>
@@ -807,12 +805,6 @@
 <p><a class="reference external" href="http://isode.com/">Isode Ltd</a> is a renowned developer of open-standard e-mail, instant messaging, and directory software. Its internet servers use Cyrus SASL for authentication.</p>
 <ul class="simple">
 <li>Alexey Melnikov</li>
-</ul>
-<p><strong>Carnegie Mellon University</strong></p>
-<p><a class="reference external" href="http://www.cmu.edu/">Carnegie Mellon University</a> is a global research university with more than 11,000 students, 86,500 alumni, and 4,000 faculty and staff.</p>
-<ul class="simple">
-<li>Ken Murchison</li>
-<li>Dave McMurtrie</li>
 </ul>
 </div>
 <div class="section" id="individual-contributors-and-past-contributors">
@@ -854,6 +846,9 @@
 <li>Laurie D. Mann</li>
 <li>Simon Matter</li>
 <li>Greg Banks</li>
+<li>Conrad Kleinespel</li>
+<li>Chris Davies</li>
+<li>Nicola Nye</li>
 </ul>
 </div>
 </div>
@@ -876,7 +871,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on May 24 2016
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Aug 03 2021
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -896,7 +891,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'3.4.3 (stable)',
+            VERSION:'3.6.0-beta1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

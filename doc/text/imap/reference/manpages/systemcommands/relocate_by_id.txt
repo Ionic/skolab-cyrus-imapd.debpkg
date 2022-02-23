@@ -1,0 +1,66 @@
+**relocate_by_id**
+******************
+
+Relocate mailbox trees by their mailbox ids
+
+
+Synopsis
+========
+
+   **relocate_by_id** [ **-C** *config-file* ] [ **-n** ] [ **-q** ] [ **-u** ] [ *mailbox-names*... ]
+
+
+Description
+===========
+
+Given a mailbox name or a space separated list of mailbox names,
+**relocate_by_id** relocates the mailbox and its submailboxes to
+directory trees hashed by mailbox id rather than hashed by mailbox
+name.
+
+**relocate_by_id** reads its configuration options out of the
+imapd.conf(5) file unless specified otherwise by **-C**. It uses
+<configdirectory>/mailboxes.db to locate the mailboxes on disk.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+-n
+
+   Do NOT make any changes.  Just list which directories will be
+   relocated.
+
+-q
+
+   Run quietly.  Suppress any error output.
+
+-u
+
+   The specified *mailbox-names* are users, not mailboxes. User
+   metadata directories will also be relocated.
+
+
+Examples
+========
+
+   **relocate_by_id -u** *jsmith*
+
+   Relocate all mailbox and metadata directories for user *jsmith*.
+
+
+Files
+=====
+
+/etc/imapd.conf, <configdirectory>/mailboxes.db
+
+
+See Also
+========
+
+imapd.conf(5)

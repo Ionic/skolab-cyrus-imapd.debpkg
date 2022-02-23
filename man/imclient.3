@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "IMCLIENT" "3" "February 02, 2022" "3.4.3" "Cyrus IMAP"
+.TH "IMCLIENT" "3" "February 23, 2022" "3.6.0" "Cyrus IMAP"
 .SH NAME
 imclient \- Cyrus IMAP documentation
 .
@@ -31,7 +31,7 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
 .sp
-Authenticating callback interface to IMAP/IMSP servers
+Authenticating callback interface to IMAP servers
 .SH SYNOPSIS
 .sp
 .nf
@@ -59,8 +59,8 @@ Authenticating callback interface to IMAP/IMSP servers
 .fi
 .SH DESCRIPTION
 .sp
-The imclient library functions are distributed with Cyrus IMAP and IMSP.
-These functions are used for building IMAP/IMSP client software. These
+The imclient library functions are distributed with Cyrus IMAP.
+These functions are used for building IMAP client software. These
 functions handle Kerberos authentication and can set callbacks based on the
 keyword in untagged replies or based on the command tag at the end of
 command replies.
@@ -308,7 +308,7 @@ imapd(8),
 \fBselect(2)\fP
 .SH KEYWORDS
 .sp
-IMAP, ACAP, IMSP, Kerberos, Authentication
+IMAP, ACAP, Kerberos, Authentication
 .SH AUTHOR
 The Cyrus Team, Nic Bernstein (Onlight)
 .SH COPYRIGHT

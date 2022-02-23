@@ -207,7 +207,7 @@ static void write_language_counts(Xapian::WritableDatabase& db,
             it != db.metadata_keys_end(XAPIAN_LANG_COUNT_KEYPREFIX); ++it) {
         db.set_metadata(*it, "");
     }
-    for (const std::pair<std::string, unsigned>& it : lang_counts) {
+    for (const std::pair<const std::string, unsigned>& it : lang_counts) {
         db.set_metadata(lang_count_key(it.first), std::to_string(it.second));
     }
 }
@@ -696,11 +696,9 @@ EXPORTED void xapian_check_if_needs_reindex(const strarray_t *sources,
 
 /* ====================================================================== */
 
-static inline void add_boolean_nterm(Xapian::Document& doc,
-                                     const std::string& term,
-                                     size_t n = XAPIAN_MAX_TERM_LENGTH)
+static inline void add_boolean_nterm(Xapian::Document& doc, const std::string& term)
 {
-    if (term.size() && term.size() < n) {
+    if (term.size() && term.size() < XAPIAN_MAX_TERM_LENGTH) {
         doc.add_boolean_term(term);
     }
 }
@@ -1334,7 +1332,6 @@ struct xapian_db
 {
     std::string *paths;
     Xapian::Database *database; // all but version 4 databases
-    Xapian::Database *legacydbv4; // version 4 databases
     std::vector<Xapian::Database> *subdbs; // all database subdbs
     Xapian::Stem *default_stemmer;
     const Xapian::Stopper* default_stopper;
@@ -1351,7 +1348,6 @@ static int xapian_db_init(xapian_db_t *db)
     try {
         db->parser = new Xapian::QueryParser;
         db->parser->set_default_op(Xapian::Query::OP_AND);
-        db->parser->set_database(db->database ? *db->database : *db->legacydbv4);
         db->default_stemmer = new Xapian::Stem(new CyrusSearchStemmer);
         db->default_stopper = get_stopper("en");
 
@@ -1400,16 +1396,15 @@ EXPORTED int xapian_db_open(const char **paths, xapian_db_t **dbp)
             if (!db->db_versions)
                 db->db_versions = new std::set<int>;
             db->db_versions->insert(db_versions.begin(), db_versions.end());
-            // Databases with version 4 split indexing by doctype.
+            // Check for experimental v4 indexes, they were bogus.
             if (db_versions.find(4) != db_versions.end()) {
-                if (!db->legacydbv4) db->legacydbv4 = new Xapian::Database;
-                db->legacydbv4->add_database(subdb);
+                xsyslog(LOG_WARNING, "deprecated v4 index detected, "
+                        "search may return wrong results",
+                        "db=<%s>", thispath);
             }
-            // Databases with any but version 4 are regular dbs.
-            if (db_versions.size() > 1 || db_versions.find(4) == db_versions.end()) {
-                if (!db->database) db->database = new Xapian::Database;
-                db->database->add_database(subdb);
-            }
+            // Add database.
+            if (!db->database) db->database = new Xapian::Database;
+            db->database->add_database(subdb);
 
             // Xapian database has no API to access subdbs.
             if (!db->subdbs) db->subdbs = new std::vector<Xapian::Database>;
@@ -1419,7 +1414,7 @@ EXPORTED int xapian_db_open(const char **paths, xapian_db_t **dbp)
         }
         thispath = "(unknown)";
 
-        if (!db->database && !db->legacydbv4) {
+        if (!db->database) {
             r = IMAP_NOTFOUND;
             goto done;
         }
@@ -1470,7 +1465,6 @@ EXPORTED void xapian_db_close(xapian_db_t *db)
     if (!db) return;
     try {
         if (!db->dbw) delete db->database;
-        delete db->legacydbv4;
         delete db->parser;
         delete db->paths;
         delete db->db_versions;
@@ -1519,16 +1513,6 @@ EXPORTED int xapian_db_langstats(xapian_db_t *db, ptrarray_t* lstats,
 EXPORTED void xapian_query_add_stemmer(xapian_db_t *db, const char *iso_lang)
 {
     if (strcmp(iso_lang, "en")) db->stem_languages->insert(iso_lang);
-}
-
-int xapian_db_has_otherthan_v4_index(const xapian_db_t *db)
-{
-    return db->database != NULL;
-}
-
-int xapian_db_has_legacy_v4_index(const xapian_db_t *db)
-{
-    return db->legacydbv4 != NULL;
 }
 
 static Xapian::Query* query_new_textmatch(const xapian_db_t *db,
@@ -2058,17 +2042,16 @@ EXPORTED void xapian_query_free(xapian_query_t *qq)
 }
 
 EXPORTED int xapian_query_run(const xapian_db_t *db, const xapian_query_t *qq,
-                              int is_legacy,
                               int (*cb)(void *data, size_t n, void *rock), void *rock)
 {
     const Xapian::Query *query = (const Xapian::Query *)qq;
     void *data = NULL;
     size_t n = 0;
 
-    if ((is_legacy && !db->legacydbv4) || (!is_legacy && !db->database)) return 0;
+    if (!db->database) return 0;
 
     try {
-        Xapian::Database *database = is_legacy ? db->legacydbv4 : db->database;
+        Xapian::Database *database = db->database;
         Xapian::Enquire enquire(*database);
         enquire.set_query(*query);
         enquire.set_sort_by_value(0, false); // sort by cyrusid ascending

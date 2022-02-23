@@ -48,6 +48,7 @@
 
 #include "hash.h"
 #include "message.h"
+#include "parseaddr.h"
 #include "smtpclient.h"
 
 #define JMAP_SUBMISSION_HDR "Content-Description"
@@ -112,25 +113,71 @@ extern json_t *jmap_server_error(int r);
 extern char *jmap_encode_base64_nopad(const char *data, size_t len);
 extern char *jmap_decode_base64_nopad(const char *b64, size_t b64len);
 
-/* Decode the text in data of datalen bytes to UTF-8 to a C-string.
+/* Decode the text in data of datalen bytes to UTF-8.
  *
- * Attempt to detect the right character encoding if conversion to
+ * Attempts to detect the right character encoding if conversion to
  * UTF-8 yields any invalid or replacement characters.
+ * UTF-8 input with replacement characters is considered valid input.
  *
  * Parameters:
  * - charset indicates the presumed character encoding.
  * - encoding must be one of the encodings defined in charset.h
+ * - data points to the encoded bytes
+ * - datalen indicates the byte length of data
  * - confidence indicates the threshold for charset detection (0 to 1.0)
- * - val holds any allocated memory to which the return value points to
+ * - dst points to a buffer for the decoded output. The buffer is NOT
+ *   reset to allow for consecutive decoding.
  * - (optional) is_encoding_problem is set for invalid byte sequences
  *
- * The return value MAY point to data if data is a C-string and does not
- * contain invalid UTF-8 (but may contain replacement) characters.
  */
-extern const char *jmap_decode_to_utf8(const char *charset, int encoding,
-                                       const char *data, size_t datalen,
-                                       float confidence,
-                                       char **val,
-                                       int *is_encoding_problem);
+extern void jmap_decode_to_utf8(const char *charset, int encoding,
+                                const char *data, size_t datalen,
+                                float confidence,
+                                struct buf *buf,
+                                int *is_encoding_problem);
+
+extern const char *jmap_encode_rawdata_blobid(const char prefix,
+                                              const char *mboxid,
+                                              uint32_t uid,
+                                              const char *userid,
+                                              const char *subpart,
+                                              struct message_guid *guid,
+                                              struct buf *dst);
+extern int jmap_decode_rawdata_blobid(const char *blobid,
+                                      char **mboxidptr,
+                                      uint32_t *uidptr,
+                                      char **useridptr,
+                                      char **subpartptr,
+                                      struct message_guid *guid);
+
+enum header_form {
+    HEADER_FORM_UNKNOWN          = 0, /* MUST be zero so we can cast to void* */
+    HEADER_FORM_RAW              = 1 << 0,
+    HEADER_FORM_TEXT             = 1 << 1,
+    HEADER_FORM_DATE             = 1 << 2,
+    HEADER_FORM_URLS             = 1 << 3,
+    HEADER_FORM_MESSAGEIDS       = 1 << 4,
+    HEADER_FORM_ADDRESSES        = 1 << 5,
+    HEADER_FORM_GROUPEDADDRESSES = 1 << 6
+};
+
+extern json_t *jmap_header_as_raw(const char *raw);
+extern json_t *jmap_header_as_text(const char *raw);
+extern json_t *jmap_header_as_date(const char *raw);
+extern json_t *jmap_header_as_urls(const char *raw);
+extern json_t *jmap_header_as_messageids(const char *raw);
+extern json_t *jmap_header_as_addresses(const char *raw);
+extern json_t *jmap_header_as_groupedaddresses(const char *raw);
+extern json_t *jmap_emailaddresses_from_addr(struct address *addr,
+                                             enum header_form form);
+
+#define JMAP_BLOBID_SIZE 42
+extern void jmap_set_blobid(const struct message_guid *guid, char *buf);
+
+#define JMAP_EMAILID_SIZE 26
+extern void jmap_set_emailid(const struct message_guid *guid, char *buf);
+
+#define JMAP_THREADID_SIZE 18
+extern void jmap_set_threadid(conversation_id_t cid, char *buf);
 
 #endif /* JMAP_UTIL_H */

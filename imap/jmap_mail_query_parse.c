@@ -96,6 +96,20 @@ HIDDEN void jmap_email_filtercondition_parse(json_t *filter,
             }
             else {
                 switch (json_array_size(arg)) {
+                case 3:
+                    s = json_string_value(json_array_get(arg, 2));
+                    if (strcmpsafe(s, "equals") &&
+                        strcmpsafe(s, "startsWith") &&
+                        strcmpsafe(s, "endsWith") &&
+                        strcmpsafe(s, "contains")) {
+
+                        ctx->path_push_index(field, 2, s, ctx->rock);
+                        ctx->invalid_field(NULL, ctx->rock);
+                        ctx->path_pop(ctx->rock);
+                    }
+
+                    GCC_FALLTHROUGH
+
                 case 2:
                     s = json_string_value(json_array_get(arg, 1));
                     if (!s || !strlen(s)) {
@@ -174,7 +188,33 @@ HIDDEN void jmap_email_filtercondition_parse(json_t *filter,
             ctx->validate_field(field, arg, ctx->rock);
         }
         else {
-            ctx->invalid_field(field, ctx->rock);
+            // can just check for syntactical correctness
+            if (!strcmp(field, "inMailbox")) {
+                if (!json_is_string(arg)) {
+                    ctx->invalid_field(field, ctx->rock);
+                }
+            }
+            else if (!strcmp(field, "inMailboxOtherThan")) {
+                if (!json_is_array(arg)) {
+                    ctx->invalid_field(field, ctx->rock);
+                }
+            }
+            else if (!strcmp(field, "allInThreadHaveKeyword") ||
+                    !strcmp(field, "someInThreadHaveKeyword") ||
+                    !strcmp(field, "noneInThreadHaveKeyword")) {
+                if (!json_string_value(arg)) {
+                    ctx->invalid_field(field, ctx->rock);
+                }
+            }
+            else if (!strcmp(field, "hasKeyword") ||
+                    !strcmp(field, "notKeyword")) {
+                if (!json_string_value(arg)) {
+                    ctx->invalid_field(field, ctx->rock);
+                }
+            }
+            else {
+                ctx->invalid_field(field, ctx->rock);
+            }
         }
     }
 }

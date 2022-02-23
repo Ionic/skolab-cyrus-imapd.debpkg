@@ -525,7 +525,7 @@ Changes to the Cyrus IMAP Server Since Version 1.4
   “/var/ptclient/”. It is controlled by the “–with-statedir=DIR”
   option, which defaults to “/var”.
 
-* Bug fix: by using an certain address form, one could deliver to a
+* Bug fix: by using a certain address form, one could deliver to a
   user’s mailbox bypassing the ACL’s.
 
 * Bug fix: un-fold header lines when parsing for the ENVELOPE.

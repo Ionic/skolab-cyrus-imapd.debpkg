@@ -73,6 +73,12 @@
 #    are listed with ``<none>''.
 
 
+#  Acl_admin_implies_write
+#  -----------------------
+#    If enabled, any user with the admin ACL on a mailbox implicitly
+#    gets the ability to write to that mailbox as well. 
+#acl_admin_implies_write: 0
+
 #  Addressbookprefix
 #  -----------------
 #    The prefix for the addressbook mailboxes hierarchies.  The hierarchy
@@ -642,6 +648,12 @@
 #    than any sane message should have. 
 #boundary_limit: 1000
 
+#  Caldav_accept_invalid_rrules
+#  ----------------------------
+#    Accept invalid RRULEs (e.g. FREQ=WEEKLY;BYMONTHDAY=15)
+#    rather than rejecting them as errors. 
+#caldav_accept_invalid_rrules: 0
+
 #  Caldav_allowattach
 #  ------------------
 #    Enable managed attachments support on the CalDAV server. 
@@ -798,8 +810,8 @@
 
 #  Commandmintimer
 #  ---------------
-#    Time in seconds. Any imap command that takes longer than this
-#    time is logged. 
+#    Time in floating point seconds. Any imap command that takes longer than
+#    this time is logged. 
 #commandmintimer: <none>
 
 #  Configdirectory
@@ -938,6 +950,11 @@
 #    assumed. 
 #dav_lock_timeout: 20s
 
+#  Debug
+#  -----
+#    If enabled, allow syslog() to pass LOG_DEBUG messages. 
+#debug: 0
+
 #  Debug_command
 #  -------------
 #    Debug command to be used by processes started with -D option.  The string
@@ -946,6 +963,14 @@
 #    is the pid (integer) and the third is the service ID.
 #    Example: /usr/local/bin/gdb /usr/cyrus/bin/%s %d 
 #debug_command: <none>
+
+#  Debug_writefail_guid
+#  --------------------
+#    If set, any arriving message with this guid will fail as if the underlying
+#    disk write had failed, pretending to be a disk full condition.  This is
+#    mainly useful for regression testing certain edge case handling.
+#    Currently only implemented for replication uploads. 
+#debug_writefail_guid: <none>
 
 #  Defaultacl
 #  ----------
@@ -1123,7 +1148,7 @@
 #  Event_extra_params
 #  ------------------
 #    Space-separated list of extra parameters to add to any appropriated event. 
-#    Allowed values: bodyStructure, clientAddress, diskUsed, flagNames, messageContent, messageSize, messages, modseq, service, timestamp, uidnext, vnd.cmu.midset, vnd.cmu.unseenMessages, vnd.cmu.envelope, vnd.cmu.sessionId, vnd.cmu.mailboxACL, vnd.cmu.mbtype, vnd.cmu.davFilename, vnd.cmu.davUid, vnd.fastmail.clientId, vnd.fastmail.sessionId, vnd.fastmail.convExists, vnd.fastmail.convUnseen, vnd.fastmail.cid, vnd.fastmail.counters, vnd.cmu.emailid, vnd.cmu.threadid
+#    Allowed values: bodyStructure, clientAddress, diskUsed, flagNames, messageContent, messageSize, messages, modseq, service, timestamp, uidnext, vnd.cmu.midset, vnd.cmu.unseenMessages, vnd.cmu.envelope, vnd.cmu.sessionId, vnd.cmu.mailboxACL, vnd.cmu.mbtype, vnd.cmu.davFilename, vnd.cmu.davUid, vnd.fastmail.clientId, vnd.fastmail.sessionId, vnd.fastmail.convExists, vnd.fastmail.convUnseen, vnd.fastmail.cid, vnd.fastmail.counters, vnd.fastmail.jmapEmail, vnd.fastmail.jmapStates, vnd.cmu.emailid, vnd.cmu.threadid
 #event_extra_params: timestamp
 
 #  Event_groups
@@ -1204,11 +1229,6 @@
 #    hashing done on configuration directories.  This is recommended if
 #    one partition has a very bushy mailbox tree. 
 #hashimapspool: 0
-
-#  Debug
-#  -----
-#    If enabled, allow syslog() to pass LOG_DEBUG messages. 
-#debug: 0
 
 #  Hostname_mechs
 #  --------------
@@ -1330,6 +1350,60 @@
 #    is assumed. 
 #httptimeout: 5m
 
+#  Http_h2_altsvc
+#  --------------
+#    If set, HTTP/2 (over TLS) will be advertised as being available on the
+#    specified [host]:port. 
+#http_h2_altsvc: <none>
+
+#  Http_jwt_key_dir
+#  ----------------
+#    The absolute path to a directory containing one or more key files
+#    to authenticate JSON Web Tokens (RFC 7519) for HTTP connections.
+#    Keys for the following JWS algorithms are supported: "HS256",
+#    "HS384", "HS512", "RS256", "RS384", "RS512".
+
+#    A key file consists of one or more keys encoded in PEM format.
+#    RSA keys must be embedded between the lines
+#    "-----BEGIN PUBLIC KEY-----" and "-----END PUBLIC KEY-----"
+#    HMAC digest keys must be embedded between the lines
+#    "-----BEGIN HMAC KEY-----" and "-----END HMAC KEY-----",
+#    encoded in base64.
+#    Any lines before or after a PEM key definition are ignored,
+#    empty lines are ignored anywhere in the file.
+
+#    The JSON Web Token must be the value of the HTTP "Authorization" header,
+#    using the "Bearer" authentication scheme. The JWS Header must include the
+#    "alg" and "typ" parameter. A header with any other parameter is rejected.
+#    The JWS Payload must include the "sub" claim with the Cyrus user
+#    identifier as value. It may include the "iat" claim (see http_jwt_max_age).
+#    A payload with any other claim is rejected.
+
+#http_jwt_key_dir: <none>
+
+#  Http_jwt_max_age
+#  ----------------
+#    Defines the timespan in which a JSON Web Token is valid
+#    (see http_jwt_key). The value must be zero or positive.
+
+#    If non-zero, the timespan starts at the point in time specified in the
+#    "iat" claim of the JWS Payload and ends after the duration of this
+#    option value has passed. Tokens without an "iat" claim,
+#    or with an issue date in the future, are rejected. There is no leeway
+#    for clock skew.
+
+#    The zero value disables validation of the "iat" JWS claim.
+
+#http_jwt_max_age: 0s
+
+#  Icalendar_max_size
+#  ------------------
+#    Maximum allowed iCalendar size.
+#    If non-zero, CalDAV and JMAP will reject storage of resources whose
+#    iCalendar representation is larger than icalendar_max_size bytes.
+#    If set to 0, this will allow iCalendar resources of any size (the default). 
+#icalendar_max_size: 0
+
 #  Idlesocket
 #  ----------
 #    Unix domain socket that idled listens on. 
@@ -1405,6 +1479,20 @@
 #    cache email search results. 
 #jmap_emailsearch_db_path: <none>
 
+#  Jmap_querycache_max_age
+#  -----------------------
+#    The duration after which unused cached JMAP query results
+#    must be evicted from process memory. If non-zero, then the
+#    full result of the last query (before windowing) is stored
+#    in-memory. Subsequent queries with the same expression and
+#    query state can then page through the cached result.
+#    A zero value disables query result caching.
+#    #
+#    If no unit is specified, minutes is assumed.
+#    #
+#    This feature currently only is enabled for Email/query. 
+#jmap_querycache_max_age: 0m
+
 #  Jmap_preview_annot
 #  ------------------
 #    The name of the per-message annotation, if any, to store message
@@ -1448,6 +1536,14 @@
 #    The maximum byte length of dynamically generated message previews. Previews
 #    stored in jmap_preview_annot take precedence. 
 #jmap_preview_length: 64
+
+#  Jmap_max_catenate_items
+#  -----------------------
+#    The maximum number of items that can be catenated together by
+#    a JMAP Blob/set action.  Returned as the maxCatenateItems property
+#    value of the JMAP \"urn:ietf:params:jmap:blob\" capabilities object.
+#    Default value is 100. 
+#jmap_max_catenate_items: 100
 
 #  Jmap_max_size_upload
 #  --------------------
@@ -1534,6 +1630,15 @@
 #    If enabled, support non-standard JMAP extensions.  If not enabled,
 #    only IETF standard JMAP functionality is supported. 
 #jmap_nonstandard_extensions: 0
+
+#  Jmap_pushpoll
+#  -------------
+#    The interval for polling for changes on an EventSource connection or
+#    when push has been ennabled on a WebSocket channel.
+#    The minimum value is 1 second. A value of 0 will disable push.
+#    #
+#    If no unit is specified, seconds is assumed. 
+#jmap_pushpoll: 60s
 
 #  Jmap_set_has_attachment
 #  -----------------------
@@ -1989,6 +2094,12 @@
 #    that fills the entire 128 available slots.  Default is NULL, which is
 #    no flags.  Example: $Label1 $Label2 $Label3 NotSpam Spam 
 #mailbox_initial_flags: <none>
+
+#  Mailbox_legacy_dirs
+#  -------------------
+#    if enabled, new mailboxes without parents will be created with legacy paths.
+#    sub mailboxes of users will still inherit the parent legacy setting 
+#mailbox_legacy_dirs: 0
 
 #  Mailbox_maxmessages_addressbook
 #  -------------------------------
@@ -2712,8 +2823,7 @@
 
 #  Reverseuniqueids
 #  ----------------
-#    At startup time, ctl_cyrusdb -r will check this value and it
-#    will either add or remove reverse UNIQUEID pointers from mailboxes.db 
+#    Deprecated. No longer used 
 #reverseuniqueids: 1
 
 #  Rfc2046_strict
@@ -2953,6 +3063,14 @@
 #    of no value means search "forever" until other timeouts. 
 #search_maxtime: <none>
 
+#  Search_maxsize
+#  --------------
+#    The maximum size in kilobytes to index for each message part. Message
+#    contents that occur after this byte offset will not be indexed or
+#    search snippets generated from.
+#    Default is 4Mb. Xapian-only. 
+#search_maxsize: 4096
+
 #  Search_queryscan
 #  ----------------
 #    The minimum number of records require to do a direct scan of all G keys
@@ -3135,8 +3253,13 @@
 #    will continue to execute regardless of the extensions used.  This
 #    option has no effect on options that are disabled at compile time
 #    (e.g., "regex"). 
-#    Allowed values: fileinto, reject, vacation, vacation-seconds, notify, include, envelope, environment, body, relational, regex, subaddress, copy, date, index, imap4flags=imapflags, mailbox, mboxmetadata, servermetadata, variables, editheader, extlists, duplicate, ihave, fcc, special-use, redirect-dsn, redirect-deliverby, mailboxid, vnd.cyrus.log=x-cyrus-log, vnd.cyrus.jmapquery=x-cyrus-jmapquery, snooze=vnd.cyrus.snooze=x-cyrus-snooze
-#sieve_extensions: fileinto reject vacation vacation-seconds notify include envelope environment body relational regex subaddress copy date index imap4flags mailbox mboxmetadata servermetadata variables editheader extlists duplicate ihave fcc special-use redirect-dsn redirect-deliverby mailboxid vnd.cyrus.log vnd.cyrus.jmapquery snooze
+#    Allowed values: fileinto, reject, vacation, vacation-seconds, notify, include, envelope, environment, body, relational, regex, subaddress, copy, date, index, imap4flags=imapflags, mailbox, mboxmetadata, servermetadata, variables, editheader, extlists, duplicate, ihave, fcc, special-use, redirect-dsn, redirect-deliverby, mailboxid, vnd.cyrus.log=x-cyrus-log, vnd.cyrus.jmapquery=x-cyrus-jmapquery, vnd.cyrus.imip, snooze=vnd.cyrus.snooze=x-cyrus-snooze
+#sieve_extensions: fileinto reject vacation vacation-seconds notify include envelope environment body relational regex subaddress copy date index imap4flags mailbox mboxmetadata servermetadata variables editheader extlists duplicate ihave fcc special-use redirect-dsn redirect-deliverby mailboxid vnd.cyrus.log vnd.cyrus.jmapquery vnd.cyrus.imip snooze
+
+#  Sieve_folder
+#  ------------
+#    The name of the folder for storing Sieve scripts (#sieve) 
+#sieve_folder: #sieve
 
 #  Sieve_maxscriptsize
 #  -------------------
@@ -3316,6 +3439,14 @@
 #    extending that list in the future or adding your own
 #    if needed. 
 #specialuse_extra: <none>
+
+#  Specialuse_nochildren
+#  ---------------------
+#    Whitespace separated list of special-use attributes that may not contain
+#    child folders.  If set, mailboxes with any of these attributes may not
+#    have child folders created, and these attributes cannot be added to
+#    mailboxes that already have children.. 
+#specialuse_nochildren: <none>
 
 #  Specialuse_protect
 #  ------------------
@@ -3513,7 +3644,7 @@
 #    replica host.  Prefix with a channel name to only apply for that
 #    channel.  If not specified, and if sync_try_imap is set to "yes"
 #    (the default), then the replication client will first try "imap"
-#    (port 143) to check if imapd supports replication.  otherwise it
+#    (port 143) to check if imapd supports replication.  Otherwise it
 #    will default to "csync" (usually port 2005). 
 #sync_port: <none>
 
@@ -3522,6 +3653,20 @@
 #    The authentication realm to use when authenticating to a sync server.
 #    Prefix with a channel name to only apply for that channel 
 #sync_realm: <none>
+
+#  Sync_reconnect_maxwait
+#  ----------------------
+#    When a rolling sync_client cannot connect to the replica, it enters
+#    a retry loop with an exponential backoff between attempts.  This
+#    option sets the upper limit on that exponential backoff: no matter
+#    how long the replica has been down so far, sync_client will never
+#    wait longer than sync_reconnect_maxwait between retries.
+#    #
+#    If this is zero or negative, the backoff duration will be allowed
+#    to increase indefinitely (not recommended).
+#    #
+#    If no unit is specified, seconds is assumed. 
+#sync_reconnect_maxwait: 20m
 
 #  Sync_repeat_interval
 #  --------------------
@@ -3863,6 +4008,14 @@
 #    occur in mailbox names.  The default switched in 3.0 from off to on. 
 #unixhierarchysep: 1
 
+#  Vcard_max_size
+#  --------------
+#    Maximum allowed vCard size.
+#    If non-zero, CardDAV and JMAP will reject storage of contacts whose
+#    vCard representation is larger than vcard_max_size bytes.
+#    If set to 0, this will allow vCards of any size (the default). 
+#vcard_max_size: 0
+
 #  Virtdomains
 #  -----------
 #    Configure virtual domain support.
@@ -3900,6 +4053,16 @@
 #    See cyr_virusscan(8) for specification of the format of this file.
 #    If not specified, the builtin default template will be used. 
 #virusscan_notification_template: <none>
+
+#  Websocket_timeout
+#  -----------------
+#    Set the length of the HTTP server's inactivity autologout timer
+#    when a WebSocket channel has been established.
+#    The default is 30 minutes.  The minimum value is 0, which will
+#    disable WebSockets.
+#    #
+#    If no unit is specified, minutes is assumed. 
+#websocket_timeout: 30m
 
 #  Xbackup_enabled
 #  ---------------

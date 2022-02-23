@@ -143,7 +143,7 @@ extern int sievedebug;
     ENOTIFY = 349,
     ENCODEURL = 350,
     DENOTIFY = 351,
-    ID = 352,
+    NID = 352,
     ANY = 353,
     LOW = 354,
     NORMAL = 355,
@@ -178,14 +178,21 @@ extern int sievedebug;
     FCC = 384,
     MAILBOXID = 385,
     MAILBOXIDEXISTS = 386,
-    LOG = 387,
-    JMAPQUERY = 388,
-    SNOOZE = 389,
-    MAILBOX = 390,
-    ADDFLAGS = 391,
-    REMOVEFLAGS = 392,
-    WEEKDAYS = 393,
-    TZID = 394
+    SNOOZE = 387,
+    MAILBOX = 388,
+    ADDFLAGS = 389,
+    REMOVEFLAGS = 390,
+    WEEKDAYS = 391,
+    TZID = 392,
+    LOG = 393,
+    JMAPQUERY = 394,
+    PROCESSIMIP = 395,
+    INVITESONLY = 396,
+    UPDATESONLY = 397,
+    DELETECANCELED = 398,
+    CALENDARID = 399,
+    OUTCOME = 400,
+    ERRSTR = 401
   };
 #endif
 /* Tokens.  */
@@ -283,7 +290,7 @@ extern int sievedebug;
 #define ENOTIFY 349
 #define ENCODEURL 350
 #define DENOTIFY 351
-#define ID 352
+#define NID 352
 #define ANY 353
 #define LOW 354
 #define NORMAL 355
@@ -318,21 +325,28 @@ extern int sievedebug;
 #define FCC 384
 #define MAILBOXID 385
 #define MAILBOXIDEXISTS 386
-#define LOG 387
-#define JMAPQUERY 388
-#define SNOOZE 389
-#define MAILBOX 390
-#define ADDFLAGS 391
-#define REMOVEFLAGS 392
-#define WEEKDAYS 393
-#define TZID 394
+#define SNOOZE 387
+#define MAILBOX 388
+#define ADDFLAGS 389
+#define REMOVEFLAGS 390
+#define WEEKDAYS 391
+#define TZID 392
+#define LOG 393
+#define JMAPQUERY 394
+#define PROCESSIMIP 395
+#define INVITESONLY 396
+#define UPDATESONLY 397
+#define DELETECANCELED 398
+#define CALENDARID 399
+#define OUTCOME 400
+#define ERRSTR 401
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 
 union YYSTYPE
 {
-#line 178 "sieve/sieve.y" /* yacc.c:1921  */
+#line 179 "sieve/sieve.y" /* yacc.c:1921  */
 
     int nval;
     char *sval;
@@ -343,7 +357,7 @@ union YYSTYPE
     testlist_t *testl;
     commandlist_t *cl;
 
-#line 347 "sieve/sieve.h" /* yacc.c:1921  */
+#line 361 "sieve/sieve.h" /* yacc.c:1921  */
 };
 
 typedef union YYSTYPE YYSTYPE;

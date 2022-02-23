@@ -67,7 +67,6 @@
 #include "annotate.h"
 #include "acl.h"
 #include "append.h"
-#include "caldav_db.h"
 #include "dlist.h"
 #include "global.h"
 #include "http_dav.h"
@@ -112,7 +111,7 @@ static const struct dav_namespace_t {
     { XML_NS_SYSFLAG, "SF" },
 };
 
-const struct match_type_t dav_match_types[] = {
+static const struct match_type_t dav_match_types[] = {
     { "contains", MATCH_TYPE_CONTAINS },
     { "equals", MATCH_TYPE_EQUALS },
     { "starts-with", MATCH_TYPE_PREFIX },
@@ -120,7 +119,7 @@ const struct match_type_t dav_match_types[] = {
     { NULL, 0 }
 };
 
-const struct collation_t dav_collations[] = {
+static const struct collation_t dav_collations[] = {
     { "i;unicode-casemap", COLLATION_UNICODE },
     { "i;ascii-casemap", COLLATION_ASCII },
     { "i;octet", COLLATION_OCTET },
@@ -305,7 +304,6 @@ struct namespace_t namespace_principal = {
     /*mbtype */ 0,
     ALLOW_READ | ALLOW_DAV | ALLOW_PROPPATCH,
     &my_dav_init, NULL, NULL, &my_dav_shutdown, &dav_premethod,
-    /*bearer*/NULL,
     {
         { NULL,                 NULL },                 /* ACL          */
         { NULL,                 NULL },                 /* BIND         */
@@ -404,6 +402,7 @@ static const struct precond_t {
     { "supported-filter", NS_CALDAV },
     { "valid-filter", NS_CALDAV },
     { "supported-collation", NS_CALDAV },
+    { "max-resource-size", NS_CALDAV },
 
     /* RSCALE (RFC 7529) preconditions */
     { "supported-rscale", NS_CALDAV },
@@ -446,8 +445,34 @@ static const struct precond_t {
     { "no-uid-conflict", NS_CARDDAV },
     { "addressbook-collection-location-ok", NS_CARDDAV },
     { "supported-filter", NS_CARDDAV },
-    { "supported-collation", NS_CARDDAV }
+    { "supported-collation", NS_CARDDAV },
+    { "max-resource-size", NS_CARDDAV },
 };
+
+void dav_precond_as_string(struct buf *buf, struct error_t *err)
+{
+    const struct precond_t *precond = &preconds[err->precond];
+
+    switch (precond->ns) {
+    case NS_DAV:
+        buf_appendcstr(buf, "DAV:");
+        break;
+    case NS_CALDAV:
+        buf_appendcstr(buf, "CALDAV:");
+        break;
+    case NS_CARDDAV:
+        buf_appendcstr(buf, "CARDDAV:");
+        break;
+    case NS_ISCHED:
+        buf_appendcstr(buf, "ISCHED:");
+        break;
+    case NS_MECOM:
+        buf_appendcstr(buf, "MECOM:");
+        break;
+    }
+
+    buf_appendcstr(buf, precond->name);
+}
 
 
 /* Check ACL on userid's principal (Inbox): ACL_LOOKUP right gives access */
@@ -555,13 +580,18 @@ static int principal_parse_path(const char *path, struct request_target_t *tgt,
     }
 
   mailbox:
-    /* Create mailbox name from the parsed path */
-
     if (tgt->userid) {
-        /* Locate the mailbox */
-        char *mboxname = caldav_mboxname(tgt->userid, NULL);
-        int r = proxy_mlookup(mboxname, &tgt->mbentry, NULL, NULL);
+        /* Locate the home-set mailbox */
+        char *mboxname = NULL;
 
+        if (tgt->allow & ALLOW_CAL)
+            mboxname = mboxname_cal(tgt->userid, NULL);
+        else if (tgt->allow & ALLOW_CARD)
+            mboxname = mboxname_abook(tgt->userid, NULL);
+        else
+            mboxname = mboxname_drive(tgt->userid, NULL);
+
+        int r = proxy_mlookup(mboxname, &tgt->mbentry, NULL, NULL);
         if (r) {
             *resultstr = error_message(r);
             syslog(LOG_ERR, "mlookup(%s) failed: %s", mboxname, *resultstr);
@@ -783,7 +813,11 @@ HIDDEN int calcarddav_parse_path(const char *path,
         ret = mboxlist_createmailboxcheck(mboxname, 0, NULL, httpd_userisadmin,
                                           httpd_userid, httpd_authstate,
                                           NULL, NULL, 0 /* force */);
-        if (ret) goto done;
+        if (ret) {
+            if (ret == IMAP_MAILBOX_BADNAME)
+                *resultstr = "Invalid name.  Percent encoded HTTP URLs are in theory valid, but in practice not supported.";
+            goto done;
+	}
 
         tgt->allow |= ALLOW_MKCOL;
     }
@@ -828,45 +862,6 @@ HIDDEN int calcarddav_parse_path(const char *path,
     free(freeme);
 
     return ret;
-}
-
-
-EXPORTED int dav_get_validators(struct mailbox *mailbox, void *data,
-                                const char *userid __attribute__((unused)),
-                                struct index_record *record,
-                                const char **etag, time_t *lastmod)
-{
-    const struct dav_data *ddata = (const struct dav_data *) data;
-
-    memset(record, 0, sizeof(struct index_record));
-
-    if (!ddata->alive) {
-        /* New resource */
-        if (etag) *etag = NULL;
-        if (lastmod) *lastmod = 0;
-    }
-    else if (ddata->imap_uid) {
-        /* Mapped URL */
-        int r;
-
-        /* Fetch index record for the resource */
-        r = mailbox_find_index_record(mailbox, ddata->imap_uid, record);
-        if (r) {
-            syslog(LOG_ERR, "mailbox_find_index_record(%s, %u) failed: %s",
-                   mailbox->name, ddata->imap_uid, error_message(r));
-            return r;
-        }
-
-        if (etag) *etag = message_guid_encode(&record->guid);
-        if (lastmod) *lastmod = record->internaldate;
-    }
-    else {
-        /* Unmapped URL (empty resource) */
-        if (etag) *etag = NULL;
-        if (lastmod) *lastmod = ddata->creationdate;
-    }
-
-    return 0;
 }
 
 
@@ -972,7 +967,7 @@ static int eval_if(const char *hdr, struct meth_params *params,
                 if (!params->parse_path(uri->path, &tag_tgt, &err)) {
                     if (tag_tgt.mbentry && !tag_tgt.mbentry->server) {
                         if (tgt_mailbox &&
-                            !strcmp(tgt_mailbox->name, tag_tgt.mbentry->name)) {
+                            !strcmp(mailbox_name(tgt_mailbox), tag_tgt.mbentry->name)) {
                             /* Use target mailbox */
                             mailbox = tgt_mailbox;
                         }
@@ -1000,7 +995,7 @@ static int eval_if(const char *hdr, struct meth_params *params,
 
                                 /* Find message UID for the resource */
                                 params->davdb.lookup_resource(davdb,
-                                                              mailbox->name,
+                                                              tag_tgt.mbentry,
                                                               tag_tgt.resource,
                                                               (void **) &ddata,
                                                               0);
@@ -1022,7 +1017,7 @@ static int eval_if(const char *hdr, struct meth_params *params,
                                                    "failed to fetch record for"
                                                    " '%s':%u in tagged"
                                                    " If header: %s",
-                                                   mailbox->name,
+                                                   mailbox_name(mailbox),
                                                    ddata->imap_uid,
                                                    error_message(r));
                                         }
@@ -1250,11 +1245,14 @@ struct mime_type_t *get_accept_type(const char **hdr, struct mime_type_t *types)
             struct mime_type_t *m;
 
             for (m = types; !ret && m->content_type; m++) {
-                if (is_mediatype(e->token, m->content_type)) ret = m;
+                if (is_mediatype(e->token, m->content_type) &&
+                    (!e->version || !strcmpsafe(e->version, m->version))) {
+                    ret = m;
+                }
             }
         }
 
-        free(e->token);
+        free_accept(e);
     }
     if (enc) free(enc);
 
@@ -1633,8 +1631,8 @@ int xml_add_response(struct propfind_ctx *fctx, long code, unsigned precond,
             (fctx->mode == PROPFIND_ALL || fctx->mode == PROPFIND_NAME)) {
             struct allprop_rock arock = { fctx, propstat };
 
-            annotatemore_findall(fctx->mailbox->name, 0, "*", /*modseq*/0,
-                                 allprop_cb, &arock, /*flags*/0);
+            annotatemore_findall_mailbox(fctx->mailbox, 0, "*", /*modseq*/0,
+                                         allprop_cb, &arock, /*flags*/0);
         }
 
         /* Check if we have any propstat elements */
@@ -1790,7 +1788,7 @@ int propfind_creationdate(const xmlChar *name, xmlNsPtr ns,
     return 0;
 }
 
-/* Callback to write CALDAV:displayname for the principal */
+/* Callback to write DAV:displayname for the principal */
 int proppatch_principalname(xmlNodePtr prop, unsigned set,
                           struct proppatch_ctx *pctx,
                           struct propstat propstat[],
@@ -1804,7 +1802,7 @@ int proppatch_principalname(xmlNodePtr prop, unsigned set,
         char *mboxname = caldav_mboxname(pctx->txn->req_tgt.userid, NULL);
         int r = 0;
 
-        if (!mailbox || strcmp(mboxname, mailbox->name)) {
+        if (!mailbox || strcmp(mboxname, mailbox_name(mailbox))) {
             r = mailbox_open_iwl(mboxname, &calhomeset);
             if (!r) pctx->mailbox = calhomeset;
         }
@@ -1826,7 +1824,7 @@ int proppatch_principalname(xmlNodePtr prop, unsigned set,
 
     /* Make sure this is on a collection and the user has admin rights */
     if (pctx->txn->req_tgt.resource ||
-        !(cyrus_acl_myrights(httpd_authstate, pctx->mailbox->acl) & DACL_ADMIN)) {
+        !(cyrus_acl_myrights(httpd_authstate, mailbox_acl(pctx->mailbox)) & DACL_ADMIN)) {
         xml_add_prop(HTTP_FORBIDDEN, pctx->ns[NS_DAV],
                      &propstat[PROPSTAT_FORBID],
                      prop->name, prop->ns, NULL, 0);
@@ -2700,7 +2698,7 @@ int propfind_curprivset(const xmlChar *name, xmlNsPtr ns,
     if (fctx->userisadmin) {
         rights |= DACL_ADMIN;
     }
-    else if (mboxname_userownsmailbox(httpd_userid, fctx->mailbox->name)) {
+    else if (mboxname_userownsmailbox(httpd_userid, mailbox_name(fctx->mailbox))) {
         rights |= config_implicitrights;
         /* we always allow admin by the owner in DAV */
         rights |= DACL_ADMIN;
@@ -2758,7 +2756,7 @@ int propfind_acl(const xmlChar *name, xmlNsPtr ns,
     if (!fctx->mailbox) return HTTP_NOT_FOUND;
 
     /* owner has implicit admin rights */
-    if (!mboxname_userownsmailbox(httpd_userid, fctx->mailbox->name)) {
+    if (!mboxname_userownsmailbox(httpd_userid, mailbox_name(fctx->mailbox))) {
         int rights = httpd_myrights(fctx->authstate, fctx->mbentry);
         if (!(rights & DACL_ADMIN))
             return HTTP_UNAUTHORIZED;
@@ -2780,7 +2778,7 @@ int propfind_acl(const xmlChar *name, xmlNsPtr ns,
                        name, ns, NULL, 0);
 
     /* Parse the ACL string (userid/rights pairs) */
-    userid = aclstr = xstrdup(fctx->mailbox->acl);
+    userid = aclstr = xstrdupnull(mailbox_acl(fctx->mailbox));
 
     while (userid) {
         int rights;
@@ -2811,7 +2809,7 @@ int propfind_acl(const xmlChar *name, xmlNsPtr ns,
         node = xmlNewChild(ace, NULL, BAD_CAST "principal", NULL);
         if (!strcmp(userid, fctx->userid))
             xmlNewChild(node, NULL, BAD_CAST "self", NULL);
-        else if (mboxname_userownsmailbox(userid, fctx->mailbox->name)) {
+        else if (mboxname_userownsmailbox(userid, mailbox_name(fctx->mailbox))) {
             xmlNewChild(node, NULL, BAD_CAST "owner", NULL);
             /* we always allow admin by the owner in DAV */
             rights |= DACL_ADMIN;
@@ -2900,11 +2898,12 @@ EXPORTED int propfind_quota(const xmlChar *name, xmlNsPtr ns,
                             void *rock __attribute__((unused)))
 {
     static char prevroot[MAX_MAILBOX_BUFFER];
-    char foundroot[MAX_MAILBOX_BUFFER], *qr = NULL;
+    char foundroot[MAX_MAILBOX_BUFFER];
+    const char *qr = NULL;
 
     if (fctx->mailbox) {
         /* Use the quotaroot as specified in mailbox header */
-        qr = fctx->mailbox->quotaroot;
+        qr = mailbox_quotaroot(fctx->mailbox);
     }
     else if (fctx->req_tgt->mbentry) {
         /* Find the quotaroot governing this hierarchy */
@@ -3254,7 +3253,7 @@ static int propfind_fromresource(const xmlChar *name, xmlNsPtr ns,
     buf_printf(&fctx->buf, DAV_ANNOT_NS "<%s>%s",
                (const char *) ns->href, name);
 
-    r = annotatemore_msg_lookup(fctx->mailbox->name, fctx->record->uid,
+    r = annotatemore_msg_lookup(fctx->mailbox, fctx->record->uid,
                                 buf_cstring(&fctx->buf), NULL, &attrib);
 
 done:
@@ -3295,9 +3294,9 @@ int propfind_fromdb(const xmlChar *name, xmlNsPtr ns,
                (const char *) ns->href, name);
 
     if (fctx->mbentry && !fctx->record) {
-        r = annotatemore_lookupmask(fctx->mbentry->name,
-                                    buf_cstring(&fctx->buf),
-                                    httpd_userid, &attrib);
+        r = annotatemore_lookupmask_mbe(fctx->mbentry,
+                                        buf_cstring(&fctx->buf),
+                                        httpd_userid, &attrib);
     }
 
     if (r) return HTTP_SERVER_ERROR;
@@ -3375,7 +3374,7 @@ static int allprop_cb(const char *mailbox __attribute__((unused)),
     xmlNsPtr ns;
     xmlNodePtr node;
 
-    /* Make sure its a shared entry or the user's private one */
+    /* Make sure it is a shared entry or the user's private one */
     if (userid && *userid && strcmp(userid, arock->fctx->userid)) return 0;
 
     /* Split entry into namespace href and name ( <href>name ) */
@@ -3821,7 +3820,7 @@ int meth_acl(struct transaction_t *txn, void *params)
 
     /* Make sure method is allowed (only allowed on collections) */
     if (!(txn->req_tgt.allow & ALLOW_ACL)) {
-        txn->error.desc = "ACLs can only be set on collections\r\n";
+        txn->error.desc = "ACLs can only be set on collections";
         syslog(LOG_DEBUG, "Tried to set ACL on non-collection");
         return HTTP_NOT_ALLOWED;
     }
@@ -3855,14 +3854,14 @@ int meth_acl(struct transaction_t *txn, void *params)
     /* Parse the ACL body */
     ret = parse_xml_body(txn, &root, NULL);
     if (!ret && !root) {
-        txn->error.desc = "Missing request body\r\n";
+        txn->error.desc = "Missing request body";
         ret = HTTP_BAD_REQUEST;
     }
     if (ret) goto done;
 
     indoc = root->doc;
 
-    /* Make sure its an DAV:acl element */
+    /* Make sure it is a DAV:acl element */
     if (!root->ns || xmlStrcmp(root->ns->href, BAD_CAST XML_NS_DAV) ||
         xmlStrcmp(root->name, BAD_CAST "acl")) {
         txn->error.desc = "Missing DAV:acl element in ACL request";
@@ -3894,7 +3893,7 @@ int meth_acl(struct transaction_t *txn, void *params)
                 if (child->type == XML_ELEMENT_NODE) {
                     if (!xmlStrcmp(child->name, BAD_CAST "principal")) {
                         if (prin) {
-                            txn->error.desc = "Multiple principals in ACE\r\n";
+                            txn->error.desc = "Multiple principals in ACE";
                             ret = HTTP_BAD_REQUEST;
                             goto done;
                         }
@@ -3902,14 +3901,14 @@ int meth_acl(struct transaction_t *txn, void *params)
                         for (prin = child->children; prin &&
                              prin->type != XML_ELEMENT_NODE; prin = prin->next);
                         if (!prin) {
-                            txn->error.desc = "Empty principal in ACE\r\n";
+                            txn->error.desc = "Empty principal in ACE";
                             ret = HTTP_BAD_REQUEST;
                             goto done;
                         }
                     }
                     else if (!xmlStrcmp(child->name, BAD_CAST "grant")) {
                         if (privs) {
-                            txn->error.desc = "Multiple grant|deny in ACE\r\n";
+                            txn->error.desc = "Multiple grant|deny in ACE";
                             ret = HTTP_BAD_REQUEST;
                             goto done;
                         }
@@ -3919,7 +3918,7 @@ int meth_acl(struct transaction_t *txn, void *params)
                     }
                     else if (!xmlStrcmp(child->name, BAD_CAST "deny")) {
                         if (privs) {
-                            txn->error.desc = "Multiple grant|deny in ACE\r\n";
+                            txn->error.desc = "Multiple grant|deny in ACE";
                             ret = HTTP_BAD_REQUEST;
                             goto done;
                         }
@@ -3935,7 +3934,7 @@ int meth_acl(struct transaction_t *txn, void *params)
                         goto done;
                     }
                     else {
-                        txn->error.desc = "Unknown element in ACE\r\n";
+                        txn->error.desc = "Unknown element in ACE";
                         ret = HTTP_BAD_REQUEST;
                         goto done;
                     }
@@ -4132,8 +4131,8 @@ int meth_acl(struct transaction_t *txn, void *params)
     }
 
     r = mboxlist_sync_setacls(txn->req_tgt.mbentry->name, buf_cstring(&acl), mailbox_modseq_dirty(mailbox));
-    if (!r) r = mailbox_set_acl(mailbox, buf_cstring(&acl));
     if (!r) {
+        mailbox_set_acl(mailbox, buf_cstring(&acl));
         char *userid = mboxname_to_userid(txn->req_tgt.mbentry->name);
         r = caldav_update_shareacls(userid);
         free(userid);
@@ -4659,7 +4658,7 @@ int meth_copy_move(struct transaction_t *txn, void *params)
     src_davdb = cparams->davdb.open_db(src_mbox);
 
     /* Find message UID for the source resource */
-    cparams->davdb.lookup_resource(src_davdb, txn->req_tgt.mbentry->name,
+    cparams->davdb.lookup_resource(src_davdb, txn->req_tgt.mbentry,
                                    txn->req_tgt.resource,
                                    (void **) &ddata, 0);
     if (!ddata->rowid) {
@@ -4734,7 +4733,7 @@ int meth_copy_move(struct transaction_t *txn, void *params)
     }
 
     /* Find message UID for the dest resource, if exists */
-    cparams->davdb.lookup_resource(dest_davdb, dest_tgt.mbentry->name,
+    cparams->davdb.lookup_resource(dest_davdb, dest_tgt.mbentry,
                                    dest_tgt.resource, (void **) &ddata, 0);
     /* XXX  Check errors */
 
@@ -4845,9 +4844,11 @@ static int meth_delete_collection(struct transaction_t *txn,
     /* if FastMail sharing, we need to remove ACLs */
     if (config_getswitch(IMAPOPT_FASTMAILSHARING) &&
         !mboxname_userownsmailbox(httpd_userid, txn->req_tgt.mbentry->name)) {
+        struct mboxlock *namespacelock = mboxname_usernamespacelock(txn->req_tgt.mbentry->name);
         r = mboxlist_setacl(&httpd_namespace, txn->req_tgt.mbentry->name,
                             httpd_userid, /*rights*/NULL, /*isadmin*/1,
                             httpd_userid, httpd_authstate);
+        mboxname_release(&namespacelock);
         if (r) {
             syslog(LOG_ERR, "meth_delete(%s) failed to remove acl: %s",
                    txn->req_tgt.mbentry->name, error_message(r));
@@ -4988,7 +4989,7 @@ static int meth_delete_collection(struct transaction_t *txn,
         void *davdb = dparams->davdb.open_db(mailbox);
 
         drock.mailbox = mailbox;
-        r = dparams->davdb.foreach_resource(davdb, mailbox->name,
+        r = dparams->davdb.foreach_resource(davdb, txn->req_tgt.mbentry,
                                             &delete_cb, &drock);
         dparams->davdb.close_db(davdb);
 
@@ -5089,7 +5090,7 @@ static int meth_delete_resource(struct transaction_t *txn,
     davdb = dparams->davdb.open_db(mailbox);
 
     /* Find message UID for the resource, if exists */
-    dparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry->name,
+    dparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry,
                                    txn->req_tgt.resource, (void **) &ddata, 0);
     if (!ddata->rowid) {
         ret = HTTP_NOT_FOUND;
@@ -5207,19 +5208,11 @@ int meth_get_head(struct transaction_t *txn, void *params)
     r = dav_parse_req_target(txn, gparams);
     if (r) return r;
 
-    if (txn->req_tgt.namespace->id == URL_NS_PRINCIPAL) {
-        /* Special "principal" */
-        if (txn->req_tgt.flags == TGT_SERVER_INFO) return get_server_info(txn);
+    /* Special "principal" */
+    if (txn->req_tgt.flags == TGT_SERVER_INFO) return get_server_info(txn);
 
-        /* No content for principals (yet) */
-        return HTTP_NO_CONTENT;
-    }
-
-    if (!txn->req_tgt.resource) {
-        /* Do any collection processing */
-        if (gparams->get) return gparams->get(txn, NULL, NULL, NULL, NULL);
-
-        /* We don't handle GET on a collection */
+    if (!txn->req_tgt.mbentry) {
+        /* No content for non-mailbox URLs (yet) */
         return HTTP_NO_CONTENT;
     }
 
@@ -5240,6 +5233,14 @@ int meth_get_head(struct transaction_t *txn, void *params)
             mime = get_accept_type(hdr, gparams->mime_types);
         else mime = gparams->mime_types;
         if (!mime) return HTTP_NOT_ACCEPTABLE;
+    }
+
+    if (!txn->req_tgt.resource) {
+        /* Do any collection processing */
+        if (gparams->get) return gparams->get(txn, NULL, NULL, NULL, NULL, mime);
+
+        /* We don't handle GET on a collection */
+        return HTTP_NO_CONTENT;
     }
 
     if (txn->req_tgt.mbentry->server) {
@@ -5268,7 +5269,7 @@ int meth_get_head(struct transaction_t *txn, void *params)
     davdb = gparams->davdb.open_db(mailbox);
 
     /* Find message UID for the resource */
-    gparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry->name,
+    gparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry,
                                    txn->req_tgt.resource, (void **) &ddata, 0);
     if (!ddata->rowid) {
         ret = HTTP_NOT_FOUND;
@@ -5313,7 +5314,7 @@ int meth_get_head(struct transaction_t *txn, void *params)
 
     /* Do any special processing */
     if (gparams->get) {
-        ret = gparams->get(txn, mailbox, &record, ddata, &obj);
+        ret = gparams->get(txn, mailbox, &record, ddata, &obj, mime);
         if (ret != HTTP_CONTINUE) goto done;
 
         ret = 0;
@@ -5449,7 +5450,7 @@ int meth_lock(struct transaction_t *txn, void *params)
     lparams->davdb.begin_transaction(davdb);
 
     /* Find message UID for the resource, if exists */
-    lparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry->name,
+    lparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry,
                                    txn->req_tgt.resource, (void *) &ddata, 1);
 
     /* Fetch resource validators */
@@ -5464,7 +5465,8 @@ int meth_lock(struct transaction_t *txn, void *params)
     if (!ddata->alive) {
         /* New resource */
         ddata->creationdate = now;
-        ddata->mailbox = mailbox->name;
+        ddata->mailbox =
+            ddata->mailbox_byname ? mailbox_name(mailbox) : mailbox_uniqueid(mailbox);
         ddata->resource = txn->req_tgt.resource;
         ddata->imap_uid = 0;
         ddata->lock_expire = 0;
@@ -5506,7 +5508,7 @@ int meth_lock(struct transaction_t *txn, void *params)
         }
         if (ret) goto done;
 
-        /* Make sure its a DAV:lockinfo element */
+        /* Make sure it is a DAV:lockinfo element */
         indoc = root->doc;
         if (!root->ns || xmlStrcmp(root->ns->href, BAD_CAST XML_NS_DAV) ||
             xmlStrcmp(root->name, BAD_CAST "lockinfo")) {
@@ -5523,7 +5525,7 @@ int meth_lock(struct transaction_t *txn, void *params)
                 /* Find child element of lockscope */
                 for (sub = node->children;
                      sub && sub->type != XML_ELEMENT_NODE; sub = sub->next);
-                /* Make sure its an exclusive element */
+                /* Make sure it is an exclusive element */
                 if (!sub || xmlStrcmp(sub->name, BAD_CAST "exclusive")) {
                     txn->error.desc = "Only exclusive locks are supported";
                     ret = HTTP_BAD_REQUEST;
@@ -5534,7 +5536,7 @@ int meth_lock(struct transaction_t *txn, void *params)
                 /* Find child element of locktype */
                 for (sub = node->children;
                      sub && sub->type != XML_ELEMENT_NODE; sub = sub->next);
-                /* Make sure its a write element */
+                /* Make sure it is a write element */
                 if (!sub || xmlStrcmp(sub->name, BAD_CAST "write")) {
                     txn->error.desc = "Only write locks are supported";
                     ret = HTTP_BAD_REQUEST;
@@ -5549,7 +5551,7 @@ int meth_lock(struct transaction_t *txn, void *params)
                 if (!sub) {
                     xmlNodeBufGetContent(owner, node);
                 }
-                /* Make sure its a href element */
+                /* Make sure it is a href element */
                 else if (xmlStrcmp(sub->name, BAD_CAST "href")) {
                     ret = HTTP_BAD_REQUEST;
                     goto done;
@@ -5577,7 +5579,7 @@ int meth_lock(struct transaction_t *txn, void *params)
     /* Start construction of our prop response */
     if (!(root = init_xml_response("prop", NS_DAV, root, ns))) {
         ret = HTTP_SERVER_ERROR;
-        txn->error.desc = "Unable to create XML response\r\n";
+        txn->error.desc = "Unable to create XML response";
         goto done;
     }
 
@@ -5641,6 +5643,7 @@ int meth_mkcol(struct transaction_t *txn, void *params)
     char *partition = NULL;
     struct proppatch_ctx pctx;
     struct mailbox *mailbox = NULL;
+    struct mboxlock *namespacelock = NULL;
 
     memset(&pctx, 0, sizeof(struct proppatch_ctx));
 
@@ -5726,16 +5729,17 @@ int meth_mkcol(struct transaction_t *txn, void *params)
         instr = root->children;
     }
 
-    struct mboxlock *namespacelock = mboxname_usernamespacelock(txn->req_tgt.mbentry->name);
+    namespacelock = mboxname_usernamespacelock(txn->req_tgt.mbentry->name);
 
     /* Create the mailbox */
-    r = mboxlist_createmailbox(txn->req_tgt.mbentry->name,
-                               mparams->mkcol.mbtype, partition,
+    mbentry_t mbentry = MBENTRY_INITIALIZER;
+    mbentry.name = txn->req_tgt.mbentry->name;
+    mbentry.mbtype = mparams->mkcol.mbtype;
+    mbentry.partition = partition;
+    r = mboxlist_createmailbox(&mbentry, 0/*options*/, 0/*highestmodseq*/,
                                httpd_userisadmin || httpd_userisproxyadmin,
                                httpd_userid, httpd_authstate,
-                               /*localonly*/0, /*forceuser*/0,
-                               /*dbonly*/0, /*notify*/0,
-                               &mailbox);
+                               0/*flags*/, &mailbox);
 
     if (instr && !r) {
         /* Start construction of our mkcol/mkcalendar response */
@@ -5744,7 +5748,7 @@ int meth_mkcol(struct transaction_t *txn, void *params)
         buf_reset(&txn->buf);
         if (!root) {
             ret = HTTP_SERVER_ERROR;
-            txn->error.desc = "Unable to create XML response\r\n";
+            txn->error.desc = "Unable to create XML response";
             mboxname_release(&namespacelock);
             goto done;
         }
@@ -5786,7 +5790,6 @@ int meth_mkcol(struct transaction_t *txn, void *params)
             goto done;
         }
     }
-    mboxname_release(&namespacelock);
 
     if (!r) {
         if (mparams->mkcol.proc) r = mparams->mkcol.proc(mailbox);
@@ -5809,6 +5812,7 @@ int meth_mkcol(struct transaction_t *txn, void *params)
   done:
     buf_free(&pctx.buf);
     mailbox_close(&mailbox);
+    mboxname_release(&namespacelock);
 
     sync_checkpoint(txn->conn->pin);
 
@@ -5899,7 +5903,7 @@ static int propfind_by_resources(struct propfind_ctx *fctx)
         struct dav_data *ddata;
 
         /* Find message UID for the resource */
-        fctx->lookup_resource(fctx->davdb, fctx->mailbox->name,
+        fctx->lookup_resource(fctx->davdb, fctx->mbentry,
                               fctx->req_tgt->resource, (void **) &ddata, 0);
         if (!ddata->rowid) {
             /* Add response for missing target */
@@ -5910,7 +5914,7 @@ static int propfind_by_resources(struct propfind_ctx *fctx)
     }
     else {
         /* Add responses for all contained resources */
-        fctx->foreach_resource(fctx->davdb, fctx->mailbox->name,
+        fctx->foreach_resource(fctx->davdb, fctx->mbentry,
                                fctx->proc_by_resource, fctx);
 
         /* Started with NULL resource, end with NULL resource */
@@ -5990,7 +5994,8 @@ int propfind_by_collection(const mbentry_t *mbentry, void *rock)
     if ((rights & fctx->reqd_privs) != fctx->reqd_privs) goto done;
 
     /* We only match known types */
-    if (!(mbentry->mbtype & fctx->req_tgt->namespace->mboxtype)) goto done;
+    if (mbtype_isa(mbentry->mbtype) !=
+        fctx->req_tgt->namespace->mboxtype) goto done;
 
     p = strrchr(mboxname, '.');
     if (!p) goto done;
@@ -6139,7 +6144,7 @@ EXPORTED int meth_propfind(struct transaction_t *txn, void *params)
         depth = 0;
     }
     else {
-        txn->error.desc = "Illegal Depth value\r\n";
+        txn->error.desc = "Illegal Depth value";
         return HTTP_BAD_REQUEST;
     }
 
@@ -6185,7 +6190,7 @@ EXPORTED int meth_propfind(struct transaction_t *txn, void *params)
     else {
         indoc = root->doc;
 
-        /* Make sure its a DAV:propfind element */
+        /* Make sure it is a DAV:propfind element */
         if (!root->ns || xmlStrcmp(root->ns->href, BAD_CAST XML_NS_DAV) ||
             xmlStrcmp(root->name, BAD_CAST "propfind")) {
             txn->error.desc = "Missing DAV:propfind element in PROPFIND request";
@@ -6207,7 +6212,7 @@ EXPORTED int meth_propfind(struct transaction_t *txn, void *params)
         spool_cache_header(xstrdup(":type"), xstrdup((const char *) cur->name),
                            txn->req_hdrs);
 
-        /* Make sure its a known element */
+        /* Make sure it is a known element */
         if (!xmlStrcmp(cur->name, BAD_CAST "allprop")) {
             fctx.mode = PROPFIND_ALL;
         }
@@ -6496,14 +6501,14 @@ int meth_proppatch(struct transaction_t *txn, void *params)
     /* Parse the PROPPATCH body */
     ret = parse_xml_body(txn, &root, NULL);
     if (!ret && !root) {
-        txn->error.desc = "Missing request body\r\n";
+        txn->error.desc = "Missing request body";
         ret = HTTP_BAD_REQUEST;
     }
     if (ret) goto done;
 
     indoc = root->doc;
 
-    /* Make sure its a DAV:propertyupdate element */
+    /* Make sure it is a DAV:propertyupdate element */
     if (!root->ns || xmlStrcmp(root->ns->href, BAD_CAST XML_NS_DAV) ||
         xmlStrcmp(root->name, BAD_CAST "propertyupdate")) {
         txn->error.desc =
@@ -6515,7 +6520,7 @@ int meth_proppatch(struct transaction_t *txn, void *params)
 
     /* Start construction of our multistatus response */
     if (!(root = init_xml_response("multistatus", NS_DAV, root, ns))) {
-        txn->error.desc = "Unable to create XML response\r\n";
+        txn->error.desc = "Unable to create XML response";
         ret = HTTP_SERVER_ERROR;
         goto done;
     }
@@ -6544,7 +6549,7 @@ int meth_proppatch(struct transaction_t *txn, void *params)
         davdb = pparams->davdb.open_db(mailbox);
 
         /* Find message UID for the resource */
-        pparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry->name,
+        pparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry,
                                        txn->req_tgt.resource, (void **) &ddata, 0);
         if (!ddata->imap_uid) {
             ret = HTTP_NOT_FOUND;
@@ -6919,7 +6924,7 @@ int meth_patch(struct transaction_t *txn, void *params)
     davdb = pparams->davdb.open_db(mailbox);
 
     /* Find message UID for the resource */
-    pparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry->name,
+    pparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry,
                                    txn->req_tgt.resource, (void *) &ddata, 0);
     if (!ddata->imap_uid) {
         ret = HTTP_NOT_FOUND;
@@ -7097,7 +7102,7 @@ int meth_put(struct transaction_t *txn, void *params)
     }
 
     /* Make sure mailbox type is correct */
-    if (txn->req_tgt.mbentry->mbtype != txn->req_tgt.namespace->mboxtype)
+    if (mbtype_isa(txn->req_tgt.mbentry->mbtype) != txn->req_tgt.namespace->mboxtype)
         return HTTP_FORBIDDEN;
 
     /* Make sure Content-Range isn't specified */
@@ -7174,7 +7179,7 @@ int meth_put(struct transaction_t *txn, void *params)
     davdb = pparams->davdb.open_db(mailbox);
 
     /* Find message UID for the resource, if exists */
-    pparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry->name,
+    pparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry,
                                    txn->req_tgt.resource, (void *) &ddata, 0);
     /* XXX  Check errors */
 
@@ -7220,7 +7225,8 @@ int meth_put(struct transaction_t *txn, void *params)
             txn->resp_body.lastmod = lastmod;
 
             if (pparams->get) {
-                r = pparams->get(txn, mailbox, &oldrecord, (void *) ddata, &obj);
+                r = pparams->get(txn, mailbox, &oldrecord,
+                                 (void *) ddata, &obj, mime);
                 if (r != HTTP_CONTINUE) flags &= ~PREFER_REP;
             }
             else {
@@ -7371,7 +7377,7 @@ int report_multiget(struct transaction_t *txn, struct meth_params *rparams,
             fctx->mbentry = tgt.mbentry;
 
             /* Check if we already have this mailbox open */
-            if (!mailbox || strcmp(mailbox->name, tgt.mbentry->name)) {
+            if (!mailbox || strcmp(mailbox_name(mailbox), tgt.mbentry->name)) {
                 if (mailbox) mailbox_close(&mailbox);
 
                 /* Open mailbox for reading */
@@ -7397,7 +7403,7 @@ int report_multiget(struct transaction_t *txn, struct meth_params *rparams,
             fctx->davdb = rparams->davdb.open_db(fctx->mailbox);
 
             /* Find message UID for the resource */
-            rparams->davdb.lookup_resource(fctx->davdb, tgt.mbentry->name,
+            rparams->davdb.lookup_resource(fctx->davdb, fctx->mbentry,
                                            tgt.resource, (void **) &ddata, 0);
             ddata->resource = tgt.resource;
             /* XXX  Check errors */
@@ -7619,7 +7625,7 @@ int report_sync_col(struct transaction_t *txn, struct meth_params *rparams,
     struct updates_rock rock = { fctx, rparams->get_modseq, limit,
                                  syncmodseq, basemodseq, &respmodseq, &nresp };
 
-    r = rparams->davdb.foreach_update(fctx->davdb, syncmodseq, mailbox->name,
+    r = rparams->davdb.foreach_update(fctx->davdb, syncmodseq, fctx->mbentry,
                                       -1 /* ALL kinds of resources */,
                                       (syncmodseq && basemodseq) ? 0 : limit + 1,
                                       &updates_cb, &rock);
@@ -7952,8 +7958,10 @@ static int report_prin_prop_search(struct transaction_t *txn,
 
                                     for (entry = prin_search_props;
                                          entry->name &&
+                                            (xmlStrcmp(fctx->ns[entry->ns]->href,
+                                                       prop->ns->href) ||
                                              xmlStrcmp(prop->name,
-                                                       BAD_CAST entry->name);
+                                                       BAD_CAST entry->name));
                                          entry++);
 
                                     if (!entry->name) {
@@ -8101,7 +8109,7 @@ int meth_report(struct transaction_t *txn, void *params)
             depth = 2;
         }
         else if ((sscanf(hdr[0], "%u", &depth) != 1) || (depth > 1)) {
-            txn->error.desc = "Illegal Depth value\r\n";
+            txn->error.desc = "Illegal Depth value";
             return HTTP_BAD_REQUEST;
         }
     }
@@ -8109,7 +8117,7 @@ int meth_report(struct transaction_t *txn, void *params)
     /* Parse the REPORT body */
     ret = parse_xml_body(txn, &inroot, NULL);
     if (!ret && !inroot) {
-        txn->error.desc = "Missing request body\r\n";
+        txn->error.desc = "Missing request body";
         return HTTP_BAD_REQUEST;
     }
     if (ret) goto done;
@@ -8224,7 +8232,7 @@ int meth_report(struct transaction_t *txn, void *params)
     /* Start construction of our multistatus response */
     if (report->resp_root &&
         !(outroot = init_xml_response(report->resp_root, NS_DAV, inroot, ns))) {
-        txn->error.desc = "Unable to create XML response\r\n";
+        txn->error.desc = "Unable to create XML response";
         ret = HTTP_SERVER_ERROR;
         goto done;
     }
@@ -8363,7 +8371,7 @@ int meth_unlock(struct transaction_t *txn, void *params)
     lparams->davdb.begin_transaction(davdb);
 
     /* Find message UID for the resource, if exists */
-    lparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry->name,
+    lparams->davdb.lookup_resource(davdb, txn->req_tgt.mbentry,
                                    txn->req_tgt.resource, (void **) &ddata, 0);
     if (!ddata->rowid) {
         ret = HTTP_NOT_FOUND;
@@ -8443,214 +8451,6 @@ int meth_unlock(struct transaction_t *txn, void *params)
         lparams->davdb.close_db(davdb);
     }
     mailbox_close(&mailbox);
-
-    return ret;
-}
-
-
-int dav_store_resource(struct transaction_t *txn,
-                       const char *data, size_t datalen,
-                       struct mailbox *mailbox, struct index_record *oldrecord,
-                       modseq_t createdmodseq, strarray_t *imapflags)
-{
-    int ret = HTTP_CREATED, r;
-    hdrcache_t hdrcache = txn->req_hdrs;
-    struct stagemsg *stage;
-    FILE *f = NULL;
-    const char **hdr, *cte;
-    quota_t qdiffs[QUOTA_NUMRESOURCES] = QUOTA_DIFFS_DONTCARE_INITIALIZER;
-    time_t now = time(NULL);
-    struct appendstate as;
-
-    /* Prepare to stage the message */
-    if (!(f = append_newstage(mailbox->name, now, 0, &stage))) {
-        syslog(LOG_ERR, "append_newstage(%s) failed", mailbox->name);
-        txn->error.desc = "append_newstage() failed\r\n";
-        return HTTP_SERVER_ERROR;
-    }
-
-    /* Create RFC 5322 header for resource */
-    if ((hdr = spool_getheader(hdrcache, "User-Agent"))) {
-        fprintf(f, "User-Agent: %s\r\n", hdr[0]);
-    }
-
-    if ((hdr = spool_getheader(hdrcache, "From"))) {
-        fprintf(f, "From: %s\r\n", hdr[0]);
-    }
-    else {
-        char *mimehdr;
-
-        assert(!buf_len(&txn->buf));
-        if (strchr(httpd_userid, '@')) {
-            /* XXX  This needs to be done via an LDAP/DB lookup */
-            buf_printf(&txn->buf, "<%s>", httpd_userid);
-        }
-        else {
-            buf_printf(&txn->buf, "<%s@%s>", httpd_userid, config_servername);
-        }
-
-        mimehdr = charset_encode_mimeheader(buf_cstring(&txn->buf),
-                                            buf_len(&txn->buf), 0);
-        fprintf(f, "From: %s\r\n", mimehdr);
-        free(mimehdr);
-        buf_reset(&txn->buf);
-    }
-
-    if ((hdr = spool_getheader(hdrcache, "Subject"))) {
-        fprintf(f, "Subject: %s\r\n", hdr[0]);
-    }
-
-    if ((hdr = spool_getheader(hdrcache, "Date"))) {
-        fprintf(f, "Date: %s\r\n", hdr[0]);
-    }
-    else {
-        char datestr[80];       /* XXX: Why do we need 80 character buffer? */
-        time_to_rfc5322(now, datestr, sizeof(datestr));
-        fprintf(f, "Date: %s\r\n", datestr);
-    }
-
-    if ((hdr = spool_getheader(hdrcache, "Message-ID"))) {
-        fprintf(f, "Message-ID: %s\r\n", hdr[0]);
-    }
-
-    if ((hdr = spool_getheader(hdrcache, "X-Schedule-User-Address"))) {
-        fprintf(f, "X-Schedule-User-Address: %s\r\n", hdr[0]);
-    }
-
-    if ((hdr = spool_getheader(hdrcache, "Content-Type"))) {
-        fprintf(f, "Content-Type: %s\r\n", hdr[0]);
-    }
-    else fputs("Content-Type: application/octet-stream\r\n", f);
-
-    if (!datalen) {
-        datalen = strlen(data);
-        cte = "8bit";
-    }
-    else {
-        cte = strnchr(data, '\0', datalen) ? "binary" : "8bit";
-    }
-    fprintf(f, "Content-Transfer-Encoding: %s\r\n", cte);
-
-    if ((hdr = spool_getheader(hdrcache, "Content-Disposition"))) {
-        fprintf(f, "Content-Disposition: %s\r\n", hdr[0]);
-    }
-
-    if ((hdr = spool_getheader(hdrcache, "Content-Description"))) {
-        fprintf(f, "Content-Description: %s\r\n", hdr[0]);
-    }
-
-    fprintf(f, "Content-Length: %u\r\n", (unsigned) datalen);
-
-    fputs("MIME-Version: 1.0\r\n\r\n", f);
-
-    /* Write the data to the file */
-    fwrite(data, datalen, 1, f);
-    qdiffs[QUOTA_STORAGE] = ftell(f);
-
-    fclose(f);
-
-    qdiffs[QUOTA_MESSAGE] = 1;
-
-    /* Prepare to append the message to the mailbox */
-    if ((r = append_setup_mbox(&as, mailbox, httpd_userid, httpd_authstate,
-                          0, qdiffs, 0, 0, EVENT_MESSAGE_NEW|EVENT_CALENDAR))) {
-        syslog(LOG_ERR, "append_setup(%s) failed: %s",
-               mailbox->name, error_message(r));
-        if (r == IMAP_QUOTA_EXCEEDED) {
-            /* DAV:quota-not-exceeded */
-            txn->error.precond = DAV_OVER_QUOTA;
-            ret = HTTP_NO_STORAGE;
-        } else {
-            ret = HTTP_SERVER_ERROR;
-        }
-        txn->error.desc = "append_setup() failed\r\n";
-    }
-    else {
-        struct body *body = NULL;
-
-        strarray_t *flaglist = NULL;
-        struct entryattlist *annots = NULL;
-
-        if (oldrecord) {
-            flaglist = mailbox_extract_flags(mailbox, oldrecord, httpd_userid);
-            mailbox_get_annotate_state(mailbox, oldrecord->uid, NULL);
-            annots = mailbox_extract_annots(mailbox, oldrecord);
-        }
-
-        /* XXX - casemerge?  Doesn't matter with flags */
-        if (imapflags) {
-            if (flaglist)
-                strarray_cat(flaglist, imapflags);
-            else
-                flaglist = strarray_dup(imapflags);
-        }
-
-        /* Append the message to the mailbox */
-        if ((r = append_fromstage(&as, &body, stage, now, createdmodseq, flaglist, 0, &annots))) {
-            syslog(LOG_ERR, "append_fromstage(%s) failed: %s",
-                   mailbox->name, error_message(r));
-            ret = HTTP_SERVER_ERROR;
-            txn->error.desc = "append_fromstage() failed\r\n";
-        }
-        if (body) {
-            message_free_body(body);
-            free(body);
-        }
-        strarray_free(flaglist);
-        freeentryatts(annots);
-
-        if (r) append_abort(&as);
-        else {
-            /* Commit the append to the mailbox */
-            if ((r = append_commit(&as))) {
-                syslog(LOG_ERR, "append_commit(%s) failed: %s",
-                       mailbox->name, error_message(r));
-                ret = HTTP_SERVER_ERROR;
-                txn->error.desc = "append_commit() failed\r\n";
-            }
-            else {
-                if (oldrecord) {
-                    /* Now that we have the replacement message in place
-                       expunge the old one. */
-                    int userflag;
-
-                    ret = HTTP_NO_CONTENT;
-
-                    /* Perform the actual expunge */
-                    r = mailbox_user_flag(mailbox, DFLAG_UNBIND, &userflag, 1);
-                    if (!r) {
-                        oldrecord->user_flags[userflag/32] |= 1 << (userflag & 31);
-                        oldrecord->internal_flags |= FLAG_INTERNAL_EXPUNGED;
-                        r = mailbox_rewrite_index_record(mailbox, oldrecord);
-                    }
-                    if (r) {
-                        syslog(LOG_ERR, "expunging record (%s) failed: %s",
-                               mailbox->name, error_message(r));
-                        txn->error.desc = error_message(r);
-                        ret = HTTP_SERVER_ERROR;
-                    }
-                }
-
-                if (!r) {
-                    /* Read index record for new message (always the last one) */
-                    struct index_record newrecord;
-                    struct dav_data ddata;
-                    static char etagbuf[256];
-                    const char *etag;
-
-                    ddata.alive = 1;
-                    ddata.imap_uid = mailbox->i.last_uid;
-                    dav_get_validators(mailbox, &ddata, httpd_userid, &newrecord,
-                                       &etag, &txn->resp_body.lastmod);
-                    strncpy(etagbuf, etag, 255);
-                    etagbuf[255] = 0;
-                    txn->resp_body.etag = etagbuf;
-                }
-            }
-        }
-    }
-
-    append_removestage(stage);
 
     return ret;
 }

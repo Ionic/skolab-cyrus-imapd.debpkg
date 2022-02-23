@@ -47,6 +47,7 @@
 #include "acl.h"
 #include "auth.h"
 #include "conversations.h"
+#include "dav_db.h"
 #include "hash.h"
 #include "jmap_util.h"
 #include "json_support.h"
@@ -84,6 +85,7 @@ enum {
     MAX_SIZE_UPLOAD,
     MAX_CONCURRENT_UPLOAD,
     MAX_SIZE_BLOB_SET,
+    MAX_CATENATE_ITEMS,
     JMAP_NUM_LIMITS  /* MUST be last */
 };
 
@@ -156,25 +158,57 @@ typedef struct jmap_req {
     const strarray_t *using_capabilities;
 } jmap_req_t;
 
-/* Write the contents of the blob identified by blobid on the
- * HTTP transaction embedded in JMAP request req.
+/* Fetch the contents of the blob identified by blobid,
+ * optionally returning a content type and an error string.
+ *
  * If not NULL, accept_mime defines the requested MIME type,
  * either defined in the Accept header or {type} URI template
  * parameter.
  *
- * Return HTTP_OK if the blob has been written or any other
+ * Return HTTP_OK if the blob has been found or any other
  * HTTP status on error.
- * Return zero if the next blob handler should be called. */
-typedef int jmap_getblob_handler(jmap_req_t *req,
-                                 const char *blobid,
-                                 const char *accept_mime);
+ * Return zero if the next blob handler should be called.
+ */
+typedef struct {
+    const char *from_accountid;  // input to the handler
+    const char *blobid;          // input to the handler
+    const char *accept_mime;     // input to the handler
+    unsigned decode : 1;         // input to the handler
+    struct buf blob;             // output from the handler
+    struct buf content_type;     // output from the handler
+    struct buf encoding;         // output from the handler
+    const char *errstr;          // output from the handler
+} jmap_getblob_context_t;
+
+void jmap_getblob_ctx_init(jmap_getblob_context_t *ctx,
+                           const char *from_accountid, const char *blobid,
+                           const char *accept_mime, unsigned decode);
+void jmap_getblob_ctx_reset(jmap_getblob_context_t *ctx);
+void jmap_getblob_ctx_fini(jmap_getblob_context_t *ctx);
+
+typedef int jmap_getblob_handler(jmap_req_t *req, jmap_getblob_context_t *ctx);
 
 typedef struct {
     hash_table methods;
     json_t *server_capabilities;
     long limits[JMAP_NUM_LIMITS];
+    // internal state
     ptrarray_t getblob_handlers; // array of jmap_getblob_handler
+    ptrarray_t event_handlers; // array of (malloced) jmap_handlers
 } jmap_settings_t;
+
+
+enum jmap_handler_event {
+    JMAP_HANDLE_SHUTDOWN      = (1 << 0), /* executed when httpd is shutdown. req is NULL */
+    JMAP_HANDLE_CLOSE_CONN    = (1 << 1), /* executed when connection is closed. req is NULL */
+    JMAP_HANDLE_BEFORE_METHOD = (1 << 2)  /* executed before each method call. req is set */
+};
+
+struct jmap_handler {
+    int eventmask;
+    void(*handler)(enum jmap_handler_event event, jmap_req_t* req, void *rock);
+    void *rock;
+};
 
 enum jmap_method_flags {
     JMAP_READ_WRITE  = (1 << 0),  /* user can change state with this method */
@@ -189,7 +223,10 @@ typedef struct {
     enum jmap_method_flags flags;
 } jmap_method_t;
 
-extern int jmap_api(struct transaction_t *txn, json_t **res,
+extern int jmap_error_response(struct transaction_t *txn,
+                               long code, json_t **res);
+extern int jmap_api(struct transaction_t *txn,
+                    const json_t *jreq, json_t **res,
                     jmap_settings_t *settings);
 
 extern int jmap_initreq(jmap_req_t *req);
@@ -225,6 +262,8 @@ extern void jmap_accounts(json_t *accounts, json_t *primary_accounts);
 /* Request-scoped mailbox cache */
 extern int  jmap_openmbox(jmap_req_t *req, const char *name,
                           struct mailbox **mboxp, int rw);
+extern int jmap_openmbox_by_uniqueid(jmap_req_t *req, const char *id,
+                                     struct mailbox **mboxp, int rw);
 extern int  jmap_isopenmbox(jmap_req_t *req, const char *name);
 extern void jmap_closembox(jmap_req_t *req, struct mailbox **mboxp);
 
@@ -268,21 +307,6 @@ extern int jmap_findblob_exact(jmap_req_t *req, const char *accountid,
                                const char *blobid,
                                struct mailbox **mbox, msgrecord_t **mr,
                                struct buf *blob);
-
-extern const struct body *jmap_contact_findblob(struct message_guid *content_guid,
-                                                const char *part_id,
-                                                struct mailbox *mbox,
-                                                msgrecord_t *mr,
-                                                struct buf *blob);
-
-#define JMAP_BLOBID_SIZE 42
-extern void jmap_set_blobid(const struct message_guid *guid, char *buf);
-
-#define JMAP_EMAILID_SIZE 26
-extern void jmap_set_emailid(const struct message_guid *guid, char *buf);
-
-#define JMAP_THREADID_SIZE 18
-extern void jmap_set_threadid(conversation_id_t cid, char *buf);
 
 /* JMAP states */
 extern json_t* jmap_getstate(jmap_req_t *req, int mbtype, int refresh);
@@ -438,6 +462,7 @@ struct jmap_query {
     size_t result_position;
     size_t server_limit;
     size_t total;
+    int have_total; /* for calculateTotal: false partial */
     json_t *ids;
 };
 
@@ -557,5 +582,6 @@ extern void jmap_parse_sharewith_patch(json_t *arg, json_t **shareWith);
 extern void jmap_mbentry_cache_free(jmap_req_t *req);
 extern const mbentry_t *jmap_mbentry_by_uniqueid(jmap_req_t *req, const char *id);
 extern mbentry_t *jmap_mbentry_by_uniqueid_copy(jmap_req_t *req, const char *id);
+extern mbentry_t *jmap_mbentry_from_dav(jmap_req_t *req, struct dav_data *dav);
 
 #endif /* JMAP_API_H */

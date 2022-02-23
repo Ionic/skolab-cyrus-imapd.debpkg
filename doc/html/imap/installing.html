@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installing Cyrus &mdash; Cyrus IMAP 3.4.3 (stable) documentation</title>
+  <title>Installing Cyrus &mdash; Cyrus IMAP 3.6.0-beta1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.3 (stable) documentation" href="../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.6.0-beta1 documentation" href="../index.html"/>
         <link rel="up" title="Setup" href="../setup.html"/>
         <link rel="next" title="HTTP modules" href="download/installation/manage-dav.html"/>
         <link rel="prev" title="Compiling" href="developer/compiling.html"/> 
@@ -130,6 +130,7 @@
 <li class="toctree-l3"><a class="reference internal" href="download/release-notes/index.html#stable-version">Stable Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="download/release-notes/index.html#development-version">Development Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="download/release-notes/index.html#supported-product-series">Supported Product Series</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="download/release-notes/index.html#series-3-6">Series 3.6</a></li>
 <li class="toctree-l4"><a class="reference internal" href="download/release-notes/index.html#series-3-4">Series 3.4</a></li>
 <li class="toctree-l4"><a class="reference internal" href="download/release-notes/index.html#series-3-2">Series 3.2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="download/release-notes/index.html#series-3-0">Series 3.0</a></li>
@@ -137,6 +138,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="download/release-notes/index.html#development-snapshots">Development snapshots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="download/release-notes/3.7/index.html">Cyrus IMAP 3.7 Tags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="download/release-notes/3.5/index.html">Cyrus IMAP 3.5 Tags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="download/release-notes/3.3/index.html">Cyrus IMAP 3.3 Tags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="download/release-notes/3.1/index.html">Cyrus IMAP 3.1 Tags</a></li>
@@ -171,12 +173,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../quickstart.html#install-cyrus-package-s">1. Install Cyrus package(s)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../quickstart.html#setup-the-cyrus-mail-user-and-group">2. Setup the cyrus:mail user and group</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../quickstart.html#setting-up-authentication-with-sasl">3. Setting up authentication with SASL</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../quickstart.html#setup-mail-delivery-from-your-mta">4. Setup mail delivery from your MTA</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../quickstart.html#install-sendmail">Install Sendmail</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../quickstart.html#sendmail-communication">Sendmail communication</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../quickstart.html#install-postfix">Install Postfix</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="../quickstart.html#setup-mail-delivery-from-your-mta">4. Setup mail delivery from your MTA</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../quickstart.html#protocol-ports">5. Protocol ports</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../quickstart.html#configuring-cyrus">6. Configuring Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../quickstart.html#launch-cyrus">7. Launch Cyrus</a></li>
@@ -336,19 +333,20 @@
 <li class="toctree-l3"><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="download/upgrade.html">Upgrading to 3.4</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="download/upgrade.html">Upgrading to 3.6</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#preparation">1. Preparation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="download/upgrade.html#installation-from-tarball">Installation from tarball</a></li>
+<li class="toctree-l4"><a class="reference internal" href="download/upgrade.html#storage-changes">Storage changes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="download/upgrade.html#how-are-you-planning-on-upgrading">How are you planning on upgrading?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="download/upgrade.html#do-what-as-who">Do What As Who?</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#install-new-3-4-cyrus">2. Install new 3.4 Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#install-new-3-6-cyrus">2. Install new 3.6 Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#shut-down-existing-cyrus">3. Shut down existing Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#backup-and-copy-existing-data">4. Backup and Copy existing data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#copy-config-files-and-update">5. Copy config files and update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#upgrade-specific-items">6. Upgrade specific items</a></li>
-<li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#start-new-3-4-cyrus-and-verify">7. Start new 3.4 Cyrus and verify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#start-new-3-6-cyrus-and-verify">7. Start new 3.6 Cyrus and verify</a></li>
 <li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#reconstruct-databases-and-cache">8. Reconstruct databases and cache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#do-you-want-any-new-features">9. Do you want any new features?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#upgrade-complete">10. Upgrade complete</a></li>
@@ -422,14 +420,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../operations.html">Operations</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="reference/manpages/commands.html">Man pages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="reference/manpages/commands.html#configuration-files">(5) Configuration Files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/manpages/index.html">Man pages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/manpages/index.html#configuration-files">(5) Configuration Files</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/configs/cyrus.conf.html"><strong>cyrus.conf</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/configs/imapd.conf.html"><strong>imapd.conf</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/configs/krb.equiv.html"><strong>krb.equiv</strong></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="reference/manpages/commands.html#system-commands">(8) System Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/manpages/index.html#system-commands">(8) System Commands</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/arbitron.html"><strong>arbitron</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/backupd.html"><strong>backupd</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/chk_cyrus.html"><strong>chk_cyrus</strong></a></li>
@@ -448,7 +446,7 @@
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/cyr_df.html"><strong>cyr_df</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/cyr_expire.html"><strong>cyr_expire</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/cyr_info.html"><strong>cyr_info</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/cyr_sequence.html"><strong>cyr_sequence</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/cyr_ls.html"><strong>cyr_ls</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/cyr_synclog.html"><strong>cyr_synclog</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/cyr_userseen.html"><strong>cyr_userseen</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/cyr_virusscan.html"><strong>cyr_virusscan</strong></a></li>
@@ -483,6 +481,7 @@
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/quota.html"><strong>quota</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/reconstruct.html"><strong>reconstruct</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/rehash.html"><strong>rehash</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/relocate_by_id.html"><strong>relocate_by_id</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/restore.html"><strong>restore</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/sievec.html"><strong>sievec</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/sieved.html"><strong>sieved</strong></a></li>
@@ -497,7 +496,7 @@
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/unexpunge.html"><strong>unexpunge</strong></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="reference/manpages/commands.html#user-commands">(1) User Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/manpages/index.html#user-commands">(1) User Commands</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/usercommands/arbitronsort.pl.html"><strong>arbitronsort.pl</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/usercommands/dav_reconstruct.html"><strong>dav_reconstruct</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/usercommands/httptest.html"><strong>httptest</strong></a></li>
@@ -744,7 +743,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.6: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.6"></a>
 </div>
       &nbsp;
     </nav>
@@ -764,7 +763,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html">Docs v3.4.3 (stable)</a> &raquo;</li>
+      <li><a href="../index.html">Docs v3.6.0-beta1</a> &raquo;</li>
       
           <li><a href="../setup.html">Setup</a> &raquo;</li>
       
@@ -772,7 +771,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.4/docsrc/imap/installing.rst" class="fa fa-github"> Edit on GitHub</a>
+            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.6/docsrc/imap/installing.rst" class="fa fa-github"> Edit on GitHub</a>
           
         
       </li>
@@ -929,43 +928,203 @@ use to login to the IMAP server later on.</p>
 <p>You can replace <code class="docutils literal notranslate"><span class="pre">secret</span></code> with a more suitable password you want and
 <code class="docutils literal notranslate"><span class="pre">imapuser</span></code> with the username you want. Once this is done, check that
 the user exists and is set up correctly:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">testsaslauthd</span> <span class="o">-</span><span class="n">u</span> <span class="n">imapuser</span> <span class="o">-</span><span class="n">p</span> <span class="n">secret</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">testsaslauthd</span> <span class="o">-</span><span class="n">u</span> <span class="n">imapuser</span> <span class="o">-</span><span class="n">p</span> <span class="n">secret</span> <span class="o">-</span><span class="n">f</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">run</span><span class="o">/</span><span class="n">saslauthd</span><span class="o">/</span><span class="n">mux</span>
 </pre></div>
 </div>
 <p>You should get an <code class="docutils literal notranslate"><span class="pre">0:</span> <span class="pre">OK</span> <span class="pre">&quot;Success.&quot;</span></code> message.</p>
 </div>
 <div class="section" id="mail-delivery-from-your-mta">
-<h3>Mail delivery from your MTA<a class="headerlink" href="#mail-delivery-from-your-mta" title="Permalink to this headline">¶</a></h3>
+<span id="mta-lda-delivery"></span><h3>Mail delivery from your MTA<a class="headerlink" href="#mail-delivery-from-your-mta" title="Permalink to this headline">¶</a></h3>
 <p>Your Cyrus IMAP server will want to receive the emails accepted by your
-SMTP server (ie Sendmail, Postfix, etc). In Cyrus, this happens via a
+SMTP server (ie Sendmail, Postfix, Exim). In Cyrus, this happens via a
 protocol called LMTP, which is usually supported by your SMTP server.</p>
+<div class="section" id="integration-with-sendmail">
+<h4>Integration with Sendmail<a class="headerlink" href="#integration-with-sendmail" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="objectives">
+<h5>Objectives<a class="headerlink" href="#objectives" title="Permalink to this headline">¶</a></h5>
+<p>This manual describes how to integrate Sendmail with Cyrus IMAP.  <a class="reference external" href="http://open-sendmail.sourceforge.net">Open Sendmail</a> presents alternative approaches, but these do not integrate well with email addresses from virtual domains, which are hosted by Cyrus IMAP, but are not in the <cite>virtuser</cite> table.</p>
+<p>Cyrus IMAP can manage many domains.  It has a default domain, and other, virtual domains.</p>
+<p>Sendmail can also manage many domains.  Its primary domains are stored in the <cite>w</cite> class and are read from <cite>/etc/mail/local-host-names</cite>.  The rewritings for these domains are modified using the aliases database.  Sendmail handles unqualified email addresses and addresses from the domains in the <cite>w</cite> class the same. Sendmail in addition can manage further, virtual domains by defining the <cite>VirtHost</cite> class.  The redirections for the virtual domains are controlled by <cite>virtusertable</cite>.</p>
+<p>This guide explains how to configure sendmail, so that it handles unqualified email addresses in the same way, as if they were in the default Cyrus IMAP domain.  It assumes, that the default Cyrus domain is in the <cite>w</cite> class.  At the end it will be possible to have destination addresses with domains in the <cite>w</cite> or <cite>VirtHost</cite> classes and these addresses will be delivered to Cyrus IMAP after aliases and <cite>virtusertable</cite> rewritings, if and only if Cyrus IMAP hosts them.</p>
+<p>Sendmail will be configured to verify using <cite>smmapd</cite> if Cyrus does have a mailbox, and reject the email during the SMTP dialog otherwise.  This avoids sending bounces.  Bounces reduce the IP reputation of a mail server.  If a local for the server user does not have a Cyrus IMAP account, this user will not get its emails in a folder on the server.  If <cite>smmapd</cite> does not respond, sendmail will accept emails for any address.</p>
+<p>If a virtual mailbox exists in Cyrus IMAP and <cite>virtusertable</cite> redirects the emails for that mailbox somewhere, the <cite>virtusertable</cite> takes precedence, like the aliases database has precedence in such cases.</p>
+<p>The user database is not considered in this guide.</p>
+<p>Plus addressing works, when the destination folder does exist and is lowercased:  If <cite>user1</cite> has folders <cite>abc</cite> and <cite>mNp</cite>, emails for <cite>user1+abc</cite> and <cite>user1+aBc</cite> will be accepted, emails for <cite>user1+mNp</cite> and <cite>user1+mnp</cite> will be rejected.  The lowercase limitation comes from <cite>smmapd</cite>.  Emails for <cite>user1+def</cite> will be rejected, if <cite>user1</cite> has no mailbox <cite>def</cite>, even if a Sieve script would place such mails in existing folders.</p>
+<p>Plus addressing does not survive aliases rewriting.  If the aliases table contains <cite>user2: user1</cite>, emails for <cite>user2+abc</cite> will be rejected, while emails for <cite>user2</cite> or <cite>user1+abc</cite> will be accepted.  After inserting <cite>user2+abc: user1+abc</cite> in the aliases table, emails for <cite>user2+abc</cite> will be accepted.</p>
+</div>
 <div class="section" id="install-sendmail">
-<h4>Install Sendmail<a class="headerlink" href="#install-sendmail" title="Permalink to this headline">¶</a></h4>
+<h5>Install Sendmail<a class="headerlink" href="#install-sendmail" title="Permalink to this headline">¶</a></h5>
 <p>We’ll set up LMTP with the Sendmail SMTP server.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">sendmail</span>
 </pre></div>
 </div>
-<p>We need to make Sendmail aware of the fact we are using the Cyrus IMAP server: modify the <code class="docutils literal notranslate"><span class="pre">/etc/mail/sendmail.mc</span></code> file. Add this line before the <code class="docutils literal notranslate"><span class="pre">MAILER_DEFINITIONS</span></code> section:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>define(`confLOCAL_MAILER&#39;, `cyrusv2&#39;)dnl
+</div>
+<div class="section" id="add-cf-feature-anfi-vcyrus-m4">
+<h5>Add cf/feature/anfi_vcyrus.m4<a class="headerlink" href="#add-cf-feature-anfi-vcyrus-m4" title="Permalink to this headline">¶</a></h5>
+<p>Create the file cf/feature/anfi_vcyrus.m4:</p>
+<div class="highlight-m4 notranslate"><div class="highlight"><pre><span></span>divert(-1)
+dnl
+dnl By using this file, you agree to the terms and conditions set
+dnl forth in the LICENSE file which can be found at the top level of
+dnl the sendmail distribution (sendmail-8.12).
+dnl
+dnl     Contributed by Andrzej Filip and Dilyan Palauzov
+LOCAL_CONFIG
+# cyrus - map for checking cyrus maibox presence
+Kcyrus socket -T&lt;TMPF&gt; -a&lt;OK&gt; local:/var/imap/socket/smmapd
+
+LOCAL_RULESETS
+SLocal_localaddr
+R$+     $: $1 $| $(cyrus $1 $: $)
+R$+ $|                $#error $@ 5.1.1 $: &quot;550 User unknown.&quot;
+R$+ $| $*&lt;TMPF&gt;       $#error $@ 4.3.0 $: &quot;451 Temporary system failure. Please try again later.&quot;
+R$+ $| $*&lt;OK&gt;         $#cyrusv2 $@ $: $1
+R$+ $| $*             $: $1
 </pre></div>
 </div>
-<p>And right below <code class="docutils literal notranslate"><span class="pre">MAILER_DEFINITIONS</span></code>, add this:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>MAILER(`cyrusv2&#39;)dnl
+<p>Many spaces in a row stand for the tabulator character.</p>
+<p>Despite the naming confusion, Cyrus 3 works with the <cite>cyrusv2</cite> mailer.</p>
+<p>This file creates a map called <cite>cyrus</cite>, which connects to the Cyrus` <cite>smmapd</cite> service.</p>
+<p>The file extends the <cite>localaddr=5</cite> and <cite>Local_localaddr</cite> rulesets to verify whether an address is known to Cyrus IMAP.  The rulesets are called from the <cite>local</cite> mailer, as the <cite>local</cite> mailer has the <cite>5</cite> mailer flag set.  The ruleset changes the mailer to <cite>cyrusv2</cite> and the email is accepted if and only if the address is known to Cyrus IMAP.</p>
+<p>The temporary rejections do not work in practice.  If <cite>smmapd</cite> is down, the email is queued instead of being rejected.  The 451 line above is there to encourage discussion.</p>
+</div>
+<div class="section" id="patching-m4-proto-m4">
+<h5>Patching m4/proto.m4<a class="headerlink" href="#patching-m4-proto-m4" title="Permalink to this headline">¶</a></h5>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gh">diff --git a/cf/m4/proto.m4 b/cf/m4/proto.m4</span>
+<span class="gd">--- a/cf/m4/proto.m4</span>
+<span class="gi">+++ b/cf/m4/proto.m4</span>
+<span class="gu">@@ -1147,6 +1147,10 @@ dnl if no match, change marker to prevent a second @domain lookup</span>
+ R&lt;@&gt; $+ + $* &lt; @ $+ . &gt;      $: &lt; $(virtuser @ $3 $@ $1 $@ $2 $@ +$2 $: ! $) &gt; $1 + $2 &lt; @ $3 . &gt;
+ dnl without +detail
+ R&lt;@&gt; $+ &lt; @ $+ . &gt;           $: &lt; $(virtuser @ $2 $@ $1 $: @ $) &gt; $1 &lt; @ $2 . &gt;
+<span class="gi">+dnl If a virtual address is not in the virtusertable, but cyrus knows about the address, deliver it.</span>
+<span class="gi">+R&lt; error : $-.$-.$- : $+ &gt; $+ &lt; @ $={VirtHost} . &gt;           $: &lt; error : $1.$2.$3 : $4 &gt; $5 &lt; $6 . &gt; $| $(cyrus  $5@$6 $: $)</span>
+<span class="gi">+R&lt; error : $-.$-.$- : $+ &gt; $* &lt; $* . &gt; $| $*&lt;OK&gt;             $#cyrusv2 $@ $: $5@$6</span>
+<span class="gi">+R&lt; error : $-.$-.$- : $+ &gt; $* $| $*&lt;TMPFS&gt;           $#error $@ 4.3.0 $: &quot;451 Temporary system failure. Please try again later.&quot;</span>
+ dnl no match
+ R&lt;@&gt; $+                              $: $1
+ dnl remove mark
 </pre></div>
 </div>
-<p>This enables the <strong>cyrusv2</strong> mailer for local mail delivery. This is a sendmail property that tells sendmail it’s talking to Cyrus. (Cyrus 3.x works with this property, despite the naming confusion.)</p>
-<p>Next, we run a script that takes the <code class="docutils literal notranslate"><span class="pre">/etc/mail/sendmail.mc</span></code> file and and prepares it for use by Sendmail. This may take some time.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">sendmailconfig</span>
+<p>Where many spaces in a row stand for the tabulator key.</p>
+<p>If an address from a virtual domain is not found in the <cite>virtusertable</cite>, ask <cite>smmapd</cite> if the address is known to Cyrus IMAP.  If it is known, deliver it to Cyrus IMAP.</p>
+</div>
+<div class="section" id="patching-mailer-cyrusv2-m4">
+<h5>Patching mailer/cyrusv2.m4<a class="headerlink" href="#patching-mailer-cyrusv2-m4" title="Permalink to this headline">¶</a></h5>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gh">diff --git a/cf/mailer/cyrusv2.m4 b/cf/mailer/cyrusv2.m4</span>
+<span class="gd">--- a/cf/mailer/cyrusv2.m4</span>
+<span class="gi">+++ b/cf/mailer/cyrusv2.m4</span>
+<span class="gu">@@ -11,7 +11,7 @@ PUSHDIVERT(-1)</span>
+ #
+
+ _DEFIFNOT(`_DEF_CYRUSV2_MAILER_FLAGS&#39;, `lsDFMnqXz&#39;)
+<span class="gd">-_DEFIFNOT(`CYRUSV2_MAILER_FLAGS&#39;, `A@/:|m&#39;)</span>
+<span class="gi">+_DEFIFNOT(`CYRUSV2_MAILER_FLAGS&#39;, `8m&#39;)</span>
+ ifdef(`CYRUSV2_MAILER_ARGS&#39;,, `define(`CYRUSV2_MAILER_ARGS&#39;, `FILE /var/imap/socket/lmtp&#39;)&#39;)
+ define(`_CYRUSV2_QGRP&#39;, `ifelse(defn(`CYRUSV2_MAILER_QGRP&#39;),`&#39;,`&#39;, ` Q=CYRUSV2_MAILER_QGRP,&#39;)&#39;)dnl
 </pre></div>
 </div>
+<p>The <cite>8</cite> flag means, that Cyrus LMTPd can accept 8bit data and sendmail will not convert 8bit data to 7bit before passing it to Cyrus IMAP.  The <cite>A&#64;/:|</cite> functionality will be performed by the <cite>local</cite> mailer, before the <cite>cyrusv2</cite> mailer is called.  The <cite>cyrus2v</cite> mailer is used only to pass data to Cyrus IMAP, after it is verified, that Cyrus IMAP hosts a particular mailbox.  Thus the <cite>cyrus2v</cite> mailer does not call the <cite>localaddr=5</cite> rule set in order to avoid loops. (If the <cite>cyrusv2</cite> mailer calls the <cite>localaddr=5</cite> ruleset and the <cite>localaddr=5</cite> ruleset calls the <cite>cyrusv2</cite> mailer, there is an endless loop).</p>
+<p>The patch to <cite>m4/proto.m4</cite> also requires a mailer, which does not call the <cite>localaddr=5</cite> ruleset.  Because of this, substituting the <cite>local</cite> mailer by <cite>define(`confLOCAL_MAILER’, `cyrusv2’)dnl</cite> will not work.  The proposed setup needs one mailer calling the <cite>localaddr=5</cite> ruleset (here the <cite>local</cite> mailer) and one mailer not calling the <cite>localaddr=5</cite> ruleset (the <cite>cyrusv2</cite> mailer).</p>
 </div>
 <div class="section" id="sendmail-communication">
-<h4>Sendmail communication<a class="headerlink" href="#sendmail-communication" title="Permalink to this headline">¶</a></h4>
-<p>One last thing we need to do for LMTP to work with Sendmail is to create a folder that will contain the UNIX socket used by Sendmail and Cyrus to deliver/receive emails:</p>
+<h5>Sendmail communication<a class="headerlink" href="#sendmail-communication" title="Permalink to this headline">¶</a></h5>
+<p>For LMTP and SMMAP to work with Sendmail, it is necessary to create a folder that will contain the UNIX socket used by Sendmail and Cyrus to deliver/receive emails:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">mkdir</span> <span class="o">-</span><span class="n">p</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">run</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/</span><span class="n">socket</span>
 <span class="n">sudo</span> <span class="n">chown</span> <span class="n">cyrus</span><span class="p">:</span><span class="n">mail</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">run</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/</span><span class="n">socket</span>
 <span class="n">sudo</span> <span class="n">chmod</span> <span class="mi">750</span> <span class="o">/</span><span class="n">var</span><span class="o">/</span><span class="n">run</span><span class="o">/</span><span class="n">cyrus</span><span class="o">/</span><span class="n">socket</span>
 </pre></div>
+</div>
+<p>Do the same for the <cite>smmapd</cite> socket.</p>
+</div>
+<div class="section" id="adjustments-for-the-mc-files">
+<h5>Adjustments for the <cite>.mc</cite> files<a class="headerlink" href="#adjustments-for-the-mc-files" title="Permalink to this headline">¶</a></h5>
+<p>In your <cite>.mc</cite> files add:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>FEATURE(`anfi_vcyrus&#39;)dnl
+MAILER(`cyrusv2&#39;)dnl
+</pre></div>
+</div>
+<p>and recompile them, e.g. by calling <cite>make file.cf</cite> to convert <cite>file.mc</cite> to <cite>file.cf</cite>.  Test with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># ggg is unqualified address, which exists both in Cyrus’ default domain and in sendmails’ w class
+$ sendmail -C file.cf -bv ggg
+ggg... deliverable: mailer cyrusv2, user ggg
+
+# verify that ggg and ggg@your-primary-domain resolve in the same way, your-primary-domain is the default Cyrus IMAP domain
+$ sendmail -C file.cf -bv ggg@your-primary-domain
+ggg... deliverable: mailer cyrusv2, user ggg
+
+# as above, but here another-domain belongs to class `w` and it is not the default domain for Cyrus IMAP
+$ sendmail -C file.cf -bv ggg@another-domain
+ggg... deliverable: mailer cyrusv2, user ggg
+
+# for an address, which exists in Cyrus IMAP, and is not overwritten in virtusertable.
+# domain1.org belongs to class VirtHost and does not belong to class w.
+$ sendmail -C sendmail-mail.cf -bv zzz@domain1.org
+zzz@domain1.org... deliverable: mailer cyrusv2, user zzz@domain1.org
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="postfix">
+<h4>Postfix<a class="headerlink" href="#postfix" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="install-postfix">
+<h5>Install Postfix<a class="headerlink" href="#install-postfix" title="Permalink to this headline">¶</a></h5>
+<p>We’ll set up LMTP with the Postfix SMTP server (consider which other
+Postfix related packages you may also desire):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">postfix</span> <span class="n">postfix</span><span class="o">-</span><span class="n">doc</span> <span class="n">postfix</span><span class="o">-</span><span class="n">pcre</span> <span class="n">postfix</span><span class="o">-</span><span class="n">ldap</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>We need to make Postfix aware of the fact we are using the Cyrus IMAP
+server and engineer delivery via LMTP.  The following examples show the
+<code class="docutils literal notranslate"><span class="pre">postconf</span></code> commands to run to add the necessary configuration to
+<code class="docutils literal notranslate"><span class="pre">/etc/postfix/main.cf</span></code>, these are not complete configurations.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Postfix supports a great many configurations for mail delivery
+transport, so these settings will depend on whether you’re planning
+to use the <code class="docutils literal notranslate"><span class="pre">local</span></code>, <code class="docutils literal notranslate"><span class="pre">virtual</span></code> or <code class="docutils literal notranslate"><span class="pre">lmtp</span></code> destination
+definitions.  For our examples we’ll be using <code class="docutils literal notranslate"><span class="pre">virtual</span></code>.  Adjust
+as needed for your purposes, and please consult the Postfix
+documentation at <a class="reference external" href="http://www.postfix.org/postconf.5.html">http://www.postfix.org/postconf.5.html</a></p>
+</div>
+<ol class="arabic">
+<li><p class="first">Setup your recipient maps, thus defining for which recipients the
+<code class="docutils literal notranslate"><span class="pre">virtual</span></code> destination will be used:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_mailbox_domains=hash:/etc/postfix/virtual_recipient_domains&quot;</span>
+<span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_mailbox_maps=hash:/etc/postfix/virtual_recipients&quot;</span>
+</pre></div>
+</div>
+<p>or, if you have enabled smmapd you can automatically track mailboxes with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_mailbox_domains=hash:/etc/postfix/virtual_recipient_domains&quot;</span>
+<span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_mailbox_maps=socketmap:unix:/run/cyrus/socket/smmap&quot;</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Optional: Set the concurrency and recipient limits for LMTP delivery to the
+<code class="docutils literal notranslate"><span class="pre">virtual</span></code> destination:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_destination_concurrency_limit=300&quot;</span>
+<span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_destination_recipient_limit=300&quot;</span>
+</pre></div>
+</div>
+<p>The purpose of those two settings is to allow for a large number of
+simultaneous delivery threads between the MTA (Postfix) and the MDA
+(Cyrus), and to allow for a large number of recipients to be listed
+for any given message, thus avoiding splitting up delivery of messages
+with lots of recipients into many separate deliveries.</p>
+</li>
+<li><p class="first">Send mail for those recipients to Cyrus via LMTP.  This first
+example is for delivery via TCP to a different host:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_transport=lmtp:inet:lmtp.example.org:2003&quot;</span>
+</pre></div>
+</div>
+<p>If your Postfix and Cyrus are on the same host, then use some
+version of this, where the socket patch matches what’s set in the
+<code class="docutils literal notranslate"><span class="pre">lmtpsocket</span></code> option in <a class="reference internal" href="reference/manpages/configs/imapd.conf.html#std:cyrusman-imapd.conf(5)">imapd.conf(5)</a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">postconf</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;virtual_transport=lmtp:unix:/run/cyrus/socket/lmtp&quot;</span>
+</pre></div>
+</div>
+</li>
+</ol>
 </div>
 </div>
 </div>
@@ -978,7 +1137,6 @@ are required for any host using the listed services:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pop3</span>      <span class="mi">110</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># Post Office Protocol v3</span>
 <span class="n">nntp</span>      <span class="mi">119</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># Network News Transport Protocol</span>
 <span class="n">imap</span>      <span class="mi">143</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># Internet Mail Access Protocol rev4</span>
-<span class="n">imsp</span>      <span class="mi">406</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># Internet Message Support Protocol (deprecated)</span>
 <span class="n">nntps</span>     <span class="mi">563</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># NNTP over TLS</span>
 <span class="n">imaps</span>     <span class="mi">993</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># IMAP over TLS</span>
 <span class="n">pop3s</span>     <span class="mi">995</span><span class="o">/</span><span class="n">tcp</span>  <span class="c1"># POP3 over TLS</span>
@@ -1472,7 +1630,7 @@ or just want to chat about Cyrus, IMAP, etc.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jun 25 2021
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jan 08 2022
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1492,7 +1650,7 @@ or just want to chat about Cyrus, IMAP, etc.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'3.4.3 (stable)',
+            VERSION:'3.6.0-beta1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

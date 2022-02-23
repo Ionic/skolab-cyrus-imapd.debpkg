@@ -75,7 +75,8 @@ static int notify_parse_path(const char *path, struct request_target_t *tgt,
                              const char **resultstr);
 
 static int notify_get(struct transaction_t *txn, struct mailbox *mailbox,
-                      struct index_record *record, void *data, void **obj);
+                      struct index_record *record, void *data, void **obj,
+                      struct mime_type_t *mime);
 static int notify_put(struct transaction_t *txn, void *obj,
                       struct mailbox *mailbox, const char *resource,
                       void *davdb, unsigned flags);
@@ -276,7 +277,7 @@ struct namespace_t namespace_notify = {
     (ALLOW_READ | ALLOW_POST | ALLOW_DELETE |
      ALLOW_DAV | ALLOW_PROPPATCH | ALLOW_ACL),
     &my_dav_init, &my_dav_auth, &my_dav_reset, &my_dav_shutdown,
-    &dav_premethod, /*bearer*/NULL,
+    &dav_premethod,
     {
         { &meth_acl,            &notify_params },      /* ACL          */
         { NULL,                 NULL },                /* BIND         */
@@ -352,9 +353,10 @@ static int lookup_notify_collection(const char *userid, mbentry_t **mbentry)
             goto done;
         }
 
-        if (*mbentry) free((*mbentry)->name);
-        else *mbentry = mboxlist_entry_create();
+        mboxlist_entry_free(mbentry);
+        *mbentry = mboxlist_entry_create();
         (*mbentry)->name = xstrdup(notifyname);
+        (*mbentry)->mbtype = MBTYPE_COLLECTION;
     }
 
   done:
@@ -379,9 +381,9 @@ static int _create_notify_collection(const char *userid, struct mailbox **mailbo
             goto done;
         }
 
-        r = mboxlist_createmailbox(mbentry->name, MBTYPE_COLLECTION,
-                                   NULL, 1 /* admin */, userid, NULL,
-                                   0, 0, 0, 0, mailbox);
+        r = mboxlist_createmailbox(mbentry, 0/*options*/, 0/*highestmodseq*/,
+                                   1/*isadmin*/, userid, NULL/*authstate*/,
+                                   0/*flags*/, mailbox);
         /* we lost the race, that's OK */
         if (r == IMAP_MAILBOX_LOCKED) r = 0;
         if (r) syslog(LOG_ERR, "IOERROR: failed to create %s (%s)",
@@ -470,14 +472,15 @@ static void my_dav_shutdown(void)
 /* Perform a GET/HEAD request on a WebDAV notification resource */
 static int notify_get(struct transaction_t *txn, struct mailbox *mailbox,
                       struct index_record *record, void *data,
-                      void **obj __attribute__((unused)))
+                      void **obj __attribute__((unused)),
+                      struct mime_type_t *mime __attribute__((unused)))
 {
     const char **hdr;
     struct webdav_data *wdata = (struct webdav_data *) data;
     struct dlist *dl = NULL, *al;
     const char *type_str;
     struct buf msg_buf = BUF_INITIALIZER;
-    struct buf inbuf, *outbuf = NULL;
+    struct buf inbuf = BUF_INITIALIZER, *outbuf = NULL;
     xmlDocPtr indoc = NULL, outdoc;
     xmlNodePtr notify = NULL, root, node, type;
     xmlNodePtr resp = NULL, sharedurl = NULL, node2;
@@ -711,6 +714,7 @@ HIDDEN int dav_send_notification(xmlDocPtr doc,
     struct mailbox *mailbox = NULL;
     struct webdav_db *webdavdb = NULL;
     struct transaction_t txn;
+    mbentry_t mbentry;
     int r;
 
     /* XXX  Need to find location of user.
@@ -734,13 +738,21 @@ HIDDEN int dav_send_notification(xmlDocPtr doc,
     webdavdb = webdav_open_mailbox(mailbox);
     if (!webdavdb) {
         syslog(LOG_ERR, "dav_send_notification: unable to open WebDAV DB (%s)",
-               mailbox->name);
+               mailbox_name(mailbox));
         r = HTTP_SERVER_ERROR;
         goto done;
     }
 
     /* Start with an empty (clean) transaction */
     memset(&txn, 0, sizeof(struct transaction_t));
+    txn.userid = httpd_userid;
+    txn.authstate = httpd_authstate;
+
+    /* Create minimal mbentry for request target from mailbox */
+    memset(&mbentry, 0, sizeof(mbentry_t));
+    mbentry.name = (char *)mailbox_name(mailbox);
+    mbentry.uniqueid = (char *)mailbox_uniqueid(mailbox);
+    txn.req_tgt.mbentry = &mbentry;
 
     /* Create header cache */
     if (!(txn.req_hdrs = spool_new_hdrcache())) {
@@ -756,7 +768,7 @@ HIDDEN int dav_send_notification(xmlDocPtr doc,
     if (r != HTTP_CREATED && r != HTTP_NO_CONTENT) {
         syslog(LOG_ERR,
                "dav_send_notification: notify_put(%s, %s) failed: %s",
-               mailbox->name, resource, error_message(r));
+               mailbox_name(mailbox), resource, error_message(r));
     }
 
   done:
@@ -878,7 +890,7 @@ HIDDEN int notify_post(struct transaction_t *txn)
     webdavdb = webdav_open_userid(txn->req_tgt.userid);
 
     /* Find message UID for the resource */
-    webdav_lookup_resource(webdavdb, txn->req_tgt.mbentry->name,
+    webdav_lookup_resource(webdavdb, txn->req_tgt.mbentry,
                            resource, &wdata, 0);
     if (!wdata->dav.imap_uid) {
         ret = HTTP_NOT_FOUND;
@@ -910,8 +922,8 @@ HIDDEN int notify_post(struct transaction_t *txn)
     /* Set invite status */
     r = mailbox_open_iwl(mboxname, &shared);
     if (r) {
-        syslog(LOG_ERR, "IOERROR: failed to open mailbox %s for share reply",
-               mboxname);
+        xsyslog(LOG_ERR, "IOERROR: failed to open mailbox for share reply",
+                         "mailbox=<%s>", mboxname);
     }
     else {
         annotate_state_t *astate = NULL;
@@ -925,7 +937,7 @@ HIDDEN int notify_post(struct transaction_t *txn)
             r = annotate_state_writemask(astate, annot,
                                          txn->req_tgt.userid, &value);
 
-            if (shared->mbtype == MBTYPE_CALENDAR) {
+            if (mbtype_isa(mailbox_mbtype(shared)) == MBTYPE_CALENDAR) {
                 /* Sharee's copy of calendar SHOULD default to transparent */
                 annot =
                     DAV_ANNOT_NS "<" XML_NS_CALDAV ">schedule-calendar-transp";
@@ -1042,7 +1054,7 @@ static int notify_put(struct transaction_t *txn, void *obj,
     if (!doc) return HTTP_FORBIDDEN;
 
     /* Find message UID for the resource */
-    webdav_lookup_resource(db, mailbox->name, resource, &wdata, 0);
+    webdav_lookup_resource(db, txn->req_tgt.mbentry, resource, &wdata, 0);
 
     if (wdata->dav.imap_uid) {
         /* Fetch index record for the resource */
@@ -1091,14 +1103,19 @@ static int notify_put(struct transaction_t *txn, void *obj,
         if (!xmlStrcmp(type->name, BAD_CAST SHARE_INVITE_NOTIFICATION)) {
             for (node = xmlFirstElementChild(type); node;
                  node = xmlNextElementSibling(node)) {
+
+                xmlURIPtr p_uri = NULL;
                 if (!xmlStrcmp(node->name, BAD_CAST "sharer-resource-uri")) {
                     struct request_target_t tgt;
                     struct meth_params *pparams;
-                    const char *path, *errstr;
+                    const char *errstr;
                     int i;
 
+                    xmlFreeURI(p_uri);
+
                     value = xmlNodeGetContent(xmlFirstElementChild(node));
-                    path = (const char *) value;
+                    p_uri = xmlParseURI((const char*)value);
+                    if (!p_uri || !p_uri->path) continue;
 
                     /* Find the namespace of the requested resource */
                     for (i = 0; http_namespaces[i]; i++) {
@@ -1109,8 +1126,9 @@ static int notify_put(struct transaction_t *txn, void *obj,
 
                         /* See if the prefix matches - terminated with NUL or '/' */
                         len = strlen(http_namespaces[i]->prefix);
-                        if (!strncmp(path, http_namespaces[i]->prefix, len) &&
-                            (!path[len] || (path[len] == '/') || !strcmp(path, "*"))) {
+                        if (!strncmp(p_uri->path, http_namespaces[i]->prefix, len) &&
+                            (!p_uri->path[len] || (p_uri->path[len] == '/') ||
+                             !strcmp(p_uri->path, "*"))) {
                             break;
                         }
                     }
@@ -1120,7 +1138,7 @@ static int notify_put(struct transaction_t *txn, void *obj,
                     pparams =
                         (struct meth_params *) tgt.namespace->methods[METH_PUT].params;
                     tgt.flags = TGT_DAV_SHARED;  // prevent old-style sharing redirect
-                    pparams->parse_path(path, &tgt, &errstr);
+                    pparams->parse_path(p_uri->path, &tgt, &errstr);
                     xmlFree(value);
                     free(tgt.userid);
 
@@ -1129,6 +1147,7 @@ static int notify_put(struct transaction_t *txn, void *obj,
                     mboxlist_entry_free(&tgt.mbentry);
                     break;
                 }
+                xmlFreeURI(p_uri);
             }
         }
 
@@ -1518,7 +1537,7 @@ HIDDEN int propfind_sharedurl(const xmlChar *name, xmlNsPtr ns,
 
     fctx->flags.cs_sharing = (rock != 0);
 
-    mbname = mbname_from_intname(fctx->mailbox->name);
+    mbname = mbname_from_intname(mailbox_name(fctx->mailbox));
 
     if (!strcmpsafe(mbname_userid(mbname), fctx->req_tgt->userid)) {
         mbname_free(&mbname);
@@ -1905,6 +1924,7 @@ HIDDEN int dav_post_share(struct transaction_t *txn, struct meth_params *pparams
     }
 
     /* Local mailbox */
+    struct mboxlock *namespacelock = mboxname_usernamespacelock(txn->req_tgt.mbentry->name);
 
     /* Read body */
     ret = parse_xml_body(txn, &root, DAVSHARING_CONTENT_TYPE);
@@ -2066,6 +2086,7 @@ HIDDEN int dav_post_share(struct transaction_t *txn, struct meth_params *pparams
     if (root) xmlFreeDoc(root->doc);
     if (notify) xmlFreeDoc(notify->doc);
     buf_free(&resource);
+    mboxname_release(&namespacelock);
 
     return ret;
 }

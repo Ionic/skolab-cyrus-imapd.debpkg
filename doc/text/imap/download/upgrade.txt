@@ -1,4 +1,4 @@
-Upgrading to 3.4
+Upgrading to 3.6
 ****************
 
 Note: This guide assumes that you are familiar and comfortable with
@@ -15,6 +15,8 @@ Upgrading: an overview
 
   * Installation from tarball
 
+  * Storage changes
+
   * How are you planning on upgrading?
 
     * Upgrade by replicating
@@ -23,7 +25,7 @@ Upgrading: an overview
 
   * Do What As Who?
 
-* 2. Install new 3.4 Cyrus
+* 2. Install new 3.6 Cyrus
 
 * 3. Shut down existing Cyrus
 
@@ -33,7 +35,7 @@ Upgrading: an overview
 
 * 6. Upgrade specific items
 
-* 7. Start new 3.4 Cyrus and verify
+* 7. Start new 3.6 Cyrus and verify
 
 * 8. Reconstruct databases and cache
 
@@ -42,12 +44,6 @@ Upgrading: an overview
 * 10. Upgrade complete
 
 * Special note for Murder configurations
-
-Note: For those upgrading from 2.3.X; newer releases of Cyrus IMAP
-  will use significantly more memory per selected mailbox.  This is
-  not an error or bug; it’s a feature.  The newer code is holding more
-  data and metadata in memory for purposes of faster access to more of
-  the mailbox.  This is not a memory leak.
 
 
 1. Preparation
@@ -62,16 +58,46 @@ Installation from tarball
 You will need to install from our packaged tarball. We provide a full
 list of libraries that Debian requires, but we aren’t able to test all
 platforms: you may find you need to install additional or different
-libraries to support v3.4.
+libraries to support v3.6.
+
+
+Storage changes
+---------------
+
+In 3.6, mailboxes and user metadata directories are organised on disk
+by UUID rather than by mailbox name.
+
+At startup (or when you first run the updated *ctl_cyrusdb -r*
+manually), ctl_cyrusdb(8) will upgrade mailboxes.db to accommodate
+both old-style and new-style storage.
+
+By default, new top-level mailboxes will be created in the new style.
+Mailboxes that already exist will remain in the old style until you
+convert them with relocate_by_id(8).  New mailboxes below the top
+level will be created in the same style as their parent mailbox.
+
+The new cyr_ls(8) tool can be used to examine the on-disk contents of
+a given mailbox name.  mbpath(8) can be used to find where on disk a
+given mailbox and its metadata are.
+
+If you want new top level mailboxes to be created in the old style,
+you can enable the *mailbox_legacy_dirs* imapd.conf(5) option, which
+defaults to **off**.  With this turned on, you may still use
+*relocate_by_id* to convert them to the new style.
+
+Sieve scripts are now stored in the ‘#sieve’ mailbox (configurable
+with the *sieve_folder* imapd.conf(5) option).  No manual steps are
+necessary for upgrade: Cyrus recognises the old style storage and will
+convert to the new style automatically as necessary.
 
 
 How are you planning on upgrading?
 ----------------------------------
 
-Ideally, you will do a sandboxed test installation of 3.4 using a
+Ideally, you will do a sandboxed test installation of 3.6 using a
 snapshot of your existing data before you switch off your existing
 installation. The rest of the instructions are assuming a sandboxed
-3.4 installation.
+3.6 installation.
 
 
 Upgrade by replicating
@@ -79,13 +105,13 @@ Upgrade by replicating
 
 If you’re familiar with replication, and your current installation is
 2.4 or newer, you can set up your existing installation to replicate
-data to a new 3.4 installation and failover to the new installation
+data to a new 3.6 installation and failover to the new installation
 when you’re ready. The replication protocol has been kept backwards
 compatible.
 
 If your old installation contains mailboxes or messages that are older
 than 2.4, they may not have GUID fields in their indexes (index
-version too old), or they may have their GUID field set to zero.  3.4
+version too old), or they may have their GUID field set to zero.  3.6
 will not accept message replications without valid matching GUIDs, so
 you need to fix this on your old installation first.
 
@@ -112,7 +138,7 @@ Upgrade in place
 If you are upgrading in place, you will need to shut down Cyrus
 entirely while you install the new package.  If your old installation
 was using Berkeley DB format databases, you will need to convert or
-upgrade the databases **before** you upgrade.  Cyrus v3.4 does not
+upgrade the databases **before** you upgrade.  Cyrus v3.6 does not
 support Berkeley DB at all.
 
 Note: If you are upgrading from Cyrus version 2.5 or earlier, and
@@ -155,17 +181,17 @@ We strongly recommend that you read this entire document before
 upgrading.
 
 
-2. Install new 3.4 Cyrus
+2. Install new 3.6 Cyrus
 ========================
 
-Download the release 3.4 package tarball.
+Download the release 3.6 package tarball.
 
 Fetch the libraries for your platform. The full list (including all
 optional packages) for Debian is:
 
    sudo apt-get install -y autoconf automake autotools-dev bash-completion bison build-essential comerr-dev \
    debhelper flex g++ git gperf groff heimdal-dev libbsd-resource-perl libclone-perl libconfig-inifiles-perl \
-   libcunit1-dev libdatetime-perl libdb-dev libdigest-sha-perl libencode-imaputf7-perl libfile-chdir-perl \
+   libcunit1-dev libdatetime-perl libdigest-sha-perl libencode-imaputf7-perl libfile-chdir-perl \
    libglib2.0-dev libical-dev libio-socket-inet6-perl libio-stringy-perl libjansson-dev libldap2-dev \
    libmysqlclient-dev libnet-server-perl libnews-nntpclient-perl libpam0g-dev libpcre3-dev libsasl2-dev \
    libsqlite3-dev libssl-dev libtest-unit-perl libtool libunix-syslog-perl liburi-perl \
@@ -175,7 +201,7 @@ optional packages) for Debian is:
 
 If you’re on another platform and can provide the list of
 dependencies, please let us know via a GitHub issue or documentation
-pull request, or send mail to the developer list.
+pull request or send mail to the developer list.
 
 Follow the general install instructions.
 
@@ -208,9 +234,6 @@ We recommend backing up all your data before continuing.
 
 * Cyrus Databases
 
-(You do already have a backup strategy in place, right? Once you’re on
-3.4, you can consider using the experimental backup tools.)
-
 Copy all of this to the new instance, using "rsync" or similar tools.
 
 Note: Cyrus keeps its data and databases in various locations, some
@@ -226,7 +249,7 @@ server):
    rsync -aHv oldimap:/var/lib/cyrus/. /var/lib/cyrus/.
    rsync -aHv oldimap:/var/spool/cyrus/. /var/spool/cyrus/.
 
-You don’t need to copy the following databases as Cyrus 3.4 will
+You don’t need to copy the following databases as Cyrus 3.6 will
 recreate these for you automatically:
 
 * duplicate delivery (deliver.db),
@@ -270,7 +293,7 @@ anything you have provided overrides for in your config files:
 
 **Important config** options: "unixhierarchysep:" and "altnamespace:"
 defaults in imapd.conf(5) changed in 3.0, which will affect you if you
-are upgrading to 3.4 from something earlier than 3.0. Implications are
+are upgrading to 3.6 from something earlier than 3.0. Implications are
 outlined in the Note in User Namespace Mode and Switching the
 Alternative Namespace.  Please also see “Sieve Scripts,” below.
 
@@ -295,13 +318,13 @@ section.
 Warning: **Berkeley db format no longer supported since 3.0**If you
   have any databases using Berkeley db, they’ll need to be converted
   to skiplist or flat *in your existing installation*. And then
-  optionally converted to whatever final format you’d like in your 3.4
+  optionally converted to whatever final format you’d like in your 3.6
   installation.Databases potentially affected: mailboxes, annotations,
   conversations, quotas.On old install, prior to migration:
 
      cvt_cyrusdb /<configdirectory>mailboxes.db berkeley /tmp/new-mailboxes.db skiplist
 
-  If you don’t want to use flat or skiplist for 3.4, you can use
+  If you don’t want to use flat or skiplist for 3.5, you can use
   cvt_cyrusdb(8) to swap to new format:
 
      cvt_cyrusdb /tmp/new-mailboxes.db skiplist /<configdirectory>/mailboxes.db <new file format>
@@ -309,7 +332,7 @@ Warning: **Berkeley db format no longer supported since 3.0**If you
 Note: The cvt_cyrusdb(8) command does not accept relative paths.
 
 
-7. Start new 3.4 Cyrus and verify
+7. Start new 3.6 Cyrus and verify
 =================================
 
    sudo ./master/master -d
@@ -317,12 +340,12 @@ Note: The cvt_cyrusdb(8) command does not accept relative paths.
 Check "/var/log/syslog" for errors so you can quickly understand
 potential problems.
 
-When you’re satisfied version 3.4 is running and can see all its data
+When you’re satisfied version 3.6 is running and can see all its data
 correctly, start the new Cyrus up with your regular init script.
 
 If something has gone wrong, contact us on the mailing list. You can
 revert to backups and keep processing mail using your old version
-until you’re able to finish your 3.4 installation.
+until you’re able to finish your 3.6 installation.
 
 Note: If you’ve disable your system startup scripts, as recommended
   in step 2, remember to re-enable them.  Use something like
@@ -376,12 +399,21 @@ setting has changed. So, to force a regeneration:
    6. Start up Cyrus (or run *ctl_cyrusdb -r*).  The RACL entries
       will be rebuilt
 
+There are fixes and improvements to caching and search indexing in
+3.6.  You should consider running reconstruct(8) across all mailboxes
+to rebuild caches, and squatter(8) to rebuild search indexes.  This
+will probably take a long time, so you may wish to only do it per-
+mailbox as inconsistencies are discovered.  However, if you have been
+running a 3.5 development version, you should make sure to do this for
+all mailboxes, due to bugs that were introduced and then fixed during
+3.5 development.
+
 
 9. Do you want any new features?
 ================================
 
-3.4 comes with many lovely new features. Consider which ones you want
-to enable. Check the 3.4 release notes for the full list.
+3.6 comes with many lovely new features. Consider which ones you want
+to enable. Check the 3.6 release notes for the full list.
 
 
 10. Upgrade complete
@@ -407,10 +439,13 @@ time.
 
 Upgrade your mupdate master and front ends last.
 
-If you are upgrading from 2.4, and wish to use XFER to transfer your
-mailboxes to your new 3.4 server, please consider first upgrading your
-2.4 setup to version 2.4.19 or later.  Earlier versions of 2.4 do not
-correctly recognise the 2.5 and later mailbox versions, and will
-downgrade mailboxes (losing metadata) in transit.  2.4.19 and later
-versions correctly recognise 2.5 and later servers, and will not
-downgrade mailbox versions in transit.
+If you wish to use XFER to transfer mailboxes from an existing backend
+to your new 3.6 backend, you should first upgrade your existing
+backends to 3.4.3, 3.2.9, or 3.0.17.  These releases contain a patch
+such that XFER will correctly recognise 3.6 destinations.  Without
+this patch, XFER will not recognise 3.6, and will downgrade mailboxes
+to the oldest supported format (losing metadata) in transit.
+
+If your existing backends are 2.4 or 2.5, there are equivalent patches
+for recognising 3.6 on the cyrus-imapd-2.4 and cyrus-imapd-2.5 git
+branches, but these are not in any released version.

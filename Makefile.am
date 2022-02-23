@@ -94,8 +94,6 @@ CLEANFILES = \
 
 DISTCLEANFILES = \
 	com_err/et/compile_et \
-	imap/http_caldav_js.h \
-	imap/http_carddav_js.h \
 	imap/http_err.c \
 	imap/http_err.h \
 	imap/imap_err.c \
@@ -120,6 +118,8 @@ DISTCLEANFILES = \
 MAINTAINERCLEANFILES = \
 	doc/legacy/murder.png \
 	doc/legacy/netnews.png \
+	imap/http_caldav_js.h \
+	imap/http_carddav_js.h \
 	man/imapd.conf.5 \
 	man/sieveshell.1 \
 	sieve/addr.h \
@@ -127,6 +127,7 @@ MAINTAINERCLEANFILES = \
 
 SUBDIRS = .
 DIST_SUBDIRS = . perl/annotator perl/imap perl/sieve/managesieve
+dist_sbin_SCRIPTS =
 dist_sysconf_DATA =
 lib_LTLIBRARIES = lib/libcyrus_min.la lib/libcyrus.la
 check_PROGRAMS =
@@ -181,13 +182,14 @@ sbin_PROGRAMS += \
 	imap/ctl_mboxlist \
 	imap/cvt_cyrusdb \
 	imap/cyr_df \
+	imap/cyr_ls \
+	imap/cyr_pwd \
 	imap/cyrdump \
 	imap/cyr_dbtool \
 	imap/cyr_deny \
 	imap/cyr_expire \
 	imap/cyr_info \
 	imap/cyr_buildinfo \
-	imap/cyr_sequence \
 	imap/cyr_synclog \
 	imap/cyr_userseen \
 	imap/cyr_virusscan \
@@ -198,7 +200,11 @@ sbin_PROGRAMS += \
 	imap/mbtool \
 	imap/quota \
 	imap/reconstruct \
+	imap/relocate_by_id \
 	imap/cvt_xlist_specialuse
+
+dist_sbin_SCRIPTS += \
+	imap/cyr_cd.sh
 
 noinst_PROGRAMS += \
 	imap/message_test \
@@ -364,15 +370,6 @@ EXTRA_DIST = \
 	lib/charset/us-ascii.t \
 	lib/htmlchar.st \
 	lib/imapoptions \
-	lib/test/cyrusdb.c \
-	lib/test/cyrusdb.INPUT \
-	lib/test/cyrusdblong.INPUT \
-	lib/test/cyrusdblong.OUTPUT \
-	lib/test/cyrusdb.OUTPUT \
-	lib/test/cyrusdbtxn.INPUT \
-	lib/test/cyrusdbtxn.OUTPUT \
-	lib/test/pool.c \
-	lib/test/rnddb.c \
 	master/README \
 	netnews/inn.diffs \
 	perl/annotator/Daemon.pm \
@@ -388,9 +385,7 @@ EXTRA_DIST = \
 	perl/imap/examples/auditmbox.pl \
 	perl/imap/examples/imapcollate.pl \
 	perl/imap/examples/imapdu.pl \
-	perl/imap/examples/test-imsp.pl \
 	perl/imap/IMAP/Admin.pm \
-	perl/imap/IMAP/IMSP.pm \
 	perl/imap/IMAP/Shell.pm \
 	perl/imap/IMAP.pm \
 	perl/imap/IMAP.xs \
@@ -502,7 +497,6 @@ dist_noinst_SCRIPTS = \
 	com_err/et/config_script \
 	imap/promdatagen \
 	lib/mkchartable.pl \
-	lib/test/run \
 	perl/sieve/scripts/installsieve.pl \
 	perl/sieve/scripts/sieveshell.pl \
 	tools/arbitronsort.pl \
@@ -612,10 +606,12 @@ cunit_FRAMEWORK = \
 cunit_TESTS = \
 	cunit/aaa-db.testc \
 	cunit/annotate.testc \
+	cunit/arrayu64.testc \
 	cunit/backend.testc \
 	cunit/binhex.testc \
 	cunit/bitvector.testc \
 	cunit/buf.testc \
+	cunit/bufarray.testc \
 	cunit/byteorder.testc \
 	cunit/charset.testc \
 	cunit/command.testc \
@@ -644,7 +640,8 @@ cunit_TESTS = \
 	cunit/quota.testc \
 	cunit/rfc822tok.testc \
 	cunit/search_expr.testc \
-	cunit/seqset.testc
+	cunit/seqset.testc \
+	cunit/smallarrayu64.testc
 
 if SIEVE
 cunit_TESTS += cunit/sieve.testc
@@ -658,7 +655,9 @@ cunit_TESTS += \
 	cunit/strhash.testc \
 	cunit/times.testc \
 	cunit/tok.testc \
-	cunit/vparse.testc
+	cunit/vparse.testc \
+	cunit/dynarray.testc \
+	cunit/xsha1.testc
 
 cunit_unit_SOURCES = $(cunit_FRAMEWORK) $(cunit_TESTS) \
 		imap/mutex_fake.c imap/spool.c
@@ -715,13 +714,13 @@ check-local:
 check-discrete: cunit/unit
 	@echo "Running unit tests, one at a time"
 	@vg= ; \
-		test -z "$$VG" || vg="$(VALGRIND)" ; \
+		test -z "$$VG" || vg="$(VALGRIND) --quiet --error-exitcode=75 --log-fd=3" ; \
 		cd cunit ; \
 		fails=0 ; \
 		tests=0 ; \
 		while read t ; do \
 			tests=$$(($$tests + 1)) ; \
-			if $$vg ./unit -v $$t >/dev/null 2>/dev/null ; then \
+			if $$vg ./unit $$t >/dev/null 3>&2 2>/dev/null ; then \
 				echo "[  OK  ] $$t" ; \
 			else \
 				fails=$$(($$fails + 1)) ; \
@@ -761,6 +760,7 @@ include_HEADERS = \
 	lib/cyr_lock.h \
 	lib/cyr_qsort_r.h \
 	lib/cyrusdb.h \
+	lib/dynarray.h \
 	lib/glob.h \
 	lib/gmtoff.h \
 	lib/hash.h \
@@ -783,7 +783,9 @@ include_HEADERS = \
 	lib/procinfo.h \
 	lib/retry.h \
 	lib/rfc822tok.h \
+	lib/seqset.h \
 	lib/signals.h \
+	lib/smallarrayu64.h \
 	lib/sqldb.h \
 	lib/strarray.h \
 	lib/strhash.h \
@@ -895,6 +897,12 @@ imap_cyr_deny_LDADD = $(LD_UTILITY_ADD)
 imap_cyr_df_SOURCES = imap/cli_fatal.c imap/cyr_df.c imap/mutex_fake.c
 imap_cyr_df_LDADD = $(LD_UTILITY_ADD)
 
+imap_cyr_ls_SOURCES = imap/cli_fatal.c imap/cyr_ls.c imap/mutex_fake.c
+imap_cyr_ls_LDADD = $(LD_UTILITY_ADD)
+
+imap_cyr_pwd_SOURCES = imap/cli_fatal.c imap/cyr_pwd.c imap/mutex_fake.c
+imap_cyr_pwd_LDADD = $(LD_UTILITY_ADD)
+
 imap_cyr_expire_SOURCES = imap/cli_fatal.c imap/cyr_expire.c imap/mutex_fake.c
 imap_cyr_expire_LDADD = $(LD_UTILITY_ADD)
 
@@ -903,9 +911,6 @@ imap_cyr_info_LDADD = $(LD_UTILITY_ADD)
 
 imap_cyr_buildinfo_SOURCES = imap/cli_fatal.c imap/cyr_buildinfo.c imap/mutex_fake.c master/masterconf.c
 imap_cyr_buildinfo_LDADD = $(LD_UTILITY_ADD)
-
-imap_cyr_sequence_SOURCES = imap/cli_fatal.c imap/cyr_sequence.c imap/mutex_fake.c
-imap_cyr_sequence_LDADD = $(LD_UTILITY_ADD)
 
 imap_cyr_synclog_SOURCES = imap/cli_fatal.c imap/cyr_synclog.c imap/mutex_fake.c
 imap_cyr_synclog_LDADD = $(LD_UTILITY_ADD)
@@ -994,6 +999,8 @@ imap_libcyrus_imap_la_SOURCES = \
 	imap/conversations.h \
 	imap/convert_code.c \
 	imap/convert_code.h \
+	imap/dav_db.c \
+	imap/dav_db.h \
 	imap/dlist.c \
 	imap/dlist.h \
 	imap/duplicate.c \
@@ -1010,6 +1017,8 @@ imap_libcyrus_imap_la_SOURCES = \
 	imap/imapparse.h \
 	imap/index.c \
 	imap/index.h \
+	imap/jmap_util.c \
+	imap/jmap_util.h \
 	imap/json_support.h \
 	imap/mailbox.c \
 	imap/mailbox.h \
@@ -1059,8 +1068,6 @@ imap_libcyrus_imap_la_SOURCES = \
 	imap/search_sort.h \
 	imap/seen.h \
 	imap/seen_db.c \
-	imap/sequence.c \
-	imap/sequence.h \
 	imap/setproctitle.c \
 	imap/sievedir.c \
 	imap/sievedir.h \
@@ -1087,6 +1094,12 @@ imap_libcyrus_imap_la_SOURCES = \
 	imap/xstats.c \
 	imap/xstats.h \
 	imap/xstats_metrics.h
+
+if SIEVE
+imap_libcyrus_imap_la_SOURCES += \
+	imap/sieve_db.c \
+	imap/sieve_db.h
+endif # SIEVE
 
 if OBJECTSTORE
 imap_libcyrus_imap_la_SOURCES += \
@@ -1124,8 +1137,6 @@ imap_libcyrus_imap_la_SOURCES += \
 	imap/caldav_db.h \
 	imap/carddav_db.c \
 	imap/carddav_db.h \
-	imap/dav_db.c \
-	imap/dav_db.h \
 	imap/dav_util.c \
 	imap/dav_util.h \
 	imap/ical_support.c \
@@ -1136,6 +1147,14 @@ imap_libcyrus_imap_la_SOURCES += \
 	imap/vcard_support.h \
 	imap/webdav_db.c \
 	imap/webdav_db.h
+
+if CUNIT
+
+cunit_TESTS += cunit/http_jwt.testc
+cunit_unit_SOURCES += imap/http_jwt.c
+
+endif # CUNIT
+
 
 endif # HTTPD
 
@@ -1179,7 +1198,8 @@ imap_lmtpd_SOURCES += imap/lmtp_sieve.c imap/lmtp_sieve.h imap/smtpclient.c
 
 if JMAP
 imap_lmtpd_SOURCES += \
-	imap/jmap_util.c imap/jmap_mail_query.c imap/jmap_mail_query_parse.c
+	imap/jmap_util.c imap/jmap_mail_query.c imap/jmap_mail_query_parse.c \
+	imap/caldav_util.c imap/dav_util.c imap/itip_support.c imap/zoneinfo_db.c
 endif # JMAP
 
 endif # SIEVE
@@ -1224,18 +1244,17 @@ imap_nntpd_SOURCES = \
 imap_nntpd_LDADD = $(LD_SIEVE_ADD) $(LD_SERVER_ADD)
 
 nodist_imap_httpd_SOURCES = \
-	imap/http_caldav_js.h \
-	imap/http_carddav_js.h \
 	imap/tz_err.c \
 	imap/tz_err.h
 
 imap_httpd_SOURCES = \
+	imap/caldav_util.c \
+	imap/caldav_util.h \
 	imap/css3_color.c \
 	imap/css3_color.h \
 	imap/http_admin.c \
 	imap/http_applepush.c \
 	imap/http_caldav.c \
-	imap/http_caldav.h \
 	imap/http_caldav_js.h \
 	imap/http_caldav_sched.c \
 	imap/http_caldav_sched.h \
@@ -1251,6 +1270,8 @@ imap_httpd_SOURCES = \
 	imap/http_h2.c \
 	imap/http_h2.h \
 	imap/http_ischedule.c \
+	imap/http_jwt.c \
+	imap/http_jwt.h \
 	imap/http_prometheus.c \
 	imap/http_proxy.c \
 	imap/http_proxy.h \
@@ -1261,6 +1282,8 @@ imap_httpd_SOURCES = \
 	imap/http_ws.h \
 	imap/httpd.c \
 	imap/httpd.h \
+	imap/itip_support.c \
+	imap/itip_support.h \
 	imap/jcal.c \
 	imap/jcal.h \
 	imap/json_support.h \
@@ -1307,13 +1330,15 @@ imap_httpd_SOURCES += \
 	imap/jmap_mailbox.c \
 	imap/jmap_mdn.c \
 	imap/jmap_notes.c \
+	imap/jmap_push.c \
+	imap/jmap_push.h \
 	imap/jmap_util.c \
-	imap/jmap_util.h \
-	imap/jmap_vacation.c
+	imap/jmap_util.h
 
 if SIEVE
 imap_httpd_SOURCES += \
-	imap/jmap_sieve.c
+	imap/jmap_sieve.c \
+	imap/jmap_vacation.c
 endif
 
 nodist_imap_httpd_SOURCES += \
@@ -1321,8 +1346,6 @@ nodist_imap_httpd_SOURCES += \
 	imap/jmap_err.h
 
 imap_libcyrus_imap_la_SOURCES += \
-	imap/jmap_util.c \
-	imap/jmap_util.h \
 	imap/json_support.c \
 	imap/json_support.h
 
@@ -1368,6 +1391,9 @@ imap_quota_LDADD = $(LD_UTILITY_ADD)
 
 imap_reconstruct_SOURCES = imap/cli_fatal.c imap/mutex_fake.c imap/reconstruct.c
 imap_reconstruct_LDADD = $(LD_UTILITY_ADD)
+
+imap_relocate_by_id_SOURCES = imap/cli_fatal.c imap/mutex_fake.c imap/relocate_by_id.c
+imap_relocate_by_id_LDADD = $(LD_UTILITY_ADD)
 
 imap_dav_reconstruct_SOURCES = imap/cli_fatal.c imap/mutex_fake.c imap/dav_reconstruct.c
 imap_dav_reconstruct_LDADD = $(LD_UTILITY_ADD)
@@ -1473,6 +1499,7 @@ lib_libcyrus_la_SOURCES = \
 	lib/prot.c \
 	lib/ptrarray.c \
 	lib/rfc822tok.c \
+	lib/seqset.c \
 	lib/signals.c \
 	lib/stristr.c \
 	lib/times.c \
@@ -1516,12 +1543,14 @@ lib_libcyrus_min_la_SOURCES = \
 	lib/assert.c \
 	lib/bufarray.c \
 	lib/byteorder.c \
+	lib/dynarray.c \
 	lib/hash.c \
 	lib/hashset.c \
 	lib/hashu64.c \
 	lib/libconfig.c \
 	lib/mpool.c \
 	lib/retry.c \
+	lib/smallarrayu64.c \
 	lib/strarray.c \
 	lib/strhash.c \
 	lib/util.c \
@@ -1791,7 +1820,6 @@ sieve_libcyrus_sieve_la_SOURCES = \
 	sieve/interp.h \
 	sieve/message.c \
 	sieve/message.h \
-	sieve/rebuild.c \
 	sieve/script.c \
 	sieve/script.h \
 	sieve/sieve.y \

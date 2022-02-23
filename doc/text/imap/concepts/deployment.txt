@@ -77,6 +77,8 @@ deployment of Cyrus IMAP.
 
       * CardDAV
 
+      * Sieve
+
   * Storage types
 
     * Flat
