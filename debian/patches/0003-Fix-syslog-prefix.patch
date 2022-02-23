@@ -8,7 +8,7 @@ Last-Update: 2020-02-10
 
 --- a/imap/global.c
 +++ b/imap/global.c
-@@ -156,6 +156,9 @@
+@@ -158,6 +158,9 @@
      return SYSLOG_FACILITY;
  }
  
@@ -18,7 +18,7 @@ Last-Update: 2020-02-10
  struct cyrus_module {
      void (*done)(void *rock);
      void *rock;
-@@ -232,7 +235,9 @@
+@@ -234,7 +237,9 @@
          openlog(ident_buf, syslog_opts, SYSLOG_FACILITY);
      }
      else {
