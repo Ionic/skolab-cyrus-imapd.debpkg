@@ -6,4 +6,4 @@
 0009-Normalize-the-authentication-ID.patch
 0012-Use-UnicodeData.txt-from-system.patch
 0018-increase-test-timeout.patch
-0019-propagate-XXFLAGS.patch
+#0019-propagate-XXFLAGS.patch
