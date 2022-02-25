@@ -1,3 +1,11 @@
+cyrus-imapd (3.4.3-4) unstable; urgency=medium
+
+  * Drop "Multi-Arch: same" because manpages generates file-conflicts
+  * Revert 3.4.3-3 change: propaging CC flags to Perl build seems wrong
+    (see https://github.com/cyrusimap/cyrus-imapd/issues/3893)
+
+ -- Yadd <yadd@debian.org>  Fri, 25 Feb 2022 13:52:49 +0100
+
 cyrus-imapd (3.4.3-3) unstable; urgency=medium
 
   * Propagate CFLAGS to Perl build (makes build reproducible)
