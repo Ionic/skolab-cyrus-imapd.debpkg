@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>JMAP &mdash; Cyrus IMAP 3.6.0-beta1 documentation</title>
+  <title>JMAP &mdash; Cyrus IMAP 3.6.0-beta2 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.6.0-beta1 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.6.0-beta2 documentation" href="../../../../index.html"/>
         <link rel="up" title="HTTP modules" href="../manage-dav.html"/>
         <link rel="next" title="RSS Feeds" href="rss.html"/>
         <link rel="prev" title="WebDAV" href="webdav.html"/> 
@@ -763,7 +763,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.6.0-beta1</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.6.0-beta2</a> &raquo;</li>
       
           <li><a href="../../../../setup.html">Setup</a> &raquo;</li>
       
@@ -841,55 +841,30 @@ the sample test clients.</p>
 <div class="section" id="jmap-implementation-status">
 <span id="jmap-implementation"></span><h2>JMAP implementation status<a class="headerlink" href="#jmap-implementation-status" title="Permalink to this headline">¶</a></h2>
 <p>The JMAP implementation in Cyrus is at various stages of maturity.</p>
-<div class="section" id="working">
-<h3>Working<a class="headerlink" href="#working" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="implemented">
+<h3>Implemented<a class="headerlink" href="#implemented" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><dl class="first docutils">
-<dt><strong>Contacts</strong></dt>
-<dd><ul class="first last">
-<li>All JMAP methods are implemented. JMAP blobs are not supported.</li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><strong>Calendars</strong></dt>
-<dd><ul class="first last">
-<li>All JMAP methods are implemented. JMAP blobs are not supported.</li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><strong>Messages</strong></dt>
-<dd><ul class="first last">
-<li>Most JMAP methods are implemented. The following methods are not planned for implementation:<ul>
-<li>copyMessages</li>
-<li>reportMessages</li>
-<li>getVacationResponse</li>
-<li>setVacationResponse</li>
-<li>getIdentityUpdates</li>
-<li>setIdentities</li>
-</ul>
-</li>
-</ul>
-</dd>
-</dl>
-</li>
+<li>The core protocol (<span class="target" id="index-1"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8620.html"><strong>RFC 8620</strong></a>), except for PushSubscription</li>
+<li>JMAP Mail (<span class="target" id="index-2"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8621.html"><strong>RFC 8621</strong></a>)</li>
+<li>A JMAP Subprotocol for WebSocket (<span class="target" id="index-3"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8887.html"><strong>RFC 8887</strong></a>)</li>
 </ul>
 </div>
-<div class="section" id="not-yet-implemented">
-<h3>Not yet implemented<a class="headerlink" href="#not-yet-implemented" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="in-development">
+<h3>In development<a class="headerlink" href="#in-development" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><strong>Remote mailboxes</strong></li>
-<li><dl class="first docutils">
-<dt><strong>Events</strong></dt>
-<dd><ul class="first last">
-<li>Changes on mailbox entries trigger notifications. However, the JMAP event service is not implemented.</li>
+<li>JMAP Calendars (<a class="reference external" href="https://tools.ietf.org/html/draft-ietf-jmap-calendars">draft-ietf-jmap-calendars</a>)</li>
+<li>JMAP Sharing (<a class="reference external" href="https://tools.ietf.org/html/draft-ietf-jmap-sharing">draft-ietf-jmap-sharing</a>)</li>
+<li>JMAP Blobs (<a class="reference external" href="https://tools.ietf.org/html/draft-ietf-jmap-blob">draft-ietf-jmap-blob</a>)</li>
+<li>JMAP Sieve (<a class="reference external" href="https://tools.ietf.org/html/draft-ietf-jmap-sieve">draft-ietf-jmap-sieve</a>)</li>
+<li>JMAP Contacts (<a class="reference external" href="https://tools.ietf.org/html/draft-ietf-jmap-jscontact">draft-ietf-jmap-jscontact</a>)</li>
+<li>JMAP MDN (<span class="target" id="index-4"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc9007.html"><strong>RFC 9007</strong></a>)</li>
 </ul>
-</dd>
-</dl>
-</li>
+</div>
+<div class="section" id="not-implemented">
+<h3>Not implemented<a class="headerlink" href="#not-implemented" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>JMAP Tasks (<a class="reference external" href="https://tools.ietf.org/html/draft-ietf-jmap-tasks">draft-ietf-jmap-tasks</a>)</li>
+<li>JMAP SMIME (<a class="reference external" href="https://tools.ietf.org/html/draft-ietf-jmap-smime">draft-ietf-jmap-smime</a>)</li>
 </ul>
 </div>
 </div>
@@ -913,7 +888,7 @@ the sample test clients.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jan 02 2018
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Mar 04 2022
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -933,7 +908,7 @@ the sample test clients.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.6.0-beta1',
+            VERSION:'3.6.0-beta2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

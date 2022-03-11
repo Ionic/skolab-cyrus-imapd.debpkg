@@ -168,6 +168,9 @@
 /* Define to 1 if you have the `getrlimit' function. */
 #undef HAVE_GETRLIMIT
 
+/* Do we have support for fetching X- component names? */
+#undef HAVE_GET_COMPONENT_NAME
+
 /* Define to 1 if you have the <gssapi/gssapi_ext.h> header file. */
 #undef HAVE_GSSAPI_GSSAPI_EXT_H
 

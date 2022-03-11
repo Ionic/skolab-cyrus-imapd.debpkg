@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>sync_client &mdash; Cyrus IMAP 3.6.0-beta1 documentation</title>
+  <title>sync_client &mdash; Cyrus IMAP 3.6.0-beta2 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../../../../genindex.html"/>
         <link rel="search" title="Search" href="../../../../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.6.0-beta1 documentation" href="../../../../index.html"/>
+    <link rel="top" title="Cyrus IMAP 3.6.0-beta2 documentation" href="../../../../index.html"/>
         <link rel="up" title="Man pages" href="../index.html"/>
         <link rel="next" title="sync_reset" href="sync_reset.html"/>
         <link rel="prev" title="squatter" href="squatter.html"/> 
@@ -763,7 +763,7 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html">Docs v3.6.0-beta1</a> &raquo;</li>
+      <li><a href="../../../../index.html">Docs v3.6.0-beta2</a> &raquo;</li>
       
           <li><a href="../../../../operations.html">Operations</a> &raquo;</li>
       
@@ -791,7 +791,7 @@
 <strong>sync_client</strong> [ <strong>-v</strong> ] [ <strong>-l</strong> ] [ <strong>-L</strong> ] [ <strong>-z</strong> ] [ <strong>-C</strong> <em>config-file</em> ] [ <strong>-S</strong> <em>server-name</em> ]
     [ <strong>-f</strong> <em>input-file</em> ] [ <strong>-F</strong> <em>shutdown_file</em> ] [ <strong>-w</strong> <em>wait_interval</em> ]
     [ <strong>-t</strong> <em>timeout</em> ] [ <strong>-d</strong> <em>delay</em> ] [ <strong>-r</strong> ] [ <strong>-n</strong> <em>channel</em> ] [ <strong>-u</strong> ] [ <strong>-m</strong> ]
-    [ <strong>-p</strong> <em>partition</em> ] [ <strong>-A</strong> ] [ <strong>-s</strong> ] [ <strong>-O</strong> ] <em>objects</em>...
+    [ <strong>-p</strong> <em>partition</em> ] [ <strong>-A</strong> ] [ <strong>-N</strong> ] [ <strong>-s</strong> ] [ <strong>-O</strong> ] <em>objects</em>...
 </pre>
 </div>
 <div class="section" id="description">
@@ -878,6 +878,13 @@ different server with each channel.</p>
 </dd></dl>
 
 <dl class="option">
+<dt id="id3">
+<code class="descname">-N</code><code class="descclassname"></code><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use non-blocking sync_lock (combination of IP address and username)
+to skip over any users who are currently syncing.</p>
+</dd></dl>
+
+<dl class="option">
 <dt id="cmdoption-sync-client-o">
 <code class="descname">-o</code><code class="descclassname"></code><a class="headerlink" href="#cmdoption-sync-client-o" title="Permalink to this definition">¶</a></dt>
 <dd><p>Only attempt to connect to the backend server once rather than
@@ -885,8 +892,8 @@ waiting up to 1000 seconds before giving up.</p>
 </dd></dl>
 
 <dl class="option">
-<dt id="id3">
-<code class="descname">-O</code><code class="descclassname"></code><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
+<dt id="id4">
+<code class="descname">-O</code><code class="descclassname"></code><a class="headerlink" href="#id4" title="Permalink to this definition">¶</a></dt>
 <dd><p>No copyback mode. Replication will stop if the replica reports a CRC
 error, rather than doing a full mailbox sync. Useful if moving users to a
 new server, where you don’t want any errors to cause the source servers
@@ -927,8 +934,8 @@ replicated. Principally used for debugging purposes: not exposed to
 </dd></dl>
 
 <dl class="option">
-<dt id="id4">
-<code class="descname">-S</code><code class="descclassname"> servername</code><a class="headerlink" href="#id4" title="Permalink to this definition">¶</a></dt>
+<dt id="id5">
+<code class="descname">-S</code><code class="descclassname"> servername</code><a class="headerlink" href="#id5" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tells <strong>sync_client</strong> with which server to communicate.  Overrides
 the <code class="docutils literal notranslate"><span class="pre">sync_host</span></code> configuration option.</p>
 </dd></dl>
@@ -1017,7 +1024,7 @@ section of <a class="reference internal" href="../configs/cyrus.conf.html#std:cy
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Sep 19 2020
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jan 09 2022
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1037,7 +1044,7 @@ section of <a class="reference internal" href="../configs/cyrus.conf.html#std:cy
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../../../',
-            VERSION:'3.6.0-beta1',
+            VERSION:'3.6.0-beta2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

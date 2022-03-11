@@ -161,7 +161,7 @@ number defined in conf.py.
 
 Usage: "|imap_current_stable_version|"
 
-Produces 3.6.0-beta1.
+Produces 3.6.0-beta2.
 
 
 Conventions: Man Pages
