@@ -7,7 +7,7 @@ Translate mailbox names to filesystem paths
 Synopsis
 ========
 
-   **mbpath** [ **-C** *config-file* ] [ **-l** ] [ **-m** ] [ **-q** ] [ **-s** ] [ **-u** ] [ **-a** | **-A** | **-M** | **-S** | **-U** ] [ *mailbox-names*... ]
+   **mbpath** [ **-C** *config-file* ] [ **-l** ] [ **-m** ] [ **-q** ] [ **-s** ] [ **-u** | **-p** ] [ **-a** | **-A** | **-M** | **-S** | **-U** ] [ *mailbox-names*... ]
 
 
 Description
@@ -53,6 +53,11 @@ Options
 -u
 
    The specified *mailbox-names* are users, not mailboxes.
+
+-p
+
+   The specified *mailbox-names* are UNIX mailbox paths, not
+   mailboxes.
 
 
 Selectors

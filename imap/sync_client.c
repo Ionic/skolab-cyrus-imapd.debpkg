@@ -117,6 +117,8 @@ static void shut_down(int code)
 {
     in_shutdown = 1;
 
+    libcyrus_run_delayed();
+
     seen_done();
     cyrus_done();
     exit(code);
@@ -262,11 +264,20 @@ static int do_daemon_work(const char *sync_shutdown_file,
 
 static void replica_connect(void)
 {
+    static int maxwait = 0;
     int wait;
+
+    if (!maxwait)
+        maxwait = config_getduration(IMAPOPT_SYNC_RECONNECT_MAXWAIT, 's');
 
     for (wait = 15;; wait *= 2) {
         int r = sync_connect(&sync_cs);
         if (r != IMAP_AGAIN) break;
+
+        signals_poll();
+
+        if (maxwait > 0 && wait > maxwait)
+            wait = maxwait;
 
         fprintf(stderr,
                 "Can not connect to server '%s', retrying in %d seconds\n",
@@ -281,6 +292,7 @@ static void replica_connect(void)
         _exit(1);
     }
 
+#ifdef HAVE_ZLIB
     if (do_compress && !sync_cs.backend->in->zstrm) {
         fprintf(stderr, "Failed to enable compression to server '%s'\n",
                 servername);
@@ -288,10 +300,25 @@ static void replica_connect(void)
                 servername);
         _exit(1);
     }
+#endif
 
     if (verbose > 1) {
         prot_setlog(sync_cs.backend->in, fileno(stderr));
         prot_setlog(sync_cs.backend->out, fileno(stderr));
+    }
+
+    if (no_copyback) {
+        const char *cmd = "FORCE";
+        struct dlist *kl = dlist_newkvlist(NULL, cmd);
+        struct dlist *kin = NULL;
+        sync_send_apply(kl, sync_cs.backend->out);
+        int r = sync_parse_response(cmd, sync_cs.backend->in, &kin);
+        if (r) {
+            syslog(LOG_ERR, "SYNCERROR: failed to enable force mode");
+            _exit(1);
+        }
+        dlist_free(&kl);
+        dlist_free(&kin);
     }
 }
 
@@ -322,6 +349,7 @@ static void do_daemon(const char *sync_shutdown_file,
             if (!backend_ping(sync_cs.backend, NULL)) restart = 1;
         }
         replica_disconnect();
+        libcyrus_run_delayed();
     }
 }
 
@@ -339,11 +367,15 @@ static int do_mailbox(const char *mboxname)
     return r;
 }
 
-static int cb_allmbox(const mbentry_t *mbentry, void *rock __attribute__((unused)))
+static int cb_allmbox(const mbentry_t *mbentry, void *rock)
 {
     int r = 0;
+    int *exit_rcp = (int *)rock;
 
     char *userid = mboxname_to_userid(mbentry->name);
+
+    // reconnect if we've been disconnected
+    if (!sync_cs.backend) replica_connect();
 
     if (userid) {
         /* skip deleted mailboxes only because the are out of order, and you would
@@ -352,22 +384,34 @@ static int cb_allmbox(const mbentry_t *mbentry, void *rock __attribute__((unused
             goto done;
 
         /* only sync if we haven't just done the user */
-        if (strcmpsafe(userid, prev_userid)) {
-            r = sync_do_user(&sync_cs, userid, NULL);
-            if (r) {
-                if (verbose)
-                    fprintf(stderr, "Error from do_user(%s): bailing out!\n", userid);
-                syslog(LOG_ERR, "Error in do_user(%s): bailing out!", userid);
-                goto done;
-            }
-            free(prev_userid);
-            prev_userid = xstrdup(userid);
+        if (!strcmpsafe(userid, prev_userid))
+            goto done;
+
+        xzfree(prev_userid);
+        prev_userid = xstrdup(userid);
+
+        r = sync_do_user(&sync_cs, userid, NULL);
+        if (r == IMAP_MAILBOX_LOCKED) {
+            if (verbose)
+                fprintf(stderr, "Skipping locked user %s\n", userid);
+            r = 0;
+        }
+        if (r) {
+            if (verbose)
+                fprintf(stderr, "Error from do_user(%s): bailing out!\n", userid);
+            syslog(LOG_ERR, "Error in do_user(%s): bailing out!", userid);
+            goto done;
         }
     }
     else {
         /* all shared mailboxes, including DELETED ones, sync alone */
         /* XXX: batch in hundreds? */
         r = do_mailbox(mbentry->name);
+        if (r == IMAP_MAILBOX_LOCKED) {
+            if (verbose)
+                fprintf(stderr, "Skipping locked mailbox %s\n", mbentry->name);
+            r = 0;
+        }
         if (r) {
             if (verbose)
                 fprintf(stderr, "Error from do_user(%s): bailing out!\n", mbentry->name);
@@ -378,7 +422,13 @@ static int cb_allmbox(const mbentry_t *mbentry, void *rock __attribute__((unused
 
 done:
     free(userid);
-    return r;
+    if (r) {
+        // disconnect on errors
+        replica_disconnect();
+        // remember that we had an error for the exit code
+        *exit_rcp = 1;
+    }
+    return 0; // but keep going anyway
 }
 
 /* ====================================================================== */
@@ -419,7 +469,7 @@ int main(int argc, char **argv)
 
     setbuf(stdout, NULL);
 
-    while ((opt = getopt(argc, argv, "C:vlLS:F:f:w:t:d:n:rRumsozOAp:1")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:vlLS:F:f:w:t:d:n:rRNumsozOAp:1")) != EOF) {
         switch (opt) {
         case 'C': /* alt config file */
             alt_config = optarg;
@@ -478,6 +528,10 @@ int main(int argc, char **argv)
             if (mode != MODE_UNKNOWN)
                 usage("sync_client", "Mutually exclusive options defined");
             mode = MODE_REPEAT;
+            break;
+
+        case 'N': // return LOCKED if this user is already sync locked
+            flags |= SYNC_FLAG_NONBLOCK;
             break;
 
         case 'A':
@@ -631,8 +685,10 @@ int main(int argc, char **argv)
         /* Open up connection to server */
         replica_connect();
 
-        if (mboxlist_allmbox(optind < argc ? argv[optind] : NULL, cb_allmbox, &channel, 0))
+        if (mboxlist_allmbox(optind < argc ? argv[optind] : NULL, cb_allmbox, &exit_rc, 0))
             exit_rc = 1;
+
+        xzfree(prev_userid);
 
         replica_disconnect();
         break;
@@ -730,6 +786,8 @@ int main(int argc, char **argv)
     }
 
     buf_free(&tagbuf);
+
+    libcyrus_run_delayed();
 
     shut_down(exit_rc);
 }

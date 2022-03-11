@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "IMAPD.CONF" "5" "February 02, 2022" "3.4.3" "Cyrus IMAP"
+.TH "IMAPD.CONF" "5" "March 11, 2022" "3.6.0" "Cyrus IMAP"
 .SH NAME
 imapd.conf \- Cyrus IMAP documentation
 .
@@ -96,6 +96,14 @@ The sections below detail options that can be placed in the
 Some options have no default value, these are listed with
 \(ga\(ga<no default>’‘.  Some options default to the empty string, these
 are listed with \(ga\(ga<none>’‘.
+.sp
+\fBacl_admin_implies_write:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+If enabled, any user with the admin ACL on a mailbox implicitly
+gets the ability to write to that mailbox as well.
+.UNINDENT
+.UNINDENT
 .sp
 \fBaddressbookprefix:\fP #addressbooks
 .INDENT 0.0
@@ -823,6 +831,14 @@ than any sane message should have.
 .UNINDENT
 .UNINDENT
 .sp
+\fBcaldav_accept_invalid_rrules:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+Accept invalid RRULEs (e.g. FREQ=WEEKLY;BYMONTHDAY=15)
+rather than rejecting them as errors.
+.UNINDENT
+.UNINDENT
+.sp
 \fBcaldav_allowattach:\fP 1
 .INDENT 0.0
 .INDENT 3.5
@@ -1024,8 +1040,8 @@ assumed.
 \fBcommandmintimer:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
-Time in seconds. Any imap command that takes longer than this
-time is logged.
+Time in floating point seconds. Any imap command that takes longer than
+this time is logged.
 .UNINDENT
 .UNINDENT
 .sp
@@ -1206,6 +1222,13 @@ assumed.
 .UNINDENT
 .UNINDENT
 .sp
+\fBdebug:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+If enabled, allow syslog() to pass LOG_DEBUG messages.
+.UNINDENT
+.UNINDENT
+.sp
 \fBdebug_command:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
@@ -1214,6 +1237,16 @@ is a C format string that gets 3 options: the first is the name of the
 executable (as specified in the cmd parameter in cyrus.conf). The second
 is the pid (integer) and the third is the service ID.
 Example: /usr/local/bin/gdb /usr/cyrus/bin/%s %d
+.UNINDENT
+.UNINDENT
+.sp
+\fBdebug_writefail_guid:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+If set, any arriving message with this guid will fail as if the underlying
+disk write had failed, pretending to be a disk full condition.  This is
+mainly useful for regression testing certain edge case handling.
+Currently only implemented for replication uploads.
 .UNINDENT
 .UNINDENT
 .sp
@@ -1440,7 +1473,7 @@ Set ALL for any folder
 .INDENT 3.5
 Space\-separated list of extra parameters to add to any appropriated event.
 .sp
-Allowed values: \fIbodyStructure\fP, \fIclientAddress\fP, \fIdiskUsed\fP, \fIflagNames\fP, \fImessageContent\fP, \fImessageSize\fP, \fImessages\fP, \fImodseq\fP, \fIservice\fP, \fItimestamp\fP, \fIuidnext\fP, \fIvnd.cmu.midset\fP, \fIvnd.cmu.unseenMessages\fP, \fIvnd.cmu.envelope\fP, \fIvnd.cmu.sessionId\fP, \fIvnd.cmu.mailboxACL\fP, \fIvnd.cmu.mbtype\fP, \fIvnd.cmu.davFilename\fP, \fIvnd.cmu.davUid\fP, \fIvnd.fastmail.clientId\fP, \fIvnd.fastmail.sessionId\fP, \fIvnd.fastmail.convExists\fP, \fIvnd.fastmail.convUnseen\fP, \fIvnd.fastmail.cid\fP, \fIvnd.fastmail.counters\fP, \fIvnd.cmu.emailid\fP, \fIvnd.cmu.threadid\fP
+Allowed values: \fIbodyStructure\fP, \fIclientAddress\fP, \fIdiskUsed\fP, \fIflagNames\fP, \fImessageContent\fP, \fImessageSize\fP, \fImessages\fP, \fImodseq\fP, \fIservice\fP, \fItimestamp\fP, \fIuidnext\fP, \fIvnd.cmu.midset\fP, \fIvnd.cmu.unseenMessages\fP, \fIvnd.cmu.envelope\fP, \fIvnd.cmu.sessionId\fP, \fIvnd.cmu.mailboxACL\fP, \fIvnd.cmu.mbtype\fP, \fIvnd.cmu.davFilename\fP, \fIvnd.cmu.davUid\fP, \fIvnd.fastmail.clientId\fP, \fIvnd.fastmail.sessionId\fP, \fIvnd.fastmail.convExists\fP, \fIvnd.fastmail.convUnseen\fP, \fIvnd.fastmail.cid\fP, \fIvnd.fastmail.counters\fP, \fIvnd.fastmail.jmapEmail\fP, \fIvnd.fastmail.jmapStates\fP, \fIvnd.cmu.emailid\fP, \fIvnd.cmu.threadid\fP
 .UNINDENT
 .UNINDENT
 .sp
@@ -1539,13 +1572,6 @@ server must be quiesced and then the directories moved with the
 If enabled, the partitions will also be hashed, in addition to the
 hashing done on configuration directories.  This is recommended if
 one partition has a very bushy mailbox tree.
-.UNINDENT
-.UNINDENT
-.sp
-\fBdebug:\fP 0
-.INDENT 0.0
-.INDENT 3.5
-If enabled, allow syslog() to pass LOG_DEBUG messages.
 .UNINDENT
 .UNINDENT
 .sp
@@ -1695,6 +1721,66 @@ is assumed.
 .UNINDENT
 .UNINDENT
 .sp
+\fBhttp_h2_altsvc:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+If set, HTTP/2 (over TLS) will be advertised as being available on the
+specified [host]:port.
+.UNINDENT
+.UNINDENT
+.sp
+\fBhttp_jwt_key_dir:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+The absolute path to a directory containing one or more key files
+to authenticate JSON Web Tokens (\fI\%RFC 7519\fP) for HTTP connections.
+Keys for the following JWS algorithms are supported: “HS256”,
+“HS384”, “HS512”, “RS256”, “RS384”, “RS512”.
+.sp
+A key file consists of one or more keys encoded in PEM format.
+RSA keys must be embedded between the lines
+“—–BEGIN PUBLIC KEY—–” and “—–END PUBLIC KEY—–”
+HMAC digest keys must be embedded between the lines
+“—–BEGIN HMAC KEY—–” and “—–END HMAC KEY—–”,
+encoded in base64.
+Any lines before or after a PEM key definition are ignored,
+empty lines are ignored anywhere in the file.
+.sp
+The JSON Web Token must be the value of the HTTP “Authorization” header,
+using the “Bearer” authentication scheme. The JWS Header must include the
+“alg” and “typ” parameter. A header with any other parameter is rejected.
+The JWS Payload must include the “sub” claim with the Cyrus user
+identifier as value. It may include the “iat” claim (see \fIhttp_jwt_max_age\fP).
+A payload with any other claim is rejected.
+.UNINDENT
+.UNINDENT
+.sp
+\fBhttp_jwt_max_age:\fP 0s
+.INDENT 0.0
+.INDENT 3.5
+Defines the timespan in which a JSON Web Token is valid
+(see \fIhttp_jwt_key\fP). The value must be zero or positive.
+.sp
+If non\-zero, the timespan starts at the point in time specified in the
+“iat” claim of the JWS Payload and ends after the duration of this
+option value has passed. Tokens without an “iat” claim,
+or with an issue date in the future, are rejected. There is no leeway
+for clock skew.
+.sp
+The zero value disables validation of the “iat” JWS claim.
+.UNINDENT
+.UNINDENT
+.sp
+\fBicalendar_max_size:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+Maximum allowed iCalendar size.
+If non\-zero, CalDAV and JMAP will reject storage of resources whose
+iCalendar representation is larger than \fIicalendar_max_size\fP bytes.
+If set to 0, this will allow iCalendar resources of any size (the default).
+.UNINDENT
+.UNINDENT
+.sp
 \fBidlesocket:\fP {configdirectory}/socket/idle
 .INDENT 0.0
 .INDENT 3.5
@@ -1790,6 +1876,22 @@ cache email search results.
 .UNINDENT
 .UNINDENT
 .sp
+\fBjmap_querycache_max_age:\fP 0m
+.INDENT 0.0
+.INDENT 3.5
+The duration after which unused cached JMAP query results
+must be evicted from process memory. If non\-zero, then the
+full result of the last query (before windowing) is stored
+in\-memory. Subsequent queries with the same expression and
+query state can then page through the cached result.
+A zero value disables query result caching.
+.sp
+If no unit is specified, minutes is assumed.
+.sp
+This feature currently only is enabled for Email/query.
+.UNINDENT
+.UNINDENT
+.sp
 \fBjmap_preview_annot:\fP <none>
 .INDENT 0.0
 .INDENT 3.5
@@ -1838,6 +1940,16 @@ angular brackets, as defined in \fI\%RFC 2392\fP\&.
 .INDENT 3.5
 The maximum byte length of dynamically generated message previews. Previews
 stored in jmap_preview_annot take precedence.
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_max_catenate_items:\fP 100
+.INDENT 0.0
+.INDENT 3.5
+The maximum number of items that can be catenated together by
+a JMAP Blob/set action.  Returned as the maxCatenateItems property
+value of the JMAP “\fI\%urn:ietf:params:jmap:blob\fP” capabilities object.
+Default value is 100.
 .UNINDENT
 .UNINDENT
 .sp
@@ -1946,6 +2058,17 @@ JMAP implementation does not enforce this size limit. Default is 10 Mb.
 .INDENT 3.5
 If enabled, support non\-standard JMAP extensions.  If not enabled,
 only IETF standard JMAP functionality is supported.
+.UNINDENT
+.UNINDENT
+.sp
+\fBjmap_pushpoll:\fP 60s
+.INDENT 0.0
+.INDENT 3.5
+The interval for polling for changes on an EventSource connection or
+when push has been ennabled on a WebSocket channel.
+The minimum value is 1 second. A value of 0 will disable push.
+.sp
+If no unit is specified, seconds is assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -2554,6 +2677,14 @@ newly created mailbox.  If you know you will require particular
 flag names then this avoids a possible race condition against a client
 that fills the entire 128 available slots.  Default is NULL, which is
 no flags.  Example: $Label1 $Label2 $Label3 NotSpam Spam
+.UNINDENT
+.UNINDENT
+.sp
+\fBmailbox_legacy_dirs:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+if enabled, new mailboxes without parents will be created with legacy paths.
+sub mailboxes of users will still inherit the parent legacy setting
 .UNINDENT
 .UNINDENT
 .sp
@@ -3488,8 +3619,7 @@ will either add or remove reverse ACL pointers from mailboxes.db
 \fBreverseuniqueids:\fP 1
 .INDENT 0.0
 .INDENT 3.5
-At startup time, ctl_cyrusdb \-r will check this value and it
-will either add or remove reverse UNIQUEID pointers from mailboxes.db
+Deprecated. No longer used
 .UNINDENT
 .UNINDENT
 .sp
@@ -3774,6 +3904,16 @@ of no value means search “forever” until other timeouts.
 .UNINDENT
 .UNINDENT
 .sp
+\fBsearch_maxsize:\fP 4096
+.INDENT 0.0
+.INDENT 3.5
+The maximum size in kilobytes to index for each message part. Message
+contents that occur after this byte offset will not be indexed or
+search snippets generated from.
+Default is 4Mb. Xapian\-only.
+.UNINDENT
+.UNINDENT
+.sp
 \fBsearch_queryscan:\fP 5000
 .INDENT 0.0
 .INDENT 3.5
@@ -3993,7 +4133,7 @@ assumed.
 .UNINDENT
 .UNINDENT
 .sp
-\fBsieve_extensions:\fP fileinto reject vacation vacation\-seconds notify include envelope environment body relational regex subaddress copy date index imap4flags mailbox mboxmetadata servermetadata variables editheader extlists duplicate ihave fcc special\-use redirect\-dsn redirect\-deliverby mailboxid vnd.cyrus.log vnd.cyrus.jmapquery snooze
+\fBsieve_extensions:\fP fileinto reject vacation vacation\-seconds notify include envelope environment body relational regex subaddress copy date index imap4flags mailbox mboxmetadata servermetadata variables editheader extlists duplicate ihave fcc special\-use redirect\-dsn redirect\-deliverby mailboxid vnd.cyrus.log vnd.cyrus.jmapquery vnd.cyrus.imip snooze
 .INDENT 0.0
 .INDENT 3.5
 Space\-separated list of Sieve extensions allowed to be used in
@@ -4002,7 +4142,14 @@ previously installed script will be unaffected by this option and
 will continue to execute regardless of the extensions used.  This
 option has no effect on options that are disabled at compile time
 (e.g., “regex”).
-Allowed values: \fIfileinto\fP, \fIreject\fP, \fIvacation\fP, \fIvacation\-seconds\fP, \fInotify\fP, \fIinclude\fP, \fIenvelope\fP, \fIenvironment\fP, \fIbody\fP, \fIrelational\fP, \fIregex\fP, \fIsubaddress\fP, \fIcopy\fP, \fIdate\fP, \fIindex\fP, \fIimap4flags=imapflags\fP, \fImailbox\fP, \fImboxmetadata\fP, \fIservermetadata\fP, \fIvariables\fP, \fIeditheader\fP, \fIextlists\fP, \fIduplicate\fP, \fIihave\fP, \fIfcc\fP, \fIspecial\-use\fP, \fIredirect\-dsn\fP, \fIredirect\-deliverby\fP, \fImailboxid\fP, \fIvnd.cyrus.log=x\-cyrus\-log\fP, \fIvnd.cyrus.jmapquery=x\-cyrus\-jmapquery\fP, \fIsnooze=vnd.cyrus.snooze=x\-cyrus\-snooze\fP
+Allowed values: \fIfileinto\fP, \fIreject\fP, \fIvacation\fP, \fIvacation\-seconds\fP, \fInotify\fP, \fIinclude\fP, \fIenvelope\fP, \fIenvironment\fP, \fIbody\fP, \fIrelational\fP, \fIregex\fP, \fIsubaddress\fP, \fIcopy\fP, \fIdate\fP, \fIindex\fP, \fIimap4flags=imapflags\fP, \fImailbox\fP, \fImboxmetadata\fP, \fIservermetadata\fP, \fIvariables\fP, \fIeditheader\fP, \fIextlists\fP, \fIduplicate\fP, \fIihave\fP, \fIfcc\fP, \fIspecial\-use\fP, \fIredirect\-dsn\fP, \fIredirect\-deliverby\fP, \fImailboxid\fP, \fIvnd.cyrus.log=x\-cyrus\-log\fP, \fIvnd.cyrus.jmapquery=x\-cyrus\-jmapquery\fP, \fIvnd.cyrus.imip\fP, \fIsnooze=vnd.cyrus.snooze=x\-cyrus\-snooze\fP
+.UNINDENT
+.UNINDENT
+.sp
+\fBsieve_folder:\fP #sieve
+.INDENT 0.0
+.INDENT 3.5
+The name of the folder for storing Sieve scripts (#sieve)
 .UNINDENT
 .UNINDENT
 .sp
@@ -4226,6 +4373,16 @@ that can be set on a mailbox. \fI\%RFC 6154\fP currently lists
 what special\-use attributes can be set. This allows
 extending that list in the future or adding your own
 if needed.
+.UNINDENT
+.UNINDENT
+.sp
+\fBspecialuse_nochildren:\fP <none>
+.INDENT 0.0
+.INDENT 3.5
+Whitespace separated list of special\-use attributes that may not contain
+child folders.  If set, mailboxes with any of these attributes may not
+have child folders created, and these attributes cannot be added to
+mailboxes that already have children..
 .UNINDENT
 .UNINDENT
 .sp
@@ -4490,7 +4647,7 @@ Name of the service (or port number) of the replication service on
 replica host.  Prefix with a channel name to only apply for that
 channel.  If not specified, and if sync_try_imap is set to “yes”
 (the default), then the replication client will first try “imap”
-(port 143) to check if imapd supports replication.  otherwise it
+(port 143) to check if imapd supports replication.  Otherwise it
 will default to “csync” (usually port 2005).
 .UNINDENT
 .UNINDENT
@@ -4500,6 +4657,22 @@ will default to “csync” (usually port 2005).
 .INDENT 3.5
 The authentication realm to use when authenticating to a sync server.
 Prefix with a channel name to only apply for that channel
+.UNINDENT
+.UNINDENT
+.sp
+\fBsync_reconnect_maxwait:\fP 20m
+.INDENT 0.0
+.INDENT 3.5
+When a rolling sync_client cannot connect to the replica, it enters
+a retry loop with an exponential backoff between attempts.  This
+option sets the upper limit on that exponential backoff: no matter
+how long the replica has been down so far, sync_client will never
+wait longer than sync_reconnect_maxwait between retries.
+.sp
+If this is zero or negative, the backoff duration will be allowed
+to increase indefinitely (not recommended).
+.sp
+If no unit is specified, seconds is assumed.
 .UNINDENT
 .UNINDENT
 .sp
@@ -4943,6 +5116,16 @@ occur in mailbox names.  The default switched in 3.0 from off to on.
 .UNINDENT
 .UNINDENT
 .sp
+\fBvcard_max_size:\fP 0
+.INDENT 0.0
+.INDENT 3.5
+Maximum allowed vCard size.
+If non\-zero, CardDAV and JMAP will reject storage of contacts whose
+vCard representation is larger than \fIvcard_max_size\fP bytes.
+If set to 0, this will allow vCards of any size (the default).
+.UNINDENT
+.UNINDENT
+.sp
 \fBvirtdomains:\fP off
 .INDENT 0.0
 .INDENT 3.5
@@ -4986,6 +5169,18 @@ The absolute path to a file containing a template to use to describe
 infected messages that have been deleted by \fBcyr_virusscan(8)\fP\&.
 See \fBcyr_virusscan(8)\fP for specification of the format of this file.
 If not specified, the builtin default template will be used.
+.UNINDENT
+.UNINDENT
+.sp
+\fBwebsocket_timeout:\fP 30m
+.INDENT 0.0
+.INDENT 3.5
+Set the length of the HTTP server’s inactivity autologout timer
+when a WebSocket channel has been established.
+The default is 30 minutes.  The minimum value is 0, which will
+disable WebSockets.
+.sp
+If no unit is specified, minutes is assumed.
 .UNINDENT
 .UNINDENT
 .sp

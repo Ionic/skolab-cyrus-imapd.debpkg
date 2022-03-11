@@ -35,6 +35,14 @@ Supported Product Series
 ========================
 
 
+Series 3.6
+----------
+
+Documentation at https://www.cyrusimap.org/3.6/.
+
+* Cyrus IMAP 3.6 Releases
+
+
 Series 3.4
 ----------
 
@@ -69,6 +77,8 @@ Documentation at https://www.cyrusimap.org/2.5/.
 
 Development snapshots
 =====================
+
+* Cyrus IMAP 3.7 Tags
 
 * Cyrus IMAP 3.5 Tags
 

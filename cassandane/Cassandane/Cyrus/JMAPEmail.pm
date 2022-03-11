@@ -14753,27 +14753,22 @@ sub test_blob_get
     my $blobId = $res->[1][1]{list}[0]{blobId};
     $self->assert_not_null($blobId);
 
-    my $wantMailboxIds = $res->[1][1]{list}[0]{mailboxIds};
-    my $wantEmailIds = {
-        $res->[1][1]{list}[0]{id} => JSON::true
-    };
-    my $wantThreadIds = {
-        $res->[1][1]{list}[0]{threadId} => JSON::true
-    };
+    my $wantMailboxIds = [keys %{$res->[1][1]{list}[0]{mailboxIds}}];
+    my $wantEmailIds = [$res->[1][1]{list}[0]{id}];
+    my $wantThreadIds = [$res->[1][1]{list}[0]{threadId}];
 
     my @using = @{ $jmap->DefaultUsing() };
     push @using, 'https://cyrusimap.org/ns/jmap/blob';
     $jmap->DefaultUsing(\@using);
 
     $res = $jmap->CallMethods([
-        ['Blob/get', { ids => [$blobId]}, "R1"],
+        ['Blob/lookup', { ids => [$blobId], types => ['Mailbox', 'Thread', 'Email']}, "R1"],
     ]);
 
     my $blob = $res->[0][1]{list}[0];
-    $self->assert_deep_equals($wantMailboxIds, $blob->{mailboxIds});
-    $self->assert_deep_equals($wantEmailIds, $blob->{emailIds});
-    $self->assert_deep_equals($wantThreadIds, $blob->{threadIds});
-
+    $self->assert_deep_equals($wantMailboxIds, $blob->{types}{Mailbox});
+    $self->assert_deep_equals($wantEmailIds, $blob->{types}{Email});
+    $self->assert_deep_equals($wantThreadIds, $blob->{types}{Thread});
 }
 
 sub test_email_set_mimeversion
@@ -19492,7 +19487,15 @@ EOF
     }, $res->[0][1]{list}[0]{mailboxIds});
     $self->assert_equals(JSON::false, $res->[1][1]{performance}{details}{isGuidSearch});
     $self->assert_deep_equals([], $res->[1][1]{ids});
-    $self->assert_equals(JSON::true, $res->[2][1]{performance}{details}{isGuidSearch});
+    my ($maj, $min) = Cassandane::Instance->get_version();
+    if ($maj < 3 || ($maj ==3 && $min < 5)) {
+        $self->assert_equals(JSON::true, $res->[2][1]{performance}{details}{isGuidSearch});
+    }
+    else {
+        # Due to improved JMAP Email query optimizer
+        $self->assert_equals(JSON::false, $res->[2][1]{performance}{details}{isGuidSearch});
+    }
+
     $self->assert_deep_equals([], $res->[2][1]{ids});
 
     xlog "Create message in inbox";
@@ -19622,7 +19625,7 @@ EOF
 
     xlog $self, "do the lot!";
     $res = $jmap->CallMethods([
-            ['Blob/set', { create => { "a" => { content => $email } } }, 'R0'],
+            ['Blob/set', { create => { "a" => { 'data:asText' => $email } } }, 'R0'],
             ['Email/import', {
             emails => {
                 "1" => {
@@ -19646,7 +19649,7 @@ EOF
     close(FH);
 
     $res = $jmap->CallMethods([
-            ['Blob/set', { create => { "img" => { content64 => encode_base64($binary, ''), type => 'image/gif' } } }, 'R0'],
+            ['Blob/set', { create => { "img" => { 'data:asBase64' => encode_base64($binary, ''), type => 'image/gif' } } }, 'R0'],
             ['Email/set', {
             create => {
                 "2" => {
@@ -22663,6 +22666,237 @@ sub test_email_set_copymove_no_permission_shared
         }, 'R1'],
     ]);
     $self->assert_str_equals('forbidden', $res->[0][1]{notUpdated}{$email}{type});
+}
+
+sub test_email_get_utf8body_base64_with_replacement_char
+    :min_version_3_5 :needs_component_sieve :needs_component_jmap
+{
+    my ($self) = @_;
+    my $jmap = $self->{jmap};
+    my $imap = $self->{store}->get_client();
+
+    # MIME message contains a correctly encoded emoji and one UTF-8
+    # replacement character. The latter must not cause Cyrus to
+    # attempt guessing the source charset or report an encoding error.
+    open(my $F, '<', 'data/mime/utf8-base64-replacement.eml') || die $!;
+    $imap->append('INBOX', $F) || die $@;
+    close($F);
+
+    my $res = $jmap->CallMethods([
+        ['Email/query', { }, 'R1'],
+        ['Email/get', {
+            '#ids' => {
+                resultOf => 'R1',
+                name => 'Email/query',
+                path => '/ids'
+            },
+            fetchAllBodyValues => JSON::true,
+            properties => ['bodyValues'],
+        }, 'R2'],
+    ]);
+    $self->assert_equals(JSON::false,
+        $res->[1][1]{list}[0]{bodyValues}{1}{isEncodingProblem});
+    $self->assert_str_equals("Hello \N{GRINNING FACE}, World \N{REPLACEMENT CHARACTER} !\n",
+        $res->[1][1]{list}[0]{bodyValues}{1}{value});
+}
+
+sub test_email_set_multipart_related
+    :min_version_3_1 :needs_component_sieve :needs_component_jmap
+{
+    my ($self) = @_;
+    my $jmap = $self->{jmap};
+
+    my $data = $jmap->Upload((pack "H*", "beefcode"), "image/gif");
+    my $blobId = $data->{blobId};
+    $self->assert_not_null($blobId);
+
+    my $res = $jmap->CallMethods([
+        ['Email/set', {
+            create => {
+                email1 => {
+                    mailboxIds => {
+                        '$inbox' => JSON::true
+                    },
+                    from => [{
+                       email => 'from@local'
+                    }],
+                    subject => "test",
+                    bodyStructure => {
+                        type => "multipart/related",
+                        subParts => [{
+                                type => 'text/html',
+                                partId => '1',
+                            }, {
+                                type => 'image/gif',
+                                blobId => $blobId,
+                            }],
+                    },
+                    bodyValues => {
+                        "1" => {
+                            value => "test",
+                        },
+                    },
+                },
+            },
+        }, 'R1'],
+        ['Email/get', {
+            ids => [ '#email1' ],
+            properties => [ 'bodyStructure' ],
+            bodyProperties => [ 'type', 'header:Content-Type' ],
+        }, 'R2' ],
+    ]);
+    $self->assert_not_null($res->[0][1]{created}{email1});
+    $self->assert_str_equals('multipart/related',
+        $res->[1][1]{list}[0]{bodyStructure}{type});
+
+    my $ct = $res->[1][1]{list}[0]{bodyStructure}{'header:Content-Type'};
+    $ct =~ tr/ \t\r\n//ds;
+    $self->assert($ct =~ /;type=\"text\/html\"$/);
+}
+
+sub test_email_query_convflags_seen_in_trash
+    :min_version_3_5 :needs_component_jmap :JMAPExtensions
+{
+    my ($self) = @_;
+    my $jmap = $self->{jmap};
+
+    my $res = $jmap->CallMethods([
+        ['Mailbox/set', {
+            create => {
+                mboxTrash => {
+                    name => 'Trash',
+                },
+            }
+        }, 'R2'],
+    ]);
+    my $mboxTrash = $res->[0][1]{created}{mboxTrash}{id};
+    $self->assert_not_null($mboxTrash);
+
+    $res = $jmap->CallMethods([
+        ['Email/set', {
+            create => {
+                emailInInbox => {
+                    mailboxIds => {
+                        '$inbox' => JSON::true,
+                    },
+                    messageId => ['emailInInbox@local'],
+                    subject => 'test',
+                    keywords => {
+                        '$seen' => JSON::true,
+                    },
+                    bodyStructure => {
+                        type => 'text/plain',
+                        partId => 'part1',
+                    },
+                    bodyValues => {
+                        part1 => {
+                            value => 'test inbox',
+                        }
+                    },
+                },
+            },
+        }, 'R1'],
+        ['Email/set', {
+            create => {
+                emailInTrash => {
+                    mailboxIds => {
+                        $mboxTrash => JSON::true,
+                    },
+                    messageId => ['emailInThrash@local'],
+                    subject => 'Re: test',
+                    references => ['emailInInbox@local'],
+                    bodyStructure => {
+                        type => 'text/plain',
+                        partId => 'part1',
+                    },
+                    bodyValues => {
+                        part1 => {
+                            value => 'test trash',
+                        }
+                    },
+                },
+            },
+        }, 'R2'],
+    ]);
+    $self->assert_not_null($res->[0][1]{created}{emailInInbox}{id});
+    $self->assert_not_null($res->[1][1]{created}{emailInTrash}{id});
+    $self->assert_str_equals($res->[0][1]{created}{emailInInbox}{threadId},
+        $res->[1][1]{created}{emailInTrash}{threadId});
+
+    $self->{instance}->run_command({cyrus => 1}, 'squatter');
+
+    $res = $jmap->CallMethods([
+        ['Email/query', {
+            filter => {
+                operator => 'NOT',
+                conditions => [{
+                    allInThreadHaveKeyword => '$seen',
+                }],
+            },
+        }, 'R1'],
+        ['Email/query', {
+            filter => {
+                operator => 'AND',
+                conditions => [{
+                    operator => 'NOT',
+                    conditions => [{
+                        allInThreadHaveKeyword => '$seen',
+                    }],
+                }, {
+                    inMailboxOtherThan => [ $mboxTrash ],
+                }],
+            },
+        }, 'R2'],
+        ['Email/query', {
+            filter => {
+                operator => 'AND',
+                conditions => [{
+                    body => 'test',
+                }, {
+                    operator => 'NOT',
+                    conditions => [{
+                        allInThreadHaveKeyword => '$seen',
+                    }],
+                }],
+            },
+        }, 'R3'],
+        ['Email/query', {
+            filter => {
+                operator => 'AND',
+                conditions => [{
+                    body => 'test',
+                }, {
+                    operator => 'NOT',
+                    conditions => [{
+                        allInThreadHaveKeyword => '$seen',
+                    }],
+                }, {
+                    inMailboxOtherThan => [ $mboxTrash ],
+                }],
+            },
+        }, 'R4'],
+    ], [
+        'urn:ietf:params:jmap:core',
+        'urn:ietf:params:jmap:mail',
+        'urn:ietf:params:jmap:submission',
+        'https://cyrusimap.org/ns/jmap/mail',
+        'https://cyrusimap.org/ns/jmap/debug',
+        'https://cyrusimap.org/ns/jmap/performance',
+    ]);
+
+    $self->assert_num_equals(2, scalar @{$res->[0][1]{ids}});
+    $self->assert_num_equals(0, scalar @{$res->[1][1]{ids}});
+    $self->assert_num_equals(2, scalar @{$res->[2][1]{ids}});
+    $self->assert_num_equals(0, scalar @{$res->[3][1]{ids}});
+
+    $self->assert_equals(JSON::false,
+        $res->[0][1]{performance}{details}{isGuidSearch});
+    $self->assert_equals(JSON::false,
+        $res->[1][1]{performance}{details}{isGuidSearch});
+    $self->assert_equals(JSON::true,
+        $res->[2][1]{performance}{details}{isGuidSearch});
+    $self->assert_equals(JSON::true,
+        $res->[3][1]{performance}{details}{isGuidSearch});
 }
 
 1;

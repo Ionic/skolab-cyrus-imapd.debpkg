@@ -44,6 +44,8 @@ use attributes;
 use Data::Dumper;
 use Scalar::Util qw(refaddr);
 use List::Util qw(uniq);
+use Digest::file qw(digest_file_hex);
+use File::Temp qw(tempfile);
 
 use lib '.';
 use base qw(Cassandane::Unit::TestCase);
@@ -369,6 +371,11 @@ magic(LowEmailLimits => sub {
         conversations_max_guidexists => 5,
         conversations_max_guidinfolder => 2,
     );
+});
+magic(HttpJWTAuthRSA => sub {
+    my $self = shift;
+    $self->config_set(http_jwt_key_dir => '@basedir@/conf/certs/http_jwt');
+    $self->want('install_certificates');
 });
 
 # Run any magic handlers indicated by the test name or attributes
@@ -697,50 +704,43 @@ sub _setup_http_service_objects
     my $service = $self->{instance}->get_service("http");
     return if !$service;
 
-    eval {
-        if ($self->{instance}->{config}->get_bit('httpmodules', 'carddav')) {
-            require Net::CardDAVTalk;
-            $self->{carddav} = Net::CardDAVTalk->new(
-                user => 'cassandane',
-                password => 'pass',
-                host => $service->host(),
-                port => $service->port(),
-                scheme => 'http',
-                url => '/',
-                expandurl => 1,
-            );
-        }
-        if ($self->{instance}->{config}->get_bit('httpmodules', 'caldav')) {
-            require Net::CalDAVTalk;
-            $self->{caldav} = Net::CalDAVTalk->new(
-                user => 'cassandane',
-                password => 'pass',
-                host => $service->host(),
-                port => $service->port(),
-                scheme => 'http',
-                url => '/',
-                expandurl => 1,
-            );
-            $self->{caldav}->UpdateAddressSet("Test User",
-                                              "cassandane\@example.com");
-        }
-        if ($self->{instance}->{config}->get_bit('httpmodules', 'jmap')) {
-            require Mail::JMAPTalk;
-            $ENV{DEBUGJMAP} = 1;
-            $self->{jmap} = Mail::JMAPTalk->new(
-                user => 'cassandane',
-                password => 'pass',
-                host => $service->host(),
-                port => $service->port(),
-                scheme => 'http',
-                url => '/jmap/',
-            );
-        }
-    };
-    if ($@) {
-        my $e = $@;
-        $self->tear_down();
-        die $e;
+    if ($self->{instance}->{config}->get_bit('httpmodules', 'carddav')) {
+        require Net::CardDAVTalk;
+        $self->{carddav} = Net::CardDAVTalk->new(
+            user => 'cassandane',
+            password => 'pass',
+            host => $service->host(),
+            port => $service->port(),
+            scheme => 'http',
+            url => '/',
+            expandurl => 1,
+        );
+    }
+    if ($self->{instance}->{config}->get_bit('httpmodules', 'caldav')) {
+        require Net::CalDAVTalk;
+        $self->{caldav} = Net::CalDAVTalk->new(
+            user => 'cassandane',
+            password => 'pass',
+            host => $service->host(),
+            port => $service->port(),
+            scheme => 'http',
+            url => '/',
+            expandurl => 1,
+        );
+        $self->{caldav}->UpdateAddressSet("Test User",
+                                            "cassandane\@example.com");
+    }
+    if ($self->{instance}->{config}->get_bit('httpmodules', 'jmap')) {
+        require Mail::JMAPTalk;
+        $ENV{DEBUGJMAP} = 1;
+        $self->{jmap} = Mail::JMAPTalk->new(
+            user => 'cassandane',
+            password => 'pass',
+            host => $service->host(),
+            port => $service->port(),
+            scheme => 'http',
+            url => '/jmap/',
+        );
     }
 
     xlog $self, "http service objects setup complete!";
@@ -754,8 +754,15 @@ sub set_up
 
     $self->_create_instances();
     if ($self->{_want}->{start_instances}) {
-        $self->_start_instances();
-        $self->_setup_http_service_objects() if defined $self->{instance};
+        eval {
+            $self->_start_instances();
+            $self->_setup_http_service_objects() if defined $self->{instance};
+        };
+        if ($@) {
+            my $e = $@;
+            $self->tear_down();
+            die $e;
+        }
     }
     else {
         xlog $self, "Instances not started due to :NoStartInstances magic!";
@@ -1140,10 +1147,12 @@ sub run_replication
     my $mailbox = delete $opts{mailbox};
     my $meta = delete $opts{meta};
     my $nosyncback = delete $opts{nosyncback};
+    my $allusers = delete $opts{allusers};
     $nmodes++ if $user;
     $nmodes++ if $rolling;
     $nmodes++ if $mailbox;
     $nmodes++ if $meta;
+    $nmodes++ if $allusers;
 
     # pass through run_command options
     my $handlers = delete $opts{handlers};
@@ -1172,6 +1181,7 @@ sub run_replication
     push(@cmd, '-O') if defined $nosyncback;
     push(@cmd, '-u', $user) if defined $user;
     push(@cmd, '-m', $mailbox) if defined $mailbox;
+    push(@cmd, '-A') if $allusers;  # n.b. boolean
 
     my %run_options;
     $run_options{cyrus} = 1;
@@ -1371,6 +1381,88 @@ sub assert_mailbox_structure
             "'$mailbox': found unexpected extra mailbox"
         );
     }
+}
+
+sub assert_sieve_exists
+{
+    my ($self, $instance, $user, $scriptname, $bc_only) = @_;
+
+    my $sieve_dir = $instance->get_sieve_script_dir($user);
+
+    $self->assert(( -f "$sieve_dir/$scriptname.bc" ),
+                  "$sieve_dir/$scriptname.bc: file not found");
+
+    if ($bc_only == 0) {
+        $self->assert(( -f "$sieve_dir/$scriptname.script" ),
+                      "$sieve_dir/$scriptname.script: file not found");
+    }
+}
+
+sub assert_sieve_not_exists
+{
+    my ($self, $instance, $user, $scriptname, $bc_only) = @_;
+
+    my $sieve_dir = $instance->get_sieve_script_dir($user);
+
+    $self->assert(( ! -f "$sieve_dir/$scriptname.bc" ),
+                  "$sieve_dir/$scriptname.bc: file exists");
+
+    if ($bc_only == 0) {
+        $self->assert(( ! -f "$sieve_dir/$scriptname.script" ),
+                      "$sieve_dir/$scriptname.script: file exists");
+    }
+}
+
+sub assert_sieve_active
+{
+    my ($self, $instance, $user, $scriptname) = @_;
+
+    my $sieve_dir = $instance->get_sieve_script_dir($user);
+
+    $self->assert(( -l "$sieve_dir/defaultbc" ),
+                  "$sieve_dir/defaultbc: missing or not a symlink");
+    $self->assert_str_equals("$scriptname.bc", readlink "$sieve_dir/defaultbc");
+}
+
+sub assert_sieve_noactive
+{
+    my ($self, $instance, $user) = @_;
+
+    my $sieve_dir = $instance->get_sieve_script_dir($user);
+
+    $self->assert(( ! -e "$sieve_dir/defaultbc" ),
+                  "$sieve_dir/defaultbc exists");
+    $self->assert(( ! -l "$sieve_dir/defaultbc" ),
+                  "dangling $sieve_dir/defaultbc symlink exists");
+}
+
+sub assert_sieve_matches
+{
+    my ($self, $instance, $user, $scriptname, $scriptcontent) = @_;
+
+    my $sieve_dir = $instance->get_sieve_script_dir($user);
+
+    my $bcname = "$sieve_dir/$scriptname.bc";
+
+    $self->assert(( -f $bcname ),
+                  "$sieve_dir/$scriptname.bc: file not found");
+
+    # compile $scriptcontent and compare digests of bytecode
+    my (undef, $tmp) = tempfile('scriptXXXXX', OPEN => 0,
+                                DIR => $instance->{basedir} . "/tmp");
+    open my $f, '>', $tmp or die "open: $!";
+    print $f $scriptcontent;
+    close $f;
+
+    my (undef, $filename) = tempfile('tmpXXXXXX', OPEN => 0,
+        DIR => $instance->{basedir} . "/tmp");
+
+    $instance->run_command({ redirects => {stdin => \$scriptcontent},
+                             cyrus => 1,
+                           },
+                           'sievec', $tmp, "$filename");
+    $self->assert_str_equals(digest_file_hex($bcname, "MD5"),
+                             digest_file_hex($filename, "MD5"));
 }
 
 1;

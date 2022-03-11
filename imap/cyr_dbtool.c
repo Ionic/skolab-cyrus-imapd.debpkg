@@ -197,9 +197,17 @@ static void batch_commands(struct db *db)
                 const char *res;
                 size_t reslen;
                 r = cyrusdb_fetch(db, key.s, key.len, &res, &reslen, tidp);
-                if (r) goto done;
-                aprinter_cb(out, key.s, key.len, res, reslen);
-                prot_flush(out);
+                switch (r) {
+                case 0:
+                    aprinter_cb(out, key.s, key.len, res, reslen);
+                    prot_flush(out);
+                    break;
+                case CYRUSDB_NOTFOUND:
+                    r = 0;
+                    break;
+                default:
+                    goto done;
+                }
             }
             else if (!strcmp(cmd.s, "DELETE")) {
                 r = cyrusdb_delete(db, key.s, key.len, tidp, 1);
@@ -238,6 +246,13 @@ done:
         fprintf(stderr, "FAILED: line %d at cmd %.*s with error %s\n",
                 line, (int)cmd.len, cmd.s, error_message(r));
     }
+
+    prot_free(in);
+    prot_free(out);
+
+    buf_free(&cmd);
+    buf_free(&key);
+    buf_free(&val);
 }
 
 int main(int argc, char *argv[])
@@ -317,7 +332,7 @@ int main(int argc, char *argv[])
 
     if(fname[0] != '/') {
         printf("\nSorry, you cannot use this tool with relative path names.\n"
-               "This is because some database backends (mainly berkeley) do not\n"
+               "This is because some database backends do not\n"
                "always do what you would expect with them.\n"
                "\nPlease use absolute pathnames instead.\n\n");
         exit(EX_OSERR);

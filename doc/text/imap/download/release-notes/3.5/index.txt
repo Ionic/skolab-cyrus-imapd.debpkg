@@ -6,3 +6,5 @@ Warning: The 3.5 series are tagged snapshots of the master branch,
   edge features** only. We will try to tag these snapshots at coherent
   development points, but there will generally be **large breaking
   changes** occurring between releases in this series.
+
+* Cyrus IMAP 3.5.0-alpha0 Tag Notes

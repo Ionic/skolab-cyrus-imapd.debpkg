@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "CYRUS.CONF" "5" "February 02, 2022" "3.4.3" "Cyrus IMAP"
+.TH "CYRUS.CONF" "5" "March 11, 2022" "3.6.0" "Cyrus IMAP"
 .SH NAME
 cyrus.conf \- Cyrus IMAP documentation
 .
@@ -284,6 +284,50 @@ is exiting.
 .INDENT 3.5
 The command (with options) to spawn as a child process.  This
 string argument is required.
+.UNINDENT
+.UNINDENT
+.sp
+.nf
+\fBwait=\fP0
+.fi
+.INDENT 0.0
+.INDENT 3.5
+Switch: whether or not master(8) should wait for this
+daemon to successfully start before continuing to load.
+.sp
+If \fIwait=n\fP (the default), the daemon will be started asynchronously
+along with the service processes.  The daemon process will not have
+file descriptor 3 open, and does not need to indicate its readiness.
+.sp
+If \fIwait=y\fP, the daemon MUST write “ok\er\en” to file descriptor 3
+to indicate its readiness; if it does not do this, and master has
+been told to wait, master will continue to wait…. If it writes
+anything else to this descriptor, or closes it before writing
+“ok\er\en”, master will exit with an error.
+.sp
+Daemons with \fIwait=y\fP will be started sequentially in the order
+they are listed in cyrus.conf, waiting for each to report readiness
+before the next is started.
+.sp
+Service processes, and \fIwait=n\fP daemons, are not started until after
+the \fIwait=y\fP daemons are all started and ready.
+.sp
+At shutdown, \fIwait=y\fP daemons will be terminated sequentially in the
+reverse order they were started, commencing after all other services
+and \fIwait=n\fP daemons have finished.
+.sp
+If a daemon that was started with \fIwait=y\fP exits unexpectedly, such
+that master restarts it, master will restart it asynchronously,
+without waiting for it to report its readiness.  In this case, file
+descriptor 3 will not be open and the daemon should not try to write
+to it.
+.sp
+If master is told to reread its config with a SIGHUP, this signal
+will be passed on to \fIwait=y\fP daemons like any other service.  If the
+daemon exits in response to the signal, master will restart it
+asynchronously, without waiting for it to report its readiness. In
+this case too, file descriptor 3 will not be open and the daemon
+should not try to write to it.
 .UNINDENT
 .UNINDENT
 .SH EXAMPLES

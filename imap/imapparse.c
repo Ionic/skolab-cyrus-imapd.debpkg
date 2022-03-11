@@ -849,12 +849,12 @@ static int get_search_criterion(struct protstream *pin,
     case '5': case '6': case '7': case '8': case '9':
     case '*':                                           /* RFC 3501 */
         if (imparse_issequence(criteria.s)) {
-            struct seqset *seq;
+            seqset_t *seq;
             e = search_expr_new(parent, SEOP_MATCH);
             e->attr = search_attr_find("msgno");
             seq = seqset_parse(criteria.s, NULL, /*maxval*/0);
             if (!seq) goto badcri;
-            seqset_free(seq);
+            seqset_free(&seq);
             e->value.s = xstrdup(criteria.s);
         }
         else goto badcri;
@@ -986,7 +986,7 @@ static int get_search_criterion(struct protstream *pin,
         break;
 
     case 'e':
-        if (!strcmp(criteria.s, "emailid")) {   /* draft-gondwana-imap-uniqueid */
+        if (!strcmp(criteria.s, "emailid")) {   /* RFC 8474 */
             if (c != ' ') goto missingarg;
             c = getastring(pin, pout, &arg);
             if (c == EOF) goto missingarg;
@@ -1156,13 +1156,13 @@ static int get_search_criterion(struct protstream *pin,
         break;
 
     case 's':
-        if (!strcmp(criteria.s, "savedatesupported")) {   /* draft-ietf-extra-imap-savedate */
+        if (!strcmp(criteria.s, "savedatesupported")) {   /* RFC 8514 */
             // savedate is supported in index version 15+
             e = search_expr_new(parent, SEOP_GE);
             e->attr = search_attr_find("indexversion");
             e->value.u = 15;
         }
-        else if (!strcmp(criteria.s, "savedbefore")) {   /* draft-ietf-extra-imap-savedate */
+        else if (!strcmp(criteria.s, "savedbefore")) {   /* RFC 8514 */
             if (c != ' ') goto missingarg;
             c = get_search_date(pin, &start, &end);
             if (c == EOF) goto baddate;
@@ -1170,13 +1170,13 @@ static int get_search_criterion(struct protstream *pin,
             e->attr = search_attr_find("savedate");
             e->value.u = start;
         }
-        else if (!strcmp(criteria.s, "savedon")) {   /* draft-ietf-extra-imap-savedate */
+        else if (!strcmp(criteria.s, "savedon")) {   /* RFC 8514 */
             if (c != ' ') goto missingarg;
             c = get_search_date(pin, &start, &end);
             if (c == EOF) goto baddate;
             date_range(parent, "savedate", start, end);
         }
-        else if (!strcmp(criteria.s, "savedsince")) {    /* draft-ietf-extra-imap-savedate */
+        else if (!strcmp(criteria.s, "savedsince")) {    /* RFC 8514 */
             if (c != ' ') goto missingarg;
             c = get_search_date(pin, &start, &end);
             if (c == EOF) goto baddate;
@@ -1263,7 +1263,7 @@ static int get_search_criterion(struct protstream *pin,
             if (c == EOF) goto missingarg;
             string_match(parent, arg.s, criteria.s, base);
         }
-        else if (!strcmp(criteria.s, "threadid")) {   /* draft-gondwana-imap-uniqueid */
+        else if (!strcmp(criteria.s, "threadid")) {   /* RFC 8474 */
             if (c != ' ') goto missingarg;
             c = getastring(pin, pout, &arg);
             if (c == EOF) goto missingarg;
@@ -1274,7 +1274,7 @@ static int get_search_criterion(struct protstream *pin,
 
     case 'u':
         if (!strcmp(criteria.s, "uid")) {           /* RFC 3501 */
-            struct seqset *seq;
+            seqset_t *seq;
             if (c != ' ') goto missingarg;
             c = getword(pin, &arg);
             if (!imparse_issequence(arg.s)) goto badcri;
@@ -1282,7 +1282,7 @@ static int get_search_criterion(struct protstream *pin,
             e->attr = search_attr_find(criteria.s);
             seq = seqset_parse(arg.s, NULL, /*maxval*/0);
             if (!seq) goto badcri;
-            seqset_free(seq);
+            seqset_free(&seq);
             e->value.s = xstrdup(arg.s);
         }
         else if (!strcmp(criteria.s, "unseen")) {       /* RFC 3501 */

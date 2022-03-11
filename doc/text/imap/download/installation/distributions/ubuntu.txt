@@ -43,8 +43,6 @@ Note: The following non-Cyrus packages are required, and will be
 
   * db-upgrade-util
 
-  * libdb5.X (where X depends on OS version)
-
   * libsasl2-2
 
   * libsasl2-modules

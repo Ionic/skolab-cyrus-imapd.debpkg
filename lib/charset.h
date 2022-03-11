@@ -45,6 +45,7 @@
 #define ENCODING_NONE 0
 #define ENCODING_QP 1
 #define ENCODING_BASE64 2
+#define ENCODING_BASE64URL 3
 #define ENCODING_UNKNOWN 255
 
 #define CHARSET_SKIPDIACRIT (1<<0)
@@ -57,10 +58,12 @@
 #define CHARSET_ESCAPEHTML (1<<8)
 #define CHARSET_KEEPHTML (1<<9)
 #define CHARSET_TRIMWS (1<<10)
+#define CHARSET_UNORM_NFC (1<<11)
 
 #define CHARSET_UNKNOWN_CHARSET (NULL)
 
 #include "util.h"
+#include "xsha1.h"
 
 typedef int comp_pat;
 /*
@@ -74,12 +77,19 @@ typedef int comp_pat;
  * * Instances are not safe to use for two simultaneous conversions. It is safe
  *   (and recommended) to reuse an instance for consecutive conversions.
  */
-typedef struct charset_converter* charset_t;
+typedef struct charset_charset* charset_t;
 
 extern int encoding_lookupname(const char *name);
 extern const char *encoding_name(int);
 
-/* ensure up to MAXTRANSLATION times expansion into buf */
+/* Converter converts to UTF-8 search form as parametrized by flags.
+ * It is safe (and recommended) to reuse an instance for consecutive
+ * conversions. */
+typedef struct charset_conv charset_conv_t;
+extern charset_conv_t *charset_conv_new(charset_t fromcharset, int flags);
+extern const char *charset_conv_convert(charset_conv_t *conv, const char *s);
+extern void charset_conv_free(charset_conv_t **convp);
+
 extern char *charset_convert(const char *s, charset_t charset, int flags);
 extern char *charset_decode_mimeheader(const char *s, int flags);
 extern char *charset_parse_mimeheader(const char *s, int flags);
@@ -133,12 +143,21 @@ extern char *charset_encode_mimephrase(const char *header);
 extern char *charset_unfold(const char *s, size_t len, int flags);
 
 extern int charset_decode(struct buf *dst, const char *src, size_t len, int encoding);
+extern int charset_encode(struct buf *dst, const char *src, size_t len, int encoding);
 
-/* Extract the body text for the message denoted by 'uid', convert its
-   text to the canonical form for searching, and pass the converted text
-   down in a series of invocations of the callback 'cb'.  This is
-   called by index_getsearchtext to extract the MIME body parts. */
-extern int charset_extract(void (*cb)(const struct buf *text, void *rock),
+extern int charset_decode_sha1(uint8_t dest[SHA1_DIGEST_LENGTH], size_t *decodedlen, const char *src, size_t len, int encoding);
+
+/* Extract the body text contained in 'data' and with character encoding
+ * 'charset' and body-part encoding 'encoding'. The 'subtype' argument
+ * defines the MIME subtype (assuming that the main type is 'text').
+ * Extraction is done by a series of invocations of the callback 'cb'.
+ * Extraction stops when either the body text is fully extracted, or
+ * 'cb' returns a non-zero value, which is then returned to the caller.
+ * If 'charset' is unknown, then the function returns early without
+ * error and never calls 'cb'.
+ * Note: This function is called by index_getsearchtext to extract
+ * the MIME body parts. */
+extern int charset_extract(int (*cb)(const struct buf *text, void *rock),
                            void *rock,
                            const struct buf *data,
                            charset_t charset, int encoding,

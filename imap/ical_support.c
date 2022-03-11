@@ -47,13 +47,14 @@
 #include <sysexits.h>
 #include <syslog.h>
 
-
 #include "assert.h"
 #include "caldav_db.h"
 #include "global.h"
 #include "ical_support.h"
+#include "icu_wrap.h"
 #include "message.h"
 #include "strhash.h"
+#include "stristr.h"
 #include "util.h"
 
 #ifdef HAVE_ICAL
@@ -225,23 +226,81 @@ static struct icaltimetype icalcomponent_get_mydatetime(icalcomponent *comp, ica
 
     if ((param = icalproperty_get_first_parameter(prop, ICAL_TZID_PARAMETER)) != NULL) {
         const char *tzid = icalparameter_get_tzid(param);
-        icaltimezone *tz = NULL;
-
-        for (c = comp; c != NULL; c = icalcomponent_get_parent(c)) {
-            tz = icalcomponent_get_timezone(c, tzid);
-            if (tz != NULL)
-                break;
+        if (!strcmpsafe(tzid, "Etc/UTC") || !strcmpsafe(tzid, "UTC")) {
+            /* Use UTC singleton for Etc/UTC */
+            ret = icaltime_set_timezone(&ret, icaltimezone_get_utc_timezone());
         }
-
-        if (tz == NULL)
-            tz = icaltimezone_get_builtin_timezone_from_tzid(tzid);
-
-        if (tz != NULL)
-            ret = icaltime_set_timezone(&ret, tz);
+        else {
+            /* Use Cyrus-internal timezone */
+            icaltimezone *mytz = icaltimezone_get_builtin_timezone(tzid);
+            if (mytz == NULL)
+                mytz = icaltimezone_get_builtin_timezone_from_tzid(tzid);
+            if (mytz == NULL) {
+                /* see if its a MS Windows TZID */
+                char *icutzid = icu_getIDForWindowsID(tzid);
+                if (icutzid)
+                    mytz = icaltimezone_get_builtin_timezone_from_tzid(icutzid);
+                free(icutzid);
+            }
+            if (mytz != NULL) {
+                ret = icaltime_set_timezone(&ret, mytz);
+            }
+            else {
+                /* Use embedded VTIMEZONE */
+                icaltimezone *tz = NULL;
+                for (c = comp; c != NULL; c = icalcomponent_get_parent(c)) {
+                    tz = icalcomponent_get_timezone(c, tzid);
+                    if (tz != NULL)
+                        break;
+                }
+                if (tz != NULL)
+                    ret =icaltime_set_timezone(&ret, tz);
+            }
+        }
     }
 
     return ret;
 }
+
+static icaltimetype icalcomponent_get_mydtstart(icalcomponent *comp)
+{
+    icalproperty *prop =
+        icalcomponent_get_first_property(comp, ICAL_DTSTART_PROPERTY);
+    return prop ?
+        icalcomponent_get_mydatetime(comp, prop) :
+        icaltime_null_time();
+}
+
+static icaltimetype icalcomponent_get_mydtend(icalcomponent *comp)
+{
+    struct icaltimetype dtstart = icalcomponent_get_mydtstart(comp);
+    struct icaltimetype dtend = icaltime_null_time();
+
+    icalproperty *end_prop =
+        icalcomponent_get_first_property(comp, ICAL_DTEND_PROPERTY);
+    icalproperty *dur_prop =
+        icalcomponent_get_first_property(comp, ICAL_DURATION_PROPERTY);
+
+    if (end_prop) {
+        dtend = icalcomponent_get_mydatetime(comp, end_prop);
+        if (!dtend.zone)
+            dtend.zone = dtstart.zone;
+    }
+    else if (dur_prop) {
+        dtend.zone = dtstart.zone;
+        struct icaldurationtype duration;
+        if (icalproperty_get_value(dur_prop)) {
+            duration = icalproperty_get_duration(dur_prop);
+        } else {
+            duration = icaldurationtype_null_duration();
+        }
+        dtend = icaltime_add(dtstart, duration);
+    }
+    else dtend = dtstart;
+
+    return dtend;
+}
+
 
 
 
@@ -366,7 +425,7 @@ EXPORTED int icalcomponent_myforeach(icalcomponent *ical,
 
     /* find event length first, we'll need it for overrides */
     if (mastercomp) {
-        dtstart = icalcomponent_get_dtstart(mastercomp);
+        dtstart = icalcomponent_get_mydtstart(mastercomp);
         event_length = icalcomponent_get_duration(mastercomp);
         if (icaldurationtype_is_null_duration(event_length) &&
             icaltime_is_date(dtstart)) {
@@ -423,8 +482,8 @@ EXPORTED int icalcomponent_myforeach(icalcomponent *ical,
         if (icaltime_is_null_time(recur)) continue;
 
         /* this is definitely a recurrence override */
-        struct icaltimetype mystart = icalcomponent_get_dtstart(comp);
-        struct icaltimetype myend = icalcomponent_get_dtend(comp);
+        struct icaltimetype mystart = icalcomponent_get_mydtstart(comp);
+        struct icaltimetype myend = icalcomponent_get_mydtend(comp);
 
         if (icaltime_compare(mystart, recur)) {
             /* DTSTART has changed: add an exception for RECURRENCE-ID */
@@ -527,7 +586,7 @@ EXPORTED icalcomponent *icalcomponent_new_stream(struct mailbox *mailbox,
     icalproperty *prop;
 
     buf_printf(&buf, "%x-%s-%u", strhash(config_servername),
-               mailbox->uniqueid, mailbox->i.uidvalidity);
+               mailbox_uniqueid(mailbox), mailbox->i.uidvalidity);
 
     ical = icalcomponent_vanew(ICAL_VCALENDAR_COMPONENT,
                                icalproperty_new_version("2.0"),
@@ -560,7 +619,16 @@ EXPORTED icalcomponent *icalcomponent_new_stream(struct mailbox *mailbox,
 
 EXPORTED icalcomponent *ical_string_as_icalcomponent(const struct buf *buf)
 {
-    return icalparser_parse_string(buf_cstring(buf));
+    const char *rawical = buf_cstring(buf);
+    icalcomponent *ical = icalparser_parse_string(rawical);
+
+    if (!ical && !stristr(rawical, "END:VCALENDAR")) {
+        char *fixed = strconcat(rawical, "END:VCALENDAR", NULL);
+        ical = icalparser_parse_string(fixed);
+        free(fixed);
+    }
+
+    return ical;
 }
 
 EXPORTED struct buf *my_icalcomponent_as_ical_string(icalcomponent* comp)
@@ -787,9 +855,9 @@ icalcomponent_get_utc_timespan(icalcomponent *comp,
 {
     struct icalperiodtype period;
 
-    period.start = icaltime_convert_to_utc(icalcomponent_get_dtstart(comp),
+    period.start = icaltime_convert_to_utc(icalcomponent_get_mydtstart(comp),
                                            floating_tz);
-    period.end   = icaltime_convert_to_utc(icalcomponent_get_dtend(comp),
+    period.end   = icaltime_convert_to_utc(icalcomponent_get_mydtend(comp),
                                            floating_tz);
     period.duration = icaldurationtype_null_duration();
 
@@ -812,7 +880,7 @@ icalcomponent_get_utc_timespan(icalcomponent *comp,
     case ICAL_VPOLL_COMPONENT:
     case ICAL_VTODO_COMPONENT: {
         struct icaltimetype due = (kind == ICAL_VPOLL_COMPONENT) ?
-            icalcomponent_get_dtend(comp) : icalcomponent_get_due(comp);
+            icalcomponent_get_mydtend(comp) : icalcomponent_get_due(comp);
 
         if (!icaltime_is_null_time(period.start)) {
             /* Has DTSTART */
@@ -934,7 +1002,7 @@ icalcomponent_get_utc_timespan(icalcomponent *comp,
 static void utc_timespan_cb(icalcomponent *comp, struct icaltime_span *span, void *rock)
 {
     struct icalperiodtype *period = (struct icalperiodtype *) rock;
-    int is_date = icaltime_is_date(icalcomponent_get_dtstart(comp));
+    int is_date = icaltime_is_date(icalcomponent_get_mydtstart(comp));
     icaltimezone *utc = icaltimezone_get_utc_timezone();
     struct icaltimetype start =
         icaltime_from_timet_with_zone(span->start, is_date, utc);
@@ -1074,6 +1142,7 @@ union match_criteria_t {
 struct path_segment_t {
     unsigned type;                    /* Is it comp, prop, or param segment? */
     unsigned kind;                    /* libical kind of comp, prop, or param */
+    char *xname;                      /* name of element, if type 'X' */
     union match_criteria_t match;     /* match criteria (depends on 'type') */
     unsigned action;                  /* patch action (create,update,setparam)*/
     void *data;                       /* patch data (depends on 'action') */
@@ -1102,6 +1171,7 @@ static int parse_target_path(char *path, struct path_segment_t **path_seg,
         new = xzmalloc(sizeof(struct path_segment_t));
         new->type = SEGMENT_COMP;
         new->kind = icalcomponent_string_to_kind(path);
+        if (new->kind == ICAL_X_COMPONENT) new->xname = xstrdup(path);
         /* Initialize RID as invalid time rather than NULL time
            since NULL time is used for empty RID (master component) */
         new->match.comp.rid.year = -1;
@@ -1167,6 +1237,7 @@ static int parse_target_path(char *path, struct path_segment_t **path_seg,
         new = xzmalloc(sizeof(struct path_segment_t));
         new->type = SEGMENT_PROP;
         new->kind = icalproperty_string_to_kind(path);
+        if (new->kind == ICAL_X_PROPERTY) new->xname = xstrdup(path);
 
         if (!*path_seg) *path_seg = new;
         else tail->child = new;
@@ -1207,6 +1278,7 @@ static int parse_target_path(char *path, struct path_segment_t **path_seg,
             new = xzmalloc(sizeof(struct path_segment_t));
             new->type = SEGMENT_PARAM;
             new->kind = icalparameter_string_to_kind(path);
+            if (new->kind == ICAL_X_PARAMETER) new->xname = xstrdup(path);
 
             tail->child = new;
             tail = new;
@@ -1257,11 +1329,15 @@ static char *remove_single_value(const char *oldstr, const char *single)
 static void apply_patch_parameter(struct path_segment_t *path_seg,
                                   icalproperty *parent, int *num_changes)
 {
-    icalparameter *param =
-        icalproperty_get_first_parameter(parent, path_seg->kind);
-    if (!param) return;
+    icalparameter *param, *nextparam;
 
-    if (path_seg->action == ACTION_DELETE) {
+    if (path_seg->action != ACTION_DELETE) return;
+
+    /* Iterate through each parameter */
+    for (param = icalproperty_get_first_parameter(parent, path_seg->kind);
+         param; param = nextparam) {
+        nextparam = icalproperty_get_next_parameter(parent, path_seg->kind);
+
         switch (path_seg->kind) {
         case ICAL_MEMBER_PARAMETER:
             /* Multi-valued parameter */
@@ -1278,18 +1354,21 @@ static void apply_patch_parameter(struct path_segment_t *path_seg,
                         icalparameter_set_member(param, newval);
                         free(newval);
                     }
-                    break;
+                    continue;
                 }
             }
+            break;
 
-            /* Fall through and delete entire parameter */
-            GCC_FALLTHROUGH
-
-        default:
-            *num_changes += 1;
-            icalproperty_remove_parameter_by_ref(parent, param);
+        case ICAL_X_PARAMETER:
+            /* Check X- parameter name match */
+            if (strcmp(path_seg->xname, icalparameter_get_iana_name(param))) {
+                continue;
+            }
             break;
         }
+
+        *num_changes += 1;
+        icalproperty_remove_parameter_by_ref(parent, param);
     }
 }
 
@@ -1297,22 +1376,29 @@ static int apply_param_match(icalproperty *prop, union match_criteria_t *match)
 {
     icalparameter_kind kind;
     icalparameter *param;
-    int ret = 1;
-
-    /* XXX  Need to handle X- parameters */
+    int ret = 0;
 
     kind = icalparameter_string_to_kind(match->prop.param);
-    param = icalproperty_get_first_parameter(prop, kind);
-    if (!param) {
-        /* property doesn't have this parameter */
-        ret = match->prop.not;
-    }
-    else if (match->prop.value) {
-        const char *param_val = icalparameter_get_value_as_string(param);
 
-        ret = !strcmp(match->prop.value, param_val);
-        if (match->prop.not) ret = !ret;  /* invert */
+    /* Iterate through each parameter */
+    for (param = icalproperty_get_first_parameter(prop, kind);
+         !ret && param; param = icalproperty_get_next_parameter(prop, kind)) {
+        /* Check X- parameter name match */
+        if (kind == ICAL_X_PARAMETER &&
+            strcmp(match->prop.param, icalparameter_get_iana_name(param))) {
+            continue;
+        }
+        else if (match->prop.value) {
+            const char *param_val = icalparameter_get_value_as_string(param);
+
+            ret = !strcmp(match->prop.value, param_val);
+        }
+        else {
+            ret = 1;
+        }
     }
+
+    if (match->prop.not) ret = !ret;  /* invert */
 
     return ret;
 }
@@ -1328,6 +1414,12 @@ static void apply_patch_property(struct path_segment_t *path_seg,
     for (prop = icalcomponent_get_first_property(parent, path_seg->kind);
          prop; prop = nextprop) {
         nextprop = icalcomponent_get_next_property(parent, path_seg->kind);
+
+        /* Check X- property name match */
+        if (path_seg->kind == ICAL_X_PROPERTY &&
+            strcmp(path_seg->xname, icalproperty_get_property_name(prop))) {
+            continue;
+        }
 
         /* Check prop-match */
         int match = 1;
@@ -1434,7 +1526,7 @@ static void create_override(icalcomponent *master, struct icaltime_span *span,
 
             /* Add RECURRENCE-ID for this recurrence */
             prop = icalproperty_new_recurrenceid(dtstart);
-            tzid = icaltimezone_get_tzid((icaltimezone *) tz);
+            tzid = icaltimezone_get_location_tzid((icaltimezone *) tz);
             if (tzid) {
                 icalproperty_add_parameter(prop, icalparameter_new_tzid(tzid));
             }
@@ -1616,6 +1708,12 @@ static void apply_patch_component(struct path_segment_t *path_seg,
     for (; comp; comp = nextcomp) {
         nextcomp = icalcomponent_get_next_component(parent, path_seg->kind);
 
+        /* Check X- component name match */
+        if (path_seg->kind == ICAL_X_COMPONENT &&
+            strcmp(path_seg->xname, icalcomponent_get_component_name(comp))) {
+            continue;
+        }
+
         /* Check comp-match */
         if (path_seg->match.comp.uid &&
             strcmpnull(path_seg->match.comp.uid, icalcomponent_get_uid(comp))) {
@@ -1728,6 +1826,7 @@ static void path_segment_free(struct path_segment_t *path_seg)
             break;
         }
 
+        free(path_seg->xname);
         free(path_seg);
     }
 }
@@ -1749,7 +1848,7 @@ EXPORTED int icalcomponent_apply_vpatch(icalcomponent *ical,
          patch;
          patch = icalcomponent_get_next_component(vpatch, ICAL_ANY_COMPONENT)) {
         struct path_segment_t *target = NULL;
-        struct patch_data_t patch_data = { patch, NULL, NULL };
+        struct patch_data_t patch_data = { NULL, NULL, NULL };
         r = 0;
 
         if (icalcomponent_isa(patch) != ICAL_XPATCH_COMPONENT) {
@@ -1760,7 +1859,7 @@ EXPORTED int icalcomponent_apply_vpatch(icalcomponent *ical,
         }
 
         /* This function is destructive of PATCH components, make a clone */
-        patch = icalcomponent_clone(patch);
+        patch_data.patch = patch = icalcomponent_clone(patch);
 
         prop = icalcomponent_get_first_property(patch,
                                                 ICAL_PATCHTARGET_PROPERTY);
@@ -1887,5 +1986,46 @@ EXPORTED icalproperty *icalproperty_new_color(const char *v)
 }
 
 #endif /* HAVE_RFC7986_COLOR */
+
+EXPORTED const char *icaltimezone_get_location_tzid(const icaltimezone *zone)
+{
+    const char *v = icaltimezone_get_location((icaltimezone*) zone);
+    if (!v) v = icaltimezone_get_tzid((icaltimezone*) zone);
+    return v;
+}
+
+EXPORTED const char *icaltime_get_location_tzid(icaltimetype t)
+{
+    return icaltimezone_get_location_tzid(t.zone);
+}
+
+static void icalproperty_remove_xparam(icalproperty *prop, const char *name)
+{
+    icalparameter *param, *next;
+
+    for (param = icalproperty_get_first_parameter(prop, ICAL_ANY_PARAMETER);
+         param;
+         param = next) {
+
+        next = icalproperty_get_next_parameter(prop, ICAL_ANY_PARAMETER);
+        if (strcasecmpsafe(icalparameter_get_xname(param), name)) {
+            continue;
+        }
+        icalproperty_remove_parameter_by_ref(prop, param);
+    }
+}
+
+EXPORTED void icalproperty_set_xparam(icalproperty *prop,
+                                      const char *name, const char *val, int purge)
+{
+    icalparameter *param;
+
+    if (purge) icalproperty_remove_xparam(prop, name);
+
+    param = icalparameter_new(ICAL_X_PARAMETER);
+    icalparameter_set_xname(param, name);
+    icalparameter_set_xvalue(param, val);
+    icalproperty_add_parameter(prop, param);
+}
 
 #endif /* HAVE_ICAL */

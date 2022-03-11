@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "SYNC_CLIENT" "8" "February 02, 2022" "3.4.3" "Cyrus IMAP"
+.TH "SYNC_CLIENT" "8" "March 11, 2022" "3.6.0" "Cyrus IMAP"
 .SH NAME
 sync_client \- Cyrus IMAP documentation
 .
@@ -38,7 +38,7 @@ Client side of the synchronization (replication) engine
 \fBsync_client\fP [ \fB\-v\fP ] [ \fB\-l\fP ] [ \fB\-L\fP ] [ \fB\-z\fP ] [ \fB\-C\fP \fIconfig\-file\fP ] [ \fB\-S\fP \fIserver\-name\fP ]
     [ \fB\-f\fP \fIinput\-file\fP ] [ \fB\-F\fP \fIshutdown_file\fP ] [ \fB\-w\fP \fIwait_interval\fP ]
     [ \fB\-t\fP \fItimeout\fP ] [ \fB\-d\fP \fIdelay\fP ] [ \fB\-r\fP ] [ \fB\-n\fP \fIchannel\fP ] [ \fB\-u\fP ] [ \fB\-m\fP ]
-    [ \fB\-p\fP \fIpartition\fP ] [ \fB\-A\fP ] [ \fB\-s\fP ] [ \fB\-O\fP ] \fIobjects\fP\&...
+    [ \fB\-p\fP \fIpartition\fP ] [ \fB\-A\fP ] [ \fB\-N\fP ] [ \fB\-s\fP ] [ \fB\-O\fP ] \fIobjects\fP\&...
 .fi
 .SH DESCRIPTION
 .sp
@@ -112,6 +112,12 @@ Use the named channel for rolling replication mode.  If multiple
 channels are specified in \fBsync_log_channels\fP then use one of them.
 This option is probably best combined with \fB\-S\fP to connect to a
 different server with each channel.
+.UNINDENT
+.INDENT 0.0
+.TP
+.B \-N
+Use non\-blocking sync_lock (combination of IP address and username)
+to skip over any users who are currently syncing.
 .UNINDENT
 .INDENT 0.0
 .TP

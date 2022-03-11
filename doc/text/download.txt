@@ -35,6 +35,8 @@ Download
 
   * Supported Product Series
 
+    * Series 3.6
+
     * Series 3.4
 
     * Series 3.2
@@ -44,6 +46,8 @@ Download
     * Series 2.5
 
   * Development snapshots
+
+    * Cyrus IMAP 3.7 Tags
 
     * Cyrus IMAP 3.5 Tags
 
