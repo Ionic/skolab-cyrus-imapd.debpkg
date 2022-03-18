@@ -48,7 +48,7 @@ Build-Depends: bison,
                rsync,
                sqlite3,
                unicode-data,
-               vim-common,
+               xxd,
                xutils-dev
 Standards-Version: 4.6.0
 Vcs-Browser: https://salsa.debian.org/debian/cyrus-imapd
