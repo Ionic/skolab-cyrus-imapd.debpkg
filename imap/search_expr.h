@@ -76,6 +76,7 @@ union search_value {
     char *s;
     struct searchannot *annot;
     strarray_t *list;
+    void *v;
 };
 
 /* search_attr.flags */
@@ -100,6 +101,7 @@ struct search_attr {
     unsigned int (*get_countability)(const union search_value *);
     void (*duplicate)(union search_value *, const union search_value *);
     void (*free)(union search_value *);
+    void (*freeattr)(struct search_attr *);
     void *data1;        /* extra data for the functions above */
 };
 
@@ -150,6 +152,7 @@ extern void search_expr_split_by_folder_and_index(search_expr_t *e,
                                                    void *rock),
                                         void *rock);
 extern char *search_expr_firstmailbox(const search_expr_t *);
+extern void search_expr_detrivialise(search_expr_t **ep);
 
 enum search_cost {
     SEARCH_COST_NONE = 0,

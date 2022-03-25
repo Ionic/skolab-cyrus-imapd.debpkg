@@ -68,7 +68,8 @@
 
 extern unsigned int proxy_cmdcnt;
 extern struct protstream *imapd_in, *imapd_out;
-extern struct backend *backend_inbox, *backend_current, **backend_cached;
+extern struct backend *backend_inbox, *backend_current;
+extern ptrarray_t backend_cached;
 extern char *imapd_userid, *proxy_userid;
 extern struct namespace imapd_namespace;
 
@@ -100,6 +101,8 @@ struct protocol_t imap_protocol =
           { "LIST-EXTENDED", CAPA_LISTEXTENDED },
           { "SASL-IR", CAPA_SASL_IR },
           { "X-REPLICATION", CAPA_REPLICATION },
+          { "X-SIEVE-MAILBOX", CAPA_SIEVE_MAILBOX },
+          /* Need to bump MAX_CAPA in protocol.h if this array is extended */
           { NULL, 0 } } },
       { "S01 STARTTLS", "S01 OK", "S01 NO", 0 },
       { "A01 AUTHENTICATE", 0, 0, "A01 OK", "A01 NO", "+ ", "*",
@@ -1207,7 +1210,7 @@ void proxy_copy(const char *tag, char *sequence, char *name, int myrights,
 /* xxx  end of separate proxy-only code */
 
 int proxy_catenate_url(struct backend *s, struct imapurl *url, FILE *f,
-                       unsigned long *size, const char **parseerr)
+                       size_t maxsize, unsigned long *size, const char **parseerr)
 {
     char mytag[128];
     int c, r = 0, found = 0;
@@ -1309,6 +1312,11 @@ int proxy_catenate_url(struct backend *s, struct imapurl *url, FILE *f,
                     if (c == '}') c = prot_getc(s->in);
                     if (c == '\r') c = prot_getc(s->in);
                     if (c != '\n') c = EOF;
+                    if (sz > maxsize) {
+                        r = IMAP_MESSAGE_TOO_LARGE;
+                        eatline(s->in, c);
+                        goto next_resp;
+                    }
                 }
                 else if (c == 'n' || c == 'N') {
                     c = chomp(s->in, "il");

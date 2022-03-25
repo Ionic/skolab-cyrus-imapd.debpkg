@@ -269,10 +269,6 @@ Administrators do not have implicit delete rights on mailboxes.  Use the
 `setaclmailbox`_ command to grant the \ ``x``\  permission to your
 principal if you need to delete a mailbox you do not own.
 
-Note that the online help admits to an optional host argument.  This argument
-is not currently used, and will be rejected with an error if specified; it
-is reserved for IMSP.
-
 aliases: \ ``delete``\ , \ ``dm``\ 
 
 .. _imap-reference-manpages-systemcommands-cyradm-disconnect:

@@ -75,6 +75,15 @@ FIELD DESCRIPTIONS
     are listed with \`\`<none>''.
 
 
+    .. startblob acl_admin_implies_write
+
+    ``acl_admin_implies_write:`` 0
+
+        If enabled, any user with the admin ACL on a mailbox implicitly
+        gets the ability to write to that mailbox as well. 
+
+    .. endblob acl_admin_implies_write
+
     .. startblob addressbookprefix
 
     ``addressbookprefix:`` #addressbooks
@@ -882,6 +891,15 @@ FIELD DESCRIPTIONS
 
     .. endblob boundary_limit
 
+    .. startblob caldav_accept_invalid_rrules
+
+    ``caldav_accept_invalid_rrules:`` 0
+
+        Accept invalid RRULEs (e.g. FREQ=WEEKLY;BYMONTHDAY=15)
+        rather than rejecting them as errors. 
+
+    .. endblob caldav_accept_invalid_rrules
+
     .. startblob caldav_allowattach
 
     ``caldav_allowattach:`` 1
@@ -1117,8 +1135,8 @@ FIELD DESCRIPTIONS
 
     ``commandmintimer:`` <none>
 
-        Time in seconds. Any imap command that takes longer than this
-        time is logged. 
+        Time in floating point seconds. Any imap command that takes longer than
+        this time is logged. 
 
     .. endblob commandmintimer
 
@@ -1322,6 +1340,15 @@ FIELD DESCRIPTIONS
 
     .. endblob dav_lock_timeout
 
+    .. startblob debug
+
+    ``debug:`` 0
+
+        If enabled, allow syslog() to pass LOG_DEBUG messages. 
+
+
+    .. endblob debug
+
     .. startblob debug_command
 
     ``debug_command:`` <none>
@@ -1333,6 +1360,17 @@ FIELD DESCRIPTIONS
         Example: /usr/local/bin/gdb /usr/cyrus/bin/%s %d 
 
     .. endblob debug_command
+
+    .. startblob debug_writefail_guid
+
+    ``debug_writefail_guid:`` <none>
+
+        If set, any arriving message with this guid will fail as if the underlying
+        disk write had failed, pretending to be a disk full condition.  This is
+        mainly useful for regression testing certain edge case handling.
+        Currently only implemented for replication uploads. 
+
+    .. endblob debug_writefail_guid
 
     .. startblob defaultacl
 
@@ -1590,7 +1628,7 @@ FIELD DESCRIPTIONS
 
         Space-separated list of extra parameters to add to any appropriated event. 
 
-        Allowed values: *bodyStructure*, *clientAddress*, *diskUsed*, *flagNames*, *messageContent*, *messageSize*, *messages*, *modseq*, *service*, *timestamp*, *uidnext*, *vnd.cmu.midset*, *vnd.cmu.unseenMessages*, *vnd.cmu.envelope*, *vnd.cmu.sessionId*, *vnd.cmu.mailboxACL*, *vnd.cmu.mbtype*, *vnd.cmu.davFilename*, *vnd.cmu.davUid*, *vnd.fastmail.clientId*, *vnd.fastmail.sessionId*, *vnd.fastmail.convExists*, *vnd.fastmail.convUnseen*, *vnd.fastmail.cid*, *vnd.fastmail.counters*, *vnd.cmu.emailid*, *vnd.cmu.threadid*
+        Allowed values: *bodyStructure*, *clientAddress*, *diskUsed*, *flagNames*, *messageContent*, *messageSize*, *messages*, *modseq*, *service*, *timestamp*, *uidnext*, *vnd.cmu.midset*, *vnd.cmu.unseenMessages*, *vnd.cmu.envelope*, *vnd.cmu.sessionId*, *vnd.cmu.mailboxACL*, *vnd.cmu.mbtype*, *vnd.cmu.davFilename*, *vnd.cmu.davUid*, *vnd.fastmail.clientId*, *vnd.fastmail.sessionId*, *vnd.fastmail.convExists*, *vnd.fastmail.convUnseen*, *vnd.fastmail.cid*, *vnd.fastmail.counters*, *vnd.fastmail.jmapEmail*, *vnd.fastmail.jmapStates*, *vnd.cmu.emailid*, *vnd.cmu.threadid*
 
 
     .. endblob event_extra_params
@@ -1704,15 +1742,6 @@ FIELD DESCRIPTIONS
         one partition has a very bushy mailbox tree. 
 
     .. endblob hashimapspool
-
-    .. startblob debug
-
-    ``debug:`` 0
-
-        If enabled, allow syslog() to pass LOG_DEBUG messages. 
-
-
-    .. endblob debug
 
     .. startblob hostname_mechs
 
@@ -1874,6 +1903,72 @@ FIELD DESCRIPTIONS
 
     .. endblob httptimeout
 
+    .. startblob http_h2_altsvc
+
+    ``http_h2_altsvc:`` <none>
+
+        If set, HTTP/2 (over TLS) will be advertised as being available on the
+        specified [host]:port. 
+
+    .. endblob http_h2_altsvc
+
+    .. startblob http_jwt_key_dir
+
+    ``http_jwt_key_dir:`` <none>
+
+        The absolute path to a directory containing one or more key files
+        to authenticate JSON Web Tokens (:rfc:`7519`) for HTTP connections.
+        Keys for the following JWS algorithms are supported: "HS256",
+        "HS384", "HS512", "RS256", "RS384", "RS512".
+
+        A key file consists of one or more keys encoded in PEM format.
+        RSA keys must be embedded between the lines
+        "-----BEGIN PUBLIC KEY-----" and "-----END PUBLIC KEY-----"
+        HMAC digest keys must be embedded between the lines
+        "-----BEGIN HMAC KEY-----" and "-----END HMAC KEY-----",
+        encoded in base64.
+        Any lines before or after a PEM key definition are ignored,
+        empty lines are ignored anywhere in the file.
+
+        The JSON Web Token must be the value of the HTTP "Authorization" header,
+        using the "Bearer" authentication scheme. The JWS Header must include the
+        "alg" and "typ" parameter. A header with any other parameter is rejected.
+        The JWS Payload must include the "sub" claim with the Cyrus user
+        identifier as value. It may include the "iat" claim (see *http_jwt_max_age*).
+        A payload with any other claim is rejected.
+
+
+    .. endblob http_jwt_key_dir
+
+    .. startblob http_jwt_max_age
+
+    ``http_jwt_max_age:`` 0s
+
+        Defines the timespan in which a JSON Web Token is valid
+        (see *http_jwt_key*). The value must be zero or positive.
+
+        If non-zero, the timespan starts at the point in time specified in the
+        "iat" claim of the JWS Payload and ends after the duration of this
+        option value has passed. Tokens without an "iat" claim,
+        or with an issue date in the future, are rejected. There is no leeway
+        for clock skew.
+
+        The zero value disables validation of the "iat" JWS claim.
+
+
+    .. endblob http_jwt_max_age
+
+    .. startblob icalendar_max_size
+
+    ``icalendar_max_size:`` 0
+
+        Maximum allowed iCalendar size.
+        If non-zero, CalDAV and JMAP will reject storage of resources whose
+        iCalendar representation is larger than *icalendar_max_size* bytes.
+        If set to 0, this will allow iCalendar resources of any size (the default). 
+
+    .. endblob icalendar_max_size
+
     .. startblob idlesocket
 
     ``idlesocket:`` {configdirectory}/socket/idle
@@ -1981,6 +2076,23 @@ FIELD DESCRIPTIONS
 
     .. endblob jmap_emailsearch_db_path
 
+    .. startblob jmap_querycache_max_age
+
+    ``jmap_querycache_max_age:`` 0m
+
+        The duration after which unused cached JMAP query results
+        must be evicted from process memory. If non-zero, then the
+        full result of the last query (before windowing) is stored
+        in-memory. Subsequent queries with the same expression and
+        query state can then page through the cached result.
+        A zero value disables query result caching.
+
+        If no unit is specified, minutes is assumed.
+
+        This feature currently only is enabled for Email/query. 
+
+    .. endblob jmap_querycache_max_age
+
     .. startblob jmap_preview_annot
 
     ``jmap_preview_annot:`` <none>
@@ -2036,6 +2148,17 @@ FIELD DESCRIPTIONS
         stored in jmap_preview_annot take precedence. 
 
     .. endblob jmap_preview_length
+
+    .. startblob jmap_max_catenate_items
+
+    ``jmap_max_catenate_items:`` 100
+
+        The maximum number of items that can be catenated together by
+        a JMAP Blob/set action.  Returned as the maxCatenateItems property
+        value of the JMAP \"urn:ietf:params:jmap:blob\" capabilities object.
+        Default value is 100. 
+
+    .. endblob jmap_max_catenate_items
 
     .. startblob jmap_max_size_upload
 
@@ -2155,6 +2278,18 @@ FIELD DESCRIPTIONS
         only IETF standard JMAP functionality is supported. 
 
     .. endblob jmap_nonstandard_extensions
+
+    .. startblob jmap_pushpoll
+
+    ``jmap_pushpoll:`` 60s
+
+        The interval for polling for changes on an EventSource connection or
+        when push has been ennabled on a WebSocket channel.
+        The minimum value is 1 second. A value of 0 will disable push.
+
+        If no unit is specified, seconds is assumed. 
+
+    .. endblob jmap_pushpoll
 
     .. startblob jmap_set_has_attachment
 
@@ -2880,6 +3015,15 @@ FIELD DESCRIPTIONS
         no flags.  Example: $Label1 $Label2 $Label3 NotSpam Spam 
 
     .. endblob mailbox_initial_flags
+
+    .. startblob mailbox_legacy_dirs
+
+    ``mailbox_legacy_dirs:`` 0
+
+        if enabled, new mailboxes without parents will be created with legacy paths.
+        sub mailboxes of users will still inherit the parent legacy setting 
+
+    .. endblob mailbox_legacy_dirs
 
     .. startblob mailbox_maxmessages_addressbook
 
@@ -3921,8 +4065,8 @@ FIELD DESCRIPTIONS
 
     ``reverseuniqueids:`` 1
 
-        At startup time, ctl_cyrusdb -r will check this value and it
-        will either add or remove reverse UNIQUEID pointers from mailboxes.db 
+        Deprecated. No longer used 
+
 
     .. endblob reverseuniqueids
 
@@ -4248,6 +4392,17 @@ FIELD DESCRIPTIONS
 
     .. endblob search_maxtime
 
+    .. startblob search_maxsize
+
+    ``search_maxsize:`` 4096
+
+        The maximum size in kilobytes to index for each message part. Message
+        contents that occur after this byte offset will not be indexed or
+        search snippets generated from.
+        Default is 4Mb. Xapian-only. 
+
+    .. endblob search_maxsize
+
     .. startblob search_queryscan
 
     ``search_queryscan:`` 5000
@@ -4492,7 +4647,7 @@ FIELD DESCRIPTIONS
 
     .. startblob sieve_extensions
 
-    ``sieve_extensions:`` fileinto reject vacation vacation-seconds notify include envelope environment body relational regex subaddress copy date index imap4flags mailbox mboxmetadata servermetadata variables editheader extlists duplicate ihave fcc special-use redirect-dsn redirect-deliverby mailboxid vnd.cyrus.log vnd.cyrus.jmapquery snooze
+    ``sieve_extensions:`` fileinto reject vacation vacation-seconds notify include envelope environment body relational regex subaddress copy date index imap4flags mailbox mboxmetadata servermetadata variables editheader extlists duplicate ihave fcc special-use redirect-dsn redirect-deliverby mailboxid vnd.cyrus.log vnd.cyrus.jmapquery vnd.cyrus.imip snooze
 
         Space-separated list of Sieve extensions allowed to be used in
         sieve scripts, enforced at submission by timsieved(8).  Any
@@ -4500,10 +4655,19 @@ FIELD DESCRIPTIONS
         will continue to execute regardless of the extensions used.  This
         option has no effect on options that are disabled at compile time
         (e.g., "regex"). 
-        Allowed values: *fileinto*, *reject*, *vacation*, *vacation-seconds*, *notify*, *include*, *envelope*, *environment*, *body*, *relational*, *regex*, *subaddress*, *copy*, *date*, *index*, *imap4flags=imapflags*, *mailbox*, *mboxmetadata*, *servermetadata*, *variables*, *editheader*, *extlists*, *duplicate*, *ihave*, *fcc*, *special-use*, *redirect-dsn*, *redirect-deliverby*, *mailboxid*, *vnd.cyrus.log=x-cyrus-log*, *vnd.cyrus.jmapquery=x-cyrus-jmapquery*, *snooze=vnd.cyrus.snooze=x-cyrus-snooze*
+        Allowed values: *fileinto*, *reject*, *vacation*, *vacation-seconds*, *notify*, *include*, *envelope*, *environment*, *body*, *relational*, *regex*, *subaddress*, *copy*, *date*, *index*, *imap4flags=imapflags*, *mailbox*, *mboxmetadata*, *servermetadata*, *variables*, *editheader*, *extlists*, *duplicate*, *ihave*, *fcc*, *special-use*, *redirect-dsn*, *redirect-deliverby*, *mailboxid*, *vnd.cyrus.log=x-cyrus-log*, *vnd.cyrus.jmapquery=x-cyrus-jmapquery*, *vnd.cyrus.imip*, *snooze=vnd.cyrus.snooze=x-cyrus-snooze*
 
 
     .. endblob sieve_extensions
+
+    .. startblob sieve_folder
+
+    ``sieve_folder:`` #sieve
+
+        The name of the folder for storing Sieve scripts (#sieve) 
+
+
+    .. endblob sieve_folder
 
     .. startblob sieve_maxscriptsize
 
@@ -4751,6 +4915,17 @@ FIELD DESCRIPTIONS
         if needed. 
 
     .. endblob specialuse_extra
+
+    .. startblob specialuse_nochildren
+
+    ``specialuse_nochildren:`` <none>
+
+        Whitespace separated list of special-use attributes that may not contain
+        child folders.  If set, mailboxes with any of these attributes may not
+        have child folders created, and these attributes cannot be added to
+        mailboxes that already have children.. 
+
+    .. endblob specialuse_nochildren
 
     .. startblob specialuse_protect
 
@@ -5058,7 +5233,7 @@ FIELD DESCRIPTIONS
         replica host.  Prefix with a channel name to only apply for that
         channel.  If not specified, and if sync_try_imap is set to "yes"
         (the default), then the replication client will first try "imap"
-        (port 143) to check if imapd supports replication.  otherwise it
+        (port 143) to check if imapd supports replication.  Otherwise it
         will default to "csync" (usually port 2005). 
 
     .. endblob sync_port
@@ -5071,6 +5246,23 @@ FIELD DESCRIPTIONS
         Prefix with a channel name to only apply for that channel 
 
     .. endblob sync_realm
+
+    .. startblob sync_reconnect_maxwait
+
+    ``sync_reconnect_maxwait:`` 20m
+
+        When a rolling sync_client cannot connect to the replica, it enters
+        a retry loop with an exponential backoff between attempts.  This
+        option sets the upper limit on that exponential backoff: no matter
+        how long the replica has been down so far, sync_client will never
+        wait longer than sync_reconnect_maxwait between retries.
+
+        If this is zero or negative, the backoff duration will be allowed
+        to increase indefinitely (not recommended).
+
+        If no unit is specified, seconds is assumed. 
+
+    .. endblob sync_reconnect_maxwait
 
     .. startblob sync_repeat_interval
 
@@ -5577,6 +5769,17 @@ FIELD DESCRIPTIONS
 
     .. endblob unixhierarchysep
 
+    .. startblob vcard_max_size
+
+    ``vcard_max_size:`` 0
+
+        Maximum allowed vCard size.
+        If non-zero, CardDAV and JMAP will reject storage of contacts whose
+        vCard representation is larger than *vcard_max_size* bytes.
+        If set to 0, this will allow vCards of any size (the default). 
+
+    .. endblob vcard_max_size
+
     .. startblob virtdomains
 
     ``virtdomains:`` off
@@ -5626,6 +5829,19 @@ FIELD DESCRIPTIONS
         If not specified, the builtin default template will be used. 
 
     .. endblob virusscan_notification_template
+
+    .. startblob websocket_timeout
+
+    ``websocket_timeout:`` 30m
+
+        Set the length of the HTTP server's inactivity autologout timer
+        when a WebSocket channel has been established.
+        The default is 30 minutes.  The minimum value is 0, which will
+        disable WebSockets.
+
+        If no unit is specified, minutes is assumed. 
+
+    .. endblob websocket_timeout
 
     .. startblob xbackup_enabled
 

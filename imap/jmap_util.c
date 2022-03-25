@@ -46,11 +46,11 @@
 #include <string.h>
 #include <syslog.h>
 #include <assert.h>
+#include <errno.h>
 
 #include <sasl/saslutil.h>
 
 #include "annotate.h"
-#include "carddav_db.h"
 #include "global.h"
 #include "hash.h"
 #include "index.h"
@@ -298,13 +298,7 @@ static void address_to_smtp(smtp_addr_t *smtpaddr, json_t *addr)
         }
         /* Encode xtext value */
         if (json_is_string(val)) {
-            const char *p;
-            for (p = json_string_value(val); *p; p++) {
-                if (('!' <= *p && *p <= '~') && *p != '=' && *p != '+') {
-                    buf_putc(&xtext, *p);
-                }
-                else buf_printf(&xtext, "+%02X", *p);
-            }
+            smtp_encode_esmtp_value(json_string_value(val), &xtext);
         }
         /* Build parameter */
         smtp_param_t *param = xzmalloc(sizeof(smtp_param_t));
@@ -332,19 +326,22 @@ EXPORTED void jmap_emailsubmission_envelope_to_smtp(smtp_envelope_t *smtpenv,
 EXPORTED json_t *jmap_fetch_snoozed(const char *mbox, uint32_t uid)
 {
     /* get the snoozed annotation */
+    mbentry_t mbentry = MBENTRY_INITIALIZER;
+    mbentry.name = (char *)mbox;
+    struct mailbox mailbox = { .mbentry = &mbentry };
     const char *annot = IMAP_ANNOT_NS "snoozed";
     struct buf value = BUF_INITIALIZER;
     json_t *snooze = NULL;
     int r;
 
-    r = annotatemore_msg_lookup(mbox, uid, annot, "", &value);
+    r = annotatemore_msg_lookup(&mailbox, uid, annot, "", &value);
 
     if (!r) {
         if (!buf_len(&value)) {
             /* get the legacy snoozed-until annotation */
             annot = IMAP_ANNOT_NS "snoozed-until";
 
-            r = annotatemore_msg_lookup(mbox, uid, annot, "", &value);
+            r = annotatemore_msg_lookup(&mailbox, uid, annot, "", &value);
             if (!r && buf_len(&value)) {
                 /* build a SnoozeDetails object from the naked "until" value */
                 snooze = json_pack("{s:s}",
@@ -489,6 +486,8 @@ HIDDEN void jmap_parser_invalid(struct jmap_parser *parser, const char *prop)
 HIDDEN json_t *jmap_server_error(int r)
 {
     switch (r) {
+    case IMAP_PERMISSION_DENIED:
+        return json_pack("{s:s}", "type", "forbidden");
     case IMAP_CONVERSATION_GUIDLIMIT:
         return json_pack("{s:s}", "type", "tooManyMailboxes");
     case IMAP_QUOTA_EXCEEDED:
@@ -562,25 +561,25 @@ HIDDEN char *jmap_decode_base64_nopad(const char *b64, size_t b64len)
     return data;
 }
 
-EXPORTED const char *jmap_decode_to_utf8(const char *charset, int encoding,
-                                         const char *data, size_t datalen,
-                                         float confidence,
-                                         char **val,
-                                         int *is_encoding_problem)
+EXPORTED void jmap_decode_to_utf8(const char *charset, int encoding,
+                                  const char *data, size_t datalen,
+                                  float confidence,
+                                  struct buf *dst,
+                                  int *is_encoding_problem)
 {
     charset_t cs = charset_lookupname(charset);
     char *text = NULL;
-    *val = NULL;
+    size_t textlen = 0;
+    struct char_counts counts = { 0 };
     const char *charset_id = charset_canon_name(cs);
     assert(confidence >= 0.0 && confidence <= 1.0);
 
-    /* Attempt fast path without allocation */
-    if (encoding == ENCODING_NONE && data[datalen] == '\0' &&
-            !strcasecmp(charset_id, "UTF-8")) {
+    /* Attempt fast path if data claims to be UTF-8 */
+    if (encoding == ENCODING_NONE && !strcasecmp(charset_id, "UTF-8")) {
         struct char_counts counts = charset_count_validutf8(data, datalen);
         if (!counts.invalid) {
-            charset_free(&cs);
-            return data;
+            buf_setmap(dst, data, datalen);
+            goto done;
         }
     }
 
@@ -591,14 +590,43 @@ EXPORTED const char *jmap_decode_to_utf8(const char *charset, int encoding,
         if (is_encoding_problem) *is_encoding_problem = 1;
         goto done;
     }
-    text = charset_to_utf8(data, datalen, cs, encoding);
+
+    /* Decode source data, converting charset if not already in UTF-8 */
+    size_t nreplacement = 0;
+    if (!strcasecmp(charset_id, "UTF-8")) {
+        struct buf buf = BUF_INITIALIZER;
+        if (charset_decode(&buf, data, datalen, encoding)) {
+            xsyslog(LOG_INFO, "failed to decode UTF-8 data",
+                    "encoding=<%s>", encoding_name(encoding));
+            buf_free(&buf);
+            if (is_encoding_problem) *is_encoding_problem = 1;
+            goto done;
+        }
+        textlen = buf_len(&buf);
+        text = buf_release(&buf);
+        counts = charset_count_validutf8(text, textlen);
+        if (counts.invalid) {
+            // Source UTF-8 data contains invalid characters.
+            // Need to run data through charset_to_utf8
+            // to insert replacement characters for these bytes.
+            nreplacement = counts.replacement;
+            xzfree(text);
+            textlen = 0;
+        }
+        else counts.replacement = 0; // ignore replacement in source data
+    }
     if (!text) {
-        if (is_encoding_problem) *is_encoding_problem = 1;
-        goto done;
+        text = charset_to_utf8(data, datalen, cs, encoding);
+        if (!text) {
+            if (is_encoding_problem) *is_encoding_problem = 1;
+            goto done;
+        }
+        textlen = strlen(text);
+        counts = charset_count_validutf8(text, textlen);
+        if (counts.replacement > nreplacement)
+            counts.replacement -= nreplacement;
     }
 
-    size_t textlen = strlen(text);
-    struct char_counts counts = charset_count_validutf8(text, textlen);
     if (is_encoding_problem)
         *is_encoding_problem = counts.invalid || counts.replacement;
 
@@ -693,6 +721,470 @@ EXPORTED const char *jmap_decode_to_utf8(const char *charset, int encoding,
 
 done:
     charset_free(&cs);
-    *val = text;
-    return text;
+    if (text) buf_setcstr(dst, text);
+    free(text);
+}
+
+/*
+ * The blobId syntax for raw message data is:
+ *
+ * <mailbox id> "_" <message UID> [ "_" <userid> [ "_" <subpart> [ "_" <SHA1> ]]]
+ *
+ * <userid> is currently used to personalize iCalendar data and may be empty
+ * <subpart> is currently used to target vCard/iCalendar properties
+ *   with data: URI values (e.g. vCard PHOTO/LOGO/SOUND or iCalendar IMAGE)
+ * <SHA1> is used to target a <subpart> having a specific value
+ */
+EXPORTED const char *jmap_encode_rawdata_blobid(const char prefix,
+                                                const char *mboxid,
+                                                uint32_t uid,
+                                                const char *userid,
+                                                const char *subpart,
+                                                struct message_guid *guid,
+                                                struct buf *dst)
+{
+    buf_reset(dst);
+
+    /* Set smart blob prefix */
+    buf_putc(dst, prefix);
+
+    /* Encode mailbox id */
+    buf_appendcstr(dst, mboxid);
+    
+    /* Encode message UID */
+    buf_printf(dst, "_%u", uid);
+
+    /* Encode user id */
+    if (userid || subpart) {
+        char *b64 = NULL;
+
+        buf_putc(dst, '_');
+        if (userid) {
+            b64 = jmap_encode_base64_nopad(userid, strlen(userid));
+            if (!b64) {
+                buf_reset(dst);
+                return NULL;
+            }
+            buf_appendcstr(dst, b64);
+            free(b64);
+        }
+
+        /* Encode subpart */
+        if (subpart) {
+            buf_putc(dst, '_');
+            b64 = jmap_encode_base64_nopad(subpart, strlen(subpart));
+            if (!b64) {
+                buf_reset(dst);
+                return NULL;
+            }
+            buf_appendcstr(dst, b64);
+            free(b64);
+
+            if (guid) {
+                /* Encode subpart data GUID */
+                buf_printf(dst, "_%s", message_guid_encode(guid));
+            }
+        }
+    }
+
+    return buf_cstring(dst);
+}
+
+EXPORTED int jmap_decode_rawdata_blobid(const char *blobid,
+                                        char **mboxidptr,
+                                        uint32_t *uidptr,
+                                        char **useridptr,
+                                        char **subpartptr,
+                                        struct message_guid *guidptr)
+{
+    char *mboxid = NULL;
+    uint32_t uid = 0;
+    char *userid = NULL;
+    char *subpart = NULL;
+    struct message_guid guid;
+    int is_valid = 0;
+
+    /* Decode mailbox id */
+    const char *base = blobid+1;
+    const char *p = strchr(base, '_');
+    if (!p) goto done;
+    mboxid = xstrndup(base, p-base);
+    if (!*mboxid) goto done;
+    base = p + 1;
+
+    /* Decode message UID */
+    if (*base == '\0') goto done;
+    char *endptr = NULL;
+    errno = 0;
+    uid = strtoul(base, &endptr, 10);
+    if (errno == ERANGE || (*endptr && *endptr != '_')) {
+        goto done;
+    }
+    base = endptr;
+
+    /* Decode userid */
+    if (*base == '_') {
+        base += 1;
+        p = strchr(base, '_');
+        size_t len = p ? (size_t) (p - base) : strlen(base);
+        if (len) {
+            userid = jmap_decode_base64_nopad(base, len);
+            if (!userid) goto done;
+        }
+        base += len;
+
+        /* Decode subpart */
+        if (*base == '_') {
+            base += 1;
+            p = strchr(base, '_');
+            len = p ? (size_t) (p - base) : strlen(base);
+            if (len) {
+                subpart = jmap_decode_base64_nopad(base, p-base);
+                if (!subpart) goto done;
+            }
+            base += len;
+
+            /* Decode subpart data GUID */
+            if (*base == '_') {
+                base += 1;
+                if (!message_guid_decode(&guid, base)) goto done;
+            }
+        }
+    }
+
+    /* All done */
+    *uidptr = uid;
+    *mboxidptr = mboxid;
+    mboxid = NULL;
+    if (useridptr) {
+        *useridptr = userid;
+        userid = NULL;
+    }
+    if (subpartptr) {
+        *subpartptr = subpart;
+        subpart = NULL;
+    }
+    if (guidptr) message_guid_copy(guidptr, &guid);
+    is_valid = 1;
+
+done:
+    free(mboxid);
+    free(userid);
+    free(subpart);
+    if (!is_valid) {
+        if (guidptr) message_guid_set_null(guidptr);
+    }
+    return is_valid;
+}
+
+EXPORTED json_t *jmap_header_as_raw(const char *raw)
+{
+    if (!raw) return json_null();
+
+    size_t len = strlen(raw);
+    if (len > 1 && raw[len-1] == '\n' && raw[len-2] == '\r') len -= 2;
+    return json_stringn(raw, len);
+}
+
+static char *_decode_mimeheader(const char *raw)
+{
+    if (!raw) return NULL;
+
+    int is_8bit = 0;
+    const char *p;
+    for (p = raw; *p; p++) {
+        if (*p & 0x80) {
+            is_8bit = 1;
+            break;
+        }
+    }
+
+    char *val = NULL;
+    if (is_8bit) {
+        int r = 0;
+        struct buf buf = BUF_INITIALIZER;
+        jmap_decode_to_utf8("utf-8", ENCODING_NONE,
+                raw, strlen(raw), 0.0, &buf, &r);
+        if (buf_len(&buf))
+            val = buf_release(&buf);
+        else
+            buf_free(&buf);
+    }
+    if (!val) {
+        val = charset_decode_mimeheader(raw, CHARSET_KEEPCASE);
+    }
+    return val;
+}
+
+EXPORTED json_t *jmap_header_as_text(const char *raw)
+{
+    if (!raw) return json_null();
+
+    /* TODO this could be optimised to omit unfolding, decoding
+     * or normalisation, or all, if ASCII */
+    /* Unfold and remove CRLF */
+    char *unfolded = charset_unfold(raw, strlen(raw), 0);
+    char *p = strchr(unfolded, '\r');
+    while (p && *(p + 1) != '\n') {
+        p = strchr(p + 1, '\r');
+    }
+    if (p) *p = '\0';
+
+    /* Trim starting SP */
+    const char *trimmed = unfolded;
+    while (isspace(*trimmed)) {
+        trimmed++;
+    }
+
+    /* Decode header */
+    char *decoded = _decode_mimeheader(trimmed);
+
+    /* Convert to Unicode NFC */
+    char *normalized = charset_utf8_normalize(decoded);
+
+    json_t *result = json_string(normalized);
+    free(normalized);
+    free(decoded);
+    free(unfolded);
+    return result;
+}
+
+EXPORTED json_t *jmap_header_as_date(const char *raw)
+{
+    if (!raw) return json_null();
+
+    struct offsettime t;
+    if (offsettime_from_rfc5322(raw, &t, DATETIME_FULL) == -1) {
+        if (!strchr(raw, '\r')) return json_null();
+        char *tmp = charset_unfold(raw, strlen(raw), CHARSET_UNFOLD_SKIPWS);
+        int r = offsettime_from_rfc5322(tmp, &t, DATETIME_FULL);
+        free(tmp);
+        if (r == -1) return json_null();
+    }
+
+    char cbuf[ISO8601_DATETIME_MAX+1] = "";
+    offsettime_to_iso8601(&t, cbuf, sizeof(cbuf), 1);
+    return json_string(cbuf);
+}
+
+static void _remove_ws(char *s)
+{
+    char *d = s;
+    do {
+        while (isspace(*s))
+            s++;
+    } while ((*d++ = *s++));
+}
+
+EXPORTED json_t *jmap_header_as_urls(const char *raw)
+{
+    if (!raw) return json_null();
+
+    /* A poor man's implementation of RFC 2369, returning anything
+     * between < and >. */
+    json_t *urls = json_array();
+    const char *base = raw;
+    const char *top = raw + strlen(raw);
+    while (base < top) {
+        const char *lo = strchr(base, '<');
+        if (!lo) break;
+        const char *hi = strchr(lo, '>');
+        if (!hi) break;
+        char *tmp = charset_unfold(lo + 1, hi - lo - 1, CHARSET_UNFOLD_SKIPWS);
+        _remove_ws(tmp);
+        if (*tmp) json_array_append_new(urls, json_string(tmp));
+        free(tmp);
+        base = hi + 1;
+    }
+    if (!json_array_size(urls)) {
+        json_decref(urls);
+        urls = json_null();
+    }
+    return urls;
+}
+
+EXPORTED json_t *jmap_header_as_messageids(const char *raw)
+{
+    if (!raw) return json_null();
+    json_t *msgids = json_array();
+    char *unfolded = charset_unfold(raw, strlen(raw), CHARSET_UNFOLD_SKIPWS);
+
+    const char *p = unfolded;
+
+    while (*p) {
+        /* Skip preamble */
+        while (isspace(*p) || *p == ',') p++;
+        if (!*p) break;
+
+        /* Find end of id */
+        const char *q = p;
+        if (*p == '<') {
+            while (*q && *q != '>') q++;
+        }
+        else {
+            while (*q && !isspace(*q)) q++;
+        }
+
+        /* Read id */
+        char *val = xstrndup(*p == '<' ? p + 1 : p,
+                             *q == '>' ? q - p - 1 : q - p);
+        if (*p == '<') {
+            _remove_ws(val);
+        }
+        if (*val) {
+            /* calculate the value that would be created if this was
+             * fed back into an Email/set and make sure it would
+             * validate */
+            char *msgid = strconcat("<", val, ">", NULL);
+            int r = conversations_check_msgid(msgid, strlen(msgid));
+            if (!r) json_array_append_new(msgids, json_string(val));
+            free(msgid);
+        }
+        free(val);
+
+        /* Reset iterator */
+        p = *q ? q + 1 : q;
+    }
+
+
+    if (!json_array_size(msgids)) {
+        json_decref(msgids);
+        msgids = json_null();
+    }
+    free(unfolded);
+    return msgids;
+}
+
+static json_t *_header_as_addresses(const char *raw, enum header_form form)
+{
+    if (!raw) return json_null();
+
+    struct address *addrs = NULL;
+    parseaddr_list(raw, &addrs);
+    json_t *result = jmap_emailaddresses_from_addr(addrs, form);
+    parseaddr_free(addrs);
+    return result;
+}
+
+EXPORTED json_t *jmap_header_as_addresses(const char *raw)
+{
+    return _header_as_addresses(raw, HEADER_FORM_ADDRESSES);
+}
+
+EXPORTED json_t *jmap_header_as_groupedaddresses(const char *raw)
+{
+    return _header_as_addresses(raw, HEADER_FORM_GROUPEDADDRESSES);
+}
+
+EXPORTED json_t *jmap_emailaddresses_from_addr(struct address *addr,
+                                               enum header_form form)
+{
+    if (!addr) return json_null();
+
+    json_t *result = json_array();
+
+    const char *groupname = NULL;
+    json_t *addresses = json_array();
+
+    struct buf buf = BUF_INITIALIZER;
+    while (addr) {
+        const char *domain = addr->domain;
+        if (!strcmpsafe(domain, "unspecified-domain")) {
+            domain = NULL;
+        }
+        if (!addr->name && addr->mailbox && !domain) {
+            /* Start of group. */
+            if (form == HEADER_FORM_GROUPEDADDRESSES) {
+                if (form == HEADER_FORM_GROUPEDADDRESSES) {
+                    if (groupname || json_array_size(addresses)) {
+                        json_t *group = json_object();
+                        json_object_set_new(group, "name",
+                                groupname ? json_string(groupname) : json_null());
+                        json_object_set_new(group, "addresses", addresses);
+                        json_array_append_new(result, group);
+                        addresses = json_array();
+                    }
+                    groupname = NULL;
+                }
+                groupname = addr->mailbox;
+            }
+        }
+        else if (!addr->name && !addr->mailbox) {
+            /* End of group */
+            if (form == HEADER_FORM_GROUPEDADDRESSES) {
+                if (groupname || json_array_size(addresses)) {
+                    json_t *group = json_object();
+                    json_object_set_new(group, "name",
+                            groupname ? json_string(groupname) : json_null());
+                    json_object_set_new(group, "addresses", addresses);
+                    json_array_append_new(result, group);
+                    addresses = json_array();
+                }
+                groupname = NULL;
+            }
+        }
+        else {
+            /* Regular address */
+            json_t *jemailaddr = json_object();
+            if (addr->name) {
+                char *tmp = _decode_mimeheader(addr->name);
+                if (tmp) json_object_set_new(jemailaddr, "name", json_string(tmp));
+                free(tmp);
+            } else {
+                json_object_set_new(jemailaddr, "name", json_null());
+            }
+            if (addr->mailbox) {
+                buf_setcstr(&buf, addr->mailbox);
+                if (domain) {
+                    buf_putc(&buf, '@');
+                    buf_appendcstr(&buf, domain);
+                }
+                json_object_set_new(jemailaddr, "email", json_string(buf_cstring(&buf)));
+                buf_reset(&buf);
+            } else {
+                json_object_set_new(jemailaddr, "email", json_null());
+            }
+            json_array_append_new(addresses, jemailaddr);
+        }
+        addr = addr->next;
+    }
+    buf_free(&buf);
+
+    if (form == HEADER_FORM_GROUPEDADDRESSES) {
+        if (groupname || json_array_size(addresses)) {
+            json_t *group = json_object();
+            json_object_set_new(group, "name",
+                    groupname ? json_string(groupname) : json_null());
+            json_object_set_new(group, "addresses", addresses);
+            json_array_append_new(result, group);
+        }
+        else json_decref(addresses);
+    }
+    else {
+        json_decref(result);
+        result = addresses;
+    }
+
+    return result;
+}
+
+EXPORTED void jmap_set_blobid(const struct message_guid *guid, char *buf)
+{
+    buf[0] = 'G';
+    memcpy(buf+1, message_guid_encode(guid), JMAP_BLOBID_SIZE-2);
+    buf[JMAP_BLOBID_SIZE-1] = '\0';
+}
+
+EXPORTED void jmap_set_emailid(const struct message_guid *guid, char *buf)
+{
+    buf[0] = 'M';
+    memcpy(buf+1, message_guid_encode(guid), JMAP_EMAILID_SIZE-2);
+    buf[JMAP_EMAILID_SIZE-1] = '\0';
+}
+
+EXPORTED void jmap_set_threadid(conversation_id_t cid, char *buf)
+{
+    buf[0] = 'T';
+    memcpy(buf+1, conversation_id_encode(cid), JMAP_THREADID_SIZE-2);
+    buf[JMAP_THREADID_SIZE-1] = 0;
 }

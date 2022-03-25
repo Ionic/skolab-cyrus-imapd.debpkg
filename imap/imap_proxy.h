@@ -64,7 +64,8 @@ enum {
     CAPA_LISTEXTENDED   = (1 << 7),
     CAPA_SASL_IR        = (1 << 8),
     CAPA_REPLICATION    = (1 << 9),
-    CAPA_METADATA       = (1 << 10)
+    CAPA_METADATA       = (1 << 10),
+    CAPA_SIEVE_MAILBOX  = (1 << 11),
 };
 
 extern struct protocol_t imap_protocol;
@@ -86,7 +87,7 @@ void proxy_copy(const char *tag, char *sequence, char *name, int myrights,
                 int usinguid, struct backend *s);
 
 int proxy_catenate_url(struct backend *s, struct imapurl *url, FILE *f,
-                       unsigned long *size, const char **parseerr);
+                       size_t maxsize, unsigned long *size, const char **parseerr);
 
 int annotate_fetch_proxy(const char *server, const char *mbox_pat,
                          const strarray_t *entry_pat,

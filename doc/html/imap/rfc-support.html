@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>RFCs Supported by Cyrus IMAP &mdash; Cyrus IMAP 3.4.3 (stable) documentation</title>
+  <title>RFCs Supported by Cyrus IMAP &mdash; Cyrus IMAP 3.6.0-beta2 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="Cyrus IMAP 3.4.3 (stable) documentation" href="../index.html"/> 
+    <link rel="top" title="Cyrus IMAP 3.6.0-beta2 documentation" href="../index.html"/> 
 
   
   
@@ -127,6 +127,7 @@
 <li class="toctree-l3"><a class="reference internal" href="download/release-notes/index.html#stable-version">Stable Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="download/release-notes/index.html#development-version">Development Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="download/release-notes/index.html#supported-product-series">Supported Product Series</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="download/release-notes/index.html#series-3-6">Series 3.6</a></li>
 <li class="toctree-l4"><a class="reference internal" href="download/release-notes/index.html#series-3-4">Series 3.4</a></li>
 <li class="toctree-l4"><a class="reference internal" href="download/release-notes/index.html#series-3-2">Series 3.2</a></li>
 <li class="toctree-l4"><a class="reference internal" href="download/release-notes/index.html#series-3-0">Series 3.0</a></li>
@@ -134,6 +135,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="download/release-notes/index.html#development-snapshots">Development snapshots</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="download/release-notes/3.7/index.html">Cyrus IMAP 3.7 Tags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="download/release-notes/3.5/index.html">Cyrus IMAP 3.5 Tags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="download/release-notes/3.3/index.html">Cyrus IMAP 3.3 Tags</a></li>
 <li class="toctree-l4"><a class="reference internal" href="download/release-notes/3.1/index.html">Cyrus IMAP 3.1 Tags</a></li>
@@ -168,12 +170,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../quickstart.html#install-cyrus-package-s">1. Install Cyrus package(s)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../quickstart.html#setup-the-cyrus-mail-user-and-group">2. Setup the cyrus:mail user and group</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../quickstart.html#setting-up-authentication-with-sasl">3. Setting up authentication with SASL</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../quickstart.html#setup-mail-delivery-from-your-mta">4. Setup mail delivery from your MTA</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../quickstart.html#install-sendmail">Install Sendmail</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../quickstart.html#sendmail-communication">Sendmail communication</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../quickstart.html#install-postfix">Install Postfix</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="../quickstart.html#setup-mail-delivery-from-your-mta">4. Setup mail delivery from your MTA</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../quickstart.html#protocol-ports">5. Protocol ports</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../quickstart.html#configuring-cyrus">6. Configuring Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../quickstart.html#launch-cyrus">7. Launch Cyrus</a></li>
@@ -333,19 +330,20 @@
 <li class="toctree-l3"><a class="reference internal" href="installing.html#troubleshooting">Troubleshooting</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="download/upgrade.html">Upgrading to 3.4</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="download/upgrade.html">Upgrading to 3.6</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#preparation">1. Preparation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="download/upgrade.html#installation-from-tarball">Installation from tarball</a></li>
+<li class="toctree-l4"><a class="reference internal" href="download/upgrade.html#storage-changes">Storage changes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="download/upgrade.html#how-are-you-planning-on-upgrading">How are you planning on upgrading?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="download/upgrade.html#do-what-as-who">Do What As Who?</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#install-new-3-4-cyrus">2. Install new 3.4 Cyrus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#install-new-3-6-cyrus">2. Install new 3.6 Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#shut-down-existing-cyrus">3. Shut down existing Cyrus</a></li>
 <li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#backup-and-copy-existing-data">4. Backup and Copy existing data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#copy-config-files-and-update">5. Copy config files and update</a></li>
 <li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#upgrade-specific-items">6. Upgrade specific items</a></li>
-<li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#start-new-3-4-cyrus-and-verify">7. Start new 3.4 Cyrus and verify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#start-new-3-6-cyrus-and-verify">7. Start new 3.6 Cyrus and verify</a></li>
 <li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#reconstruct-databases-and-cache">8. Reconstruct databases and cache</a></li>
 <li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#do-you-want-any-new-features">9. Do you want any new features?</a></li>
 <li class="toctree-l3"><a class="reference internal" href="download/upgrade.html#upgrade-complete">10. Upgrade complete</a></li>
@@ -419,14 +417,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../operations.html">Operations</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="reference/manpages/commands.html">Man pages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="reference/manpages/commands.html#configuration-files">(5) Configuration Files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/manpages/index.html">Man pages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/manpages/index.html#configuration-files">(5) Configuration Files</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/configs/cyrus.conf.html"><strong>cyrus.conf</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/configs/imapd.conf.html"><strong>imapd.conf</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/configs/krb.equiv.html"><strong>krb.equiv</strong></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="reference/manpages/commands.html#system-commands">(8) System Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/manpages/index.html#system-commands">(8) System Commands</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/arbitron.html"><strong>arbitron</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/backupd.html"><strong>backupd</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/chk_cyrus.html"><strong>chk_cyrus</strong></a></li>
@@ -445,7 +443,7 @@
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/cyr_df.html"><strong>cyr_df</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/cyr_expire.html"><strong>cyr_expire</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/cyr_info.html"><strong>cyr_info</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/cyr_sequence.html"><strong>cyr_sequence</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/cyr_ls.html"><strong>cyr_ls</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/cyr_synclog.html"><strong>cyr_synclog</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/cyr_userseen.html"><strong>cyr_userseen</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/cyr_virusscan.html"><strong>cyr_virusscan</strong></a></li>
@@ -480,6 +478,7 @@
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/quota.html"><strong>quota</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/reconstruct.html"><strong>reconstruct</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/rehash.html"><strong>rehash</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/relocate_by_id.html"><strong>relocate_by_id</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/restore.html"><strong>restore</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/sievec.html"><strong>sievec</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/sieved.html"><strong>sieved</strong></a></li>
@@ -494,7 +493,7 @@
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/systemcommands/unexpunge.html"><strong>unexpunge</strong></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="reference/manpages/commands.html#user-commands">(1) User Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/manpages/index.html#user-commands">(1) User Commands</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/usercommands/arbitronsort.pl.html"><strong>arbitronsort.pl</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/usercommands/dav_reconstruct.html"><strong>dav_reconstruct</strong></a></li>
 <li class="toctree-l4"><a class="reference internal" href="reference/manpages/usercommands/httptest.html"><strong>httptest</strong></a></li>
@@ -741,7 +740,7 @@
       </div>
         
 <div class="buildstatus">
-    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.4: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.4"></a>
+    <a href="https://travis-ci.com/github/cyrusimap/cyrus-imapd" target="_blank">cyrus-imapd-3.6: <img src="https://travis-ci.com/cyrusimap/cyrus-imapd.svg?branch=cyrus-imapd-3.6"></a>
 </div>
       &nbsp;
     </nav>
@@ -761,13 +760,13 @@
 
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html">Docs v3.4.3 (stable)</a> &raquo;</li>
+      <li><a href="../index.html">Docs v3.6.0-beta2</a> &raquo;</li>
       
     <li>RFCs Supported by Cyrus IMAP</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.4/docsrc/imap/rfc-support.rst" class="fa fa-github"> Edit on GitHub</a>
+            <a href="https://github.com/cyrusimap/cyrus-imapd/blob/cyrus-imapd-3.6/docsrc/imap/rfc-support.rst" class="fa fa-github"> Edit on GitHub</a>
           
         
       </li>
@@ -1288,105 +1287,117 @@ the data.</p>
 <p><span class="target" id="index-153"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6558.html"><strong>RFC 6558</strong></a></p>
 <blockquote>
 <div>Sieve Extension for Converting Messages before Delivery</div></blockquote>
-<p><span class="target" id="index-154"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6578.html"><strong>RFC 6578</strong></a></p>
+<p><span class="target" id="index-154"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6455.html"><strong>RFC 6455</strong></a></p>
+<blockquote>
+<div>The WebSocket Protocol</div></blockquote>
+<p><span class="target" id="index-155"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6578.html"><strong>RFC 6578</strong></a></p>
 <blockquote>
 <div>Collection Synchronization for Web Distributed Authoring and
 Versioning (WebDAV)</div></blockquote>
-<p><span class="target" id="index-155"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6585.html"><strong>RFC 6585</strong></a></p>
+<p><span class="target" id="index-156"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6585.html"><strong>RFC 6585</strong></a></p>
 <blockquote>
 <div>Additional HTTP Status Codes</div></blockquote>
-<p><span class="target" id="index-156"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6609.html"><strong>RFC 6609</strong></a></p>
+<p><span class="target" id="index-157"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6609.html"><strong>RFC 6609</strong></a></p>
 <blockquote>
 <div>Sieve Email Filtering: Include Extension</div></blockquote>
-<p><span class="target" id="index-157"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6638.html"><strong>RFC 6638</strong></a></p>
+<p><span class="target" id="index-158"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6638.html"><strong>RFC 6638</strong></a></p>
 <blockquote>
 <div>Scheduling Extensions to CalDAV</div></blockquote>
-<p><span class="target" id="index-158"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6764.html"><strong>RFC 6764</strong></a></p>
+<p><span class="target" id="index-159"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6764.html"><strong>RFC 6764</strong></a></p>
 <blockquote>
 <div>Locating Services for Calendaring Extensions to WebDAV (CalDAV) and
 vCard Extensions to WebDAV (CardDAV)</div></blockquote>
-<p><span class="target" id="index-159"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6797.html"><strong>RFC 6797</strong></a></p>
+<p><span class="target" id="index-160"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6797.html"><strong>RFC 6797</strong></a></p>
 <blockquote>
 <div>HTTP Strict Transport Security (HSTS)</div></blockquote>
-<p><span class="target" id="index-160"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6851.html"><strong>RFC 6851</strong></a></p>
+<p><span class="target" id="index-161"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6851.html"><strong>RFC 6851</strong></a></p>
 <blockquote>
 <div><p>Internet Message Access Protocol (IMAP) - MOVE Extension</p>
 <div class="versionadded">
 <p><span class="versionmodified">New in version 2.5.0.</span></p>
 </div>
 </div></blockquote>
-<p><span class="target" id="index-161"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7230.html"><strong>RFC 7230</strong></a></p>
+<p><span class="target" id="index-162"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6901.html"><strong>RFC 6901</strong></a></p>
+<blockquote>
+<div>JavaScript Object Notation (JSON) Pointer</div></blockquote>
+<p><span class="target" id="index-163"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7230.html"><strong>RFC 7230</strong></a></p>
 <blockquote>
 <div>Hypertext Transfer Protocol (HTTP/1.1): Message Syntax and Routing</div></blockquote>
-<p><span class="target" id="index-162"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7231.html"><strong>RFC 7231</strong></a></p>
+<p><span class="target" id="index-164"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7231.html"><strong>RFC 7231</strong></a></p>
 <blockquote>
 <div>Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content</div></blockquote>
-<p><span class="target" id="index-163"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7232.html"><strong>RFC 7232</strong></a></p>
+<p><span class="target" id="index-165"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7232.html"><strong>RFC 7232</strong></a></p>
 <blockquote>
 <div>Hypertext Transfer Protocol (HTTP/1.1): Conditional Requests</div></blockquote>
-<p><span class="target" id="index-164"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7233.html"><strong>RFC 7233</strong></a></p>
+<p><span class="target" id="index-166"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7233.html"><strong>RFC 7233</strong></a></p>
 <blockquote>
 <div>Hypertext Transfer Protocol (HTTP/1.1): Range Requests</div></blockquote>
-<p><span class="target" id="index-165"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7234.html"><strong>RFC 7234</strong></a></p>
+<p><span class="target" id="index-167"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7234.html"><strong>RFC 7234</strong></a></p>
 <blockquote>
 <div>Hypertext Transfer Protocol (HTTP/1.1): Caching</div></blockquote>
-<p><span class="target" id="index-166"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7235.html"><strong>RFC 7235</strong></a></p>
+<p><span class="target" id="index-168"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7235.html"><strong>RFC 7235</strong></a></p>
 <blockquote>
 <div>Hypertext Transfer Protocol (HTTP/1.1): Authentication</div></blockquote>
-<p><span class="target" id="index-167"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7238.html"><strong>RFC 7238</strong></a></p>
+<p><span class="target" id="index-169"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7238.html"><strong>RFC 7238</strong></a></p>
 <blockquote>
 <div>The Hypertext Transfer Protocol Status Code 308 (Permanent Redirect)</div></blockquote>
-<p><span class="target" id="index-168"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7239.html"><strong>RFC 7239</strong></a></p>
+<p><span class="target" id="index-170"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7239.html"><strong>RFC 7239</strong></a></p>
 <blockquote>
 <div>Forwarded HTTP Extension</div></blockquote>
-<p><span class="target" id="index-169"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7240.html"><strong>RFC 7240</strong></a></p>
+<p><span class="target" id="index-171"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7240.html"><strong>RFC 7240</strong></a></p>
 <blockquote>
 <div>Prefer Header for HTTP</div></blockquote>
-<p><span class="target" id="index-170"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7265.html"><strong>RFC 7265</strong></a></p>
+<p><span class="target" id="index-172"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7265.html"><strong>RFC 7265</strong></a></p>
 <blockquote>
 <div>jCal: The JSON Format for iCalendar</div></blockquote>
-<p><span class="target" id="index-171"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7352.html"><strong>RFC 7352</strong></a></p>
+<p><span class="target" id="index-173"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7352.html"><strong>RFC 7352</strong></a></p>
 <blockquote>
 <div>Sieve Email Filtering: Detecting Duplicate Deliveries</div></blockquote>
-<p><span class="target" id="index-172"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7529.html"><strong>RFC 7529</strong></a></p>
+<p><span class="target" id="index-174"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7529.html"><strong>RFC 7529</strong></a></p>
 <blockquote>
 <div>Non-Gregorian Recurrence Rules in the Internet Calendaring and
 Scheduling Core Object Specification (iCalendar)</div></blockquote>
-<p><span class="target" id="index-173"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7540.html"><strong>RFC 7540</strong></a></p>
+<p><span class="target" id="index-175"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7540.html"><strong>RFC 7540</strong></a></p>
 <blockquote>
 <div>Hypertext Transfer Protocol Version 2 (HTTP/2)</div></blockquote>
-<p><span class="target" id="index-174"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7615.html"><strong>RFC 7615</strong></a></p>
+<p><span class="target" id="index-176"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7615.html"><strong>RFC 7615</strong></a></p>
 <blockquote>
 <div>HTTP Authentication-Info and Proxy-Authentication-Info Response
 Header Fields</div></blockquote>
-<p><span class="target" id="index-175"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7616.html"><strong>RFC 7616</strong></a></p>
+<p><span class="target" id="index-177"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7616.html"><strong>RFC 7616</strong></a></p>
 <blockquote>
 <div>HTTP Digest Access Authentication</div></blockquote>
-<p><span class="target" id="index-176"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7617.html"><strong>RFC 7617</strong></a></p>
+<p><span class="target" id="index-178"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7617.html"><strong>RFC 7617</strong></a></p>
 <blockquote>
 <div>The ‘Basic’ HTTP Authentication Scheme</div></blockquote>
-<p><span class="target" id="index-177"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7692.html"><strong>RFC 7692</strong></a></p>
+<p><span class="target" id="index-179"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7692.html"><strong>RFC 7692</strong></a></p>
 <blockquote>
 <div>Compression Extensions for WebSocket</div></blockquote>
-<p><span class="target" id="index-178"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7694.html"><strong>RFC 7694</strong></a></p>
+<p><span class="target" id="index-180"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7694.html"><strong>RFC 7694</strong></a></p>
 <blockquote>
 <div>Hypertext Transfer Protocol (HTTP) Client-Initiated Content-Encoding</div></blockquote>
-<p><span class="target" id="index-179"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7804.html"><strong>RFC 7804</strong></a></p>
+<p><span class="target" id="index-181"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7725.html"><strong>RFC 7725</strong></a></p>
+<blockquote>
+<div>An HTTP Status Code to Report Legal Obstacles</div></blockquote>
+<p><span class="target" id="index-182"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7804.html"><strong>RFC 7804</strong></a></p>
 <blockquote>
 <div>Salted Challenge Response HTTP Authentication Mechanism</div></blockquote>
-<p><span class="target" id="index-180"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7808.html"><strong>RFC 7808</strong></a></p>
+<p><span class="target" id="index-183"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7808.html"><strong>RFC 7808</strong></a></p>
 <blockquote>
 <div>Time Zone Data Distribution Service</div></blockquote>
-<p><span class="target" id="index-181"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7809.html"><strong>RFC 7809</strong></a></p>
+<p><span class="target" id="index-184"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7809.html"><strong>RFC 7809</strong></a></p>
 <blockquote>
 <div>CalDAV: Time Zones by Reference</div></blockquote>
-<p><span class="target" id="index-182"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7932.html"><strong>RFC 7932</strong></a></p>
+<p><span class="target" id="index-185"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7889.html"><strong>RFC 7889</strong></a></p>
+<blockquote>
+<div>The IMAP APPENDLIMIT Extension</div></blockquote>
+<p><span class="target" id="index-186"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7932.html"><strong>RFC 7932</strong></a></p>
 <blockquote>
 <div>Brotli Compressed Data Format</div></blockquote>
-<p><span class="target" id="index-183"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7953.html"><strong>RFC 7953</strong></a></p>
+<p><span class="target" id="index-187"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7953.html"><strong>RFC 7953</strong></a></p>
 <blockquote>
 <div>Calendar Availability</div></blockquote>
-<p><span class="target" id="index-184"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7986.html"><strong>RFC 7986</strong></a></p>
+<p><span class="target" id="index-188"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7986.html"><strong>RFC 7986</strong></a></p>
 <blockquote>
 <div><p>New Properties for iCalendar</p>
 <div class="admonition note">
@@ -1399,39 +1410,75 @@ and REFRESH-INTERVAL are not exported on iCalendar streams retrieved with GET.</
 downloaded with the New Properties for iCalendar.</p>
 </div>
 </div></blockquote>
-<p><span class="target" id="index-185"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8144.html"><strong>RFC 8144</strong></a></p>
+<p><span class="target" id="index-189"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8144.html"><strong>RFC 8144</strong></a></p>
 <blockquote>
 <div>Use of the Prefer Header Field in Web Distributed Authoring and
 Versioning (WebDAV)</div></blockquote>
-<p><span class="target" id="index-186"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8246.html"><strong>RFC 8246</strong></a></p>
+<p><span class="target" id="index-190"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8246.html"><strong>RFC 8246</strong></a></p>
 <blockquote>
 <div>HTTP Immutable Responses</div></blockquote>
-<p><span class="target" id="index-187"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8297.html"><strong>RFC 8297</strong></a></p>
+<p><span class="target" id="index-191"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8288.html"><strong>RFC 8288</strong></a></p>
+<blockquote>
+<div>Web Linking</div></blockquote>
+<p><span class="target" id="index-192"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8297.html"><strong>RFC 8297</strong></a></p>
 <blockquote>
 <div>An HTTP Status Code for Indicating Hints</div></blockquote>
-<p><span class="target" id="index-188"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8437.html"><strong>RFC 8437</strong></a></p>
+<p><span class="target" id="index-193"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8437.html"><strong>RFC 8437</strong></a></p>
 <blockquote>
 <div>IMAP UNAUTHENTICATE Extension for Connection Reuse</div></blockquote>
-<p><span class="target" id="index-189"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8438.html"><strong>RFC 8438</strong></a></p>
+<p><span class="target" id="index-194"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8438.html"><strong>RFC 8438</strong></a></p>
 <blockquote>
 <div>IMAP Extension for STATUS=SIZE</div></blockquote>
-<p><span class="target" id="index-190"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8440.html"><strong>RFC 8440</strong></a></p>
+<p><span class="target" id="index-195"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8440.html"><strong>RFC 8440</strong></a></p>
 <blockquote>
 <div>IMAP4 Extension for Returning MYRIGHTS Information in Extended LIST</div></blockquote>
-<p><span class="target" id="index-191"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8478.html"><strong>RFC 8478</strong></a></p>
+<p><span class="target" id="index-196"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8441.html"><strong>RFC 8441</strong></a></p>
 <blockquote>
-<div>Zstandard Compression and the application/zstd Media Type</div></blockquote>
-<p><span class="target" id="index-192"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8579.html"><strong>RFC 8579</strong></a></p>
+<div>Bootstrapping WebSockets with HTTP/2</div></blockquote>
+<p><span class="target" id="index-197"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8474.html"><strong>RFC 8474</strong></a></p>
+<blockquote>
+<div>IMAP Extension for Object Identifiers</div></blockquote>
+<p><span class="target" id="index-198"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8514.html"><strong>RFC 8514</strong></a></p>
+<blockquote>
+<div>Internet Message Access Protocol (IMAP) - SAVEDATE Extension</div></blockquote>
+<p><span class="target" id="index-199"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8579.html"><strong>RFC 8579</strong></a></p>
 <blockquote>
 <div>Sieve Email Filtering: Delivering to Special-Use Mailboxes</div></blockquote>
-<p><span class="target" id="index-193"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8580.html"><strong>RFC 8580</strong></a></p>
+<p><span class="target" id="index-200"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8580.html"><strong>RFC 8580</strong></a></p>
 <blockquote>
 <div>Sieve Extension: File Carbon Copy (FCC)</div></blockquote>
-<p><span class="target" id="index-194"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8607.html"><strong>RFC 8607</strong></a></p>
+<p><span class="target" id="index-201"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8607.html"><strong>RFC 8607</strong></a></p>
 <blockquote>
 <div>Calendaring Extensions to WebDAV (CalDAV): Managed Attachments</div></blockquote>
+<p><span class="target" id="index-202"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8620.html"><strong>RFC 8620</strong></a></p>
+<blockquote>
+<div>The JSON Meta Application Protocol (JMAP)</div></blockquote>
+<p><span class="target" id="index-203"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8621.html"><strong>RFC 8621</strong></a></p>
+<blockquote>
+<div>The JSON Meta Application Protocol (JMAP) for Mail</div></blockquote>
+<p><span class="target" id="index-204"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8878.html"><strong>RFC 8878</strong></a></p>
+<blockquote>
+<div>Zstandard Compression and the application/zstd Media Type</div></blockquote>
+<p><span class="target" id="index-205"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8887.html"><strong>RFC 8887</strong></a></p>
+<blockquote>
+<div>A JSON Meta Application Protocol (JMAP) Subprotocol for WebSocket</div></blockquote>
+<p><span class="target" id="index-206"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8970.html"><strong>RFC 8970</strong></a></p>
+<blockquote>
+<div>IMAP4 Extension: Message Preview Generation</div></blockquote>
 <div class="section" id="ietf-rfc-drafts">
 <h2>IETF RFC Drafts<a class="headerlink" href="#ietf-rfc-drafts" title="Permalink to this headline">¶</a></h2>
+<p>draft-ietf-extra-sieve-mailboxid</p>
+<blockquote>
+<div>Sieve Email Filtering: delivery by mailboxid</div></blockquote>
+<p>draft-ietf-extra-sieve-snooze</p>
+<blockquote>
+<div>Sieve Email Filtering: Snooze Extension</div></blockquote>
+<p>draft-ietf-jmap-calendars</p>
+<blockquote>
+<div>JMAP for Calendars</div></blockquote>
+<p>draft-ietf-jmap-sieve</p>
+<blockquote>
+<div>JMAP for Sieve Scripts</div></blockquote>
 <p>draft-murchison-lmtp-ignorequota</p>
 <blockquote>
 <div>LMTP Service Extension for Ignoring Recipient Quotas</div></blockquote>
@@ -1448,9 +1495,6 @@ Versioning (WebDAV)</div></blockquote>
 <p>draft-desruisseaux-ischedule</p>
 <blockquote>
 <div>Internet Calendar Scheduling Protocol (iSchedule)</div></blockquote>
-<p>draft-gondwana-sieve-mailboxid</p>
-<blockquote>
-<div>Sieve Email Filtering: delivery by mailboxid</div></blockquote>
 <p>draft-thomson-hybi-http-timeout</p>
 <blockquote>
 <div>Hypertext Transfer Protocol (HTTP) Keep-Alive Header</div></blockquote>
@@ -1460,100 +1504,69 @@ Brief Header    Microsoft ‘Brief’ header extension</div></blockquote>
 </div>
 <div class="section" id="rfc-wishlist">
 <h2>RFC Wishlist<a class="headerlink" href="#rfc-wishlist" title="Permalink to this headline">¶</a></h2>
-<p><span class="target" id="index-195"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2221.html"><strong>RFC 2221</strong></a></p>
+<p><span class="target" id="index-207"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2221.html"><strong>RFC 2221</strong></a></p>
 <blockquote>
 <div>IMAP4 Login Referrals</div></blockquote>
-<p><span class="target" id="index-196"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2295.html"><strong>RFC 2295</strong></a></p>
+<p><span class="target" id="index-208"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2295.html"><strong>RFC 2295</strong></a></p>
 <blockquote>
 <div>Transparent Content Negotiation in HTTP</div></blockquote>
-<p><span class="target" id="index-197"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2369.html"><strong>RFC 2369</strong></a></p>
+<p><span class="target" id="index-209"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc2369.html"><strong>RFC 2369</strong></a></p>
 <blockquote>
 <div>The Use of URLs as Meta-Syntax for Core Mail List Commands
 and their Transport through Message Header Fields</div></blockquote>
-<p><span class="target" id="index-198"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc3229.html"><strong>RFC 3229</strong></a></p>
+<p><span class="target" id="index-210"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc3229.html"><strong>RFC 3229</strong></a></p>
 <blockquote>
 <div>Delta encoding in HTTP</div></blockquote>
-<p><span class="target" id="index-199"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5182.html"><strong>RFC 5182</strong></a></p>
+<p><span class="target" id="index-211"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5182.html"><strong>RFC 5182</strong></a></p>
 <blockquote>
 <div>IMAP Extension for Referencing the Last SEARCH Result</div></blockquote>
-<p><span class="target" id="index-200"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5255.html"><strong>RFC 5255</strong></a></p>
+<p><span class="target" id="index-212"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5255.html"><strong>RFC 5255</strong></a></p>
 <blockquote>
 <div>Internet Message Access Protocol Internationalization</div></blockquote>
-<p><span class="target" id="index-201"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5259.html"><strong>RFC 5259</strong></a></p>
+<p><span class="target" id="index-213"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5259.html"><strong>RFC 5259</strong></a></p>
 <blockquote>
 <div>Internet Message Access Protocol - CONVERT Extension</div></blockquote>
-<p><span class="target" id="index-202"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5437.html"><strong>RFC 5437</strong></a></p>
+<p><span class="target" id="index-214"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5437.html"><strong>RFC 5437</strong></a></p>
 <blockquote>
 <div>Sieve Notification Mechanism: Extensible Messaging and Presence
 Protocol (XMPP)</div></blockquote>
-<p><span class="target" id="index-203"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5465.html"><strong>RFC 5465</strong></a></p>
+<p><span class="target" id="index-215"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5465.html"><strong>RFC 5465</strong></a></p>
 <blockquote>
 <div>The IMAP NOTIFY Extension</div></blockquote>
-<p><span class="target" id="index-204"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5466.html"><strong>RFC 5466</strong></a></p>
+<p><span class="target" id="index-216"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5466.html"><strong>RFC 5466</strong></a></p>
 <blockquote>
 <div>IMAP4 Extension for Named Searches (Filters)</div></blockquote>
-<p><span class="target" id="index-205"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5550.html"><strong>RFC 5550</strong></a></p>
+<p><span class="target" id="index-217"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5550.html"><strong>RFC 5550</strong></a></p>
 <blockquote>
 <div>The Internet Email to Support Diverse Service Environments (Lemonade) Profile</div></blockquote>
-<p><span class="target" id="index-206"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5842.html"><strong>RFC 5842</strong></a></p>
+<p><span class="target" id="index-218"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc5842.html"><strong>RFC 5842</strong></a></p>
 <blockquote>
 <div>Binding Extensions to Web Distributed Authoring and Versioning (WebDAV)</div></blockquote>
-<p><span class="target" id="index-207"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6468.html"><strong>RFC 6468</strong></a></p>
+<p><span class="target" id="index-219"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6468.html"><strong>RFC 6468</strong></a></p>
 <blockquote>
 <div>Sieve Notification Mechanism: SIP MESSAGE</div></blockquote>
-<p><span class="target" id="index-208"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6785.html"><strong>RFC 6785</strong></a></p>
+<p><span class="target" id="index-220"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6785.html"><strong>RFC 6785</strong></a></p>
 <blockquote>
 <div>Support for Internet Message Access Protocol (IMAP) Events in Sieve</div></blockquote>
-<p><span class="target" id="index-209"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6855.html"><strong>RFC 6855</strong></a></p>
+<p><span class="target" id="index-221"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6855.html"><strong>RFC 6855</strong></a></p>
 <blockquote>
 <div>IMAP Support for UTF-8</div></blockquote>
-<p><span class="target" id="index-210"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc6901.html"><strong>RFC 6901</strong></a></p>
-<blockquote>
-<div>JavaScript Object Notation (JSON) Pointer</div></blockquote>
-<p><span class="target" id="index-211"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7162.html"><strong>RFC 7162</strong></a></p>
+<p><span class="target" id="index-222"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7162.html"><strong>RFC 7162</strong></a></p>
 <blockquote>
 <div>IMAP Extensions: Quick Flag Changes Resynchronization (CONDSTORE)
 and Quick Mailbox Resynchronization (QRESYNC)</div></blockquote>
-<p><span class="target" id="index-212"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7377.html"><strong>RFC 7377</strong></a></p>
+<p><span class="target" id="index-223"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7377.html"><strong>RFC 7377</strong></a></p>
 <blockquote>
 <div>IMAP4 Multimailbox SEARCH Extension</div></blockquote>
-<p><span class="target" id="index-213"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7725.html"><strong>RFC 7725</strong></a></p>
-<blockquote>
-<div>An HTTP Status Code to Report Legal Obstacles</div></blockquote>
-<p><span class="target" id="index-214"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7888.html"><strong>RFC 7888</strong></a></p>
+<p><span class="target" id="index-224"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7888.html"><strong>RFC 7888</strong></a></p>
 <blockquote>
 <div>IMAP4 Non-synchronizing Literals</div></blockquote>
-<p><span class="target" id="index-215"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc7889.html"><strong>RFC 7889</strong></a></p>
-<blockquote>
-<div>The IMAP APPENDLIMIT Extension</div></blockquote>
-<p><span class="target" id="index-216"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8288.html"><strong>RFC 8288</strong></a></p>
-<blockquote>
-<div>Web Linking</div></blockquote>
-<p><span class="target" id="index-217"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8470.html"><strong>RFC 8470</strong></a></p>
+<p><span class="target" id="index-225"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8470.html"><strong>RFC 8470</strong></a></p>
 <blockquote>
 <div>Using Early Data in HTTP</div></blockquote>
-<p><span class="target" id="index-218"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8474.html"><strong>RFC 8474</strong></a></p>
-<blockquote>
-<div><p>IMAP Extension for Object Identifiers</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">This is implemented as draft-ietf-extra-imap-objectid.</p>
-</div>
-</div></blockquote>
-<p><span class="target" id="index-219"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8508.html"><strong>RFC 8508</strong></a></p>
+<p><span class="target" id="index-226"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8508.html"><strong>RFC 8508</strong></a></p>
 <blockquote>
 <div>IMAP REPLACE Extension</div></blockquote>
-<p><span class="target" id="index-220"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8514.html"><strong>RFC 8514</strong></a></p>
-<blockquote>
-<div><p>Internet Message Access Protocol (IMAP) - SAVEDATE Extension</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">This is implemented as draft-ietf-extra-imap-savedate.</p>
-</div>
-</div></blockquote>
-<p><span class="target" id="index-221"></span><a class="rfc reference external" href="https://tools.ietf.org/html/rfc8621.html"><strong>RFC 8621</strong></a></p>
-<blockquote>
-<div>The JSON Meta Application Protocol (JMAP) for Mail</div></blockquote>
 </div>
 </div>
 
@@ -1566,7 +1579,7 @@ and Quick Mailbox Resynchronization (QRESYNC)</div></blockquote>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Jan 16 2021
+        &copy; Copyright 1993-2018, The Cyrus Team. Last updated on Feb 13 2021
     </p>
   </div>
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4 using a modified <a href="https://readthedocs.org">Read the Docs</a> <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>.
@@ -1586,7 +1599,7 @@ and Quick Mailbox Resynchronization (QRESYNC)</div></blockquote>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'3.4.3 (stable)',
+            VERSION:'3.6.0-beta2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

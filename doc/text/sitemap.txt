@@ -41,6 +41,10 @@ Sitemap
 
         * Supported Product Series
 
+          * Series 3.6
+
+            * Cyrus IMAP 3.6 Releases
+
           * Series 3.4
 
             * Cyrus IMAP 3.4 Releases
@@ -59,7 +63,13 @@ Sitemap
 
         * Development snapshots
 
+          * Cyrus IMAP 3.7 Tags
+
+            * Cyrus IMAP 3.7.0-alpha0 Tag Notes
+
           * Cyrus IMAP 3.5 Tags
+
+            * Cyrus IMAP 3.5.0-alpha0 Tag Notes
 
           * Cyrus IMAP 3.3 Tags
 
@@ -147,12 +157,6 @@ Sitemap
         * 3. Setting up authentication with SASL
 
         * 4. Setup mail delivery from your MTA
-
-          * Install Sendmail
-
-          * Sendmail communication
-
-          * Install Postfix
 
         * 5. Protocol ports
 
@@ -480,9 +484,9 @@ Sitemap
 
           * Mail delivery from your MTA
 
-            * Install Sendmail
+            * Integration with Sendmail
 
-            * Sendmail communication
+            * Postfix
 
           * Protocol ports
 
@@ -500,11 +504,13 @@ Sitemap
 
         * Troubleshooting
 
-      * Upgrading to 3.4
+      * Upgrading to 3.6
 
         * 1. Preparation
 
           * Installation from tarball
+
+          * Storage changes
 
           * How are you planning on upgrading?
 
@@ -514,7 +520,7 @@ Sitemap
 
           * Do What As Who?
 
-        * 2. Install new 3.4 Cyrus
+        * 2. Install new 3.6 Cyrus
 
         * 3. Shut down existing Cyrus
 
@@ -524,7 +530,7 @@ Sitemap
 
         * 6. Upgrade specific items
 
-        * 7. Start new 3.4 Cyrus and verify
+        * 7. Start new 3.6 Cyrus and verify
 
         * 8. Reconstruct databases and cache
 
@@ -1009,7 +1015,7 @@ Sitemap
 
             * See Also
 
-          * **cyr_sequence**
+          * **cyr_ls**
 
             * Synopsis
 
@@ -1018,6 +1024,10 @@ Sitemap
             * Options
 
             * Examples
+
+            * Files
+
+            * See Also
 
           * **cyr_synclog**
 
@@ -1482,6 +1492,20 @@ Sitemap
             * Description
 
             * Options
+
+            * Files
+
+            * See Also
+
+          * **relocate_by_id**
+
+            * Synopsis
+
+            * Description
+
+            * Options
+
+            * Examples
 
             * Files
 

@@ -9,7 +9,7 @@ transparency, maintainability and readability to what we’re doing.
 Coding Style
 ============
 
-* Unix style: CRLF line endings.
+* Unix style: LF line endings.
 
 * No trailing spaces.
 

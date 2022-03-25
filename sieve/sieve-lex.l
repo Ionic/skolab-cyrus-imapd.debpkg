@@ -317,7 +317,7 @@ ws              [ \t]+
     /* notify - draft-martin-sieve-notify-01 */
 <INITIAL>denotify             return DENOTIFY;
 <INITIAL>:method              return METHOD;
-<INITIAL>:id                  return ID;
+<INITIAL>:id                  return NID;
 <INITIAL>:low                 return yylval->nval = LOW;
 <INITIAL>:normal              return yylval->nval = NORMAL;
 <INITIAL>:high                return yylval->nval = HIGH;
@@ -371,17 +371,11 @@ ws              [ \t]+
     /* fcc - RFC 8580 */
 <INITIAL>:fcc                  return FCC;
 
-    /* draft-gondwana-sieve-mailboxid */
+    /* mailboxid - draft-ietf-extra-sieve-mailboxid */
 <INITIAL>mailboxidexists       return MAILBOXIDEXISTS;
 <INITIAL>:mailboxid            return MAILBOXID;
 
-    /* vnd.cyrus.log */
-<INITIAL>log                   return LOG;
-
-    /* vnd.cyrus.jmapquery */
-<INITIAL>jmapquery             return JMAPQUERY;
-
-    /* vnd.cyrus.snooze */
+    /* snooze - draft-ietf-extra-sieve-snooze */
 <INITIAL>snooze                return SNOOZE;
 <INITIAL>:mailbox              return MAILBOX;
 <INITIAL>:addflags             return ADDFLAGS;
@@ -391,6 +385,21 @@ ws              [ \t]+
     /*   :create               defined in 'mailbox'     */
     /*   :mailboxid            defined in 'mailboxid'   */
     /*   :specialuse           defined in 'special-use' */
+
+    /* vnd.cyrus.log */
+<INITIAL>log                   return LOG;
+
+    /* vnd.cyrus.jmapquery */
+<INITIAL>jmapquery             return JMAPQUERY;
+
+    /* vnd.cyrus.imip */
+<INITIAL>processimip          return PROCESSIMIP;
+<INITIAL>:invitesonly         return INVITESONLY;
+<INITIAL>:updatesonly         return UPDATESONLY;
+<INITIAL>:deletecanceled      return DELETECANCELED;
+<INITIAL>:calendarid          return CALENDARID;
+<INITIAL>:outcome             return OUTCOME;
+<INITIAL>:errstr              return ERRSTR;
 
 <INITIAL>"/*"([^\*]|\*[^\/])*\*?"*/" ;  /* ignore bracketed comments */
 <INITIAL>#.* ;                /* ignore hash comments */

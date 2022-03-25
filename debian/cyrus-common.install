@@ -18,7 +18,6 @@ usr/lib/cyrus/bin/cyr_deny
 usr/lib/cyrus/bin/cyr_df
 usr/lib/cyrus/bin/cyr_expire
 usr/lib/cyrus/bin/cyr_info
-usr/lib/cyrus/bin/cyr_sequence
 usr/lib/cyrus/bin/cyr_userseen
 usr/lib/cyrus/bin/cyr_virusscan
 usr/lib/cyrus/bin/cyrdump

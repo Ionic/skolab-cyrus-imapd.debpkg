@@ -3,10 +3,7 @@ Who Is Cyrus
 
 The Cyrus project was originally started at Carnegie Mellon University
 but it has since attracted a very dedicated and diverse group of core
-contributors. Carnegie Mellon University remains active in development
-of Cyrus and also provides the infrastructure on which cyrusimap.org
-runs today, but CMU is now just one of many core contributors to
-Project Cyrus.
+contributors.
 
 
 Core Contributors
@@ -15,20 +12,18 @@ Core Contributors
 These are the core organizations who are providing dedicated resources
 to the Cyrus Project.
 
-**FastMail**
+**Fastmail**
 
-FastMail is a leading e-mail hosting provider that runs on Cyrus
+Fastmail is a leading e-mail hosting provider that runs on Cyrus
 software.
 
 * Bron Gondwana
 
 * Ellie Timoney
 
-* Conrad Kleinespel
+* Ken Murchison
 
-* Chris Davies
-
-* Nicola Nye
+* Robert Stepanek
 
 **Kolab Systems**
 
@@ -44,15 +39,6 @@ messaging, and directory software. Its internet servers use Cyrus SASL
 for authentication.
 
 * Alexey Melnikov
-
-**Carnegie Mellon University**
-
-Carnegie Mellon University is a global research university with more
-than 11,000 students, 86,500 alumni, and 4,000 faculty and staff.
-
-* Ken Murchison
-
-* Dave McMurtrie
 
 
 Individual contributors and past contributors
@@ -134,3 +120,9 @@ contribution wasn’t appreciated.
 * Simon Matter
 
 * Greg Banks
+
+* Conrad Kleinespel
+
+* Chris Davies
+
+* Nicola Nye

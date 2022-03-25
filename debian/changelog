@@ -1,3 +1,11 @@
+cyrus-imapd (3.6.0~beta2-1) unstable; urgency=medium
+
+  * New upstream version 3.6.0~beta2
+  * Refresh patches
+  * Add build dependency to libical-dev
+
+ -- Yadd <yadd@debian.org>  Fri, 11 Mar 2022 07:22:48 +0100
+
 cyrus-imapd (3.4.3-4) unstable; urgency=medium
 
   * Drop "Multi-Arch: same" because manpages generates file-conflicts

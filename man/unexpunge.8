@@ -1,6 +1,6 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "UNEXPUNGE" "8" "February 02, 2022" "3.4.3" "Cyrus IMAP"
+.TH "UNEXPUNGE" "8" "March 11, 2022" "3.6.0" "Cyrus IMAP"
 .SH NAME
 unexpunge \- Cyrus IMAP documentation
 .
@@ -35,7 +35,7 @@ Recover messages the user has (accidentally) deleted.
 .SH SYNOPSIS
 .sp
 .nf
-\fBunexpunge\fP [ \fB\-C\fP \fIconfig\-file\fP ] \fB\-l\fP \fImailbox\fP
+\fBunexpunge\fP [ \fB\-C\fP \fIconfig\-file\fP ] \fB\-l\fP \fImailbox\fP [ \fIuid\fP\&... ]
 \fBunexpunge\fP [ \fB\-C\fP \fIconfig\-file\fP ] \fB\-t\fP \fItime\-interval\fP [ \fB\-d\fP ] [ \fB\-v\fP ] [ \fB\-f\fP \fIflagname\fP ] \fBmailbox\fP
 \fBunexpunge\fP [ \fB\-C\fP \fIconfig\-file\fP ] \fB\-a\fP [ \fB\-d\fP ] [ \fB\-v\fP ] [ \fB\-f\fP \fIflagname\fP ] \fImailbox\fP
 \fBunexpunge\fP [ \fB\-C\fP \fIconfig\-file\fP ] \fB\-u\fP [ \fB\-d\fP ] [ \fB\-v\fP ] [ \fB\-f\fP \fIflagname\fP ] \fImailbox\fP \fIuid\fP\&...
@@ -61,6 +61,8 @@ Use the specified configuration file \fIconfig\-file\fP rather than the default 
 .B \-l
 List the expunged messages in the specified mailbox which are
 available for restoration.
+Optionally, only list the messages in the mailbox matching the
+UIDs in the space\-separated list at the end of the command invocation.
 .UNINDENT
 .INDENT 0.0
 .TP

@@ -6,7 +6,7 @@ Last-Update: 2020-02-10
 
 --- a/Makefile.am
 +++ b/Makefile.am
-@@ -1560,9 +1560,9 @@
+@@ -1589,9 +1589,9 @@
  # in particular ellie believes unifix.txt must be before UnicodeData.txt
  lib/chartable.c: lib/mkchartable.pl lib/charset/unifix.txt \
  	$(top_srcdir)/lib/charset/*.t \

@@ -103,10 +103,6 @@
 /* Do we have support for optimize __attribute__? */
 #undef HAVE_DECLARE_OPTIMIZE
 
-/* Define to 1 if you have the declaration of
-   `NGHTTP2_SETTINGS_ENABLE_CONNECT_PROTOCOL', and to 0 if you don't. */
-#undef HAVE_DECL_NGHTTP2_SETTINGS_ENABLE_CONNECT_PROTOCOL
-
 /* Define to 1 if you have the declaration of `tzname', and to 0 if you don't.
    */
 #undef HAVE_DECL_TZNAME
@@ -172,6 +168,9 @@
 /* Define to 1 if you have the `getrlimit' function. */
 #undef HAVE_GETRLIMIT
 
+/* Do we have support for fetching X- component names? */
+#undef HAVE_GET_COMPONENT_NAME
+
 /* Define to 1 if you have the <gssapi/gssapi_ext.h> header file. */
 #undef HAVE_GSSAPI_GSSAPI_EXT_H
 
@@ -211,6 +210,9 @@
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
+
+/* Do we have support for controlling invalid RRULE handline? */
+#undef HAVE_INVALID_RRULE_HANDLING
 
 /* Do we have Jansson? */
 #undef HAVE_JANSSON

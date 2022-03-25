@@ -1,0 +1,67 @@
+**cyr_ls**
+**********
+
+List Cyrus mailbox directory contents
+
+
+Synopsis
+========
+
+   **cyr_ls** [ **-C** *config-file* ] [ **-l** ] [ **-m** ] [ **-R** ] [ **-1** ] [ *mailbox-name* ]
+
+
+Description
+===========
+
+List information about the directory corresponding to the given
+mailbox name (the current directory by default)
+
+**cyr_ls** reads its configuration options out of the imapd.conf(5)
+file unless specified otherwise by **-C**. It uses
+<configdirectory>/mailboxes.db to locate the mailboxes on disk.
+
+
+Options
+=======
+
+-C config-file
+
+   Use the specified configuration file *config-file* rather than the
+   default imapd.conf(5).
+
+-l
+
+   Use a long listing format.
+
+-m
+
+   Output the path to the metadata files (if different from the
+   message files).
+
+-R
+
+   List submailboxes recursively.
+
+-1
+
+   List one file per line.
+
+
+Examples
+========
+
+   **cyr_ls** *user/jsmith*
+
+   Display the directory contents for mailbox *user/jsmith*.
+
+
+Files
+=====
+
+/etc/imapd.conf, <configdirectory>/mailboxes.db
+
+
+See Also
+========
+
+imapd.conf(5)

@@ -623,6 +623,10 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
    Sieve Extension for Converting Messages before Delivery
 
+**RFC 6455**
+
+   The WebSocket Protocol
+
 **RFC 6578**
 
    Collection Synchronization for Web Distributed Authoring and
@@ -654,6 +658,10 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
    Internet Message Access Protocol (IMAP) - MOVE Extension
 
    New in version 2.5.0.
+
+**RFC 6901**
+
+   JavaScript Object Notation (JSON) Pointer
 
 **RFC 7230**
 
@@ -731,6 +739,10 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
    Hypertext Transfer Protocol (HTTP) Client-Initiated Content-
    Encoding
 
+**RFC 7725**
+
+   An HTTP Status Code to Report Legal Obstacles
+
 **RFC 7804**
 
    Salted Challenge Response HTTP Authentication Mechanism
@@ -742,6 +754,10 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 **RFC 7809**
 
    CalDAV: Time Zones by Reference
+
+**RFC 7889**
+
+   The IMAP APPENDLIMIT Extension
 
 **RFC 7932**
 
@@ -773,6 +789,10 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
    HTTP Immutable Responses
 
+**RFC 8288**
+
+   Web Linking
+
 **RFC 8297**
 
    An HTTP Status Code for Indicating Hints
@@ -789,9 +809,17 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
    IMAP4 Extension for Returning MYRIGHTS Information in Extended LIST
 
-**RFC 8478**
+**RFC 8441**
 
-   Zstandard Compression and the application/zstd Media Type
+   Bootstrapping WebSockets with HTTP/2
+
+**RFC 8474**
+
+   IMAP Extension for Object Identifiers
+
+**RFC 8514**
+
+   Internet Message Access Protocol (IMAP) - SAVEDATE Extension
 
 **RFC 8579**
 
@@ -805,9 +833,45 @@ The following is an inventory of RFCs supported by Cyrus IMAP.
 
    Calendaring Extensions to WebDAV (CalDAV): Managed Attachments
 
+**RFC 8620**
+
+   The JSON Meta Application Protocol (JMAP)
+
+**RFC 8621**
+
+   The JSON Meta Application Protocol (JMAP) for Mail
+
+**RFC 8878**
+
+   Zstandard Compression and the application/zstd Media Type
+
+**RFC 8887**
+
+   A JSON Meta Application Protocol (JMAP) Subprotocol for WebSocket
+
+**RFC 8970**
+
+   IMAP4 Extension: Message Preview Generation
+
 
 IETF RFC Drafts
 ===============
+
+draft-ietf-extra-sieve-mailboxid
+
+   Sieve Email Filtering: delivery by mailboxid
+
+draft-ietf-extra-sieve-snooze
+
+   Sieve Email Filtering: Snooze Extension
+
+draft-ietf-jmap-calendars
+
+   JMAP for Calendars
+
+draft-ietf-jmap-sieve
+
+   JMAP for Sieve Scripts
 
 draft-murchison-lmtp-ignorequota
 
@@ -830,10 +894,6 @@ draft-york-vpoll
 draft-desruisseaux-ischedule
 
    Internet Calendar Scheduling Protocol (iSchedule)
-
-draft-gondwana-sieve-mailboxid
-
-   Sieve Email Filtering: delivery by mailboxid
 
 draft-thomson-hybi-http-timeout
 
@@ -910,10 +970,6 @@ RFC Wishlist
 
    IMAP Support for UTF-8
 
-**RFC 6901**
-
-   JavaScript Object Notation (JSON) Pointer
-
 **RFC 7162**
 
    IMAP Extensions: Quick Flag Changes Resynchronization (CONDSTORE)
@@ -923,42 +979,14 @@ RFC Wishlist
 
    IMAP4 Multimailbox SEARCH Extension
 
-**RFC 7725**
-
-   An HTTP Status Code to Report Legal Obstacles
-
 **RFC 7888**
 
    IMAP4 Non-synchronizing Literals
-
-**RFC 7889**
-
-   The IMAP APPENDLIMIT Extension
-
-**RFC 8288**
-
-   Web Linking
 
 **RFC 8470**
 
    Using Early Data in HTTP
 
-**RFC 8474**
-
-   IMAP Extension for Object Identifiers
-
-   Note: This is implemented as draft-ietf-extra-imap-objectid.
-
 **RFC 8508**
 
    IMAP REPLACE Extension
-
-**RFC 8514**
-
-   Internet Message Access Protocol (IMAP) - SAVEDATE Extension
-
-   Note: This is implemented as draft-ietf-extra-imap-savedate.
-
-**RFC 8621**
-
-   The JSON Meta Application Protocol (JMAP) for Mail
