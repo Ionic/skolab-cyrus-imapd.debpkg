@@ -1,3 +1,12 @@
+cyrus-imapd (3.6.0~beta2-2) unstable; urgency=medium
+
+  * Replace vim-common Build-Depends with xxd (Closes: #1007885)
+  * Fix install
+  * Update lintian overrides
+  * dh_missing: strict
+
+ -- Yadd <yadd@debian.org>  Fri, 25 Mar 2022 07:23:41 +0100
+
 cyrus-imapd (3.6.0~beta2-1) unstable; urgency=medium
 
   * New upstream version 3.6.0~beta2
