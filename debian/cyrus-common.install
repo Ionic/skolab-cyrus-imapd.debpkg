@@ -13,6 +13,7 @@ usr/lib/cyrus/bin/ctl_*
 usr/lib/cyrus/bin/cvt_*
 usr/lib/cyrus/bin/cyr_backup
 usr/lib/cyrus/bin/cyr_buildinfo
+usr/lib/cyrus/bin/cyr_cd.sh
 usr/lib/cyrus/bin/cyr_dbtool
 usr/lib/cyrus/bin/cyr_deny
 usr/lib/cyrus/bin/cyr_df
@@ -39,6 +40,7 @@ usr/lib/cyrus/bin/ptexpire
 usr/lib/cyrus/bin/ptloader
 usr/lib/cyrus/bin/quota
 usr/lib/cyrus/bin/reconstruct
+usr/lib/cyrus/bin/relocate_by_id
 usr/lib/cyrus/bin/sievec
 usr/lib/cyrus/bin/sieved
 usr/lib/cyrus/bin/smmapd
@@ -65,6 +67,7 @@ usr/share/man/man8/cyrus-chk_*.8
 usr/share/man/man8/cyrus-ctl_deliver.8
 usr/share/man/man8/cyrus-ctl_cyrusdb.8
 usr/share/man/man8/cyrus-ctl_mboxlist.8
+usr/share/man/man8/cyrus-ctl_zoneinfo.8
 usr/share/man/man8/cyrus-cvt_*.8
 usr/share/man/man8/cyrus-cyr_buildinfo.8
 usr/share/man/man8/cyrus-cyr_dbtool.8
