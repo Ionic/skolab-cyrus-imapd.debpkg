@@ -1,1 +1,2 @@
-cyrus-common: package-name-doesnt-match-sonames libcyrus0 libcyrus-imap0 libcyrus-min0 libcyrus-sieve0
+package-name-doesnt-match-sonames libcyrus-imap0 libcyrus-min0 libcyrus-sieve0 libcyrus0
+shell-script-fails-syntax-check usr/lib/cyrus/bin/cyr_cd.sh

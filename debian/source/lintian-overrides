@@ -18,8 +18,7 @@ very-long-line-length-in-source-file Makefile.in line *
 very-long-line-length-in-source-file cassandane/.travis.yml line *
 very-long-line-length-in-source-file cmulocal/libtool.m4 line *
 very-long-line-length-in-source-file configure line *
-very-long-line-length-in-source-file doc/*.html line *
-very-long-line-length-in-source-file doc/*.txt line *
-very-long-line-length-in-source-file docsrc/*.rst line *
+very-long-line-length-in-source-file doc/* line *
+very-long-line-length-in-source-file docsrc/* line *
 very-long-line-length-in-source-file lib/imapoptions line 2400 is 850 characters long (>512)
-very-long-line-length-in-source-file man/imapd.conf.5 line 4005 is 639 characters long (>512)
+very-long-line-length-in-source-file man/imapd.conf.5 line *
