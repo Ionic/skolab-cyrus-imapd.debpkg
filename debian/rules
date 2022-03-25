@@ -231,6 +231,4 @@ override_dh_installsystemd:
 	dh_installsystemd --name=cyrus-imapd
 
 override_dh_missing:
-	# Temporarily accept missing manpages
-	#dh_missing --fail-missing -X.la
-	dh_missing --list-missing -X.la
+	dh_missing --fail-missing -X.la
