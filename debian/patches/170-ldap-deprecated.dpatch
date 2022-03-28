@@ -1,0 +1,16 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 170-ldap-deprecated.dpatch by dann frazier <dannf@debian.org>
+##
+## DP: bug #463430: ldap_get_values implicitly converted to pointer
+
+@DPATCH@
+--- a/imap/global.c
++++ b/imap/global.c
+@@ -52,6 +52,7 @@
+ #include <netinet/in.h>
+ #include <sys/stat.h>
+ 
++#define LDAP_DEPRECATED 1
+ #include <ldap.h>
+ #include <lber.h>
+ 

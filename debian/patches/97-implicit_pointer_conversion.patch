@@ -1,0 +1,10 @@
+--- a/ptclient/ldap.c
++++ b/ptclient/ldap.c
+@@ -61,6 +61,7 @@ static char rcsid[] __attribute__((unuse
+ #include <sys/un.h>
+ #include <sys/uio.h>
+ 
++#define LDAP_DEPRECATED 1
+ #include <ldap.h>
+ #include <lber.h>
+ 

@@ -1,0 +1,471 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 30_update_perlcalling.sh.dpatch by Sven Mueller <debian@incase.de>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: updates calling of the perl interpreter to what we expect in Debian.
+## DP: More precisely: Call /usr/bin/perl directly instead of using some
+## DP: shell magic to locate perl and run it.
+## DP: NOTE: only some script use the "-w" or even the "-T" flag for perl.
+## DP:       This should be the default actually. 
+
+@DPATCH@
+--- a/contrib/cyrus-graphtools.1.0/cgi-bin/cyrus_master.pl
++++ b/contrib/cyrus-graphtools.1.0/cgi-bin/cyrus_master.pl
+@@ -1,4 +1,4 @@
+-#!/usr/local/bin/perl5
++#!/usr/bin/perl
+ 
+ #
+ # Created by Alison Greenwald <alison@andrew.cmu.edu> 21 Sep 2000
+--- a/contrib/cyrus-graphtools.1.0/cgi-bin/graph_cyrus_db-sum.pl
++++ b/contrib/cyrus-graphtools.1.0/cgi-bin/graph_cyrus_db-sum.pl
+@@ -1,4 +1,4 @@
+-#!/usr/local/bin/perl5
++#!/usr/bin/perl
+ 
+ #
+ # Created by Alison Greenwald 21 Sep 2000
+--- a/contrib/cyrus-graphtools.1.0/cgi-bin/graph_cyrus_db.pl
++++ b/contrib/cyrus-graphtools.1.0/cgi-bin/graph_cyrus_db.pl
+@@ -1,4 +1,4 @@
+-#!/usr/local/bin/perl5 
++#!/usr/bin/perl 
+ 
+ #
+ # Created by Alison Greenwald <alison@andrew.cmu.edu> 21 Sep 2000
+--- a/contrib/mupdate-test.pl
++++ b/contrib/mupdate-test.pl
+@@ -1,4 +1,4 @@
+-#!/usr/local/bin/perl
++#!/usr/bin/perl
+ 
+ # Create a workload against a murder frontend
+ # that will give the MUPDATE server a workout.
+--- a/perl/imap/examples/auditmbox.pl
++++ b/perl/imap/examples/auditmbox.pl
+@@ -1,4 +1,4 @@
+-#! /usr/bin/perl -w
++#!/usr/bin/perl -w
+ # 
+ # Copyright (c) 2000 Carnegie Mellon University.  All rights reserved.
+ #
+--- a/perl/imap/examples/imapcollate.pl
++++ b/perl/imap/examples/imapcollate.pl
+@@ -1,4 +1,4 @@
+-#! /usr/bin/perl -w
++#!/usr/bin/perl -w
+ # 
+ # Copyright (c) 2000 Carnegie Mellon University.  All rights reserved.
+ #
+--- a/perl/imap/examples/imapdu.pl
++++ b/perl/imap/examples/imapdu.pl
+@@ -1,4 +1,4 @@
+-#! /usr/local/bin/perl -w
++#!/usr/bin/perl -w
+ #
+ # $Id: imapdu.pl,v 1.8 2001/11/30 19:30:45 leg Exp $
+ # 
+--- a/perl/imap/examples/test-imsp.pl
++++ b/perl/imap/examples/test-imsp.pl
+@@ -1,4 +1,4 @@
+-#!/usr/local/bin/perl -w
++#!/usr/bin/perl -w
+ 
+ # test-imsp.pl
+ #
+--- a/perl/sieve/scripts/installsieve.pl
++++ b/perl/sieve/scripts/installsieve.pl
+@@ -1,6 +1,4 @@
+-#! /bin/sh
+-exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
+-#!perl -w
++#!/usr/bin/perl -w
+ # 
+ # Copyright (c) 2000 Carnegie Mellon University.  All rights reserved.
+ #
+--- a/perl/sieve/scripts/sieveshell.pl
++++ b/perl/sieve/scripts/sieveshell.pl
+@@ -1,6 +1,4 @@
+-#! /bin/sh
+-exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
+-#!perl -w
++#!/usr/bin/perl -w
+ # 
+ # Copyright (c) 2000 Carnegie Mellon University.  All rights reserved.
+ #
+--- a/snmp/snmpgen
++++ b/snmp/snmpgen
+@@ -1,4 +1,4 @@
+-#!/bin/sh
++#!/usr/bin/perl -w
+ # 
+ # Copyright (c) 2000 Carnegie Mellon University.  All rights reserved.
+ #
+@@ -38,25 +38,8 @@
+ # AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
+ # OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ #
+-exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
+-#!perl -w
+ # $Id: snmpgen,v 1.18 2005/04/11 06:08:58 shadow Exp $
+ 
+-if ($] !~ /^5\..*/) {
+-  # uh-oh. this isn't perl 5.
+-  foreach (split(/:/, $ENV{PATH})) { # try to find "perl5".
+-    exec("$_/perl5", "-w", "-x", "-S", $0, @ARGV) if (-x "$_/perl5");
+-  }
+-  # we failed. bail.
+-  die "Your perl is too old; I need perl 5.\n";
+-}
+-
+-# load the real script. this is isolated in an 'eval' so perl4 won't
+-# choke on the perl5-isms.
+-eval join("\n", <DATA>);
+-if ($@) { die "$@"; }
+-
+-__END__
+ require 5;
+ 
+ #Tim Martin
+--- a/tools/arbitronsort.pl
++++ b/tools/arbitronsort.pl
+@@ -1,4 +1,4 @@
+-#!/usr/local/bin/perl
++#!/usr/bin/perl
+ 
+ #
+ # This script takes the output of arbitron (run without the -o option)
+--- a/tools/config2header
++++ b/tools/config2header
+@@ -1,4 +1,5 @@
+-#!/bin/sh
++#!/usr/bin/perl -w
++#
+ # $Id: config2header,v 1.12 2005/04/19 18:54:32 shadow Exp $
+ #
+ # Copyright (c) 2001 Carnegie Mellon University.  All rights reserved.
+@@ -39,24 +40,6 @@
+ # AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
+ # OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ #
+-exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
+-#!perl -w
+-
+-if ($] !~ /^5\..*/) {
+-  # uh-oh. this isn't perl 5.
+-  foreach (split(/:/, $ENV{PATH})) { # try to find "perl5".
+-    exec("$_/perl5", "-x", "-S", $0, @ARGV) if (-x "$_/perl5");
+-  }
+-  # we failed. bail.
+-  die "Your perl is too old; I need perl 5.\n";
+-}
+-
+-# load the real script. this is isolated in an 'eval' so perl4 won't
+-# choke on the perl5-isms.
+-eval join("\n", <DATA>);
+-if ($@) { die "$@"; }
+-
+-__END__
+ require 5;
+ 
+ use strict;
+--- a/tools/config2man
++++ b/tools/config2man
+@@ -1,4 +1,5 @@
+-#!/bin/sh
++#!/usr/bin/perl -w
++#
+ # $Id: config2man,v 1.3 2003/12/09 18:33:52 ken3 Exp $
+ #
+ # Copyright (c) 2001 Carnegie Mellon University.  All rights reserved.
+@@ -39,24 +40,6 @@
+ # AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
+ # OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ #
+-exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
+-#!perl -w
+-
+-if ($] !~ /^5\..*/) {
+-  # uh-oh. this isn't perl 5.
+-  foreach (split(/:/, $ENV{PATH})) { # try to find "perl5".
+-    exec("$_/perl5", "-x", "-S", $0, @ARGV) if (-x "$_/perl5");
+-  }
+-  # we failed. bail.
+-  die "Your perl is too old; I need perl 5.\n";
+-}
+-
+-# load the real script. this is isolated in an 'eval' so perl4 won't
+-# choke on the perl5-isms.
+-eval join("\n", <DATA>);
+-if ($@) { die "$@"; }
+-
+-__END__
+ require 5;
+ 
+ use strict;
+--- a/tools/dohash
++++ b/tools/dohash
+@@ -1,4 +1,4 @@
+-#!/bin/sh
++#!/usr/bin/perl -w
+ # 
+ # Copyright (c) 2000 Carnegie Mellon University.  All rights reserved.
+ #
+@@ -38,27 +38,10 @@
+ # AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
+ # OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ #
+-exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
+-#!perl -w
+ # script to upgrade from versions of imapd previous to 1.6.2
+ # make sure you run it as the cyrus user
+ # $Id: dohash,v 1.11 2005/12/01 22:01:12 murch Exp $
+ 
+-if ($] !~ /^5\..*/) {
+-  # uh-oh. this isn't perl 5.
+-  foreach (split(/:/, $ENV{PATH})) { # try to find "perl5".
+-    exec("$_/perl5", "-x", "-S", $0, @ARGV) if (-x "$_/perl5");
+-  }
+-  # we failed. bail.
+-  die "Your perl is too old; I need perl 5.\n";
+-}
+-
+-# load the real script. this is isolated in an 'eval' so perl4 won't
+-# choke on the perl5-isms.
+-eval join("\n", <DATA>);
+-if ($@) { die "$@"; }
+-
+-__END__
+ require 5;
+ 
+ $| = 1;
+--- a/tools/masssievec
++++ b/tools/masssievec
+@@ -1,4 +1,6 @@
+-#!/bin/sh
++#!/usr/bin/perl -w
++# 
++# Script for mass compilation of sieve scripts.
+ # 
+ # Copyright (c) 2000 Carnegie Mellon University.  All rights reserved.
+ #
+@@ -38,28 +40,11 @@
+ # AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
+ # OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ #
+-exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
+-#!perl -w
+ #
+ # Script for mass compilation of sieve scripts.
+ #
+ # $Id: masssievec,v 1.5 2005/12/01 22:01:12 murch Exp $
+ 
+-if ($] !~ /^5\..*/) {
+-  # uh-oh. this isn't perl 5.
+-  foreach (split(/:/, $ENV{PATH})) { # try to find "perl5".
+-    exec("$_/perl5", "-x", "-S", $0, @ARGV) if (-x "$_/perl5");
+-  }
+-  # we failed. bail.
+-  die "Your perl is too old; I need perl 5.\n";
+-}
+-
+-# load the real script. this is isolated in an 'eval' so perl4 won't
+-# choke on the perl5-isms.
+-eval join("\n", <DATA>);
+-if ($@) { die "$@"; }
+-
+-__END__
+ require 5;
+ 
+ $| = 1;
+--- a/tools/mkimap
++++ b/tools/mkimap
+@@ -1,4 +1,4 @@
+-#!/bin/sh
++#!/usr/bin/perl
+ # 
+ # Copyright (c) 2000 Carnegie Mellon University.  All rights reserved.
+ #
+@@ -38,25 +38,8 @@
+ # AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
+ # OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ #
+-exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
+-#!perl -w
+ # $Id: mkimap,v 1.17 2005/12/01 19:12:34 murch Exp $
+ 
+-if ($] !~ /^5\..*/) {
+-  # uh-oh. this isn't perl 5.
+-  foreach (split(/:/, $ENV{PATH})) { # try to find "perl5".
+-    exec("$_/perl5", "-x", "-S", $0, @ARGV) if (-x "$_/perl5");
+-  }
+-  # we failed. bail.
+-  die "Your perl is too old; I need perl 5.\n";
+-}
+-
+-# load the real script. this is isolated in an 'eval' so perl4 won't
+-# choke on the perl5-isms.
+-eval join("\n", <DATA>);
+-if ($@) { die "$@"; }
+-
+-__END__
+ require 5;
+ 
+ sub read_conf {
+--- a/tools/mknewsgroups
++++ b/tools/mknewsgroups
+@@ -1,5 +1,8 @@
+-#!/bin/sh
++#!/usr/bin/perl -w
+ # 
++# Create newsgroups on imap server
++# Based on the make_fromactive.pl script by Tim Martin
++#
+ # Copyright (c) 2003 Carnegie Mellon University.  All rights reserved.
+ #
+ # Redistribution and use in source and binary forms, with or without
+@@ -38,29 +41,6 @@
+ # AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
+ # OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ #
+-exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
+-#!perl -w
+-#
+-# Create newsgroups on imap server
+-# Based on the make_fromactive.pl script by Tim Martin
+-#
+-# $Id: mknewsgroups,v 1.2 2003/10/22 18:03:47 rjs3 Exp $
+-
+-if ($] !~ /^5\..*/) {
+-  # uh-oh. this isn't perl 5.
+-  foreach (split(/:/, $ENV{PATH})) { # try to find "perl5".
+-    exec("$_/perl5", "-x", "-S", $0, @ARGV) if (-x "$_/perl5");
+-  }
+-  # we failed. bail.
+-  die "Your perl is too old; I need perl 5.\n";
+-}
+-
+-# load the real script. this is isolated in an 'eval' so perl4 won't
+-# choke on the perl5-isms.
+-eval join("\n", <DATA>);
+-if ($@) { die "$@"; }
+-
+-__END__
+ require 5;
+ 
+ use Getopt::Long;
+--- a/tools/rehash
++++ b/tools/rehash
+@@ -1,4 +1,8 @@
+-#!/bin/sh
++#!/usr/bin/perl
++# script to upgrade from simple hashing scheme to full hashing scheme
++# make sure you run it as the cyrus user
++# 
++# Written by Gary Mills <mills@cc.UManitoba.CA>
+ # 
+ # Copyright (c) 2000 Carnegie Mellon University.  All rights reserved.
+ #
+@@ -38,8 +42,6 @@
+ # AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
+ # OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ #
+-exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
+-#!perl -w
+ # script to upgrade from simple hashing scheme to full hashing scheme
+ # make sure you run it as the cyrus user
+ #
+@@ -47,21 +49,6 @@ exec perl -x -S $0 ${1+"$@"} # -*-perl-*
+ #
+ # $Id: rehash,v 1.8 2005/12/01 22:01:12 murch Exp $
+ 
+-if ($] !~ /^5\..*/) {
+-  # uh-oh. this isn't perl 5.
+-  foreach (split(/:/, $ENV{PATH})) { # try to find "perl5".
+-    exec("$_/perl5", "-x", "-S", $0, @ARGV) if (-x "$_/perl5");
+-  }
+-  # we failed. bail.
+-  die "Your perl is too old; I need perl 5.\n";
+-}
+-
+-# load the real script. this is isolated in an 'eval' so perl4 won't
+-# choke on the perl5-isms.
+-eval join("\n", <DATA>);
+-if ($@) { die "$@"; }
+-
+-__END__
+ require 5;
+ 
+ $| = 1;
+--- a/tools/translatesieve
++++ b/tools/translatesieve
+@@ -1,6 +1,4 @@
+-#!/bin/sh
+-exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
+-#!perl -w
++#!/usr/bin/perl
+ # script to translate sieve scripts to use unixhierarchysep and/or altnamespace
+ # make sure you run it as the cyrus user
+ #!/usr/bin/perl
+@@ -45,21 +43,6 @@ exec perl -x -S $0 ${1+"$@"} # -*-perl-*
+ # OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ #
+ 
+-if ($] !~ /^5\..*/) {
+-  # uh-oh. this isn't perl 5.
+-  foreach (split(/:/, $ENV{PATH})) { # try to find "perl5".
+-    exec("$_/perl5", "-x", "-S", $0, @ARGV) if (-x "$_/perl5");
+-  }
+-  # we failed. bail.
+-  die "Your perl is too old; I need perl 5.\n";
+-}
+-
+-# load the real script. this is isolated in an 'eval' so perl4 won't
+-# choke on the perl5-isms.
+-eval join("\n", <DATA>);
+-if ($@) { die "$@"; }
+-
+-__END__
+ require 5;
+ 
+ $| = 1;
+--- a/tools/undohash
++++ b/tools/undohash
+@@ -1,4 +1,4 @@
+-#!/usr/bin/perl
++#!/usr/bin/perl -w
+ # script to downgrade from cyrus imapd 1.6.2+ to earlier.
+ # do NOT run this script while imapd's are running
+ # $Id: undohash,v 1.8 2005/12/01 22:01:13 murch Exp $
+--- a/tools/upgradesieve
++++ b/tools/upgradesieve
+@@ -1,6 +1,4 @@
+-#!/bin/sh
+-exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
+-#!perl -w
++#!/usr/bin/perl -w
+ # script to upgrade sievedir from imapd 1.6.13
+ # make sure you run it as the cyrus user
+ #!/usr/bin/perl
+@@ -45,21 +43,6 @@ exec perl -x -S $0 ${1+"$@"} # -*-perl-*
+ # OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ #
+ 
+-if ($] !~ /^5\..*/) {
+-  # uh-oh. this isn't perl 5.
+-  foreach (split(/:/, $ENV{PATH})) { # try to find "perl5".
+-    exec("$_/perl5", "-x", "-S", $0, @ARGV) if (-x "$_/perl5");
+-  }
+-  # we failed. bail.
+-  die "Your perl is too old; I need perl 5.\n";
+-}
+-
+-# load the real script. this is isolated in an 'eval' so perl4 won't
+-# choke on the perl5-isms.
+-eval join("\n", <DATA>);
+-if ($@) { die "$@"; }
+-
+-__END__
+ require 5;
+ 
+ $| = 1;

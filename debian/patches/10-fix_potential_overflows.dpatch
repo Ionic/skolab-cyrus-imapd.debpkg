@@ -1,0 +1,185 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 10-fix_potential_overflows.dpatch by Sven Mueller <debian@incase.de>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: fix potential buffer overflows
+
+@DPATCH@
+--- a/imap/ctl_mboxlist.c
++++ b/imap/ctl_mboxlist.c
+@@ -479,7 +479,7 @@ void do_undump(void)
+     int r = 0;
+     char buf[16384];
+     int line = 0;
+-    char last_commit[MAX_MAILBOX_NAME];
++    char last_commit[MAX_MAILBOX_NAME+1];
+     char *key=NULL, *data=NULL;
+     int keylen, datalen;
+     int untilCommit = PER_COMMIT;
+--- a/imap/fud.c
++++ b/imap/fud.c
+@@ -119,9 +119,9 @@ int begin_handling(void)
+ 
+         while(1) {
+             /* For safety */
+-            memset(username,'\0',MAXLOGNAME + MAXDOMNAME);	
+-            memset(mbox,'\0',MAX_MAILBOX_NAME+1);
+-            memset(buf, '\0', MAXLOGNAME + MAX_MAILBOX_NAME + 1);
++            memset(username,'\0', sizeof(username));	
++            memset(mbox,'\0', sizeof(mbox));
++            memset(buf, '\0', sizeof(buf));
+ 
+ 	    if (signals_poll() == SIGHUP) {
+ 		/* caught a SIGHUP, return */
+--- a/imap/global.c
++++ b/imap/global.c
+@@ -465,7 +465,7 @@ static int acl_ok(const char *user, stru
+ {
+     struct namespace namespace;
+     char *acl;
+-    char bufuser[MAX_MAILBOX_NAME], inboxname[MAX_MAILBOX_NAME];
++    char bufuser[MAX_MAILBOX_NAME+1], inboxname[MAX_MAILBOX_NAME+1];
+     int r;
+ 
+     /* Set namespace */
+--- a/imap/idle_idled.c
++++ b/imap/idle_idled.c
+@@ -110,11 +110,11 @@ int idle_enabled(void)
+     idle_remote.sun_family = AF_UNIX;
+     idle_sock = config_getstring(IMAPOPT_IDLESOCKET);
+     if (idle_sock) {	
+-	strcpy(idle_remote.sun_path, idle_sock);
++	strlcpy(idle_remote.sun_path, idle_sock, sizeof(idle_remote.sun_path));
+     }
+     else {
+-	strcpy(idle_remote.sun_path, config_dir);
+-	strcat(idle_remote.sun_path, FNAME_IDLE_SOCK);
++	strlcpy(idle_remote.sun_path, config_dir, sizeof(idle_remote.sun_path));
++	strlcat(idle_remote.sun_path, FNAME_IDLE_SOCK, sizeof(idle_remote.sun_path));
+     }
+     idle_remote_len = sizeof(idle_remote.sun_family) +
+ 	strlen(idle_remote.sun_path) + 1;
+--- a/imap/index.c
++++ b/imap/index.c
+@@ -3292,9 +3292,17 @@ static MsgData *index_msgdata_load(unsig
+ 		cur->from = get_localpart_addr(from + CACHE_ITEM_SIZE_SKIP);
+ 		break;
+ 	    case SORT_SUBJECT:
+-		cur->xsubj = index_extract_subject(subj + CACHE_ITEM_SIZE_SKIP,
+-						   CACHE_ITEM_LEN(subj),
+-						   &cur->is_refwd);
++		 {
++		     int len = CACHE_ITEM_LEN(subj);
++		     char *t = xmalloc(len+1);
++		
++		     memcpy(t, subj + CACHE_ITEM_SIZE_SKIP, len);
++		     t[len] = '\0';
++		
++		     cur->xsubj = index_extract_subject(t, len, &cur->is_refwd);
++		
++		     free(t);
++		 }
+ 		cur->xsubj_hash = strhash(cur->xsubj);
+ 		break;
+ 	    case SORT_TO:
+--- a/imap/mboxlist.h
++++ b/imap/mboxlist.h
+@@ -73,7 +73,7 @@ extern struct db *mbdb;
+ 
+ /* each mailbox has the following data */
+ struct mbox_entry {
+-    char name[MAX_MAILBOX_NAME];
++    char name[MAX_MAILBOX_NAME+1];
+     int mbtype;
+     char partition[MAX_PARTITION_LEN];
+ 				/* holds remote machine for REMOTE mailboxes */
+--- a/imap/message.c
++++ b/imap/message.c
+@@ -795,7 +795,7 @@ struct ibuf *ibuf;
+     /* Save header value */
+     len = hdrend - hdr;
+     message_ibuf_ensure(ibuf, len+2);
+-    strncpy(ibuf->end, hdr, len);
++    strncpy(ibuf->end, hdr, len+1);
+     ibuf->end += len;
+     *(ibuf->end)++ = '\r';
+     *(ibuf->end)++ = '\n';
+--- a/imap/mupdate.h
++++ b/imap/mupdate.h
+@@ -70,8 +70,8 @@ struct mupdate_handle_s {
+     struct buf tag, cmd, arg1, arg2, arg3;
+ 
+     /* For client side mupdate_find calls */
+-    char mailbox_buf[MAX_MAILBOX_NAME];
+-    char server_buf[MAX_MAILBOX_NAME];
++    char mailbox_buf[MAX_MAILBOX_NAME+1];
++    char server_buf[MAX_MAILBOX_NAME+1];
+     char *acl_buf;
+     size_t acl_buf_len;
+     struct mupdate_mailboxdata mailboxdata_buf;
+--- a/imap/proxyd.c
++++ b/imap/proxyd.c
+@@ -1213,7 +1213,7 @@ int service_main(int argc __attribute__(
+ 		 char **envp __attribute__((unused)))
+ {
+     socklen_t salen;
+-    char hbuf[NI_MAXHOST];
++    char hbuf[NI_MAXHOST+1];
+     struct sockaddr_storage proxyd_localaddr, proxyd_remoteaddr;
+     char localip[60], remoteip[60];
+     int niflags;
+--- a/imtest/imtest.c
++++ b/imtest/imtest.c
+@@ -1231,7 +1231,7 @@ static void interactive(struct protocol_
+ 	
+ 	/* can't have this and a file for input */
+ 	sunsock.sun_family = AF_UNIX;
+-	strcpy(sunsock.sun_path, output_socket);
++	strlcpy(sunsock.sun_path, output_socket, sizeof(sunsock.sun_path));
+ 	unlink(output_socket);
+ 
+ 	listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
+--- a/master/master.c
++++ b/master/master.c
+@@ -222,13 +222,17 @@ int become_cyrus(void)
+     return result;
+ }
+ 
+-void get_prog(char *path, unsigned size, char *const *cmd)
++void get_prog(char *path, unsigned int size, char *const *cmd)
+ {
+     if (cmd[0][0] == '/') {
+ 	/* master lacks strlcpy, due to no libcyrus */
+ 	snprintf(path, size, "%s", cmd[0]);
++	path[size-1] = '\0';
++    }
++    else {
++	snprintf(path, size, "%s/%s", SERVICE_PATH, cmd[0]);
++	path[size-1] = '\0';
+     }
+-    else snprintf(path, size, "%s/%s", SERVICE_PATH, cmd[0]);
+ }
+ 
+ void get_statsock(int filedes[2])
+--- a/master/masterconf.c
++++ b/master/masterconf.c
+@@ -133,7 +133,7 @@ const char *masterconf_getstring(struct
+ 	} else {
+ 	    /* one word */
+ 	    for (i = 0; i < 255; i++) {
+-		if (isspace((int) *p)) break;
++		if ((!*p) || (isspace((int) *p))) break;
+ 		v[i] = *p++;
+ 	    }
+ 	}
+--- a/notifyd/notifyd.c
++++ b/notifyd/notifyd.c
+@@ -143,7 +143,7 @@ int do_notify()
+ 	if (cp) nopt = strtol(cp, NULL, 10);
+ 	if (nopt < 0 || errno == ERANGE) cp = NULL;
+ 
+-	if (cp && nopt &&
++	if (cp && (nopt > 0) &&
+ 	    !(options = (char**) xrealloc(options, nopt * sizeof(char*)))) {
+ 	    fatal("xmalloc(): can't allocate options", EC_OSERR);
+ 	}

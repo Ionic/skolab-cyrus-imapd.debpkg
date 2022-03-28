@@ -1,0 +1,24 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 140-kolab-mbox.dpatch by Steffen Joeris <steffen.joeris@skolelinux.de>
+##
+## DP: Kolab upstream's imapd-goodchars.patch
+## DP: Some hunks of that patch are in 0009-upstream-remove-redundant-wildcard-check
+
+@DPATCH@
+--- a/imap/mboxname.c
++++ b/imap/mboxname.c
+@@ -653,8 +653,13 @@ int mboxname_netnewscheck(char *name)
+ /*
+  * Apply site policy restrictions on mailbox names.
+  * Restrictions are hardwired for now.
+- */
++ 
++ * original definition
+ #define GOODCHARS " +,-.0123456789:=@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
++ */
++
++#define GOODCHARS " #$%'()*+,-.0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~"
++
+ int mboxname_policycheck(char *name)
+ {
+     unsigned i;

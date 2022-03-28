@@ -1,0 +1,143 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 72-faster-isdigit.dpatch by Sven Mueller <debian@incase.de>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Use a smaller (but less intelligent) isdigit() implementation,
+## DP: a simple range-check. Patch backported from:
+## DP: http://cyrus.brong.fastmail.fm/patches/cyrus-isdigit-2.3.3.diff
+
+@DPATCH@
+--- a/imap/index.c
++++ b/imap/index.c
+@@ -490,8 +490,8 @@ int oldexists;
+      */
+     old = seenuids;
+     new = newseenuids;
+-    while (isdigit((int) *old)) oldnext = oldnext * 10 + *old++ - '0';
+-    while (isdigit((int) *new)) newnext = newnext * 10 + *new++ - '0';
++    while (cyrus_isdigit((int) *old)) oldnext = oldnext * 10 + *old++ - '0';
++    while (cyrus_isdigit((int) *new)) newnext = newnext * 10 + *new++ - '0';
+ 
+     for (msgno = 1; msgno <= imapd_exists; msgno++) {
+ 	uid = UID(msgno);
+@@ -505,7 +505,7 @@ int oldexists;
+ 		oldnext = 0;
+ 		if (!*old) oldnext = mailbox->last_uid+1;
+ 		else old++;
+-		while (isdigit((int) *old)) {
++		while (cyrus_isdigit((int) *old)) {
+ 		    oldnext = oldnext * 10 + *old++ - '0';
+ 		}
+ 		oldnext += oldseen;
+@@ -524,7 +524,7 @@ int oldexists;
+ 		    neweof++;
+ 		}
+ 		else new++;
+-		while (isdigit((int) *new)) {
++		while (cyrus_isdigit((int) *new)) {
+ 		    newnext = newnext * 10 + *new++ - '0';
+ 		}
+ 		newnext += newseen;
+@@ -643,7 +643,7 @@ int oldexists;
+ 		neweof++;
+ 	    }
+ 	    else new++;
+-	    while (isdigit((int) *new)) newnext = newnext * 10 + *new++ - '0';
++	    while (cyrus_isdigit((int) *new)) newnext = newnext * 10 + *new++ - '0';
+ 	    newnext += newseen;
+ 	}
+     }
+@@ -661,7 +661,7 @@ int oldexists;
+ 		/* There's a ":M" after the ",N".  Parse/include that too. */
+ 		new++;
+ 		newnext = 0;
+-		while (isdigit((int) *new)) newnext = newnext * 10 + *new++ - '0';
++		while (cyrus_isdigit((int) *new)) newnext = newnext * 10 + *new++ - '0';
+ 	    }
+ 	    uid = newnext;
+ 	    newseen++;		/* Forget we parsed ",N" */
+@@ -1504,7 +1504,7 @@ index_forsequence(struct mailbox* mailbo
+     }
+ 
+     for (;;) {
+-	if (isdigit((int) *sequence)) {
++	if (cyrus_isdigit((int) *sequence)) {
+ 	    start = start*10 + *sequence - '0';
+ 	}
+ 	else if (*sequence == '*') {
+@@ -1513,7 +1513,7 @@ index_forsequence(struct mailbox* mailbo
+ 	else if (*sequence == ':') {
+ 	    end = 0;
+ 	    sequence++;
+-	    while (isdigit((int) *sequence)) {
++	    while (cyrus_isdigit((int) *sequence)) {
+ 		end = end*10 + *sequence++ - '0';
+ 	    }
+ 	    if (*sequence == '*') {
+@@ -1571,7 +1571,7 @@ int usinguid;
+     unsigned i, start = 0, end;
+ 
+     for (;;) {
+-	if (isdigit((int) *sequence)) {
++	if (cyrus_isdigit((int) *sequence)) {
+ 	    start = start*10 + *sequence - '0';
+ 	}
+ 	else if (*sequence == '*') {
+@@ -1581,7 +1581,7 @@ int usinguid;
+ 	else if (*sequence == ':') {
+ 	    end = 0;
+ 	    sequence++;
+-	    while (isdigit((int) *sequence)) {
++	    while (cyrus_isdigit((int) *sequence)) {
+ 		end = end*10 + *sequence++ - '0';
+ 	    }
+ 	    if (*sequence == '*') {
+@@ -1705,7 +1705,7 @@ static int index_fetchsection(const char
+     while (*p != ']' && *p != 'M') {
+ 	/* Generate the actual part number */
+ 	skip = 0;
+-	while (isdigit((int) *p)) {
++	while (cyrus_isdigit((int) *p)) {
+             skip = skip * 10 + *p++ - '0';
+             /* xxx overflow */
+         }
+@@ -1834,7 +1834,7 @@ static void index_fetchfsection(const ch
+ 
+     while (*p != 'H') {
+ 	skip = 0;
+-	while (isdigit((int) *p)) {
++	while (cyrus_isdigit((int) *p)) {
+             skip = skip * 10 + *p++ - '0';
+             /* xxx overflow */
+         }
+@@ -3379,7 +3379,7 @@ static void parse_cached_envelope(char *
+ 	case '{':			/* literal */
+ 	    c++;			/* skip open brace */
+ 	    len = 0;			/* determine length of literal */
+-	    while (isdigit((int) *c)) {
++	    while (cyrus_isdigit((int) *c)) {
+ 		len = len*10 + *c - '0';
+ 		c++;
+ 	    }
+@@ -3533,7 +3533,7 @@ static char *_index_extract_subject(char
+ 			break;
+ 		    			/* if we have a digit, and we're still
+ 					   counting, keep building the count */
+-		    } else if (isdigit((int) *x) && count != -1) {
++		    } else if (cyrus_isdigit((int) *x) && count != -1) {
+ 			count = count * 10 + *x - '0';
+                         if (count < 0) {                /* overflow */
+                             count = -1; /* abort counting */
+--- a/lib/util.h
++++ b/lib/util.h
+@@ -107,4 +107,10 @@ extern void cyrus_reset_stdio();
+  */
+ extern int cyrus_mkdir(const char *path, mode_t mode);
+ 
++/* Some systems have very inefficient implementations of isdigit,
++ * and we use it in a lot of inner loops
++ */
++
++#define cyrus_isdigit(x) ((x) >= '0' && (x) <= '9')
++
+ #endif /* INCLUDED_UTIL_H */

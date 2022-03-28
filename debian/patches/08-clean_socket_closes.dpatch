@@ -1,0 +1,84 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 08-clean_socket_closes.dpatch by Sven Mueller <debian@incase.de>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Cleanly close sockets
+
+@DPATCH@
+--- a/imap/backend.c
++++ b/imap/backend.c
+@@ -400,6 +400,7 @@ struct backend *backend_connect(struct b
+ 	    syslog(LOG_ERR, "couldn't authenticate to backend server: %s",
+ 		   sasl_errstring(r, NULL, NULL));
+ 	    if (!ret_backend) free(ret);
++ 	    shutdown(sock, SHUT_RDWR);
+ 	    close(sock);
+ 	    ret = NULL;
+ 	}
+--- a/imap/fud.c
++++ b/imap/fud.c
+@@ -158,6 +158,15 @@ void shut_down(int code)
+     mboxlist_done();
+     closelog();
+     cyrus_done();
++
++    /* be nice to remote */
++    shutdown(0, SHUT_RD);
++    shutdown(1, SHUT_RD);
++    shutdown(2, SHUT_RD);
++    close(0);
++    close(1);
++    close(2);
++
+     exit(code);
+ }
+ 
+--- a/imap/imapd.c
++++ b/imap/imapd.c
+@@ -767,6 +767,10 @@ void shut_down(int code)
+ #ifdef HAVE_SSL
+     tls_shutdown_serverengine();
+ #endif
++    /* shutdown socket nicely */
++    cyrus_close_sock(0);
++    cyrus_close_sock(1);
++    cyrus_close_sock(2);
+ 
+     cyrus_done();
+ 
+--- a/imap/lmtpd.c
++++ b/imap/lmtpd.c
+@@ -553,6 +553,9 @@ void shut_down(int code)
+ 
+     cyrus_done();
+ 
++    /* shutdown socket nicely */
++    cyrus_reset_stdio();
++
+     exit(code);
+ }
+ 
+--- a/imap/pop3d.c
++++ b/imap/pop3d.c
+@@ -496,6 +496,9 @@ void shut_down(int code)
+ #endif
+ 
+     cyrus_done();
++    cyrus_close_sock(0);
++    cyrus_close_sock(1);
++    cyrus_close_sock(2);
+ 
+     exit(code);
+ }
+--- a/imap/proxyd.c
++++ b/imap/proxyd.c
+@@ -1382,6 +1382,9 @@ void shut_down(int code)
+ #endif
+ 
+     cyrus_done();
++    cyrus_close_sock(0);
++    cyrus_close_sock(1);
++    cyrus_close_sock(2);
+ 
+     exit(code);
+ }

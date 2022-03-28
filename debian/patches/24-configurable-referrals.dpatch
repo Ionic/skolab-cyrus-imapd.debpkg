@@ -1,0 +1,53 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 24-configurable-referrals.dpatch by Benjamin Seidenberg <benjamin@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+@DPATCH@
+--- a/imap/proxyd.c
++++ b/imap/proxyd.c
+@@ -1161,7 +1161,7 @@ static void proxyd_reset(void)
+     
+     /* Cleanup Globals */
+     proxyd_cmdcnt = 0;
+-    disable_referrals = 0;
++    disable_referrals = config_getswitch(IMAPOPT_PROXYD_DISABLE_MAILBOX_REFERRALS);
+     supports_referrals = 0;
+     proxyd_userisadmin = 0;
+     proxyd_starttls_done = 0;
+@@ -2776,6 +2776,10 @@ void cmd_capability(char *tag)
+     prot_printf(proxyd_out, "* CAPABILITY ");
+     prot_printf(proxyd_out, CAPABILITY_STRING);
+ 
++    if (config_getswitch(IMAPOPT_PROXYD_DISABLE_MAILBOX_REFERRALS) == 0) {
++      prot_printf(proxyd_out, " MAILBOX-REFERRALS");
++    }
++		
+     if (config_getint(IMAPOPT_IMAPIDLEPOLL) > 0) {
+ 	prot_printf(proxyd_out, " IDLE");
+     }
+--- a/imap/version.h
++++ b/imap/version.h
+@@ -55,7 +55,7 @@
+ 
+ /* CAPABILITIES are now defined here, not including sasl ones */
+ #define CAPABILITY_STRING "IMAP4 IMAP4rev1 ACL QUOTA LITERAL+ " \
+-	"MAILBOX-REFERRALS NAMESPACE UIDPLUS ID " \
++	"NAMESPACE UIDPLUS ID " \
+ 	"NO_ATOMIC_RENAME UNSELECT " \
+ 	"CHILDREN MULTIAPPEND BINARY " \
+ 	"SORT THREAD=ORDEREDSUBJECT THREAD=REFERENCES " \
+--- a/lib/imapoptions
++++ b/lib/imapoptions
+@@ -668,6 +668,10 @@ are listed with ``<none>''.
+    connections that these referrals would cause, thus resulting in a higher
+    authentication load on the respective backend server. */
+ 
++{ "proxyd_disable_mailbox_referrals", 0, SWITCH }
++/* Set to true to disable the use of mailbox-referrals on the
++   proxy servers.*/
++
+ { "proxyservers", NULL, STRING }
+ /* A list of users and groups that are allowed to proxy for other
+    users, seperated by spaces.  Any user listed in this will be

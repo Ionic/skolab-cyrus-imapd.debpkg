@@ -1,0 +1,50 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 22-imapd_index_check.dpatch by Sven Mueller <debian@incase.de>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Fix usage of index_check()
+
+@DPATCH@
+--- a/imap/imapd.c
++++ b/imap/imapd.c
+@@ -3125,8 +3125,8 @@ void cmd_fetch(char *tag, char *sequence
+ 
+     if (usinguid) {
+ 	fetchitems |= FETCH_UID;
+-	index_check(imapd_mailbox, 1, 0);
+     }
++    index_check(imapd_mailbox, 1, 0);
+ 
+     fetchargs.fetchitems = fetchitems;
+     r = index_fetch(imapd_mailbox, sequence, usinguid, &fetchargs,
+@@ -3141,6 +3141,9 @@ void cmd_fetch(char *tag, char *sequence
+     } else if (fetchedsomething || usinguid) {
+ 	prot_printf(imapd_out, "%s OK %s (%s sec)\r\n", tag,
+ 		    error_message(IMAP_OK_COMPLETED), mytime);
++	if(fetchargs.fetchitems & FETCH_SETSEEN) {
++	    index_check(imapd_mailbox,usinguid,1);
++	}
+     } else {
+ 	/* normal FETCH, nothing came back */
+ 	prot_printf(imapd_out, "%s NO %s (%s sec)\r\n", tag,
+@@ -3259,7 +3262,8 @@ void cmd_partial(const char *tag, const
+ 
+     index_fetch(imapd_mailbox, msgno, 0, &fetchargs, &fetchedsomething);
+ 
+-    index_check(imapd_mailbox, 0, 0);
++    index_check(imapd_mailbox, 0,
++       fetchedsomething && (fetchargs.fetchitems & FETCH_SETSEEN));
+ 
+     if (fetchedsomething) {
+ 	prot_printf(imapd_out, "%s OK %s\r\n", tag,
+@@ -3391,7 +3395,9 @@ void cmd_store(char *tag, char *sequence
+     r = index_store(imapd_mailbox, sequence, usinguid, &storeargs,
+ 		    flag, nflags);
+ 
+-    if (usinguid) {
++    if(storeargs.seen || storeargs.operation==STORE_REPLACE) {
++	index_check(imapd_mailbox, usinguid, 1);
++    } else if (usinguid) {
+ 	index_check(imapd_mailbox, 1, 0);
+     }
+ 

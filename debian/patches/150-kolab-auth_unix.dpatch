@@ -1,0 +1,85 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 150-kolab-auth_unix.dpatch by Steffen Joeris <steffen.joeris@skolelinux.de>
+##
+## DP: Kolab upstream's imapd.patch.group plus imapd.group2.patch
+
+@DPATCH@
+--- a/lib/auth_unix.c
++++ b/lib/auth_unix.c
+@@ -48,6 +48,7 @@
+ #include <stdlib.h>
+ #include <pwd.h>
+ #include <grp.h>
++#include <stdio.h>
+ #include <ctype.h>
+ #include <string.h>
+ 
+@@ -142,6 +143,25 @@ static char allowedchars[256] = {
+     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+ };
+ 
++static struct group* fgetgrnam(const char* name)
++{
++    struct group *grp;
++    FILE *groupfile;
++
++    groupfile = fopen("/etc/imapd.group", "r");
++    if (!groupfile) groupfile = fopen("/etc/group", "r");
++    if (groupfile) {
++       while ((grp = fgetgrent(groupfile))) {
++         if (strcasecmp(grp->gr_name, name) == 0) {
++           fclose(groupfile);
++           return grp;
++         }
++       }
++    }
++    if (groupfile) fclose(groupfile);
++    return NULL;
++}
++
+ /*
+  * Convert 'identifier' into canonical form.
+  * Returns a pointer to a static buffer containing the canonical form
+@@ -177,7 +197,7 @@ size_t len;
+      */
+     
+     if (!strncmp(retbuf, "group:", 6)) {
+-	grp = getgrnam(retbuf+6);
++	grp = fgetgrnam(retbuf+6);
+ 	if (!grp) return 0;
+ 	strcpy(retbuf+6, grp->gr_name);
+ 	return retbuf;
+@@ -224,6 +244,7 @@ static struct auth_state *mynewstate(con
+     struct passwd *pwd;
+     struct group *grp;
+     char **mem;
++    FILE *groupfile;
+ 
+     identifier = mycanonifyid(identifier, 0);
+     if (!identifier) return 0;
+@@ -240,10 +261,12 @@ static struct auth_state *mynewstate(con
+ 
+     pwd = getpwnam(identifier);
+ 	
+-    setgrent();
+-    while ((grp = getgrent())) {
++    groupfile = fopen("/etc/imapd.group", "r");
++    if (!groupfile) groupfile = fopen("/etc/group", "r");
++    if (groupfile) {
++       while ((grp = fgetgrent(groupfile))) {
+ 	for (mem = grp->gr_mem; *mem; mem++) {
+-	    if (!strcmp(*mem, identifier)) break;
++            if (!strcasecmp(*mem, identifier)) break;
+ 	}
+ 
+ 	if (*mem || (pwd && pwd->pw_gid == grp->gr_gid)) {
+@@ -253,7 +276,8 @@ static struct auth_state *mynewstate(con
+ 	    newstate->group[newstate->ngroups-1] = xstrdup(grp->gr_name);
+ 	}
+     }
+-    endgrent();
++       fclose(groupfile);
++    }
+     return newstate;
+ }
+ 

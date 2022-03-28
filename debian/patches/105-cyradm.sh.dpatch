@@ -1,0 +1,20 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 105-cyradm.sh.dpatch by Steffen Joeris <steffen.joeris@skolelinux.de>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Add some stuff to scripts
+
+@DPATCH@
+--- a/perl/imap/cyradm.sh
++++ b/perl/imap/cyradm.sh
+@@ -312,6 +312,10 @@ Delete (STORE \DELETED, EXPUNGE)
+ 
+ Administer (SETACL)
+ 
++=item C</explicit/annotation>
++
++Sets the annotation I</explicit/annotation> on I<mailbox> to I<value>.
++
+ =back
+ 
+ =item C<setinfo> I<attribute> I<value>
