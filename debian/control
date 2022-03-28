@@ -1,0 +1,152 @@
+Source: kolab-cyrus-imapd
+Section: mail
+Priority: extra
+Maintainer: Debian Kolab Maintainers <pkg-kolab-devel@lists.alioth.debian.org>
+Uploaders: Noèl Köthe <noel@debian.org>, Steffen Joeris <white@debian.org>, Mathieu Parent <sathieu@debian.org>
+Standards-Version: 3.8.3
+Build-Depends: debhelper (>= 5), quilt, tcl-dev | tcl8.3-dev, libwrap0-dev, libpam0g-dev, libdb-dev, libssl-dev, libzephyr-dev, libsasl2-dev (>= 2.1.9), comerr-dev, libsnmp-dev | libsnmp9-dev, perl, xutils-dev | xutils, flex, bison, autotools-dev, po-debconf, transfig, ghostscript | gs-gpl, groff, libkvm-dev [kfreebsd-i386], libkvm-dev [kfreebsd-amd64], heimdal-dev, libldap2-dev
+Vcs-Browser: http://svn.debian.org/wsvn/pkg-kolab/kolab-cyrus-imapd/trunk/
+Vcs-Svn: svn://svn.debian.org/pkg-kolab/kolab-cyrus-imapd/trunk/
+Homepage: http://cyrusimap.web.cmu.edu/
+
+Package: kolab-cyrus-common
+Architecture: any
+Section: mail
+Depends: postfix | mail-transport-agent, adduser (>= 3.34), dpkg (>> 1.9.0), netbase (>= 4.07), gawk, ${shlibs:Depends}, ${perl:Depends}, ${misc:Depends}
+Recommends: kolab-cyrus-imapd | kolab-cyrus-pop3d  | kolab-cyrus-admin, db4.7-util, db4.8-util, db5.1-util, db-util
+Suggests: kolab-cyrus-clients, kolab-cyrus-admin, kolab-cyrus-imapd, kolab-cyrus-pop3d, sasl2-bin, apt-listchanges (>= 2.35)
+Conflicts: suidmanager (<< 0.50), cyrus-common, cyrus21-common, cyrus22-common, cyrus-common-2.2
+Replaces: cyrus21-common, cyrus22-common, cyrus-common-2.2
+Provides: cyrus21-common, cyrus22-common, cyrus-common-2.2
+Description: Kolab Cyrus mail system - common files
+ Cyrus is an IMAP server designed to handle massive quantities of mail,
+ with a number of features not found in other IMAP implementations,
+ including support for:
+  - running the daemon without root privileges;
+  - POP3 in addition to plain IMAP;
+  - POP/IMAP-before-SMTP using DRAC;
+  - secure IMAP using SSL;
+  - server-side filtering with Sieve;
+  - mail users without login accounts;
+  - simple mail quotas;
+  - virtual domains;
+  - IPv6.
+ .
+ Cyrus doesn't support reading from and storing mail in the
+ standard mail spool. It stores mail in a separate directory in its
+ own MH-like format.
+ .
+ This package contains the common files needed by the other Cyrus
+ components. The kolab-cyrus-imapd and/or kolab-cyrus-pop3d packages are needed
+ to enable IMAP and POP3 support respectively.
+
+Package: kolab-cyrus-imapd
+Architecture: any
+Section: mail
+Depends: kolab-cyrus-common (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Provides: imap-server, cyrus21-imapd, cyrus22-imapd, cyrus-imapd-2.2
+Conflicts: imap-server, cyrus21-imapd, cyrus22-imapd, cyrus-imapd-2.2
+Replaces: cyrus21-imapd, cyrus22-imapd, cyrus-imapd-2.2
+Description: Kolab Cyrus mail system - IMAP support
+ Cyrus is an IMAP server designed to handle massive quantities of mail,
+ with a number of features not found in other IMAP implementations,
+ including support for:
+  - running the daemon without root privileges;
+  - POP3 in addition to plain IMAP;
+  - POP/IMAP-before-SMTP using DRAC;
+  - secure IMAP using SSL;
+  - server-side filtering with Sieve;
+  - mail users without login accounts;
+  - simple mail quotas;
+  - virtual domains;
+  - IPv6.
+ .
+ This package contains the IMAP (Internet Mail Access Protocol) portion
+ of the Cyrus IMAPd suite.
+
+Package: kolab-cyrus-pop3d
+Architecture: any
+Section: mail
+Depends: kolab-cyrus-common (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Provides: cyrus21-pop3d, cyrus22-pop3d, pop3-server, cyrus-pop3d-2.2
+Conflicts: cyrus21-pop3d, cyrus22-pop3d, pop3-server, cyrus-pop3d-2.2
+Replaces: cyrus21-pop3d, cyrus22-pop3d, cyrus-pop3d-2.2
+Description: Kolab Cyrus mail system - POP3 support
+ Cyrus is an IMAP server designed to handle massive quantities of mail,
+ with a number of features not found in other IMAP implementations,
+ including support for:
+  - running the daemon without root privileges;
+  - POP3 in addition to plain IMAP;
+  - POP/IMAP-before-SMTP using DRAC;
+  - secure IMAP using SSL;
+  - server-side filtering with Sieve;
+  - mail users without login accounts;
+  - simple mail quotas;
+  - virtual domains;
+  - IPv6.
+ .
+ This package contains the POP3 (Post Office Protocol) portion of the Cyrus
+ IMAPd suite.
+
+Package: kolab-cyrus-admin
+Architecture: all
+Section: mail
+Depends: kolab-libcyrus-imap-perl (>= ${source:Version}), ${misc:Depends}
+Suggests: sasl2-bin
+Conflicts: cyrus-admin, cyrus21-admin, cyrus22-admin, cyrus-admin-2.2
+Replaces: cyrus21-admin, cyrus22-admin, cyrus-admin-2.2
+Provides: cyrus21-admin, cyrus22-admin, cyrus-admin-2.2
+Description: Kolab Cyrus mail system - administration tools
+ Cyrus is an IMAP server designed to handle massive quantities of mail,
+ with a number of features not found in other IMAP implementations,
+ including support for:
+  - running the daemon without root privileges;
+  - POP3 in addition to plain IMAP;
+  - POP/IMAP-before-SMTP using DRAC;
+  - secure IMAP using SSL;
+  - server-side filtering with Sieve;
+  - mail users without login accounts;
+  - simple mail quotas;
+  - virtual domains;
+  - IPv6.
+ . 
+ This package provides the administrative tools for the Cyrus IMAPd suite.
+ It contains cyradm, which can be used to administer both local and remote
+ Cyrus mail systems, plus sieveshell (and its deprecated cousin
+ installsieve), which can be used to manage Sieve scripts.
+
+Package: kolab-cyrus-clients
+Architecture: any
+Section: mail
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Conflicts: cyrus21-clients, cyrus22-clients, cyrus-clients-2.2
+Provides: cyrus21-clients, cyrus22-clients, cyrus-clients-2.2
+Replaces: cyrus21-clients, cyrus22-clients, cyrus-clients-2.2
+Description: Kolab Cyrus mail system (test clients)
+ This package contains client tools to test the Cyrus IMAPd suite.
+ It contains the mupdatetest, sivtest, smtptest, lmtptest,
+ imtest and pop3test tools which can be used to interactively talk to 
+ a mupdate, Sieve, SMTP, LMTP, IMAP or POP3 server.
+ The clients are fully SASL-enabled for authentication.
+ .
+ For more information, please see the kolab-cyrus-common package.
+
+Package: kolab-libcyrus-imap-perl
+Architecture: any
+Depends: ${perl:Depends}, ${shlibs:Depends}, ${misc:Depends}
+Provides: libcyrus-imap-perl, libcyrus-imap-perl21, libcyrus-imap-perl22
+Conflicts: libcyrus-imap-perl, libcyrus-imap-perl21, libcyrus-imap-perl22
+Replaces: libcyrus-imap-perl21, libcyrus-imap-perl22
+Section: perl
+Description: Kolab Interface to Cyrus imap client imclient library
+ The Cyrus::IMAP module provides an interface to the Cyrus imclient
+ library.  These are primarily useful for implementing cyradm operations
+ within a Perl script; there are easier ways to implement general client
+ operations, although they may be more limited in terms of authentication
+ options when talking to a Cyrus imapd.
+ .
+ The modules that compose Cyrus::SIEVE are also included, but they are
+ undocumented upstream.
+ .
+ For more information, please see the kolab-cyrus-common package.
+

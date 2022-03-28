@@ -1,0 +1,871 @@
+kolab-cyrus-imapd (2.2.13p1-0.4) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Fix pending l10n issues. Debconf translations:
+    - Danish (Joe Hansen).  Closes: #633377
+    - Dutch; (Jeroen Schot).  Closes: #656627
+    - Polish (Michał Kułach).  Closes: #659569
+
+ -- Christian Perrier <bubulle@debian.org>  Mon, 20 Feb 2012 07:15:16 +0100
+
+kolab-cyrus-imapd (2.2.13p1-0.3) unstable; urgency=low
+
+  * Remove db versions from debian/patches/99-update-autoconf.dpatch
+    as well to fix wrong linking to db-4.7 on mipsel
+
+ -- Ondřej Surý <ondrej@debian.org>  Tue, 28 Jun 2011 12:03:46 +0200
+
+kolab-cyrus-imapd (2.2.13p1-0.2) unstable; urgency=low
+
+  * Always set RET value (thanks to Steven Kurylo for catching that)
+
+ -- Ondřej Surý <ondrej@debian.org>  Thu, 09 Jun 2011 10:07:59 +0200
+
+kolab-cyrus-imapd (2.2.13p1-0.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+    + Security upload
+    + Per maintainers request
+  * Imported Upstream version 2.2.13p1
+  * Fix CVE-2011-1926: STARTTLS plaintext command injection
+    vulnerability (VU#555316) (Closes: #629350)
+  * Update autotools script before configuring by running autoreconf
+  * Add support for linking with Berkeley DB5.1 (Closes: #621355)
+  * Build against generic libdb-dev
+  * Add automatic database upgrade script (pulled from cyrus-imapd-2.4)
+    + Don't fail the upgrade if dbX.Y-util is not found
+    + Try upgrade script in init.d script without upgraded databases
+  * Update patches for 2.2.13p1 release
+  * Filemode changes
+  * Merge patches from cyrus-imapd-2.2
+    + Replace sv_{yes,no,undef} with PL_sv_{yes,no,undef}
+      (Closes: #628632)
+    + Fix infinite loop in case of corrupted index files
+    + Some GNU Hurd build fixes
+    + Fix Perl IMAP.xs croak FTBFS
+    + Fix cyrmaster -j (janitor) segfault
+  * Build with dynamic version of com_err
+  * Cherry-pick b6fd04c4 from upstream git to fix: Corrupt quota files
+    cause data loss (Closes: #411240)
+  * Recommend all dbX.Y-util
+
+ -- Ondřej Surý <ondrej@debian.org>  Mon, 06 Jun 2011 21:59:10 +0200
+
+kolab-cyrus-imapd (2.2.13-9) unstable; urgency=medium
+
+  * Synced against cyrus-imapd package
+    - Upgrade to use BerkeleyDB 4.7. (Closes: #524427)
+    - Use quilt (Closes: #560628)
+  * Enable imaps by default
+  * Upload to unstable with urgency medium for the libkrb transition
+
+ -- Mathieu Parent <sathieu@debian.org>  Thu, 28 Jan 2010 15:40:50 +0100
+
+cyrus-imapd-2.2 (2.2.13-19) unstable; urgency=low
+
+  * Switch to BerkeleyDB 4.7, the version OpenLDAP uses.
+  * Add patch by Cristian Rigamonti to fix logcheck rules for "defaultbc
+    doesn't exist" error message. (Closes: #511030)
+  * Update Vietnamese debconf translation, thanks Clytie Siddall.
+    (Closes: #548052)
+  * Upload to unstable for the libkrb transition.
+
+ -- Christoph Berg <myon@debian.org>  Sat, 23 Jan 2010 23:35:21 +0100
+
+cyrus-imapd-2.2 (2.2.13-18) experimental; urgency=low
+
+  [ Henrique de Moraes Holschuh ]
+  * sieve/bc_eval.c (0025-upstream-fix-cve-2009-3235.dpatch):
+    update for completeness to match the patch used by the security-team:
+    use snprintf for scount, to future-proof against "int" larger than
+    64 bits.
+
+  [ Christoph Berg ]
+  * Add myself to Uploaders.
+  * Upgrade to use BerkeleyDB 4.8. (Closes: #421942)
+  * Convert to use quilt, and update the patch headers to use clean paths.
+    (Closes: #563303)
+  * Add patch by Mathieu Parent to fix conflicting getline definition.
+    (Closes: #552865)
+
+ -- Christoph Berg <myon@debian.org>  Fri, 22 Jan 2010 22:16:02 +0100
+
+kolab-cyrus-imapd (2.2.13-8) unstable; urgency=low
+
+  * Remove kolab-cyrus-common.linda 
+  * 01-fix_Makefile.in.dpatch: sync with cyrus-imapd-2.2
+    (add '@WARNERROR@ -fPIC' to CFLAGS)
+  * Disable 101-fix_Makefile.in.dpatch (redundant with above patch)
+  * README.source: describe "cyrus-to-kolab" process
+  * 26-local-getline.dpatch: Fix "FTBFS: ../makedepend/def.h:164: error:
+     conflicting types for 'getline'" (Closes: #552848)
+
+ -- Mathieu Parent <sathieu@debian.org>  Wed, 11 Nov 2009 23:26:07 +0100
+
+kolab-cyrus-imapd (2.2.13-7) unstable; urgency=high
+
+  * Setting urgency to high due to the CVE below
+  * cyrus.conf: Fix "sieve port is not available form other hosts"
+    (Closes: #549597)
+
+ -- Mathieu Parent <sathieu@debian.org>  Sun, 04 Oct 2009 19:41:13 +0200
+
+kolab-cyrus-imapd (2.2.13-6) unstable; urgency=low
+
+  * Synced against cyrus-imapd package
+  * Fix and acknowledge NMU for "CVE-2009-2632: Buffer overflow in the SIEVE
+    script component" (Closes: #547712)
+  * Added me as uploader
+  * debian/control:
+    - Prefix packages descriptions by "Kolab " 
+    - Conflicts, Replaces and Provides corresponding cyrus-imapd-2.2 packages
+    - Added Recommends and Suggests (based on cyrus-imapd-2.2) 
+  * Get closer to cyrus-imapd-2.2: cyrus.conf 
+
+ -- Mathieu Parent <sathieu@debian.org>  Sun, 04 Oct 2009 14:56:07 +0200
+
+cyrus-imapd-2.2 (2.2.13-17) unstable; urgency=high
+
+  * Security Update: CVE-2009-3235:
+    Multiple stack-based buffer overflows in the Sieve parsing code,
+    patches taken from upstream CVS (closes: #547947)
+
+ -- Henrique de Moraes Holschuh <hmh@debian.org>  Tue, 22 Sep 2009 17:17:17 -0300
+
+cyrus-imapd-2.2 (2.2.13-16) unstable; urgency=high
+
+  * Justification for high urgency: Get security update from -15 into
+    testing as fast as possible since -15 was removed before it could
+    migrate.
+  * Fix build dependency on tcl-dev (keeping old tcl8.3-dev to make
+    backports easier) (Closes: 545281) 
+  * Fix up README.Debian.database (Closes: 543293)
+  * Build against newer cyrus-sasl (Closes: 527495,528468)
+  * Fix cyrus-common postinst to only run makedirs if a new upstream
+    is installed (Closes: 545512), add a README to note that the
+    postinst needs to be changed with each new upstream
+  * Fix find syntax in cyrus-makedirs (Closes: 545554)
+
+ -- Sven Mueller <sven@debian.org>  Tue, 08 Sep 2009 10:04:14 +0200
+
+cyrus-imapd-2.2 (2.2.13-15) unstable; urgency=high
+
+  [Security Update]
+  * Fixes buffer overflow in SIEVE script handling -> high urgency
+    Problem has no CVE tag assigned, is not yet announced by upstream,
+    but upstream patch is in public CVS -> not embargoed.
+
+  [Sven Mueller]
+  * change example script mbox2cyrus to remove bashisms (Closes: #489558,
+    thanks to Andres Mejia)
+  * change Makefile so that no (intended) non-phony target invokes a phony
+    target. Also remove empty lines inside rules or replace them by comment
+    lines
+  * Added patches for translation updates as provided by Christian Perrier
+    (see below)
+  * update cyrus-makedirs to be more performant (using xargs to call chmod
+    et al. instead of using find -exec, this avoids lots of forks)
+  * remove build dependency alternate libsnmp5-dev (not even in oldstable
+    anymore), add alternative libsnmp-dev (as in stable)
+  * update standards-version to 3.8.3.0
+    - add README.source
+    - remove version from perl build dependency
+
+  [ Christian Perrier ]
+  * Debconf templates and debian/control reviewed by the debian-l10n-
+    english team as part of the Smith review project. Closes: #523989
+  * [Debconf translation updates]
+    - Swedish. Closes: #524090
+    - Czech. Closes: #524092
+    - Japanese. Closes: #524121
+    - Russian. Closes: #525704
+    - Portuguese. Closes: #525912
+    - German. Closes: #525913
+    - Galician. Closes: #524267
+    - Italian. Closes: #524312
+    - French. Closes: #524954
+    - Finnish. Closes: #526182
+    - Bokmål, Norwegian. Closes: #526231
+    - Spanish. Closes: #526358
+    - Basque. Closes: #530856
+
+ -- Sven Mueller <sven@debian.org>  Fri, 04 Sep 2009 09:58:54 +0200
+
+kolab-cyrus-imapd (2.2.13-5) unstable; urgency=low
+
+  * Synced against cyrus-imapd package (closes: #475128)
+
+ -- Peter Eisentraut <petere@debian.org>  Sat, 26 Apr 2008 11:54:09 +0200
+
+cyrus-imapd-2.2 (2.2.13-14) unstable; urgency=low
+
+  [ Sven Mueller ]
+  * Fix a problem in lib/Makefile.in with multi-word CCs
+    (problem found by Uwe Hermann's try at building all Debian packages with
+    Open64 - kudos to him for this nice little project)
+  * Update portoguese debconf translations (Closes: #439405)
+  * Add Homepage field to debian/control
+  * Use official VCS fields to document repository
+
+  [ Benjamin Seidenberg ]
+  * Fix the finds in cyrus-makedirs (which weren't working properly) to use
+    xargs instead of -exec. (Closes #442491)
+
+  [ Sven Mueller ]
+  * Fix control file (lintian warning: substvar-source-version-is-deprecated)
+  * Check for necessary changes regarding policy version 3.7.3.0, there where
+    none, so upgrading debian/control
+  * Fix init script LSB header (closes: 470110)
+  * Update logcheck rules and the rule filenames (closes: 473526)
+  * Add finnish translation (Closes: 473792)
+  * Update galician translation (Closes: 473886)
+  * Add basque translation (Closes: 473914)
+  * add norwegian bokmal translation (Closes: 474360)
+  * Add patch to add sasl_{minimum,maximum}_layer details can be found
+    in libsasl documentation. (Closes: 402814)
+
+ -- Sven Mueller <sven@debian.org>  Tue, 15 Apr 2008 12:37:26 +0200
+
+kolab-cyrus-imapd (2.2.13-4) unstable; urgency=low
+
+  [ Benoit Mortier ]
+  * Changed the order of the admins in cyrus.conf
+
+  [ Peter Eisentraut ]
+  * Upgrade to Kolab 2.1
+    - Added imapd.folderchar.patch
+  * Synced against cyrus-imapd package
+  * Changed control fields XS-Vcs-* to Vcs-*
+  * Added 170-ldap-deprecated.dpatch to define LDAP_DEPRECATED because
+    deprecated LDAP API is used (closes: #463430)
+
+ -- Peter Eisentraut <petere@debian.org>  Fri, 22 Feb 2008 15:33:56 +0100
+
+cyrus-imapd-2.2 (2.2.13-13) unstable; urgency=low
+
+  * Change messages and chown's in cyrus-makedirs (Use find instead)
+    (Closes: #404446, 411529)
+  * Fix logcheck rule to ignore nonexistant sieve scripts (Closes #416826)
+  * Update README.exim to something more debian specific. Thanks: Romain
+    Chantereau <romain@mezimail.com> and Steve Kemp <skx@debian.org>.
+    (Closes: #395504)
+  * Update README.Debian.databases. Along with other fixes from a long time
+    ago, this addresses almost all of the issues raised in an upgrade report.
+    (Closes: #409945)
+  * Add a patch by Andrew Morgan <morgan@orst.edu> that adds a config option
+    to disable referrals from frontends to backends
+
+ -- Benjamin Seidenberg <benjamin@debian.org>  Fri, 22 Jun 2007 16:50:45 +0100
+
+cyrus-imapd-2.2 (2.2.13-12) unstable; urgency=low
+
+  * The "This-would-be-a-lot-easier-if-Ross-Boylan-used-courier" Release
+
+  [ Sven Mueller ]
+  * Add rules to logcheck.violations.ignore, eliminating "SQUAT failed"
+    generic error message as far as logcheck is concerned.
+  * Fix bug number in README.Debian (151295, not 151925) (Closes: #426334)
+
+  [ Benjamin Seidenberg ]
+  * Remove a redundant part of patches//13-master_process_handling.dpatch
+    which causes a double free. (Closes: #425844, #429164)
+  * Add information about tls_[service]_* options changing in UPGRADE.Debian.
+    (Closes: #408503)
+
+ -- Benjamin Seidenberg <benjamin@debian.org>  Mon, 18 Jun 2007 15:38:01 -0400
+
+kolab-cyrus-imapd (2.2.13-3) unstable; urgency=low
+
+  * Synced against cyrus-imapd package (closes: #410347, #416914)
+  * Added XS-X-Vcs-Browser field
+
+ -- Peter Eisentraut <petere@debian.org>  Tue, 29 May 2007 13:24:37 +0200
+
+cyrus-imapd-2.2 (2.2.13-11) unstable; urgency=low
+
+  * Fix a bug in cyrus-common-2.2 postrm script:
+    Even when a package Depends on debconf, it is not guaranteed to be there
+    when postrm is called. (Closes: #416739)
+  * Assume removal of spools is not desired if debconf isn't available (least
+    surprise / least chance of data loss principle).
+  * Add Xs-Vcs-Browser and Xs-Vcs-Svn control fields for the PTS.
+  * Fix a number of small issues with the 64bit quota patch.
+  * update automake/autoconf patch with latest autotools-dev and
+    automake/autoconf packages from unstable.
+  * Add optional patch which allows uploads of messages with "From " headers.
+    Taken from fastmail.fm patchset.
+  * Add upstream patch to avoid sending empty literal responses.
+  * Add upstream patch to sort illegal dates before legal ones.
+  * Add galician debconf translation (Closes: #412809)
+  * Add portuguese debconf translation (Closes: #410964)
+  * Add a little more detail to the squatter manpage (Closes: #395063)
+  * Add dependency on heimdal-dev, add check to debian/rules wether GSSAPI is
+    used (Closes: #423970)
+
+ -- Sven Mueller <sven@debian.org>  Fri, 18 May 2007 13:05:58 +0200
+
+kolab-cyrus-imapd (2.2.13-2) unstable; urgency=high
+
+  * Synced against cyrus-imapd package
+
+ -- Peter Eisentraut <petere@debian.org>  Wed, 10 Jan 2007 15:18:45 +0100
+
+cyrus-imapd-2.2 (2.2.13-10) unstable; urgency=high
+
+  * High urgency due to #400747
+  
+  [ Sven Mueller ]
+  * Update README.Debian.simpleinstall (Closes: #395250)
+  * Upstream change: applied RFC4314 READ-ONLY logic
+
+  [ Benjamin Seidenberg ]
+  * Add notice about lmtp overquota configuration option rename to
+    UPGRADE.Debian (Closes: #400645)
+  * Disable upstream patch 0019 due to bad sasl interactions (Closes: #400747) 
+
+ -- Benjamin Seidenberg <benjamin@debian.org>  Sat,  9 Dec 2006 10:03:38 -0500
+
+kolab-cyrus-imapd (2.2.13-1) unstable; urgency=low
+
+  * Synced against cyrus-imapd package
+    - New descriptions (closes: #382882)
+    - Obsoletes 110-Admin.pm.dpatch; the changes are now in
+      45-kolab2-annotations.dpatch
+    - Obsoletes 120-kolab-Shell.pm.dpatch; equivalent changes are now in
+      65-sieveshell-enhancements.dpatch
+    - Debconf templates now follow the Developer's Reference better
+      (closes: #362038)
+  * Removed -v option from dpatch call because it's broken (see #396738)
+
+ -- Peter Eisentraut <petere@debian.org>  Wed,  8 Nov 2006 10:37:47 +0100
+
+cyrus-imapd-2.2 (2.2.13-9) unstable; urgency=high
+
+  * The "Benjamin made it in time for etch" release.
+  * High urgency upload with simple fixes for Etch
+
+  [ Henrique de Moraes Holschuh ]
+  * Prevent cronjobs and initscript from working when another version
+    of Cyrus IMAPD is installed and 2.2 is in removed but not purged
+    state (Closes: #393596)
+
+ -- Benjamin Seidenberg <benjamin@debian.org>  Wed, 25 Oct 2006 13:39:08 -0400
+
+cyrus-imapd-2.2 (2.2.13-8) unstable; urgency=medium
+
+  [ Sven Mueller ]
+  * Remove unneeded drac dependency
+  * New vietnamese translation (thanks to Clytie Siddall, Closes: #383281)
+  * New russian translation (thanks to Yuri Kozlov, Closes: #383217)
+  * Updated dutch translation (thanks to Kurt De Bree, Closes: #384870)
+  * Updated logcheck rules a bit more, thanks to Ross Boylan (Closes: #384265)
+  * Add spanish debconf translation thanks to César Gómez Martín.
+  * Add patch to fix FTBFS on GNU/kFreeBSD thanks to Petr Salinger.
+    (Closes: #388242)
+  * Run autoconf to generate update configure script after above patch was
+    applied to configure.in
+  * Add patch by Ben Poliakoff which fixes an inability to set annotations
+    from IMAP::Admin perl module (Closes: #389597)
+    urgency=medium because of this bug. Might have been medium, but the
+    combination of this bug and the one below seems severe enough for high.
+    It makes the package unusable to anyone using annotations (guess is 40%
+    of new installs).
+  * Update dutch debconf translation (Closes: #389783)
+  * Fix a problem with repeated builds from the same tree.
+  * Add upstream patch to imtest.c prefixing raw client responses with C:
+
+  [ Henrique de Moraes Holschuh ]
+  * Update pt_BR debconf translation
+
+  [ Benjamin Seidenberg ]
+  * Update date span in debian/copyright
+  * Fix mistake in init script, ! check_status instead of !check_status.
+    Thanks to Farzad FARID
+  * Fix DOS encoding on several files in debian/ (Closes: #391092)
+    Thanks to Farzad FARID
+  * Changed my email in debian/control 
+
+ -- Benjamin Seidenberg <benjamin@debian.org>  Mon, 16 Oct 2006 19:41:37 -0400
+
+cyrus-imapd-2.2 (2.2.13-7) unstable; urgency=low
+
+  * The "Bad translations in the middle of the night" release.
+  * Update czech translation by Martin ín <martin.sin@zshk.cz>
+    (Closes: #382775,#383226)
+  * Add logcheck ignore line for lmtp delivery log entries (Closes: #382942)
+  * Update imapd.conf and cyrus.conf to reflect the configurable IDLE patch
+    applied since 2.2.13-5. (Closes: #382938)
+  * Update a debconf question so that it doesn't ask in first persion. Fixes a
+    lintian warning or even two.
+  * Fix delprune event in cyrus.conf to use cyr_expire (Closes: #383015)
+  * Add swedish translation by Daniel Nylander <po@danielnylander.se>
+  * Fix some mistakes in the german translation, most corrections by Holger
+    Wansing <linux@wansing-online.de>
+  * Update italian translation by Cristian Rigamonti <cri@linux.it>
+  * Correct README.Debian.database regarding number of .seen and .sub
+    databases. (Closes: #383484)
+  * Change wording regarding installsieve in README.Debian. (Closes: #383485)
+  * Add a "WARNING" prefix to the error message about missing sieve scripts.
+    (Closes: #383640)
+  * Add a logcheck ignore clause for sieve redirects. (Closes: #384265)
+  * Fix an implicit pointer conversion in imap/global.c (Closes: #384279)
+  * Update french translation thanks to Philippe Batailler and the
+    debian-l10n-french mailing list. (Closes: #384288)
+  * added 'sieve_allowreferrals' option which controls whether timsieved
+    issues referrals (default) or proxies (by murch@andrew.cmu.edu)
+  * update japanese debconf translation, thanks to Hideki Yamane
+    (henrich@samba.gr.jp)
+  * Update logcheck rules (thanks to Paul Traina <reportbug@st04.pst.org>)
+    (Closes: #387180)
+  * Add a patch to change a log message when a user has no sieve file.
+
+ -- Sven Mueller <sven@debian.org>  Thu, 14 Sep 2006 18:58:49 +0200
+
+cyrus-imapd-2.2 (2.2.13-6) unstable; urgency=low
+
+  * Fix a problem in cyrus-common-2.2 preinst 
+
+ -- Sven Mueller <sven@debian.org>  Thu, 10 Aug 2006 03:58:58 +0200
+
+cyrus-imapd-2.2 (2.2.13-5) unstable; urgency=low
+
+  * The "Need to clean the Windows" release
+
+    [ Benjamin Seidenberg ]
+  * Update the following documentation:
+    - README.Debian
+    - README.Debian.database
+    - README.Debian.postfix
+    - README.Debian.
+    (Closes: #378520, #369882)
+  * Bump debian policy to version 3.7.2 (No changes required)
+  * Move cyr_expire to /usr/sbin as this is used in cyrus.conf.
+    Thanks to Alexander Turic <alexander@turcic.com>. (Closes: #380595)
+  * Rename cron script to cyrus22 since dots aren't allowed
+    (Closes: #382069)
+
+  [ Sven Mueller ]
+  * Remove outdated entry about netnews removal from README.Debian
+    (Closes: #378519)
+  * Add --no-create-home to adduser arguments in cyrus-common2.2's
+    postinst script. (Closes: #378518)
+  * Modify debian/rules to once again create a meaningful
+    cyrus-db-types.txt file (Closes: #366957)
+  * Improve imapd.conf documentation to show how service specific options can
+    be given. Also update packaged imapd.conf to reflect 2.2 syntax and
+    behaviour. (Closes: #379881)
+  * Use ssl-cert and reference system-wide ssl certificates in imapd.conf,
+    leaving the service specific ssl certs as-is.
+  * Update imapd.conf documentation to clarify behaviour of allowplaintext in
+    combination with sasl_mech_list.
+  * Sync with 2.2 CVS tree from upstream, including a few documentation fixes
+    and a fix returning empty strings for empty message parts instead of NULL
+  * Use configurable idle patch from OndÅ~Yej SurÃ½
+  * Add some more options to /etc/default/cyrus2.2 and use them in the init
+    script, including a generic OPTIONS variable to allow setting of any
+    commandline option for cyrmaster. (Closes: #382061)
+  * Add logic in cyrus-common-2.2 preinst/postrm scripts to rename the
+    cron.daily script. Supplements change by Benjamin Seidenberg, closing
+    #382069.
+
+ -- Sven Mueller <sven@debian.org>  Thu, 10 Aug 2006 03:17:27 +0200
+
+cyrus-imapd-2.2 (2.2.13-4) unstable; urgency=low
+
+  [ Benjamin Seidenberg ]
+  * Switch from dh_movefiles (deprecated) to dh_install
+
+  [ Sven Mueller ]
+  * Integrate 4 upstream CVS updates/fixes:
+    - Upstream fix: only free() the backend struct if we allocated it
+      (don't free cached connections)
+    - remove limit on the size of mailbox files that can be received by UNDUMP
+      (write file directly to disk rather than reading the literal into
+      memory)
+    - better logging to facilitate message tracking (Wes Craig
+      <wes@umich.edu>)
+    - remove redundant check for wildcards in mailbox names (Wes Craig
+      <wes@umich.edu>)
+  * Move expiry from ctl_deliver to cyr_expire as suggested by upstreams
+    upgrade information.
+  * Add upstream patch to fix a small issue with linking and libRSAglue
+  * Add upstream patch to compile with MIT krb5 1.4.3 (Philip Guenther
+    <guenther@sendmail.com>)
+  * Add upstream patch to allow reporting of mailbox sizes above 4GB
+  * Add upstream patch to fix a documentation error in imapoptions
+  * Add patch to fix some compiler warnings about casts from pointer to
+    integer of different size
+  * Change the init script to actuall print some information when called with
+    the "status" argument
+  * Add upstream typo fixes of the day. See 0016-upstream-fix-typos for
+    reference to upstream CVS
+
+  [ Benjamin Seidenberg ]
+  * Fix typos in UPGRADE.Debian (Closes: #368675)
+  * Fix link in doc/html/readme.html (Closes: #368676)
+  * Add upstream patch to fix POP locking when reconstructing
+
+ -- Sven Mueller <sven@debian.org>  Wed, 28 Jun 2006 22:21:51 +0200
+
+cyrus-imapd-2.2 (2.2.13-3) unstable; urgency=high
+
+  [ Sven Mueller ]
+  * [Security] Add upstream patch to disallow user probes
+  * Add upstream patch to fix dump/undump of remote mailboxes (ctl_mboxlist)
+  * Add upstream patch to allow ACL removal for invalid IDs
+  * Add upstream patch to properly handle timezones and DST in fetchnews
+  * Urgency=high for both security fix and patch to dump/undump bug which
+    makes package unusuable in many supported setups
+
+  [ Benjamin Seidenberg ]
+  * Add build dependency on libkvm-dev for kfreebsd (Closes: #366113)
+
+ -- Sven Mueller <debian@incase.de>  Fri,  5 May 2006 18:01:41 +0200
+
+cyrus-imapd-2.2 (2.2.13-2) unstable; urgency=low
+
+  [ Sven Mueller ]
+  * Apply fix from upstream CVS to imap/backend.c (Closes: #365629) 
+
+ -- Sven Mueller <debian@incase.de>  Tue,  2 May 2006 22:14:03 +0200
+
+cyrus-imapd-2.2 (2.2.13-1) unstable; urgency=low
+
+  [ Sven Mueller ]
+  * Switch to new upstream release (2.2.13)
+  * Fix spelling mistake in debian/control (Closes: #363329)
+  * Fix logcheck rule (Closes: #364835)
+
+ -- Sven Mueller <debian@incase.de>  Sat, 29 Apr 2006 22:31:42 +0200
+
+cyrus-imapd-2.2 (2.2.12-5) unstable; urgency=low
+
+  [ Sven Mueller ]
+  * Add example entries for squatter to cyrus.conf (Closes: #355303)
+  * Fix URLs in README.sendmail (Closes: #355771)
+  * Remove STDERR redirection from cyrus-common-2.2 postinst call to adduser
+
+  [ Benjamin Seidenberg ]
+  * Default to lmtp_downcase_rcpt: yes for compliance with RFC 2821
+    (Closes: #357040)
+
+ -- Sven Mueller <debian@incase.de>  Fri, 31 Mar 2006 20:11:54 +0200
+
+cyrus-imapd-2.2 (2.2.12-4) unstable; urgency=low
+
+  [ Benjamin Seidenberg ]
+  * Change maintainer to mailing list
+  * Remove multiple provides: lines in cyrus-nntpd-2.2 (Closes: #352240)
+  * Add lintian override for CVS dirs in source tarball, we need to hit
+    upstream with a cluebat for this.
+  * Move all Build-Depends-Indep dependencies to Build-Depends because of the
+    way debian/rules invokes this target, they are not installed, fixes FTBFS.
+    (Closes: #352775, #352779)
+
+  [ Sven Mueller ]
+  * Disable DRAC authentication
+  * Fix reference in debian/po/POTFILES.in (Closes: #352948)
+
+  [ Ondřej Surý ]
+  * Upload to unstable.
+
+ -- Ondřej Surý <ondrej@debian.org>  Wed, 15 Feb 2006 22:42:35 +0100
+
+cyrus-imapd-2.2 (2.2.12-3) unstable; urgency=low
+
+  [ Sven Mueller ]
+  * Add a script which helps downloading, editing and re-uploading
+    sieve scripts
+  * Add a patch to fix db_err callback prototype when building against
+    Berkeley DB 4.3 or newer
+
+  [ Henrique de Moraes Holschuh ]
+  * UPGRADE.Debian: warn of dangerous problem in cyrus-imapd from sarge,
+    which would cause data loss when UPGRADE.Debian instructions were
+    followed.
+
+  [ Benjamin Seidenberg ]
+  * Changed debian/control so that the doc package is in section doc to match
+    ftpmaster override.
+
+  [ Ondřej Surý ]
+  * Updated and renamed logcheck rules.
+  * Upload to unstable.
+
+ -- Ondřej Surý <ondrej@debian.org>  Mon, 13 Feb 2006 14:16:44 +0100
+
+cyrus-imapd-2.2 (2.2.12-2) experimental; urgency=low
+
+  [ Henrique de Moraes Holschuh ]
+  * Modify the Debian default TLS cipher list to use only secure ciphers
+    suitable for imap/pop/smtp/lmtp TLS, and add an explanation
+
+  [ Benjamin Seidenberg ]
+  * Rewrote descriptions to all refer to cyrus-common-2.2
+  * Changed all package names in all required files within /debian to reflect
+    the new naming scheme
+  * Deleted two files in /usr/lib/cyrus in the purge target of postrm so that
+    this folder is deleted correctly
+  * Changed policy version to 3.6.2
+  * Added upstream patchset 6662:
+    imap/spool.c:1.7->1.8: don't catch our own NULL (off by one error)
+    (Closes: #342314)
+
+  [ Sven Mueller ]
+  * Add a small sed call to debian rules to work around libsnmp[59]-dev
+    problem which causes an unneccesary "-lsensors" in master/Makefile,
+    resulting in an unnessary build dependency on libsensors-dev.
+    Proper fix has to go into netsmp packages, also we need to properly use
+    Debian's libtool. (Closes: #341580)
+  * Add czech translation (thanks to Martin Sin and the debian-l10n-czech
+    team) with a spelling correction from Ondrej Surý.
+  * Adjust kolab2 annotation patch according to patch from Steffen Joeris
+    (Closes: #347527)
+  * Apply patch fixing some error messages in Shell.pm (Closes: #347658)
+
+  [ Ondřej Surý ]
+  * Upload to experimental.
+
+ -- Ondřej Surý <ondrej@debian.org>  Fri, 13 Jan 2006 11:52:58 +0100
+
+kolab-cyrus-imapd (2.2.12-8) unstable; urgency=medium
+
+  [ Steffen Joeris ]
+  * Include README.Debian.debug from original cyrus package
+    to get some debug information (Closes: #368124)
+    Thanks to Tom Fernandes
+  * Include Czech translation (Closes: #382236)
+    Thanks to  Martin Sín
+  * Updated Dutch translation (Closes: #377255, #388123)
+    Thanks to Kurt De Bree
+
+  [ Noèl Köthe ]
+  * corrected wrong patch for berkley db usage. thx Chris Halls,
+    Florian Zschocke (Closes: #369705, #383172)
+
+  [ Peter Eisentraut ]
+  * Added README.postfix from original cyrus package
+  * Include original README.Debian combined with our additional note
+  * Added watch file from original cyrus package
+  * Updated Japanese translation (Closes: #393213)
+    Thanks to Hideki Yamane
+  * Added XS-X-Vcs-Svn field
+  * Fixed Debhelper build dependency version
+
+ -- Peter Eisentraut <petere@debian.org>  Wed,  1 Nov 2006 12:48:56 +0100
+
+kolab-cyrus-imapd (2.2.12-7)  unstable; urgency=low
+
+  * debian/rules removed unneeded pts configure options
+  * corrected spelling typo (closes: Bug#364189)
+
+ -- Noèl Köthe <noel@debian.org>  Tue, 09 May 2006 03:41:57 +0200
+
+kolab-cyrus-imapd (2.2.12-6)  unstable; urgency=low
+
+  [ Steffen Joeris ]
+
+  * fix init-script to let kolab-cyrus-imapd start
+    (Closes: 358805) Thanks to Marvin Stark
+  * update po/POTFILES.in to make sure that debconf-updatepo
+    is working (Closes: #359696) Thanks to Thomas Huriaux
+
+  [ Noèl Köthe ]
+
+  * add more information about popminpoll option in imapd.conf
+  * remove ptclient stuff because its not included upstream
+
+ -- Noèl Köthe <noel@debian.org>  Wed, 05 Apr 2006 18:47:32 +0200
+
+kolab-cyrus-imapd (2.2.12-5)  unstable; urgency=low
+
+  * upload to sid. closes: Bug#347242
+  * added ldap_version: 3 to imapd.conf
+  * disable popminpoll in imapd.conf because this makes no sense with
+    kolab because this will result in errors at the client
+  * add ptloader for ldap groups to imapd.conf and cyrus.conf
+
+ -- Noèl Köthe <noel@debian.org>  Tue, 21 Mar 2006 23:13:24 +0100
+
+kolab-cyrus-imapd (2.2.12-4)  experimental; urgency=low
+
+  * enabled --with-auth=pts and --with-pts=ldap
+  * install the new ptdump, ptexpire and ptloader binaries into
+    kolab-cyrus-imapd
+  * add fixing patches from Tobias König <tobias.koenig@credativ.de>
+    151-cyrus_kolab_ldap.patch
+    152-cyrus_auth_pts.patch
+  * add LDAP configure options to imapd.conf
+  * enable pop in default cyrus.conf
+
+ -- Noèl Köthe <noel@debian.org>  Sat, 04 Mar 2006 23:56:28 +0100
+
+kolab-cyrus-imapd (2.2.12-3) experimental; urgency=low
+
+  [ Noèl Köthe ]
+  
+  * add missing config files to the package
+
+  [ Steffen Joeris ]
+  
+  * remove build-indeps and move them to build-depends
+    now the package will be build on the buildds
+
+ -- Noèl Köthe <noel@debian.org>  Mon, 20 Feb 2006 19:58:21 +0100
+
+kolab-cyrus-imapd (2.2.12-2) experimental; urgency=low
+
+  * Build for kolab, based on packaging from cyrus22
+    special thanks to cyrus-maintainers
+    See ITP #180634 or Kolab on alioth
+      https://alioth.debian.org/projects/pkg-kolab/
+
+   [ Steffen Joeris ]
+
+   * conflicts against cyrus22 package
+   * drop pam, because we use saslauthd and direclty ldap
+   * new build-depends mainly for ldap
+   * include patches from Kolab usptream
+     ( 100-kolab-imapd, 105-cyradm.sh, 110-Admin.pm, 120-kolab-Shell.pm,
+       130-kolab-imapd-goodchars, 140-kolab-ldap, 150-kolab-auth_unix)
+   * remove -doc package, because we can use the cyrus22-doc package
+   * remove -dev package because we don't need it
+   * drop nntp because there is no need for it with kolab
+   * remove various README files, because they only belong to the
+     cyrus22 package
+   * wrote README.Debian
+   * add lintian override for source
+   * change various pathes to make kolab- packages
+   * change pathes in scripts to make it kolab compatible
+   * update copyright
+
+   [ Noèl Köthe ]
+
+   * change configurations
+
+ -- Noèl Köthe <noel@debian.org>  Wed, 01 Feb 2006 11:54:53 +0100
+
+cyrus22-imapd (2.2.12-1) experimental; urgency=low
+
+  [ Benjamin Seidenberg ]
+  * Revised to build against pristine upstream sources.
+  [ Sven Mueller ]
+  * Fixed a discrepancy between documentation and actual behaviour of the
+    "dracinterval" imapd.conf option. Documentation always said the default
+    would be 0, while the default was actually 5.
+  [ Henrique de Moraes Holschuh ]
+  * Change build-dependency from libsnmp4.2-dev (ucd snmp) to libsnmp9-dev |
+    libsnmp5-dev (netsnmp), so that it works right in sid/etch and sarge
+  * Upload to experimental
+
+ -- Henrique de Moraes Holschuh <hmh@debian.org>  Tue, 29 Nov 2005 02:10:21 -0200
+
+cyrus22-imapd (2.2.12-0.9) unstable; urgency=low
+
+  [ Sven Mueller ]
+  * Add patch to be compatible with BerkeleyDB 4.3
+  * Add patch to fix TLS/SSL shutdown in timsieved
+
+ -- Sven Mueller <debian@incase.de>  Mon, 14 Nov 2005 14:56:20 +0100
+
+cyrus22-imapd (2.2.12-0.8) unstable; urgency=low
+
+  [ Sven Mueller ]
+  * Fix a problem in the init scripts new status check, found by Benjamin
+    Seidenberg.
+
+ -- Sven Mueller <debian@incase.de>  Sun, 13 Nov 2005 20:14:05 +0100
+
+cyrus22-imapd (2.2.12-0.7) unstable; urgency=low
+
+  [ Sven Mueller ]
+  * Switch most deletions of autogenerated files to use debian/deletable.files
+  * Switch all remaining patches to dpatch so that the .diff.gz should now be
+    clean except for the files in debian/.
+
+ -- Sven Mueller <debian@incase.de>  Thu, 10 Nov 2005 16:06:09 +0100
+
+cyrus22-imapd (2.2.12-0.6) unstable; urgency=low
+
+  [ Sven Mueller ]
+  * Added kolab2 annotation patch as proposed by Christoper Sacca
+  * Added a small patch to lower the minimum pop3 timeout to 1 minute.
+    The default is still at 10 minutes. I also added some documentation to make
+    it clear to admins that it is _not_ recommended to lower the value to less
+    than 10 minutes (because that is what the standard says it should be at).
+    I needed this change for use at my workplace though. The patch is disabled
+    by default.
+  * Patched init script to support everything LSB 3.0 asks for, including the
+    "right" return codes, as far as we can.
+  * Add patch to enhance sieveshell a bit:
+    - Add --execfile parameter to read commands from a file
+    - Add --password parameter to pass the users parameter on the commandline
+    - Add code to return with a non-zero exit code if the last command
+      executed failed for some reason.
+
+  [ Ondřej Surý ]
+  * Add 64bit quota dpatch.
+  * Rerun autoconf and add result as dpatch. 
+
+ -- Sven Mueller <debian@incase.de>  Fri, 23 Sep 2005 18:55:57 +0200
+
+cyrus22-imapd (2.2.12-0.5) unstable; urgency=low
+
+  * Update upgrading information
+  * Include masssievec in cyrus22-common
+  * Applied patch from Raphaël 'SurcouF' Bordet <surcouf@debianfr.net> to add
+    nntp support again.
+  * Eliminate an unused variable from tools/masssievec to get rid of perl
+    warning.
+  * Update Recommends and Suggests for cyrus22-common as suggested by HMH
+  * Move several patches from patching the source directly to patching through
+    the use of dpatch
+
+ -- Sven Mueller <debian@incase.de>  Tue, 24 May 2005 23:13:18 +0200
+
+cyrus22-imapd (2.2.12-0.4) unstable; urgency=low
+
+  * Fix usage message in deliver.c to reflect Debian naming of (cyr)deliver,
+    (cyr)quota and (cyr)reconstruct
+  * Document the defaultdomain setting a bit better (hopefully)
+  * fix deletion of debian/cyrus-hardwired-config.txt during cleanup
+  * build both arch-dependend and arch-independend parts when debian/rules is
+    called for the build target
+  * Add Sven Mueller to the list of uploaders
+
+ -- Sven Mueller <debian@incase.de>  Fri, 29 Apr 2005 00:14:04 +0200
+
+cyrus22-imapd (2.2.12-0.3) unstable; urgency=low
+
+  * Add a README which contains the configure options used to
+    compile the package. The README is auto-generated by debian/rules
+  * cyrus22-clients needs to conflict with cyrus21-clients
+  * cyrus22-common needs to conflict with cyrus21-common 
+  * Add a guess of what the problem might be to the set_cert_stuff failure
+    message
+  * Update a few Replaces:, Provides: and Conflicts: lines in debian/control
+
+ -- Sven Mueller <debian@incase.de>  Thu, 24 Mar 2005 12:26:27 +0100
+
+cyrus22-imapd (2.2.12-0.2) unstable; urgency=low
+
+  * Fix some more perl executable paths
+  * clean up debian directory a bit
+  * install sievec with cyrus22-common
+  * install mbexamine with cyrus22-common
+  * install smmapd with cyrus22-common
+  * install cyr_expire with cyrus22-common
+  * install installsieve with cyrus22-admin
+
+ -- Sven Mueller <debian@incase.de>  Tue, 22 Mar 2005 14:48:33 +0100
+
+cyrus22-imapd (2.2.12-0.1) unstable; urgency=low
+
+  * Initial revision of cyrus22-imapd package
+    - debian packaging taken from cyrus21-imapd_2.1.18-1
+  * Add/fix imapd.conf info regarding virtual domains
+  * Add DRAC support (i.e. apply DRAC patch from /contrib)
+  * Add syncldap2cyrus.pl script from #260833 (a cyrus21 bug)
+
+ -- Sven Mueller <debian@incase.de>  Fri, 18 Mar 2005 13:34:09 +0100
+

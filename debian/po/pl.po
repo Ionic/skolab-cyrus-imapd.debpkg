@@ -1,0 +1,88 @@
+# Translation of kolab-cyrus-imapd debconf templates to Polish.
+# Copyright (C) 2012
+# This file is distributed under the same license as the kolab-cyrus-imapd package.
+#
+# Michał Kułach <michal.kulach@gmail.com>, 2012.
+msgid ""
+msgstr ""
+"Project-Id-Version: kolab-cyrus-imapd\n"
+"Report-Msgid-Bugs-To: kolab-cyrus-imapd@packages.debian.org\n"
+"POT-Creation-Date: 2012-02-11 08:39+0100\n"
+"PO-Revision-Date: 2012-02-11 19:40+0100\n"
+"Last-Translator: Michał Kułach <michal.kulach@gmail.com>\n"
+"Language-Team: Polish <debian-l10n-polish@lists.debian.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Lokalize 1.2\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
+"|| n%100>=20) ? 1 : 2);\n"
+
+#. Type: error
+#. Description
+#: ../kolab-cyrus-common.templates:2001
+msgid "Modified database backends"
+msgstr "Zmodyfikowano backendy bazy danych"
+
+#. Type: error
+#. Description
+#: ../kolab-cyrus-common.templates:2001
+msgid ""
+"Comparison between /usr/lib/cyrus/cyrus-db-types.txt and /usr/lib/cyrus/"
+"cyrus-db-types.active shows that database backends for Cyrus IMAPd have been "
+"changed."
+msgstr ""
+"Porównanie plików /usr/lib/cyrus/cyrus-db-types.txt i /usr/lib/cyrus/cyrus-"
+"db-types.active wykazało, że zmienił się backend bazy danych Cyrus IMAPd."
+
+#. Type: error
+#. Description
+#: ../kolab-cyrus-common.templates:2001
+msgid ""
+"This means that those databases for which the database backends changed "
+"might need to be converted manually to the new format, using the cvt_cyrusdb"
+"(8) utility."
+msgstr ""
+"Oznacza to, że wspomniane bazy danych muszą zostać skonwertowane manualnie "
+"do nowego formatu, przy użyciu narzędzia cvt_cyrusdb(8)."
+
+#. Type: error
+#. Description
+#: ../kolab-cyrus-common.templates:2001
+msgid ""
+"Please refer to /usr/share/doc/kolab-cyrus-common/README.Debian.database for "
+"more information.  Do not start cyrmaster until you have converted the "
+"databases to the new format."
+msgstr ""
+"Proszę zapoznać się z /usr/share/doc/kolab-cyrus-common/README.Debian."
+"database, aby poznać więcej szczegółów. Proszę nie uruchamiać cyrmaster, "
+"dopóki konwersja nie zostanie ukończona."
+
+#. Type: boolean
+#. Description
+#: ../kolab-cyrus-common.templates:3001
+msgid "Remove the mail and news spools?"
+msgstr "Usunąć kolejki poczty i wiadomości?"
+
+#. Type: boolean
+#. Description
+#: ../kolab-cyrus-common.templates:3001
+msgid ""
+"The Cyrus mail and news spools, as well as users' sieve scripts, can be "
+"removed when the package is purged."
+msgstr ""
+"Kolejki poczty i wiadomości Cyrus, podobnie jak skrypty sieve, mogą być "
+"usunięte, jeśli pakiet będzie czyszczony."
+
+#. Type: boolean
+#. Description
+#: ../kolab-cyrus-common.templates:3001
+msgid ""
+"This question only applies to the default spools and sieve script "
+"directories in /var.  If you modified their location in imapd.conf, the new "
+"locations will not be removed; just the old ones in /var."
+msgstr ""
+"Pytanie odnosi się wyłącznie do domyślnych katalogów spool i skryptów sieve "
+"w katalogu /var. Jeśli ich lokalizacja została zmieniona w imapd.conf, nowo "
+"wybrana nie zostanie usunięta; skasowaniu ulegną tylko stare katalogi w /var."

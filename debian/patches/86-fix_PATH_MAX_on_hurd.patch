@@ -1,0 +1,65 @@
+--- a/master/master.c
++++ b/master/master.c
+@@ -73,6 +73,10 @@
+ #include <errno.h>
+ #include <limits.h>
+ 
++#ifndef PATH_MAX
++#define PATH_MAX 4096
++#endif
++
+ #ifndef INADDR_NONE
+ #define INADDR_NONE 0xffffffff
+ #endif
+--- a/master/service.c
++++ b/master/service.c
+@@ -72,6 +72,10 @@
+ #include "xmalloc.h"
+ #include "signals.h"
+ 
++#ifndef PATH_MAX
++#define PATH_MAX 4096
++#endif
++
+ extern int optind, opterr;
+ extern char *optarg;
+ 
+--- a/imap/proxyd.c
++++ b/imap/proxyd.c
+@@ -91,6 +91,10 @@
+ #include "telemetry.h"
+ #include "backend.h"
+ 
++#ifndef MAXHOSTNAMELEN
++#define MAXHOSTNAMELEN 255
++#endif
++
+ /* config.c stuff */
+ const int config_need_data = 0;
+ 
+--- a/imap/pop3d.c
++++ b/imap/pop3d.c
+@@ -84,6 +84,10 @@
+ #include "telemetry.h"
+ #include "backend.h"
+ 
++#ifndef MAXHOSTNAMELEN
++#define MAXHOSTNAMELEN
++#endif
++
+ #ifdef HAVE_KRB
+ /* kerberos des is purported to conflict with OpenSSL DES */
+ #define DES_DEFS
+--- a/syslog/syslogd.c
++++ b/syslog/syslogd.c
+@@ -156,6 +156,10 @@ static char sccsid[] = "@(#)syslogd.c	5.
+ #define SYSLOG_NAMES
+ #include "syslog.h"
+ 
++#ifndef MAXHOSTNAMELEN
++#define MAXHOSTNAMELEN 255
++#endif
++
+ #define UT_NAMESIZE	8
+ #define	_PATH_UTMP	"/etc/utmp"
+ #define	_PATH_DEV	"/dev/"

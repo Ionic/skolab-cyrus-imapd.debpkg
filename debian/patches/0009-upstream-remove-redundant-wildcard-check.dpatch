@@ -1,0 +1,54 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 0009-upstream-remove-redundant-wildcard-check by Sven Mueller
+##                                            <debian@incase.de>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: remove redundant check for wildcards in mailbox names
+## DP: (Wes Craig <wes@umich.edu>)
+
+@DPATCH@
+--- a/imap/imapd.c
++++ b/imap/imapd.c
+@@ -38,7 +38,7 @@
+  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
+-/* $Id: imapd.c,v 1.498 2006/01/13 22:06:28 murch Exp $ */
++/* $Id: imapd.c,v 1.500 2006/05/10 15:41:44 murch Exp $ */
+ 
+ #include <config.h>
+ 
+@@ -3952,11 +3952,6 @@ void cmd_rename(const char *tag,
+ 	}
+     }
+ 
+-    /* verify that the mailbox doesn't have a wildcard in it */
+-    for (p = oldmailboxname; !r && *p; p++) {
+-	if (*p == '*' || *p == '%') r = IMAP_MAILBOX_BADNAME;
+-    }
+-
+     /* attempt to rename the base mailbox */
+     if (!r) {
+ 	r = mboxlist_renamemailbox(oldmailboxname, newmailboxname, partition,
+--- a/imap/mboxlist.c
++++ b/imap/mboxlist.c
+@@ -40,7 +40,7 @@
+  *
+  */
+ /*
+- * $Id: mboxlist.c,v 1.241 2005/11/22 18:20:51 murch Exp $
++ * $Id: mboxlist.c,v 1.242 2006/05/10 15:41:52 murch Exp $
+  */
+ 
+ #include <config.h>
+@@ -476,10 +476,6 @@ mboxlist_mycreatemailboxcheck(char *name
+ 		free(acl);
+ 		return IMAP_PERMISSION_DENIED;
+ 	    }
+-	    /* disallow wildcards in userids with inboxes. */	     
+-	    if (strchr(mbox, '*') || strchr(mbox, '%') || strchr(mbox, '?')) {
+-		return IMAP_MAILBOX_BADNAME;
+-	    }
+ 
+ 	    /*
+ 	     * Users by default have all access to their personal mailbox(es),

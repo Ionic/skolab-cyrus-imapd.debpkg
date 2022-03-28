@@ -1,0 +1,89 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 0005-upstream-fix-ctl_mboxlist-dump-undump.dpatch by Sven Mueller <debian@incase.de>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Fix a problem in ctl_mboxlist with remote mailboxes (it now also dumps
+## DP: and undumps mailbox type flags)
+
+@DPATCH@
+--- a/doc/changes.html
++++ b/doc/changes.html
+@@ -15,6 +15,12 @@
+  - Potential buffer overflow in Sieve.</li>
+ </ul>
+ 
++<h1>Changes to the Cyrus IMAP Server since 2.2.13</h1> 
++<ul> 
++<li><tt>ctl_mboxlist</tt> now dumps/undumps the mailbox type flags,
++making it useful for remote mailboxes.</li>
++</ul>
++
+ <h1>Changes to the Cyrus IMAP Server since 2.2.12</h1> 
+ <ul> 
+ <li>Allow sieve scripts to be run on shared mailboxes (via <tt>sieve</tt>
+--- a/imap/ctl_mboxlist.c
++++ b/imap/ctl_mboxlist.c
+@@ -187,7 +187,7 @@ static int dump_cb(void *rockp,
+     switch (d->op) {
+     case DUMP:
+ 	if(!d->partition || !strcmp(d->partition, part)) {
+-	    printf("%s\t%s\t%s\n", name, part, acl);
++	    printf("%s\t%d %s\t%s\n", name, mbtype, part, acl);
+ 	    if(d->purge) {
+ 		config_mboxlist_db->delete(mbdb, key, keylen, &(d->tid), 0);
+ 	    }
+@@ -490,7 +490,7 @@ void do_undump(void)
+     while (fgets(buf, sizeof(buf), stdin)) {
+ 	char *name, *partition, *acl;
+ 	char *p;
+-	int tries = 0;
++	int mbtype = 0, tries = 0;
+ 	
+ 	line++;
+ 
+@@ -501,6 +501,12 @@ void do_undump(void)
+ 	    continue;
+ 	}
+ 	*p++ = '\0';
++	if (isdigit((int) *p)) {
++	    /* new style dump */
++	    mbtype = strtol(p, &p, 10);
++	    /* skip trailing space */
++	    if (*p == ' ') p++;
++	}
+ 	partition = p;
+ 	for (; *p && *p != '\t'; p++) ;
+ 	if (!*p) {
+@@ -523,7 +529,7 @@ void do_undump(void)
+ 	}
+ 
+ 	key = name; keylen = strlen(key);
+-	data = mboxlist_makeentry(0, partition, acl); datalen = strlen(data);
++	data = mboxlist_makeentry(mbtype, partition, acl); datalen = strlen(data);
+ 	
+ 	tries = 0;
+     retry:
+--- a/man/ctl_mboxlist.8
++++ b/man/ctl_mboxlist.8
+@@ -104,7 +104,9 @@ Read configuration options from \fIconfi
+ .TP
+ .B \-d
+ Dump the contents of the database to standard output in a portable
+-flat-text format.
++flat-text format.  NOTE: In Cyrus versions 2.2.13 and earlier, the dump
++format did not include the mailbox type flags, breaking remote
++mailboxes (frontends, mupdate master) when undumped.
+ .TP
+ .B \-x
+ When performing a dump, remove the mailboxes dumped from the mailbox list
+@@ -115,7 +117,9 @@ When performing a dump, dump only thise
+ .TP
+ .B \-u
+ Load the contents of the database from standard input.  The input MUST
+-be in the format output using the \fB\-d\fR option.
++be in the format output using the \fB\-d\fR option.  NOTE: Both the
++old and new formats can be loaded, but the old format will break
++remote mailboxes.
+ .TP
+ .B \-m
+ For backend servers in the Cyrus Murder, synchronize the local mailbox list

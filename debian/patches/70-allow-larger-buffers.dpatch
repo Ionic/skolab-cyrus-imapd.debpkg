@@ -1,0 +1,24 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## allow-larger-buffers-dpatch by Sven Mueller <debian@incase.de>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Patch to allow larger buffers (especially for list of UIDs).
+## DP: Patch taken and "backported" to 2.2 from:
+## DP: http://cyrus.brong.fastmail.fm/patches/cyrus-longwords-2.3.3.diff
+
+@DPATCH@
+--- a/imap/imapparse.c
++++ b/imap/imapparse.c
+@@ -52,9 +52,9 @@
+ #include "exitcodes.h"
+ 
+ enum {
+-    MAXQUOTED = 32768,
+-    MAXWORD = 32768,
+-    MAXLITERAL = INT_MAX / 20
++    MAXQUOTED = 524288,
++    MAXWORD = 524288,
++    MAXLITERAL = INT_MAX / 10
+ };
+ 
+ void freebuf(struct buf *buf)

@@ -1,0 +1,29 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 01-fix_Makefile.in.dpatch by Steffen Joeris <steffen.joeris@skolelinux.de>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Fix lib/Makefile.in
+
+@DPATCH@
+diff -urNad kolab-cyrus-imapd-2.2.13~/lib/Makefile.in kolab-cyrus-imapd-2.2.13/lib/Makefile.in
+--- kolab-cyrus-imapd-2.2.13~/lib/Makefile.in	2006-11-02 20:25:05.000000000 +0100
++++ kolab-cyrus-imapd-2.2.13/lib/Makefile.in	2006-11-02 20:25:06.000000000 +0100
+@@ -62,7 +62,7 @@
+ LIBS = @LIBS@
+ 
+ MAKEDEPEND_CFLAGS = @CFLAGS@
+-CFLAGS = @CFLAGS@ @PERL_CCCDLFLAGS@
++CFLAGS = @CFLAGS@ @PERL_CCCDLFLAGS@ @WARNERROR@ -fPIC
+ LDFLAGS = @LDFLAGS@
+ 
+ SHELL = /bin/sh
+@@ -155,8 +155,7 @@
+ 	$(CC) $(LDFLAGS) -o mkchartable mkchartable.o xstrlcpy.o xstrlcat.o xmalloc.o assert.o
+ 
+ clean:
+-	rm -f *.o *.a chartable.c Makefile.bak mkchartable makedepend.log \
+-	$(BUILTSOURCES)
++	rm -f *.o *.a chartable.c Makefile.bak mkchartable makedepend.log 
+ 
+ distclean: clean
+ 	rm -f Makefile

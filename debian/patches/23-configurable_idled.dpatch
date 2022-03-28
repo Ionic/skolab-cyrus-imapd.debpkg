@@ -1,0 +1,497 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 23-configurable_idled.dpatch by Ondřej Surý <ondrej@sury.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Adds imapd.conf option to select IDLE method at runtime
+
+@DPATCH@
+--- a/configure.in
++++ b/configure.in
+@@ -760,9 +760,6 @@ AC_ARG_WITH(idle,[  --with-idle=METHOD
+                           METHOD is [poll], idled or no],
+ 	WITH_IDLE="${withval}",WITH_IDLE="poll")
+ AC_SUBST(WITH_IDLE)
+-if test "$WITH_IDLE" = "idled"; then
+-  IMAP_PROGS="$IMAP_PROGS idled"
+-fi
+ 
+ dnl
+ dnl see if we're compiling with NNTP support
+--- a/imap/Makefile.in
++++ b/imap/Makefile.in
+@@ -47,9 +47,6 @@ DEFINES=-DSETPROCTITLE
+ # 'local' (legacy flat file).
+ SEEN=seen_db.o
+ 
+-# IMAP IDLE mechanism
+-IDLE=idle_@WITH_IDLE@.o
+-
+ srcdir = @srcdir@
+ top_srcdir = @top_srcdir@
+ VPATH = @srcdir@
+@@ -104,7 +101,8 @@ LOBJS= append.o mailbox.o mboxlist.o mup
+ 	convert_code.o duplicate.o saslclient.o saslserver.o signals.o \
+ 	annotate.o search_engines.o squat.o squat_internal.o mbdump.o \
+ 	imapparse.o telemetry.o user.o notify.o protocol.o quota_db.o \
+-	$(SEEN) $(IDLE)
++	idle.o idle_no.o idle_poll.o idle_idled.o \
++	$(SEEN)
+ 
+ IMAPDOBJS=pushstats.o backend.o imapd.o index.o tls.o version.o
+ 
+@@ -118,7 +116,7 @@ CLIOBJS=cli_fatal.o mutex_fake.o
+ SERVICE=../master/service.o
+ SERVICETHREAD=../master/service-thread.o
+ 
+-PROGS = imapd lmtpd pop3d \
++PROGS = imapd lmtpd pop3d idled \
+ 	fud smmapd reconstruct quota mbpath ipurge \
+ 	cyrdump chk_cyrus cvt_cyrusdb deliver ctl_mboxlist \
+ 	ctl_deliver ctl_cyrusdb squatter mbexamine cyr_expire arbitron \
+--- a/imap/global.c
++++ b/imap/global.c
+@@ -72,6 +72,7 @@
+ #include "prot.h" /* for PROT_BUFSIZE */
+ #include "util.h"
+ #include "xmalloc.h"
++#include "idle.h"
+ 
+ static enum {
+     NOT_RUNNING = 0,
+@@ -94,6 +95,8 @@ struct cyrusdb_backend *config_ptscache_
+ /* syslog prefix tag */
+ static char syslog_prefix[20];
+ 
++struct idle_backend *config_idle=NULL;
++
+ /* Called before a cyrus application starts (but after command line parameters
+  * are read) */
+ int cyrus_init(const char *alt_config, const char *ident, unsigned flags)
+@@ -185,6 +188,10 @@ int cyrus_init(const char *alt_config, c
+ 	config_ptscache_db =
+ 	    cyrusdb_fromname(config_getstring(IMAPOPT_PTSCACHE_DB));
+ 
++        /* lookup idle backend */
++        config_idle =
++            idle_fromname(config_getstring(IMAPOPT_IDLEMETHOD));
++
+ 	/* configure libcyrus as needed */
+ 	libcyrus_config_setstring(CYRUSOPT_CONFIG_DIR, config_dir);
+ 	libcyrus_config_setswitch(CYRUSOPT_AUTH_UNIX_GROUP_ENABLE,
+--- a/imap/global.h
++++ b/imap/global.h
+@@ -152,4 +152,6 @@ extern struct cyrusdb_backend *config_du
+ extern struct cyrusdb_backend *config_tlscache_db;
+ extern struct cyrusdb_backend *config_ptscache_db;
+ 
++extern struct idle_backend *config_idle;
++
+ #endif /* INCLUDED_GLOBAL_H */
+--- /dev/null
++++ b/imap/idle.c
+@@ -0,0 +1,87 @@
++/* 
++ * Copyright (c) 1998-2003 Carnegie Mellon University.  All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer. 
++ *
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *
++ * 3. The name "Carnegie Mellon University" must not be used to
++ *    endorse or promote products derived from this software without
++ *    prior written permission. For permission or any other legal
++ *    details, please contact  
++ *      Office of Technology Transfer
++ *      Carnegie Mellon University
++ *      5000 Forbes Avenue
++ *      Pittsburgh, PA  15213-3890
++ *      (412) 268-4387, fax: (412) 268-7395
++ *      tech-transfer@andrew.cmu.edu
++ *
++ * 4. Redistributions of any form whatsoever must retain the following
++ *    acknowledgment:
++ *    "This product includes software developed by Computing Services
++ *     at Carnegie Mellon University (http://www.cmu.edu/computing/)."
++ *
++ * CARNEGIE MELLON UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO
++ * THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
++ * AND FITNESS, IN NO EVENT SHALL CARNEGIE MELLON UNIVERSITY BE LIABLE
++ * FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
++ * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
++ * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++/* $Id: idle.c,v 1.10 2006/01/04 02:06:23 ondrej Exp $ */
++
++#include <config.h>
++#include <stdlib.h>
++#include <string.h>
++#include <stdio.h>
++#include <netdb.h>
++#include <sys/socket.h>
++#include <netinet/in.h>
++#include <arpa/inet.h>
++#include <errno.h>
++#include <syslog.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <unistd.h>
++#include <fcntl.h>
++#include "makedepend/def.h"
++
++#include "idle.h"
++#include "exitcodes.h"
++
++struct idle_backend *idle_backends[] = {
++    &id_bk_no,
++    &id_bk_poll,
++    &id_bk_idled,
++    NULL };
++
++struct idle_backend *idle_fromname(const char *name)
++{
++    int i;
++    struct idle_backend *idle = NULL;
++
++    for (i = 0; idle_backends[i]; i++) {
++        if (!strcmp(idle_backends[i]->name, name)) {
++            idle = idle_backends[i];
++	    break;
++        }
++    }
++    if (!idle) {
++        char errbuf[1024];
++        snprintf(errbuf, sizeof(errbuf),
++                 "idle backend %s not supported", name);
++        fatal(errbuf, EC_CONFIG);
++    }
++
++    return idle;
++}
+--- a/imap/idle.h
++++ b/imap/idle.h
+@@ -44,8 +44,7 @@
+ #define IDLE_H
+ 
+ #include "mailbox.h"
+-
+-extern const char *idle_method_desc;
++#include "global.h"
+ 
+ typedef enum {
+     IDLE_MAILBOX =	0x1,
+@@ -54,20 +53,43 @@ typedef enum {
+ 
+ typedef void idle_updateproc_t(idle_flags_t flags);
+ 
++struct idle_backend {
++    const char *name;
+ 
+-/* Is IDLE enabled?  Can also do initial setup, if necessary */
+-int idle_enabled(void);
+-
+-/* Setup for IDLE.
+- * 'proc' is a pointer to a function which reports mailbox updates and/or
+- * ALERTs to the client.
+- */
+-int idle_init(idle_updateproc_t *proc);
++    /* Is IDLE enabled?  Can also do initial setup, if necessary */
++    int (*enabled)(void);
+ 
+-/* Start IDLEing on 'mailbox'. */
+-void idle_start(struct mailbox *mailbox);
++    /* Setup for IDLE.
++     * 'proc' is a pointer to a function which reports mailbox updates and/or
++     * ALERTs to the client.
++     */
++    int (*init)(idle_updateproc_t *proc);
++
++    /* Start IDLEing on 'mailbox'. */
++    void (*start)(struct mailbox *mailbox);
++
++    /* Cleanup when IDLE is completed. */
++    void (*done)(struct mailbox *mailbox);
++};
++
++/* Defines to simulate old behaviour */
++/* see struct definition above to see what they do */
++
++#define idle_enabled() 		(config_idle?config_idle->enabled():0)
++#define idle_init(proc)		(config_idle?config_idle->init(proc):0)
++#define idle_start(mbox)	(config_idle?config_idle->start(mbox):0)
++#define idle_done(mbox)		(config_idle?config_idle->done(mbox):0)
++#define idle_method_desc	(config_idle?config_idle->name:NULL)
++
++extern struct idle_backend *idle_backends[];
++
++/* Note that some of these may be undefined symbols
++ * if imapd was not built with support for them */
++extern struct idle_backend id_bk_no;
++extern struct idle_backend id_bk_poll;
++extern struct idle_backend id_bk_idled;
+ 
+-/* Cleanup when IDLE is completed. */
+-void idle_done(struct mailbox *mailbox);
++/* Configuration */
++struct idle_backend *idle_fromname(const char *name);
+ 
+ #endif
+--- a/imap/idle_idled.c
++++ b/imap/idle_idled.c
+@@ -58,8 +58,6 @@
+ #include "idled.h"
+ #include "global.h"
+ 
+-const char *idle_method_desc = "idled";
+-
+ /* function to report mailbox updates to the client */
+ static idle_updateproc_t *idle_update = NULL;
+ 
+@@ -73,14 +71,14 @@ static struct sockaddr_un idle_remote;
+ static int idle_remote_len = 0;
+ 
+ /* Forward declarations */
+-int idle_send_msg(int msg, struct mailbox *mailbox);
+-void idle_notify(struct mailbox *mailbox);
++static int idle_send_msg(int msg, struct mailbox *mailbox);
++static void idle_notify(struct mailbox *mailbox);
+ 
+ 
+ /*
+  * Create connection to idled for sending notifications
+  */
+-int idle_enabled(void)
++static int idle_idled_enabled(void)
+ {
+     int s;
+     int fdflags;
+@@ -154,7 +152,10 @@ static void idle_poll(int sig)
+     }
+ }
+ 
+-int idle_init(idle_updateproc_t *proc)
++/* forward declaration */
++static void idle_idled_done(struct mailbox *mailbox);
++
++static int idle_idled_init(idle_updateproc_t *proc)
+ {
+     struct sigaction action;
+ 
+@@ -177,14 +178,14 @@ int idle_init(idle_updateproc_t *proc)
+ 	syslog(LOG_ERR, "sigaction: %m");
+ 
+ 	/* Cancel receiving signals */
+-	idle_done(NULL);
++	idle_idled_done(NULL);
+ 	return 0;
+     }
+ 
+     return 1;
+ }
+ 
+-void idle_start(struct mailbox *mailbox)
++static void idle_idled_start(struct mailbox *mailbox)
+ {
+     idle_started = 1;
+ 
+@@ -195,7 +196,7 @@ void idle_start(struct mailbox *mailbox)
+     }
+ }
+ 
+-void idle_done(struct mailbox *mailbox)
++static void idle_idled_done(struct mailbox *mailbox)
+ {
+     /* Tell idled that we're done idling */
+     idle_send_msg(IDLE_DONE, mailbox);
+@@ -212,7 +213,7 @@ void idle_done(struct mailbox *mailbox)
+ /*
+  * Send a message to idled
+  */
+-int idle_send_msg(int msg, struct mailbox *mailbox)
++static int idle_send_msg(int msg, struct mailbox *mailbox)
+ {
+     idle_data_t idledata;
+ 
+@@ -235,10 +236,21 @@ int idle_send_msg(int msg, struct mailbo
+ /*
+  * Notify imapidled of a mailbox change
+  */
+-void idle_notify(struct mailbox *mailbox)
++static void idle_notify(struct mailbox *mailbox)
+ {
+     /* We should try to determine if we need to send this
+      * (ie, is an imapd is IDLE on 'mailbox'?).
+      */
+     idle_send_msg(IDLE_NOTIFY, mailbox);
+ }
++
++struct idle_backend id_bk_idled =
++{
++    "idled", /* name */
++
++    &idle_idled_enabled,
++    &idle_idled_init,
++
++    &idle_idled_start,
++    &idle_idled_done
++};
+--- a/imap/idle_no.c
++++ b/imap/idle_no.c
+@@ -42,23 +42,31 @@
+ 
+ #include "idle.h"
+ 
+-
+-const char *idle_method_desc = (char *)0;
+-
+-int idle_enabled(void)
++static int idle_no_enabled(void)
+ {
+     return 0;
+ }
+ 
+-int idle_init(idle_updateproc_t *proc)
++static int idle_no_init(idle_updateproc_t *proc)
+ {
+     return 0;
+ }
+ 
+-void idle_start(struct mailbox *mailbox)
++static void idle_no_start(struct mailbox *mailbox __attribute__((unused)))
+ {
+ }
+ 
+-void idle_done(struct mailbox *mailbox)
++static void idle_no_done(struct mailbox *mailbox __attribute__((unused)))
+ {
+ }
++
++struct idle_backend id_bk_no =
++{
++    "no", /* name */
++
++    &idle_no_enabled,
++    &idle_no_init,
++
++    &idle_no_start,
++    &idle_no_done
++};
+--- a/imap/idle_poll.c
++++ b/imap/idle_poll.c
+@@ -51,15 +51,13 @@
+ #include "idle.h"
+ #include "global.h"
+ 
+-const char *idle_method_desc = "poll";
+-
+ /* function to report mailbox updates to the client */
+ static idle_updateproc_t *idle_update = NULL;
+ 
+ /* how often to poll the mailbox */
+ static time_t idle_period = -1;
+ 
+-int idle_enabled(void)
++static int idle_poll_enabled(void)
+ {
+     /* get polling period */
+     if (idle_period == -1) {
+@@ -78,7 +76,10 @@ static void idle_poll(int sig __attribut
+     alarm(idle_period);
+ }
+ 
+-int idle_init(idle_updateproc_t *proc)
++/* forward declaration */
++static void idle_poll_done(struct mailbox *mailbox __attribute__((unused)));
++
++static int idle_poll_init(idle_updateproc_t *proc)
+ {
+     struct sigaction action;
+ 
+@@ -96,22 +97,33 @@ int idle_init(idle_updateproc_t *proc)
+ 	syslog(LOG_ERR, "sigaction: %m");
+ 
+ 	/* Cancel receiving signals */
+-	idle_done(NULL);
++	idle_poll_done(NULL);
+ 	return 0;
+     }
+ 
+     return 1;
+ }
+ 
+-void idle_start(struct mailbox *mailbox __attribute__((unused)))
++static void idle_poll_start(struct mailbox *mailbox __attribute__((unused)))
+ {
+     alarm(idle_period);
+ }
+ 
+-void idle_done(struct mailbox *mailbox __attribute__((unused)))
++static void idle_poll_done(struct mailbox *mailbox __attribute__((unused)))
+ {
+     /* Remove the polling function */
+     signal(SIGALRM, SIG_IGN);
+ 
+     idle_update = NULL;
+ }
++
++struct idle_backend id_bk_poll = 
++{
++    "poll", /* name */
++
++    &idle_poll_enabled,
++    &idle_poll_init,
++
++    &idle_poll_start,
++    &idle_poll_done
++};
+--- a/imap/version.c
++++ b/imap/version.c
+@@ -62,6 +62,7 @@
+ #include "map.h"
+ #include "lock.h"
+ #include "nonblock.h"
++#include "global.h"
+ #include "idle.h"
+ 
+ #ifdef USE_SIEVE
+--- a/lib/Makefile.in
++++ b/lib/Makefile.in
+@@ -74,6 +74,8 @@ cyrus_prefix = @cyrus_prefix@
+ 
+ libdir = @libdir@
+ 
++IDLE = @WITH_IDLE@
++
+ BUILTSOURCES = imapopts.h imapopts.c
+ 
+ LIBCYR_HDRS = $(srcdir)/acl.h $(srcdir)/assert.h $(srcdir)/auth.h \
+@@ -132,7 +134,7 @@ libcyrus_min.a: $(LIBCYRM_OBJS)
+ 	$(RANLIB) libcyrus_min.a
+ 
+ imapopts.c: imapoptions $(srcdir)/../tools/config2header
+-	$(srcdir)/../tools/config2header CC=$(CC) $(srcdir)/imapopts.c $(srcdir)/imapopts.h < $(srcdir)/imapoptions
++	sed -e "s/%IDLE%/$(IDLE)/g" < $(srcdir)/imapoptions | $(srcdir)/../tools/config2header CC=$(CC) $(srcdir)/imapopts.c $(srcdir)/imapopts.h
+ 
+ imapopts.h: imapopts.c
+ 
+--- a/lib/imapoptions
++++ b/lib/imapoptions
+@@ -248,6 +248,9 @@ are listed with ``<none>''.
+ /* The password to use for authentication to the backend server hostname
+    (where hostname is the short hostname of the server) - Cyrus Murder */
+ 
++{ "idlemethod", "%IDLE%", STRINGLIST("no", "poll", "idled") }
++/* The idle backend to use for IDLE command. */
++
+ { "idlesocket", "{configdirectory}/socket/idle", STRING }
+ /* Unix domain socket that idled listens on. */
+ 

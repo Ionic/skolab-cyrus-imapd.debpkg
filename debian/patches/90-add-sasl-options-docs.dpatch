@@ -1,0 +1,28 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 90-add-sasl-options-docs.dpatch by Sven Mueller <sven@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+@DPATCH@
+--- a/lib/imapoptions
++++ b/lib/imapoptions
+@@ -755,12 +755,15 @@ one you specified in the \fB/etc/cyrus.c
+ 
+ { "sasl_maximum_layer", 256, INT }
+ /* Maximum SSF (security strength factor) that the server will allow a
+-   client to negotiate. */
++   client to negotiate. This corresponds to the max_ssf option of libsasl.
++   Please check the libsasl documentation for available values. */
+ 
+ { "sasl_minimum_layer", 0, INT }
+ /* The minimum SSF that the server will allow a client to negotiate.
+-   A value of 1 requires integrity protection; any higher value  
+-   requires some amount of encryption. */
++   A value of 1 requires integrity protection (i.e. checksums); any higher
++   value requires some amount of encryption. This corresponds to the min_ssf
++   option of libsasl. Please check libsasl documentation for available
++   values. */
+ 
+ # Commented out - used by libsasl
+ # { "sasl_option", 0, STRING }

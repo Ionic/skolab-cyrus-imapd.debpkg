@@ -1,0 +1,9 @@
+Cyrus IMAP for Debian, admin utilities
+$Id: cyrus-admin-2.2.README.Debian 229 2005-12-08 23:26:29Z astronut $
+---------------------
+
+Refer to the cyrus-doc-2.2 package for more information.  There is a lot
+of it, and it will save you hours (or days) of frustating bug-hunting if
+you read them first.
+
+ -- Henrique de Moraes Holschuh <hmh@debian.org>

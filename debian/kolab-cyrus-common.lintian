@@ -1,0 +1,4 @@
+kolab-cyrus-common: no-debconf-config
+kolab-cyrus-common: postinst-uses-db-input
+kolab-cyrus-common: dir-or-file-in-var-run var/run/cyrus/
+kolab-cyrus-common: dir-or-file-in-var-run var/run/cyrus/socket/

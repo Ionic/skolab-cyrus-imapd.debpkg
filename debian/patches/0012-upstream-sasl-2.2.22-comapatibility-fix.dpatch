@@ -1,0 +1,31 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 0012-upstream-sasl-2.2.22-comapatibility-fix.dpatch by Benjamin Seidenberg <astronut@dlgeek.net>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Upstream compatibility fix for SASL 2.1.22
+
+@DPATCH@
+--- a/imtest/imtest.c
++++ b/imtest/imtest.c
+@@ -1,7 +1,7 @@
+ /* imtest.c -- IMAP/POP3/NNTP/LMTP/SMTP/MUPDATE/MANAGESIEVE test client
+  * Ken Murchison (multi-protocol implementation)
+  * Tim Martin (SASL implementation)
+- * $Id: imtest.c,v 1.107 2006/01/20 20:31:23 jeaton Exp $
++ * $Id: imtest.c,v 1.108 2006/05/25 15:23:07 murch Exp $
+  *
+  * Copyright (c) 1998-2003 Carnegie Mellon University.  All rights reserved.
+  *
+@@ -886,6 +886,12 @@ imt_stat getauthline(struct sasl_cmd_t *
+     }
+     
+     if (*str != '\r') {
++	/* trim CRLF */
++	char *p = str + strlen(str) - 1;
++	if (p >= str && *p == '\n') *p-- = '\0';
++	if (p >= str && *p == '\r') *p-- = '\0';
++
++	/* alloc space for decoded response */
+ 	len = strlen(str) + 1;
+ 	*line = malloc(len);
+ 	if ((*line) == NULL) {

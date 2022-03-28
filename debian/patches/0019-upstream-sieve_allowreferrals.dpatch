@@ -1,0 +1,650 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 0019-upstream-sieve_allowreferrals.dpatch by Sven Mueller <sven@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Upstream: patch sieve to allow referrals
+
+@DPATCH@
+diff -urNad cyrus-imapd-2.2.13/doc/changes.html cyrus-imapd-2.2.13/doc/changes.html
+--- cyrus-imapd-2.2.13/doc/changes.html	2006-08-31 16:46:21.000000000 +0200
++++ cyrus-imapd-2.2.13/doc/changes.html	2006-08-31 16:53:15.970326054 +0200
+@@ -1,6 +1,6 @@
+ <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+-<!-- $Id: changes.html,v 1.102 2006/03/31 15:24:29 murch Exp $ -->
++<!-- $Id: changes.html,v 1.104 2006/08/30 16:29:10 murch Exp $ -->
+ <html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+ <meta name="generator" content="HTML Tidy, see www.w3.org" />
+@@ -14,6 +14,14 @@
+ making it useful for remote mailboxes.</li>
+ </ul>
+ 
++<h1>Changes to the Cyrus IMAP Server since 2.2.13</h1> 
++<ul> 
++<li><tt>ctl_mboxlist</tt> now dumps/undumps the mailbox type flags,
++making it useful for remote mailboxes.</li>
++<li>Added <tt>sieve_allowreferrals</tt> option to control whether
++<tt>timsieved</tt> issues referrals or proxys traffic to backends.</li>
++</ul>
++
+ <h1>Changes to the Cyrus IMAP Server since 2.2.12</h1> 
+ <ul> 
+ <li>Allow sieve scripts to be run on shared mailboxes (via <tt>sieve</tt>
+@@ -2034,7 +2042,7 @@
+ </ul>
+ 
+ <hr />
+-last modified: $Date: 2006/03/31 15:24:29 $ <br />
++last modified: $Date: 2006/08/30 16:29:10 $ <br />
+ <a href="index.html">Return</a> to the Cyrus IMAP Server Home Page
+ </body>
+ </html>
+diff -urNad cyrus-imapd-2.2.13/imap/backend.c cyrus-imapd-2.2.13/imap/backend.c
+--- cyrus-imapd-2.2.13/imap/backend.c	2006-08-31 16:46:21.000000000 +0200
++++ cyrus-imapd-2.2.13/imap/backend.c	2006-08-31 16:55:26.609576327 +0200
+@@ -39,7 +39,7 @@
+  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
+-/* $Id: backend.c,v 1.41 2006/05/11 18:05:29 murch Exp $ */
++/* $Id: backend.c,v 1.42 2006/08/30 16:29:11 murch Exp $ */
+ 
+ #include <config.h>
+ 
+@@ -74,7 +74,8 @@
+ #include "util.h"
+ 
+ static char *ask_capability(struct protstream *pout, struct protstream *pin,
+-			    struct protocol_t *prot, unsigned long *capa)
++			    struct protocol_t *prot, unsigned long *capa,
++			    int banner)
+ {
+     char str[4096];
+     char *ret = NULL, *tmp;
+@@ -82,7 +83,7 @@
+ 
+     *capa = 0;
+     
+-    if (prot->capa_cmd.cmd) {
++    if (!banner && prot->capa_cmd.cmd) {
+ 	/* request capabilities of server */
+ 	prot_printf(pout, "%s\r\n", prot->capa_cmd.cmd);
+ 	prot_flush(pout);
+@@ -239,7 +240,7 @@
+ 	/* If we don't have a usable mech, do TLS and try again */
+     } while (r == SASL_NOMECH && CAPA(s, CAPA_STARTTLS) &&
+ 	     do_starttls(s, &prot->tls_cmd) != -1 &&
+-	     (*mechlist = ask_capability(s->out, s->in, prot, &s->capability)));
++	     (*mechlist = ask_capability(s->out, s->in, prot, &s->capability, 0)));
+ 
+     /* xxx unclear that this is correct */
+     free_callbacks(cb);
+@@ -378,20 +379,23 @@
+     ret->sock = sock;
+     prot_setflushonread(ret->in, ret->out);
+     
+-    if (prot->capa_cmd.cmd) {
+-	/* read the initial greeting */
+-	if (!prot_fgets(buf, sizeof(buf), ret->in)) {
+-	    syslog(LOG_ERR,
+-		   "backend_connect(): couldn't read initial greeting: %s",
+-		   ret->in->error ? ret->in->error : "(null)");
+-	    if (!ret_backend) free(ret);
+-	    close(sock);
+-	    return NULL;
+-	}
++    if (!prot->banner.is_capa) {
++	do { /* read the initial greeting */
++	    if (!prot_fgets(buf, sizeof(buf), ret->in)) {
++		syslog(LOG_ERR,
++		       "backend_connect(): couldn't read initial greeting: %s",
++		       ret->in->error ? ret->in->error : "(null)");
++		if (!ret_backend) free(ret);
++		close(sock);
++		return NULL;
++	    }
++	} while (strncasecmp(buf, prot->banner.resp,
++			     strlen(prot->banner.resp)));
+     }
+ 
+     /* get the capabilities */
+-    mechlist = ask_capability(ret->out, ret->in, prot, &ret->capability);
++    mechlist = ask_capability(ret->out, ret->in, prot, &ret->capability,
++			      prot->banner.is_capa);
+ 
+     /* now need to authenticate to backend server,
+        unless we're doing LMTP on a UNIX socket (deliver) */
+diff -urNad cyrus-imapd-2.2.13/imap/protocol.c cyrus-imapd-2.2.13/imap/protocol.c
+--- cyrus-imapd-2.2.13/imap/protocol.c	2006-08-31 16:44:13.000000000 +0200
++++ cyrus-imapd-2.2.13/imap/protocol.c	2006-08-31 16:53:15.973325759 +0200
+@@ -39,7 +39,7 @@
+  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
+-/* $Id: protocol.c,v 1.13 2004/12/07 19:26:24 ken3 Exp $ */
++/* $Id: protocol.c,v 1.14 2006/08/30 16:29:11 murch Exp $ */
+ 
+ #include <config.h>
+ 
+@@ -89,8 +89,24 @@
+     return success;
+ }
+ 
++static char *sieve_parsesuccess(char *str, const char **status)
++{
++    char *success = NULL, *tmp;
++
++    if (!strncmp(str, "OK (", 4) &&
++	(tmp = strstr(str+4, "SASL \"")) != NULL) {
++	success = tmp+6; /* skip SASL " */
++	tmp = strstr(success, "\"");
++	*tmp = '\0'; /* clip " */
++    }
++
++    if (status) *status = NULL;
++    return success;
++}
++
+ struct protocol_t protocol[] = {
+     { "imap", "imap",
++      { 0, "* OK" },
+       { "C01 CAPABILITY", "C01 ", &imap_parsemechlist,
+ 	{ { " AUTH=", CAPA_AUTH },
+ 	  { " STARTTLS", CAPA_STARTTLS },
+@@ -103,6 +119,7 @@
+       { "N01 NOOP", "N01 OK" },
+       { "Q01 LOGOUT", "Q01 " } },
+     { "pop3", "pop",
++      { 0, "+OK " },
+       { "CAPA", ".", NULL,
+ 	{ { "SASL ", CAPA_AUTH },
+ 	  { "STLS", CAPA_STARTTLS },
+@@ -112,6 +129,7 @@
+       { "NOOP", "+OK" },
+       { "QUIT", "+OK" } },
+     { "nntp", "nntp",
++      { 0, "20" },
+       { "CAPABILITIES", ".", NULL,
+ 	{ { "SASL ", CAPA_AUTH },
+ 	  { "STARTTLS", CAPA_STARTTLS },
+@@ -121,6 +139,7 @@
+       { "DATE", "111" },
+       { "QUIT", "205" } },
+     { "lmtp", "lmtp",
++      { 0, "220 " },
+       { "LHLO murder", "250 ", NULL,
+ 	{ { "AUTH ", CAPA_AUTH },
+ 	  { "STARTTLS", CAPA_STARTTLS },
+@@ -132,11 +151,22 @@
+       { "NOOP", "250" },
+       { "QUIT", "221" } },
+     { "mupdate", "mupdate",
++      { 1, "* OK" },
+       { NULL, "* OK", NULL,
+ 	{ { "* AUTH ", CAPA_AUTH },
+ 	  { NULL, 0 } } },
+       { "S01 STARTTLS", "S01 OK", "S01 NO" },
+       { "A01 AUTHENTICATE", INT_MAX, 1, "A01 OK", "A01 NO", "", "*", NULL },
+       { "N01 NOOP", "N01 OK" },
+-      { "Q01 LOGOUT", "Q01 " } }
++      { "Q01 LOGOUT", "Q01 " } },
++    { "sieve", SIEVE_SERVICE_NAME,
++      { 1, "OK" },
++      { "CAPABILITY", "OK", NULL,
++	{ { "\"SASL\" ", CAPA_AUTH },
++	  { "\"STARTTLS\"", CAPA_STARTTLS },
++	  { NULL, 0 } } },
++      { "STARTTLS", "OK", "NO" },
++      { "AUTHENTICATE", INT_MAX, 1, "OK", "NO", NULL, "*", &sieve_parsesuccess },
++      { NULL, NULL, NULL },
++      { "LOGOUT", NULL, "OK" } }
+ };
+diff -urNad cyrus-imapd-2.2.13/imap/protocol.h cyrus-imapd-2.2.13/imap/protocol.h
+--- cyrus-imapd-2.2.13/imap/protocol.h	2006-08-31 16:44:13.000000000 +0200
++++ cyrus-imapd-2.2.13/imap/protocol.h	2006-08-31 16:53:15.973325759 +0200
+@@ -39,7 +39,7 @@
+  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
+-/* $Id: protocol.h,v 1.5 2004/05/06 18:52:07 ken3 Exp $ */
++/* $Id: protocol.h,v 1.6 2006/08/30 16:29:11 murch Exp $ */
+ 
+ #ifndef _INCLUDED_PROTOCOL_H
+ #define _INCLUDED_PROTOCOL_H
+@@ -70,9 +70,13 @@
+ 
+ struct protocol_t;
+ 
++struct banner_t {
++    int is_capa;		/* banner is capability response */
++    char *resp;			/* end of banner response */
++};
++
+ struct capa_cmd_t {
+-    const char *cmd;		/* [OPTIONAL] capability command string
+-				   (NULL = capabilities in banner) */
++    const char *cmd;		/* [OPTIONAL] capability command string */
+     const char *resp;		/* end of capability response */
+     char *(*parse_mechlist)(const char *str, struct protocol_t *prot);
+ 				/* [OPTIONAL] parse capability string,
+@@ -95,6 +99,7 @@
+ struct protocol_t {
+     const char *service;	/* INET service name */
+     const char *sasl_service;	/* SASL service name */
++    struct banner_t banner;
+     struct capa_cmd_t capa_cmd;
+     struct tls_cmd_t tls_cmd;
+     struct sasl_cmd_t sasl_cmd;
+@@ -109,7 +114,8 @@
+     PROTOCOL_POP3,
+     PROTOCOL_NNTP,
+     PROTOCOL_LMTP,
+-    PROTOCOL_MUPDATE
++    PROTOCOL_MUPDATE,
++    PROTOCOL_SIEVE
+ };
+ 
+ #endif /* _INCLUDED_PROTOCOL_H */
+diff -urNad cyrus-imapd-2.2.13/imap/saslclient.c cyrus-imapd-2.2.13/imap/saslclient.c
+--- cyrus-imapd-2.2.13/imap/saslclient.c	2006-08-31 16:44:13.000000000 +0200
++++ cyrus-imapd-2.2.13/imap/saslclient.c	2006-08-31 16:53:15.972325858 +0200
+@@ -39,7 +39,7 @@
+  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
+-/* $Id: saslclient.c,v 1.13 2004/07/07 19:49:05 rjs3 Exp $ */
++/* $Id: saslclient.c,v 1.14 2006/08/30 16:29:11 murch Exp $ */
+ 
+ #include <config.h>
+ 
+@@ -237,21 +237,24 @@
+     do {
+ 	char *p;
+ 
++	base64 = buf;
++	*base64 = '\0';
++
+ 	if (clientout) { /* response */
+ 	    /* convert to base64 */
+-	    base64 = buf;
+ 	    r = sasl_encode64(clientout, clientoutlen,
+ 			      base64, BASE64_BUF_SIZE, NULL);
+ 
+ 	    clientout = NULL;
++	}
+ 
+-	    /* send to server */
+-	    if (sendliteral) {
+-		prot_printf(pout, "{%d+}\r\n", strlen(base64));
+-		prot_flush(pout);
+-	    }
+-	    prot_printf(pout, "%s", base64);
++	/* send to server */
++	if (sendliteral) {
++	    prot_printf(pout, "{%d+}\r\n", strlen(base64));
++	    prot_flush(pout);
+ 	}
++	prot_printf(pout, "%s", base64);
++
+       noinitresp:
+ 	prot_printf(pout, "\r\n");
+ 	prot_flush(pout);
+@@ -281,10 +284,23 @@
+ 	    r = SASL_BADAUTH;
+ 	    break;
+ 	}
+-	else if (!strncasecmp(buf, sasl_cmd->cont, strlen(sasl_cmd->cont))) {
++	else if (sasl_cmd->cont &&
++		 !strncasecmp(buf, sasl_cmd->cont, strlen(sasl_cmd->cont))) {
+ 	    /* continue */
+ 	    base64 = buf + strlen(sasl_cmd->cont);
+ 	}
++	else if (!sasl_cmd->cont && buf[0] == '{') {
++	    unsigned int litsize = atoi(buf+1);
++
++	    /* get actual literal data */
++	    if (!prot_fgets(buf, AUTH_BUF_SIZE, pin)) {
++		if (sasl_result) *sasl_result = SASL_FAIL;
++		if (status) *status = "EOF from server";
++		return IMAP_SASL_PROTERR;
++	    }
++
++	    base64 = buf;
++	}
+ 	else {
+ 	    /* unknown response */
+ 	    if (status) *status = buf;
+diff -urNad cyrus-imapd-2.2.13/lib/imapoptions cyrus-imapd-2.2.13/lib/imapoptions
+--- cyrus-imapd-2.2.13/lib/imapoptions	2006-08-31 16:46:22.000000000 +0200
++++ cyrus-imapd-2.2.13/lib/imapoptions	2006-08-31 16:53:44.074560998 +0200
+@@ -42,7 +42,7 @@
+ .\" AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
+ .\" OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ .\" 
+-.\" $Id: imapoptions,v 1.37 2006/06/05 23:31:22 murch Exp $
++.\" $Id: imapoptions,v 1.38 2006/08/30 16:29:11 murch Exp $
+ .SH NAME
+ imapd.conf \- IMAP configuration file
+ .SH DESCRIPTION
+@@ -853,6 +853,11 @@
+ /* If using the alternate IMAP namespace, the prefix for the other users
+    namespace.  The hierarchy delimiter will be automatically appended. */
+ 
++{ "sieve_allowreferrals", 1, SWITCH }
++/* If enabled, timsieved will issue referrals to clients when the
++   user's scripts reside on a remote server (in a Murder).
++   Otherwise, timsieved will proxy traffic to the remote server. */
++
+ # xxx badly worded
+ { "unix_group_enable", 1, SWITCH }
+ /* Should we look up groups when using auth_unix (disable this if you are
+diff -urNad cyrus-imapd-2.2.13/timsieved/Makefile.in cyrus-imapd-2.2.13/timsieved/Makefile.in
+--- cyrus-imapd-2.2.13/timsieved/Makefile.in	2006-08-31 16:44:13.000000000 +0200
++++ cyrus-imapd-2.2.13/timsieved/Makefile.in	2006-08-31 16:53:15.967326349 +0200
+@@ -1,5 +1,5 @@
+ # Makefile.in - timsieved makefile
+-# $Id: Makefile.in,v 1.24 2004/05/28 18:03:10 rjs3 Exp $
++# $Id: Makefile.in,v 1.25 2006/08/30 16:29:11 murch Exp $
+ # @configure_input@
+ # 
+ # Copyright (c) 1998-2000 Carnegie Mellon University.  All rights reserved.
+@@ -83,7 +83,7 @@
+ 	$(INSTALL) -m 755 timsieved $(DESTDIR)$(service_path)
+ 
+ OBJS= actions.o lex.o mystring.o scripttest.o timsieved.o parser.o \
+-	../imap/tls.o
++	../imap/tls.o ../imap/backend.o
+ 
+ timsieved: $(OBJS) $(SERVICE)
+ 	$(CC) $(LDFLAGS) -o timsieved \
+diff -urNad cyrus-imapd-2.2.13/timsieved/actions.c cyrus-imapd-2.2.13/timsieved/actions.c
+--- cyrus-imapd-2.2.13/timsieved/actions.c	2006-08-31 16:44:13.000000000 +0200
++++ cyrus-imapd-2.2.13/timsieved/actions.c	2006-08-31 16:53:15.967326349 +0200
+@@ -1,6 +1,6 @@
+ /* actions.c -- executes the commands for timsieved
+  * Tim Martin
+- * $Id: actions.c,v 1.38 2005/11/18 14:18:18 murch Exp $
++ * $Id: actions.c,v 1.39 2006/08/30 16:29:11 murch Exp $
+  */
+ /*
+  * Copyright (c) 1998-2003 Carnegie Mellon University.  All rights reserved.
+@@ -177,8 +177,9 @@
+     int mechcount;
+ 
+     /* implementation */
+-    prot_printf(conn, "\"IMPLEMENTATION\" \"Cyrus timsieved %s\"\r\n",
+-		CYRUS_VERSION);
++    prot_printf(conn,
++		"\"IMPLEMENTATION\" \"Cyrus timsieved%s %s\"\r\n",
++		config_mupdate_server ? " (Murder)" : "", CYRUS_VERSION);
+     
+     /* SASL */
+     if (!authenticated &&
+diff -urNad cyrus-imapd-2.2.13/timsieved/parser.c cyrus-imapd-2.2.13/timsieved/parser.c
+--- cyrus-imapd-2.2.13/timsieved/parser.c	2006-08-31 16:44:13.000000000 +0200
++++ cyrus-imapd-2.2.13/timsieved/parser.c	2006-08-31 16:53:15.968326251 +0200
+@@ -1,7 +1,7 @@
+ /* parser.c -- parser used by timsieved
+  * Tim Martin
+  * 9/21/99
+- * $Id: parser.c,v 1.39 2005/11/03 13:41:54 murch Exp $
++ * $Id: parser.c,v 1.40 2006/08/30 16:29:11 murch Exp $
+  */
+ /*
+  * Copyright (c) 1998-2003 Carnegie Mellon University.  All rights reserved.
+@@ -60,6 +60,7 @@
+ #include "libconfig.h"
+ #include "global.h"
+ #include "auth.h"
++#include "backend.h"
+ #include "mboxname.h"
+ #include "mboxlist.h"
+ #include "xmalloc.h"
+@@ -90,6 +91,7 @@
+ /* from elsewhere */
+ void fatal(const char *s, int code);
+ extern int sieved_logfd;
++extern struct backend *backend;
+ 
+ /* forward declarations */
+ static void cmd_logout(struct protstream *sieved_out,
+@@ -680,19 +682,20 @@
+       }
+ 
+       if(type & MBTYPE_REMOTE) {
+-	  /* It's a remote mailbox, we want to set up a referral */
+-	  if (sieved_domainfromip) {
+-	      char *authname, *p;
++	  /* It's a remote mailbox */
++	  if (config_getswitch(IMAPOPT_SIEVE_ALLOWREFERRALS)) {
++	      /* We want to set up a referral */
++	      if (sieved_domainfromip) {
++		  char *authname, *p;
+ 
+-	      /* get a new copy of the userid */
+-	      free(username);
+-	      username = xstrdup(canon_user);
++		  /* get a new copy of the userid */
++		  free(username);
++		  username = xstrdup(canon_user);
+ 
+-	      /* get the authid from SASL */
+-	      sasl_result=sasl_getprop(sieved_saslconn, SASL_AUTHUSER,
+-				       (const void **) &canon_user);
+-	      if (sasl_result!=SASL_OK)
+-		  {
++		  /* get the authid from SASL */
++		  sasl_result=sasl_getprop(sieved_saslconn, SASL_AUTHUSER,
++					   (const void **) &canon_user);
++		  if (sasl_result!=SASL_OK) {
+ 		      *errmsg = "Internal SASL error";
+ 		      syslog(LOG_ERR, "SASL: sasl_getprop SASL_AUTHUSER: %s",
+ 			     sasl_errstring(sasl_result, NULL, NULL));
+@@ -704,21 +707,46 @@
+ 		      ret = FALSE;
+ 		      goto cleanup;
+ 		  }
+-	      authname = xstrdup(canon_user);
++		  authname = xstrdup(canon_user);
+ 
+-	      if ((p = strchr(authname, '@'))) *p = '%';
+-	      if ((p = strchr(username, '@'))) *p = '%';
++		  if ((p = strchr(authname, '@'))) *p = '%';
++		  if ((p = strchr(username, '@'))) *p = '%';
+ 
+-	      referral_host =
+-		  (char*) xmalloc(strlen(authname)+1+strlen(username)+1+
+-				  strlen(server)+1);
+-	      sprintf((char*) referral_host, "%s;%s@%s",
+-		      authname, username, server);
++		  referral_host =
++		      (char*) xmalloc(strlen(authname)+1+strlen(username)+1+
++				      strlen(server)+1);
++		  sprintf((char*) referral_host, "%s;%s@%s",
++			  authname, username, server);
+ 
+-	      free(authname);
++		  free(authname);
++	      }
++	      else
++		  referral_host = xstrdup(server);
++	  }
++	  else {
++	      /* We want to set up a connection to the backend for proxying */
++	      const char *statusline = NULL;
++
++	      /* xxx hide the fact that we are storing partitions */
++	      if (server) {
++		  char *c;
++		  c = strchr(server, '!');
++		  if(c) *c = '\0';
++	      }
++
++	      backend = backend_connect(NULL, server, &protocol[PROTOCOL_SIEVE],
++					username, &statusline);
++
++	      if (!backend) {
++		  syslog(LOG_ERR, "couldn't authenticate to backend server");
++		  prot_printf(sieved_out, "NO \"%s\"\r\n",
++			      statusline ? statusline :
++			      "Authentication to backend server failed");
++		  prot_flush(sieved_out);
++
++		  goto cleanup;
++	      }
+ 	  }
+-	  else
+-	      referral_host = xstrdup(server);
+       } else if (actions_setuser(username) != TIMSIEVE_OK) {
+ 	  *errmsg = "internal error";
+ 	  syslog(LOG_ERR, "error in actions_setuser()");
+diff -urNad cyrus-imapd-2.2.13/timsieved/timsieved.c cyrus-imapd-2.2.13/timsieved/timsieved.c
+--- cyrus-imapd-2.2.13/timsieved/timsieved.c	2006-08-31 16:44:13.000000000 +0200
++++ cyrus-imapd-2.2.13/timsieved/timsieved.c	2006-08-31 16:53:15.968326251 +0200
+@@ -1,7 +1,7 @@
+ /* timsieved.c -- main file for timsieved (sieve script accepting program)
+  * Tim Martin
+  * 9/21/99
+- * $Id: timsieved.c,v 1.56 2005/11/18 14:18:35 murch Exp $
++ * $Id: timsieved.c,v 1.57 2006/08/30 16:29:11 murch Exp $
+  */
+ /*
+  * Copyright (c) 1998-2003 Carnegie Mellon University.  All rights reserved.
+@@ -82,6 +82,7 @@
+ 
+ #include "auth.h"
+ #include "acl.h"
++#include "backend.h"
+ #include "mboxlist.h"
+ #include "util.h"
+ 
+@@ -117,12 +118,24 @@
+     1, 1, &sieved_authstate, &sieved_userisadmin, NULL
+ };
+ 
++/* PROXY stuff */
++struct backend *backend = NULL;
++
++static void bitpipe(void);
++/* end PROXY stuff */
++
+ /*
+  * Cleanly shut down and exit
+  */
+ void shut_down(int code) __attribute__ ((noreturn));
+ void shut_down(int code)
+ {
++    /* close backend connection */
++    if (backend) {
++	backend_disconnect(backend, &protocol[PROTOCOL_SIEVE]);
++	free(backend);
++    }
++
+     /* close mailboxes */
+     mboxlist_close();
+     mboxlist_done();
+@@ -161,6 +174,14 @@
+ 
+     while (ret != TRUE)
+     {
++	if (backend) {
++	    /* create a pipe from client to backend */
++	    bitpipe();
++
++	    /* pipe has been closed */
++	    return;
++	}
++
+ 	ret = parser(sieved_out, sieved_in);
+     }
+ 
+@@ -202,7 +223,7 @@
+ 		 char **argv __attribute__((unused)),
+ 		 char **envp __attribute__((unused)))
+ {
+-    global_sasl_init(0, 1, mysasl_cb);
++    global_sasl_init(1, 1, mysasl_cb);
+ 
+     /* open mailboxes */
+     mboxlist_init(0);
+@@ -351,3 +372,79 @@
+ 
+     return SASL_OK;
+ }
++
++/* we've authenticated the client, we've connected to the backend.
++   now it's all up to them */
++static void bitpipe(void)
++{
++    struct protgroup *protin = protgroup_new(2);
++    struct protgroup *protout = NULL;
++    struct timeval timeout;
++    int n, shutdown = 0;
++    char buf[4096];
++
++    /* Reset protin to all zeros (to preserve memory allocation) */
++    protgroup_reset(protin);
++    protgroup_insert(protin, sieved_in);
++    protgroup_insert(protin, backend->in);
++
++    for (;;) {
++	/* check for shutdown file */
++	if (shutdown_file(buf, sizeof(buf))) {
++	    shutdown = 1;
++	    goto done;
++	}
++
++	/* Clear protout if needed */
++	protgroup_free(protout);
++	protout = NULL;
++
++	timeout.tv_sec = 60;
++	timeout.tv_usec = 0;
++
++	n = prot_select(protin, PROT_NO_FD, &protout, NULL, &timeout);
++	if (n == -1) {
++	    syslog(LOG_ERR, "prot_select() failed in bitpipe(): %m");
++	    fatal("prot_select() failed in bitpipe()", EC_TEMPFAIL);
++	}
++	if (n && protout) {
++	    struct protstream *ptmp;
++
++	    for (; n; n--) {
++		ptmp = protgroup_getelement(protout, n-1);
++
++		if (ptmp == sieved_in) {
++		    do {
++			int c = prot_read(sieved_in, buf, sizeof(buf));
++			if (c == 0 || c < 0) goto done;
++			prot_write(backend->out, buf, c);
++		    } while (sieved_in->cnt > 0);
++		    prot_flush(backend->out);
++		}
++		else if (ptmp == backend->in) {
++		    do {
++			int c = prot_read(backend->in, buf, sizeof(buf));
++			if (c == 0 || c < 0) goto done;
++			prot_write(sieved_out, buf, c);
++		    } while (backend->in->cnt > 0);
++		    prot_flush(sieved_out);
++		}
++		else {
++		    /* XXX shouldn't get here !!! */
++		    fatal("unknown protstream returned by prot_select in bitpipe()",
++			  EC_SOFTWARE);
++		}
++	    }
++	}
++    }
++
++
++ done:
++    /* ok, we're done. */
++    protgroup_free(protin);
++    protgroup_free(protout);
++
++    if (shutdown) prot_printf(sieved_out, "NO \"%s\"\r\n", buf);
++
++    return;
++}

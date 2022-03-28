@@ -1,0 +1,19 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 82-allow-from_-header by FastMail.fm
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Allow message upload of messages with a "From " header, as for example
+## DP: Outlook sometimes tries (occured with Thunderbird as well)
+
+@DPATCH@
+diff -urNad cyrus-imapd-2.2.13/imap/message.c cyrus-imapd-2.2.13/imap/message.c
+--- cyrus-imapd-2.2.13/imap/message.c	2007-02-25 21:28:42.000000000 +0100
++++ cyrus-imapd-2.2.13/imap/message.c	2007-02-25 21:29:40.841335772 +0100
+@@ -296,6 +296,7 @@
+ 	/* Check for valid header name */
+ 	if (sawnl && buf[0] != ' ' && buf[0] != '\t') {
+ 	    if (buf[0] == ':') return IMAP_MESSAGE_BADHEADER;
++	if (strstr(buf,"From ") != buf )
+ 	    for (p = (unsigned char *)buf; *p != ':'; p++) {
+ 		if (*p <= ' ') return IMAP_MESSAGE_BADHEADER;
+ 	    }

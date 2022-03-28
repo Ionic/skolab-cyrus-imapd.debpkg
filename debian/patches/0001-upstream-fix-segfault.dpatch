@@ -1,0 +1,18 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 0001-upstream-fix-segfault.dpatch by Sven Mueller <debian@incase.de>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Fix for imap/backend.c, upstream CVS edition 1.40
+
+@DPATCH@
+--- a/imap/backend.c
++++ b/imap/backend.c
+@@ -271,7 +271,7 @@ struct backend *backend_connect(struct b
+     /* need to (re)establish connection to server or create one */
+     int sock = -1;
+     int r;
+-    int err = 0;
++    int err = -1;
+     struct addrinfo hints, *res0 = NULL, *res1 = NULL, *res;
+     struct sockaddr_un sunsock;
+     char buf[2048], *mechlist = NULL;

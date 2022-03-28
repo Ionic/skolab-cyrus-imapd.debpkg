@@ -1,0 +1,56 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 0021-upstream-applied_RFC4314_READ-ONLY_logic.dpatch by Sven Mueller <sven@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Upstream: applied RFC4314 READ-ONLY logic (by murch)
+
+@DPATCH@
+--- a/imap/imapd.c
++++ b/imap/imapd.c
+@@ -38,7 +38,7 @@
+  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
+-/* $Id: imapd.c,v 1.500 2006/05/10 15:41:44 murch Exp $ */
++/* $Id: imapd.c,v 1.501 2006/11/13 16:17:52 murch Exp $ */
+ 
+ #include <config.h>
+ 
+@@ -2643,7 +2643,7 @@ void cmd_select(char *tag, char *cmd, ch
+ 
+     /* Examine command puts mailbox in read-only mode */
+     if (cmd[0] == 'E') {
+-	imapd_mailbox->myrights &= ~(ACL_SEEN|ACL_WRITE|ACL_DELETE);
++	imapd_mailbox->myrights &= ~ACL_READ_WRITE;
+     }
+ 
+     if (imapd_mailbox->myrights & ACL_DELETE) {
+@@ -2682,7 +2682,7 @@ void cmd_select(char *tag, char *cmd, ch
+     }
+ 
+     prot_printf(imapd_out, "%s OK [READ-%s] %s\r\n", tag,
+-	   (imapd_mailbox->myrights & (ACL_WRITE|ACL_DELETE)) ?
++	   (imapd_mailbox->myrights & ACL_READ_WRITE) ?
+ 		"WRITE" : "ONLY", error_message(IMAP_OK_COMPLETED));
+ 
+     proc_register("imapd", imapd_clienthost, imapd_userid, mailboxname);
+--- a/lib/acl.h
++++ b/lib/acl.h
+@@ -42,7 +42,7 @@
+  * Start Date: 6/28/93
+  */
+ 
+-/* $Id: acl.h,v 1.16 2004/03/05 19:19:21 rjs3 Exp $ */
++/* $Id: acl.h,v 1.17 2006/11/13 16:17:53 murch Exp $ */
+ 
+ #ifndef INCLUDED_ACL_H
+ #define INCLUDED_ACL_H
+@@ -75,6 +75,8 @@
+ #define ACL_USER9  0x40000L
+ #define ACL_FULL   0xFFFFFL
+ 
++#define ACL_READ_WRITE	(ACL_SEEN|ACL_WRITE|ACL_INSERT|ACL_DELETE)
++
+ #define ACL_MODE_SET 0
+ #define ACL_MODE_ADD 1
+ #define ACL_MODE_REMOVE 2
