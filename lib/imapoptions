@@ -757,7 +757,11 @@ Blank lines and lines beginning with ``#'' are ignored.
    mailbox that does not have a parent mailbox. */
 
 { "defaultdomain", "internal", STRING, "3.0.0" }
-/* The default domain for virtual domain support */
+/* The default domain for virtual domain support. Note that this domain
+   is stripped from the email-address transmitted using LMTP, but it
+   is not stripped from usernames at login-time. For imapd/pop3d,
+   "user" and "user@defaultdomain" specify two different users.
+   Please check install-virtdomains.html for details. */
 
 { "defaultpartition", NULL, STRING, "2.3.17" }
 /* The partition name used by default for new mailboxes.  If not
@@ -1459,7 +1463,10 @@ Blank lines and lines beginning with ``#'' are ignored.
 /* The list of remote realms whose users may authenticate using cross-realm
    authentication identifiers.  Separate each realm name by a space.  (A
    cross-realm identity is considered any identity returned by SASL
-   with an "@" in it.). */
+   with an "@" in it.). Note that to support multiple virtual domains
+   on the same interface/IP, you need to list them all as loginrealms.
+   If you don't list them here, your users probably won't be able to
+   log in. */
 
 { "loginuseacl", 0, SWITCH, "2.3.17" }
 /* If enabled, any authentication identity which has \fBa\fR rights on a
