@@ -312,6 +312,10 @@ Delete (STORE \DELETED, EXPUNGE)
 
 Administer (SETACL)
 
+=item C</explicit/annotation>
+
+Sets the annotation I</explicit/annotation> on I<mailbox> to I<value>.
+
 =back
 
 =item C<setinfo> I<attribute> I<value>
