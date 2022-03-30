@@ -51,4 +51,6 @@ extern int bsearch_mem(const char *word, int caseSensitive,
 
 extern int bsearch_compare(const char *s1, const char *s2);
 
+extern int bsearch_ncompare(const char *s1, int l1, const char *s2, int l2);
+
 #endif /* INCLUDED_BSEARCH_H */
