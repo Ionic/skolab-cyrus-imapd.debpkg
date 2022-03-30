@@ -400,6 +400,7 @@ struct backend *backend_connect(struct backend *ret_backend, const char *server,
 	    syslog(LOG_ERR, "couldn't authenticate to backend server: %s",
 		   sasl_errstring(r, NULL, NULL));
 	    if (!ret_backend) free(ret);
+ 	    shutdown(sock, SHUT_RDWR);
 	    close(sock);
 	    ret = NULL;
 	}
