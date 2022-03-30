@@ -140,7 +140,7 @@ int append_check(const char *name, int format,
     if (!r) {
 	if (m.quota.limit >= 0 && quotacheck >= 0 &&
 	    m.quota.used + quotacheck > 
-	    ((unsigned) m.quota.limit * QUOTA_UNITS)) {
+	    ((uquota_t) m.quota.limit * QUOTA_UNITS)) {
 	    r = IMAP_QUOTA_EXCEEDED;
 	}
     }
@@ -208,7 +208,7 @@ int append_setup(struct appendstate *as, const char *name,
     if (!r) {
 	if (as->m.quota.limit >= 0 && quotacheck >= 0 &&
 	    as->m.quota.used + quotacheck > 
-	    ((unsigned) as->m.quota.limit * QUOTA_UNITS)) {
+	    ((uquota_t) as->m.quota.limit * QUOTA_UNITS)) {
 	    quota_abort(&as->tid);
 	    mailbox_close(&as->m);
 	    r = IMAP_QUOTA_EXCEEDED;

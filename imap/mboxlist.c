@@ -2536,7 +2536,7 @@ static int mboxlist_changequota(const char *name,
 	r = quota_write(&mailbox.quota, tid);
 	if (r) {
 	    syslog(LOG_ERR,
-		   "LOSTQUOTA: unable to record free of %lu bytes in quota %s",
+		   "LOSTQUOTA: unable to record free of " UQUOTA_T_FMT " bytes in quota %s",
 		   mailbox.quota_mailbox_used, mailbox.quota.root);
 	}
 	free(mailbox.quota.root);

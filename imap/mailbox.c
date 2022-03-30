@@ -84,6 +84,7 @@
 #include "seen.h"
 #include "util.h"
 #include "xmalloc.h"
+#include "byteorder64.h"
 
 static int mailbox_doing_reconstruct = 0;
 #define zeromailbox(m) { memset(&m, 0, sizeof(struct mailbox)); \
@@ -788,6 +789,13 @@ int mailbox_read_index_header(struct mailbox *mailbox)
     mailbox->last_uid =
 	ntohl(*((bit32 *)(mailbox->index_base+OFFSET_LAST_UID)));
 
+#ifdef HAVE_LONG_LONG_INT
+    if (mailbox->minor_version > 5) {
+	/* newer versions may use 64bit quotas now */
+        mailbox->quota_mailbox_used =
+            ntohll(*((bit64 *)(mailbox->index_base+OFFSET_QUOTA_MAILBOX_USED64)));
+    } else
+#endif
     mailbox->quota_mailbox_used =
 	ntohl(*((bit32 *)(mailbox->index_base+OFFSET_QUOTA_MAILBOX_USED-quota_upgrade_offset)));
 
@@ -1183,9 +1191,18 @@ int mailbox_write_index_header(struct mailbox *mailbox)
     *((bit32 *)(buf+OFFSET_EXISTS)) = htonl(mailbox->exists);
     *((bit32 *)(buf+OFFSET_LAST_APPENDDATE)) = htonl(mailbox->last_appenddate);
     *((bit32 *)(buf+OFFSET_LAST_UID)) = htonl(mailbox->last_uid);
-    *((bit32 *)(buf+OFFSET_QUOTA_RESERVED_FIELD)) = htonl(0); /* RESERVED */
+
+    /* quotas may be 64bit now */
+#ifdef HAVE_LONG_LONG_INT
+    *((bit64 *)(buf+OFFSET_QUOTA_MAILBOX_USED64)) =
+	htonll(mailbox->quota_mailbox_used);
+#else	
+    /* zero the unused 32bits */
+    *((bit32 *)(buf+OFFSET_QUOTA_MAILBOX_USED64)) = htonl(0);
     *((bit32 *)(buf+OFFSET_QUOTA_MAILBOX_USED)) =
 	htonl(mailbox->quota_mailbox_used);
+#endif
+
     *((bit32 *)(buf+OFFSET_POP3_LAST_LOGIN)) = htonl(mailbox->pop3_last_login);
     *((bit32 *)(buf+OFFSET_UIDVALIDITY)) = htonl(mailbox->uidvalidity);
     *((bit32 *)(buf+OFFSET_DELETED)) = htonl(mailbox->deleted);
@@ -1433,9 +1450,18 @@ static int mailbox_upgrade_index(struct mailbox *mailbox)
     *((bit32 *)(buf+OFFSET_EXISTS)) = htonl(mailbox->exists);
     *((bit32 *)(buf+OFFSET_LAST_APPENDDATE)) = htonl(mailbox->last_appenddate);
     *((bit32 *)(buf+OFFSET_LAST_UID)) = htonl(mailbox->last_uid);
-    /* OFFSET_QUOTA_RESERVED_FIELD left as zero */
+
+    /* newer versions may use 64bit quotas */
+#ifdef HAVE_LONG_LONG_INT
+    *((bit64 *)(buf+OFFSET_QUOTA_MAILBOX_USED64)) =
+	htonll(mailbox->quota_mailbox_used);
+#else	
+    /* zero the unused 32bits */
+    *((bit32 *)(buf+OFFSET_QUOTA_MAILBOX_USED64)) = htonl(0);
     *((bit32 *)(buf+OFFSET_QUOTA_MAILBOX_USED)) =
 	htonl(mailbox->quota_mailbox_used);
+#endif
+
     *((bit32 *)(buf+OFFSET_POP3_LAST_LOGIN)) = htonl(mailbox->pop3_last_login);
     *((bit32 *)(buf+OFFSET_UIDVALIDITY)) = htonl(mailbox->uidvalidity);
     *((bit32 *)(buf+OFFSET_DELETED)) = htonl(mailbox->deleted);
@@ -1611,7 +1637,8 @@ mailbox_expunge(struct mailbox *mailbox,
     size_t fnamebuf_len;
     FILE *newindex = NULL, *newcache = NULL;
     unsigned long *deleted;
-    unsigned numdeleted = 0, quotadeleted = 0;
+    unsigned numdeleted = 0;
+    uquota_t quotadeleted = 0;
     unsigned numansweredflag = 0;
     unsigned numdeletedflag = 0;
     unsigned numflaggedflag = 0;
@@ -1838,8 +1865,13 @@ mailbox_expunge(struct mailbox *mailbox,
     *((bit32 *)(buf+OFFSET_FLAGGED)) = htonl(newflagged);
 
     /* Fix up quota_mailbox_used */
+#ifdef HAVE_LONG_LONG_INT
+    *((bit64 *)(buf+OFFSET_QUOTA_MAILBOX_USED64)) =
+	htonll(ntohll(*((bit64 *)(buf+OFFSET_QUOTA_MAILBOX_USED64)))-quotadeleted);
+#else
     *((bit32 *)(buf+OFFSET_QUOTA_MAILBOX_USED)) =
       htonl(ntohl(*((bit32 *)(buf+OFFSET_QUOTA_MAILBOX_USED)))-quotadeleted);
+#endif
     /* Fix up start offset if necessary */
     if (mailbox->start_offset < INDEX_HEADER_SIZE) {
 	*((bit32 *)(buf+OFFSET_START_OFFSET)) = htonl(INDEX_HEADER_SIZE);
@@ -1871,7 +1903,7 @@ mailbox_expunge(struct mailbox *mailbox,
 	if (!r) quota_commit(&tid);
 	else {
 	    syslog(LOG_ERR,
-		   "LOSTQUOTA: unable to record free of %u bytes in quota %s",
+		   "LOSTQUOTA: unable to record free of " UQUOTA_T_FMT " bytes in quota %s",
 		   quotadeleted, mailbox->quota.root);
 	}
     }
@@ -2146,7 +2178,7 @@ int mailbox_delete(struct mailbox *mailbox, int delete_quota_root)
 	r = quota_write(&mailbox->quota, &tid);
 	if (r) {
 	    syslog(LOG_ERR,
-		   "LOSTQUOTA: unable to record free of %lu bytes in quota %s",
+		   "LOSTQUOTA: unable to record free of " UQUOTA_T_FMT " bytes in quota %s",
 		   mailbox->quota_mailbox_used, mailbox->quota.root);
 	}
 	else
@@ -2265,7 +2297,7 @@ int mailbox_rename_copy(struct mailbox *oldmailbox,
 	    strcmp(oldmailbox->quota.root, newmailbox->quota.root) != 0) {
 	    if (!r && newmailbox->quota.limit >= 0 &&
 		newmailbox->quota.used + oldmailbox->quota_mailbox_used >
-		((unsigned) newmailbox->quota.limit * QUOTA_UNITS)) {
+		((uquota_t) newmailbox->quota.limit * QUOTA_UNITS)) {
 		r = IMAP_QUOTA_EXCEEDED;
 	    }
 	}
@@ -2479,7 +2511,7 @@ mailbox_sync(const char *oldname, const char *oldpath, const char *oldacl,
 	    strcmp(oldmailbox.quota.root, newmailbox.quota.root) != 0) {
 	    if (!r && newmailbox.quota.limit >= 0 &&
 		newmailbox.quota.used + oldmailbox.quota_mailbox_used >
-		((unsigned) newmailbox.quota.limit * QUOTA_UNITS)) {
+		((uquota_t) newmailbox.quota.limit * QUOTA_UNITS)) {
 		r = IMAP_QUOTA_EXCEEDED;
 	    }
 	}
@@ -2632,7 +2664,7 @@ mailbox_sync(const char *oldname, const char *oldpath, const char *oldacl,
 	else if (r2 == IMAP_QUOTAROOT_NONEXISTENT) r2 = 0;
 	if (r2) {
 	    syslog(LOG_ERR,
-	      "LOSTQUOTA: unable to record use of %lu bytes in quota %s",
+	      "LOSTQUOTA: unable to record use of " UQUOTA_T_FMT " bytes in quota %s",
 		   newmailbox.quota_mailbox_used, newmailbox.quota.root);
 	}
     }

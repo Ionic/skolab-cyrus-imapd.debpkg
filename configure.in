@@ -107,6 +107,15 @@ dnl	AC_MSG_ERROR(The Cyrus IMAPD requires support for long file names)
 dnl fi
 AC_C_INLINE
 
+dnl Check if `long long int' is available
+AC_CHECK_SIZEOF(long long int)
+AC_CHECK_SIZEOF(unsigned long long int)
+if test "$ac_cv_sizeof_long_long_int" -eq 8 -a \
+        "$ac_cv_sizeof_unsigned_long_long_int" -eq 8; then
+  AC_DEFINE(HAVE_LONG_LONG_INT,[],[Does the compiler support long long int?])
+  AC_C_BIGENDIAN
+fi
+
 CMU_C___ATTRIBUTE__
 CMU_C_FPIC
 

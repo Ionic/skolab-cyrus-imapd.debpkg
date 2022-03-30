@@ -266,7 +266,7 @@ int do_examine(char *name,
     printf("  Minor Version: %d\n", mailbox.minor_version);
     printf("  Header Size: %ld bytes  Record Size: %ld bytes\n",
 	   mailbox.start_offset, mailbox.record_size);
-    printf("  Number of Messages: %lu  Mailbox Size: %lu bytes\n",
+    printf("  Number of Messages: %lu  Mailbox Size: " UQUOTA_T_FMT " bytes\n",
 	   mailbox.exists, mailbox.quota_mailbox_used);
     printf("  Last Append Date: (%ld) %s", mailbox.last_appenddate,
 	   ctime(&mailbox.last_appenddate));

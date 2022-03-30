@@ -871,6 +871,11 @@ int prot_printf(struct protstream *s, const char *fmt, ...)
     char buf[30];
     va_start(pvar, fmt);
 
+#ifdef HAVE_LONG_LONG_INT
+    long long int ll;
+    unsigned long long int ull;
+#endif
+
     assert(s->write);
 
     while ((percent = strchr(fmt, '%')) != 0) {
@@ -893,6 +898,27 @@ int prot_printf(struct protstream *s, const char *fmt, ...)
 		snprintf(buf, sizeof(buf), "%lu", ul);
 		prot_write(s, buf, strlen(buf));
 		break;
+
+#ifdef HAVE_LONG_LONG_INT
+            case 'l':
+	        switch (*++percent) {
+		case 'd':
+		    ll = va_arg(pvar, long long int);
+		    snprintf(buf, sizeof(buf), "%lld", ll);
+		    prot_write(s, buf, strlen(buf));
+		    break;
+
+		case 'u':
+		    ull = va_arg(pvar, unsigned long long int);
+		    snprintf(buf, sizeof(buf), "%llu", ull);
+		    prot_write(s, buf, strlen(buf));
+		    break;
+
+	        default:
+		    abort();
+		}
+		break;
+#endif
 
 	    default:
 		abort();

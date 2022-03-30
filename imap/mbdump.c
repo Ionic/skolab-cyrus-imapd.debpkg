@@ -507,7 +507,7 @@ int undump_mailbox(const char *mbname, const char *mbpath, const char *mbacl,
 {
     struct buf file, data;
     char c;
-    int quotaused = 0;
+    uquota_t quotaused = 0;
     int r = 0;
     int curfile = -1;
     const char *userid = NULL;

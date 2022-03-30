@@ -45,6 +45,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <limits.h>
+#include <config.h>
 
 #include "auth.h"
 #include "quota.h"
@@ -59,6 +60,10 @@ typedef unsigned long bit32;
 typedef unsigned short bit32;
 #else
 #error dont know what to use for bit32
+#endif
+
+#ifdef HAVE_LONG_LONG_INT
+typedef unsigned long long int bit64;
 #endif
 
 #define MAX_MAILBOX_NAME 490
@@ -126,7 +131,7 @@ struct mailbox {
     unsigned long exists;
     time_t last_appenddate;
     unsigned long last_uid;
-    unsigned long quota_mailbox_used;
+    uquota_t quota_mailbox_used;
     unsigned long pop3_last_login;
     unsigned long uidvalidity;
 
@@ -168,8 +173,8 @@ struct index_record {
 #define OFFSET_EXISTS 20
 #define OFFSET_LAST_APPENDDATE 24
 #define OFFSET_LAST_UID 28
-#define OFFSET_QUOTA_RESERVED_FIELD 32  /* Reserved for 64bit quotas */
-#define OFFSET_QUOTA_MAILBOX_USED 36
+#define OFFSET_QUOTA_MAILBOX_USED64 32  /* offset for 64bit quotas */
+#define OFFSET_QUOTA_MAILBOX_USED 36    /* offset for 32bit quotas */
 #define OFFSET_POP3_LAST_LOGIN 40
 #define OFFSET_UIDVALIDITY 44
 #define OFFSET_DELETED 48      /* added for ACAP */
