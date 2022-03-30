@@ -182,6 +182,9 @@ static void cyrus_modules_done()
     }
 }
 
+/* syslog prefix tag */
+static char syslog_prefix[20];
+
 /* Called before a cyrus application starts (but after command line parameters
  * are read) */
 EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flags, int config_need_data)
@@ -193,6 +196,7 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
     int syslog_opts = LOG_PID;
     const char *facility;
     char *ident_buf = NULL;
+    char *ident_syslog_buf = NULL;
 
     if (cyrus_init_run != NOT_RUNNING) {
         fatal("cyrus_init called twice!", EX_CONFIG);
@@ -231,11 +235,12 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
      */
     if ((prefix = getenv("CYRUS_SYSLOG_PREFIX"))) {
         ident_buf = strconcat(prefix, "/", ident, NULL);
-        openlog(ident_buf, syslog_opts, SYSLOG_FACILITY);
+        ident_syslog_buf = ident_buf;
     }
     else {
-        openlog(config_ident, syslog_opts, SYSLOG_FACILITY);
+        ident_syslog_buf = strconcat("cyrus/", ident, NULL);
     }
+    openlog(ident_syslog_buf, syslog_opts, SYSLOG_FACILITY);
 
     /* Load configuration file.  This will set config_dir when it finds it */
     config_read(alt_config, config_need_data);
@@ -255,15 +260,15 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
         /* The $CYRUS_SYSLOG_PREFIX environment variable takes precedence */
         if (!ident_buf) {
             if (prefix)
-                ident_buf = strconcat(prefix, "/", ident, NULL);
+                ident_syslog_buf = strconcat(prefix, "/", ident, NULL);
             else
-                ident_buf = xstrdup(ident);
+                ident_syslog_buf = strconcat("cyrus/", ident, NULL);
         }
 
         closelog();
-        openlog(ident_buf, syslog_opts, facnum);
+        openlog(ident_syslog_buf, syslog_opts, facnum);
     }
-    /* Do not free ident_buf, syslog needs it for the life of this process! */
+    /* Do not free ident_syslog_buf, syslog needs it for the life of this process! */
 
     /* allow debug logging */
     if (!config_debug)
