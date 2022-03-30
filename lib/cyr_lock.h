@@ -45,6 +45,8 @@
 
 #include <sys/stat.h>
 
+extern int lock_wait_time;
+
 extern const char lock_method_desc[];
 
 extern double debug_locks_longer_than;
