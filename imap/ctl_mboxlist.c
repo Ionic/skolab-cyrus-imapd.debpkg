@@ -479,7 +479,7 @@ void do_undump(void)
     int r = 0;
     char buf[16384];
     int line = 0;
-    char last_commit[MAX_MAILBOX_NAME];
+    char last_commit[MAX_MAILBOX_NAME+1];
     char *key=NULL, *data=NULL;
     int keylen, datalen;
     int untilCommit = PER_COMMIT;

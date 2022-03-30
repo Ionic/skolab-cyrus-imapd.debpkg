@@ -465,7 +465,7 @@ static int acl_ok(const char *user, struct auth_state *authstate)
 {
     struct namespace namespace;
     char *acl;
-    char bufuser[MAX_MAILBOX_NAME], inboxname[MAX_MAILBOX_NAME];
+    char bufuser[MAX_MAILBOX_NAME+1], inboxname[MAX_MAILBOX_NAME+1];
     int r;
 
     /* Set namespace */

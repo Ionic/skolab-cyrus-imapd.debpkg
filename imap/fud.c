@@ -119,9 +119,9 @@ int begin_handling(void)
 
         while(1) {
             /* For safety */
-            memset(username,'\0',MAXLOGNAME + MAXDOMNAME);	
-            memset(mbox,'\0',MAX_MAILBOX_NAME+1);
-            memset(buf, '\0', MAXLOGNAME + MAX_MAILBOX_NAME + 1);
+            memset(username,'\0', sizeof(username));	
+            memset(mbox,'\0', sizeof(mbox));
+            memset(buf, '\0', sizeof(buf));
 
 	    if (signals_poll() == SIGHUP) {
 		/* caught a SIGHUP, return */

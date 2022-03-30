@@ -1213,7 +1213,7 @@ int service_main(int argc __attribute__((unused)),
 		 char **envp __attribute__((unused)))
 {
     socklen_t salen;
-    char hbuf[NI_MAXHOST];
+    char hbuf[NI_MAXHOST+1];
     struct sockaddr_storage proxyd_localaddr, proxyd_remoteaddr;
     char localip[60], remoteip[60];
     int niflags;

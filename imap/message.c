@@ -795,7 +795,7 @@ struct ibuf *ibuf;
     /* Save header value */
     len = hdrend - hdr;
     message_ibuf_ensure(ibuf, len+2);
-    strncpy(ibuf->end, hdr, len);
+    strncpy(ibuf->end, hdr, len+1);
     ibuf->end += len;
     *(ibuf->end)++ = '\r';
     *(ibuf->end)++ = '\n';

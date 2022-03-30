@@ -133,7 +133,7 @@ const char *masterconf_getstring(struct entry *e, const char *key,
 	} else {
 	    /* one word */
 	    for (i = 0; i < 255; i++) {
-		if (isspace((int) *p)) break;
+		if ((!*p) || (isspace((int) *p))) break;
 		v[i] = *p++;
 	    }
 	}

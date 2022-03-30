@@ -222,13 +222,17 @@ int become_cyrus(void)
     return result;
 }
 
-void get_prog(char *path, unsigned size, char *const *cmd)
+void get_prog(char *path, unsigned int size, char *const *cmd)
 {
     if (cmd[0][0] == '/') {
 	/* master lacks strlcpy, due to no libcyrus */
 	snprintf(path, size, "%s", cmd[0]);
+	path[size-1] = '\0';
     }
-    else snprintf(path, size, "%s/%s", SERVICE_PATH, cmd[0]);
+    else {
+	snprintf(path, size, "%s/%s", SERVICE_PATH, cmd[0]);
+	path[size-1] = '\0';
+    }
 }
 
 void get_statsock(int filedes[2])

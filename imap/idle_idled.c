@@ -110,11 +110,11 @@ int idle_enabled(void)
     idle_remote.sun_family = AF_UNIX;
     idle_sock = config_getstring(IMAPOPT_IDLESOCKET);
     if (idle_sock) {	
-	strcpy(idle_remote.sun_path, idle_sock);
+	strlcpy(idle_remote.sun_path, idle_sock, sizeof(idle_remote.sun_path));
     }
     else {
-	strcpy(idle_remote.sun_path, config_dir);
-	strcat(idle_remote.sun_path, FNAME_IDLE_SOCK);
+	strlcpy(idle_remote.sun_path, config_dir, sizeof(idle_remote.sun_path));
+	strlcat(idle_remote.sun_path, FNAME_IDLE_SOCK, sizeof(idle_remote.sun_path));
     }
     idle_remote_len = sizeof(idle_remote.sun_family) +
 	strlen(idle_remote.sun_path) + 1;

@@ -70,8 +70,8 @@ struct mupdate_handle_s {
     struct buf tag, cmd, arg1, arg2, arg3;
 
     /* For client side mupdate_find calls */
-    char mailbox_buf[MAX_MAILBOX_NAME];
-    char server_buf[MAX_MAILBOX_NAME];
+    char mailbox_buf[MAX_MAILBOX_NAME+1];
+    char server_buf[MAX_MAILBOX_NAME+1];
     char *acl_buf;
     size_t acl_buf_len;
     struct mupdate_mailboxdata mailboxdata_buf;

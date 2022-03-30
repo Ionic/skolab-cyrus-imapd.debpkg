@@ -3292,9 +3292,17 @@ static MsgData *index_msgdata_load(unsigned *msgno_list, int n,
 		cur->from = get_localpart_addr(from + CACHE_ITEM_SIZE_SKIP);
 		break;
 	    case SORT_SUBJECT:
-		cur->xsubj = index_extract_subject(subj + CACHE_ITEM_SIZE_SKIP,
-						   CACHE_ITEM_LEN(subj),
-						   &cur->is_refwd);
+		 {
+		     int len = CACHE_ITEM_LEN(subj);
+		     char *t = xmalloc(len+1);
+		
+		     memcpy(t, subj + CACHE_ITEM_SIZE_SKIP, len);
+		     t[len] = '\0';
+		
+		     cur->xsubj = index_extract_subject(t, len, &cur->is_refwd);
+		
+		     free(t);
+		 }
 		cur->xsubj_hash = strhash(cur->xsubj);
 		break;
 	    case SORT_TO:

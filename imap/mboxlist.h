@@ -73,7 +73,7 @@ extern struct db *mbdb;
 
 /* each mailbox has the following data */
 struct mbox_entry {
-    char name[MAX_MAILBOX_NAME];
+    char name[MAX_MAILBOX_NAME+1];
     int mbtype;
     char partition[MAX_PARTITION_LEN];
 				/* holds remote machine for REMOTE mailboxes */

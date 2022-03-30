@@ -143,7 +143,7 @@ int do_notify()
 	if (cp) nopt = strtol(cp, NULL, 10);
 	if (nopt < 0 || errno == ERANGE) cp = NULL;
 
-	if (cp && nopt &&
+	if (cp && (nopt > 0) &&
 	    !(options = (char**) xrealloc(options, nopt * sizeof(char*)))) {
 	    fatal("xmalloc(): can't allocate options", EC_OSERR);
 	}
