@@ -1,5 +1,5 @@
 .\" -*- nroff -*-
-.TH MASTER 8 "Project Cyrus" CMU
+.TH CYRMASTER 8 "Project Cyrus" CMU
 .\" 
 .\" Copyright (c) 1996-2000 Carnegie Mellon University.  All rights reserved.
 .\"
@@ -41,9 +41,9 @@
 .\" 
 .\" $Id: master.8,v 1.13 2004/12/17 16:32:23 ken3 Exp $
 .SH NAME
-master \- master Cyrus process
+cyrmaster \- master Cyrus process
 .SH SYNOPSIS
-.B master
+.B cyrmaster
 [
 .B \-C
 .I alternate imapd.conf
@@ -79,7 +79,7 @@ master \- master Cyrus process
 .I snmp agentx socket
 ]
 .SH DESCRIPTION
-.I Master
+.I cyrmaster
 is the process that controls all of the Cyrus processes. This process
 is responsible for creating all imapd, pop3d, lmtpd and sieved child
 processes. This process also initializes the Berkeley DB code and
@@ -92,12 +92,12 @@ when it receives a SIGTERM.
 .SH OPTIONS
 .TP
 .BI \-C " alternate imapd.conf"
-Specifies an alternate imapd.conf for use by master (note that this will
-not affect any sub-processes spawned by master, you should specify those
+Specifies an alternate imapd.conf for use by cyrmaster (note that this will
+not affect any sub-processes spawned by cyrmaster, you should specify those
 specifically in the respective entries in cyrus.conf).
 .TP
 .BI \-M " alternate cyrus.conf"
-Specifies an alternate cyrus.conf for use by master.
+Specifies an alternate cyrus.conf for use by cyrmaster.
 .TP
 .BI \-l " listen queue backlog"
 Increase the listen queue backlog. By default, the listen queue is set
@@ -113,7 +113,7 @@ compiled Cyrus from its default of 10000 entries).
 .BI \-p " pidfile"
 Use
 .I pidfile
-as the pidfile.  If not specified, defaults to /var/run/cyrus-master.pid
+as the pidfile.  If not specified, defaults to /var/run/cyrmaster.pid
 .TP
 .BI \-P " snmp agentx ping interval"
 Sets the amount on time in seconds the subagent will try and reconnect to the
@@ -132,12 +132,12 @@ Address the master agent (most likely snmpd) listens on.
 Requires net-snmp 5.0 or higher.
 .SH CONFIGURATION
 Upon execution,
-.I master
+.I cyrmaster
 reads its configuration information out of the
 .IR cyrus.conf (5)
 file.
 .PP
-.I Master
+.I cyrmaster
 rereads its configuration file when it receives a hangup signal,
 SIGHUP.  Services and events may be added, deleted or modified when the
 configuration file is reread.  Any active services removed from the
@@ -146,9 +146,18 @@ configuration file will be allowed to run until completion.
 The environment variable \fBCYRUS_VERBOSE\fR can be set to log additional
 debugging information. Setting the value to 1 results in base level logging. 
 Setting it higher results in more log messages being generated.
+.SH BUGS
+Services do not always go away silently when removed through a SIGHUP.  If
+there are workers of the removed service still running, messages to syslog
+about broken pipes and accept() failures are to be expected.
+.PP
+The in-memory list of services is not cleaned up ever, so a cyrmaster daemon
+that has been sent an extremely high amount of SIGHUP signals to
+add/remove/modify services will lose performance eventually.  Restarting
+cyrmaster fixes this.
 .SH FILES
 .TP
-.B /etc/cyrus.conf, /etc/imapd.conf, /var/run/cyrus-master.pid
+.B /etc/cyrus.conf, /etc/imapd.conf, /var/run/cyrmaster.pid
 .SH SEE ALSO
 .PP
 \fBcyrus.conf(5)\fR, \fBimapd.conf(5)\fR, \fBimapd(8)\fR,

@@ -1,5 +1,5 @@
 .\" -*- nroff -*-
-.TH DELIVER 8 "Project Cyrus" CMU
+.TH CYRDELIVER 8 "Project Cyrus" CMU
 .\" 
 .\" Copyright (c) 1998-2000 Carnegie Mellon University.  All rights reserved.
 .\"
@@ -41,9 +41,9 @@
 .\" 
 .\" $Id: deliver.8,v 1.18 2004/06/21 18:40:10 rjs3 Exp $
 .SH NAME
-deliver \- deliver mail to an IMAP mailbox
+cyrdeliver \- deliver mail to an IMAP mailbox
 .SH SYNOPSIS
-.B deliver
+.B cyrdeliver
 [
 .B \-C
 .I config-file
@@ -76,7 +76,7 @@ deliver \- deliver mail to an IMAP mailbox
 .I userid
 ]...
 .br
-.B deliver
+.B cyrdeliver
 [
 .B \-C
 .I config-file
@@ -146,7 +146,7 @@ Deliver message even when receiving mailbox is over quota.
 .B \-l
 Accept messages using the LMTP protocol.
 .SH NOTES
-Depending on the setting of \fBreject8bit\fR in \fBimapd.conf(5)\fR, deliver
+Depending on the setting of \fBreject8bit\fR in \fBimapd.conf(5)\fR, cyrdeliver
 either rejects messages with 8-bit-set characters in the headers or 
 changes these characters to `X'.
 This is because such characters can't be interpreted since the

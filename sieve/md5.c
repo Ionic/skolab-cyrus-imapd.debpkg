@@ -31,7 +31,7 @@ documentation and/or software.
 
 #include "md5global.h"
 #include "md5.h"
-#include "hmac-md5.h"
+#include "sasl/hmac-md5.h"
 
 /* Constants for MD5Transform routine.
 */

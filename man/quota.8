@@ -1,5 +1,5 @@
 .\" -*- nroff -*-
-.TH QUOTA 8 "Project Cyrus" CMU
+.TH CYRQUOTA 8 "Project Cyrus" CMU
 .\" 
 .\" Copyright (c) 1998-2000 Carnegie Mellon University.  All rights reserved.
 .\"
@@ -41,9 +41,9 @@
 .\" 
 .\" $Id: quota.8,v 1.11 2003/10/22 18:50:13 rjs3 Exp $
 .SH NAME
-quota \- report and optionally fix quota usage
+cyrquota \- report and optionally fix quota usage
 .SH SYNOPSIS
-.B quota
+.B cyrquota
 [
 .B \-C
 .I config-file
@@ -59,12 +59,12 @@ quota \- report and optionally fix quota usage
 .IR mailbox-prefix ...
 ]
 .SH DESCRIPTION
-.I Quota
+.I cyrquota
 generates a report listing quota roots, giving their limits and usage.
 If the
 .I \-f
 option is given, 
-.I quota
+.I cyrquota
 first fixes any inconsistencies in the quota subsystem, such as
 mailboxes with the wrong quota root or quota roots with the wrong
 quota usage reported.
@@ -79,14 +79,14 @@ limited to quota roots with names that start with one of the given
 prefixes.
 .PP
 Running
-.I quota
+.I cyrquota
 with both the 
 .I \-f
 option and
 .I mailbox-prefix
 arguments is not recommended.
 .PP
-.I Quota
+.I cyrquota
 reads its configuration options out of the
 .IR imapd.conf (5)
 file unless specified otherwise by \fB-C\fR.

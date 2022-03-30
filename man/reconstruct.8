@@ -1,5 +1,5 @@
 .\" -*- nroff -*-
-.TH RECONSTRUCT 8 "Project Cyrus" CMU
+.TH CYRRECONSTRUCT 8 "Project Cyrus" CMU
 .\" 
 .\" Copyright (c) 1998-2000 Carnegie Mellon University.  All rights reserved.
 .\"
@@ -41,9 +41,9 @@
 .\" 
 .\" $Id: reconstruct.8,v 1.20 2006/06/19 13:01:19 murch Exp $
 .SH NAME
-reconstruct \- reconstruct mailboxes
+cyrreconstruct \- reconstruct mailboxes
 .SH SYNOPSIS
-.B reconstruct
+.B cyrreconstruct
 [
 .B \-C
 .I config-file
@@ -63,14 +63,14 @@ reconstruct \- reconstruct mailboxes
 ]
 .IR mailbox ...
 .br
-.B reconstruct
+.B cyrreconstruct
 [
 .B \-C
 .I config-file
 ]
 .B \-m
 .SH DESCRIPTION
-.I Reconstruct
+.I cyrreconstruct
 rebuilds one or more IMAP mailboxes.  When invoked with the
 .B \-m
 switch, it rebuilds the master
@@ -78,17 +78,17 @@ mailboxes file.  It can be used to recover from
 almost any sort of data corruption.
 .PP
 If
-.I Reconstruct
+.I cyrreconstruct
 can find existing header and index files, it attempts to preserve any
 data in them that is not derivable from the message files themselves.
 The state 
-.I reconstruct
+.I cyrreconstruct
 attempts to preserve includes the flag names, flag state, and
 internaldate.
-.I Reconstruct
+.I cyrreconstruct
 derives all other information from the message files.
 .PP
-.I Reconstruct
+.I cyrreconstruct
 reads its configuration options out of the
 .IR imapd.conf (5)
 file unless specified otherwise by \fB-C\fR.  Any mailbox directory
@@ -96,12 +96,12 @@ underneath the path specified in the
 .I partition-news
 configuration option is assumed to be in news format.
 .PP
-.I Reconstruct
+.I cyrreconstruct
 does not adjust the quota usage recorded in any quota
 root files.  After running
-.IR reconstruct ,
+.IR cyrreconstruct ,
 it is advisable to run
-.IR quota (8)
+.IR cyrquota (8)
 with the
 .I \-f
 switch in order to fix the quota root files.

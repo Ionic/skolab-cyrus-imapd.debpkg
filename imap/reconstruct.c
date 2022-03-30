@@ -345,8 +345,8 @@ int main(int argc, char **argv)
 void usage(void)
 {
     fprintf(stderr,
-	    "usage: reconstruct [-C <alt_config>] [-p partition] [-rfx] mailbox...\n");
-    fprintf(stderr, "       reconstruct [-C <alt_config>] -m\n");
+	    "usage: cyrreconstruct [-C <alt_config>] [-p partition] [-rfx] mailbox...\n");
+    fprintf(stderr, "       cyrreconstruct [-C <alt_config>] -m\n");
     exit(EC_USAGE);
 }    
 
