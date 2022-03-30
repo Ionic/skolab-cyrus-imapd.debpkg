@@ -717,14 +717,22 @@ static long bio_dump_cb(BIO * bio, int cmd, const char *argp, int argi,
 	return (ret);
 
     if (cmd == (BIO_CB_READ | BIO_CB_RETURN)) {
-	printf("read from %08X [%08lX] (%d bytes => %ld (0x%X))",
-	       (unsigned int) bio, (long unsigned int) argp,
+#if __WORDSIZE == 64
+	printf("read from %016zX [%016zX] (%d bytes => %ld (0x%X))",
+#else
+	printf("read from %08zX [%08zX] (%d bytes => %ld (0x%X))",
+#endif
+	       (size_t) bio, (size_t) argp,
 	       argi, ret, (unsigned int) ret);
 	tls_dump(argp, (int) ret);
 	return (ret);
     } else if (cmd == (BIO_CB_WRITE | BIO_CB_RETURN)) {
-	printf("write to %08X [%08lX] (%d bytes => %ld (0x%X))",
-	       (unsigned int) bio, (long unsigned int)argp,
+#if __WORDSIZE == 64
+	printf("write to %016zX [%016zX] (%d bytes => %ld (0x%X))",
+#else
+	printf("write to %08zX [%08zX] (%d bytes => %ld (0x%X))",
+#endif
+	       (size_t) bio, (size_t)argp,
 	       argi, ret, (unsigned int) ret);
 	tls_dump(argp, (int) ret);
     }

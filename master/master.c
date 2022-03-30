@@ -1304,7 +1304,6 @@ void add_start(const char *name, struct entry *e,
 
 void add_service(const char *name, struct entry *e, void *rock)
 {
-    int ignore_err = (int) rock;
     char *cmd = xstrdup(masterconf_getstring(e, "cmd", ""));
     int prefork = masterconf_getint(e, "prefork", 0);
     int babysit = masterconf_getswitch(e, "babysit", 0);
@@ -1324,7 +1323,7 @@ void add_service(const char *name, struct entry *e, void *rock)
 	snprintf(buf, sizeof(buf),
 		 "unable to find command or port for service '%s'", name);
 
-	if (ignore_err) {
+	if (rock != NULL) {
 	    syslog(LOG_WARNING, "WARNING: %s -- ignored", buf);
 	    return;
 	}
@@ -1340,7 +1339,7 @@ void add_service(const char *name, struct entry *e, void *rock)
 	/* must have empty/same service name, listen and proto */
 	if ((!Services[i].name || !strcmp(Services[i].name, name)) &&
 	    (!Services[i].listen || !strcmp(Services[i].listen, listen)) &&
-	    (!Services[i].proto || !strcmp(Services[i].proto, proto)))
+	    ((Services[i].proto==NULL) || !strcmp(Services[i].proto, proto)))
 	    break;
     }
 
@@ -1349,7 +1348,7 @@ void add_service(const char *name, struct entry *e, void *rock)
 	char buf[256];
 	snprintf(buf, sizeof(buf), "multiple entries for service '%s'", name);
 
-	if (ignore_err) {
+	if (rock != NULL) {
 	    syslog(LOG_WARNING, "WARNING: %s -- ignored", buf);
 	    return;
 	}
@@ -1438,7 +1437,6 @@ void add_service(const char *name, struct entry *e, void *rock)
 
 void add_event(const char *name, struct entry *e, void *rock)
 {
-    int ignore_err = (int) rock;
     char *cmd = xstrdup(masterconf_getstring(e, "cmd", ""));
     int period = 60 * masterconf_getint(e, "period", 0);
     int at = masterconf_getint(e, "at", -1), hour, min;
@@ -1450,7 +1448,7 @@ void add_event(const char *name, struct entry *e, void *rock)
 	snprintf(buf, sizeof(buf),
 		 "unable to find command or port for event '%s'", name);
 
-	if (ignore_err) {
+	if (rock != NULL) {
 	    syslog(LOG_WARNING, "WARNING: %s -- ignored", buf);
 	    return;
 	}
