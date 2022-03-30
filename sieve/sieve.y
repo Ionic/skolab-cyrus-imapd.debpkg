@@ -923,7 +923,7 @@ static int verify_relat(char *r)
 	else if (!strcmp(r, "ne")) {return NE;}
 	else if (!strcmp(r, "eq")) {return EQ;}
 	else{
-	  sprintf(errbuf, "flag '%s': not a valid relational operation", r);
+	  snprintf(errbuf, sizeof(errbuf), "flag '%s': not a valid relational operation", r);
 	  yyerror(errbuf);
 	  return -1;
 	}

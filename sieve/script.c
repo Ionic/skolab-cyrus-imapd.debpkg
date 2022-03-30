@@ -526,9 +526,9 @@ static int do_sieve_error(int ret,
     if ((ret != SIEVE_OK) && interp->err) {
 	char buf[1024];
 	if (lastaction == -1) /* we never executed an action */
-	    sprintf(buf, "%s", errmsg ? errmsg : sieve_errstr(ret));
+	    snprintf(buf, sizeof(buf), "%s", errmsg ? errmsg : sieve_errstr(ret));
 	else
-	    sprintf(buf, "%s: %s", action_to_string(lastaction),
+	    snprintf(buf, sizeof(buf), "%s: %s", action_to_string(lastaction),
 		    errmsg ? errmsg : sieve_errstr(ret));
  
 	ret |= interp->execute_err(buf, interp->interp_context,

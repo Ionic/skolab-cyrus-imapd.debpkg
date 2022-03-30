@@ -440,7 +440,7 @@ int eval_bc_test(sieve_interp_t *interp, void* m,
 	int comparator=ntohl(bc[i+3].value);
 	int apart=ntohl(bc[i+4].value);
 	int count=0;
-	char scount[3];
+	char scount[21];
 	int isReg = (match==B_REGEX);
 	int ctag = 0;
 	regex_t *reg;
@@ -574,7 +574,7 @@ int eval_bc_test(sieve_interp_t *interp, void* m,
      
 	if  (match == B_COUNT)
 	{
-	    sprintf(scount, "%u", count);
+	    snprintf(scount, sizeof(scount), "%u", count);
 	    /* search through all the data */ 
 	    currd=datai+2;
 	    for (z=0; z<numdata && !res; z++)
@@ -608,7 +608,7 @@ int eval_bc_test(sieve_interp_t *interp, void* m,
 	int relation=ntohl(bc[i+2].value);
 	int comparator=ntohl(bc[i+3].value);
 	int count=0;	
-	char scount[3];
+	char scount[21];
 	int isReg = (match==B_REGEX);
 	int ctag = 0;
 	regex_t *reg;
@@ -689,7 +689,7 @@ int eval_bc_test(sieve_interp_t *interp, void* m,
 	
 	if  (match == B_COUNT )
 	{
-	    sprintf(scount, "%u", count);
+	    snprintf(scount, sizeof(scount), "%u", count);
 	    /*search through all the data*/ 
 	    currd=datai+2;
 	    for (z=0; z<numdata && !res; z++)
