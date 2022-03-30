@@ -2140,13 +2140,16 @@ static void cmd_authinfo_sasl(char *cmd, char *mech, char *resp)
 	    default:
 		code = 481;
 	    }
-	    errorstring = sasl_errstring(sasl_result, NULL, NULL);
 
 	    syslog(LOG_NOTICE, "badlogin: %s %s [%s]",
 		   nntp_clienthost, mech, sasl_errdetail(nntp_saslconn));
 
 	    sleep(3);
 
+	    /* Don't allow user probing */
+	    if (sasl_result == SASL_NOUSER) sasl_result = SASL_BADAUTH;
+
+	    errorstring = sasl_errstring(sasl_result, NULL, NULL);
 	    if (errorstring) {
 		prot_printf(nntp_out, "%d %s\r\n", code, errorstring);
 	    } else {

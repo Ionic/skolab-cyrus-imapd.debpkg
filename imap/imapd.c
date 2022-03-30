@@ -1785,6 +1785,9 @@ void cmd_login(char *tag, char *user)
 
 	sleep(3);
 
+	/* Don't allow user probing */
+	if (r == SASL_NOUSER) r = SASL_BADAUTH;
+
 	if ((reply = sasl_errstring(r, NULL, NULL)) != NULL) {
 	    prot_printf(imapd_out, "%s NO Login failed: %s\r\n", tag, reply);
 	} else {
@@ -1898,8 +1901,6 @@ cmd_authenticate(char *tag, char *authtype, char *resp)
 	    break;
 	default: 
 	    /* failed authentication */
-	    errorstring = sasl_errstring(sasl_result, NULL, NULL);
-
 	    syslog(LOG_NOTICE, "badlogin: %s %s [%s]",
 		   imapd_clienthost, authtype, sasl_errdetail(imapd_saslconn));
 
@@ -1908,6 +1909,10 @@ cmd_authenticate(char *tag, char *authtype, char *resp)
 				VARIABLE_LISTEND);
 	    sleep(3);
 
+	    /* Don't allow user probing */
+	    if (sasl_result == SASL_NOUSER) sasl_result = SASL_BADAUTH;
+
+	    errorstring = sasl_errstring(sasl_result, NULL, NULL);
 	    if (errorstring) {
 		prot_printf(imapd_out, "%s NO %s\r\n", tag, errorstring);
 	    } else {

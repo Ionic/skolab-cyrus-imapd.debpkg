@@ -2106,7 +2106,7 @@ void cmd_login(char *tag, char *user)
     char c;
     struct buf passwdbuf;
     char *passwd;
-    char *reply = 0;
+    const char *reply = 0;
     int r;
 
     if (proxyd_userid) {
@@ -2180,17 +2180,19 @@ void cmd_login(char *tag, char *user)
 				 strlen(canon_user),
 				 passwd,
 				 strlen(passwd)))!=SASL_OK) {
-	const char *errorstring = sasl_errstring(r, NULL, NULL);
-	if (reply) {
-	    syslog(LOG_NOTICE, "badlogin: %s plaintext %s %s",
-		   proxyd_clienthost, canon_user, reply);
-	}
+	syslog(LOG_NOTICE, "badlogin: %s plaintext %s %s",
+	       proxyd_clienthost, canon_user, sasl_errdetail(proxyd_saslconn));
+
 	/* Apply penalty only if not under layer */
 	if (proxyd_starttls_done == 0)
 	    sleep(3);
-	if (errorstring) {
+
+	/* Don't allow user probing */
+	if (r == SASL_NOUSER) r = SASL_BADAUTH;
+
+	if ((reply = sasl_errstring(r, NULL, NULL)) != NULL) {
 	    prot_printf(proxyd_out, "%s NO Login failed: %s\r\n", 
-			tag, errorstring);
+			tag, reply);
 	} else {
 	    prot_printf(proxyd_out, "%s NO Login failed.", tag);
 	}
@@ -2276,8 +2278,6 @@ void cmd_authenticate(char *tag, char *authtype, char *resp)
 	    break;
 	default: 
 	    /* failed authentication */
-	    errorstring = sasl_errstring(sasl_result, NULL, NULL);
-
 	    syslog(LOG_NOTICE, "badlogin: %s %s [%s]",
 		   proxyd_clienthost, authtype, sasl_errdetail(proxyd_saslconn));
 
@@ -2286,6 +2286,10 @@ void cmd_authenticate(char *tag, char *authtype, char *resp)
 				VARIABLE_LISTEND);
 	    sleep(3);
 
+	    /* Don't allow user probing */
+	    if (sasl_result == SASL_NOUSER) sasl_result = SASL_BADAUTH;
+
+	    errorstring = sasl_errstring(sasl_result, NULL, NULL);
 	    if (errorstring) {
 		prot_printf(proxyd_out, "%s NO %s\r\n", tag, errorstring);
 	    } else {
@@ -4253,13 +4257,13 @@ void cmd_getquotaroot(char *tag, char *name)
 						proxyd_userid, mailboxname);
     if (!r) r = mlookup(mailboxname, &server, NULL, NULL);
 
-    if(proxyd_userisadmin) {
+    if(!r && proxyd_userisadmin) {
 	/* If they are an admin, they won't retain that privledge if we
 	 * proxy for them, so we need to refer them -- even if they haven't
 	 * told us they're able to handle it. */
 	proxyd_refer(tag, server, name);
-    } else {
-	if (!r) s = proxyd_findserver(server);
+    } else if (!r) {
+	s = proxyd_findserver(server);
 
 	if (s) {
 	    prot_printf(s->out, "%s Getquotaroot {%d+}\r\n%s\r\n",
@@ -4268,11 +4272,10 @@ void cmd_getquotaroot(char *tag, char *name)
 	} else {
 	    r = IMAP_SERVER_UNAVAILABLE;
 	}
+    }
 
-	if (r) {
-	    prot_printf(proxyd_out, "%s NO %s\r\n", tag, error_message(r));
-	    return;
-	}
+    if (r) {
+	prot_printf(proxyd_out, "%s NO %s\r\n", tag, error_message(r));
     }
 }
 
