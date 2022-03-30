@@ -900,7 +900,7 @@ one you specified in the \fB/etc/cyrus.conf\fR file.
    mailbox hierarchy.  The default is to use the netnews separator
    character '.'. */
 
-{ "virtdomains", "off", ENUM("off", "userid", "on") }
+{ "virtdomains", "off", ENUM("off", "userid", "ldap", "on") }
 /* Enable virtual domain support.  If enabled, the user's domain will
    be determined by splitting a fully qualified userid at the last '@'
    or '%' symbol.  If the userid is unqualified, and the virtdomains
