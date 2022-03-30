@@ -522,41 +522,6 @@ void fatal(const char* s, int code)
 }
 
 #ifdef HAVE_KRB
-/* translate IPv4 mapped IPv6 address to IPv4 address */
-#ifdef IN6_IS_ADDR_V4MAPPED
-static void sockaddr_unmapped(struct sockaddr *sa, socklen_t *len)
-{
-    struct sockaddr_in6 *sin6;
-    struct sockaddr_in *sin4;
-    uint32_t addr;
-    int port;
-
-    if (sa->sa_family != AF_INET6)
-	return;
-    sin6 = (struct sockaddr_in6 *)sa;
-    if (!IN6_IS_ADDR_V4MAPPED((&sin6->sin6_addr)))
-	return;
-    sin4 = (struct sockaddr_in *)sa;
-    addr = *(uint32_t *)&sin6->sin6_addr.s6_addr[12];
-    port = sin6->sin6_port;
-    memset(sin4, 0, sizeof(struct sockaddr_in));
-    sin4->sin_addr.s_addr = addr;
-    sin4->sin_port = port;
-    sin4->sin_family = AF_INET;
-#ifdef HAVE_SOCKADDR_SA_LEN
-    sin4->sin_len = sizeof(struct sockaddr_in);
-#endif
-    *len = sizeof(struct sockaddr_in);
-}
-#else
-static void sockaddr_unmapped(struct sockaddr *sa __attribute__((unused)),
-			      socklen_t *len __attribute__((unused)))
-{
-    return;
-}
-#endif
-
-
 /*
  * MIT's kludge of a kpop protocol
  * Client does a krb_sendauth() first thing
