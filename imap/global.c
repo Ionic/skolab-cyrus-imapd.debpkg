@@ -52,6 +52,7 @@
 #include <netinet/in.h>
 #include <sys/stat.h>
 
+#define LDAP_DEPRECATED 1
 #include <ldap.h>
 #include <lber.h>
 
