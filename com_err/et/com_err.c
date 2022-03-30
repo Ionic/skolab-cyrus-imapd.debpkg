@@ -50,7 +50,7 @@
 #include <string.h>
 #include "mit-sipb-copyright.h"
 
-#if defined(HAVE_STDARG_H) || defined(_WINDOWS)
+#if defined(HAVE_STDARG_H) || defined(__STDC__) || defined(_WINDOWS)
 #include <stdarg.h>
 #else
 #include <varargs.h>
