@@ -59,6 +59,6 @@ END
     )
 ],[
     PERL="${PERL}"
-    MAKE_MAKER_ARGS="PREFIX=${prefix}"
+    MAKE_MAKER_ARGS="INSTALLDIRS=vendor"
 ])
 ])#CMU_PERL_MAKEMAKER
