@@ -41,7 +41,7 @@
  */
 
 /*
- * $Id: message.c,v 1.99 2004/09/16 17:58:54 ken3 Exp $
+ * $Id: message.c,v 1.99.2.1 2006/12/19 18:57:48 murch Exp $
  */
 
 #include <config.h>
@@ -1429,7 +1429,7 @@ unsigned flags;
     if (t >= 0) return (t - zone_off * 60);
     
  baddate:
-    return time(0);
+    return (flags & PARSE_NOCREATE) ? 0 : time(0);
 }
 
 /*
