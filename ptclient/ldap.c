@@ -61,6 +61,7 @@ static char rcsid[] __attribute__((unused)) =
 #include <sys/un.h>
 #include <sys/uio.h>
 
+#define LDAP_DEPRECATED 1
 #include <ldap.h>
 #include <lber.h>
 
