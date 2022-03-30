@@ -64,7 +64,7 @@ Options
 .. option:: -p  pidfile
 
     Use *pidfile* as the pidfile.  If not specified, defaults to
-    ``/var/run/master.pid``
+    ``/run/cyrus-master.pid``
 
 .. option:: -d
 
@@ -113,12 +113,24 @@ The environment variable **CYRUS_VERBOSE** can be set to log additional
 debugging information. Setting the value to 1 results in base level logging.
 Setting it higher results in more log messages being generated.
 
+Bugs
+====
+
+Services do not always go away silently when removed through a SIGHUP.  If
+there are workers of the removed service still running, messages to syslog
+about broken pipes and accept() failures are to be expected.
+
+The in-memory list of services is not cleaned up ever, so a master daemon
+that has been sent an extremely high amount of SIGHUP signals to
+add/remove/modify services will lose performance eventually.  Restarting
+master fixes this.
+
 Files
 =====
 
 /etc/cyrus.conf,
 /etc/imapd.conf,
-/var/run/master.pid
+/run/cyrus-master.pid
 
 See Also
 ========

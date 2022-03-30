@@ -132,10 +132,10 @@ on certain Internet/UNIX sockets.
 
     ..
 
-    where *path* is the explicit path to a UNIX socket, *host* is
-    either the hostname or bracket-enclosed IP address of a network
-    interface, and *port* is either a port number or service name
-    (as listed in ``/etc/services``).
+    where *path* is the explicit (absolute) path to a UNIX socket,
+    *host* is either the hostname or bracket-enclosed IP address of a
+    network interface, and *port* is either a port number or service
+    name (as listed in ``/etc/services``).
 
     If *host* is missing, 0.0.0.0 (all interfaces) is assumed.  Use
     localhost or 127.0.0.1 to restrict access, i.e. when a proxy
@@ -174,6 +174,9 @@ on certain Internet/UNIX sockets.
     listening on multiple network types (i.e. ipv4 and ipv6) then
     one process will be forked for each address, causing twice as
     many processes as you might expect.
+
+    For datagram-based services (UDP), the maximum value of prefork is
+    1.
 
 .. parsed-literal::
 
