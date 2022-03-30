@@ -503,7 +503,16 @@ int oldexists;
 	    else {
 		oldseen = (*old == ':');
 		oldnext = 0;
-		if (!*old) oldnext = mailbox->last_uid+1;
+		if (!*old) {
+		    oldnext = mailbox->last_uid+1;
+		    /* just in case the index is corrupted, don't
+		     * loop forever */
+		    if (oldnext < uid) {
+			syslog(LOG_ERR, "index corrupted, needs reconstruct %s",
+			       mailbox->name);
+			oldnext = uid;
+		    }
+		}
 		else old++;
 		while (cyrus_isdigit((int) *old)) {
 		    oldnext = oldnext * 10 + *old++ - '0';
@@ -521,6 +530,13 @@ int oldexists;
 		newnext = 0;
 		if (!*new) {
 		    newnext = mailbox->last_uid+1;
+		    /* just in case the index is corrupted, don't
+		     * loop forever */
+		    if (newnext < uid) {
+			syslog(LOG_ERR, "index corrupted, needs reconstruct %s",
+			       mailbox->name);
+			newnext = uid;
+		    }
 		    neweof++;
 		}
 		else new++;
