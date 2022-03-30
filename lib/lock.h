@@ -53,6 +53,8 @@
 
 #include <sys/stat.h>
 
+extern int lock_wait_time;
+
 extern const char *lock_method_desc;
 
 extern int lock_reopen P((int fd, const char *filename,

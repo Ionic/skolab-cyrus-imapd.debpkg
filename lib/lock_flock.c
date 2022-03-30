@@ -46,6 +46,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <syslog.h>
+#include <signal.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -53,6 +55,36 @@
 #include "lock.h"
 
 const char *lock_method_desc = "flock";
+
+int lock_wait_time = LOCK_GIVEUP_TIMER_DEFAULT;
+
+/* Signal handling. We REQUIRE SYSV abort-syscall behaviour */
+
+static volatile int lock_gotsigalrm = 0;
+void lock_sigalrm_handler(int sig __attribute__((unused)))
+{
+    lock_gotsigalrm = 1;
+}
+
+static int setsigalrm(int enable)
+{
+    struct sigaction action;
+
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = SA_RESETHAND;
+
+    if(enable) {
+	action.sa_handler = lock_sigalrm_handler;
+    } else {
+	action.sa_handler = SIG_IGN;
+    }
+    if (sigaction(SIGALRM, &action, NULL) < 0) {
+	syslog(LOG_ERR, "installing SIGALRM handler: sigaction: %m");
+	return -1;
+    }
+    lock_gotsigalrm = 0;
+    return 0;
+}
 
 /*
  * Block until we obtain an exclusive lock on the file descriptor 'fd',
@@ -67,12 +99,10 @@ const char *lock_method_desc = "flock";
  * 'failaction' is provided, it is filled in with a pointer to a fixed
  * string naming the action that failed.
  *
+ * We use POSIX semanthics and alarm() to avoid deadlocks
+ *
  */
-int lock_reopen(fd, filename, sbuf, failaction)
-int fd;
-const char *filename;
-struct stat *sbuf;
-const char **failaction;
+int lock_reopen(int fd, const char *filename, struct stat *sbuf, const char **failaction)
 {
     int r;
     struct stat sbuffile, sbufspare;
@@ -80,11 +110,15 @@ const char **failaction;
 
     if (!sbuf) sbuf = &sbufspare;
 
+    setsigalrm(1);
+    alarm(lock_wait_time);
     for (;;) {
 	r = flock(fd, LOCK_EX);
 	if (r == -1) {
-	    if (errno == EINTR) continue;
+	    if (errno == EINTR && !lock_gotsigalrm) continue;
 	    if (failaction) *failaction = "locking";
+	    alarm(0);
+	    setsigalrm(0);
 	    return -1;
 	}
 
@@ -93,20 +127,32 @@ const char **failaction;
 	if (r == -1) {
 	    if (failaction) *failaction = "stating";
 	    flock(fd, LOCK_UN);
+	    alarm(0);
+	    setsigalrm(0);
 	    return -1;
 	}
 
-	if (sbuf->st_ino == sbuffile.st_ino) return 0;
+	if (sbuf->st_ino == sbuffile.st_ino) {
+	    alarm(0);
+	    setsigalrm(0);
+	    return 0;
+	}
+ 
 
 	newfd = open(filename, O_RDWR);
 	if (newfd == -1) {
 	    if (failaction) *failaction = "opening";
 	    flock(fd, LOCK_UN);
+	    alarm(0);
+	    setsigalrm(0);
 	    return -1;
 	}
 	dup2(newfd, fd);
 	close(newfd);
     }
+    alarm(0);
+    setsigalrm(0);
+    return 0;
 }
 
 /*
@@ -114,17 +160,27 @@ const char **failaction;
  * Returns 0 for success, -1 for failure, with errno set to an
  * appropriate error code.
  */
-int lock_blocking(fd)
-int fd;
+int lock_blocking(int fd)
 {
     int r;
 
+    setsigalrm(1);
+    alarm(lock_wait_time);
     for (;;) {
 	r = flock(fd, LOCK_EX);
-	if (r != -1) return 0;
-	if (errno == EINTR) continue;
+	if (r != -1) {
+	    alarm(0);
+	    setsigalrm(0);
+	    return 0;
+	}
+	if (errno == EINTR && !lock_gotsigalrm) continue;
+	alarm(0);
+	setsigalrm(0);
 	return -1;
     }
+    alarm(0);
+    setsigalrm(0);
+    return 0;
 }
 
 /*
@@ -132,17 +188,27 @@ int fd;
  * Returns 0 for success, -1 for failure, with errno set to an
  * appropriate error code.
  */
-int lock_shared(fd)
-int fd;
+int lock_shared(int fd)
 {
     int r;
 
+    setsigalrm(1);
+    alarm(lock_wait_time);
     for (;;) {
 	r = flock(fd, LOCK_SH);
-	if (r != -1) return 0;
-	if (errno == EINTR) continue;
+	if (r != -1) {
+	    alarm(0);
+	    setsigalrm(0);
+	    return 0;
+	}
+	if (errno == EINTR && !lock_gotsigalrm) continue;
+	alarm(0);
+	setsigalrm(0);
 	return -1;
     }
+    alarm(0);
+    setsigalrm(0);
+    return 0;
 }
 
 /*
@@ -164,7 +230,9 @@ int fd;
 }
 
 /*
- * Release any lock on 'fd'.  Always returns success.
+ * Release any lock on 'fd'.
+ * Returns 0 for success, -1 for failure, with errno set to an
+ * appropriate error code.
  */
 int lock_unlock(int fd)
 {
@@ -174,8 +242,8 @@ int lock_unlock(int fd)
         r = flock(fd, LOCK_UN);
         if (r != -1) return 0;
         if (errno == EINTR) continue;
-        /* xxx help! */
         return -1;
     }
+    return 0;
 }
 

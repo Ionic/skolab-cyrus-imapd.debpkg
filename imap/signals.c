@@ -50,7 +50,7 @@
 #include "xmalloc.h"
 #include "exitcodes.h"
 
-static int gotsignal = 0;
+static volatile int gotsignal = 0;
 
 static void sighandler(int sig)
 {
