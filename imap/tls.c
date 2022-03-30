@@ -166,7 +166,7 @@ int tls_enabled(void)
  * tim - this seems to just be giving logging messages
  */
 
-static void apps_ssl_info_callback(SSL * s, int where, int ret)
+static void apps_ssl_info_callback(const SSL * s, int where, int ret)
 {
     char   *str;
     int     w;
@@ -678,7 +678,7 @@ int     tls_init_serverengine(const char *ident,
     s_key_file = config_getstring(IMAPOPT_TLS_KEY_FILE);
 
     if (!set_cert_stuff(s_ctx, s_cert_file, s_key_file)) {
-	syslog(LOG_ERR,"TLS server engine: cannot load cert/key data");
+	syslog(LOG_ERR,"TLS server engine: cannot load cert/key data, may be a cert/key mismatch?");
 	return (-1);
     }
     SSL_CTX_set_tmp_rsa_callback(s_ctx, tmp_rsa_cb);
@@ -1105,7 +1105,7 @@ int tls_init_clientengine(int verifydepth,
     
     if (c_cert_file || c_key_file) {
 	if (!set_cert_stuff(c_ctx, c_cert_file, c_key_file)) {
-	    syslog(LOG_ERR,"TLS client engine: cannot load cert/key data");
+	    syslog(LOG_ERR,"TLS client engine: cannot load cert/key data, may be a cert/key mismatch?");
 	    return (-1);
 	}
     }

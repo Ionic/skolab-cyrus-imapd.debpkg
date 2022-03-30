@@ -63,6 +63,7 @@
 
 #include <limits.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #include <netinet/in.h>
 #include <sys/un.h>
@@ -417,7 +418,7 @@ static RSA *tmp_rsa_cb(SSL * s __attribute__((unused)),
  * tim - this seems to just be giving logging messages
  */
 
-static void apps_ssl_info_callback(SSL * s, int where, int ret)
+static void apps_ssl_info_callback(const SSL * s, int where, int ret)
 {
     char   *str;
     int     w;
@@ -530,7 +531,7 @@ static int tls_init_clientengine(int verifydepth, char *var_tls_cert_file, char 
     
     if (c_cert_file || c_key_file)
 	if (!set_cert_stuff(tls_ctx, c_cert_file, c_key_file)) {
-	    printf("TLS engine: cannot load cert/key data\n");
+	    printf("TLS engine: cannot load cert/key data, maybe a cert/key mismatch?\n");
 	    return IMTEST_FAIL;
 	}
     SSL_CTX_set_tmp_rsa_callback(tls_ctx, tmp_rsa_cb);
