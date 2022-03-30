@@ -43,6 +43,7 @@ struct service {
 extern struct service *Services;
 extern int allocservices;
 extern int nservices;
+void sighandler_setup(void);
 
 /*
  * Description of multiple address family support from
