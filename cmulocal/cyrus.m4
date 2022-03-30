@@ -3,6 +3,7 @@ dnl Additional macros for configure.in packaged up for easier theft.
 dnl $Id: cyrus.m4,v 1.4 2003/10/08 20:35:24 rjs3 Exp $
 dnl tjs@andrew.cmu.edu 6-may-1998
 dnl
+dnl Debian fix (hmh@debian.org): We don't want runpath set in Debian
 
 dnl It would be good if ANDREW_ADD_LIBPATH could detect if something was
 dnl already there and not redundantly add it if it is.
@@ -30,16 +31,8 @@ AC_DEFUN([CMU_ADD_LIBPATH_TO], [
 ])
 
 dnl runpath initialization
+dnl (disabled by hmh@debian.org
 AC_DEFUN([CMU_GUESS_RUNPATH_SWITCH], [
    # CMU GUESS RUNPATH SWITCH
-  AC_CACHE_CHECK(for runpath switch, andrew_runpath_switch, [
-    # first, try -R
-    SAVE_LDFLAGS="${LDFLAGS}"
-    LDFLAGS="-R /usr/lib"
-    AC_TRY_LINK([],[],[andrew_runpath_switch="-R"], [
-  	LDFLAGS="-Wl,-rpath,/usr/lib"
-    AC_TRY_LINK([],[],[andrew_runpath_switch="-Wl,-rpath,"],
-    [andrew_runpath_switch="none"])
-    ])
-  LDFLAGS="${SAVE_LDFLAGS}"
-  ])])
+    andrew_runpath_switch="none"
+])
