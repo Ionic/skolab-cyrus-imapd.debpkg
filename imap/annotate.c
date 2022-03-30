@@ -2408,6 +2408,19 @@ static const annotate_entrydesc_t server_db_entry =
         NULL
     };
 
+static const annotate_entrydesc_t generic_vendor_db_entry =
+    {
+        NULL,
+        ATTRIB_TYPE_STRING,
+        BACKEND_ONLY,
+        ATTRIB_VALUE_SHARED | ATTRIB_VALUE_PRIV,
+        ACL_ADMIN,
+        annotation_get_fromdb,
+        annotation_set_todb,
+        NULL,
+        NULL
+    };
+
 /* Annotation attributes and their flags */
 struct annotate_attrib
 {
@@ -3462,6 +3475,13 @@ static int find_desc_store(annotate_state_t *state,
         return IMAP_PERMISSION_DENIED;
 
     *descp = db_entry;
+
+    /* Check for generic vendor annotations. */
+    if ((!strncmp(name, "/vendor/", strlen("/vendor/"))) &&
+        (strlen(name) > strlen("/vendor/"))) {
+        *descp = &generic_vendor_db_entry;
+    }
+
     return 0;
 }
 
