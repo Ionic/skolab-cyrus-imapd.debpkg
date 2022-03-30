@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 # script to downgrade from cyrus imapd 1.6.2+ to earlier.
 # do NOT run this script while imapd's are running
 # $Id: undohash,v 1.8 2005/12/01 22:01:13 murch Exp $

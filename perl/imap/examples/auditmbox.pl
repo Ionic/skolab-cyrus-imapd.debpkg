@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w
+#!/usr/bin/perl -w
 # 
 # Copyright (c) 2000 Carnegie Mellon University.  All rights reserved.
 #

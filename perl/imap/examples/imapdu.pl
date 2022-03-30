@@ -1,4 +1,4 @@
-#! /usr/local/bin/perl -w
+#!/usr/bin/perl -w
 #
 # $Id: imapdu.pl,v 1.8 2001/11/30 19:30:45 leg Exp $
 # 
