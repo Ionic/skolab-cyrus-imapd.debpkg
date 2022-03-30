@@ -54,7 +54,7 @@ CYRUS_GROUP=@cyrus_group@
 
 DEFS = @DEFS@ @LOCALDEFS@
 CPPFLAGS = -I.. -I$(srcdir)/../sieve -I$(srcdir)/../imap -I$(srcdir)/../lib @COM_ERR_CPPFLAGS@ @CPPFLAGS@ @SASLFLAGS@
-CFLAGS = @CFLAGS@
+CFLAGS = @CFLAGS@ @WARNERROR@
 LDFLAGS = @LDFLAGS@
 
 prefix = @prefix@

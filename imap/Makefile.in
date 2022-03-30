@@ -72,7 +72,7 @@ LIB_WRAP = @LIB_WRAP@
 LIBS = $(IMAP_LIBS) $(IMAP_COM_ERR_LIBS)
 DEPLIBS = ../lib/libcyrus.a ../lib/libcyrus_min.a @DEPLIBS@
 
-CFLAGS = @CFLAGS@
+CFLAGS = @CFLAGS@ @WARNERROR@
 LDFLAGS = @LDFLAGS@ @COM_ERR_LDFLAGS@ 
 
 SHELL = /bin/sh

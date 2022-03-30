@@ -40,7 +40,7 @@ COMPILE_ET = @COMPILE_ET@
 DEFS = @DEFS@
 CPPFLAGS = -I.. -I$(srcdir)/../lib @COM_ERR_CPPFLAGS@ @CPPFLAGS@ @SASLFLAGS@
 MAKEDEPEND_CFLAGS = @CFLAGS@
-CFLAGS = @CFLAGS@ @PERL_CCCDLFLAGS@
+CFLAGS = @CFLAGS@ @PERL_CCCDLFLAGS@ -fPIC
 LDFLAGS = @LDFLAGS@
 
 MAKEDEPEND = @MAKEDEPEND@
@@ -51,6 +51,7 @@ IMAP_LIBS = @IMAP_LIBS@ @LIB_RT@
 LIBS = libsieve.a $(IMAP_LIBS) $(IMAP_COM_ERR_LIBS)
 DEPLIBS=../lib/libcyrus.a ../lib/libcyrus_min.a @DEPLIBS@
 
+BINARIES = sievec sieved
 BUILT_SOURCES = addr.c addr.h addr-lex.c \
 	sieve.c sieve.h sieve-lex.c \
 	sieve_err.h sieve_err.c
@@ -114,7 +115,7 @@ sieve_err.h sieve_err.c: sieve_err.et
 	$(COMPILE_ET) $(srcdir)/sieve_err.et
 
 clean:
-	rm -f test *~ *.o *.a Makefile.bak makedepend.log
+	rm -f test *~ *.o *.a Makefile.bak makedepend.log $(BINARIES)
 
 distclean: clean
 	rm -f Makefile

@@ -57,7 +57,7 @@ IMAP_LIBS = @IMAP_LIBS@
 DEPLIBS = ../../../lib/libcyrus.a ../../../lib/libcyrus_min.a @DEPLIBS@
 
 MAKEDEPEND_CFLAGS = @CFLAGS@
-CFLAGS = @CFLAGS@ @PERL_CCCDLFLAGS@
+CFLAGS = @CFLAGS@ @PERL_CCCDLFLAGS@ -fPIC
 LDFLAGS = @LDFLAGS@
 
 SHELL = /bin/sh

@@ -84,9 +84,9 @@ all::
 			   BDB_LIB="$(BDB_LIB)" BDB_INC="$(BDB_INC)" \
 			   OPENSSL_LIB="$(OPENSSL_LIB)" OPENSSL_INC="$(OPENSSL_INC)" \
 			   SASL_LIB="$(SASL_LIB)" SASL_INC="$(SASL_INC)" CC="$(CC)" \
-			     $(PERL) Makefile.PL PREFIX=$(prefix); \
+			     $(PERL) Makefile.PL INSTALLDIRS=vendor; \
 			fi; \
-			$(MAKE) $(MFLAGS) DESTDIR=$(DESTDIR) all) || exit 1; \
+			$(MAKE) $(MFLAGS) LD_RUN_PATH= DESTDIR=$(DESTDIR) all) || exit 1; \
 	done
 
 install::
