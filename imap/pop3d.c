@@ -600,6 +600,7 @@ void shut_down(int code)
 {
     int bytes_in = 0;
     int bytes_out = 0;
+    int i = 0;
 
     in_shutdown = 1;
 
@@ -656,6 +657,10 @@ void shut_down(int code)
     saslprops_free(&saslprops);
 
     cyrus_done();
+    for (i = 0; 3 > i; ++i)
+    {
+        cyrus_close_sock(i);
+    }
 
     if (config_iolog) {
         read_io_count(io_count_stop);
