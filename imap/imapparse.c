@@ -52,9 +52,9 @@
 #include "exitcodes.h"
 
 enum {
-    MAXQUOTED = 32768,
-    MAXWORD = 32768,
-    MAXLITERAL = INT_MAX / 20
+    MAXQUOTED = 524288,
+    MAXWORD = 524288,
+    MAXLITERAL = INT_MAX / 10
 };
 
 void freebuf(struct buf *buf)
