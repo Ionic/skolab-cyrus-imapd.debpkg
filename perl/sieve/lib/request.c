@@ -560,7 +560,6 @@ int getscript(int version, struct protstream *pout,
 	      char **refer_to, char **errstrp)
 {
   int res;
-  mystring_t *str=NULL;
   mystring_t *errstr=NULL;
   lexstate_t state;
   int ret = 0;

@@ -126,7 +126,7 @@ my %builtins = (exit =>
 		  [\&_sc_info, '[mailbox]',
 		   'display mailbox/server metadata'],
 		mboxcfg =>
-		  [\&_sc_mboxcfg, 'mailbox [comment|news2mail|expire|sieve|squat] value',
+		  [\&_sc_mboxcfg, 'mailbox [comment|news2mail|expire|squat|/<explicit annotation>] value',
 		   'configure mailbox'],
 		mboxconfig => 'mboxcfg',
 		reconstruct =>
@@ -437,7 +437,7 @@ sub run {
 # programs, as opposed to things expected from within a program.)
 sub shell {
   my ($server, $port, $authz, $auth, $systemrc, $userrc, $dorc, $mech, $pw) =
-    ('', 143, undef, $ENV{USER} || $ENV{LOGNAME}, '/usr/local/etc/cyradmrc.pl',
+    ('', 143, undef, $ENV{USER} || $ENV{LOGNAME}, '/etc/cyradmrc.pl',
      "$ENV{HOME}/.cyradmrc.pl", 1, undef, undef);
   GetOptions('user|u=s' => \$auth,
 	     'authz|z=s' => \$authz,
@@ -467,7 +467,7 @@ sub shell {
 			  -rock => \$cyradm});
     $cyradm->authenticate(-authz => $authz, -user => $auth,
 			  -mechanism => $mech, -password => $pw)
-      or die "cyradm: cannot authenticate to server with $mech as $auth\n";
+      or die "cyradm: cannot authenticate to server" . (defined($mech)?" with $mech":"") . " as $auth\n";
   }
   my $fstk = [*STDIN, *STDOUT, *STDERR];
   if ($dorc && $systemrc ne '' && -f $systemrc) {
@@ -1400,7 +1400,7 @@ sub _sc_mboxcfg {
   while (defined ($opt = shift(@argv))) {
     last if $opt eq '--';
     if ($opt =~ /^-/) {
-      die "usage: mboxconfig mailbox [comment|news2mail|expire|sieve|squat] value\n";
+      die "usage: mboxconfig mailbox [comment|news2mail|expire|squat|/<explicit annotation>] value\n";
     }
     else {
       push(@nargv, $opt);
@@ -1409,7 +1409,7 @@ sub _sc_mboxcfg {
   }
   push(@nargv, @argv);
   if (@nargv < 2) {
-    die "usage: mboxconfig mailbox [comment|news2mail|expire|sieve|squat] value\n";
+    die "usage: mboxconfig mailbox [comment|news2mail|expire|squat|/<explicit annotation>] value\n";
   }
   if (!$cyrref || !$$cyrref) {
     die "mboxconfig: no connection to server\n";
