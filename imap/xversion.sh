@@ -22,4 +22,4 @@ find .. -name '*.[chly]' -print | \
 	match ($0, pattern) {
 	    printf "\"%s\"\n", substr($0, RSTART, RLENGTH)
 	}' pattern="$DATEPAT $TIMEPAT" | \
-	sort | tail -1 >> xversion.h
+	sort | tail -n 1 >> xversion.h
