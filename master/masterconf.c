@@ -87,16 +87,18 @@ void fatalf(int code, const char *fmt, ...)
 int masterconf_init(const char *ident, const char *alt_config)
 {
     char *buf = NULL;
+    char *syslog_buf = NULL;
     const char *prefix;
 
     /* If our prefix is configured in the environment we can set it early */
     if ((prefix = getenv("CYRUS_SYSLOG_PREFIX"))) {
         buf = strconcat(prefix, "/", ident, NULL);
-        openlog(buf, LOG_PID, SYSLOG_FACILITY);
+        syslog_buf = buf;
     }
     else {
-        openlog(ident, LOG_PID, SYSLOG_FACILITY);
+        syslog_buf = strconcat("cyrus/", ident, NULL);
     }
+    openlog(syslog_buf, LOG_PID, SYSLOG_FACILITY);
 
     config_ident = ident;
     config_read(alt_config, 0);
@@ -108,16 +110,16 @@ int masterconf_init(const char *ident, const char *alt_config)
         /* XXX master ignores IMAPOPT_SYSLOG_FACILITY */
 
         if (prefix)
-            buf = strconcat(prefix, "/", ident, NULL);
+            syslog_buf = strconcat(prefix, "/", ident, NULL);
         else
-            buf = xstrdup(ident);
+            syslog_buf = strconcat("cyrus/", ident, NULL);
 
         /* Reopen the log with the new prefix */
         closelog();
-        openlog(buf, LOG_PID, SYSLOG_FACILITY);
+        openlog(syslog_buf, LOG_PID, SYSLOG_FACILITY);
     }
 
-    /* don't free 'buf', syslog needs it for the lifetime of the process */
+    /* don't free 'syslog_buf', syslog needs it for the lifetime of the process */
 
     /* drop debug messages locally */
     if (!config_debug)
