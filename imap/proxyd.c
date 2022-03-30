@@ -1161,7 +1161,7 @@ static void proxyd_reset(void)
     
     /* Cleanup Globals */
     proxyd_cmdcnt = 0;
-    disable_referrals = 0;
+    disable_referrals = config_getswitch(IMAPOPT_PROXYD_DISABLE_MAILBOX_REFERRALS);
     supports_referrals = 0;
     proxyd_userisadmin = 0;
     proxyd_starttls_done = 0;
@@ -2776,6 +2776,10 @@ void cmd_capability(char *tag)
     prot_printf(proxyd_out, "* CAPABILITY ");
     prot_printf(proxyd_out, CAPABILITY_STRING);
 
+    if (config_getswitch(IMAPOPT_PROXYD_DISABLE_MAILBOX_REFERRALS) == 0) {
+      prot_printf(proxyd_out, " MAILBOX-REFERRALS");
+    }
+		
     if (config_getint(IMAPOPT_IMAPIDLEPOLL) > 0) {
 	prot_printf(proxyd_out, " IDLE");
     }

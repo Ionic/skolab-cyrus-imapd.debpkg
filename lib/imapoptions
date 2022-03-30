@@ -668,6 +668,10 @@ are listed with ``<none>''.
    connections that these referrals would cause, thus resulting in a higher
    authentication load on the respective backend server. */
 
+{ "proxyd_disable_mailbox_referrals", 0, SWITCH }
+/* Set to true to disable the use of mailbox-referrals on the
+   proxy servers.*/
+
 { "proxyservers", NULL, STRING }
 /* A list of users and groups that are allowed to proxy for other
    users, seperated by spaces.  Any user listed in this will be
