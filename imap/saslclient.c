@@ -39,7 +39,7 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* $Id: saslclient.c,v 1.13 2004/07/07 19:49:05 rjs3 Exp $ */
+/* $Id: saslclient.c,v 1.14.2.1 2006/12/19 14:30:28 murch Exp $ */
 
 #include <config.h>
 
@@ -217,21 +217,22 @@ int saslclient(sasl_conn_t *conn, struct sasl_cmd_t *sasl_cmd,
 	sprintf(cmdbuf, "%s %s", sasl_cmd->cmd, mech);
     prot_printf(pout, "%s", cmdbuf);
 
-    if (clientout) { /* initial response */
-	if (!clientoutlen) { /* zero-length initial response */
-	    prot_printf(pout, " =");
+    if (!clientout) goto noinitresp;  /* no initial response */
 
-	    clientout = NULL;
-	}
-	else if (!sendliteral &&
-		 ((strlen(cmdbuf) + clientoutlen + 3) > sasl_cmd->maxlen)) {
-	    /* initial response is too long for auth command,
-	       so wait for a server challenge before sending it */
-	    goto noinitresp;
-	}
-	else { /* full response -- encoded below */
-	    prot_printf(pout, " ");
-	}
+    /* initial response */
+    if (!clientoutlen) { /* zero-length initial response */
+	prot_printf(pout, " =");
+
+	clientout = NULL;
+    }
+    else if (!sendliteral &&
+	     ((strlen(cmdbuf) + clientoutlen + 3) > sasl_cmd->maxlen)) {
+	/* initial response is too long for auth command,
+	   so wait for a server challenge before sending it */
+	goto noinitresp;
+    }
+    else { /* full response -- encoded below */
+	prot_printf(pout, " ");
     }
 
     do {
