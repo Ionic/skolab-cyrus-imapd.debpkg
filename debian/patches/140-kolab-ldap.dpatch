@@ -4,17 +4,6 @@
 ## DP: Kolab upstream's kolab-ldap.patch
 
 @DPATCH@
---- a/configure
-+++ b/configure
-@@ -16713,7 +16713,7 @@ for flag in ${ldflags} ${default_ldflags
- done
- 
- IMAP_COM_ERR_LIBS="${COM_ERR_LIBS}"
--IMAP_LIBS="${LIB_SASL} ${LIBS}"
-+IMAP_LIBS="${LIB_SASL} -lldap -llber ${LIBS}"
- 
- 
- 
 --- a/imap/global.c
 +++ b/imap/global.c
 @@ -52,6 +52,9 @@
@@ -114,3 +103,14 @@
  /* Enable virtual domain support.  If enabled, the user's domain will
     be determined by splitting a fully qualified userid at the last '@'
     or '%' symbol.  If the userid is unqualified, and the virtdomains
+--- a/configure.in
++++ b/configure.in
+@@ -1013,7 +1013,7 @@ for flag in ${ldflags} ${default_ldflags
+ done
+ 
+ IMAP_COM_ERR_LIBS="${COM_ERR_LIBS}"
+-IMAP_LIBS="${LIB_SASL} ${LIBS}"
++IMAP_LIBS="${LIB_SASL} -lldap -llber ${LIBS}"
+ 
+ AC_SUBST(LIB_RT)
+ AC_SUBST(IMAP_COM_ERR_LIBS)
