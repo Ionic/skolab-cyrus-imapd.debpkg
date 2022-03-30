@@ -2241,12 +2241,15 @@ If all partitions are over that limit, this feature is not used anymore.
 
 { "sasl_maximum_layer", 256, INT, "2.3.17" }
 /* Maximum SSF (security strength factor) that the server will allow a
-   client to negotiate. */
+   client to negotiate. This corresponds to the max_ssf option of libsasl.
+   Please check the libsasl documentation for available values. */
 
 { "sasl_minimum_layer", 0, INT, "2.3.17" }
 /* The minimum SSF that the server will allow a client to negotiate.
-   A value of 1 requires integrity protection; any higher value
-   requires some amount of encryption. */
+   A value of 1 requires integrity protection (i.e., checksums); any higher
+   value requires some amount of encryption. This corresponds to the min_ssf
+   option of libsasl. Please check libsasl documentation for available
+   values. */
 
 # Commented out - used by libsasl
 # { "sasl_option", 0, STRING, "2.3.17" }
