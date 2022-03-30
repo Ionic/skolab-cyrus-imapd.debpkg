@@ -1048,6 +1048,9 @@ void shut_down(int code)
 
     cyrus_done();
 
+    /* shutdown socket nicely */
+    cyrus_reset_stdio();
+
     exit(code);
 }
 

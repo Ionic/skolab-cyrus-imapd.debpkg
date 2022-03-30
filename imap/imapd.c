@@ -1158,6 +1158,11 @@ void shut_down(int code)
 #ifdef HAVE_SSL
     tls_shutdown_serverengine();
 #endif
+    /* shutdown socket nicely */
+    for (i = 0; 3 > i; ++i)
+    {
+        cyrus_close_sock(i);
+    }
 
     saslprops_free(&saslprops);
 
