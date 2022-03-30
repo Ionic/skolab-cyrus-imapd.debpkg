@@ -69,6 +69,7 @@
 #include "mboxname.h"
 #include "proc.h"
 #include "seen.h"
+#include "util.h"
 #include "xmalloc.h"
 
 /* generated headers are not necessarily in current directory */
@@ -140,11 +141,20 @@ static int begin_handling(void)
 void shut_down(int code) __attribute__((noreturn));
 void shut_down(int code)
 {
+    int i = 0;
+
     in_shutdown = 1;
 
     seen_done();
     closelog();
     cyrus_done();
+
+    /* be nice to remote */
+    for (i = 0; 3 > i; ++i)
+    {
+        cyrus_close_sock(i);
+    }
+
     exit(code);
 }
 
