@@ -83,6 +83,11 @@ periodically as an EVENT in
 .IR cyrus.conf (5)
 .
 .PP
+The
+.I mailbox
+argument can be omitted, which indexes all mailboxes. Otherwise it needs
+to be specified in the same format as used in cyradm.
+.PP
 .B NOTE:
 Messages and mailboxes that have not been indexed CAN still be
 SEARCHed, just not as quickly as those with a SQUAT index.
@@ -98,7 +103,11 @@ Read configuration options from \fIconfig-file\fR.
 .TP
 .B \-r
 Recursively create indexes for all sub-mailboxes of the mailboxes or
-mailbox prefixes given as arguments.
+mailbox prefixes given as arguments. If 
+.B \-r
+is specified, you must also specify at least one
+.I mailbox
+to recurse down from.
 .TP
 .B \-s
 Skip mailboxes whose index file is older than their current squat file

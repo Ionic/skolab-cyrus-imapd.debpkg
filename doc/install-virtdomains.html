@@ -99,6 +99,10 @@ then set <tt>defaultdomain</tt> to 'xxx.yyy.zzz'.
 to the <tt>defaultdomain</tt>.  See <a href=#admins>Administrators</a>
 below for further discussion.
 
+<p><b>Note:</b> Users in the <tt>defaultdomain</tt> must <i>not</i>
+log in using the <tt>user@domain</tt> cross-realm login syntax. The
+<tt>user@domain</tt> type specification only works for them in LMTP.
+
 <p>Here is a sample <tt>imapd.conf</tt> with a minimal set of configuration
 options.</p>
 
