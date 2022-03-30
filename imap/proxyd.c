@@ -91,6 +91,10 @@
 #include "telemetry.h"
 #include "backend.h"
 
+#ifndef MAXHOSTNAMELEN
+#define MAXHOSTNAMELEN 255
+#endif
+
 /* config.c stuff */
 const int config_need_data = 0;
 

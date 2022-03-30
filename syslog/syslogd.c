@@ -156,6 +156,10 @@ static char sccsid[] = "@(#)syslogd.c	5.42 (Berkeley) 6/29/90";
 #define SYSLOG_NAMES
 #include "syslog.h"
 
+#ifndef MAXHOSTNAMELEN
+#define MAXHOSTNAMELEN 255
+#endif
+
 #define UT_NAMESIZE	8
 #define	_PATH_UTMP	"/etc/utmp"
 #define	_PATH_DEV	"/dev/"

@@ -72,6 +72,10 @@
 #include "xmalloc.h"
 #include "signals.h"
 
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
 extern int optind, opterr;
 extern char *optarg;
 
