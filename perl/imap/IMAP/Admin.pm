@@ -828,6 +828,8 @@ sub mboxconfig {
 
   my %values = ( "comment" => "/comment",
                  "expire" => "/vendor/cmu/cyrus-imapd/expire",
+                 "folder-type" => "/vendor/kolab/folder-type",
+                 "h-share-uid" => "/vendor/kolab/h-share-uid",
                  "news2mail" => "/vendor/cmu/cyrus-imapd/news2mail",
                  "sharedseen" => "/vendor/cmu/cyrus-imapd/sharedseen",
                  "sieve" => "/vendor/cmu/cyrus-imapd/sieve",
