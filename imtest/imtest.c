@@ -624,14 +624,14 @@ static long bio_dump_cb(BIO * bio, int cmd, const char *argp, int argi,
 	return (ret);
     
     if (cmd == (BIO_CB_READ | BIO_CB_RETURN)) {
-	printf("read from %08X [%08lX] (%d bytes => %ld (0x%X))\n",
-	       (unsigned int) bio, (long unsigned int) argp,
+	printf("read from %p [%p] (%d bytes => %ld (0x%X))\n",
+	       (void*) bio, (void*) argp,
 	       argi, ret, (unsigned int) ret);
 	tls_dump(argp, (int) ret);
 	return (ret);
     } else if (cmd == (BIO_CB_WRITE | BIO_CB_RETURN)) {
-	printf("write to %08X [%08lX] (%d bytes => %ld (0x%X))\n",
-	       (unsigned int) bio, (long unsigned int) argp,
+	printf("write to %p [%p] (%d bytes => %ld (0x%X))\n",
+	       (void*) bio, (void*) argp,
 	       argi, ret, (unsigned int) ret);
 	tls_dump(argp, (int) ret);
     }
@@ -1778,7 +1778,8 @@ static int append_msg(char *mbox, int size)
 {
     int lup;
     
-    prot_printf(pout,"A003 APPEND %s (\\Seen) {%u}\r\n",mbox,size+strlen(HEADERS));
+    prot_printf(pout,"A003 APPEND %s (\\Seen) {%lu}\r\n",mbox,
+		    (unsigned long) size+strlen(HEADERS));
     /* do normal header foo */
     prot_printf(pout,HEADERS);
     

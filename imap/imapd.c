@@ -6095,8 +6095,8 @@ static int trashacl(struct protstream *pin, struct protstream *pout,
     memset(&tmp, 0, sizeof(struct buf));
     memset(&user, 0, sizeof(struct buf));
 
-    prot_printf(pout, "ACL0 GETACL {%d+}\r\n%s\r\n",
-		strlen(mailbox), mailbox);
+    prot_printf(pout, "ACL0 GETACL {%lu+}\r\n%s\r\n",
+		(unsigned long) strlen(mailbox), mailbox);
 
     while(1) {
 	c = getword(pin, &tag);
@@ -6146,9 +6146,9 @@ static int trashacl(struct protstream *pin, struct protstream *pout,
 
 		snprintf(tagbuf, sizeof(tagbuf), "ACL%d", ++i);
 		
-		prot_printf(pout, "%s DELETEACL {%d+}\r\n%s {%d+}\r\n%s\r\n",
-			    tagbuf, strlen(mailbox), mailbox,
-			    strlen(user.s), user.s);
+		prot_printf(pout, "%s DELETEACL {%lu+}\r\n%s {%lu+}\r\n%s\r\n",
+			    tagbuf, (unsigned long) strlen(mailbox), mailbox,
+			    (unsigned long) strlen(user.s), user.s);
 		if(c == '\r') {
 		    c = prot_getc(pin);
 		    if(c != '\n') {
@@ -6223,11 +6223,11 @@ static int dumpacl(struct protstream *pin, struct protstream *pout,
 
 	snprintf(tag, sizeof(tag), "SACL%d", tagnum++);
 	
-	prot_printf(pout, "%s SETACL {%d+}\r\n%s {%d+}\r\n%s {%d+}\r\n%s\r\n",
+	prot_printf(pout, "%s SETACL {%d+}\r\n%s {%lu+}\r\n%s {%lu+}\r\n%s\r\n",
 		    tag,
 		    mailboxlen, mailbox,
-		    strlen(acl), acl,
-		    strlen(rights), rights);
+		    (unsigned long) strlen(acl), acl,
+		    (unsigned long) strlen(rights), rights);
 
 	while(1) {
 	    c = getword(pin, &inbuf);
@@ -6341,11 +6341,11 @@ static int do_xfer_single(char *toserver, char *topart,
     if(!r) {
 	if(topart) {
 	    /* need to send partition as an atom */
-	    prot_printf(be->out, "LC1 LOCALCREATE {%d+}\r\n%s %s\r\n",
-			strlen(name), name, topart);
+	    prot_printf(be->out, "LC1 LOCALCREATE {%lu+}\r\n%s %s\r\n",
+			(unsigned long) strlen(name), name, topart);
 	} else {
-	    prot_printf(be->out, "LC1 LOCALCREATE {%d+}\r\n%s\r\n",
-			strlen(name), name);
+	    prot_printf(be->out, "LC1 LOCALCREATE {%lu+}\r\n%s\r\n",
+			(unsigned long) strlen(name), name);
 	}
 	r = getresult(be->in, "LC1");
 	if(r) syslog(LOG_ERR, "Could not move mailbox: %s, LOCALCREATE failed",
@@ -6379,7 +6379,8 @@ static int do_xfer_single(char *toserver, char *topart,
     if(!r) {
 	backout_mupdate = 1;
 
-	prot_printf(be->out, "D01 UNDUMP {%d+}\r\n%s ", strlen(name), name);
+	prot_printf(be->out, "D01 UNDUMP {%lu+}\r\n%s ",
+		    (unsigned long) strlen(name), name);
 
 	r = dump_mailbox(NULL, mailboxname, path, acl, 0, be->in, be->out,
 			 imapd_authstate);
@@ -6425,8 +6426,8 @@ static int do_xfer_single(char *toserver, char *topart,
 	/* 6.5) Kick remote server to correct mupdate entry */
 	/* Note that we don't really care if this succeeds or not */
 	if (mupdate_h) {
-	    prot_printf(be->out, "MP1 MUPDATEPUSH {%d+}\r\n%s\r\n",
-			strlen(name), name);
+	    prot_printf(be->out, "MP1 MUPDATEPUSH {%lu+}\r\n%s\r\n",
+			(unsigned long) strlen(name), name);
 	    rerr = getresult(be->in, "MP1");
 	    if(rerr) {
 		syslog(LOG_ERR,
@@ -6465,8 +6466,8 @@ done:
     }
     if(r && backout_remotebox) {
 	rerr = 0;
-	prot_printf(be->out, "LD1 LOCALDELETE {%d+}\r\n%s\r\n",
-		    strlen(name), name);
+	prot_printf(be->out, "LD1 LOCALDELETE {%lu+}\r\n%s\r\n",
+		    (unsigned long) strlen(name), name);
 	rerr = getresult(be->in, "LD1");
  	if(rerr) {
 	    syslog(LOG_ERR,
@@ -6661,9 +6662,10 @@ void cmd_xfer(char *tag, char *name, char *toserver, char *topart)
 	    if(!r) {
 		/* note use of + to force the setting of a nonexistant
 		 * quotaroot */
-		prot_printf(be->out, "Q01 SETQUOTA {%d+}\r\n" \
+		prot_printf(be->out, "Q01 SETQUOTA {%lu+}\r\n" \
 			    "+%s (STORAGE %d)\r\n",
-			    strlen(name)+1, name, quota.limit);
+			    (unsigned long) strlen(name)+1,
+			    name, quota.limit);
 		r = getresult(be->in, "Q01");
 		if(r) syslog(LOG_ERR,
 			     "Could not move mailbox: %s, " \
@@ -7207,7 +7209,7 @@ const char *s;
 
     /* if it's too long, literal it */
     if (*p || len >= 1024) {
-	prot_printf(imapd_out, "{%u}\r\n%s", strlen(s), s);
+	prot_printf(imapd_out, "{%lu}\r\n%s", (unsigned long) strlen(s), s);
     } else {
 	prot_printf(imapd_out, "\"%s\"", s);
     }
@@ -7237,7 +7239,7 @@ const char *s;
 
     /* if it's too long, literal it */
     if (*p || len >= 1024) {
-	prot_printf(imapd_out, "{%u}\r\n%s", strlen(s), s);
+	prot_printf(imapd_out, "{%lu}\r\n%s", (unsigned long) strlen(s), s);
     } else {
 	prot_printf(imapd_out, "\"%s\"", s);
     }

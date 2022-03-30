@@ -364,7 +364,8 @@ int putscript(struct protstream *conn, mystring_t *name, mystring_t *data,
 
   if (result != TIMSIEVE_OK) {
       if (errstr && *errstr) { 
-	  prot_printf(conn, "NO {%d}\r\n%s\r\n", strlen(errstr), errstr);
+	  prot_printf(conn, "NO {%lu}\r\n%s\r\n",
+			  (unsigned long) strlen(errstr), errstr);
 	  free(errstr);
       } else {
 	  if (errstr) free(errstr);

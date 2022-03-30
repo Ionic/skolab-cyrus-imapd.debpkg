@@ -330,9 +330,11 @@ int mupdate_activate(mupdate_handle *handle,
     if (!handle->saslcompleted) return MUPDATE_NOAUTH;
 
     prot_printf(handle->pout,
-		"X%u ACTIVATE {%d+}\r\n%s {%d+}\r\n%s {%d+}\r\n%s\r\n", 
-		handle->tagn++, strlen(mailbox), mailbox, 
-		strlen(server), server, strlen(acl), acl);
+		"X%u ACTIVATE {%lu+}\r\n%s {%lu+}\r\n%s {%lu+}\r\n%s\r\n", 
+		handle->tagn++,
+		(unsigned long) strlen(mailbox), mailbox,
+		(unsigned long) strlen(server), server,
+		(unsigned long) strlen(acl), acl);
 
     ret = mupdate_scarf(handle, mupdate_scarf_one, NULL, 1, &response);
     if (ret) {
@@ -355,9 +357,10 @@ int mupdate_reserve(mupdate_handle *handle,
     if (!handle->saslcompleted) return MUPDATE_NOAUTH;
 
     prot_printf(handle->pout,
-		"X%u RESERVE {%d+}\r\n%s {%d+}\r\n%s\r\n",
-		handle->tagn++, strlen(mailbox), mailbox, 
-		strlen(server), server);
+		"X%u RESERVE {%lu+}\r\n%s {%lu+}\r\n%s\r\n",
+		handle->tagn++,
+		(unsigned long) strlen(mailbox), mailbox, 
+		(unsigned long) strlen(server), server);
 
     ret = mupdate_scarf(handle, mupdate_scarf_one, NULL, 1, &response);
     if (ret) {
@@ -380,9 +383,10 @@ int mupdate_deactivate(mupdate_handle *handle,
     if (!handle->saslcompleted) return MUPDATE_NOAUTH;
 
     prot_printf(handle->pout,
-		"X%u DEACTIVATE {%d+}\r\n%s {%d+}\r\n%s\r\n",
-		handle->tagn++, strlen(mailbox), mailbox, 
-		strlen(server), server);
+		"X%u DEACTIVATE {%lu+}\r\n%s {%lu+}\r\n%s\r\n",
+		handle->tagn++,
+		(unsigned long) strlen(mailbox), mailbox, 
+		(unsigned long) strlen(server), server);
 
     ret = mupdate_scarf(handle, mupdate_scarf_one, NULL, 1, &response);
     if (ret) {
@@ -405,8 +409,8 @@ int mupdate_delete(mupdate_handle *handle,
     if (!handle->saslcompleted) return MUPDATE_NOAUTH;
 
     prot_printf(handle->pout,
-		"X%u DELETE {%d+}\r\n%s\r\n", handle->tagn++, 
-		strlen(mailbox), mailbox);
+		"X%u DELETE {%lu+}\r\n%s\r\n", handle->tagn++, 
+		(unsigned long) strlen(mailbox), mailbox);
 
     ret = mupdate_scarf(handle, mupdate_scarf_one, NULL, 1, &response);
     if (ret) {
@@ -474,8 +478,8 @@ int mupdate_find(mupdate_handle *handle, const char *mailbox,
     if(!handle || !mailbox || !target) return MUPDATE_BADPARAM;
 
     prot_printf(handle->pout,
-		"X%u FIND {%d+}\r\n%s\r\n", handle->tagn++, 
-		strlen(mailbox), mailbox);
+		"X%u FIND {%lu+}\r\n%s\r\n", handle->tagn++, 
+		(unsigned long) strlen(mailbox), mailbox);
 
     memset(&(handle->mailboxdata_buf), 0, sizeof(handle->mailboxdata_buf));
 
@@ -507,8 +511,8 @@ int mupdate_list(mupdate_handle *handle, mupdate_callback callback,
 
     if(prefix) {
 	prot_printf(handle->pout,
-		    "X%u LIST {%d+}\r\n%s\r\n", handle->tagn++,
-		    strlen(prefix), prefix);
+		    "X%u LIST {%lu+}\r\n%s\r\n", handle->tagn++,
+		    (unsigned long) strlen(prefix), prefix);
     } else {
 	prot_printf(handle->pout,
 		    "X%u LIST\r\n", handle->tagn++);

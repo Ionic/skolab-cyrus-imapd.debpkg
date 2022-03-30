@@ -2060,7 +2060,7 @@ char *s;
     if (*p || len >= 1024) {
 	/* Write out as literal */
 	char buf[100];
-	snprintf(buf, sizeof(buf), "{%u}\r\n", strlen(s));
+	snprintf(buf, sizeof(buf), "{%lu}\r\n", (unsigned long) strlen(s));
 	message_ibuf_ensure(ibuf, strlen(s)+strlen(buf));
 	for (p = buf; *p; p++) *(ibuf->end)++ = *p;
 	for (p = s; *p; p++) *(ibuf->end)++ = *p;

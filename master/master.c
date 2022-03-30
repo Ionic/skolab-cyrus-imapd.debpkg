@@ -1883,7 +1883,7 @@ int main(int argc, char **argv)
 	    }
 	    
 	    /* Write PID */
-	    snprintf(buf, sizeof(buf), "%lu\n", (unsigned long int)getpid());
+	    snprintf(buf, sizeof(buf), "%lu\n", (unsigned long int) getpid());
 	    if(lseek(pidfd, 0, SEEK_SET) == -1 ||
 	       ftruncate(pidfd, 0) == -1 ||
 	       write(pidfd, buf, strlen(buf)) == -1) {

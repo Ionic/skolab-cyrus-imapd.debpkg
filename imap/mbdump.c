@@ -271,8 +271,8 @@ int dump_mailbox(const char *tag, const char *mbname, const char *mbpath,
 
 	/* send filename, size, and contents */
 	if(first) {
-	    prot_printf(pout, "{%d}\r\n",
-			strlen(name));
+	    prot_printf(pout, "{%lu}\r\n",
+			(unsigned long) strlen(name));
 
 	    if(!tag) {
 		/* synchronize */
@@ -292,8 +292,8 @@ int dump_mailbox(const char *tag, const char *mbname, const char *mbpath,
 
 	    first = 0;
 	} else {
-	    prot_printf(pout, " {%d%s}\r\n%s {%lu%s}\r\n",
-			strlen(name),
+	    prot_printf(pout, " {%lu%s}\r\n%s {%lu%s}\r\n",
+			(unsigned long) strlen(name),
 			(!tag ? "+" : ""),
 			name, len,
 			(!tag ? "+" : ""));
@@ -327,8 +327,8 @@ int dump_mailbox(const char *tag, const char *mbname, const char *mbpath,
 
 	/* send filename, size, and contents */
 	if(first) {
-	    prot_printf(pout, "{%d}\r\n",
-			strlen(data_files[i]));
+	    prot_printf(pout, "{%lu}\r\n",
+			(unsigned long) strlen(data_files[i]));
 	    
 	    if(!tag) {
 		/* synchronize */
@@ -347,8 +347,8 @@ int dump_mailbox(const char *tag, const char *mbname, const char *mbpath,
 			(!tag ? "+" : ""));
 	    first = 0;
 	} else {
-	    prot_printf(pout, " {%d%s}\r\n%s {%lu%s}\r\n",
-			strlen(data_files[i]),
+	    prot_printf(pout, " {%lu%s}\r\n%s {%lu%s}\r\n",
+			(unsigned long) strlen(data_files[i]),
 			(!tag ? "+" : ""),
 			data_files[i], len,
 			(!tag ? "+" : ""));
@@ -474,8 +474,8 @@ int dump_mailbox(const char *tag, const char *mbname, const char *mbpath,
 				snprintf(ext_fname, sizeof(ext_fname),
 					 "SIEVE-%s", next->d_name);
 			    }
-			    prot_printf(pout, " {%d%s}\r\n%s {%lu%s}\r\n",
-					strlen(ext_fname), 
+			    prot_printf(pout, " {%lu%s}\r\n%s {%lu%s}\r\n",
+					(unsigned long) strlen(ext_fname), 
 					(!tag ? "+" : ""),
 					ext_fname,
 					len,

@@ -1613,20 +1613,20 @@ void cmd_find(struct conn *C, const char *tag, const char *mailbox,
     pthread_mutex_unlock(&mailboxes_mutex); /* UNLOCK */
 
     if (m && m->t == SET_ACTIVE) {
-	prot_printf(C->pout, "%s MAILBOX {%d+}\r\n%s {%d+}\r\n%s {%d+}\r\n%s\r\n",
+	prot_printf(C->pout, "%s MAILBOX {%lu+}\r\n%s {%lu+}\r\n%s {%lu+}\r\n%s\r\n",
 		    tag,
-		    strlen(m->mailbox), m->mailbox,
-		    strlen(m->server), m->server,
-		    strlen(m->acl), m->acl);
+		    (unsigned long) strlen(m->mailbox), m->mailbox,
+		    (unsigned long) strlen(m->server), m->server,
+		    (unsigned long) strlen(m->acl), m->acl);
     } else if (m && m->t == SET_RESERVE) {
-	prot_printf(C->pout, "%s RESERVE {%d+}\r\n%s {%d+}\r\n%s\r\n",
+	prot_printf(C->pout, "%s RESERVE {%lu+}\r\n%s {%lu+}\r\n%s\r\n",
 		    tag,
-		    strlen(m->mailbox), m->mailbox,
-		    strlen(m->server), m->server);
+		    (unsigned long) strlen(m->mailbox), m->mailbox,
+		    (unsigned long) strlen(m->server), m->server);
     } else if (send_delete) {
 	/* not found, if needed, send a delete */
-	prot_printf(C->pout, "%s DELETE {%d+}\r\n%s\r\n",
-		    tag, strlen(mailbox), mailbox);
+	prot_printf(C->pout, "%s DELETE {%lu+}\r\n%s\r\n",
+		    tag, (unsigned long) strlen(mailbox), mailbox);
     }
     
     free_mbent(m);
@@ -1668,17 +1668,17 @@ static int sendupdate(char *name,
 	    switch (m->t) {
 	    case SET_ACTIVE:
 		prot_printf(C->pout,
-			    "%s MAILBOX {%d+}\r\n%s {%d+}\r\n%s {%d+}\r\n%s\r\n",
+			    "%s MAILBOX {%lu+}\r\n%s {%lu+}\r\n%s {%lu+}\r\n%s\r\n",
 			    C->streaming,
-			    strlen(m->mailbox), m->mailbox,
-			    strlen(m->server), m->server,
-			    strlen(m->acl), m->acl);
+			    (unsigned long) strlen(m->mailbox), m->mailbox,
+			    (unsigned long) strlen(m->server), m->server,
+			    (unsigned long) strlen(m->acl), m->acl);
 		break;
 	    case SET_RESERVE:
-		prot_printf(C->pout, "%s RESERVE {%d+}\r\n%s {%d+}\r\n%s\r\n",
+		prot_printf(C->pout, "%s RESERVE {%lu+}\r\n%s {%lu+}\r\n%s\r\n",
 			    C->streaming,
-			    strlen(m->mailbox), m->mailbox,
-			    strlen(m->server), m->server);
+			    (unsigned long) strlen(m->mailbox), m->mailbox,
+			    (unsigned long) strlen(m->server), m->server);
 		break;
 		
 	    case SET_DELETE:

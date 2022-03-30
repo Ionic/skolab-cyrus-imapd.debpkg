@@ -2841,7 +2841,8 @@ void cmd_append(char *tag, char *name)
     if (!r) {
 	int is_active = 1;
 	s->context = (void*) &is_active;
-	prot_printf(s->out, "%s Append {%d+}\r\n%s ", tag, strlen(name), name);
+ 	prot_printf(s->out, "%s Append {%lu+}\r\n%s ", tag,
+ 			(unsigned long) strlen(name), name);
 	if (!(r = pipe_command(s, 16384))) {
 	    pipe_until_tag(s, tag, 0);
 	}
@@ -2917,8 +2918,8 @@ void cmd_select(char *tag, char *cmd, char *name)
 	return;
     }
 
-    prot_printf(backend_current->out, "%s %s {%d+}\r\n%s\r\n", tag, cmd, 
-		strlen(name), name);
+    prot_printf(backend_current->out, "%s %s {%lu+}\r\n%s\r\n", tag, cmd, 
+		(unsigned long) strlen(name), name);
     switch (pipe_including_tag(backend_current, tag, 0)) {
     case PROXY_OK:
 	proc_register("proxyd", proxyd_clienthost, proxyd_userid, mailboxname);
@@ -3148,8 +3149,9 @@ void cmd_copy(char *tag, char *sequence, char *name, int usinguid)
 		    r == 0 ? "[TRYCREATE] " : "", error_message(r));
     } else if (s == backend_current) {
 	/* this is the easy case */
-	prot_printf(backend_current->out, "%s %s %s {%d+}\r\n%s\r\n",
-		    tag, cmd, sequence, strlen(name), name);
+	prot_printf(backend_current->out, "%s %s %s {%lu+}\r\n%s\r\n",
+		    tag, cmd, sequence, 
+		    (unsigned long) strlen(name), name);
 	pipe_including_tag(backend_current, tag, 0);
     } else {
 	char mytag[128];
@@ -3310,7 +3312,8 @@ void cmd_copy(char *tag, char *sequence, char *name, int usinguid)
 	}
 
 	/* start the append */
-	prot_printf(s->out, "%s Append {%d+}\r\n%s", tag, strlen(name), name);
+	prot_printf(s->out, "%s Append {%lu+}\r\n%s", tag,
+			(unsigned long) strlen(name), name);
 	prot_printf(backend_current->out, "%s %s %s (Rfc822.peek)\r\n",
 		    mytag, usinguid ? "Uid Fetch" : "Fetch", sequence);
 	for (/* each FETCH response */;;) {
@@ -3555,8 +3558,8 @@ void cmd_create(char *tag, char *name, char *server)
 
     if (!r) {
 	/* ok, send the create to that server */
-	prot_printf(s->out, "%s CREATE {%d+}\r\n%s\r\n", 
-		    tag, strlen(name), name);
+	prot_printf(s->out, "%s CREATE {%lu+}\r\n%s\r\n", 
+		    tag, (unsigned long) strlen(name), name);
 	res = pipe_including_tag(s, tag, 0);
 	tag = "*";		/* can't send another tagged response */
 	
@@ -3596,8 +3599,8 @@ void cmd_delete(char *tag, char *name)
     }
 
     if (!r) {
-	prot_printf(s->out, "%s DELETE {%d+}\r\n%s\r\n", 
-		    tag, strlen(name), name);
+	prot_printf(s->out, "%s DELETE {%lu+}\r\n%s\r\n", 
+		    tag, (unsigned long) strlen(name), name);
 	res = pipe_including_tag(s, tag, 0);
 	tag = "*";		/* can't send another tagged response */
 
@@ -3698,17 +3701,17 @@ void cmd_rename(char *tag, char *oldname, char *newname, char *partition)
 		/* Cross Server */
 		/* <tag> XFER <name> <dest server> <dest partition> */
 		prot_printf(s->out,
-			    "%s XFER {%d+}\r\n%s {%d+}\r\n%s {%d+}\r\n%s\r\n", 
-			    tag, strlen(oldname), oldname,
-			    strlen(newserver), newserver,
-			    strlen(destpart), destpart);
+			    "%s XFER {%lu+}\r\n%s {%lu+}\r\n%s {%lu+}\r\n%s\r\n", 
+			    tag, (unsigned long) strlen(oldname), oldname,
+			    (unsigned long) strlen(newserver), newserver,
+			    (unsigned long) strlen(destpart), destpart);
 	    }
 	    
 	} else {
 	    /* <tag> XFER <name> <dest server> */
-	    prot_printf(s->out, "%s XFER {%d+}\r\n%s {%d+}\r\n%s\r\n", 
-			tag, strlen(oldname), oldname,
-			strlen(partition), partition);
+	    prot_printf(s->out, "%s XFER {%lu+}\r\n%s {%lu+}\r\n%s\r\n", 
+			tag, (unsigned long) strlen(oldname), oldname,
+			(unsigned long) strlen(partition), partition);
 	}
 	
 	res = pipe_including_tag(s, tag, 0);
@@ -3724,9 +3727,9 @@ void cmd_rename(char *tag, char *oldname, char *newname, char *partition)
 	    /* do MUPDATE create operations for new mailbox */
 	}
 
-	prot_printf(s->out, "%s RENAME {%d+}\r\n%s {%d+}\r\n%s\r\n", 
-		    tag, strlen(oldname), oldname,
-		    strlen(newname), newname);
+	prot_printf(s->out, "%s RENAME {%lu+}\r\n%s {%lu+}\r\n%s\r\n", 
+		    tag, (unsigned long) strlen(oldname), oldname,
+		    (unsigned long) strlen(newname), newname);
 	res = pipe_including_tag(s, tag, 0);
 	tag = "*";		/* can't send another tagged response */
 	
@@ -3761,8 +3764,8 @@ void cmd_find(char *tag, char *namespace, char *pattern)
 
 	if (backend_inbox) {
 	    prot_printf(backend_inbox->out, 
-			"%s Lsub \"\" {%d+}\r\n%s\r\n",
-			tag, strlen(pattern), pattern);
+			"%s Lsub \"\" {%lu+}\r\n%s\r\n",
+			tag, (unsigned long) strlen(pattern), pattern);
 	    pipe_lsub(backend_inbox, tag, 0, "MAILBOX");
 	} else {		/* user doesn't have an INBOX */
 	    /* noop */
@@ -3831,9 +3834,9 @@ void cmd_list(char *tag, int listopts, char *reference, char *pattern)
 
 	if (backend_inbox) {
 	    prot_printf(backend_inbox->out, 
-			"%s Lsub {%d+}\r\n%s {%d+}\r\n%s\r\n",
-			tag, strlen(reference), reference,
-			strlen(pattern), pattern);
+			"%s Lsub {%lu+}\r\n%s {%lu+}\r\n%s\r\n",
+			tag, (unsigned long) strlen(reference), reference,
+			(unsigned long) strlen(pattern), pattern);
 	    pipe_lsub(backend_inbox, tag, 0, (listopts & LIST_LSUB) ? "LSUB" : "LIST");
 	} else {		/* user doesn't have an INBOX */
 	    /* noop */
@@ -3922,14 +3925,14 @@ void cmd_changesub(char *tag, char *namespace, char *name, int add)
 	
 	if (namespace) {
 	    prot_printf(backend_inbox->out, 
-			"%s %s {%d+}\r\n%s {%d+}\r\n%s\r\n", 
+			"%s %s {%lu+}\r\n%s {%lu+}\r\n%s\r\n", 
 			tag, cmd, 
-			strlen(namespace), namespace,
-			strlen(name), name);
+			(unsigned long) strlen(namespace), namespace,
+			(unsigned long) strlen(name), name);
 	} else {
-	    prot_printf(backend_inbox->out, "%s %s {%d+}\r\n%s\r\n", 
+	    prot_printf(backend_inbox->out, "%s %s {%lu+}\r\n%s\r\n", 
 			tag, cmd, 
-			strlen(name), name);
+			(unsigned long) strlen(name), name);
 	}
 	pipe_including_tag(backend_inbox, tag, 0);
     } else {
@@ -4161,15 +4164,15 @@ void cmd_setacl(char *tag, const char *name,
     } else if (!r) {
 	if (rights) {
 	    prot_printf(s->out, 
-			"%s Setacl {%d+}\r\n%s {%d+}\r\n%s {%d+}\r\n%s\r\n",
-			tag, strlen(name), name,
-			strlen(identifier), identifier,
-			strlen(rights), rights);
+			"%s Setacl {%lu+}\r\n%s {%lu+}\r\n%s {%lu+}\r\n%s\r\n",
+			tag, (unsigned long) strlen(name), name,
+			(unsigned long) strlen(identifier), identifier,
+			(unsigned long) strlen(rights), rights);
 	} else {
 	    prot_printf(s->out, 
-			"%s Deleteacl {%d+}\r\n%s {%d+}\r\n%s\r\n",
-			tag, strlen(name), name,
-			strlen(identifier), identifier);
+			"%s Deleteacl {%lu+}\r\n%s {%lu+}\r\n%s\r\n",
+			tag, (unsigned long) strlen(name), name,
+			(unsigned long) strlen(identifier), identifier);
 	}	    
 	res = pipe_including_tag(s, tag, 0);
 	tag = "*";		/* can't send another tagged response */
@@ -4269,8 +4272,8 @@ void cmd_getquotaroot(char *tag, char *name)
 	s = proxyd_findserver(server);
 
 	if (s) {
-	    prot_printf(s->out, "%s Getquotaroot {%d+}\r\n%s\r\n",
-			tag, strlen(name), name);
+	    prot_printf(s->out, "%s Getquotaroot {%lu+}\r\n%s\r\n",
+			tag, (unsigned long) strlen(name), name);
 	    pipe_including_tag(s, tag, 0);
 	} else {
 	    r = IMAP_SERVER_UNAVAILABLE;
@@ -4495,8 +4498,8 @@ void cmd_status(char *tag, char *name)
     if (!r) s = proxyd_findserver(server);
     if (!r && !s) r = IMAP_SERVER_UNAVAILABLE;
     if (!r) {
-	prot_printf(s->out, "%s Status {%d+}\r\n%s ", tag,
-		    strlen(name), name);
+	prot_printf(s->out, "%s Status {%lu+}\r\n%s ", tag,
+		    (unsigned long) strlen(name), name);
 	if (!pipe_command(s, 65536)) {
 	    pipe_until_tag(s, tag, 0);
 	}
@@ -4636,7 +4639,7 @@ const char *s;
 
     /* if it's too long, literal it */
     if (*p || len >= 1024) {
-	prot_printf(proxyd_out, "{%u}\r\n%s", strlen(s), s);
+	prot_printf(proxyd_out, "{%lu}\r\n%s", (unsigned long) strlen(s), s);
     } else {
 	prot_printf(proxyd_out, "\"%s\"", s);
     }
@@ -4664,7 +4667,7 @@ void printastring(const char *s)
 
     /* if it's too long, literal it */
     if (*p || len >= 1024) {
-	prot_printf(proxyd_out, "{%u}\r\n%s", strlen(s), s);
+	prot_printf(proxyd_out, "{%lu}\r\n%s", (unsigned long) strlen(s), s);
     } else {
 	prot_printf(proxyd_out, "\"%s\"", s);
     }
