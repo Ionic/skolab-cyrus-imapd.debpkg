@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!/usr/bin/perl
 # A pretend saslauthd that just accepts any password except "bad"
 # for any user.  Use me for testing!
 
