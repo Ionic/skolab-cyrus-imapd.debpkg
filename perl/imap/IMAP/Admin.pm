@@ -784,18 +784,20 @@ sub mboxconfig {
 		 "news2mail" => "/vendor/cmu/cyrus-imapd/news2mail",
 		 "expire" => "/vendor/cmu/cyrus-imapd/expire",
 		 "sieve" => "/vendor/cmu/cyrus-imapd/sieve",
-		 "squat" => "/vendor/cmu/cyrus-imapd/squat" );
+		 "squat" => "/vendor/cmu/cyrus-imapd/squat",
+ 		 "folder-type" => "/vendor/kolab/folder-type",
+ 		 "h-share-uid" => "/vendor/kolab/h-share-uid" );
 
   if(!$self->{support_annotatemore}) {
     $self->{error} = "Remote does not support ANNOTATEMORE.";
     return undef;
   }
 
-  if(!exists($values{$entry})) {
-    $self->{error} = "Unknown parameter $entry";
+  if(exists($values{$entry})) {
+    $entry = $values{$entry};
+  } else {
+    $self->{error} = "Unknown parameter $entry" unless substr($entry,0,1) eq "/";
   }
-
-  $entry = $values{$entry};
 
   my ($rc, $msg);
 

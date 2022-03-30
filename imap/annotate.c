@@ -1673,6 +1673,11 @@ const struct annotate_st_entry mailbox_rw_entries[] =
     { NULL, 0, ANNOTATION_PROXY_T_INVALID, 0, 0, NULL, NULL }
 };
 
+const struct annotate_st_entry vendor_entry =
+    { NULL, ATTRIB_TYPE_STRING, BACKEND_ONLY,
+      ATTRIB_VALUE_SHARED | ATTRIB_VALUE_PRIV,
+      ACL_ADMIN, annotation_set_todb, NULL };
+
 int annotatemore_store(char *mailbox,
 		       struct entryattlist *l,
 		       struct namespace *namespace,
@@ -1685,6 +1690,7 @@ int annotatemore_store(char *mailbox,
     struct attvaluelist *av;
     struct storedata sdata;
     const struct annotate_st_entry *entries;
+    struct annotate_st_entry * working_entry;
     time_t now = time(0);
 
     memset(&sdata, 0, sizeof(struct storedata));
@@ -1706,37 +1712,55 @@ int annotatemore_store(char *mailbox,
     while (e) {
 	int entrycount, attribs;
 	struct annotate_st_entry_list *nentry = NULL;
+	struct annotate_st_entry *ientry = NULL;
 
 	/* See if we support this entry */
+	working_entry = NULL;
 	for (entrycount = 0;
 	     entries[entrycount].name;
 	     entrycount++) {
 	    if (!strcmp(e->entry, entries[entrycount].name)) {
+	        working_entry = &(entries[entrycount]);
 		break;
 	    }
 	}
-	if (!entries[entrycount].name) {
-	    /* unknown annotation */
-	    return IMAP_PERMISSION_DENIED;
+	if (working_entry==NULL) {
+	    /* test for generic vendor annotation */
+	    if ((strncmp("/vendor/", e->entry, strlen("/vendor/"))==0) &&
+	        (strlen(e->entry)>strlen("/vendor/"))) {
+	      working_entry = &(vendor_entry);
+	    }
+	    else {
+	        /* unknown annotation */
+	        return IMAP_PERMISSION_DENIED;
+	    }
 	}
 
 	/* Add this entry to our list only if it
 	   applies to our particular server type */
-	if (entries[entrycount].proxytype == PROXY_AND_BACKEND
+	if (working_entry->proxytype == PROXY_AND_BACKEND
 	    || (proxy_store_func &&
-		entries[entrycount].proxytype == PROXY_ONLY)
+		working_entry->proxytype == PROXY_ONLY)
 	    || (!proxy_store_func &&
-		entries[entrycount].proxytype == BACKEND_ONLY)) {
+		working_entry->proxytype == BACKEND_ONLY)) {
+            ientry = xzmalloc(sizeof(struct annotate_st_entry));
+            ientry->name = e->entry;
+            ientry->type = working_entry->type;
+            ientry->proxytype = working_entry->proxytype;
+            ientry->attribs = working_entry->attribs;
+            ientry->acl = working_entry->acl;
+            ientry->set = working_entry->set;
+            ientry->rock = working_entry->rock;	
 	    nentry = xzmalloc(sizeof(struct annotate_st_entry_list));
 	    nentry->next = sdata.entry_list;
-	    nentry->entry = &(entries[entrycount]);
+	    nentry->entry = ientry;
 	    nentry->shared.modifiedsince = now;
 	    nentry->priv.modifiedsince = now;
 	    sdata.entry_list = nentry;
 	}
 
 	/* See if we are allowed to set the given attributes. */
-	attribs = entries[entrycount].attribs;
+	attribs = working_entry->attribs;
 	av = e->attvalues;
 	while (av) {
 	    const char *value;
@@ -1746,7 +1770,7 @@ int annotatemore_store(char *mailbox,
 		    goto cleanup;
 		}
 		value = annotate_canon_value(av->value,
-					     entries[entrycount].type);
+					     working_entry->type);
 		if (!value) {
 		    r = IMAP_ANNOTATION_BADVALUE;
 		    goto cleanup;
@@ -1772,7 +1796,7 @@ int annotatemore_store(char *mailbox,
 		    goto cleanup;
 		}
 		value = annotate_canon_value(av->value,
-					     entries[entrycount].type);
+					     working_entry->type);
 		if (!value) {
 		    r = IMAP_ANNOTATION_BADVALUE;
 		    goto cleanup;
@@ -1874,6 +1898,12 @@ int annotatemore_store(char *mailbox,
     /* Free the entry list */
     while (sdata.entry_list) {
 	struct annotate_st_entry_list *freeme = sdata.entry_list;
+	if (freeme != NULL){
+	    struct annotate_st_entry *freeme2 = freeme->entry;
+	    if (freeme2 != NULL) {
+	        free( freeme2 );
+	    }
+	}
 	sdata.entry_list = sdata.entry_list->next;
 	free(freeme);
     }
