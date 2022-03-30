@@ -170,7 +170,7 @@ sub read_conf {
 $imapdconf = shift || "/etc/imapd.conf";
 
 $yn = "y";
-$sievedir = "/usr/sieve";
+$sievedir = "/var/spool/sieve";
 $nosievedir = 0;
 $hashispool = 0;
 $virtdomains = 0;
@@ -181,7 +181,7 @@ while ($conf = shift @configs) {
     read_conf($conf);
 }
 
-if (! $confdir) { $confdir = "/var/imap"; }
+if (! $confdir) { $confdir = "/var/lib/cyrus"; }
 
 if ($interactive) {
     print "upgrade $confdir? ";
@@ -555,6 +555,7 @@ sub move_part {
 	      or die "couldn't rename .$i/$s/$t to $s/$t";
 	  }
 	  closedir MV;
+	  rmdir ".$i/$s" or die "could not remove .$i/$s"
 	}
 	closedir SUB;
 	rmdir ".$i" or die "could not remove .$i";
