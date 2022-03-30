@@ -186,6 +186,8 @@ struct centry {
 };
 static struct centry *ctable[child_table_size];
 
+static int child_mourning_time = 2;    /* Time in seconds to remember child
+                                          after processing SIGCHLD */
 static int janitor_frequency = 1;       /* Janitor sweeps per second */
 static int janitor_position;            /* Entry to begin at in next sweep */
 static struct timeval janitor_mark;     /* Last time janitor did a sweep */
@@ -381,7 +383,7 @@ static void centry_set_state(struct centry *c, enum sstate state)
 {
     c->service_state = state;
     if (state == SERVICE_STATE_DEAD)
-        c->janitor_deadline = time(NULL) + 2;
+        c->janitor_deadline = time(NULL) + child_mourning_time;
 }
 
 /*
@@ -1841,9 +1843,12 @@ static void add_service(const char *name, struct entry *e, void *rock)
 
     /* is this service actually there? */
     if (!verify_service_file(Services[i].exec)) {
-        fatalf(EX_CONFIG,
+        char buf[1024];
+        snprintf(buf, sizeof(buf),
                  "cannot find executable for service '%s'", name);
-        /* if it is not, we're misconfigured, die. */
+        /* if it is not, we just skip it */
+        syslog(LOG_WARNING, "WARNING: %s -- ignored", buf);
+        return;
     }
 
     Services[i].maxforkrate = maxforkrate;
@@ -1863,6 +1868,7 @@ static void add_service(const char *name, struct entry *e, void *rock)
         if (prefork > 1) prefork = 1;
         Services[i].desired_workers = prefork;
         Services[i].max_workers = 1;
+        Services[i].babysit = 0;
     }
 
     if (reconfig) {
@@ -1912,7 +1918,7 @@ static void add_event(const char *name, struct entry *e, void *rock)
     if (!strcmp(cmd,"")) {
         char buf[256];
         snprintf(buf, sizeof(buf),
-                 "unable to find command or port for event '%s'", name);
+                 "unable to find command for event '%s'", name);
 
         if (ignore_err) {
             syslog(LOG_WARNING, "WARNING: %s -- ignored", buf);
@@ -1982,12 +1988,12 @@ static void limit_fds(rlim_t x)
         rl.rlim_cur = rl.rlim_max = x;
     }
 
-    if (verbose > 1) {
+    if (verbose > 1 && getrlimit(RLIMIT_NUMFDS, &rl) >= 0) {
         syslog(LOG_DEBUG, "set maximum file descriptors to " RLIM_T_FMT "/" RLIM_T_FMT,
                rl.rlim_cur, rl.rlim_max);
     }
 
-    if (setrlimit(RLIMIT_NUMFDS, &rl) < 0) {
+    if (setrlimit(RLIMIT_NUMFDS, &rl) < 0 && x != RLIM_INFINITY) {
         syslog(LOG_ERR,
                "setrlimit: Unable to set file descriptors limit to " RLIM_T_FMT ": %m",
                rl.rlim_cur);
@@ -2226,9 +2232,13 @@ static void reread_conf(struct timeval now)
                 free(Services[i].listen);
                 free(Services[i].proto);
             }
+            Services[i].name = NULL;
             Services[i].listen = NULL;
             Services[i].proto = NULL;
             Services[i].desired_workers = 0;
+            Services[i].nforks = 0;
+            Services[i].nactive = 0;
+            Services[i].nconnections = 0;
 
             /* close all listeners */
             shutdown(Services[i].socket, SHUT_RDWR);
@@ -2300,9 +2310,9 @@ int main(int argc, char **argv)
     p = getenv("CYRUS_VERBOSE");
     if (p) verbose = atoi(p) + 1;
 #ifdef HAVE_NETSNMP
-    while ((opt = getopt(argc, argv, "C:L:M:p:l:Ddj:vVP:x:")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:L:M:p:l:Ddj:J:vVP:x:")) != EOF) {
 #else
-    while ((opt = getopt(argc, argv, "C:L:M:p:l:Ddj:vV")) != EOF) {
+    while ((opt = getopt(argc, argv, "C:L:M:p:l:Ddj:J:vV")) != EOF) {
 #endif
         switch (opt) {
         case 'C': /* alt imapd.conf file */
@@ -2335,8 +2345,15 @@ int main(int argc, char **argv)
             /* Janitor frequency */
             janitor_frequency = atoi(optarg);
             if(janitor_frequency < 1)
-                fatal("The janitor period must be at least 1 second", EX_CONFIG);
+                fatal("The janitor frequency must be at least once per second", EX_CONFIG);
             break;
+       case 'J':
+           /* Janitor delay before cleanup of a child */
+           child_mourning_time = atoi(optarg);
+           if(child_mourning_time < 1)
+               fatal("The janitor's mourning time interval must be at least 1 second",
+                       EX_CONFIG);
+           break;
 #ifdef HAVE_NETSNMP
         case 'P': /* snmp AgentXPingInterval */
             agentxpinginterval = atoi(optarg);
