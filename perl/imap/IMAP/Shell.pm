@@ -445,7 +445,7 @@ sub run {
 sub shell {
   my ($server, $port, $authz, $auth, $systemrc, $userrc, $dorc, $mech, $pw,
       $tlskey, $notls, $cacert, $capath) =
-    ('', 143, undef, $ENV{USER} || $ENV{LOGNAME}, '/usr/local/etc/cyradmrc.pl',
+    ('', 143, undef, $ENV{USER} || $ENV{LOGNAME}, '/etc/cyradmrc.pl',
      "$ENV{HOME}/.cyradmrc.pl", 1, undef, undef, undef, undef, undef, undef);
   GetOptions('user|u=s' => \$auth,
              'authz|z=s' => \$authz,
