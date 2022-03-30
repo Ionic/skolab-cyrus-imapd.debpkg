@@ -1767,9 +1767,9 @@ EXPORTED int mboxname_same_userid(const char *name1, const char *name2)
  * NOTE: '^' is '.' externally in unixhs, and invalid in unixhs
  *
  * The set of printable chars that are not in GOODCHARS are:
- *    !"%&/;<>\`{|}
+ *    !"&/\
  */
-#define GOODCHARS " #$'()*+,-.0123456789:=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_abcdefghijklmnopqrstuvwxyz~"
+#define GOODCHARS " #$%'()*+,-.0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 EXPORTED int mboxname_policycheck(const char *name)
 {
     const char *p;
