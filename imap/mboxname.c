@@ -128,7 +128,11 @@ static int mboxname_tointernal(struct namespace *namespace, const char *name,
 		sprintf(result, "%s!", cp);
 	    }
 	}
+#ifdef ATVDOM /* allow '@' being a regular character in mboxname even when using virtual domains */
+	else if ((cp = strrchr(name, '@'))) {
+#else
 	if ((cp = strrchr(name, '@'))) {
+#endif /* ATVDOM */
 	    /* mailbox specified as mbox@domain */
 	    namelen = cp - name;
 

@@ -71,6 +71,11 @@
 
 #define PROB (0.5)
 
+#ifdef __FreeBSD__
+/* #define fdatasync(fd) fsync(fd) */
+#define O_DSYNC 0
+#endif
+
 /* 
  *
  * disk format; all numbers in network byte order
