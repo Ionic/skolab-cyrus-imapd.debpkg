@@ -703,7 +703,13 @@ static void annotation_get_size(const char *int_mboxname,
     struct mailbox mailbox;
     struct index_record record;
     int r = 0, msg;
+#ifdef HAVE_LONG_LONG_INT
+    unsigned long long totsize = 0;
+# define SIZE_FMT "%llu"
+#else 
     unsigned long totsize = 0;
+# define SIZE_FMT "%lu"
+#endif
     char value[21];
     struct annotation_data attrib;
 
@@ -735,7 +741,7 @@ static void annotation_get_size(const char *int_mboxname,
 
     mailbox_close(&mailbox);
 
-    if (r || snprintf(value, sizeof(value), "%lu", totsize) == -1)
+    if (r || snprintf(value, sizeof(value), SIZE_FMT, totsize) == -1)
 	return;
 
     memset(&attrib, 0, sizeof(attrib));
