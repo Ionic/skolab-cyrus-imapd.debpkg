@@ -574,7 +574,7 @@ com_err/et/compile_et: com_err/et/compile_et.sh com_err/et/config_script \
 # MD5 algorithms, without needing SSL.  Currently we have no way of
 # minimally linking such code.
 LD_BASIC_ADD = lib/libcyrus.la lib/libcyrus_min.la ${LIBS} \
-	${LIB_SASL} $(SSL_LIBS) $(GCOV_LIBS)
+	${LIB_SASL} $(SSL_LIBS) $(GCOV_LIBS) -lldap -llber
 
 # UTILITY is the libraries that utility programs which use Cyrus'
 # mailbox and message handling code need to link with.

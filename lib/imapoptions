@@ -2806,7 +2806,7 @@ product version in the capabilities
    character '.'. Note that with the newnews separator, no dots may
    occur in mailbox names.  The default switched in 3.0 from off to on. */
 
-{ "virtdomains", "off", ENUM("off", "userid", "on"), "3.1.8" }
+{ "virtdomains", "off", ENUM("off", "userid", "ldap", "on"), "3.1.8" }
 /* Configure virtual domain support.
 .PP
 .IP off
