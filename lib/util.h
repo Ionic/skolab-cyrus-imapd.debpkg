@@ -107,4 +107,10 @@ extern void cyrus_reset_stdio();
  */
 extern int cyrus_mkdir(const char *path, mode_t mode);
 
+/* Some systems have very inefficient implementations of isdigit,
+ * and we use it in a lot of inner loops
+ */
+
+#define cyrus_isdigit(x) ((x) >= '0' && (x) <= '9')
+
 #endif /* INCLUDED_UTIL_H */
