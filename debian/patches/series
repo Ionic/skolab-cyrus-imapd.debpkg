@@ -68,7 +68,11 @@
 # 82-allow-from_-header.dpatch
 99-berkeleydb.patch
 87-STARTTLS_vulnerability_fix.patch
-99-update-autoconf.dpatch
+
+# Disable this patch, since the autotools templates should already include the
+# necessary information and autoreconf will likely apply them correctly.
+#99-update-autoconf.dpatch
+
 100-kolab-imapd.dpatch
 105-cyradm.sh.dpatch
 130-kolab-imapd-goodchars.dpatch
