@@ -51,15 +51,13 @@
 #include "idle.h"
 #include "global.h"
 
-const char *idle_method_desc = "poll";
-
 /* function to report mailbox updates to the client */
 static idle_updateproc_t *idle_update = NULL;
 
 /* how often to poll the mailbox */
 static time_t idle_period = -1;
 
-int idle_enabled(void)
+static int idle_poll_enabled(void)
 {
     /* get polling period */
     if (idle_period == -1) {
@@ -78,7 +76,10 @@ static void idle_poll(int sig __attribute__((unused)))
     alarm(idle_period);
 }
 
-int idle_init(idle_updateproc_t *proc)
+/* forward declaration */
+static void idle_poll_done(struct mailbox *mailbox __attribute__((unused)));
+
+static int idle_poll_init(idle_updateproc_t *proc)
 {
     struct sigaction action;
 
@@ -96,22 +97,33 @@ int idle_init(idle_updateproc_t *proc)
 	syslog(LOG_ERR, "sigaction: %m");
 
 	/* Cancel receiving signals */
-	idle_done(NULL);
+	idle_poll_done(NULL);
 	return 0;
     }
 
     return 1;
 }
 
-void idle_start(struct mailbox *mailbox __attribute__((unused)))
+static void idle_poll_start(struct mailbox *mailbox __attribute__((unused)))
 {
     alarm(idle_period);
 }
 
-void idle_done(struct mailbox *mailbox __attribute__((unused)))
+static void idle_poll_done(struct mailbox *mailbox __attribute__((unused)))
 {
     /* Remove the polling function */
     signal(SIGALRM, SIG_IGN);
 
     idle_update = NULL;
 }
+
+struct idle_backend id_bk_poll = 
+{
+    "poll", /* name */
+
+    &idle_poll_enabled,
+    &idle_poll_init,
+
+    &idle_poll_start,
+    &idle_poll_done
+};

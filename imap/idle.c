@@ -38,58 +38,50 @@
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* $Id: idle.h,v 1.7 2005/12/09 16:12:50 murch Exp $ */
+/* $Id: idle.c,v 1.10 2006/01/04 02:06:23 ondrej Exp $ */
 
-#ifndef IDLE_H
-#define IDLE_H
+#include <config.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <errno.h>
+#include <syslog.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include "makedepend/def.h"
 
-#include "mailbox.h"
-#include "global.h"
+#include "idle.h"
+#include "exitcodes.h"
 
-typedef enum {
-    IDLE_MAILBOX =	0x1,
-    IDLE_ALERT =	0x2
-} idle_flags_t;
+struct idle_backend *idle_backends[] = {
+    &id_bk_no,
+    &id_bk_poll,
+    &id_bk_idled,
+    NULL };
 
-typedef void idle_updateproc_t(idle_flags_t flags);
+struct idle_backend *idle_fromname(const char *name)
+{
+    int i;
+    struct idle_backend *idle = NULL;
 
-struct idle_backend {
-    const char *name;
+    for (i = 0; idle_backends[i]; i++) {
+        if (!strcmp(idle_backends[i]->name, name)) {
+            idle = idle_backends[i];
+	    break;
+        }
+    }
+    if (!idle) {
+        char errbuf[1024];
+        snprintf(errbuf, sizeof(errbuf),
+                 "idle backend %s not supported", name);
+        fatal(errbuf, EC_CONFIG);
+    }
 
-    /* Is IDLE enabled?  Can also do initial setup, if necessary */
-    int (*enabled)(void);
-
-    /* Setup for IDLE.
-     * 'proc' is a pointer to a function which reports mailbox updates and/or
-     * ALERTs to the client.
-     */
-    int (*init)(idle_updateproc_t *proc);
-
-    /* Start IDLEing on 'mailbox'. */
-    void (*start)(struct mailbox *mailbox);
-
-    /* Cleanup when IDLE is completed. */
-    void (*done)(struct mailbox *mailbox);
-};
-
-/* Defines to simulate old behaviour */
-/* see struct definition above to see what they do */
-
-#define idle_enabled() 		(config_idle?config_idle->enabled():0)
-#define idle_init(proc)		(config_idle?config_idle->init(proc):0)
-#define idle_start(mbox)	(config_idle?config_idle->start(mbox):0)
-#define idle_done(mbox)		(config_idle?config_idle->done(mbox):0)
-#define idle_method_desc	(config_idle?config_idle->name:NULL)
-
-extern struct idle_backend *idle_backends[];
-
-/* Note that some of these may be undefined symbols
- * if imapd was not built with support for them */
-extern struct idle_backend id_bk_no;
-extern struct idle_backend id_bk_poll;
-extern struct idle_backend id_bk_idled;
-
-/* Configuration */
-struct idle_backend *idle_fromname(const char *name);
-
-#endif
+    return idle;
+}

@@ -62,6 +62,7 @@
 #include "map.h"
 #include "lock.h"
 #include "nonblock.h"
+#include "global.h"
 #include "idle.h"
 
 #ifdef USE_SIEVE

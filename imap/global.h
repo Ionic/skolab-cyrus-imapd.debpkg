@@ -152,4 +152,6 @@ extern struct cyrusdb_backend *config_duplicate_db;
 extern struct cyrusdb_backend *config_tlscache_db;
 extern struct cyrusdb_backend *config_ptscache_db;
 
+extern struct idle_backend *config_idle;
+
 #endif /* INCLUDED_GLOBAL_H */

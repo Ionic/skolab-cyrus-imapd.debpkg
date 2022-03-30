@@ -72,6 +72,7 @@
 #include "prot.h" /* for PROT_BUFSIZE */
 #include "util.h"
 #include "xmalloc.h"
+#include "idle.h"
 
 static enum {
     NOT_RUNNING = 0,
@@ -93,6 +94,8 @@ struct cyrusdb_backend *config_ptscache_db;
 
 /* syslog prefix tag */
 static char syslog_prefix[20];
+
+struct idle_backend *config_idle=NULL;
 
 /* Called before a cyrus application starts (but after command line parameters
  * are read) */
@@ -184,6 +187,10 @@ int cyrus_init(const char *alt_config, const char *ident, unsigned flags)
 	    cyrusdb_fromname(config_getstring(IMAPOPT_TLSCACHE_DB));
 	config_ptscache_db =
 	    cyrusdb_fromname(config_getstring(IMAPOPT_PTSCACHE_DB));
+
+        /* lookup idle backend */
+        config_idle =
+            idle_fromname(config_getstring(IMAPOPT_IDLEMETHOD));
 
 	/* configure libcyrus as needed */
 	libcyrus_config_setstring(CYRUSOPT_CONFIG_DIR, config_dir);

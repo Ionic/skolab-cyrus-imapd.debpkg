@@ -58,8 +58,6 @@
 #include "idled.h"
 #include "global.h"
 
-const char *idle_method_desc = "idled";
-
 /* function to report mailbox updates to the client */
 static idle_updateproc_t *idle_update = NULL;
 
@@ -73,14 +71,14 @@ static struct sockaddr_un idle_remote;
 static int idle_remote_len = 0;
 
 /* Forward declarations */
-int idle_send_msg(int msg, struct mailbox *mailbox);
-void idle_notify(struct mailbox *mailbox);
+static int idle_send_msg(int msg, struct mailbox *mailbox);
+static void idle_notify(struct mailbox *mailbox);
 
 
 /*
  * Create connection to idled for sending notifications
  */
-int idle_enabled(void)
+static int idle_idled_enabled(void)
 {
     int s;
     int fdflags;
@@ -154,7 +152,10 @@ static void idle_poll(int sig)
     }
 }
 
-int idle_init(idle_updateproc_t *proc)
+/* forward declaration */
+static void idle_idled_done(struct mailbox *mailbox);
+
+static int idle_idled_init(idle_updateproc_t *proc)
 {
     struct sigaction action;
 
@@ -177,14 +178,14 @@ int idle_init(idle_updateproc_t *proc)
 	syslog(LOG_ERR, "sigaction: %m");
 
 	/* Cancel receiving signals */
-	idle_done(NULL);
+	idle_idled_done(NULL);
 	return 0;
     }
 
     return 1;
 }
 
-void idle_start(struct mailbox *mailbox)
+static void idle_idled_start(struct mailbox *mailbox)
 {
     idle_started = 1;
 
@@ -195,7 +196,7 @@ void idle_start(struct mailbox *mailbox)
     }
 }
 
-void idle_done(struct mailbox *mailbox)
+static void idle_idled_done(struct mailbox *mailbox)
 {
     /* Tell idled that we're done idling */
     idle_send_msg(IDLE_DONE, mailbox);
@@ -212,7 +213,7 @@ void idle_done(struct mailbox *mailbox)
 /*
  * Send a message to idled
  */
-int idle_send_msg(int msg, struct mailbox *mailbox)
+static int idle_send_msg(int msg, struct mailbox *mailbox)
 {
     idle_data_t idledata;
 
@@ -235,10 +236,21 @@ int idle_send_msg(int msg, struct mailbox *mailbox)
 /*
  * Notify imapidled of a mailbox change
  */
-void idle_notify(struct mailbox *mailbox)
+static void idle_notify(struct mailbox *mailbox)
 {
     /* We should try to determine if we need to send this
      * (ie, is an imapd is IDLE on 'mailbox'?).
      */
     idle_send_msg(IDLE_NOTIFY, mailbox);
 }
+
+struct idle_backend id_bk_idled =
+{
+    "idled", /* name */
+
+    &idle_idled_enabled,
+    &idle_idled_init,
+
+    &idle_idled_start,
+    &idle_idled_done
+};

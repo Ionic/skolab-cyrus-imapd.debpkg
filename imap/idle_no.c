@@ -42,23 +42,31 @@
 
 #include "idle.h"
 
-
-const char *idle_method_desc = (char *)0;
-
-int idle_enabled(void)
+static int idle_no_enabled(void)
 {
     return 0;
 }
 
-int idle_init(idle_updateproc_t *proc)
+static int idle_no_init(idle_updateproc_t *proc)
 {
     return 0;
 }
 
-void idle_start(struct mailbox *mailbox)
+static void idle_no_start(struct mailbox *mailbox __attribute__((unused)))
 {
 }
 
-void idle_done(struct mailbox *mailbox)
+static void idle_no_done(struct mailbox *mailbox __attribute__((unused)))
 {
 }
+
+struct idle_backend id_bk_no =
+{
+    "no", /* name */
+
+    &idle_no_enabled,
+    &idle_no_init,
+
+    &idle_no_start,
+    &idle_no_done
+};

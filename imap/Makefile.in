@@ -47,9 +47,6 @@ DEFINES=-DSETPROCTITLE
 # 'local' (legacy flat file).
 SEEN=seen_db.o
 
-# IMAP IDLE mechanism
-IDLE=idle_@WITH_IDLE@.o
-
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -104,7 +101,8 @@ LOBJS= append.o mailbox.o mboxlist.o mupdate-client.o mboxname.o message.o \
 	convert_code.o duplicate.o saslclient.o saslserver.o signals.o \
 	annotate.o search_engines.o squat.o squat_internal.o mbdump.o \
 	imapparse.o telemetry.o user.o notify.o protocol.o quota_db.o \
-	$(SEEN) $(IDLE)
+	idle.o idle_no.o idle_poll.o idle_idled.o \
+	$(SEEN)
 
 IMAPDOBJS=pushstats.o backend.o imapd.o index.o tls.o version.o
 
@@ -118,7 +116,7 @@ CLIOBJS=cli_fatal.o mutex_fake.o
 SERVICE=../master/service.o
 SERVICETHREAD=../master/service-thread.o
 
-PROGS = imapd lmtpd pop3d \
+PROGS = imapd lmtpd pop3d idled \
 	fud smmapd reconstruct quota mbpath ipurge \
 	cyrdump chk_cyrus cvt_cyrusdb deliver ctl_mboxlist \
 	ctl_deliver ctl_cyrusdb squatter mbexamine cyr_expire arbitron \

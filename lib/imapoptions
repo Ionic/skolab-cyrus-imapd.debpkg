@@ -248,6 +248,9 @@ are listed with ``<none>''.
 /* The password to use for authentication to the backend server hostname
    (where hostname is the short hostname of the server) - Cyrus Murder */
 
+{ "idlemethod", "%IDLE%", STRINGLIST("no", "poll", "idled") }
+/* The idle backend to use for IDLE command. */
+
 { "idlesocket", "{configdirectory}/socket/idle", STRING }
 /* Unix domain socket that idled listens on. */
 
