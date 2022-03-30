@@ -637,14 +637,14 @@ static long bio_dump_cb(BIO * bio, int cmd, const char *argp, int argi,
         return (ret);
 
     if (cmd == (BIO_CB_READ | BIO_CB_RETURN)) {
-        printf("read from %08lX [%08lX] (%d bytes => %ld (0x%lX))\n",
-               (unsigned long) bio, (unsigned long) argp,
+        printf("read from %p [%p] (%d bytes => %ld (0x%lX))\n",
+               (void*) bio, (void*) argp,
                argi, ret, ret);
         tls_dump(argp, (int) ret);
         return (ret);
     } else if (cmd == (BIO_CB_WRITE | BIO_CB_RETURN)) {
-        printf("write to %08lX [%08lX] (%d bytes => %ld (0x%lX))\n",
-               (unsigned long) bio, (unsigned long) argp,
+        printf("write to %p [%p] (%d bytes => %ld (0x%lX))\n",
+               (void*) bio, (void*) argp,
                argi, ret, ret);
         tls_dump(argp, (int) ret);
     }
