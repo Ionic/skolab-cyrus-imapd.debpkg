@@ -850,7 +850,7 @@ static int myopen(const char *fname, int flags, struct dbengine **ret, struct tx
     db = (struct dbengine *) xzmalloc(sizeof(struct dbengine));
     db->fd = -1;
     db->fname = xstrdup(fname);
-    db->compar = (flags & CYRUSDB_MBOXSORT) ? bsearch_ncompare_mbox : compare_signed;
+    db->compar = bsearch_ncompare_mbox;
     db->open_flags = (flags & ~CYRUSDB_CREATE);
 
     db->fd = open(fname, O_RDWR, 0644);

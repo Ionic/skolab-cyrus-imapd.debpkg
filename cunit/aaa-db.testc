@@ -792,8 +792,14 @@ static void test_mboxlist(void)
 
     /* got the expected keys in the expected order */
     GOTRESULT(KEY1, strlen(KEY1), DATA1, strlen(DATA1));
-    /* flat is always in mboxlist order! */
-    if (!strcmp(backend, "flat")) {
+    /*
+     * flat is always in mboxlist order!
+     *
+     * Additionally, with our Kolab patches, skiplist is also always in
+     * mboxlist order. We might want to change/drop this, though...
+     */
+    if (!strcmp(backend, "flat") ||
+        !strcmp(backend, "skiplist")) {
         GOTRESULT(KEY3, strlen(KEY3), DATA3, strlen(DATA3));
         GOTRESULT(KEY2, strlen(KEY2), DATA2, strlen(DATA2));
     }
