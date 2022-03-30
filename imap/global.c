@@ -91,6 +91,9 @@ struct cyrusdb_backend *config_duplicate_db;
 struct cyrusdb_backend *config_tlscache_db;
 struct cyrusdb_backend *config_ptscache_db;
 
+/* syslog prefix tag */
+static char syslog_prefix[20];
+
 /* Called before a cyrus application starts (but after command line parameters
  * are read) */
 int cyrus_init(const char *alt_config, const char *ident, unsigned flags)
@@ -118,7 +121,9 @@ int cyrus_init(const char *alt_config, const char *ident, unsigned flags)
     
     /* xxx we lose here since we can't have the prefix until we load the
      * config file */
-    openlog(config_ident, LOG_PID, SYSLOG_FACILITY);
+    strncpy(syslog_prefix, "cyrus/", sizeof(syslog_prefix));
+    strncat(syslog_prefix, ident, sizeof(syslog_prefix) - 7);
+    openlog(syslog_prefix, LOG_PID, SYSLOG_FACILITY);
 
     /* Load configuration file.  This will set config_dir when it finds it */
     config_read(alt_config);

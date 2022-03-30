@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
 
     if (geteuid() == 0) fatal("must run as the Cyrus user", EC_USAGE);
     
-    openlog("ptexpire", LOG_PID, SYSLOG_FACILITY);
+    openlog("cyrus/ptexpire", LOG_PID, SYSLOG_FACILITY);
 
     while ((opt = getopt(argc, argv, "C:E:")) != EOF) {
 	switch (opt) {
