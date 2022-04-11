@@ -81,8 +81,6 @@ configure-stamp: $(QUILT_STAMPFN)
 	cp /usr/share/misc/config.guess config.guess
 	touch configure.in && touch aclocal.m4 && touch configure
 	#
-	# IF YOU CHANGE BERKELEY DB VERSION, MAKE SURE TO UPDATE
-	# DBENGINE AT THE TOP OF THIS MAKEFILE!
 	./configure CFLAGS="-fno-strict-aliasing -fPIC -Wall -pipe $(DEBUGFLAGS)" $(CONFFLAGS) \
 	 --with-extraident=$(EXTRA_IDENT) \
 	 --prefix=/usr/share --exec-prefix=/usr --libexecdir=/usr/sbin \
@@ -96,8 +94,6 @@ configure-stamp: $(QUILT_STAMPFN)
 	 --with-cyrus-prefix=/usr/lib/cyrus --with-lock=fcntl \
 	 --with-perl=/usr/bin/perl \
 	 --with-openssl=/usr --with-auth=unix \
-	 --with-bdb=db-$(BDB_VERSION) \
-	 --with-bdb-libdir=/usr/lib --with-bdb-incdir=/usr/include \
 	 --enable-murder --enable-nntp \
 	 --disable-listext --enable-annotatemore --with-sasl=/usr \
 	 --with-drac=/usr \
