@@ -107,6 +107,8 @@ enum cyrus_opt {
     CYRUSOPT_SKIPLIST_ALWAYS_CHECKPOINT,
     /* ACL override */
     CYRUSOPT_ACL_ADMIN_IMPLIES_WRITE,
+    /* Lowercase uid and strip leading and trailing blanks (OFF) */
+    CYRUSOPT_NORMALIZEUID,
 
     CYRUSOPT_LAST
 
