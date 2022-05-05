@@ -104,7 +104,7 @@ EXPORTED void fatal(const char *s, int code)
 }
 
 /* Each test gets a maximum of 20 seconds. */
-#define TEST_TIMEOUT_MS (20*1000)
+#define TEST_TIMEOUT_MS (240*1000)
 
 static jmp_buf jbuf;
 static const char *code;
