@@ -1,4 +1,4 @@
-cyrus-imapd (3.6.0~beta2-3) UNRELEASED; urgency=medium
+cyrus-imapd (3.6.0~beta2-3) unstable; urgency=medium
 
   [ Yadd ]
   * Fix copyright (Closes: #1010028)
@@ -6,7 +6,7 @@ cyrus-imapd (3.6.0~beta2-3) UNRELEASED; urgency=medium
   [ Dan Bungert ]
   * Add patch for openssl 3 (Closes: #1010535)
 
- -- Yadd <yadd@debian.org>  Thu, 05 May 2022 16:08:01 +0200
+ -- Yadd <yadd@debian.org>  Thu, 05 May 2022 18:06:52 +0200
 
 cyrus-imapd (3.6.0~beta2-2) unstable; urgency=medium
 
