@@ -7,3 +7,4 @@
 0012-Use-UnicodeData.txt-from-system.patch
 0018-increase-test-timeout.patch
 #0019-propagate-XXFLAGS.patch
+0020-openssl3-EVP_PKEY_base_id.patch
