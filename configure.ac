@@ -191,7 +191,7 @@ AC_CHECK_ALIGNOF(uint32_t)
 
 AC_CHECK_HEADERS(unistd.h sys/select.h sys/param.h stdarg.h)
 AC_REPLACE_FUNCS(memmove strcasecmp ftruncate strerror posix_fadvise strsep memmem memrchr)
-AC_CHECK_FUNCS(strlcat strlcpy strnchr getgrouplist fmemopen pselect futimens futimes)
+AC_CHECK_FUNCS(strlcat strlcpy strnchr getgrouplist fmemopen pselect futimens futimes getline)
 AC_HEADER_DIRENT
 
 dnl check whether to use getpassphrase or getpass
