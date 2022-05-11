@@ -1539,9 +1539,9 @@ lib_libcyrus_min_la_CFLAGS = $(AM_CFLAGS) $(CFLAG_VISIBILITY)
 # in particular ellie believes unifix.txt must be before UnicodeData.txt
 lib/chartable.c: lib/mkchartable.pl lib/charset/unifix.txt \
 	$(top_srcdir)/lib/charset/*.t \
-	lib/charset/UnicodeData.txt lib/charset/aliases.txt
+	/usr/share/unicode/UnicodeData.txt lib/charset/aliases.txt
 	@echo "### Building chartables..."
-	$(AM_V_GEN)perl $(top_srcdir)/lib/mkchartable.pl -m $(top_srcdir)/lib/charset/unifix.txt -m $(top_srcdir)/lib/charset/UnicodeData.txt -a $(top_srcdir)/lib/charset/aliases.txt -o $@ $(top_srcdir)/lib/charset/*.t || (rm -f $@ && exit 1)
+	$(AM_V_GEN)perl $(top_srcdir)/lib/mkchartable.pl -m $(top_srcdir)/lib/charset/unifix.txt -m /usr/share/unicode/UnicodeData.txt -a $(top_srcdir)/lib/charset/aliases.txt -o $@ $(top_srcdir)/lib/charset/*.t || (rm -f $@ && exit 1)
 	@echo "### Done building chartables."
 
 lib/imapopts.h: lib/imapopts.c
