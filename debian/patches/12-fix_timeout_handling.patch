@@ -1,0 +1,359 @@
+Description: fixes timeout handling
+ This has never been upstreamed (or at least not accepted) and
+ Debian dropped it from their patch set, even though no direct
+ equivalent exists. This could mean that the functionality added
+ here is either not helping, the problem it is trying to fix is
+ difficult to reproduce (and hence only affects marginal install
+ bases) or just that nobody cared about getting it upstream too
+ much. We'd better keep it for now and try to ask for upstream's
+ judgement on it.
+Author: Sven Mueller <debian@incase.de>
+Forwarded: no
+Last-Update: 2022-05-05
+
+---
+ lib/cyr_lock.h   |  2 ++
+ lib/lock_fcntl.c | 72 ++++++++++++++++++++++++++++++++++++++++++++++---
+ lib/lock_flock.c | 82 +++++++++++++++++++++++++++++++++++++++++++++++++++-----
+ 3 files changed, 147 insertions(+), 9 deletions(-)
+
+diff --git a/lib/cyr_lock.h b/lib/cyr_lock.h
+index df72a4a4a..008c6a3f9 100644
+--- a/lib/cyr_lock.h
++++ b/lib/cyr_lock.h
+@@ -45,6 +45,8 @@
+ 
+ #include <sys/stat.h>
+ 
++extern int lock_wait_time;
++
+ extern const char lock_method_desc[];
+ 
+ extern double debug_locks_longer_than;
+diff --git a/lib/lock_fcntl.c b/lib/lock_fcntl.c
+index edab809cb..14e86a4aa 100644
+--- a/lib/lock_fcntl.c
++++ b/lib/lock_fcntl.c
+@@ -46,6 +46,8 @@
+ #include <unistd.h>
+ #include <fcntl.h>
+ #include <errno.h>
++#include <syslog.h>
++#include <signal.h>
+ 
+ #include "cyr_lock.h"
+ 
+@@ -56,6 +58,36 @@ EXPORTED const char lock_method_desc[] = "fcntl";
+ 
+ EXPORTED double debug_locks_longer_than = 0.0;
+ 
++int lock_wait_time = LOCK_GIVEUP_TIMER_DEFAULT;
++
++/* Signal handling. We REQUIRE SYSV abort-syscall behaviour */
++
++static volatile int lock_gotsigalrm = 0;
++void lock_sigalrm_handler(int sig __attribute__((unused)))
++{
++    lock_gotsigalrm = 1;
++}
++
++static int setsigalrm(int enable)
++{
++    struct sigaction action;
++
++    sigemptyset(&action.sa_mask);
++    action.sa_flags = SA_RESETHAND;
++
++    if(enable) {
++        action.sa_handler = lock_sigalrm_handler;
++    } else {
++        action.sa_handler = SIG_IGN;
++    }
++    if (sigaction(SIGALRM, &action, NULL) < 0) {
++        syslog(LOG_ERR, "installing SIGALRM handler: sigaction: %m");
++        return -1;
++    }
++    lock_gotsigalrm = 0;
++    return 0;
++}
++
+ /*
+  * Block until we obtain an exclusive lock on the file descriptor 'fd',
+  * opened for reading and writing on the file named 'filename'.  If
+@@ -69,6 +101,8 @@ EXPORTED double debug_locks_longer_than = 0.0;
+  * 'failaction' is provided, it is filled in with a pointer to a fixed
+  * string naming the action that failed.
+  *
++ * We use POSIX semanthics and alarm() to avoid deadlocks
++ *
+  */
+ EXPORTED int lock_reopen_ex(int fd, const char *filename,
+                             struct stat *sbuf, const char **failaction,
+@@ -85,6 +119,8 @@ EXPORTED int lock_reopen_ex(int fd, const char *filename,
+ 
+     if (!sbuf) sbuf = &sbufspare;
+ 
++    setsigalrm(1);
++    alarm(lock_wait_time);
+     for (;;) {
+         fl.l_type= F_WRLCK;
+         fl.l_whence = SEEK_SET;
+@@ -92,8 +128,10 @@ EXPORTED int lock_reopen_ex(int fd, const char *filename,
+         fl.l_len = 0;
+         r = fcntl(fd, F_SETLKW, &fl);
+         if (r == -1) {
+-            if (errno == EINTR) continue;
++            if (errno == EINTR && !lock_gotsigalrm) continue;
+             if (failaction) *failaction = "locking";
++            alarm(0);
++            setsigalrm(0);
+             return -1;
+         }
+ 
+@@ -102,6 +140,8 @@ EXPORTED int lock_reopen_ex(int fd, const char *filename,
+         if (r == -1) {
+             if (failaction) *failaction = "stating";
+             r = lock_unlock(fd, filename);
++            alarm(0);
++            setsigalrm(0);
+             return -1;
+         }
+ 
+@@ -114,6 +154,8 @@ EXPORTED int lock_reopen_ex(int fd, const char *filename,
+                 if (locktime > debug_locks_longer_than) /* 10ms */
+                     syslog(LOG_NOTICE, "locktimer: reopen %s (%0.2fs)", filename, locktime);
+             }
++            alarm(0);
++            setsigalrm(0);
+             return 0;
+         }
+ 
+@@ -123,11 +165,15 @@ EXPORTED int lock_reopen_ex(int fd, const char *filename,
+         if (newfd == -1) {
+             if (failaction) *failaction = "opening";
+             r = lock_unlock(fd, filename);
++            alarm(0);
++            setsigalrm(0);
+             return -1;
+         }
+         dup2(newfd, fd);
+         close(newfd);
+     }
++    alarm(0);
++    setsigalrm(0);
+ }
+ 
+ /*
+@@ -150,6 +196,10 @@ EXPORTED int lock_setlock(int fd, int exclusive, int nonblock,
+     if (debug_locks_longer_than)
+         gettimeofday(&starttime, 0);
+ 
++    if (!nonblock) {
++        setsigalrm(1);
++        alarm(lock_wait_time);
++    }
+     for (;;) {
+         fl.l_type= type;
+         fl.l_whence = SEEK_SET;
+@@ -165,15 +215,30 @@ EXPORTED int lock_setlock(int fd, int exclusive, int nonblock,
+                 if (locktime > debug_locks_longer_than)
+                     syslog(LOG_NOTICE, "locktimer: reopen %s (%0.2fs)", filename, locktime);
+             }
++            if (!nonblock) {
++                alarm(0);
++                setsigalrm(0);
++            }
+             return 0;
+         }
+-        if (errno == EINTR) continue;
++        if (errno == EINTR && (nonblock || !lock_gotsigalrm)) continue;
++        if (!nonblock) {
++            alarm(0);
++            setsigalrm(0);
++        }
+         return -1;
+     }
++    if (!nonblock) {
++        alarm(0);
++        setsigalrm(0);
++    }
++    return 0;
+ }
+ 
+ /*
+- * Release any lock on 'fd'.  Always returns success.
++ * Release any lock on 'fd'.
++ * Returns 0 for success, -1 for failure, with errno set to an
++ * appropriate error code.
+  */
+ EXPORTED int lock_unlock(int fd, const char *filename __attribute__((unused)))
+ {
+@@ -192,5 +257,6 @@ EXPORTED int lock_unlock(int fd, const char *filename __attribute__((unused)))
+         /* xxx help! */
+         return -1;
+     }
++    return 0;
+ }
+ 
+diff --git a/lib/lock_flock.c b/lib/lock_flock.c
+index af0ebbabf..978efbd78 100644
+--- a/lib/lock_flock.c
++++ b/lib/lock_flock.c
+@@ -45,6 +45,8 @@
+ #include <sys/stat.h>
+ #include <fcntl.h>
+ #include <errno.h>
++#include <syslog.h>
++#include <signal.h>
+ #ifdef HAVE_UNISTD_H
+ #include <unistd.h>
+ #endif
+@@ -53,6 +55,36 @@
+ 
+ EXPORTED const char lock_method_desc[] = "flock";
+ 
++int lock_wait_time = LOCK_GIVEUP_TIMER_DEFAULT;
++
++/* Signal handling. We REQUIRE SYSV abort-syscall behaviour */
++
++static volatile int lock_gotsigalrm = 0;
++void lock_sigalrm_handler(int sig __attribute__((unused)))
++{
++    lock_gotsigalrm = 1;
++}
++
++static int setsigalrm(int enable)
++{
++    struct sigaction action;
++
++    sigemptyset(&action.sa_mask);
++    action.sa_flags = SA_RESETHAND;
++
++    if(enable) {
++	action.sa_handler = lock_sigalrm_handler;
++    } else {
++        action.sa_handler = SIG_IGN;
++    }
++    if (sigaction(SIGALRM, &action, NULL) < 0) {
++        syslog(LOG_ERR, "installing SIGALRM handler: sigaction: %m");
++        return -1;
++    }
++    lock_gotsigalrm = 0;
++    return 0;
++}
++
+ /*
+  * Block until we obtain an exclusive lock on the file descriptor 'fd',
+  * opened for reading and writing on the file named 'filename'.  If
+@@ -66,6 +98,8 @@ EXPORTED const char lock_method_desc[] = "flock";
+  * 'failaction' is provided, it is filled in with a pointer to a fixed
+  * string naming the action that failed.
+  *
++ * We use POSIX semanthics and alarm() to avoid deadlocks
++ *
+  */
+ EXPORTED int lock_reopen_ex(int fd, const char *filename,
+                             struct stat *sbuf, const char **failaction,
+@@ -77,11 +111,15 @@ EXPORTED int lock_reopen_ex(int fd, const char *filename,
+ 
+     if (!sbuf) sbuf = &sbufspare;
+ 
++    setsigalrm(1);
++    alarm(lock_wait_time);
+     for (;;) {
+         r = flock(fd, LOCK_EX);
+         if (r == -1) {
+-            if (errno == EINTR) continue;
++            if (errno == EINTR && !lock_gotsigalrm) continue;
+             if (failaction) *failaction = "locking";
++            alarm(0);
++            setsigalrm(0);
+             return -1;
+         }
+ 
+@@ -90,10 +128,16 @@ EXPORTED int lock_reopen_ex(int fd, const char *filename,
+         if (r == -1) {
+             if (failaction) *failaction = "stating";
+             lock_unlock(fd, filename);
++            alarm(0);
++            setsigalrm(0);
+             return -1;
+         }
+ 
+-        if (sbuf->st_ino == sbuffile.st_ino) return 0;
++        if (sbuf->st_ino == sbuffile.st_ino) {
++            alarm(0);
++            setsigalrm(0);
++            return 0;
++        }
+ 
+         if (changed) *changed = 1;
+ 
+@@ -101,11 +145,16 @@ EXPORTED int lock_reopen_ex(int fd, const char *filename,
+         if (newfd == -1) {
+             if (failaction) *failaction = "opening";
+             lock_unlock(fd, filename);
++            alarm(0);
++            setsigalrm(0);
+             return -1;
+         }
+         dup2(newfd, fd);
+         close(newfd);
+     }
++    alarm(0);
++    setsigalrm(0);
++    return 0;
+ }
+ 
+ /*
+@@ -124,16 +173,37 @@ EXPORTED int lock_setlock(int fd, int exclusive, int nonblock,
+     int op = (exclusive ? LOCK_EX : LOCK_SH);
+     if (nonblock) op |= LOCK_NB;
+ 
++    if (!nonblock) {
++        setsigalrm(1);
++        alarm(lock_wait_time);
++    }
+     for (;;) {
+         r = flock(fd, op);
+-        if (r != -1) return 0;
+-        if (errno == EINTR) continue;
++        if (r != -1) {
++            if (!nonblock) {
++                alarm(0);
++                setsigalrm(0);
++            }
++            return 0;
++        }
++        if (errno == EINTR && (nonblock || !lock_gotsigalrm)) continue;
++        if (!nonblock) {
++            alarm(0);
++            setsigalrm(0);
++        }
+         return -1;
+     }
++    if (!nonblock) {
++        alarm(0);
++        setsigalrm(0);
++    }
++    return 0;
+ }
+ 
+ /*
+- * Release any lock on 'fd'.  Always returns success.
++ * Release any lock on 'fd'.
++ * Returns 0 for success, -1 for failure, with errno set to an
++ * appropriate error code.
+  */
+ EXPORTED int lock_unlock(int fd, const char *filename __attribute__((unused)))
+ {
+@@ -143,8 +213,8 @@ EXPORTED int lock_unlock(int fd, const char *filename __attribute__((unused)))
+         r = flock(fd, LOCK_UN);
+         if (r != -1) return 0;
+         if (errno == EINTR) continue;
+-        /* xxx help! */
+         return -1;
+     }
++    return 0;
+ }
+ 

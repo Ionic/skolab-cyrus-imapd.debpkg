@@ -1,0 +1,82 @@
+Description: fix some minor things in manpages, fix program names in
+ manpages and program sources
+ Patch update: dropped modifications related to man page and
+ program names, since modern cyrus now prefixes cyrus- to man
+ pages automatically.
+Author: Sven Mueller <debian@incase.de>
+Forwarded: no
+Last-Update: 2022-05-05
+
+---
+ docsrc/imap/reference/manpages/configs/cyrus.conf.rst    | 11 +++++++----
+ docsrc/imap/reference/manpages/systemcommands/master.rst | 16 ++++++++++++++--
+ 2 files changed, 21 insertions(+), 6 deletions(-)
+
+diff --git a/docsrc/imap/reference/manpages/configs/cyrus.conf.rst b/docsrc/imap/reference/manpages/configs/cyrus.conf.rst
+index 7e2b32049..5c988dc9b 100644
+--- a/docsrc/imap/reference/manpages/configs/cyrus.conf.rst
++++ b/docsrc/imap/reference/manpages/configs/cyrus.conf.rst
+@@ -132,10 +132,10 @@ on certain Internet/UNIX sockets.
+ 
+     ..
+ 
+-    where *path* is the explicit path to a UNIX socket, *host* is
+-    either the hostname or bracket-enclosed IP address of a network
+-    interface, and *port* is either a port number or service name
+-    (as listed in ``/etc/services``).
++    where *path* is the explicit (absolute) path to a UNIX socket,
++    *host* is either the hostname or bracket-enclosed IP address of a
++    network interface, and *port* is either a port number or service
++    name (as listed in ``/etc/services``).
+ 
+     If *host* is missing, 0.0.0.0 (all interfaces) is assumed.  Use
+     localhost or 127.0.0.1 to restrict access, i.e. when a proxy
+@@ -175,6 +175,9 @@ on certain Internet/UNIX sockets.
+     one process will be forked for each address, causing twice as
+     many processes as you might expect.
+ 
++    For datagram-based services (UDP), the maximum value of prefork is
++    1.
++
+ .. parsed-literal::
+ 
+     **maxchild=**\ -1
+diff --git a/docsrc/imap/reference/manpages/systemcommands/master.rst b/docsrc/imap/reference/manpages/systemcommands/master.rst
+index 65f64b93d..0f4364bb9 100644
+--- a/docsrc/imap/reference/manpages/systemcommands/master.rst
++++ b/docsrc/imap/reference/manpages/systemcommands/master.rst
+@@ -65,7 +65,7 @@ Options
+ .. option:: -p  pidfile
+ 
+     Use *pidfile* as the pidfile.  If not specified, defaults to
+-    ``/var/run/master.pid``
++    ``/run/cyrus-master.pid``
+ 
+ .. option:: -P  snmp agentx ping interval
+ 
+@@ -125,12 +125,24 @@ The environment variable **CYRUS_VERBOSE** can be set to log additional
+ debugging information. Setting the value to 1 results in base level logging.
+ Setting it higher results in more log messages being generated.
+ 
++Bugs
++====
++
++Services do not always go away silently when removed through a SIGHUP.  If
++there are workers of the removed service still running, messages to syslog
++about broken pipes and accept() failures are to be expected.
++
++The in-memory list of services is not cleaned up ever, so a master daemon
++that has been sent an extremely high amount of SIGHUP signals to
++add/remove/modify services will lose performance eventually.  Restarting
++master fixes this.
++
+ Files
+ =====
+ 
+ /etc/cyrus.conf,
+ /etc/imapd.conf,
+-/var/run/master.pid
++/run/cyrus-master.pid
+ 
+ See Also
+ ========

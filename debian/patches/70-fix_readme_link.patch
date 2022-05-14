@@ -1,0 +1,27 @@
+Description: Fix a bad link in readme.html
+ While technically legit (and still applying trivially), this
+ patch only changes the now-unused legacy documentation and the
+ thing it does won't actually help, since man pages are now
+ generated in docsrc/ instead. The legacy documentation will
+ vanish sooner or later, so trying to fix it is in vain.
+Author: Benjamin Seidenberg <astronut@dlgeek.net>
+Forwarded: no
+Last-Update: 2022-05-05
+
+---
+ doc/legacy/readme.html | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/doc/legacy/readme.html b/doc/legacy/readme.html
+index 758234927..bd9c70b5a 100644
+--- a/doc/legacy/readme.html
++++ b/doc/legacy/readme.html
+@@ -67,7 +67,7 @@ replication protocol will be fixed in version 2.3.9.
+ <P> This system should be expected to have the same order-of-magnitude
+ installation complexity as a netnews system.  Maintenance should have
+ similar complexity, except administrators will have to deal with <A
+-HREF="cyradm.1.html">creation and deletion of users</A> and will have
++HREF="man/cyradm.1.html">creation and deletion of users</A> and will have
+ the option of managing quotas and access control lists.
+ 
+ <p>This package is distributed as a source only release. It is

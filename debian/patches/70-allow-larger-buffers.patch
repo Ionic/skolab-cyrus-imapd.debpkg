@@ -1,0 +1,37 @@
+Description: Patch to allow larger buffers (especially for list of
+ UIDs).
+ Patch taken and "backported" to 2.2 from:
+ http://cyrus.brong.fastmail.fm/patches/cyrus-longwords-2.3.3.diff
+ The changed limits can now be customized via the config file
+ (which is good), and were raised a bit (which is even better),
+ but not enough to match the old values established in this patch.
+ We'll keep the default limits high, just to be safe. Otherwise we
+ could just as well drop this patch.
+Author: Sven Mueller <debian@incase.de>
+Forwarded: no
+Last-Update: 2022-05-05
+
+---
+ lib/imapoptions | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/lib/imapoptions b/lib/imapoptions
+index a124ec133..194c9710d 100644
+--- a/lib/imapoptions
++++ b/lib/imapoptions
+@@ -1522,11 +1522,11 @@ Blank lines and lines beginning with ``#'' are ignored.
+    messages larger than \fImaxmessagesize\fR bytes.  If set to 0, this
+    will allow messages of any size (the default). */
+ 
+-{ "maxquoted", 131072, INT, "2.3.17" }
+-/* Maximum size of a single quoted string for the parser.  Default 128k */
++{ "maxquoted", 524288, INT, "2.3.17" }
++/* Maximum size of a single quoted string for the parser.  Default 512k */
+ 
+-{ "maxword", 131072, INT, "2.3.17" }
+-/* Maximum size of a single word for the parser.  Default 128k */
++{ "maxword", 524288, INT, "2.3.17" }
++/* Maximum size of a single word for the parser.  Default 512k */
+ 
+ { "mboxkey_db", "twoskip", STRINGLIST("skiplist", "twoskip", "zeroskip"), "3.1.6" }
+ /* The cyrusdb backend to use for mailbox keys. */

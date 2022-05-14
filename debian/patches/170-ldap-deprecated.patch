@@ -1,0 +1,23 @@
+Description: bug #463430: ldap_get_values implicitly converted to
+ pointer
+Author: Dann Frazier <dannf@debian.org>
+Bug-Debian: https://bugs.debian.org/463430
+Forwarded: no
+Last-Update: 2022-05-05
+
+---
+ imap/global.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/imap/global.c b/imap/global.c
+index 674ca9d39..177e65807 100644
+--- a/imap/global.c
++++ b/imap/global.c
+@@ -57,6 +57,7 @@
+ #include <openssl/rand.h>
+ #endif
+ 
++#define LDAP_DEPRECATED 1
+ #include <ldap.h>
+ #include <lber.h>
+ 

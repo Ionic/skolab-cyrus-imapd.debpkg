@@ -1,0 +1,32 @@
+Description: Clarify that some IMAPOPTS map to m{in,ax}_sff in libsasl.
+Author: Sven Mueller <debian@incase.de>
+Forwarded: no
+Last-Update: 2022-05-05
+
+---
+ lib/imapoptions | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/lib/imapoptions b/lib/imapoptions
+index 038048e4f..c29dc7ee3 100644
+--- a/lib/imapoptions
++++ b/lib/imapoptions
+@@ -2084,12 +2084,15 @@ If all partitions are over that limit, this feature is not used anymore.
+ 
+ { "sasl_maximum_layer", 256, INT, "2.3.17" }
+ /* Maximum SSF (security strength factor) that the server will allow a
+-   client to negotiate. */
++   client to negotiate. This corresponds to the max_ssf option of libsasl.
++   Please check the libsasl documentation for available values. */
+ 
+ { "sasl_minimum_layer", 0, INT, "2.3.17" }
+ /* The minimum SSF that the server will allow a client to negotiate.
+-   A value of 1 requires integrity protection; any higher value
+-   requires some amount of encryption. */
++   A value of 1 requires integrity protection (i.e., checksums); any higher
++   value requires some amount of encryption. This corresponds to the min_ssf
++   option of libsasl. Please check libsasl documentation for available
++   values. */
+ 
+ # Commented out - used by libsasl
+ # { "sasl_option", 0, STRING, "2.3.17" }

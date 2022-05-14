@@ -1,0 +1,26 @@
+Description: update imapd.conf option descriptions to be a bit more
+ verbose about supported option names
+Author: Sven Mueller <debian@incase.de>
+Forwarded: no
+Last-Update: 2022-05-05
+
+---
+ lib/imapoptions | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/lib/imapoptions b/lib/imapoptions
+index 194c9710d..038048e4f 100644
+--- a/lib/imapoptions
++++ b/lib/imapoptions
+@@ -98,7 +98,10 @@ The sections below detail options that can be placed in the
+ \fB/etc/imapd.conf\fR file, and show each option's default value.
+ Some options have no default value, these are listed with
+ ``<no default>''.  Some options default to the empty string, these
+-are listed with ``<none>''.
++are listed with ``<none>''. It is also possible to override options by
++specifying them as <service_id>_<optionname>. One example is ``lmtp_admins'',
++which overrides ``admins'' just for the lmtp service. The <service_id> is the
++one you specified in the cyrus.conf(5) file.
+ */
+ 
+ # OPTIONS

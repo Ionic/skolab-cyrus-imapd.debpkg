@@ -1,0 +1,56 @@
+Description: update aclocal.m4 and configure.in
+ Now modifies configure.ac instead.
+Author: Sven Mueller <debian@incase.de>
+Forwarded: no
+Last-Update: 2022-05-05
+
+---
+ configure.ac | 21 ++++++++++++++++-----
+ 1 file changed, 16 insertions(+), 5 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 4ae93d1b4..da366b8a7 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -81,6 +81,11 @@ AM_INIT_AUTOMAKE([-Wall -Werror -Wno-portability foreign dist-bzip2
+                   no-installinfo subdir-objects silent-rules tar-ustar])
+ AC_CONFIG_LIBOBJ_DIR([lib])
+ 
++dnl Useful for maintainer mode stuff
++WARNERROR=-W
++AC_ARG_ENABLE(warnings-are-errors,[  --enable-warnings-are-errors   add -Werror to most gcc calls], [ if test "$enableval" != "no" ; then WARNERROR=-Werror ; fi ])
++AC_SUBST(WARNERROR)
++
+ dnl Useful hook for distributions
+ AC_ARG_WITH(extraident,
+         [AS_HELP_STRING([--with-extraident=STRING],[use STRING as extra version information])],
+@@ -138,10 +143,12 @@ AC_PROG_INSTALL
+ AC_USE_SYSTEM_EXTENSIONS
+ AC_ISC_POSIX
+ AC_PROG_AWK
+-AC_SYS_LONG_FILE_NAMES
+-if test $ac_cv_sys_long_file_names = no; then
+-        AC_MSG_ERROR(The Cyrus IMAPD requires support for long file names)
+-fi
++dnl fakeroot sometimes fails this test
++dnl and Debian always supports long filenames anyway
++dnl AC_SYS_LONG_FILE_NAMES
++dnl if test $ac_cv_sys_long_file_names = no; then
++dnl        AC_MSG_ERROR(The Cyrus IMAPD requires support for long file names)
++dnl fi
+ AC_C_INLINE
+ 
+ gl_VISIBILITY
+@@ -2397,7 +2404,11 @@ enum {
+     TLS_FAST_SHUTDOWN = 1,
+ 
+     /* should we have long LMTP error messages? */
+-    LMTP_LONG_ERROR_MSGS = 1
++    LMTP_LONG_ERROR_MSGS = 1,
++
++    /* default time to wait, in seconds, before giving up
++     * trying to lock something */
++    LOCK_GIVEUP_TIMER_DEFAULT = 100
+ };
+ 
+ #endif /* _CYRUS_IMAPD_CONFIG_H_ */

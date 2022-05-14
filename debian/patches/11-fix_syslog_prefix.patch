@@ -1,0 +1,158 @@
+Description: Make sure all programs log (to syslog) with
+ "cyrus/<program>" as the log prefix.
+ Updated and especially more complete than
+ 0003-Fix-syslog-prefix.patch, which this now supersedes.
+Author: Sven Mueller <debian@incase.de>
+Forwarded: no
+Last-Update: 2022-05-05
+
+---
+ imap/global.c       | 17 +++++++++++------
+ master/masterconf.c | 14 ++++++++------
+ ptclient/ptexpire.c |  2 +-
+ ptclient/test.c     |  2 +-
+ ptclient/test2.c    |  2 +-
+ 5 files changed, 22 insertions(+), 15 deletions(-)
+
+diff --git a/imap/global.c b/imap/global.c
+index da620fabe..f069eea12 100644
+--- a/imap/global.c
++++ b/imap/global.c
+@@ -180,6 +180,9 @@ static void cyrus_modules_done()
+     }
+ }
+ 
++/* syslog prefix tag */
++static char syslog_prefix[20];
++
+ /* Called before a cyrus application starts (but after command line parameters
+  * are read) */
+ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flags, int config_need_data)
+@@ -191,6 +194,7 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
+     int syslog_opts = LOG_PID;
+     const char *facility;
+     char *ident_buf = NULL;
++    char *ident_syslog_buf = NULL;
+ 
+     if (cyrus_init_run != NOT_RUNNING) {
+         fatal("cyrus_init called twice!", EX_CONFIG);
+@@ -229,11 +233,12 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
+      */
+     if ((prefix = getenv("CYRUS_SYSLOG_PREFIX"))) {
+         ident_buf = strconcat(prefix, "/", ident, NULL);
+-        openlog(ident_buf, syslog_opts, SYSLOG_FACILITY);
++        ident_syslog_buf = ident_buf;
+     }
+     else {
+-        openlog(config_ident, syslog_opts, SYSLOG_FACILITY);
++        ident_syslog_buf = strconcat("cyrus/", ident, NULL);
+     }
++    openlog(ident_syslog_buf, syslog_opts, SYSLOG_FACILITY);
+ 
+     /* Load configuration file.  This will set config_dir when it finds it */
+     config_read(alt_config, config_need_data);
+@@ -253,15 +258,15 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
+         /* The $CYRUS_SYSLOG_PREFIX environment variable takes precedence */
+         if (!ident_buf) {
+             if (prefix)
+-                ident_buf = strconcat(prefix, "/", ident, NULL);
++                ident_syslog_buf = strconcat(prefix, "/", ident, NULL);
+             else
+-                ident_buf = xstrdup(ident);
++                ident_syslog_buf = strconcat("cyrus/", ident, NULL);
+         }
+ 
+         closelog();
+-        openlog(ident_buf, syslog_opts, facnum);
++        openlog(ident_syslog_buf, syslog_opts, facnum);
+     }
+-    /* Do not free ident_buf, syslog needs it for the life of this process! */
++    /* Do not free ident_syslog_buf, syslog needs it for the life of this process! */
+ 
+     /* allow debug logging */
+     if (!config_debug)
+diff --git a/master/masterconf.c b/master/masterconf.c
+index 3e694885e..c11f8e837 100644
+--- a/master/masterconf.c
++++ b/master/masterconf.c
+@@ -87,16 +87,18 @@ void fatalf(int code, const char *fmt, ...)
+ int masterconf_init(const char *ident, const char *alt_config)
+ {
+     char *buf = NULL;
++    char *syslog_buf = NULL;
+     const char *prefix;
+ 
+     /* If our prefix is configured in the environment we can set it early */
+     if ((prefix = getenv("CYRUS_SYSLOG_PREFIX"))) {
+         buf = strconcat(prefix, "/", ident, NULL);
+-        openlog(buf, LOG_PID, SYSLOG_FACILITY);
++        syslog_buf = buf;
+     }
+     else {
+-        openlog(ident, LOG_PID, SYSLOG_FACILITY);
++        syslog_buf = strconcat("cyrus/", ident, NULL);
+     }
++    openlog(syslog_buf, LOG_PID, SYSLOG_FACILITY);
+ 
+     config_ident = ident;
+     config_read(alt_config, 0);
+@@ -108,16 +110,16 @@ int masterconf_init(const char *ident, const char *alt_config)
+         /* XXX master ignores IMAPOPT_SYSLOG_FACILITY */
+ 
+         if (prefix)
+-            buf = strconcat(prefix, "/", ident, NULL);
++            syslog_buf = strconcat(prefix, "/", ident, NULL);
+         else
+-            buf = xstrdup(ident);
++            syslog_buf = strconcat("cyrus/", ident, NULL);
+ 
+         /* Reopen the log with the new prefix */
+         closelog();
+-        openlog(buf, LOG_PID, SYSLOG_FACILITY);
++        openlog(syslog_buf, LOG_PID, SYSLOG_FACILITY);
+     }
+ 
+-    /* don't free 'buf', syslog needs it for the lifetime of the process */
++    /* don't free 'syslog_buf', syslog needs it for the lifetime of the process */
+ 
+     /* drop debug messages locally */
+     if (!config_debug)
+diff --git a/ptclient/ptexpire.c b/ptclient/ptexpire.c
+index e813e92a5..1e5e1a81f 100644
+--- a/ptclient/ptexpire.c
++++ b/ptclient/ptexpire.c
+@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
+     const char *fname;
+     char *alt_config = NULL, *tofree = NULL;
+ 
+-    openlog("ptexpire", LOG_PID, SYSLOG_FACILITY);
++    openlog("cyrus/ptexpire", LOG_PID, SYSLOG_FACILITY);
+ 
+     while ((opt = getopt(argc, argv, "C:E:")) != EOF) {
+         switch (opt) {
+diff --git a/ptclient/test.c b/ptclient/test.c
+index 614d60253..634cf8287 100644
+--- a/ptclient/test.c
++++ b/ptclient/test.c
+@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
+     cacheid=cache;
+   } else
+     cacheid=NULL;
+-  openlog("pttest", LOG_PID, SYSLOG_FACILITY);
++  openlog("cyrus/pttest", LOG_PID, SYSLOG_FACILITY);
+ 
+   if (!auth_setid(argv[1],cacheid))
+     printf ("Auth_memberof(%s,%s) is %d\n", argv[1], argv[2],
+diff --git a/ptclient/test2.c b/ptclient/test2.c
+index dc380233c..18a66ea07 100644
+--- a/ptclient/test2.c
++++ b/ptclient/test2.c
+@@ -45,7 +45,7 @@
+ 
+ int main(void) {
+   char cacheid[16]="4224423";
+-  openlog("testr", LOG_PID, SYSLOG_FACILITY);
++  openlog("cyrus/testr", LOG_PID, SYSLOG_FACILITY);
+ 
+   if (!auth_setid("cg2v@club.cc.cmu.edu",cacheid))
+     printf ("Auth_memberof(cg2v,cg2v:me) is %d\n",

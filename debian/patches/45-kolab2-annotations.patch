@@ -1,0 +1,67 @@
+Description: Add kolab2 compatible annotation functionality
+ The original patch was a handful and the annotation mechanism was
+ fully reworked some years ago. It actually makes these changes
+ more light-weight now, but has the added side-effect that for the
+ changes here to work correctly, the site admin MUST enable
+ annotation_allow_undefined so that generic vendor annotations are
+ not just rejected with an error.
+Author: Sven Mueller <debian@incase.de>
+Forwarded: no
+Last-Update: 2022-05-05
+
+---
+ imap/annotate.c         | 20 ++++++++++++++++++++
+ perl/imap/IMAP/Admin.pm |  2 ++
+ 2 files changed, 22 insertions(+)
+
+diff --git a/imap/annotate.c b/imap/annotate.c
+index a5462d6e5..1d99181fd 100644
+--- a/imap/annotate.c
++++ b/imap/annotate.c
+@@ -2408,6 +2408,19 @@ static const annotate_entrydesc_t server_db_entry =
+         NULL
+     };
+ 
++static const annotate_entrydesc_t generic_vendor_db_entry =
++    {
++        NULL,
++        ATTRIB_TYPE_STRING,
++        BACKEND_ONLY,
++        ATTRIB_VALUE_SHARED | ATTRIB_VALUE_PRIV,
++        ACL_ADMIN,
++        annotation_get_fromdb,
++        annotation_set_todb,
++        NULL,
++        NULL
++    };
++
+ /* Annotation attributes and their flags */
+ struct annotate_attrib
+ {
+@@ -3462,6 +3475,13 @@ static int find_desc_store(annotate_state_t *state,
+         return IMAP_PERMISSION_DENIED;
+ 
+     *descp = db_entry;
++
++    /* Check for generic vendor annotations. */
++    if ((!strncmp(name, "/vendor/", strlen("/vendor/"))) &&
++        (strlen(name) > strlen("/vendor/"))) {
++        *descp = &generic_vendor_db_entry;
++    }
++
+     return 0;
+ }
+ 
+diff --git a/perl/imap/IMAP/Admin.pm b/perl/imap/IMAP/Admin.pm
+index 6f7eba860..331906b28 100644
+--- a/perl/imap/IMAP/Admin.pm
++++ b/perl/imap/IMAP/Admin.pm
+@@ -833,6 +833,8 @@ sub mboxconfig {
+ 
+   my %values = ( "comment" => "/comment",
+                  "expire" => "/vendor/cmu/cyrus-imapd/expire",
++                 "folder-type" => "/vendor/kolab/folder-type",
++                 "h-share-uid" => "/vendor/kolab/h-share-uid",
+                  "news2mail" => "/vendor/cmu/cyrus-imapd/news2mail",
+                  "sharedseen" => "/vendor/cmu/cyrus-imapd/sharedseen",
+                  "sieve" => "/vendor/cmu/cyrus-imapd/sieve",

@@ -1,0 +1,24 @@
+Description: increase test timeout
+Author: Xavier Guimard <yadd@debian.org>
+Bug: https://github.com/cyrusimap/cyrus-imapd/issues/3040
+Bug-Debian: https://bugs.debian.org/960658
+Forwarded: not-needed
+Last-Update: 2020-05-20
+
+---
+ cunit/unit.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cunit/unit.c b/cunit/unit.c
+index 087f43537..31e6a940a 100644
+--- a/cunit/unit.c
++++ b/cunit/unit.c
+@@ -98,7 +98,7 @@ EXPORTED void fatal(const char *s, int code)
+ }
+ 
+ /* Each test gets a maximum of 20 seconds. */
+-#define TEST_TIMEOUT_MS (20*1000)
++#define TEST_TIMEOUT_MS (240*1000)
+ 
+ static jmp_buf jbuf;
+ static const char *code;
