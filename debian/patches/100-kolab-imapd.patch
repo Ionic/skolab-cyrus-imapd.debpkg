@@ -1,0 +1,33 @@
+Description: Kolab upstream's imapd.patch adapted
+ This drops almost all of the original patch. The mailbox name
+ handling saw a complete rewrite in 2015 via
+ 65c9129253cfb22542c906330aecfb3068484a0b into a much cleaner
+ interface. Due to that, the only relevant hunk looks obsolete
+ now, since the new code natively should support at (@) characters
+ in user names. Additionally, the changed code was never even used
+ within Debian, since the ATVDOM macro was never defined. Dropping
+ this hunk should hence be safe. The only hunk left is a change to
+ com_err, which is likewise redundant, since upstream's
+ (e2fsprogs) com_err looks more modern nowadays, but we'll need to
+ convince Cyrus upstream to move on to get that for free.
+Author: Steffen Joeris <steffen.joeris@skolelinux.de>
+Forwarded: no
+Last-Update: 2022-05-05
+
+---
+ com_err/et/com_err.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/com_err/et/com_err.c b/com_err/et/com_err.c
+index 7fdcb08e8..1ce822b27 100644
+--- a/com_err/et/com_err.c
++++ b/com_err/et/com_err.c
+@@ -50,7 +50,7 @@
+ #include <string.h>
+ #include "mit-sipb-copyright.h"
+ 
+-#if defined(HAVE_STDARG_H) || defined(_WINDOWS)
++#if defined(HAVE_STDARG_H) || defined(__STDC__) || defined(_WINDOWS)
+ #include <stdarg.h>
+ #else
+ #include <varargs.h>

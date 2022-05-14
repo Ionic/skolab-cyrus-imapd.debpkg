@@ -1,0 +1,31 @@
+Description: Kolab upstream's imapd-goodchars.patch
+ Some hunks of that patch previously were in
+ 0009-upstream-remove-redundant-wildcard-check, which is now
+ integrated.
+ Some of these parts look very dangerous, especially allowing
+ percent sign characters. This could easily lead to security
+ issues if carelessly passing a mailbox name as a format string.
+Author: Steffen Joeris <steffen.joeris@skolelinux.de>
+Forwarded: no
+Last-Update: 2022-05-05
+
+---
+ imap/mboxname.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/imap/mboxname.c b/imap/mboxname.c
+index 86ecf3b35..974a48a5d 100644
+--- a/imap/mboxname.c
++++ b/imap/mboxname.c
+@@ -1767,9 +1767,9 @@ EXPORTED int mboxname_same_userid(const char *name1, const char *name2)
+  * NOTE: '^' is '.' externally in unixhs, and invalid in unixhs
+  *
+  * The set of printable chars that are not in GOODCHARS are:
+- *    !"%&/;<>\`{|}
++ *    !"&/\
+  */
+-#define GOODCHARS " #$'()*+,-.0123456789:=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_abcdefghijklmnopqrstuvwxyz~"
++#define GOODCHARS " #$%'()*+,-.0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+ EXPORTED int mboxname_policycheck(const char *name)
+ {
+     const char *p;

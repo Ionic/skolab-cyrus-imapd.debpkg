@@ -1,0 +1,47 @@
+Description: Rename conflicting function getline
+ Definitely upstream this! Should be quick, easy and painless.
+Author: Mathieu Parent <sathieu@debian.org>
+Bug-Debian: https://bugs.debian.org/552865
+Bug-Debian: https://bugs.debian.org/552848
+Forwarded: no
+Last-Update: 2022-05-05
+
+---
+ contrib/sieve-spamassassin | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/contrib/sieve-spamassassin b/contrib/sieve-spamassassin
+index 9f9dbe22c..84b694daa 100644
+--- a/contrib/sieve-spamassassin
++++ b/contrib/sieve-spamassassin
+@@ -85,7 +85,7 @@ diff -cr cyrus-imapd-2.1.3-orig/imap/lmtpd.c cyrus-imapd-2.1.3/imap/lmtpd.c
+ + /* spam support */
+ +
+ + static int
+-+ getline (int s, char *buf, int len)
+++ local_getline (int s, char *buf, int len)
+ + {
+ +     char *bp = buf;
+ +     int ret = 1;
+@@ -129,8 +129,8 @@ diff -cr cyrus-imapd-2.1.3-orig/imap/lmtpd.c cyrus-imapd-2.1.3/imap/lmtpd.c
+ +     int score;
+ +     int threshold;
+ +
+-+     if (! getline (s, buf, sizeof (buf))) {
+-+       syslog (LOG_ERR, "read_response: response getline failed");
+++     if (! local_getline (s, buf, sizeof (buf))) {
+++       syslog (LOG_ERR, "read_response: response local_getline failed");
+ +       return SIEVE_FAIL;
+ +     }
+ +     if (sscanf (buf, "SPAMD/%d.%d %d %*s", &major, &minor, &response) != 3) {
+@@ -143,8 +143,8 @@ diff -cr cyrus-imapd-2.1.3-orig/imap/lmtpd.c cyrus-imapd-2.1.3/imap/lmtpd.c
+ +               major, minor);
+ +       return SIEVE_FAIL;
+ +     }
+-+     if (! getline (s, buf, sizeof (buf))) {
+-+       syslog (LOG_ERR, "read_response: header getline failed");
+++     if (! local_getline (s, buf, sizeof (buf))) {
+++       syslog (LOG_ERR, "read_response: header local_getline failed");
+ +       return SIEVE_FAIL;
+ +     }
+ +     if (sscanf (buf, "Spam: %5s ; %d / %d", is_spam, &score, &threshold) != 3) {

@@ -1,0 +1,25 @@
+Description: Adds some enhancements to sieveshell and fixes some paths.
+ The actual enhancements are all upstream now, so the only part
+ left over is the path modification, which maps to the other part
+ of Debian's 0006-Fix-paths-on-Debian-in-tools-rehash.patch patch.
+Author: Sven Mueller <debian@incase.de>
+Forwarded: no
+Last-Update: 2022-05-05
+
+---
+ perl/imap/IMAP/Shell.pm | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/perl/imap/IMAP/Shell.pm b/perl/imap/IMAP/Shell.pm
+index ea5a4c13f..7f82f4471 100644
+--- a/perl/imap/IMAP/Shell.pm
++++ b/perl/imap/IMAP/Shell.pm
+@@ -445,7 +445,7 @@ sub run {
+ sub shell {
+   my ($server, $port, $authz, $auth, $systemrc, $userrc, $dorc, $mech, $pw,
+       $tlskey, $notls, $cacert, $capath) =
+-    ('', 143, undef, $ENV{USER} || $ENV{LOGNAME}, '/usr/local/etc/cyradmrc.pl',
++    ('', 143, undef, $ENV{USER} || $ENV{LOGNAME}, '/etc/cyradmrc.pl',
+      "$ENV{HOME}/.cyradmrc.pl", 1, undef, undef, undef, undef, undef, undef);
+   GetOptions('user|u=s' => \$auth,
+              'authz|z=s' => \$authz,

@@ -1,0 +1,72 @@
+Description: Kolab upstream's imapd.folderchar.patch
+ The original patch changed lib/cyrusdb_skiplist.c to
+ unconditionally use bsearch_ncompare_mbox as the comparing
+ function instead of the "traditional" signed char comparator
+ function, the latter which is ridden with issues according to the
+ inline comment.
+ The difference between these two functions is that
+ bsearch_compare_mbox maps each character to a different one
+ according to an internal, static list, while the latter function
+ compares based on the raw value without any mapping. The
+ hardcoded mapping essentially sorts \r and \t to start-of-heading
+ and the period character right after that one.
+ Traditionally, skiplists always used the latter function. The
+ Kolab patch changed this unconditionally.
+ Some time between Cyrus 2.2.13-p1 in 2009 and 3.4.2 in 2022,
+ upstream introduced a new option called
+ IMAPOPT_IMPROVED_MBOXLIST_SORT, which essentially allowed
+ switching between the two comparator functions, but, crucially,
+ kept the default set to off, i.e., the skiplist code using the
+ traditional comparator function.
+ Afterwards, the internal mailbox hierarchy separator was changed
+ from the period character to ^ by default (called
+ "unixhierarchysep") in version 3.0. Once that was done,
+ IMAPOPT_IMPROVED_MBOXLIST_SORT was removed and most code now
+ doesn't even try to use this sorting mechanism any longer, other
+ than directly via cyr_dbtool -M.
+ We revert skiplist behavior to unconditionally use
+ bsearch_compare_mbox again with this patch, but that will very
+ likely make the Cyrus installation incompatible with upstream's,
+ so it stands to reason if it wouldn't be better to just drop it.
+Author: Peter Eisentraut <petere@debian.org>
+Forwarded: no
+Last-Update: 2022-05-05
+
+---
+ cunit/aaa-db.testc     | 9 +++++++--
+ lib/cyrusdb_skiplist.c | 2 +-
+ 2 files changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/cunit/aaa-db.testc b/cunit/aaa-db.testc
+index a6ab3981d..da9a65ba3 100644
+--- a/cunit/aaa-db.testc
++++ b/cunit/aaa-db.testc
+@@ -780,8 +780,13 @@ static void test_mboxlist(void)
+ 
+     /* got the expected keys in the expected order */
+     GOTRESULT(KEY1, strlen(KEY1), DATA1, strlen(DATA1));
+-    /* flat is always in mboxlist order! */
+-    if (!strcmp(backend, "flat")) {
++    /*
++     * flat is always in mboxlist order!
++     * Additionally, with our Kolab patches, skiplist is also always in
++     * mboxlist order. We might want to change/drop this, though...
++     */
++    if (!strcmp(backend, "flat") ||
++        !strcmp(backend, "skiplist")) {
+         GOTRESULT(KEY3, strlen(KEY3), DATA3, strlen(DATA3));
+         GOTRESULT(KEY2, strlen(KEY2), DATA2, strlen(DATA2));
+     }
+diff --git a/lib/cyrusdb_skiplist.c b/lib/cyrusdb_skiplist.c
+index 19498dd49..44c442b2d 100644
+--- a/lib/cyrusdb_skiplist.c
++++ b/lib/cyrusdb_skiplist.c
+@@ -855,7 +855,7 @@ static int myopen(const char *fname, int flags, struct dbengine **ret, struct tx
+     db = (struct dbengine *) xzmalloc(sizeof(struct dbengine));
+     db->fd = -1;
+     db->fname = xstrdup(fname);
+-    db->compar = (flags & CYRUSDB_MBOXSORT) ? bsearch_ncompare_mbox : compare_signed;
++    db->compar = bsearch_ncompare_mbox;
+     db->open_flags = (flags & ~CYRUSDB_CREATE);
+ 
+     db->fd = open(fname, O_RDWR, 0644);

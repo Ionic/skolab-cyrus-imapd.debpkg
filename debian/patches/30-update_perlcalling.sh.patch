@@ -1,0 +1,111 @@
+Description: updates calling of the perl interpreter to what we expect
+ in Debian.
+ More precisely: Call /usr/bin/perl directly instead of using some
+ shell magic to locate perl and run it.
+ NOTE: only some script use the "-w" or even the "-T" flag for perl.
+       This should be the default actually.
+ Updates the original patch and makes it pretty much supersede
+ 0005-Updates-calling-of-the-perl-interpreter-to-what-we-e.patch
+ in Debian. It also changes more than the latter patch, so
+ probably even better.
+Author: Sven Mueller <debian@incase.de>
+Forwarded: no
+Last-Update: 2022-05-05
+
+---
+ cassandane/utils/fakesaslauthd     | 2 +-
+ perl/imap/cyradm.sh                | 4 +---
+ perl/imap/examples/auditmbox.pl    | 2 +-
+ perl/imap/examples/imapcollate.pl  | 2 +-
+ perl/imap/examples/imapdu.pl       | 2 +-
+ perl/sieve/scripts/installsieve.pl | 4 +---
+ tools/rehash                       | 2 +-
+ tools/translatesieve               | 4 +---
+ 8 files changed, 8 insertions(+), 14 deletions(-)
+
+diff --git a/cassandane/utils/fakesaslauthd b/cassandane/utils/fakesaslauthd
+index 1cdb1a027..7b7dcd4c7 100755
+--- a/cassandane/utils/fakesaslauthd
++++ b/cassandane/utils/fakesaslauthd
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env perl
++#!/usr/bin/perl
+ # A pretend saslauthd that just accepts any password except "bad"
+ # for any user.  Use me for testing!
+ 
+diff --git a/perl/imap/cyradm.sh b/perl/imap/cyradm.sh
+index 7fc5a0b0c..94b11b932 100644
+--- a/perl/imap/cyradm.sh
++++ b/perl/imap/cyradm.sh
+@@ -1,6 +1,4 @@
+-#! /bin/sh
+-exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
+-#!perl
++#!/usr/bin/perl
+ #
+ # Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
+ #
+diff --git a/perl/imap/examples/auditmbox.pl b/perl/imap/examples/auditmbox.pl
+index fcc684431..c65af0aed 100644
+--- a/perl/imap/examples/auditmbox.pl
++++ b/perl/imap/examples/auditmbox.pl
+@@ -1,4 +1,4 @@
+-#! /usr/bin/perl -w
++#!/usr/bin/perl -w
+ #
+ # Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
+ #
+diff --git a/perl/imap/examples/imapcollate.pl b/perl/imap/examples/imapcollate.pl
+index c8ea05ed1..631dfcfff 100644
+--- a/perl/imap/examples/imapcollate.pl
++++ b/perl/imap/examples/imapcollate.pl
+@@ -1,4 +1,4 @@
+-#! /usr/bin/perl -w
++#!/usr/bin/perl -w
+ #
+ # Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
+ #
+diff --git a/perl/imap/examples/imapdu.pl b/perl/imap/examples/imapdu.pl
+index e93866fa4..31226f685 100644
+--- a/perl/imap/examples/imapdu.pl
++++ b/perl/imap/examples/imapdu.pl
+@@ -1,4 +1,4 @@
+-#! /usr/bin/perl -w
++#!/usr/bin/perl -w
+ #
+ # Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
+ #
+diff --git a/perl/sieve/scripts/installsieve.pl b/perl/sieve/scripts/installsieve.pl
+index 744b50ac0..35972c436 100644
+--- a/perl/sieve/scripts/installsieve.pl
++++ b/perl/sieve/scripts/installsieve.pl
+@@ -1,6 +1,4 @@
+-#! /bin/sh
+-exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
+-#!perl -w
++#!/usr/bin/perl -w
+ #
+ # Copyright (c) 1994-2008 Carnegie Mellon University.  All rights reserved.
+ #
+diff --git a/tools/rehash b/tools/rehash
+index 7bdad8656..bf563336d 100755
+--- a/tools/rehash
++++ b/tools/rehash
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env perl
++#!/usr/bin/perl
+ #
+ # Copyright (c) 1994-2012 Carnegie Mellon University.  All rights reserved.
+ #
+diff --git a/tools/translatesieve b/tools/translatesieve
+index b17f13b46..08771bfcd 100755
+--- a/tools/translatesieve
++++ b/tools/translatesieve
+@@ -1,6 +1,4 @@
+-#!/bin/sh
+-exec perl -x -S $0 ${1+"$@"} # -*-perl-*-
+-#!perl -w
++#!/usr/bin/perl
+ #
+ # script to translate sieve scripts to use unixhierarchysep and/or altnamespace
+ # make sure you run it as the cyrus user

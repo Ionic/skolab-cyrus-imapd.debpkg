@@ -1,0 +1,127 @@
+Description: Kolab upstream's imapd.patch.group plus imapd.group2.patch
+ The code nowadays uses getgrouplist by default on systems
+ supporting the function, which is incompatible with the whole idea of a
+ separate, new, Cyrus-only group file. The old code is still available
+ for systems not supporting getgrouplist, so we just disable the
+ getgrouplist portion altogether.
+Author: Steffen Joeris <steffen.joeris@skolelinux.de>
+Forwarded: no
+Last-Update: 2022-05-05
+
+---
+ lib/auth_unix.c | 58 ++++++++++++++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 47 insertions(+), 11 deletions(-)
+
+diff --git a/lib/auth_unix.c b/lib/auth_unix.c
+index 57680e9b5..587f14611 100644
+--- a/lib/auth_unix.c
++++ b/lib/auth_unix.c
+@@ -44,6 +44,7 @@
+ #include <stdlib.h>
+ #include <pwd.h>
+ #include <grp.h>
++#include <stdio.h>
+ #include <ctype.h>
+ #include <string.h>
+ 
+@@ -137,6 +138,33 @@ static const char allowedchars[256] = {
+     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+ };
+ 
++static struct group* fgetgrnam(const char* name)
++{
++    struct group *grp;
++    FILE *groupfile;
++
++    groupfile = fopen("/etc/imapd.group", "r");
++
++    if (!groupfile) {
++        groupfile = fopen("/etc/group", "r");
++    }
++
++    if (groupfile) {
++        while ((grp = fgetgrent(groupfile))) {
++            if (strcasecmp(grp->gr_name, name) == 0) {
++                fclose(groupfile);
++                return grp;
++            }
++        }
++    }
++
++    if (groupfile) {
++        fclose(groupfile);
++    }
++
++    return NULL;
++}
++
+ /*
+  * Convert 'identifier' into canonical form.
+  * Returns a pointer to a static buffer containing the canonical form
+@@ -171,7 +199,7 @@ static const char *mycanonifyid(const char *identifier, size_t len)
+      */
+ 
+     if (!strncmp(retbuf, "group:", 6)) {
+-        grp = getgrnam(retbuf+6);
++        grp = fgetgrnam(retbuf+6);
+         if (!grp) return NULL;
+         if (strlen(grp->gr_name) >= sizeof(retbuf)-6)
+                 return NULL;
+@@ -225,12 +253,13 @@ static struct auth_state *mynewstate(const char *identifier)
+     struct auth_state *newstate;
+     struct passwd *pwd;
+     struct group *grp;
+-#if defined(HAVE_GETGROUPLIST) && defined(__GLIBC__)
++#if 0 && defined(HAVE_GETGROUPLIST) && defined(__GLIBC__)
+     gid_t gid, *groupids = NULL;
+     int ret, ngroups = 10, oldngroups;
+ #else
+     char **mem;
+ #endif
++    FILE *groupfile;
+ 
+     identifier = mycanonifyid(identifier, 0);
+     if (!identifier) return 0;
+@@ -246,7 +275,7 @@ static struct auth_state *mynewstate(const char *identifier)
+ 
+     pwd = getpwnam(identifier);
+ 
+-#if defined(HAVE_GETGROUPLIST) && defined(__GLIBC__)
++#if 0 && defined(HAVE_GETGROUPLIST) && defined(__GLIBC__)
+     gid = pwd ? pwd->pw_gid : (gid_t) -1;
+ 
+     /* get the group ids */
+@@ -277,18 +306,25 @@ err:
+     if (groupids) free(groupids);
+ 
+ #else /* !HAVE_GETGROUPLIST */
+-    setgrent();
+-    while ((grp = getgrent())) {
+-        for (mem = grp->gr_mem; *mem; mem++) {
+-            if (!strcmp(*mem, identifier)) break;
++    groupfile = fopen("/etc/imapd.group", "r");
++
++    if (!groupfile) {
++        groupfile = fopen("/etc/group", "r");
++    }
++
++    if (groupfile) {
++        while ((grp = fgetgrent(groupfile))) {
++            for (mem = grp->gr_mem; *mem; mem++) {
++                if (!strcasecmp(*mem, identifier)) break;
++            }
++
++            if (*mem || (pwd && pwd->pw_gid == grp->gr_gid))
++                strarray_append(&newstate->groups, grp->gr_name);
+         }
+ 
+-        if (*mem || (pwd && pwd->pw_gid == grp->gr_gid))
+-            strarray_append(&newstate->groups, grp->gr_name);
++        fclose(groupfile);
+     }
+-    endgrent();
+ #endif /* HAVE_GETGROUPLIST */
+-
+     return newstate;
+ }
+ 

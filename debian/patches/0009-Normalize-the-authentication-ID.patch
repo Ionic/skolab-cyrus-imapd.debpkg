@@ -1,0 +1,117 @@
+Description: Normalize the authentication ID
+ By normalize, it is intended that;
+    1) Authentication IDs all can be lowercased for more accurate
+       comparison without being volatile to, say, user error, and
+    2) Any leading or trailing blank space can be stripped
+    N.B.: upstream advises to just drop this patch, since it's broken
+          (or rather, that they had something like this in the past, but
+          it turned out that many sites break under these assumptions).
+Author: "Jeroen van Meeuwen (Kolab Systems)" <vanmeeuwen@kolabsys.com>
+Forwarded: https://github.com/cyrusimap/cyrus-imapd/pull/3283
+Reviewed-By: Xavier Guimard <yadd@debian.org
+Last-Update: 2020-02-10
+
+---
+ imap/global.c    |  2 ++
+ lib/auth_unix.c  | 18 ++++++++++++++++++
+ lib/imapoptions  |  5 +++++
+ lib/libcyr_cfg.c |  4 ++++
+ lib/libcyr_cfg.h |  2 ++
+ 5 files changed, 31 insertions(+)
+
+diff --git a/imap/global.c b/imap/global.c
+index ffd286bd3..343cbd2f7 100644
+--- a/imap/global.c
++++ b/imap/global.c
+@@ -350,6 +350,8 @@ EXPORTED int cyrus_init(const char *alt_config, const char *ident, unsigned flag
+                                   config_getswitch(IMAPOPT_UNIX_GROUP_ENABLE));
+         libcyrus_config_setswitch(CYRUSOPT_USERNAME_TOLOWER,
+                                   config_getswitch(IMAPOPT_USERNAME_TOLOWER));
++        libcyrus_config_setswitch(CYRUSOPT_NORMALIZEUID,
++                                  config_getswitch(CYRUSOPT_NORMALIZEUID));
+         libcyrus_config_setswitch(CYRUSOPT_SKIPLIST_UNSAFE,
+                                   config_getswitch(IMAPOPT_SKIPLIST_UNSAFE));
+         libcyrus_config_setstring(CYRUSOPT_TEMP_PATH,
+diff --git a/lib/auth_unix.c b/lib/auth_unix.c
+index 67f978a5f..57680e9b5 100644
+--- a/lib/auth_unix.c
++++ b/lib/auth_unix.c
+@@ -150,9 +150,11 @@ static const char allowedchars[256] = {
+ static const char *mycanonifyid(const char *identifier, size_t len)
+ {
+     static char retbuf[81];
++    char backup[81];
+     struct group *grp;
+     char *p;
+     int username_tolower = 0;
++    int ic,rbc;
+ 
+     if (!len) len = strlen(identifier);
+     if (len >= sizeof(retbuf)) return NULL;
+@@ -194,6 +196,22 @@ static const char *mycanonifyid(const char *identifier, size_t len)
+         }
+     }
+ 
++    if( (libcyrus_config_getswitch(CYRUSOPT_NORMALIZEUID) == 1) ) {
++        strcpy(backup,retbuf);
++       /* remove leading blanks */
++       for(ic=0; isblank(backup[ic]); ic++);
++       for(rbc=0; backup[ic]; ic++) {
++            retbuf[rbc] = ( isalpha(backup[ic]) ?
++                 tolower(backup[ic]) : backup[ic] );
++            rbc++;
++       }
++       retbuf[rbc] = '\0';
++       /* remove trailing blanks */
++       for(--rbc; isblank(retbuf[rbc]); rbc--) {
++            retbuf[rbc] = '\0';
++       }
++    }
++
+     return retbuf;
+ }
+ 
+diff --git a/lib/imapoptions b/lib/imapoptions
+index 3d43d1c36..9f0adad0f 100644
+--- a/lib/imapoptions
++++ b/lib/imapoptions
+@@ -3171,6 +3171,11 @@ of the incoming network interface, or if no record is found, the
+ { "fastmailsharing", 0, SWITCH, "3.0.0" }
+ /* If enabled, use FastMail style sharing (oldschool full server paths) */
+ 
++{ "normalizeuid", 0, SWITCH }
++/* Lowercase uid and strip leading and trailing blanks. It is recommended
++   to set this to yes, especially if OpenLDAP is used as authentication
++   source. */
++
+ /*
+ .SH SEE ALSO
+ .PP
+diff --git a/lib/libcyr_cfg.c b/lib/libcyr_cfg.c
+index d36d4f1f2..4f09eefe6 100644
+--- a/lib/libcyr_cfg.c
++++ b/lib/libcyr_cfg.c
+@@ -160,6 +160,10 @@ static struct cyrusopt_s cyrus_options[] = {
+       CFGVAL(long, 0),
+       CYRUS_OPT_SWITCH },
+ 
++    { CYRUSOPT_NORMALIZEUID,
++      CFGVAL(long, 1),
++      CYRUS_OPT_SWITCH },
++
+     { CYRUSOPT_LAST, { NULL }, CYRUS_OPT_NOTOPT }
+ };
+ 
+diff --git a/lib/libcyr_cfg.h b/lib/libcyr_cfg.h
+index b11114ae2..17db98581 100644
+--- a/lib/libcyr_cfg.h
++++ b/lib/libcyr_cfg.h
+@@ -107,6 +107,8 @@ enum cyrus_opt {
+     CYRUSOPT_SKIPLIST_ALWAYS_CHECKPOINT,
+     /* ACL override */
+     CYRUSOPT_ACL_ADMIN_IMPLIES_WRITE,
++    /* Lowercase uid and strip leading and trailing blanks (OFF) */
++    CYRUSOPT_NORMALIZEUID,
+ 
+     CYRUSOPT_LAST
+ 
